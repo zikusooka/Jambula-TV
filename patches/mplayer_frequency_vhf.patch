@@ -1,0 +1,29 @@
+--- frequencies.c.original	2013-07-16 07:15:02.000000000 +0300
++++ frequencies.c	2013-07-17 17:12:58.971688237 +0300
+@@ -988,6 +988,18 @@
+ };
+ 
+ /* --------------------------------------------------------------------- */
++/* Uganda Broadcast */
++
++static const struct CHANLIST pal_bcast_ug[] ={
++    { "1",	 69250 },
++    { "5",	175250 },
++    { "7",	189250 },
++    { "12",	224250 },
++    { "13",	231250 },
++    FREQ_UHF
++};
++
++/* --------------------------------------------------------------------- */
+ 
+ static const struct CHANLIST argentina[] = {
+     { "001",   56250 },
+@@ -1205,6 +1217,7 @@
+     { "france",           secam_france,      CHAN_COUNT(secam_france)      },
+     { "china-bcast",      pal_bcast_cn,      CHAN_COUNT(pal_bcast_cn)      },
+     { "southafrica",      pal_bcast_za,      CHAN_COUNT(pal_bcast_za)      },
++    { "uganda",           pal_bcast_ug,      CHAN_COUNT(pal_bcast_ug)      },
+     { "argentina",        argentina,         CHAN_COUNT(argentina)         },
+     { "russia",           russia,            CHAN_COUNT(russia)            },
+     { NULL, NULL, 0 } /* EOF */

@@ -1,0 +1,4 @@
+# ADS Tech Portable Hard Disk
+# To find those variables, run ../contrib/scripts/udev-properties.sh
+# -------------------------------------------------------------------
+ACTION=="add", ENV{SUBSYSTEM}=="usb", ENV{DEVTYPE}=="usb_device", ENV{ID_MODEL}=="USB2.0_Drive_Kit", ENV{ID_VENDOR_ID}=="06e1", ENV{ID_MODEL_ID}=="d804", TAG+="systemd", ENV{SYSTEMD_WANTS}+="usb-portable-drive.service"

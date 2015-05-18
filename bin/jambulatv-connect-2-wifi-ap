@@ -1,0 +1,129 @@
+#!/bin/sh
+# Argument from icinga2 script
+ICINGA2_AP_STATUS=$@
+
+# Available in functions file
+INTERNET_WIFI_ISP_CONFIG=/etc/JambulaTV/internet-mobile-wifi.cfg
+WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
+WIFI_INTERFACES_AVAILABLE=$(sudo iw dev |grep Interface |wc -l)
+# Variable specific to this script
+WIFI_DRIVER=nl80211
+WIFI_SSID=$(grep -i SSID $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+WIFI_SECURITY_KEY=$(grep -i SECURITY_KEY $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+OSD_SCRIPT=/usr/bin/jambulatv-osd
+AP_FOUND_MSG="Found your WiFi Access Point ($WIFI_SSID). Please wait while I connect to it"
+CONNECTED_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID), Assigning IP Address ..."
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+number_of_interfaces () { 
+# Quit if less than 2 WiFi devices are detected
+if [ "$WIFI_INTERFACES_AVAILABLE" -lt "2" ];
+then
+echo "CRITICAL: Sorry, WiFi dual Interface mode is not supported"
+exit 2
+else
+# Set WiFi station Interface
+WIFI_STATION_INTERFACE=$(sudo iw dev |grep -B 4 'type managed' |grep Interface | tail -1 | awk {'print $2'})
+fi
+}
+
+scan_4_wifi () {
+# Take station UP
+sudo ip link set $WIFI_STATION_INTERFACE up
+#
+# Scan for AP, and get scanned SSID
+sudo iw dev $WIFI_STATION_INTERFACE scan | grep -i SSID | cut -d : -f2 | sed 's/ //' | grep $WIFI_SSID
+# See if there's a match
+if [[ $? = 0 ]];
+then
+WIFI_FOUND=yes
+echo "$AP_FOUND_MSG"
+else
+WIFI_FOUND=no
+fi
+export WIFI_FOUND
+}
+
+generate_wpa_config () {
+grep "ssid=\"$WIFI_SSID\"" $WIFI_WPA_CONFIG_FILE > /dev/null 2>&1
+WPA_EXISTS=$?
+# Generate a wpa/wpa2 configuration file if not yet set
+[ "$WPA_EXISTS" = "0" ] || \
+sudo wpa_passphrase $WIFI_SSID $WIFI_SECURITY_KEY >> $WIFI_WPA_CONFIG_FILE
+}
+
+connect_2_access_point () {
+# Kill existing wpa_supplicant processes
+sudo killall wpa_supplicant || killall -9 wpa_supplicant
+# Connect to HotSpot
+sudo wpa_supplicant -B -D $WIFI_DRIVER -i $WIFI_STATION_INTERFACE -c $WIFI_WPA_CONFIG_FILE
+}
+
+check_link_status () {
+# Check link status
+WIFI_LINK_STATUS=$(iw dev $WIFI_STATION_INTERFACE link)
+#
+if [ "$WIFI_LINK_STATUS" = "Not connected." ];
+then
+echo "Connection to $WIFI_SSID failed!. Exiting ..."
+exit 1
+else
+# Display success essage on Screen
+$OSD_SCRIPT -m "$CONNECTED_MSG"
+fi
+}
+
+get_ip_address () {
+# Start dhclient if it is not running
+ps acx | grep dhclient > /dev/null 2>&1
+# Get IP Address using dhclient
+if [ "$?" != "0" ];
+then
+echo "Acquiring IP address information ..."
+sudo dhclient $WIFI_STATION_INTERFACE
+fi
+}
+
+quit_not_found () {
+if [[ $WIFI_FOUND != yes ]];
+then
+echo "WARNING - Wireless Access Point ($WIFI_SSID) Not Available"
+exit 1
+fi
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+case $ICINGA2_AP_STATUS in
+OK)
+# Beep to alert WiFi AP found
+/usr/bin/beep
+;;
+WARNING)
+# Quit script since Icinga2 detects no WiFi AP
+exit 1
+;;
+*)
+# Scan for WiFi AP If not running via icinga2 i.e. manual
+number_of_interfaces 
+scan_4_wifi
+quit_not_found
+;;
+esac
+#
+# Go futher if there's available AP
+generate_wpa_config
+connect_2_access_point 
+sleep 5
+check_link_status 
+get_ip_address
+
+# Restart coova-chilli in order to Change default Internet gateway device
+systemctl restart coova-chilli

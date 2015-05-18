@@ -1,0 +1,5 @@
+alias char-major-81 videodev
+alias char-major-81-1 saa7134
+
+options saa7134 card=65 tuner=54 video_nr=1 vbi_nr=1 radio_nr=1 disable_ir=1
+options saa7134-alsa index=1

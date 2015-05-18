@@ -1,0 +1,90 @@
+#!/bin/sh
+# Set variables
+AUTOLOGIN_USER=jambula
+JAMBULATV_LOG=/var/log/jambulatv.log
+XBMC_CMD=/usr/bin/xbmc
+# See if Intel 828XXX VGA exists 
+lspci | grep VGA | grep 'Intel Corporation 828' > /dev/null 2>&1
+INTEL_VGA_EXISTS=$?
+# if it exists, set environment for VGA cards with no hardware acceleration
+if [ "$INTEL_VGA_EXISTS" = "0" ];
+then
+XBMC_START_ARGS="MESA_GL_VERSION_OVERRIDE=3.0"
+else
+XBMC_START_ARGS=""
+fi
+
+# Export variables
+export DISPLAY=:0.0
+export TERM=xterm
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/bin:/bin:/usr/local/bin:/usr/X11R6/bin/:/sbin:/usr/sbin
+export 
+
+
+
+###############
+#  Functions  #
+###############
+xbmc_pre_settings () {
+echo "`date`: JambulaTV started" > $JAMBULATV_LOG
+}
+
+xbmc_start () {
+su -l $AUTOLOGIN_USER -c "$XBMC_START_ARGS $XBMC_CMD"
+}
+
+xbmc_stop () {
+su -l $AUTOLOGIN_USER -c '/usr/bin/killall xbmc xbmc-bin' 
+}
+
+lxde_start () {
+/usr/sbin/lxdm 
+}
+
+lxde_stop () {
+killall X
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+case $@ in
+
+# XBMC
+start-xbmc)
+xbmc_pre_settings
+xbmc_start
+;;
+
+stop-xbmc)
+xbmc_stop
+;;
+
+restart-xbmc)
+xbmc_stop
+xbmc_start
+;;
+
+# LXDE
+start-lxde)
+lxde_start
+;;
+
+stop-lxde)
+lxde_stop
+;;
+
+restart-lxde)
+lxde_stop
+lxde_start
+;;
+
+*)
+clear
+echo "Usage: $(basename $0) \
+[start-xbmc|stop-xbmc|restart-xbmc|start-lxde|stop-lxde|restart-lxde]"
+;;
+
+esac

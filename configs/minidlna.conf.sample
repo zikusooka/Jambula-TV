@@ -1,0 +1,47 @@
+###########################
+#  JambulaTV DLNA Server  #
+###########################
+
+port=8512
+network_interface=
+user=minidlna
+
+media_dir=A,USER_MUSIC_DIR
+media_dir=V,USER_TV_SHOWS_DIR
+media_dir=V,USER_MOVIES_DIR
+media_dir=P,USER_PICTURES_DIR
+
+friendly_name=JambulaTV DLNA Server
+
+db_dir=/var/cache/JambulaTV/minidlna
+
+log_dir=/var/log/JambulaTV/minidlna
+
+log_level=general,artwork,database,inotify,scanner,metadata,http,ssdp,tivo=warn
+
+album_art_names=Cover.jpg/cover.jpg/cover.png/AlbumArtSmall.jpg/albumartsmall.jpg/AlbumArt.jpg/albumart.jpg/Album.jpg/album.jpg/Folder.jpg/folder.jpg/Thumb.jpg/thumb.jpg
+
+inotify=yes
+
+enable_tivo=no
+
+strict_dlna=no
+
+presentation_url=http://172.16.0.1/index.php
+
+notify_interval=60
+
+serial=12345678
+model_number=1
+
+minissdpdsocket=/var/run/minissdpd.sock
+
+# use different container as root of the tree
+# possible values:
+#   + "." - use standard container (this is the default)
+#   + "B" - "Browse Directory"
+#   + "M" - "Music"
+#   + "V" - "Video"
+#   + "P" - "Pictures"
+# if you specify "B" and client device is audio-only then "Music/Folders" will be used as root
+#root_container=.

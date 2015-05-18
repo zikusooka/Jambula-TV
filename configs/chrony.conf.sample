@@ -1,0 +1,31 @@
+server 0.uk.pool.ntp.org offline
+server 1.uk.pool.ntp.org offline
+server 2.uk.pool.ntp.org offline
+server 3.uk.pool.ntp.org offline
+
+stratumweight 0
+
+driftfile /var/lib/chrony/drift
+
+rtcsync
+
+makestep 10 3
+
+allow 192.168/16
+
+#bindcmdaddress 127.0.0.1
+#bindcmdaddress ::1
+
+local stratum 10
+
+keyfile /etc/chrony.keys
+
+commandkey 1
+
+generatecommandkey
+
+noclientlog
+
+logchange 0.5
+
+logdir /var/log/chrony

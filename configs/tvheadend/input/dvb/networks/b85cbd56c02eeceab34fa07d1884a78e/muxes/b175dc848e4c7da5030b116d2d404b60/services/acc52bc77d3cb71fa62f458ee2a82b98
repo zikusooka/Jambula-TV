@@ -1,0 +1,37 @@
+{
+	"sid": 1400,
+	"lcn": 92,
+	"lcn2": 0,
+	"svcname": "Silverbird",
+	"provider": "MCA",
+	"dvb_servicetype": 1,
+	"prefcapid": 0,
+	"prefcapid_lock": 0,
+	"enabled": true,
+	"pcr": 1402,
+	"pmt": 1401,
+	"stream": [
+		{
+			"pid": 967,
+			"type": "CA",
+			"position": 262144,
+			"caidlist": [
+				{
+					"caid": 1544
+				}
+			]
+		},
+		{
+			"pid": 1402,
+			"type": "H264",
+			"position": 0
+		},
+		{
+			"pid": 1403,
+			"type": "AAC",
+			"position": 0,
+			"language": "eng",
+			"audio_type": 0
+		}
+	]
+}

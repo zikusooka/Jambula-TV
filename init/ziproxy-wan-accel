@@ -1,0 +1,73 @@
+#!/bin/bash
+#
+# Startup script for Ziproxy
+#
+# chkconfig: - 86 14
+# description: Ziproxy
+
+# Copyright (c)2005-2013 Daniel Mealha Cabrita
+
+PROGNAME="Ziproxy"
+
+# source function library
+. /etc/init.d/functions
+
+rc_done="  done"
+rc_failed="  failed"
+
+return=$rc_done
+
+PID_FILE_USER=/var/run/ziproxy-user.pid
+PID_FILE_LINK=/var/run/ziproxy-link.pid
+ZIPROXY=/usr/bin/ziproxy
+ZIPROXY_USER_CONF=/etc/JambulaTV/ziproxy/ziproxy-user.conf
+ZIPROXY_LINK_CONF=/etc/JambulaTV/ziproxy/ziproxy-link.conf
+RUN_AS_USER=ziproxy
+
+case "$1" in
+start)
+	# Ziproxy-User
+	printf "Starting %s: " "${PROGNAME}-USER"
+	${ZIPROXY} -d -u ${RUN_AS_USER} -c ${ZIPROXY_USER_CONF} -p ${PID_FILE_USER}
+	# Ziproxy-Link
+	printf "Starting %s: " "${PROGNAME}-LINK"
+	${ZIPROXY} -d -u ${RUN_AS_USER} -c ${ZIPROXY_LINK_CONF} -p ${PID_FILE_LINK}
+
+	if [ $? != 0 ]; then
+		failure
+	else
+		success
+	fi
+
+	echo
+	;;
+	
+stop)
+	# Ziproxy-User
+	printf "Stopping %s: " "${PROGNAME}-USER"
+
+	${ZIPROXY} -k -u ${RUN_AS_USER} -c ${ZIPROXY_USER_CONF} -p ${PID_FILE}
+	# Ziproxy-Link
+	printf "Stopping %s: " "${PROGNAME}-LINK"
+
+	${ZIPROXY} -k -u ${RUN_AS_USER} -c ${ZIPROXY_LINK_CONF} -p ${PID_FILE}
+
+	if [ $? != 0 ]; then
+		failure
+	else
+		success
+	fi
+
+	echo
+	;;
+		
+restart|reload)
+        $0 stop
+        $0 start
+        ;;
+
+*)
+        printf "Usage: %s {start|stop|restart}\n" "${PROGNAME}"
+        exit 1
+
+esac

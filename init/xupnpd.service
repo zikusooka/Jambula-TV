@@ -1,0 +1,11 @@
+[Unit]
+Description=Lightweight DLNA IPTV Media Server
+After=syslog.target local-fs.target network.target coova-chilli.service
+
+[Service]
+User=jambula
+Type=forking
+ExecStart=/etc/JambulaTV/xupnpd/xupnpd
+
+[Install]
+WantedBy=multi-user.target

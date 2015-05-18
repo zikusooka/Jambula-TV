@@ -1,0 +1,16 @@
+--- /etc/chilli/up.sh.orig	2014-07-23 19:54:36.000000000 +0300
++++ /etc/chilli/up.sh	2014-07-23 20:05:03.962185710 +0300
+@@ -44,6 +44,13 @@
+ 		    done
+ 		}
+ 		
++     	        # Jambula Labs patch to allow UDP ports to be specified in config
++	    	[ -n "HS_UDP_PORTS" ] && {
++		    for port in $HS_UDP_PORTS; do
++	    	        ipt_in -p udp -m udp --dport $port --dst $ADDR -j ACCEPT
++		    done
++    	        }
++ 
+ 		ipt_in -p udp -d 255.255.255.255 --destination-port 67:68 -j ACCEPT
+ 		ipt_in -p udp -d $ADDR --destination-port 67:68 -j ACCEPT
+ 		ipt_in -p udp --dst $ADDR --dport 53 -j ACCEPT

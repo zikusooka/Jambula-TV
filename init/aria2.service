@@ -1,0 +1,10 @@
+[Unit]
+Description=Aria2c download manager
+After=network.target
+
+[Service]
+User=jambula
+ExecStart=/usr/bin/aria2c --conf-path=/etc/JambulaTV/aria2.conf -D
+
+[Install]
+WantedBy=multi-user.target

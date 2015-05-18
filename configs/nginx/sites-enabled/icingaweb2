@@ -1,0 +1,21 @@
+    server {
+        listen 8519;
+
+        server_name  jambulatv_icinga;
+        root	/usr/share/JambulaTV/html/icingaweb2/public;
+        index   index.php;
+
+     	location ~ ^/index\.php(.*)$ {
+	    include includes/php_params; #  set this before SCRIPT_FILENAME et al
+	    fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+            fastcgi_param ICINGAWEB_CONFIGDIR /etc/JambulaTV/icingaweb2;
+            fastcgi_param REMOTE_USER $remote_user;
+        }
+ 
+	location ~ /.+? {
+	    alias /usr/share/JambulaTV/html/icingaweb2/public;
+	    index index.php;
+	    try_files $1 $uri $uri/ /index.php$is_args$args;
+        }
+
+    }

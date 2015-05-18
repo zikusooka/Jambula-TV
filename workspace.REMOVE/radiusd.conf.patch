@@ -1,0 +1,195 @@
+--- /usr/src/jambula/freeradius-server-2.2.0/raddb/radiusd.conf	2014-01-13 22:27:58.345349690 +0300
++++ /etc/raddb/radiusd.conf	2014-02-19 17:38:54.182666960 +0300
+@@ -52,10 +52,10 @@
+ #
+ 
+ prefix = /usr
+-exec_prefix = ${prefix}
++exec_prefix = /usr
+ sysconfdir = /etc
+ localstatedir = /var
+-sbindir = ${exec_prefix}/sbin
++sbindir = /usr/sbin
+ logdir = ${localstatedir}/log/radius
+ raddbdir = ${sysconfdir}/raddb
+ radacctdir = ${logdir}/radacct
+@@ -103,7 +103,7 @@
+ #	make
+ #	make install
+ #
+-libdir = /usr/lib64
++libdir = /usr/lib64/freeradius
+ 
+ #  pidfile: Where to place the PID of the RADIUS server.
+ #
+@@ -164,8 +164,8 @@
+ #  It will join all groups where "user" is a member.  This can allow
+ #  for some finer-grained access controls.
+ #
+-#user = radius
+-#group = radius
++user = radiusd
++group = radiusd
+ 
+ #  max_request_time: The maximum time (in seconds) to handle a request.
+ #
+@@ -245,25 +245,16 @@
+ 	#	proxy   IP to use for sending proxied packets
+ 	#	detail  Read from the detail file.  For examples, see
+ 	#               raddb/sites-available/copy-acct-to-home-server
+-	#	status  listen for Status-Server packets.  For examples,
+-	#		see raddb/sites-available/status
+-	#	coa     listen for CoA-Request and Disconnect-Request
+-	#		packets.  For examples, see the file
+-	#		raddb/sites-available/coa
+ 	#
+ 	type = auth
+ 
+ 	#  Note: "type = proxy" lets you control the source IP used for
+ 	#        proxying packets, with some limitations:
+ 	#
++	#    * Only ONE proxy listener can be defined.
+ 	#    * A proxy listener CANNOT be used in a virtual server section.
+ 	#    * You should probably set "port = 0".
+ 	#    * Any "clients" configuration will be ignored.
+-	#
+-	#  See also proxy.conf, and the "src_ipaddr" configuration entry
+-	#  in the sample "home_server" section.  When you specify the
+-	#  source IP address for packets sent to a home server, the
+-	#  proxy listeners are automatically created.
+ 
+ 	#  IP address on which to listen.
+ 	#  Allowed values are:
+@@ -450,18 +441,6 @@
+ 	#
+ 	auth_badpass = no
+ 	auth_goodpass = no
+-
+-	#  Log additional text at the end of the "Login OK" messages.
+-	#  for these to work, the "auth" and "auth_goopass" or "auth_badpass"
+-	#  configurations above have to be set to "yes".
+-	#
+-	#  The strings below are dynamically expanded, which means that
+-	#  you can put anything you want in them.  However, note that
+-	#  this expansion can be slow, and can negatively impact server
+-	#  performance.
+-	#
+-#	msg_goodpass = ""
+-#	msg_badpass = ""
+ }
+ 
+ #  The program to execute to do concurrency checks.
+@@ -520,8 +499,6 @@
+ 	#  packet.  If the server responds, it must be alive, and the
+ 	#  NAS can start using it for real requests.
+ 	#
+-	#  See also raddb/sites-available/status
+-	#
+ 	status_server = yes
+ }
+ 
+@@ -620,23 +597,6 @@
+ 	min_spare_servers = 3
+ 	max_spare_servers = 10
+ 
+-	#  When the server receives a packet, it places it onto an
+-	#  internal queue, where the worker threads (configured above)
+-	#  pick it up for processing.  The maximum size of that queue
+-	#  is given here.
+-	#
+-	#  When the queue is full, any new packets will be silently
+-	#  discarded.
+-	#
+-	#  The most common cause of the queue being full is that the
+-	#  server is dependent on a slow database, and it has received
+-	#  a large "spike" of traffic.  When that happens, there is
+-	#  very little you can do other than make sure the server
+-	#  receives less traffic, or make sure that the database can
+-	#  handle the load.
+-	#
+-#	max_queue_size = 65536
+-
+ 	#  There may be memory leaks or resource allocation problems with
+ 	#  the server.  If so, set this value to 300 or so, so that the
+ 	#  resources will be cleaned up periodically.
+@@ -697,7 +657,7 @@
+ 	#  Include another file that has the SQL-related configuration.
+ 	#  This is another file only because it tends to be big.
+ 	#
+-#	$INCLUDE sql.conf
++	$INCLUDE sql.conf
+ 
+ 	#
+ 	#  This module is an SQL enabled version of the counter module.
+@@ -709,12 +669,15 @@
+ 	#  totally dependent on the SQL module to process Accounting
+ 	#  packets.
+ 	#
+-#	$INCLUDE sql/mysql/counter.conf
+-
++	$INCLUDE sql/mysql/counter.conf
+ 	#
+ 	#  IP addresses managed in an SQL table.
+ 	#
+-#	$INCLUDE sqlippool.conf
++	#$INCLUDE sqlippool.conf
++
++	# OTP token support.  Not included by default.
++	# $INCLUDE otp.conf
++
+ }
+ 
+ # Instantiation
+@@ -775,6 +738,9 @@
+ 	#	sql1
+ 	#	sql2
+ 	#}
++	sql
++	chillispot_max_bytes
++        noresetcounter
+ }
+ 
+ ######################################################################
+@@ -788,31 +754,23 @@
+ 
+ ######################################################################
+ #
+-#	Load virtual servers.
+-#
+-#	This next $INCLUDE line loads files in the directory that
+-#	match the regular expression: /[a-zA-Z0-9_.]+/
++#	As of 2.0.0, the "authorize", "authenticate", etc. sections
++#	are in separate configuration files, per virtual host.
+ #
+-#	It allows you to define new virtual servers simply by placing
+-#	a file into the raddb/sites-enabled/ directory.
+-#
+-$INCLUDE sites-enabled/
++######################################################################
+ 
+ ######################################################################
+ #
+-#	All of the other configuration sections like "authorize {}",
+-#	"authenticate {}", "accounting {}", have been moved to the
+-#	the file:
++#	Include all enabled virtual hosts.
+ #
+-#		raddb/sites-available/default
++#	The following directory is searched for files that match
++#	the regex:
+ #
+-#	This is the "default" virtual server that has the same
+-#	configuration as in version 1.0.x and 1.1.x.  The default
+-#	installation enables this virtual server.  You should
+-#	edit it to create policies for your local site.
++#		/[a-zA-Z0-9_.]+/
+ #
+-#	For more documentation on virtual servers, see:
++#	The files are then included here, just as if they were cut
++#	and pasted into this file.
+ #
+-#		raddb/sites-available/README
++#	See "sites-enabled/default" for some additional documentation.
+ #
+-######################################################################
++$INCLUDE sites-enabled/

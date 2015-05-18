@@ -1,0 +1,79 @@
+--- addons/chan_mobile.c.org	2012-05-28 17:22:06.000000000 +0000
++++ addons/chan_mobile.c	2012-06-06 16:45:30.270238143 +0000
+@@ -4041,6 +4041,8 @@
+ 
+ static void *do_discovery(void *data)
+ {
++	char addr[19] = {0};
++	int port;
+ 
+ 	struct adapter_pvt *adapter;
+ 	struct mbl_pvt *pvt;
+@@ -4052,8 +4054,30 @@
+ 				AST_RWLIST_RDLOCK(&devices);
+ 				AST_RWLIST_TRAVERSE(&devices, pvt, entry) {
+ 					ast_mutex_lock(&pvt->lock);
++					port = pvt->rfcomm_port;
++					if (port == 0) {
++						ba2str(&pvt->addr, addr);
++						switch(pvt->type) {
++							case MBL_TYPE_PHONE:
++								port = sdp_search(addr, HANDSFREE_AGW_PROFILE_ID);
++								break;
++							case MBL_TYPE_HEADSET:
++								port = sdp_search(addr, HEADSET_PROFILE_ID);
++								break;
++							default:
++								ast_verb(3, "Bluetooth Device %s seems to be neither a headset nor a phone.\n", pvt->id);
++								break;
++						}
++
++						if (port != 0) {
++							ast_verb(3, "Bluetooth Device %s uses port %d for communication.\n", pvt->id, port);
++						}
++						else {
++							ast_verb(3, "Bluetooth Device %s: port auto-detect failed.\n", pvt->id);
++						}
++					}
+ 					if (!adapter->inuse && !pvt->connected && !strcmp(adapter->id, pvt->adapter->id)) {
+-						if ((pvt->rfcomm_socket = rfcomm_connect(adapter->addr, pvt->addr, pvt->rfcomm_port)) > -1) {
++						if ((pvt->rfcomm_socket = rfcomm_connect(adapter->addr, pvt->addr, port)) > -1) {
+ 							if (start_monitor(pvt)) {
+ 								pvt->connected = 1;
+ 								adapter->inuse = 1;
+@@ -4265,11 +4289,21 @@
+ 	}
+ 
+ 	address = ast_variable_retrieve(cfg, cat, "address");
++	if (ast_strlen_zero(address)) {
++		ast_log(LOG_ERROR, "Skipping device %s. Missing required address setting.\n", cat);
++		goto e_return;
++	}
++
+ 	port = ast_variable_retrieve(cfg, cat, "port");
++	if (ast_strlen_zero(port)) {
++		ast_debug(1, "Port for device %s not specified, using run-time detection.\n", cat);
++	}
++/*
+ 	if (ast_strlen_zero(port) || ast_strlen_zero(address)) {
+ 		ast_log(LOG_ERROR, "Skipping device %s. Missing required port or address setting.\n", cat);
+ 		goto e_return;
+ 	}
++*/
+ 
+ 	/* create and initialize our pvt structure */
+ 	if (!(pvt = ast_calloc(1, sizeof(*pvt)))) {
+@@ -4291,7 +4325,12 @@
+ 	str2ba(address, &pvt->addr);
+ 	pvt->timeout = -1;
+ 	pvt->rfcomm_socket = -1;
+-	pvt->rfcomm_port = atoi(port);
++	if (ast_strlen_zero(port)) {
++		pvt->rfcomm_port = 0;
++	}
++	else {
++		pvt->rfcomm_port = atoi(port);
++	}
+ 	pvt->sco_socket = -1;
+ 	pvt->monitor_thread = AST_PTHREADT_NULL;
+ 	pvt->ring_sched_id = -1;

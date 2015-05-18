@@ -1,0 +1,199 @@
+#!/bin/bash
+#
+SCRIPT_COMMAND=$1
+SCRIPT_ACTION=$2
+RADIO_FREQ=$3
+SCRIPT_ARGS_ENTERED=$#
+SCRIPT_ARGS_4_START=3
+SCRIPT_ARGS_4_STOP=2
+
+RADIO_LOCATION="Kampala(Uganda)"
+LOG_DIR=/var/log
+LOG_FILE=$LOG_DIR/fmradio_streaming.log
+
+FM_RADIO_CMD=/usr/bin/fm
+FM_RADIO_CMD_OPTS='-q'
+FM_RADIO_DEV=/dev/radio1
+FM_RADIO_VOL=100
+FM_RADIO_OUTPUT=/var/tmp/fmradio.wav
+
+PULSE_DEV=`pactl list | grep -A2 '^Source #' | grep 'Name: .*\.monitor$' | awk '{print $NF}' | tail -1`
+SAMPLE_RATE=43000
+
+VLC_CMD=/usr/bin/cvlc
+VLC_OPTIONS='-I http --daemon --no-video --no-sout-display-video --verbose 2'
+
+WAIT_PERIOD=20
+
+HOST_IP_ADDRESS=`hostname -i`
+
+WIRELESS_DEV=`iw dev | grep Interface | awk {'print $2'} | head -n 1`
+ip addr show $WIRELESS_DEV | grep state | grep DOWN > /dev/null 2>&1
+WIRELESS_DEV_STATE=$?
+WIRELESS_TUNNEL_DEV=tun0
+
+DST_IP_WIRED=$HOST_IP_ADDRESS
+
+DST_IP_WIRELESS_DEFAULT=172.16.0.1
+# Check existence of WiFi device
+if [ "x$WIRELESS_DEV" = "x" ] || [ "$WIRELESS_DEV_STATE" = "0" ];
+then
+# Give arbirary wiFi Address
+DST_IP_WIRELESS=$DST_IP_WIRELESS_DEFAULT
+else
+DST_IP_WIRELESS=`ip addr show $WIRELESS_TUNNEL_DEV | grep inet | awk {'print $2'} | head -1 | cut -d / -f1`
+fi
+
+DST_PORT_WIRED=8090
+DST_PORT_WIRELESS=1735
+
+STREAM_TITLE="title='JambulaRadio',author=FM-$RADIO_FREQ-Radio-$RADIO_LOCATION,copyright=2014-2015-Jambula-Labs-All-rights-reserved,comment=Broadcasting-Live-from-JambulaTV,rating=PG14"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+usage () {
+case "$SCRIPT_ACTION" in
+start)
+if [ "$SCRIPT_ARGS_ENTERED" != "$SCRIPT_ARGS_4_START" ]; 
+then
+clear
+echo "Usage:  ./`basename $0` [play|record|stream] [start] [Frequency e.g.101.3] 
+"
+exit 1
+fi
+;;
+stop)
+if [ "$SCRIPT_ARGS_ENTERED" != "$SCRIPT_ARGS_4_STOP" ]; 
+then
+clear
+echo "Usage:  ./`basename $0` [play|record|stream] [stop]
+"
+exit 1
+fi
+;;
+*)
+clear
+echo "Usage:  ./`basename $0` [play|record|stream] [start|stop] [Frequency e.g.101.3] 
+"
+exit 1
+;;
+esac
+}
+
+unmute_radio () {
+$FM_RADIO_CMD $FM_RADIO_CMD_OPTS -d $FM_RADIO_DEV on
+}
+
+mute_radio () {
+$FM_RADIO_CMD $FM_RADIO_CMD_OPTS -d $FM_RADIO_DEV off
+}
+
+play_radio () {
+unmute_radio
+$FM_RADIO_CMD $FM_RADIO_CMD_OPTS -d $FM_RADIO_DEV -T forever $RADIO_FREQ $FM_RADIO_VOL > /dev/null 2>&1 &
+}
+
+capture_radio () {
+# tune
+play_radio
+# record
+parec -d $PULSE_DEV | sox -t raw -r $SAMPLE_RATE -e signed -L -b 16 -c 2 - $FM_RADIO_OUTPUT > /dev/null 2>&1 &
+}
+
+wait_for_audio () {
+sleep $WAIT_PERIOD
+}
+
+stream_radio () {
+$VLC_CMD $VLC_OPTIONS $FM_RADIO_OUTPUT --sout '#duplicate{dst=standard{access=http,mux='asf'{'$STREAM_TITLE'},dst='$DST_IP_WIRED':'$DST_PORT_WIRED'},dst=standard{access=http,mux='asf'{'$STREAM_TITLE'},dst='$DST_IP_WIRELESS':'$DST_PORT_WIRELESS'}"}' > $LOG_FILE 2>&1 &
+}
+
+pid_fm () {
+PID_FM=`ps auxw | grep fm | grep "$FM_RADIO_DEV" | awk {'print $2'}`
+}
+
+pid_parec () {
+PID_PAREC=`ps auxw | grep parec | grep "$PULSE_DEV" | awk {'print $2'}`
+}
+
+pid_sox () {
+PID_SOX=`ps auxw | grep sox | grep "$FM_RADIO_OUTPUT" | awk {'print $2'}`
+}
+
+pid_vlc () {
+PID_VLC=`ps auxw | grep vlc | grep "dst=standard" | awk {'print $2'}`
+}
+
+stop_radio () {
+mute_radio
+pid_fm
+kill $PID_FM > /dev/null 2>&1
+}
+
+stop_capture () {
+pid_parec
+kill $PID_PAREC $PID_SOX > /dev/null 2>&1
+stop_radio
+}
+
+stop_stream () {
+pid_vlc
+pid_fm
+kill $PID_VLC > /dev/null 2>&1
+stop_capture
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+usage
+
+# Start 
+# *****
+if [ "$SCRIPT_ACTION" = "start" ];
+then
+# Start per command specified
+case $SCRIPT_COMMAND in
+# play
+play)
+play_radio 
+;;
+# record
+record)
+capture_radio
+;;
+# stream
+stream)
+capture_radio
+wait_for_audio 
+stream_radio
+;;
+esac
+fi
+
+# Stop
+# ****
+if [ "$SCRIPT_ACTION" = "stop" ];
+then
+# Stop per command specified
+case $SCRIPT_COMMAND in 
+# Stop radio
+play)
+stop_radio
+;;
+# Stop record
+record)
+stop_capture
+;;
+# Stop stream
+stream)
+stop_stream 
+;;
+esac
+fi

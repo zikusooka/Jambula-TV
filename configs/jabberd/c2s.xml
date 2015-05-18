@@ -1,0 +1,137 @@
+<c2s>
+  <id>c2s</id>
+
+  <pidfile>/var/lib/jabberd/pid/c2s.pid</pidfile>
+
+  <router>
+    <ip>127.0.0.1</ip>            
+    <port>5347</port>            
+    <user>jabberd</user>          
+    <pass>JABBERD_PASSWORD_CHANGE_ME</pass>           
+    <!--
+    <pemfile>/etc/jabberd/server.pem</pemfile>
+    -->
+    <retry>
+      <init>3</init>
+      <lost>3</lost>
+      <sleep>2</sleep>
+    </retry>
+  </router>
+
+    <log type='file'> <!-- "syslog", "file" or "stdout" -->
+    <file>/var/log/JambulaTV/jabberd/c2s.log</file>
+  </log>
+
+  <local>
+      <id register-enable='mu'>JambulaTV</id>
+    <ip>0.0.0.0</ip>
+    <port>5222</port>
+    <ssl-port>5223</ssl-port>
+    <!--
+    <pemfile>/etc/jabberd/server.pem</pemfile>
+    -->
+    <!--
+    <verify-mode>7</verify-mode>
+    -->
+    <!--
+    <cachain>/etc/jabberd/client_ca_certs.pem</cachain>  
+    -->
+  </local>
+
+  <io>
+    <max_fds>1024</max_fds>
+    <limits>
+      <bytes>0</bytes>
+      <stanzas>1000</stanzas>
+      <connects>0</connects>
+      <stanzasize>65535</stanzasize>
+    </limits>
+    <!--
+    <compression/>
+    -->
+    <access>
+      <order>allow,deny</order>
+      <!--
+      <allow ip='127.0.0.0' mask='255.0.0.0'/>
+      -->
+      <!-- Allow a single host -->
+      <!--
+      <allow ip='12.34.56.78'/>
+      -->
+      <!-- Deny a network or a host -->
+      <!--
+      <deny ip='127.0.0.1' mask='255.0.0.0'/>
+      <deny ip='87.65.43.21'/>
+      -->
+    </access>
+
+    <check>
+      <interval>0</interval>
+      <idle>0</idle>
+      <keepalive>0</keepalive>
+    </check>
+  </io>
+
+  <stats>
+    <!--
+    <packet>/var/lib/jabberd/stats/c2s.packets</packet>
+    -->
+  </stats>
+
+  <pbx>
+    <!--
+    <pipe>/var/lib/jabberd/run/pbx</pipe>
+    -->
+  </pbx>
+
+  <authreg>
+    <path>LIBDIR/jabberd</path>
+    <module>mysql</module>
+    <register> <enable/> </register>
+    <mechanisms>
+      <traditional>
+        <plain/>
+        <digest/>
+      </traditional>
+
+      <sasl>
+        <plain/>
+        digest-md5 disabled 
+        <!--
+        <anonymous/>
+        <gssapi/>
+        -->
+      </sasl>
+    </mechanisms>
+
+    <ssl-mechanisms>
+      <!-- it's advisable that you disable plain in the above
+           <mechanisms/> section -->
+      <traditional>
+        <plain/>
+      </traditional>
+
+      <sasl>
+        <plain/>
+        <external/>
+      </sasl>
+
+    </ssl-mechanisms>
+
+    <mysql>
+      <host>localhost</host>
+      <port>3306</port>
+      <dbname>jabberd2</dbname>
+      <user>jabberd2</user>
+      <pass>JABBERD_PASSWORD_CHANGE_ME</pass>
+      <password_type>
+        <!-- only one may be enabled here -->
+        <plaintext/>
+        <!-- use crypt(3)ed passwords
+        <crypt/>
+        -->
+      </password_type>
+    </mysql>
+    </authreg>
+
+</c2s>

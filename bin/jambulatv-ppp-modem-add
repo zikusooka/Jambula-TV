@@ -1,0 +1,108 @@
+#!/bin/sh
+exit
+#
+# Change these settings if you know what you're doing!
+DNS_TUNNEL=none #none|dns2tcp|iodine
+VPN_TUNNEL=none #none|openvpn
+VPN_TUNNEL_DEV=tun1
+VPN_TUNNEL_IP=10.8.0.5
+OPENVPN_LINK=n
+
+# Fixed Variables
+PPP_SCRIPTS_DIR=/usr/bin
+LOGGING_DIR=/var/log/JambulaTV
+PPP_DIAL_SCRIPT=$PPP_SCRIPTS_DIR/jambulatv-ppp-dialer
+MODEM_ISP_INIT_SCRIPT=$PPP_SCRIPTS_DIR/jambulatv-ppp-init
+PPP_LOG_FILE=$LOGGING_DIR/ppp-dialer.log
+PPP_VARIABLES_FILE=/tmp/ppp-connected-variables
+DNS2TCP_CLIENT_SCRIPT=/usr/bin/jambulatv-dns2tcp_client 
+IODINE_CLIENT_SCRIPT=/usr/bin/jambulatv-iodine_client
+OPENVPN_CLIENT_SCRIPT=/usr/bin/jambulatv-openvpn-client
+ISP_FILE=/etc/JambulaTV/internet-mobile-usb.cfg
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+# Source modem ISP initialization scripts
+. $MODEM_ISP_INIT_SCRIPT
+
+# Identify ISP using MCC code
+query_mnc_code
+
+case $MNC_CODE in
+# Airtel
+01)
+OPERATOR=AIRTEL
+;;
+22)
+OPERATOR=AIRTEL
+;;
+# Vodafine
+06)
+OPERATOR=VODAFONE
+;;
+# MTN
+10)
+OPERATOR=MTN
+;;
+# UTL
+11)
+OPERATOR=UTL
+;;
+# Africell
+14)
+OPERATOR=ORANGE
+;;
+# SMART
+18)
+OPERATOR=SMART
+;;
+# SMILE
+33)
+OPERATOR=SMILE
+;;
+# K2
+44)
+OPERATOR=K2
+;;
+esac
+
+
+# Test to see if ISP credentials file exists 
+if [ -e "$ISP_FILE" ];
+then
+# Remove old ISP in ISP file
+sed -i '/ISP_NAME/d' $ISP_FILE
+# Replace & Insert Current ISP in ISP file
+echo "ISP_NAME=$OPERATOR" >> $ISP_FILE
+#
+# Set ISP login credentials
+# --------------------------
+ISP_NAME=`grep ISP_NAME $ISP_FILE | sed '/^#/d' | cut -d = -f2 | sed 's/ //g'`
+USERNAME=`grep USERNAME $ISP_FILE | sed '/^#/d' | cut -d = -f2 | sed 's/ //g'`
+PASSWORD=`grep PASSWORD $ISP_FILE | sed '/^#/d' | cut -d = -f2 | sed 's/ //g'`
+ACCOUNT_PHONE_NUMBER=`grep ACCOUNT_PHONE_NUMBER $ISP_FILE | sed '/^#/d' | cut -d = -f2 | sed 's/ //g'`
+ACCOUNT_ACCESS_CODE=`grep ACCOUNT_ACCESS_CODE $ISP_FILE | sed '/^#/d' | cut -d = -f2 | sed 's/ //g'`
+else
+/usr/bin/logger "[JambulaTV-PPP-Modem-Add]: Could not locate the file named $ISP_FILE. Please create it first!"
+exit 1
+fi
+
+
+#
+# Start Internet processes
+# -------------------------
+# Create PPP Log directory if non-existent
+[ -d $LOGGING_DIR ] || /usr/bin/mkdir -p $LOGGING_DIR
+# Connect to the Internet
+$PPP_DIAL_SCRIPT $ISP_NAME $USERNAME $PASSWORD 1 $ACCOUNT_PHONE_NUMBER $ACCOUNT_ACCESS_CODE $VPN_TUNNEL $DNS_TUNNEL > $PPP_LOG_FILE 2>&1
+# Source PPP connected variables - needed for tunnel scripts
+[ -f $PPP_VARIABLES_FILE ] && . $PPP_VARIABLES_FILE
+# Start iodine tunnel if activated
+[ "$DNS_TUNNEL" != "iodine" ] || $IODINE_CLIENT_SCRIPT start 
+# Start dns2tcp tunnel if activated
+[ "$DNS_TUNNEL" != "dns2tcp" ] || $DNS2TCP_CLIENT_SCRIPT $DNS2TCP_RESOURCE $DNS2TCP_LOCAL_PORT 
+# Start OpenVPN link if activated
+[ "$OPENVPN_LINK" != "y" ] || $OPENVPN_CLIENT_SCRIPT start $VPN_TUNNEL_DEV $VPN_TUNNEL_IP

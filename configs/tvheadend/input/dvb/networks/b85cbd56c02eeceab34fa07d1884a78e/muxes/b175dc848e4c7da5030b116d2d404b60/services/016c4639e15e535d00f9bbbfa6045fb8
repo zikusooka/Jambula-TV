@@ -1,0 +1,37 @@
+{
+	"sid": 1650,
+	"lcn": 32,
+	"lcn2": 0,
+	"svcname": "Select Sport 2",
+	"provider": "MCA",
+	"dvb_servicetype": 1,
+	"prefcapid": 0,
+	"prefcapid_lock": 0,
+	"enabled": true,
+	"pcr": 1652,
+	"pmt": 1651,
+	"stream": [
+		{
+			"pid": 942,
+			"type": "CA",
+			"position": 262144,
+			"caidlist": [
+				{
+					"caid": 1544
+				}
+			]
+		},
+		{
+			"pid": 1652,
+			"type": "H264",
+			"position": 0
+		},
+		{
+			"pid": 1653,
+			"type": "AAC",
+			"position": 0,
+			"language": "eng",
+			"audio_type": 0
+		}
+	]
+}

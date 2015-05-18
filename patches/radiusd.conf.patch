@@ -1,0 +1,41 @@
+--- radiusd.conf.orig	2014-08-22 15:37:45.966969470 +0300
++++ radiusd.conf	2014-08-26 20:47:36.335122591 +0300
+@@ -262,7 +262,6 @@
+ 	#  NOT used.
+ 	#
+ 	file = ${logdir}/radius.log
+-
+ 	#
+ 	#  If this configuration parameter is set, then log messages for
+ 	#  a *request* go to this file, rather than to radius.log.
+@@ -415,8 +414,8 @@
+ 	#  member.  This can allow for some finer-grained access
+ 	#  controls.
+ 	#
+-#	user = radius
+-#	group = radius
++	user = radiusd
++	group = radiusd
+ 
+ 	#  Core dumps are a bad thing.  This should only be set to
+ 	#  'yes' if you're debugging a problem with the server.
+@@ -483,7 +482,7 @@
+ 	#  and may not reflect patches applied to libssl by
+ 	#  distribution maintainers.
+ 	#
+-	allow_vulnerable_openssl = no
++	allow_vulnerable_openssl = yes
+ }
+ 
+ # PROXY CONFIGURATION
+@@ -712,6 +711,10 @@
+ 	#	sql1
+ 	#	sql2
+ 	#}
++	
++	# Jambula Labs - SQL counters
++	chillispot_max_bytes
++	noresetcounter
+ }
+ 
+ ######################################################################

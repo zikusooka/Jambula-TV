@@ -1,0 +1,15 @@
+[Unit]
+Description=Squid caching proxy
+After=syslog.target network.target nss-lookup.target
+
+[Service]
+Type=forking
+LimitNOFILE=16384
+ExecStartPre=/usr/bin/jambulatv-squid-cache-swap
+ExecStart=/usr/sbin/squid -f /etc/squid/squid.conf
+ExecReload=/usr/sbin/squid -k reconfigure -f /etc/squid/squid.conf
+ExecStop=/usr/sbin/squid -k shutdown -f /etc/squid/squid.conf
+PIDFile=/var/run/squid.pid
+
+[Install]
+WantedBy=multi-user.target

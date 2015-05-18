@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# Change these settings if you know what you're doing!
+DNS_TUNNEL=none #none|dns2tcp|iodine
+VPN_TUNNEL=none #none|openvpn
+OPENVPN_LINK=n
+
+# Fixed Variables
+LOGGING_DIR=/var/log/JambulaTV
+PPP_DIAL_SCRIPT=/usr/bin/jambulatv-ppp-dialer
+PPP_LOG_FILE=$LOGGING_DIR/ppp-dialer.log
+DNS2TCP_CLIENT_SCRIPT=/usr/bin/jambulatv-dns2tcp_client 
+IODINE_CLIENT_SCRIPT=/usr/bin/jambulatv-iodine_client
+OPENVPN_CLIENT_SCRIPT=/usr/bin/jambulatv-openvpn-client
+SSH_PID=`ps auxw | grep ssh | grep localhost | awk {'print $2'}`
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+#
+# Stop Internet processes
+# -----------------------
+# Kill ppp
+killall pppd || killall pppd
+# kill pppd script
+killall `basename $PPP_DIAL_SCRIPT`
+#
+# Stop iodine tunnel
+[ "$DNS_TUNNEL" != "iodine" ] || $IODINE_CLIENT_SCRIPT stop 
+# Stop dns2tcp tunnel
+if [ "$DNS_TUNNEL" = "dns2tcp" ];
+then
+# kill ssh pid
+kill $SSH_PID || kill $SSH_PID
+# Kill dns2tcpc
+killall dns2tcpc || killall dns2tcpc
+fi
+# Stop OpenVPN link
+[ "$OPENVPN_LINK" != "y" ] || $OPENVPN_CLIENT_SCRIPT stop 

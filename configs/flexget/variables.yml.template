@@ -1,0 +1,44 @@
+trakt:
+  username: TRAKT_USERNAME
+
+global:
+  rtorrent_magnet: TORRENTS_WATCH_DIRECTORY
+
+email:
+  from: torrents@DOMAIN_NAME
+  to: EMAIL_ADDRESS
+  subject: "[JambulaTV] - A new flexget entry has been added"
+  smtp_username: GMAIL_ADDRESS
+  smtp_password: GMAIL_PASSWORD
+
+tv:
+  path: PROJECT_PARTITION # TV path for free space calculations
+  exists_series: TORRENTS_COMPLETED_DIRECTORY
+  include: FLEXGET_CONFIG_DIR/tvseries.yml
+  download: TORRENTS_WATCH_DIRECTORY
+  day_of_week: sun,mon,tue,wed,thu,fri,sat
+  hour: 2
+  minute: 1
+
+movies:
+  path: PROJECT_PARTITION # Movies path for free space calculations
+  exists_movie: TORRENTS_COMPLETED_DIRECTORY
+  download: TORRENTS_WATCH_DIRECTORY
+  day_of_week: sun,mon,tue,wed,thu,fri,sat
+  hour: 3
+  minute: 5
+
+netcasts:
+  path: PROJECT_PARTITION # Netcasts path for free space calculations
+  exists: PROJECT_PARTITION
+  include: FLEXGET_CONFIG_DIR/netcasts.yml
+  logfile: PROJECT_SYSTEM_LOG_DIR/flexget/netcasts.log
+  download: NETCASTS_DIRECTORY
+  download_script: SCRIPTS_DIR/get_netcasts
+  day_of_week: sun,mon,tue,wed,thu,fri,sat
+  hour: 5
+  minute: 15
+
+wget:
+  logfile: PROJECT_SYSTEM_LOG_DIR/flexget/wget.log
+  limit_rate: 14k

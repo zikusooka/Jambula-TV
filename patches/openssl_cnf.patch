@@ -1,0 +1,40 @@
+--- openssl.cnf.orig	2012-07-12 12:55:30.000000000 +0300
++++ openssl.cnf	2013-06-24 18:27:00.383087017 +0300
+@@ -127,30 +127,32 @@
+ 
+ [ req_distinguished_name ]
+ countryName			= Country Name (2 letter code)
+-countryName_default		= XX
++countryName_default		= UG
+ countryName_min			= 2
+ countryName_max			= 2
+ 
+ stateOrProvinceName		= State or Province Name (full name)
+-#stateOrProvinceName_default	= Default Province
++stateOrProvinceName_default	= Kampala
+ 
+ localityName			= Locality Name (eg, city)
+-localityName_default	= Default City
++localityName_default		= Kampala 
+ 
+ 0.organizationName		= Organization Name (eg, company)
+-0.organizationName_default	= Default Company Ltd
++0.organizationName_default	= Jambula Labs
+ 
+ # we can do this but it is not needed normally :-)
+ #1.organizationName		= Second Organization Name (eg, company)
+ #1.organizationName_default	= World Wide Web Pty Ltd
+ 
+ organizationalUnitName		= Organizational Unit Name (eg, section)
+-#organizationalUnitName_default	=
++organizationalUnitName_default	= JambulaTV Services
+ 
+ commonName			= Common Name (eg, your name or your server\'s hostname)
++commonName_default		= JambulaTV
+ commonName_max			= 64
+ 
+ emailAddress			= Email Address
++emailAddress_default		= root@JambulaTV
+ emailAddress_max		= 64
+ 
+ # SET-ex3			= SET extension number 3

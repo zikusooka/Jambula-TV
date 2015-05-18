@@ -1,0 +1,144 @@
+#!/bin/sh
+clear
+
+
+ASTERISK_CMD=/usr/sbin/asterisk
+
+
+
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+add_callerid_2_addressbook () {
+# Ask for Phone Numbers
+clear
+echo "Enter The Phone Number(s) you want to add - Separate multiple numbers with a space:
+"
+read TELEPHONE_NUMBERS
+
+# Act on Number(s) entered
+for PHONE_NUMBER in $TELEPHONE_NUMBERS
+do
+
+# Ask for Full Names
+clear
+echo "Enter the Caller ID (Full Names) for the phone number [$PHONE_NUMBER]"
+read CALLER_ID_NAME
+
+# Add Name to PhoneBook
+$ASTERISK_CMD -rx "database put cidname $PHONE_NUMBER \"$CALLER_ID_NAME\""
+
+done
+
+}
+
+del_callerid_2_addressbook () {
+# Ask for Phone Numbers
+clear
+echo "Enter The Phone Number(s) you wish to delete - Separate multiple numbers with a space:
+"
+read TELEPHONE_NUMBERS
+
+# Act on Number(s) entered
+for PHONE_NUMBER in $TELEPHONE_NUMBERS
+do
+
+# Add Name to PhoneBook
+$ASTERISK_CMD -rx "database del cidname $PHONE_NUMBER"
+
+done
+
+}
+
+ask_4_phone_db () {
+# Ask for Telephone Number
+##########################
+clear
+echo "Enter The Phone Number(s) - Separate multiple numbers with a space:
+"
+read TELEPHONE
+
+
+clear
+echo "What do you want to do to the phone number(s) [$TELEPHONE]?
+
+1. Add to the $FAMILY database
+
+2. Remove from the $FAMILY database
+
+"
+read ACTION
+}
+
+action_cmd_db () {
+clear
+case $ACTION in
+1)
+for NUMBER in $TELEPHONE
+do
+$ASTERISK_CMD -rx "database put $FAMILY $NUMBER 1"
+done
+;;
+2)
+for NUMBER in $TELEPHONE
+do
+$ASTERISK_CMD -rx "database del $FAMILY $NUMBER"
+done
+;;
+*)
+;;
+esac
+}
+
+
+
+
+
+
+##########
+# SCRIPT #
+##########
+
+# Ask for database
+##################
+clear
+echo "Which database do you want to act on?  
+
+1. PBXOFF_ANYTIME (Bypass PBX System when call comes in)
+
+2. PBXON (Send call to PBX System)
+
+3. PBXON_XGF (Send call to PBX Annoying prompts)
+
+4. Phone Book
+"
+read DATABASE
+case $DATABASE in
+1)
+FAMILY=PBXOFF_ANYTIME
+ask_4_phone_db
+action_cmd_db
+;;
+2)
+FAMILY=PBXOFF
+ask_4_phone_db
+action_cmd_db
+;;
+3)
+FAMILY=PBXON_XGF
+ask_4_phone_db
+action_cmd_db
+;;
+4)
+add_callerid_2_addressbook
+;;
+*)
+echo "Please pick a number
+"
+exit 
+;;
+esac

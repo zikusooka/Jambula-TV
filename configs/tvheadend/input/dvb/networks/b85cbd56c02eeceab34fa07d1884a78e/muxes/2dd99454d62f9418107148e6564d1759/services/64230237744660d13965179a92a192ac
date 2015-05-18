@@ -1,0 +1,37 @@
+{
+	"sid": 1140,
+	"lcn": 71,
+	"lcn2": 0,
+	"svcname": "One Gospel",
+	"provider": "MCA",
+	"dvb_servicetype": 1,
+	"prefcapid": 0,
+	"prefcapid_lock": 0,
+	"enabled": true,
+	"pcr": 1142,
+	"pmt": 1141,
+	"stream": [
+		{
+			"pid": 994,
+			"type": "CA",
+			"position": 262144,
+			"caidlist": [
+				{
+					"caid": 1544
+				}
+			]
+		},
+		{
+			"pid": 1142,
+			"type": "H264",
+			"position": 0
+		},
+		{
+			"pid": 1143,
+			"type": "AAC",
+			"position": 0,
+			"language": "eng",
+			"audio_type": 0
+		}
+	]
+}

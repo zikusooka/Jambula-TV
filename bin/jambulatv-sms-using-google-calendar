@@ -1,0 +1,47 @@
+#!/bin/sh
+# Variables
+SMS_GOOGLE_CALENDAR_CMD=/usr/bin/google-sms.py
+#
+GMAIL_USERNAME=$1
+GMAIL_PASSWORD=$2
+GMAIL_CALENDER=$3
+#
+SMS_BODY=">>$4<<"
+SMS_TITLE=`hostname -s | cut -d '-' -f1`
+
+
+# Functions
+command_usage(){
+clear
+echo "Usage:  ./`basename $0` [Username] [Password] [Calendar] [SMS Message]
+
+Example:./`basename $0` johndoe mysecret \"meetings\" \"This is a test\"
+"
+}
+
+# Check for correct usage arguments
+if [ "x$1" = "x" ];
+then
+command_usage
+exit 1
+elif [ "x$2" = "x" ];
+then
+command_usage
+exit 1
+elif [ "x$3" = "x" ];
+then
+command_usage
+exit 1
+elif [ "x$4" = "x" ];
+then
+command_usage
+exit 1
+fi
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+# Send SMS vis Google Calendar
+$SMS_GOOGLE_CALENDAR_CMD -e $GMAIL_USERNAME@gmail.com -p $GMAIL_PASSWORD -t "$SMS_TITLE" -l "$SMS_BODY" -c "$GMAIL_CALENDER"

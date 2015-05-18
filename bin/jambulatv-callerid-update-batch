@@ -1,0 +1,48 @@
+#!/bin/sh
+# Create Asterisk PhoneBook using saved VCARD file
+# To get a back up of your phone using gammu and bluetooth. Create .gammurc file in
+# $HOME/.gammurc
+#
+# [gammu]
+# port = MAC ADDRESS
+# connection = blueat
+# synchronizetime = yes
+# logfile = /var/log/gammu 
+
+
+# Variables
+ASTERISK_CMD=/usr/sbin/asterisk
+VCARD_FILE=$@
+NAME_AND_NUMBER_DRAFT=/tmp/phone_number_draft
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+# Usage
+clear
+if [ "x$VCARD_FILE" = "x" ];
+then
+echo "Usage: $(basename $0) [VCARD_FILE_PATH/mybackup.vcf]
+"
+exit 1
+fi
+
+# Dump Name and phone number field combinations to draft file
+grep '^TEL\|^N' $VCARD_FILE | cut -d : -f2 | paste - - -d ";" | tr -d $'\r' > $NAME_AND_NUMBER_DRAFT
+
+# Cycle through phone numbers to match names
+cat $NAME_AND_NUMBER_DRAFT | while read LINE
+do
+CALLER_ID_NUMBER=$(echo $LINE | cut -d ";" -f1)
+
+CALLER_ID_NAME=$(echo $LINE | cut -d ";" -f2)
+
+# Add Record to Asterisk AddressBook
+echo "
+Adding $CALLER_ID_NAME : $CALLER_ID_NUMBER ..."
+# Update database
+$ASTERISK_CMD -rx "database put cidname $CALLER_ID_NUMBER \"$CALLER_ID_NAME\"" 
+
+done

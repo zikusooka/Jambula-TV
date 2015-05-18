@@ -1,0 +1,101 @@
+#!/bin/sh
+PREFIX=/usr
+CONFDIR=/etc
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=$CONFDIR/$PROJECT_NAME
+PROJECT_SYSTEM_SHARE_DIR=$PREFIX/share/$PROJECT_NAME
+
+VLM_VOD_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/vlm
+VLM_VOD_CONFIG_FILE=$VLM_VOD_CONFIG_DIR/vlm.conf
+
+TV_MARKET=kiwatule-north
+TV_CHANNELS_FILE=$PROJECT_SYSTEM_SHARE_DIR/tv/analog/$TV_MARKET-channels
+TV_FREQ_TABLE_FILE=$PROJECT_SYSTEM_SHARE_DIR/tv/analog/$TV_MARKET-frequencies
+PROJECT_TV_STREAMS_LOGO=$PROJECT_SYSTEM_SHARE_DIR/tv/logos/jambulatv-stream.png
+TV_STREAMING_DEVICE=/dev/video1
+
+
+
+# Backup exisiting VoD 4 TV file
+[ ! -e $VLM_VOD_CONFIG_FILE ] || mv -v $VLM_VOD_CONFIG_FILE $VLM_VOD_CONFIG_FILE.backup
+# Query T  Parameters using analogue TV frequency table
+cat $TV_FREQ_TABLE_FILE | while read TV_CHANNEL_PARAMS
+do
+# TV Channel No.
+TV_CHAN=`echo $TV_CHANNEL_PARAMS | sed 's/ //g' | cut -d : -f1 | sed -e "s/'//g"`
+# TV Station Name ie. Set Human Readable channel names
+case $TV_CHAN in
+5)
+TV_STATION=ubc
+;;
+12)
+TV_STATION=nbs
+;;
+13)
+TV_STATION=bukedde1
+;;
+22)
+TV_STATION=ltv
+;;
+25)
+TV_STATION=wbs
+;;
+28)
+TV_STATION=top
+;;
+31)
+TV_STATION=eatv
+;;
+32)
+TV_STATION=citizen
+;;
+40)
+TV_STATION=star
+;;
+42)
+TV_STATION=record
+;;
+43)
+TV_STATION=bukedde2
+;;
+44)
+TV_STATION=chan44
+;;
+54)
+TV_STATION=ntv
+;;
+*)
+TV_STATION=chan$TV_CHAN
+;;
+esac
+#
+# TV Frequency No.
+TV_FREQ=`echo $TV_CHANNEL_PARAMS | sed 's/ //g' | cut -d : -f2 | cut -d , -f1`
+
+
+# Add VoD item
+echo "
+new $TV_STATION vod enabled
+setup $TV_STATION output '#duplicate{dst=\"transcode{vcodec=MP4V,sfilter=logo{file=$PROJECT_TV_STREAMS_LOGO,position=5},acodec=mp3,vb=1024,ab=256,venc=ffmpeg{keyint=80,hurry-up,vt=800000},audio-sync,aenc=ffmpeg,samplerate=44100,deinterlace=blend}\"}'
+setup $TV_STATION mux mp2t
+setup $TV_STATION option input-slave=alsa://hw:1,0 
+setup $TV_STATION option alsa-samplerate=22050
+setup $TV_STATION option v4l2-standard=5
+setup $TV_STATION option v4l2-chroma=I420
+setup $TV_STATION option v4l2-input=0
+setup $TV_STATION option v4l2-audio-input=0
+setup $TV_STATION option v4l2-width=320
+setup $TV_STATION option v4l2-height=240
+setup $TV_STATION option v4l2-tuner=0
+setup $TV_STATION option v4l2-tuner-audio-mode=1
+setup $TV_STATION option sout-mux-caching=2048
+
+setup $TV_STATION option sout-rtp-sap
+setup $TV_STATION option sout-rtp-name=$TV_STATION
+setup $TV_STATION option sout-rtp-cat=LiveTV
+setup $TV_STATION option sout-rtp-proto=tcp
+
+setup $TV_STATION option v4l2-tuner-frequency=$TV_FREQ
+setup $TV_STATION input v4l2://$TV_STREAMING_DEVICE
+" >> $VLM_VOD_CONFIG_FILE
+done

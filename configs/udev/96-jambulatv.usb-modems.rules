@@ -1,0 +1,36 @@
+##########################
+#  JambulaTV udev rules  #
+##########################
+# You need to change ID_SERIAL, ID_VENDOR_ID, ID_MODEL_ID
+# To find those variables, Insert USB modem and then run:
+#
+# udevadm info --query property /sys/class/tty/ttyUSB0
+#
+# 3G USB dongles for Internet connectivity
+#----------------------------------------- 
+#
+# Huawei E3131
+# -------------
+# Add 
+ACTION=="add", ENV{ID_SERIAL}=="HUAWEI_HUAWEI_Mobile", ENV{ID_VENDOR_ID}=="12d1", ENV{ID_MODEL_ID}=="151d", TAG+="systemd", ENV{SYSTEMD_WANTS}+="3g_internet.service"
+#
+# Remove
+ACTION=="remove", ENV{ID_SERIAL}=="HUAWEI_HUAWEI_Mobile", ENV{ID_VENDOR_ID}=="12d1", ENV{ID_MODEL_ID}=="151d", RUN+="/usr/bin/systemctl stop 3g_internet.service"
+#
+#
+# Huawei E173s-2
+# --------------
+# Add 
+ACTION=="add", ENV{ID_SERIAL}=="HUAWEI_HUAWEI_Mobile", ENV{ID_VENDOR_ID}=="12d1", ENV{ID_MODEL_ID}=="1c0b", TAG+="systemd", ENV{SYSTEMD_WANTS}+="3g_internet.service"
+#
+# Remove
+ACTION=="remove", ENV{ID_SERIAL}=="HUAWEI_HUAWEI_Mobile", ENV{ID_VENDOR_ID}=="12d1", ENV{ID_MODEL_ID}=="1c0b", RUN+="/usr/bin/systemctl stop 3g_internet.service"
+#
+#
+# Huawei E160E
+#-------------
+# Add 
+ACTION=="add", ENV{ID_SERIAL_SHORT}=="1234567890ABCDEF", ENV{ID_VENDOR_ID}=="12d1", ENV{ID_MODEL_ID}=="1003", TAG+="systemd", ENV{SYSTEMD_WANTS}+="3g_internet.service"
+#
+# Remove
+ACTION=="remove", ENV{ID_SERIAL}=="HUAWEI_HUAWEI_Mobile", ENV{ID_VENDOR_ID}=="12d1", ENV{ID_MODEL_ID}=="1003", RUN+="/usr/bin/systemctl stop 3g_internet.service"

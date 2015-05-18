@@ -1,0 +1,246 @@
+<sm>
+  <id>sm</id>
+
+  <pidfile>/var/lib/jabberd/pid/sm.pid</pidfile>
+
+  <router>
+    <ip>127.0.0.1</ip>            
+    <port>5347</port>             
+    <user>jabberd</user>         
+    <pass>JABBERD_PASSWORD_CHANGE_ME</pass>    
+    <!--
+    <pemfile>/etc/jabberd/server.pem</pemfile>
+    -->
+    <retry>
+      <init>3</init>
+      <lost>3</lost>
+      <sleep>2</sleep>
+    </retry>
+  </router>
+
+  <log type='file'> <!-- "syslog", "file" or "stdout" -->
+    <file>/var/log/JambulaTV/jabberd/sm.log</file>
+  </log>
+
+  <local>
+    <id>JambulaTV</id>
+  </local>
+
+  <storage>
+    <path>LIBDIR/jabberd</path>
+
+    <driver>mysql</driver>
+
+    <mysql>
+      <host>localhost</host>
+      <port>3306</port>
+      <dbname>jabberd2</dbname>
+      <user>jabberd2</user>
+      <pass>JABBERD_PASSWORD_CHANGE_ME</pass>
+      <transactions/>
+    </mysql>
+  </storage>
+
+  <aci>
+    <acl type='all'>
+      <jid>admin@JambulaTV</jid>
+    </acl>
+
+    <acl type='broadcast'>
+      <jid>announce@JambulaTV</jid>
+    </acl>
+
+    <acl type='messages'>
+      <jid>support@JambulaTV</jid>
+    </acl>
+
+    <acl type='disco'>
+      <jid>webstatus@JambulaTV</jid>
+    </acl>
+  </aci>
+
+  <modules>
+    <path>LIBDIR/jabberd</path>
+    <chain id='sess-start'>
+      <module>status</module>           
+    </chain>
+
+    <chain id='sess-end'>
+      <module>status</module>           
+      <module>iq-last</module>          
+    </chain>
+
+    <chain id='in-sess'>
+      <module>validate</module>        
+      <module>status</module>          
+      <module>privacy</module>         
+      <module>roster</module>           
+      <module>vacation</module>         
+      <module>pep</module>        
+      <module>iq-vcard</module>         
+      <module>iq-ping</module>          
+      <module>iq-private</module>       
+      <module>disco</module>           
+      <module>amp</module>             
+      <module>offline</module>         
+      <module>announce</module>        
+      <module>presence</module>       
+      <module>deliver</module>         
+    </chain>
+
+    <chain id='out-sess'>
+      <module>pep</module>        
+    </chain>
+
+    <chain id='in-router'>
+      <module>session</module>          
+      <module>validate</module>         
+      <module>presence</module>        
+      <module>privacy</module>          
+    </chain>
+   
+    <chain id='out-router'>
+      <module>privacy</module>          
+    </chain>
+    
+    <chain id='pkt-sm'>
+      <module>iq-last</module>          
+      <module>iq-ping</module>         
+      <module>iq-time</module>        
+      <module>iq-version</module>    
+      <module>amp</module>          
+      <module>disco</module>       
+      <module>announce</module>   
+      <module>help</module>            
+      <module>echo</module>           
+      <module>status</module>        
+      <module>presence</module>     
+    </chain>
+
+    <chain id='pkt-user'>
+      <module>roster</module>           
+      <module>presence</module>         
+      <module>iq-vcard</module>         
+      <module>amp</module>             
+      <module>deliver</module>        
+      <module>vacation</module>       
+      <module>offline</module>       
+      <module>iq-last</module>      
+    </chain>
+
+    <chain id='pkt-router'>
+      <module>session</module>         
+      <module>disco</module>          
+    </chain>
+
+    <chain id='user-load'>
+      <module>active</module>           
+      <module>roster</module>          
+      <module>roster-publish</module>  
+      <module>privacy</module>        
+      <module>vacation</module>      
+    </chain>
+
+    <chain id='user-create'>
+      <module>active</module>           
+      <module>template-roster</module>  
+    </chain>
+
+    <chain id='user-delete'>
+      <module>active</module>           
+      <module>announce</module>         
+      <module>offline</module>         
+      <module>privacy</module>        
+      <module>roster</module>        
+      <module>vacation</module>     
+      <module>status</module>      
+      <module>iq-last</module>    
+      <module>iq-private</module>
+      <module>iq-vcard</module>   
+    </chain>
+
+    <chain id='disco-extend'>
+      <module>iq-version</module>       
+      <module>help</module>            
+    </chain>
+  </modules>
+
+  <discovery>
+
+    <identity>
+      <category>server</category>       
+      <type>im</type>                  
+      <name>JambulaTV IM server</name>   
+    </identity>
+
+    <agents/>
+
+    <items>
+      <!-- example entry for a user directory -->
+      <!--
+      <item category='service' type='jud' jid='users.jabber.org' name='Jabber User Directory'/>
+      -->
+      <!-- example entry for a groupchat (conference) service -->
+      <!--
+      <item category='conference' type='public' jid='conference.jabber.org' name='Text conferencing'/>
+      -->
+    </items>
+
+    <serverinfo>
+      <admin-addresses>
+        <value>mailto:xmpp@JambulaTV</value>
+        <value>xmpp:admins@JambulaTV</value>
+      </admin-addresses>
+      <abuse-addresses>
+        <value>mailto:abuse@JambulaTV</value>
+        <value>xmpp:abuse@JambulaTV</value>
+      </abuse-addresses>
+      <feedback-addresses>
+        <value>http://example.org/feedback.php</value>
+      </feedback-addresses>
+      <sales-addresses/>
+      <security-addresses/>
+      <support-addresses/>
+    </serverinfo>
+
+  </discovery>
+
+  <user>
+    <auto-create/>
+    <vcard>
+        <max-field-size>
+            <default>16384</default>
+            <avatar>16384</avatar>
+        </max-field-size>
+    </vcard>
+
+    <template>
+        <active-cache-ttl>60</active-cache-ttl>
+      <roster>/etc/jabberd/templates/roster.xml</roster>
+    </template>
+  </user>
+
+  <offline>
+    <!--
+    <dropmessages/>
+    -->
+    <!--
+    <storeheadlines/>
+    -->
+    <!--
+    <dropsubscriptions/>
+    -->
+    <!--
+    <userquota>500</userquota>
+    -->
+  </offline>
+
+  <roster>
+    <maxitems>100</maxitems>
+  </roster>
+
+  <status>
+    <resource>webstatus</resource>
+  </status>
+
+</sm>

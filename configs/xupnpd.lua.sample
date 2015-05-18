@@ -1,0 +1,85 @@
+--  ------------------------------------------
+--  Jambula - IPTV  - xupnpd.lua template   --
+--  ------------------------------------------
+
+cfg={}
+
+cfg.ssdp_interface='tun0'
+
+cfg.ssdp_loop=1
+
+cfg.ssdp_notify_interval=15
+
+cfg.ssdp_max_age=1800
+
+cfg.http_port=8515
+
+cfg.log_facility='local0'
+
+cfg.daemon=true
+
+cfg.embedded=false
+
+cfg.debug=2
+
+--cfg.udpxy_url='http://MULTICAST_PROXY_IP:4022'
+
+cfg.mcast_interface='WIRELESS_DEV'
+
+cfg.proxy=2
+
+cfg.user_agent='Mozilla/5.0'
+
+cfg.http_timeout=30
+
+cfg.dlna_notify=true
+
+cfg.dlna_subscribe_ttl=1800
+
+cfg.group=true
+
+cfg.sort_files=false
+
+cfg.name='Jambula-IPTV'
+
+cfg.uuid='DEVICE_UUID'
+
+cfg.cache_size=8
+
+cfg.cache_ttl=900
+
+cfg.default_mime_type='mpeg'
+
+cfg.feeds_update_interval=0
+cfg.playlists_update_interval=0
+
+playlist=
+{
+    { 'PLAYLISTS_DIRECTORY', 'Live TV' },
+    { 'USER_TV_SHOWS_DIR', 'TV Series' },
+    { 'USER_MOVIES_DIR', 'Movies' },
+    { 'NETCASTS_DIRECTORY', 'Netcasts' },
+    { 'USER_MUSIC_DIR', 'Music' },
+    { 'USER_PICTURES_DIR', 'Pictures' },
+}
+
+feeds=
+{
+    { 'youtube',        'channel/top_rated',    'YouTube Top Rated' },
+}
+
+-- log ident, pid file end www root
+cfg.version='1.033'
+cfg.log_ident=arg[1] or 'xupnpd'
+cfg.pid_file='/var/run/'..cfg.log_ident..'.pid'
+cfg.www_root='./www/'
+cfg.tmp_path='/tmp/'
+cfg.plugin_path='./plugins/'
+cfg.config_path='./config/'
+cfg.playlists_path='PLAYLISTS_DIRECTORY/'
+--cfg.feeds_path='/tmp/xupnpd-feeds/'
+cfg.ui_path='./ui/'
+cfg.drive=''                    -- reload playlists only if drive state=active/idle, example: cfg.drive='/dev/sda'
+cfg.profiles='./profiles/'      -- device profiles feature
+
+dofile('xupnpd_main.lua')

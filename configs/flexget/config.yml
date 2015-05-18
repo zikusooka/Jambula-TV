@@ -1,0 +1,276 @@
+secrets: variables.yml
+templates:
+
+##########
+# Global #
+# ########
+  global:
+    regexp:
+      reject:
+        - (s|d)ub(s|bed)?\b: {from: title}   # subbed/dubbed/etc videos
+        - \b(duo|tri|quadri|tetra|penta)logy\b: {from: title}   # Series
+        - \b3-?D\b: {from: title}   # 3D displays
+        - \btrailer\b: {from: title}   # Trailers matched as movies
+        - \bR5\b: {from: title}   # Poor quality types
+        - \bWEBSCR\b: {from: title}   # Features like "720p"
+        - \bscreener\b: {from: title}
+        - \bTS\b: {from: title}
+        - \bCam\b: {from: title}
+        - '{C_P}': {from: title}   # Poor quality releases
+        - TrTd TeaM: {from: title}
+        - \[TNTVillage\]: {from: title}
+        - \[facepalm\]: {from: title}
+        - \bASAP\b: {from: title}
+        - \bNL.Subs.DutchReleaseTeam\b: {from: title}
+        
+    torrent_alive: yes # 10 # Require at least 40 seeds of any torrent
+    content_filter:
+      require:
+        - '*.avi'
+        - '*.mkv'
+        - '*.mpg'
+        - '*.mpeg'
+        - '*.mp4'
+        - '*.r0*'
+        - '*.part0*'
+      reject: 
+        - 'password.txt'
+        - 'password.zip'
+        - '*.wmv'
+    domain_delay:
+      bt-chat.com: 5 seconds
+      torrentz.eu: 5 seconds
+    rtorrent_magnet: '{{secrets.global.rtorrent_magnet}}'
+    email:
+      from: '{{secrets.email.from}}'
+      to: '{{secrets.email.to}}'
+      subject: '{{secrets.email.subject}}'
+      smtp_host: smtp.gmail.com
+      smtp_port: 587
+      smtp_login: true
+      smtp_username: '{{secrets.email.smtp_username}}'
+      smtp_password: '{{secrets.email.smtp_password}}'
+      smtp_tls: yes
+
+
+
+##############
+#  Templates #
+##############
+
+  # TV
+  # --
+  tv:
+    content_size:
+      max: 450
+    free_space:
+      path: '{{secrets.tv.path}}'
+      space: 1000
+    exists_series:
+      - '{{secrets.tv.exists_series}}'
+    series:
+      settings:
+        group 1:
+          quality: "hdtv 720p webrip !480p !10bit"
+          propers: no 
+          identified_by: ep
+          tracking: backfill
+    thetvdb_lookup: yes
+    priority: 10
+    include: [ '{{secrets.tv.include}}' ]
+    download: '{{secrets.tv.download}}'
+    verify_ssl_certificates: no
+    only_new : yes
+
+  # Movies 
+  #--------
+  movies:
+    limit_new: 1
+   # Some feeds might include TV Shows, ignore them
+    regexp:
+      reject:
+        - s\d+e\d+: {from: title}
+        - '\d{4}.\d{2}.\d{2}': {from: title}
+        - \d+x\d+: {from: title}
+    plugin_priority:
+      if: 173
+      proper_movies: 171
+    #imdb_lookup: yes
+    rottentomatoes:
+      min_critics_score: 80
+      min_audience_score: 85
+      #require_certified_fresh: yes
+      #accept_actors, accept_directors, accept_mpaa_ratings, max_year, min_audience_rating, min_audience_score, min_average_score, min_critics_rating, min_critics_score, min_year, reject_actors, reject_directors, reject_genres, reject_mpaa_ratings
+      min_year: 2012
+      reject_genres:
+        - horror
+      reject_mpaa_ratings:
+        - PG-13
+#    imdb_required: yes
+#    imdb:
+#      min_score: 6.0
+#      min_votes: 10000
+#      min_year: 2012
+#      reject_genres:
+#        - horror
+#        - animation
+#        - musical
+#      accept_languages:
+#        - english
+    quality: 
+      - 480p+
+      - "!dts !cam !10bit"
+    #movie_queue: accept
+    content_size:
+      max: 800
+      min: 600
+    free_space:
+      path: '{{secrets.movies.path}}'
+      space: 1000
+    seen_movies: strict
+    exists_movie:
+      - '{{secrets.movies.exists_movie}}'
+    only_new: no
+    priority: 15
+    download: '{{secrets.movies.download}}'
+
+# Movies - Trakt 
+# --------------
+# Pull movies from trakt.tv watchlist and add to the movie queue
+  #trakt_list:
+    #username: '{{secrets.trakt.username}}'
+    #list: watchlist
+    #type: movies
+    #accept_all: yes
+    #movie_queue: add
+    #settings:
+     # quality:
+      #  - 480p+
+      #  - "!dts !cam !10bit"
+
+# Netcasts 
+# --------
+  netcasts:
+    free_space:
+      path: '{{secrets.netcasts.path}}'
+      space: 1000
+    exists:
+      - '{{secrets.netcasts.exists}}'
+    limit_new: 5
+    priority: 5
+    include: [ '{{secrets.netcasts.include}}' ]
+    exec:
+      auto_escape: yes
+      on_start:
+        # Add timestamp to log file
+        phase: echo "$(date '+%F %H:%M'):" >> '{{secrets.netcasts.logfile}}'
+      on_output:
+        # Download netcasts
+        #for_accepted: wget -c --limit-rate='{{secrets.wget.limit_rate}}' -b -a '{{secrets.wget.logfile}}' -P '{{secrets.netcasts.download}}' %(url)s
+        for_accepted: echo "%(url)s" >> '{{secrets.netcasts.download_script}}'
+      on_exit:
+        # Add URL to log file
+        for_accepted: echo -e "%(url)s" >> '{{secrets.netcasts.logfile}}'
+    accept_all: yes
+
+
+
+###########
+#  TASKS  #
+###########
+
+tasks:
+
+  # TV Shows
+  # --------
+  tv_shows:
+    inputs:
+      - rss: { url: 'https://kickass.to/tv/?rss=1', silent: yes }  # KICKASS
+      #- rss: { url: 'http://ezrss.it/feed/', silent: yes }  # EZRSS
+      - rss: { url: 'http://kat.ph/tv/?rss=1', silent: yes }  # KAT
+      - rss: { url: 'http://rss.bt-chat.com/?group=3', silent: yes }  # BT-Chat 
+      - rss: { url: 'https://torrentz.eu/feed_verified?q=tv', silent: yes }  # Torrentz
+      - rss: { url: 'http://extratorrent.cc/rss.xml?cid=8', silent: yes }  # Extra Torrent
+      - rss: { url: 'http://showrss.info/feeds/all.rss', silent: yes }  # Karmorra 
+      #- rss: { url: 'http://thepiratebay.se/rss', silent: yes }  #
+      - rss: { url: 'http://www.torlock.com/television/rss.xml', silent: yes }  # TorLock
+    template: 
+      - tv
+
+  # Movies
+  # ------
+  movies:
+    # Specific movies in Queue
+    discover:
+      what:
+        - emit_movie_queue: yes
+        - rottentomatoes_list:
+            movies:
+              - box_office
+      from:
+        #- piratebay:
+        #    category: movies
+        #    sort_by: leechers
+        #- isohunt: movies
+        #- flexget_archive: yes
+        #- newtorrents: movies
+        - torrentz: verified
+        - kat:
+            category: movies
+            verified: yes
+    inputs:
+      - rss: { url: 'http://www.torlock.com/movies/rss.xml', silent: yes }  # TorLock 
+      - rss: { url: 'http://torrentz.eu/feed_verified?q=movies', silent: yes }  # Torrentz 
+      - rss: { url: 'http://rss.thepiratebay.org/207', silent: yes }  # The Pirate Bay
+      - rss: http://kat.ph/movies/?rss=1 
+      - rss: http://www.mininova.org/rss.xml?cat=4 # Mininova
+      - rss: http://isohunt.com/js/rss/?iht=1  # IsoHunt
+    template: 
+      - movies
+
+  # Trakt - Movies
+  # --------------
+  trakt_movies:
+    template: movies_trakt
+
+  # Netcasts
+  # --------
+  internet_tv:
+    template: netcasts
+
+
+
+##############
+#  Scheduler #
+##############
+#
+schedules:
+  - tasks: [tv_shows]
+    schedule:
+      day_of_week: '{{secrets.tv.day_of_week}}'
+      hour: '{{secrets.tv.hour}}'      
+      minute: '{{secrets.tv.minute}}'
+      day: '*'
+      week: '*'
+      month: '*'
+      year: '*'
+
+  - tasks: [movies]
+    schedule:
+      day_of_week: '{{secrets.movies.day_of_week}}'
+      hour: '{{secrets.movies.hour}}'
+      minute: '{{secrets.movies.minute}}'
+      day: '*'
+      week: '*'
+      month: '*'
+      year: '*'
+
+  - tasks: [internet_tv]
+    schedule:
+      day_of_week: '{{secrets.netcasts.day_of_week}}'
+      hour: '{{secrets.netcasts.hour}}'
+      minute: '{{secrets.netcasts.minute}}'
+      day: '*'
+      week: '*'
+      month: '*'
+      year: '*'

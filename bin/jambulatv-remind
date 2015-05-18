@@ -1,0 +1,40 @@
+#!/bin/sh
+# Run reminder to find out whats coming up, and display botice ion screen
+
+REMIND_CMD=/usr/bin/remind
+REMIND_OPTIONS="-h"
+REMIND_DIR=/JambulaTV/Reminders
+MULTIMEDIA_USER=jambula
+
+TODAYS_REMINDERS_FILE=/tmp/reminders
+
+OSD_SCRIPT=/usr/bin/jambulatv-osd
+OSD_WAIT=15
+
+KODI_GUI_SETTINGS="/JambulaTV/.xbmc/userdata/guisettings.xml"
+KODI_WEBSERVER_PORT=$(grep webserverport $KODI_GUI_SETTINGS | sed 's:<webserverport>::' | sed 's:</webserverport>::' | sed 's: ::g')
+
+
+
+# Wait for kodi interface to come up
+ss -ln | grep $KODI_WEBSERVER_PORT > /dev/null 2>&1
+KODI_PORT_STATUS=$?
+while [[ $KODI_PORT_STATUS != 0 ]];
+do
+sleep 5
+ss -ln | grep $KODI_WEBSERVER_PORT > /dev/null 2>&1
+done
+
+
+# Get reminders
+$REMIND_CMD -u$MULTIMEDIA_USER $REMIND_OPTIONS $REMIND_DIR > $TODAYS_REMINDERS_FILE
+#
+# Read reminders
+cat $TODAYS_REMINDERS_FILE | sed '/^\s*$/d' | while read REMINDER_MSG
+do
+# Quit if no reminders
+[ "x$REMINDER_MSG" = "x" ] && exit 0
+# Display Message one at a time
+$OSD_SCRIPT -m "$REMINDER_MSG"
+sleep $OSD_WAIT
+done

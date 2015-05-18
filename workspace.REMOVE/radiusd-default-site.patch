@@ -1,0 +1,330 @@
+--- /usr/src/jambula/freeradius-server-2.2.0/raddb/sites-available/default	2012-09-10 14:51:34.000000000 +0300
++++ /etc/raddb/sites-available/default	2014-02-19 17:40:36.973341638 +0300
+@@ -7,10 +7,6 @@
+ #	directory.  Soft links should be created in the "sites-enabled"
+ #	directory to these files.  This is done in a normal installation.
+ #
+-#	If you are using 802.1X (EAP) authentication, please see also
+-#	the "inner-tunnel" virtual server.  You wll likely have to edit
+-#	that, too, for authentication to work.
+-#
+ #	$Id$
+ #
+ ######################################################################
+@@ -58,9 +54,6 @@
+ #  Authorization. First preprocess (hints and huntgroups files),
+ #  then realms, and finally look in the "users" file.
+ #
+-#  Any changes made here should also be made to the "inner-tunnel"
+-#  virtual server.
+-#
+ #  The order of the realm modules will determine the order that
+ #  we try to find a matching realm.
+ #
+@@ -68,23 +61,14 @@
+ #  need to setup hints for the remote radius server
+ authorize {
+ 	#
+-	#  Security settings.  Take a User-Name, and do some simple
+-	#  checks on it, for spaces and other invalid characters.  If
+-	#  it looks like the user is trying to play games, reject it.
+-	#
+-	#  This should probably be enabled by default.
+-	#
+-	#  See policy.conf for the definition of the filter_username policy.
+-	#
+-#	filter_username
+-
+-	#
+ 	#  The preprocess module takes care of sanitizing some bizarre
+ 	#  attributes in the request, and turning them into attributes
+ 	#  which are more standard.
+ 	#
+ 	#  It takes care of processing the 'raddb/hints' and the
+ 	#  'raddb/huntgroups' files.
++	#
++	#  It also adds the %{Client-IP-Address} attribute to the request.
+ 	preprocess
+ 
+ 	#
+@@ -110,16 +94,7 @@
+ 	#  If you have a Cisco SIP server authenticating against
+ 	#  FreeRADIUS, uncomment the following line, and the 'digest'
+ 	#  line in the 'authenticate' section.
+-	digest
+-
+-	#
+-	#  The WiMAX specification says that the Calling-Station-Id
+-	#  is 6 octets of the MAC.  This definition conflicts with
+-	#  RFC 3580, and all common RADIUS practices.  Un-commenting
+-	#  the "wimax" module here means that it will fix the
+-	#  Calling-Station-Id attribute to the normal format as
+-	#  specified in RFC 3580 Section 3.21
+-#	wimax
++#	digest
+ 
+ 	#
+ 	#  Look for IPASS style 'realm/', and if not found, look for
+@@ -163,18 +138,21 @@
+ 	#  to read /etc/passwd or /etc/shadow directly, see the
+ 	#  passwd module in radiusd.conf.
+ 	#
+-#	unix
++	unix
+ 
+ 	#
+ 	#  Read the 'users' file
+-	files
++#	files
+ 
+ 	#
+ 	#  Look in an SQL database.  The schema of the database
+ 	#  is meant to mirror the "users" file.
+ 	#
+ 	#  See "Authorization Queries" in sql.conf
+-#	sql
++	sql
++
++	chillispot_max_bytes
++        noresetcounter
+ 
+ 	#
+ 	#  If you are using /etc/smbpasswd, and are also doing
+@@ -277,7 +255,7 @@
+ 	#  If you have a Cisco SIP server authenticating against
+ 	#  FreeRADIUS, uncomment the following line, and the 'digest'
+ 	#  line in the 'authorize' section.
+-	digest
++#	digest
+ 
+ 	#
+ 	#  Pluggable Authentication Modules.
+@@ -288,12 +266,7 @@
+ 	#  module checks the users password.  Note that packets
+ 	#  containing CHAP-Password attributes CANNOT be authenticated
+ 	#  against /etc/passwd!  See the FAQ for details.
+-	#
+-	#  For normal "crypt" authentication, the "pap" module should
+-	#  be used instead of the "unix" module.  The "unix" module should
+-	#  be used for authentication ONLY for compatibility with legacy
+-	#  FreeRADIUS configurations.
+-	#
++	#  
+ 	unix
+ 
+ 	# Uncomment it if you want to use ldap for authentication
+@@ -308,22 +281,6 @@
+ 	#
+ 	#  Allow EAP authentication.
+ 	eap
+-
+-	#
+-	#  The older configurations sent a number of attributes in
+-	#  Access-Challenge packets, which wasn't strictly correct.
+-	#  If you want to filter out these attributes, uncomment
+-	#  the following lines.
+-	#
+-#	Auth-Type eap {
+-#		eap {
+-#			handled = 1  
+-#		}
+-#		if (handled && (Response-Packet-Type == Access-Challenge)) {
+-#			attr_filter.access_challenge.post-auth
+-#			handled  # override the "updated" code from attr_filter
+-#		}
+-#	}
+ }
+ 
+ 
+@@ -334,24 +291,6 @@
+ 	preprocess
+ 
+ 	#
+-	#  Session start times are *implied* in RADIUS.
+-	#  The NAS never sends a "start time".  Instead, it sends
+-	#  a start packet, *possibly* with an Acct-Delay-Time.
+-	#  The server is supposed to conclude that the start time
+-	#  was "Acct-Delay-Time" seconds in the past.
+-	#
+-	#  The code below creates an explicit start time, which can
+-	#  then be used in other modules.
+-	#
+-	#  The start time is: NOW - delay - session_length
+-	#
+-
+-#	  update request {
+-#	  	FreeRADIUS-Acct-Session-Start-Time = "%{expr: %l - %{%{Acct-Session-Time}:-0} - %{%{Acct-Delay-Time}:-0}}"
+-#	}
+-
+-
+-	#
+ 	#  Ensure that we have a semi-unique identifier for every
+ 	#  request, and many NAS boxes are broken.
+ 	acct_unique
+@@ -369,7 +308,7 @@
+ 
+ 	#
+ 	#  Read the 'acct_users' file
+-	files
++#	files
+ }
+ 
+ #
+@@ -386,14 +325,14 @@
+ 	#  Update the wtmp file
+ 	#
+ 	#  If you don't use "radlast", you can delete this line.
+-#	unix
++	unix
+ 
+ 	#
+ 	#  For Simultaneous-Use tracking.
+ 	#
+ 	#  Due to packet losses in the network, the data here
+ 	#  may be incorrect.  There is little we can do about it.
+-#	radutmp
++	radutmp
+ #	sradutmp
+ 
+ 	#  Return an address to the IP Pool when we see a stop record.
+@@ -403,21 +342,7 @@
+ 	#  Log traffic to an SQL database.
+ 	#
+ 	#  See "Accounting queries" in sql.conf
+-#	sql
+-
+-	#
+-	#  If you receive stop packets with zero session length,
+-	#  they will NOT be logged in the database.  The SQL module
+-	#  will print a message (only in debugging mode), and will
+-	#  return "noop".
+-	#
+-	#  You can ignore these packets by uncommenting the following
+-	#  three lines.  Otherwise, the server will not respond to the
+-	#  accounting request, and the NAS will retransmit.
+-	#
+-#	if (noop) {
+-#		ok
+-#	}
++	sql
+ 
+ 	#
+ 	#  Instead of sending the query to the SQL server,
+@@ -428,9 +353,6 @@
+ 	#  Cisco VoIP specific bulk accounting
+ #	pgsql-voip
+ 
+-	# For Exec-Program and Exec-Program-Wait
+-	exec
+-
+ 	#  Filter attributes from the accounting response.
+ 	attr_filter.accounting_response
+ 
+@@ -451,7 +373,7 @@
+ 
+ 	#
+ 	#  See "Simultaneous Use Checking Queries" in sql.conf
+-#	sql
++	sql
+ }
+ 
+ 
+@@ -472,7 +394,7 @@
+ 	#  After authenticating the user, do another SQL query.
+ 	#
+ 	#  See "Authentication Logging Queries" in sql.conf
+-#	sql
++	sql
+ 
+ 	#
+ 	#  Instead of sending the query to the SQL server,
+@@ -487,73 +409,9 @@
+ 	#
+ #	ldap
+ 
+-	# For Exec-Program and Exec-Program-Wait
+ 	exec
+ 
+ 	#
+-	#  Calculate the various WiMAX keys.  In order for this to work,
+-	#  you will need to define the WiMAX NAI, usually via
+-	#
+-	#	update request {
+-	#	       WiMAX-MN-NAI = "%{User-Name}"
+-	#	}
+-	#
+-	#  If you want various keys to be calculated, you will need to
+-	#  update the reply with "template" values.  The module will see
+-	#  this, and replace the template values with the correct ones
+-	#  taken from the cryptographic calculations.  e.g.
+-	#
+-	# 	update reply {
+-	#		WiMAX-FA-RK-Key = 0x00
+-	#		WiMAX-MSK = "%{EAP-MSK}"
+-	#	}
+-	#
+-	#  You may want to delete the MS-MPPE-*-Keys from the reply,
+-	#  as some WiMAX clients behave badly when those attributes
+-	#  are included.  See "raddb/modules/wimax", configuration
+-	#  entry "delete_mppe_keys" for more information.
+-	#
+-#	wimax
+-
+-	#  If there is a client certificate (EAP-TLS, sometimes PEAP
+-	#  and TTLS), then some attributes are filled out after the
+-	#  certificate verification has been performed.  These fields
+-	#  MAY be available during the authentication, or they may be
+-	#  available only in the "post-auth" section.
+-	#
+-	#  The first set of attributes contains information about the
+-	#  issuing certificate which is being used.  The second
+-	#  contains information about the client certificate (if
+-	#  available).
+-#
+-#	update reply {
+-#	       Reply-Message += "%{TLS-Cert-Serial}"
+-#	       Reply-Message += "%{TLS-Cert-Expiration}"
+-#	       Reply-Message += "%{TLS-Cert-Subject}"
+-#	       Reply-Message += "%{TLS-Cert-Issuer}"
+-#	       Reply-Message += "%{TLS-Cert-Common-Name}"
+-#	       Reply-Message += "%{TLS-Cert-Subject-Alt-Name-Email}"
+-#
+-#	       Reply-Message += "%{TLS-Client-Cert-Serial}"
+-#	       Reply-Message += "%{TLS-Client-Cert-Expiration}"
+-#	       Reply-Message += "%{TLS-Client-Cert-Subject}"
+-#	       Reply-Message += "%{TLS-Client-Cert-Issuer}"
+-#	       Reply-Message += "%{TLS-Client-Cert-Common-Name}"
+-#	       Reply-Message += "%{TLS-Client-Cert-Subject-Alt-Name-Email}"
+-#	}
+-
+-
+-	#  If the WiMAX module did it's work, you may want to do more
+-	#  things here, like delete the MS-MPPE-*-Key attributes.
+-	#
+-	#	if (updated) {
+-	#		update reply {
+-	#			MS-MPPE-Recv-Key !* 0x00
+-	#			MS-MPPE-Send-Key !* 0x00
+-	#		}
+-	#	}
+-
+-	#
+ 	#  Access-Reject packets are sent through the REJECT sub-section of the
+ 	#  post-auth section.
+ 	#
+@@ -561,8 +419,6 @@
+ 	#  'edir_account_policy_check = yes' in the ldap module configuration
+ 	#
+ 	Post-Auth-Type REJECT {
+-		# log failed authentications in SQL, too.
+-#		sql
+ 		attr_filter.access_reject
+ 	}
+ }
+@@ -644,5 +500,6 @@
+ #	Post-Proxy-Type Fail {
+ #			detail
+ #	}
++
+ }
+ 

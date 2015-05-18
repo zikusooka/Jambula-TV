@@ -1,0 +1,5051 @@
+#!/bin/sh
+PROJECT_NAME=JambulaTV
+PROJECT_VERSION=3
+PROJECT_URL="http://www.jambulatv.com"
+COMPANY_NAME="Jambula Labs"
+ROOT_DIR=/JambulaTV
+AUTOLOGIN_USER=jambula
+AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
+AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall"
+MULTIMEDIA_USER=$AUTOLOGIN_USER
+MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
+
+# System directories
+PREFIX=/usr
+CONFDIR=/etc
+STATEDIR=/var
+RUNDIR=/run
+SOURCESDIR=/opt
+SPOOLDIR=$STATEDIR/spool
+BINARY_PREFIX=/usr/bin
+LIBDIR=$PREFIX/lib
+INCDIR=$PREFIX/include
+CRONTABS_DIR=$SPOOLDIR/cron
+MANDIR1=$PREFIX/share/man/man1
+MANDIR8=$PREFIX/share/man/man8
+SYSCTL_DIR=$CONFDIR/sysctl.d
+UDEV_RULES_DIR=/usr/lib/udev/rules.d
+PYTHON_SITEDIR=$LIBDIR/python2.7/site-packages
+FIRMWARE_DIR=$PREFIX/lib/firmware
+POST_INSTALL_NOTES=$ROOT_DIR/post_install_notes
+# Source directories
+PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
+PROJECT_PATCHES_DIR=$PROJECT_BASE_DIR/patches
+PROJECT_CONFIGS_DIR=$PROJECT_BASE_DIR/configs
+PROJECT_SRC_DIR=$PROJECT_BASE_DIR/src
+PROJECT_BIN_DIR=$PROJECT_BASE_DIR/bin
+PROJECT_UTILS_DIR=$PROJECT_BASE_DIR/utils
+PROJECT_IMAGES_DIR=$PROJECT_BASE_DIR/images
+PROJECT_CONTRIB_DIR=$PROJECT_BASE_DIR/contrib
+PROJECT_INIT_SCRIPTS_DIR=$PROJECT_BASE_DIR/init
+PROJECT_FIRMWARE_DIR=$PROJECT_BASE_DIR/firmware
+PROJECT_CUSTOMIZATION_DIR=$PROJECT_BASE_DIR/customize
+PROJECT_DOCS_DIR=$PROJECT_BASE_DIR/docs
+# Package directories
+PROJECT_TARBALLS_DIR=$PROJECT_SRC_DIR/tarballs
+PROJECT_GITHUB_DIR=$PROJECT_SRC_DIR/github
+PROJECT_RPMS_DIR=$PROJECT_SRC_DIR/rpms
+PROJECT_ZIPS_DIR=$PROJECT_SRC_DIR/zips
+# System directories
+PROJECT_SYSTEM_ARCH=`uname -m`
+PROJECT_SYSTEM_CONF_DIR=$CONFDIR/$PROJECT_NAME
+PROJECT_SYSTEM_SHARE_DIR=$PREFIX/share/$PROJECT_NAME
+PROJECT_SYSTEM_LOG_DIR=$STATEDIR/log/$PROJECT_NAME
+PROJECT_SYSTEM_LIB_DIR=$STATEDIR/lib/$PROJECT_NAME
+PROJECT_SYSTEM_CACHE_DIR=$STATEDIR/cache/$PROJECT_NAME
+
+PROJECT_PARTITION=/$PROJECT_NAME
+LOCAL_SETTINGS_DIR=$PROJECT_PARTITION/local_settings
+
+# User's media folders
+USER_MUSIC_DIR=$PROJECT_PARTITION/Music
+USER_PICTURES_DIR=$PROJECT_PARTITION/Pictures
+USER_VIDEOS_DIR=$PROJECT_PARTITION/Videos
+USER_TV_SHOWS_DIR=$USER_VIDEOS_DIR/TV_Shows
+USER_MOVIES_DIR=$USER_VIDEOS_DIR/Movies
+
+NETCASTS_DIRECTORY=$USER_VIDEOS_DIR/Netcasts
+PLAYLISTS_DIRECTORY=$PROJECT_PARTITION/Playlists
+
+# Remind
+REMINDERS_DIRECTORY=$PROJECT_PARTITION/Reminders
+
+TORRENTS_COMPLETED_DIRECTORY=$PROJECT_PARTITION/Torrents/completed
+TORRENTS_PENDING_DIRECTORY=$PROJECT_PARTITION/Torrents/pending
+TORRENTS_WATCH_DIRECTORY=$PROJECT_PARTITION/Torrents/watch
+RTORRENT_SESSIONS_DIR=$TORRENTS_WATCH_DIRECTORY/.sessions_rtorrent
+
+# aria2
+ARIA2_CONFIG_FILE=$PROJECT_SYSTEM_CONF_DIR/aria2.conf
+ARIA2_DOWNLOADS_DIRECTORY=$PROJECT_PARTITION/Downloads
+ARIA2_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/aria2.log
+ARIA2_SAVE_SESSION_FILE=$PROJECT_SYSTEM_LOG_DIR/aria2.session
+ARIA2_DOWNLOAD_COMPLETE_BT_SCRIPT=
+ARIA2_DOWNLOAD_COMPLETE_SCRIPT=
+ARIA2_DOWNLOAD_ERROR_SCRIPT=
+ARIA2_DOWNLOAD_PAUSE_SCRIPT=
+ARIA2_DOWNLOAD_START_SCRIPT=
+ARIA2_DOWNLOAD_STOP_SCRIPT=
+
+KAA_MODULES_GIT_DIR=$PROJECT_SRC_DIR/kaa-modules
+FREEVO1_GIT_DIR=$PROJECT_SRC_DIR/freevo1-git
+FREEVO1_SVN_DIR=$PROJECT_SRC_DIR/freevo1-svn
+
+INSTALL_SRC_DIR=$PREFIX/src/jambulatv
+KAA_INSTALL_DIR=$INSTALL_SRC_DIR/kaa
+FREEVO_INSTALL_DIR=$INSTALL_SRC_DIR/freevo
+
+FREEVO_RUNTIME_SHARE_DIR=$FREEVO_INSTALL_DIR/share
+FREEVO_RUNTIME_SKINS_DIR=$FREEVO_RUNTIME_SHARE_DIR/skins
+
+KERNELS_SRC_DIR=/usr/src/kernels
+
+FREEVO_LOCAL_CONFIG_DIR=$HOME/.freevo
+FREEVO_SYSTEM_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/freevo
+FREEVO_CMD=$FREEVO_INSTALL_DIR/freevo
+FREEVO_USER=$MULTIMEDIA_USER
+FREEVO_USER_HOME_DIR=`cat /etc/passwd | grep "$FREEVO_USER" | cut -d ':' -f6 | head -1`/.freevo 
+
+GENERATE_LOCAL_CONF_SCRIPT=/usr/bin/jambulatv-generate-local-conf
+
+#FREEVO_VERSION=git
+FREEVO_VERSION=svn
+
+
+TVHEADEND_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.hts/tvheadend
+
+KODI_CODENAME=Isengard
+KODI_FFMPEG_VERSION=2.6.2-$KODI_CODENAME-alpha
+
+XBMC_VERSION=13.2
+XBMC_CODENAME=Gotham
+XBMC_SKIN=confluence #aeon.nox.5
+XBMC_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.xbmc
+XBMC_SHARE_DIR=$PREFIX/share/xbmc
+XBMC_USER_DATA=$XBMC_CONFIG_DIR/userdata
+XBMC_USER_ADDONS=$XBMC_CONFIG_DIR/addons
+XBMC_SYSTEM_DATA=$XBMC_SHARE_DIR/userdata
+XBMC_SYSTEM_ADDONS=$XBMC_SHARE_DIR/addons
+ADDITIONAL_XBMC_ADDONS="plugin.audio.jazzradio.com plugin.audio.npr plugin.audio.radio_de plugin.video.aljazeera plugin.video.cbsnews_com plugin.video.discovery_com plugin.video.diy plugin.video.espn_3 plugin.video.espn.video plugin.video.foodnetwork plugin.video.fox.news plugin.video.guardian plugin.video.itbn_org plugin.video.kidsplace plugin.video.npr plugin.video.revision3 plugin.video.rt plugin.video.techcrunch plugin.video.ted.talks plugin.video.twit plugin.video.world.news.live plugin.video.zoneminder rtorrent repository.superrepo.org.gotham.all script.commands script.facebook.media script.game.netwalk script.rss.editor script.service.alarmclock script.service.checkpreviousepisode script.service.twitter script.xbmc.audio.mixer script.xbmc script.xbmc.pandora skin.aeon.nox.5 weather.metoffice weather.weatherchina weather.worldweatheronline weather.wunderground"
+
+X11_DRIVER="" # intel|nouveau|mga|openchrome
+INTEL_X11_DRIVER_VERSION=git
+NOUVEAU_X11_DRIVER_VERSION=git
+OPENCHROME_X11_DRIVER_VERSION=0.3.3 #git
+MGA_X11_DRIVER_VERSION=git #1.6.3 #git
+ALSA_DRIVER_VERSION=1.0.25
+ALSA_LIB_VERSION=1.0.28
+ALSA_UTILS_VERSION=1.0.28
+ALSA_OSS_VERSION=1.0.28
+ALSA_PLUGINS_VERSION=1.0.28
+PYALSAAUDIO_VERSION=0.7
+BLUEZ_VERSION=4.101 # Keep here, V5.X has no HSP/HFP
+SBC_VERSION=1.2
+PULSEAUDIO_VERSION=5.0
+PORTAUDIO_VERSION=stable_v19_20140130
+SDL1_VERSION=1.2.15
+SDL2_VERSION=2.0.3
+LIVE555_VERSION=2014.07.25 #2013.04.30
+X264_VERSION=snapshot-20130904-2245
+FFMPEG_VERSION=2.3.1 #0.10.8
+MPLAYER_VERSION=checkout-snapshot #1.1.1
+XINE_LIB_VERSION=1.2.6
+XINE_UI_VERSION=0.99.8
+SOX_VERSION=14.4.1
+TVTIME_VERSION=1.0.2
+DVBSTREAMER_VERSION=svn-20130829 #2.1.0
+PYDVBSTREAMER_VERSION=0.1
+LIVEPAUSE_VERSION=1.1.1
+V4L_UTILS_VERSION=1.3.90
+PYOSD_VERSION=0.2.14
+NODM_VERSION=0.7
+FREERADIUS_VERS=3.0.3
+DALORADIUS_VERS=0.9-9
+COOVA_CHILLI_VERS=svn-492 # or svn-485
+HASERL_VERS=0.9.29
+GSTREAMER_VERSION=1.1.3
+RYGEL_VERSION=0.19.4
+EMAIL_VERS=3.1.3
+HEYU_VERSION=2.11-rc1
+PERL_X10_VERSION=0.03
+PERL_NET_SFTP_FOREIGN_VERSION=1.77
+LIBDBI_VERSION=0.9.0
+ICINGA1_VERSION=1.9.3
+ICINGA2_VERSION=2.2.3
+ICINGA2_VERSION_PREVIOUS=$(which icinga2 2>&1 /dev/null && icinga2 --version | head -1 | cut -d : -f2 | sed 's: ::' | sed 's:)::')
+NAGIOS_PLUGINS_VERSION=1.4.16
+MONITORING_PLUGINS_VERSION=2.0
+MINISAPSERVER_VERSION=0.3.8
+DNS2TCP_VERSION=0.5.2
+OPENRESOLV_VERSION=3.5.7
+BEEP2_VERSION=1.2a
+GDATA_VERSION=2.0.17
+
+EMAIL_CONFIG_DIR=/etc/email
+
+MODPROBE_DIR=/etc/modprobe.d
+SUDOERS_DIR=/etc/sudoers.d
+
+RES1=1024x768
+RES2=800x600
+RES3=640x480
+DEPTH1=32
+DEPTH2=24
+DEPTH3=16
+PREFERRED_TV_RESOLUTION=$RES1
+XORG_CMD=/usr/bin/Xorg
+XORG_DIR=/etc/X11
+XORG_CONF=$XORG_DIR/xorg.conf
+XORG_CONF_DIR=$XORG_DIR/xorg.conf.d
+XORG_CONF_NEW=/root/xorg.conf.new
+XORG_CONF_DISPLAY=1
+
+
+XSET_CMD=/usr/bin/xset 
+
+LXDE_DM_DIR=/etc/lxdm
+LXDM_CONFIG=$LXDE_DM_DIR/lxdm.conf
+LXDE_SESSION_DIR=/etc/xdg/lxsession
+LXDE_AUTOSTART_DIR=$LXDE_SESSION_DIR/LXDE
+LXDE_AUTOSTART_FILE=$LXDE_AUTOSTART_DIR/autostart
+
+UUID_ROOT_PARTITION=`cat /etc/fstab | sed /^#/d | grep '1 1' | awk {'print $1'} | cut -d '=' -f2`
+GRUB2_BOOT_DIR=/boot/grub2
+GRUB2_BOOT_FILE=$GRUB2_BOOT_DIR/grub.cfg
+GRUB2_CONFIG_DIR=/etc/grub.d
+GRUB2_DEFAULT_FILE=/etc/default/grub
+#GRUB2_CMD_OPTIONS="acpi=off noapic"
+GRUB2_CMD_OPTIONS=""
+GRUB2_VIDEO_RESOLUTION=${RES1}x${DEPTH1}
+GRUB2_BEEP_SOUND="480 440 1"
+
+PULSE_HOME_DIR=$STATEDIR/run/pulse
+PULSE_SYSTEM_CONFIG=$CONFDIR/pulse/system.pa
+PULSE_DEFAULT_CONFIG=$CONFDIR/pulse/default.pa
+PULSE_ROOT_CONFIG_DIR=/root/.config/pulse
+
+CHRONY_KEYS_FILE=/etc/chrony.keys
+CHRONYC_CMD=/usr/bin/chronyc
+
+PLYMOUTH_THEME=spinfinity 
+PLYMOUTH_SET_CMD=/usr/sbin/plymouth-set-default-theme
+PLYMOUTH_UPDATE_CMD=/usr/libexec/plymouth/plymouth-update-initrd
+
+SYSTEMD_UNITS_DIR_SYSTEM=/usr/lib/systemd/system
+SYSTEMD_UNITS_DIR_USER=/etc/systemd/system
+
+DBUS_SYSTEM_SERVICES_DIR=/usr/share/dbus-1/system-services
+
+SYSCONFIG_DIR=/etc/sysconfig
+SYSCONFIG_DESKTOP_FILE=$SYSCONFIG_DIR/desktop
+SYSCONFIG_NETWORK_FILE=$SYSCONFIG_DIR/network
+SYSCONFIG_NETWORK_SCRIPTS_DIR=$SYSCONFIG_DIR/network-scripts
+
+SYSCONFIG_i18N_FILE=/etc/sysconfig/i18n
+
+NETWORK_MAC_ADDRESS=`ip addr show | grep ether | awk {'print $2'} | head -1`
+
+SYSTEM_UUID=$(uuid)
+SYSTEM_IDENTIFIER=$(echo $SYSTEM_UUID | cut -d - -f5)
+#SYSTEM_IDENTIFIER=`echo $NETWORK_MAC_ADDRESS | sed -e 's/://g'`
+
+PORTS_ASSIGNED_FILE=$PROJECT_DOCS_DIR/ports_assigned
+
+# Internet ISP settings
+INTERNET_USB_ISP_CONFIG=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-usb.cfg
+INTERNET_WIFI_ISP_CONFIG=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-wifi.cfg
+ISP_NAME_DEFAULT=AIRTEL
+ISP_USERNAME_DEFAULT=none
+ISP_PASSWORD_DEFAULT=none
+
+FLEXGET_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/flexget
+
+TIMEZONE="Africa/Kampala"
+TIMEZONE_FILE=/etc/timezone
+
+NGINX_CONF_DIR=/etc/nginx
+NGINX_CONFD_DIR=$NGINX_CONF_DIR/conf.d
+
+RPMBUILD_DIR=/tmp/rpmbuild
+
+WWW_USER=nginx
+WWW_GROUP=nginx
+WWW_HTML_DIR=$PROJECT_SYSTEM_SHARE_DIR/html
+WWW_CGI_DIR=$PROJECT_SYSTEM_SHARE_DIR/cgi-bin
+
+MYSQL_PRIVILEGES_FILE=/tmp/freeradius-priviledges.sql
+
+FREERADIUS_DB_NAME=radius
+FREERADIUS_DB_USER=radius
+FREERADIUS_DB_CONF_DIR=/etc/raddb
+FREERADIUS_DB_CONF_FILE=$FREERADIUS_DB_CONF_DIR/sql.conf
+FREERADIUS_CLIENTS_CONF_FILE=$FREERADIUS_DB_CONF_DIR/clients.conf
+FREERADIUS_RADIUSD_FILE=$FREERADIUS_DB_CONF_DIR/radiusd.conf
+FREERADIUS_MODULES_ENABLED_DIR=$FREERADIUS_DB_CONF_DIR/mods-enabled
+FREERADIUS_MODULES_AVAIL_DIR=$FREERADIUS_DB_CONF_DIR/mods-available
+FREERADIUS_MODULES_CONFIG_DIR=$FREERADIUS_DB_CONF_DIR/mods-config
+FREERADIUS_SQL_MAIN_SCHEMA_DIR=$FREERADIUS_MODULES_CONFIG_DIR/sql/main/mysql
+FREERADIUS_DB_SCHEMA=$FREERADIUS_SQL_MAIN_SCHEMA_DIR/schema.sql
+FREERADIUS_SQL_COUNTERS_DIR=$FREERADIUS_MODULES_CONFIG_DIR/sql/counter/mysql
+FREERADIUS_SQL_MODULE_FILE=$FREERADIUS_MODULES_AVAIL_DIR/sql
+FREERADIUS_SQLCOUNTER_MODULE_FILE=$FREERADIUS_MODULES_AVAIL_DIR/sqlcounter
+FREERADIUS_SITES_AVAIL=$FREERADIUS_DB_CONF_DIR/sites-available
+FREERADIUS_SITES_AVAIL_DEFAULT_FILE=$FREERADIUS_SITES_AVAIL/default
+FREERADIUS_SITES_AVAIL_INNER_TUNNEL_FILE=$FREERADIUS_SITES_AVAIL/inner-tunnel
+
+COOVA_CONFIG_DIR=/etc/chilli
+COOVA_CONFIG_FILE=$COOVA_CONFIG_DIR/config
+COOVA_HTML_DIR=$WWW_HTML_DIR/coova
+
+COOVA_OPEN_TCP_PORTS="22 80 81 82 83 84 85 443 1735 1736 1737 1738 1739 1740 5222 6969 8080 8082 8083 8084 8085" 
+
+UPNP_MDNS_ENABLE=y
+CHILLI_DHCP_START=50
+CHILLI_DHCP_END=99
+
+
+HOSTAPD_DIR=/etc/hostapd
+
+IPTABLES_CMD=/usr/sbin/iptables
+
+JABBERD_CONF_DIR=$CONFDIR/jabberd
+JABBERD_ROUTER_USERS_FILE=$JABBERD_CONF_DIR/router-users.xml
+JABBERD_DB_CREATE=/usr/share/jabberd/db-setup.mysql
+
+JABBERD_PASSWORD=`grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //'`
+
+
+# ZM Database Variables
+ZONEMINDER_DB_HOST=localhost
+ZONEMINDER_DB_NAME=zm
+ZONEMINDER_DB_SCHEMA=$INSTALL_SRC_DIR/ZoneMinder/db/zm_create.sql
+ZONEMINDER_DB_USER=jambula
+ZONEMINDER_DB_PASS=jambulazm1
+
+ZONEMINDER_ZMS_INETD_SCRIPT=$BINARY_PREFIX/jambulatv-zms-inetd
+ZONEMINDER_ZMS_INETD_PORT=8521
+
+ZONEMINDER_EVENTS_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Camera-Events
+
+# Motion Database Variables
+MOTION_DB_HOST=localhost
+MOTION_DB_NAME=motion
+MOTION_DB_USER=jambula
+MOTION_DB_PASS=jambulamotion1
+
+# DNS Settings
+# *************
+# Current DNS 1
+CURRENT_DNS1=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 1'`
+#
+# Number of DNS settings
+NUMBER_OF_DNS=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | wc -l`
+#
+# Add second DNS if more than 1 setting
+if [ "$NUMBER_OF_DNS" -gt "1" ];
+then
+# Current DNS 2
+CURRENT_DNS2=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 2'` 
+else
+CURRENT_DNS2=$CURRENT_DNS1
+fi
+
+# All Domain Name Servers
+NETWORK_DNS_1=$CURRENT_DNS1
+NETWORK_DNS_2=$CURRENT_DNS2
+
+# Public DNS Servers: Google, OpenDNS, Comodo, OpenNIC, Yandex
+PUBLIC_DNS_SERVERS="8.8.8.8 208.67.222.222 8.26.56.26 107.170.95.180 77.88.8.8"
+
+
+# Dynamic variables
+# -----------------
+LIRC_REMOTE=intex #streamzap
+
+WIFI_SSID="Jambula Labs"
+WIFI_SECURITY_KEY="eggnog15"
+WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
+WIFI_INTERFACES_AVAILABLE=$(iw dev |grep Interface |wc -l)
+WIFI_AP_INTERFACE=wlp1s4 #jwlan0
+WIFI_STATION_INTERFACE=jwlan1
+WIFI_PHY_DEV=0
+WIFI_WAIT_TIME=40
+
+NETWORK_ETHERNET_DEVICE=`ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g'`
+NETWORK_WIRELESS_DEVICE=$WIFI_AP_INTERFACE
+NETWORK_WIRELESS_MAC_ADDRESS=$(ip addr show dev $NETWORK_WIRELESS_DEVICE | grep ether | awk {'print $2'} | head -1)
+NETWORK_IP_ADDRESS=`hostname -i`
+NETWORK_GATEWAY_ADDRESS=`ip route show | grep default | awk {'print $3'}`
+NETWORK_MASK_PREFIX=24
+NETWORK_DOMAIN=jambulatv.com
+NETWORK_WIRELESS_SSID="JAMBULA-HOTSPOT"
+NETWORK_WIRELESS_CHANNEL_NO=11
+NETWORK_WIRELESS_PASSPHRASE=2014august24
+NETWORK_DHCP_RANGE="192.168.0.100,192.168.0.199"
+
+CHRONYC_PASSWD=jul1214
+
+MYSQL_ROOT_PASSWORD=173dell
+FREERADIUS_DB_PASS=lled371
+FREERADIUS_ADMIN_USER="$PROJECT_NAME"
+FREERADIUS_ADMIN_PASS=lled371
+
+COOVA_NORMAL_USER_LOGIN=coovuser
+COOVA_NORMAL_USER_PASSWORD=coovpass
+COOVA_SERVER_IP=172.16.0.1
+COOVA_UAM_SECRET=lled371
+COOVA_PRIVILEGED_MAC="00:21:5c:25:32:5b,00:02:2D:53:66:21,00:0E:9B:15:98:8E"
+
+JABBERD_PASSWD=`grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //'`
+JABBERD_RESOURCE=Home
+
+# VOIP/SIP Settings 
+SIP_PROVIDER_HOSTNAME=sip.flowroute.com
+
+GOOGLE_VOICE_USERNAME=aexbox1@gmail.com
+GOOGLE_VOICE_PASSWORD=equator1
+
+# SMS via Google Calendar
+SMS_VIA_GOOGLE_CALENDAR_SCRIPT=$BINARY_PREFIX/jambulatv-sms-using-google-calendar 
+GOOGLE_CALENDAR_USERNAME=jambulatv1
+GOOGLE_CALENDAR_PASSWORD=equator1
+GOOGLE_CALENDAR="JambulaTV-Services"
+
+# Cepstral
+CEPSTRAL_VERSION=6.0.1
+CEPSTRAL_VOICE=Allison-8kHz
+CEPSTRAL_EULA=agree
+CEPSTRAL_PREFIX=/opt/swift
+# License info/key you obtained from Cepstral
+CEPSTRAL_CUSTOMER_NAME="$PROJECT_NAME"
+CEPSTRAL_COMPANY_NAME="$COMPANY_NAME" 
+CEPSTRAL_LICENSE_KEY="insert0your1cepstral2key3here"
+
+# Icinga
+ICINGA_USER=icinga
+ICINGA_PASS=jambula
+
+ICINGA_GROUP=icinga
+ICINGA_CMD_GROUP=icingacmd
+ICINGA_ADMIN_PASS=jambulatv
+
+ICINGA_DB_NAME=$ICINGA_USER
+ICINGA_DB_USER=${ICINGA_USER}2
+ICINGA_DB_PASS=${ICINGA_PASS}2
+
+ICINGA2_CONFIG_DIR=$CONFDIR/icinga2
+ICINGA2_OBJECTS_DIR=$ICINGA2_CONFIG_DIR/conf.d
+ICINGA2_CUSTOM_CONFIG_DIR=$ICINGA2_OBJECTS_DIR/$PROJECT_NAME
+ICINGA2_SCRIPTS_DIR=$ICINGA2_CONFIG_DIR/scripts
+ICINGA2_FEATURES_AVAIL_DIR=$ICINGA2_CONFIG_DIR/features-available
+
+MONITORING_PLUGINS_DIR=$LIBDIR/nagios/plugins
+FPING_CMD=/usr/sbin/fping
+
+# Icingaweb2
+ICINGA2_WEB_USER=$WWW_USER
+ICINGA2_WEB_GROUP=icingaweb2
+ICINGA2_WEB_TOKEN_FILE=/tmp/icingaweb2_setup_token
+
+# VNC
+VNC_DISPLAY=3
+VNC_PASSWORD=jambulatv
+
+# Reverse SSH
+REVERSE_SSH_SCRIPT=$BINARY_PREFIX/jambulatv-reverse-ssh-tunnel
+REVERSE_SSH_NOTIFICATION_METHOD="sms #sms|email|none" 
+# Local SSH server
+LOCAL_SSH_USER=root
+LOCAL_SSH_SERVER=localhost
+LOCAL_SSH_SERVER_PORT=22
+# Remote SSH server
+REMOTE_SSH_SERVER_USER=root
+REMOTE_SSH_SERVER=192.81.220.150
+REMOTE_SSH_SERVER_PORT=222
+REMOTE_SSH_SERVER_RANDOM_PORT=$[ ( $RANDOM % 10000 )  + 10000 ]
+# AutoSSH
+AUTOSSH_CMD=/usr/bin/autossh
+AUTOSSH_PORT=$[ ( $RANDOM % 10000 )  + 20000 ]
+AUTOSSH_GATETIME=0
+
+# OpenVPN
+OPENVPN_CLIENT_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/openvpn
+OPENVPN_CLIENT_CONFIG_FILE=$OPENVPN_CLIENT_CONFIG_DIR/client.conf
+OPENVPN_CLIENT_PROTOCOL=tcp #udp
+OPENVPN_SERVER_IP=[REMOTE-VPN-SERVER]
+OPENVPN_SERVER_PORT=[REMOTE-VPN-PORT:11945]
+OPENVPN_SAMPLE_KEYS_DIR=$(find /usr/share/doc/openvpn* -iname 'sample-keys')
+
+# DNS2TCP
+DNS2TCP_DOMAIN=t1.soroti.com
+DNS2TCP_LOCAL_PORT=2222
+DNS2TCP_SOCKS_PORT=1080
+DNS2TCP_HTTP_PROXY_PORT=8089
+DNS2TCP_RESOURCE_1=ssh2
+DNS2TCP_RESOURCE_2=vpn
+DNS2TCP_DNS_SERVER=41.202.229.144
+DNS2TCPC_USER=root
+
+# VLM VoD
+VLM_VOD_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/vlm
+VLM_VOD_CONFIG_FILE=$VLM_VOD_CONFIG_DIR/vlm.conf
+VLM_VOD_DIRECTORY=/JambulaTV/vlm_vod
+VLM_VOD_CREATE_SCRIPT=$BINARY_PREFIX/jambulatv-create-video-on-demand
+VLM_VOD_DELETE_SCRIPT=$BINARY_PREFIX/jambulatv-delete-video-on-demand
+
+INCRON_DIRECTORY=/etc/incron.d
+
+# Asterisk
+ASTERISK_AGI_BIN_DIR=$STATEDIR/lib/asterisk/agi-bin
+
+
+
+######################
+#  HELPER FUNCTIONS  #
+######################
+check_internet_connectivity_ping () {
+# host to ping
+REMOTE_HOST_NAME="google.com"
+ping -c 3 -W 3 $REMOTE_HOST_NAME > /dev/null 2>&1
+INTERNET_STATUS_VAL=$?
+}
+
+download_flexget_deps () {
+# Download fresh and updated flexget dependencies
+# ------------------------------------------------
+# Check Internet connectivity
+check_internet_connectivity_ping 
+if [ "$INTERNET_STATUS_VAL" != "0" ];
+then
+clear
+echo "You are not connected to the Internet.  Sorry, I can not proceed.
+"
+exit 0
+fi
+#
+# Make temporary backup folder
+[ ! -d /tmp/flexget_deps ] || rm -rf /tmp/flexget_deps
+mkdir /tmp/flexget_deps
+if [ -d $PROJECT_TARBALLS_DIR/flexget_deps ];
+then
+# Remove old packages
+mv -v $PROJECT_TARBALLS_DIR/flexget_deps/*{gz,bz2,zip} /tmp/flexget_deps/
+else
+# Create Download directory
+mkdir $PROJECT_TARBALLS_DIR/flexget_deps
+fi
+# Install update python modules
+for PYTHON_MODULE in \
+itsdangerous \
+setuptools \
+MarkupSafe \
+Paver \
+feedparser \
+SQLAlchemy \
+PyYAML \
+beautifulsoup4 \
+html5lib \
+PyRSS2Gen \
+pynzb \
+progressbar \
+Jinja2 \
+Werkzeug \
+flask \
+CherryPy \
+certifi \
+chardet \
+requests \
+six \
+python-dateutil \
+python-tvrage \
+jsonschema \
+plumbum \
+rpyc \
+tmdb3 \
+path.py \
+pbr \
+argparse \
+stevedore \
+babelfish \
+guessit \
+futures \
+tzlocal \
+pytz \
+apscheduler
+#
+do
+pip -v install --no-install -d $PROJECT_TARBALLS_DIR/flexget_deps $PYTHON_MODULE
+clear
+#
+done
+echo "Update completed. All flexget dependencies are located in [$PROJECT_TARBALLS_DIR/flexget_deps]"
+}
+
+
+
+#########################
+#  UNINSTALL FUNCTIONS  #
+#########################
+
+uninstall_src_pkgs () {
+if [ -d $INSTALL_SRC_DIR/$1 ];
+then
+echo "Uninstalling the package: $1 ..."
+cd $INSTALL_SRC_DIR/$1 
+make uninstall && make clean && make distclean
+cd $INSTALL_SRC_DIR
+rm -rf $1
+whereis $1 > /dev/null
+PKG_LEFTOVERS_EXIST=$?
+[ "$PKG_LEFTOVERS_EXIST" != "0" ] || rm -rf `whereis $1`
+else
+echo "The package: $1 is not installed"
+fi
+}
+
+uninstall_python_pkgs () {
+[ ! -d $PYTHON_SITEDIR/$1 ] || rm -rf $PYTHON_SITEDIR/$1
+whereis $1 > /dev/null
+PKG_LEFTOVERS_EXIST=$?
+[ "$PKG_LEFTOVERS_EXIST" != "0" ] || rm -rf `whereis $1`
+}
+
+uninstall_oss () {
+# Make build directory
+cd $INSTALL_SRC_DIR/oss && make clean
+# Uninstall
+sh $INSTALL_SRC_DIR/oss/setup/Linux/removeoss.sh
+rm -rf $INSTALL_SRC_DIR/oss
+rm -rf $INSTALL_SRC_DIR/oss-$OSS_VERSION-src-gpl
+}
+
+# Uninstall live555
+uninstall_live555 () {
+uninstall_src_pkgs live
+uninstall_src_pkgs live555
+uninstall_src_pkgs liveMedia
+uninstall_src_pkgs groupsock
+uninstall_src_pkgs BasicUsageEnvironment
+uninstall_src_pkgs UsageEnvironment
+# Remove Binaries
+for LIVEBIN in live555MediaServer live555ProxyServer sapWatch playSIP openRTSP testMP3Streamer testMPEG1or2VideoStreamer testMPEG1or2AudioVideoStreamer testMPEG2TransportStreamer testMPEG4VideoStreamer testH264VideoStreamer testDVVideoStreamer testWAVAudioStreamer testAMRAudioStreamer vobStreamer testMP3Receiver testMPEG1or2VideoReceiver testMPEG2TransportReceiver sapWatch testRelay testReplicator testOnDemandRTSPServer testMPEG1or2AudioVideoToDarwin testMPEG4VideoToDarwin testRTSPClient openRTSP playSIP testMPEG1or2Splitter testMPEG1or2ProgramToTransportStream testH264VideoToTransportStream MPEG2TransportStreamIndexer testMPEG2TransportStreamTrickPlay
+do
+rm $BINARY_PREFIX/$LIVEBIN
+done
+# Remove Libs
+for LIVELIB in libBasicUsageEnvironment.a libliveMedia.a libgroupsock.a libUsageEnvironment.a
+do
+rm $LIBDIR/$LIVELIB
+done
+}
+
+uninstall_icinga2 () {
+# stop icinga2 service
+systemctl stop icinga2.service
+# disable service
+systemctl disable icinga2.service
+
+# Remove user and groups
+groupdel $ICINGA_CMD_GROUP
+userdel -r $ICINGA_USER
+# /etc
+mv -v $CONFDIR/icinga2 icinga2.$ICINGA2_VERSION_PREVIOUS
+rm -f $CONFDIR/rc.d/rc{0,1,2,3,4,5,6}.d/*icinga2
+rm -f $CONFDIR/bash_completion.d/icinga2
+rm -f $CONFDIR/logrotate.d/icinga2
+rm -f $CONFDIR/sysconfig/icinga2
+# /var 
+rm -rf $STATEDIR/cache/icinga2 \
+rm -rf $STATEDIR/lib/icinga2 \
+rm -rf $STATEDIR/log/icinga2 \
+rm -rf $STATEDIR/spool/icinga2
+# /usr
+rm -f $SYSTEMD_UNITS_DIR_SYSTEM/icinga2.service
+rm -f $PREFIX/sbin/icinga2*
+rm -rf $LIBDIR/icinga2
+rm -rf $PREFIX/share/doc/icinga2
+rm -rf $PREFIX/share/icinga2*
+rm -f $MANDIR8/icinga2*
+rm -rf $INSTALL_SRC_DIR/icinga2
+}
+
+uninstall_zoneminder () {
+uninstall_src_pkgs zoneminder
+# Stop processes
+systemctl stop zoneminder.service
+kill $(ps auxw | grep zm | awk {'print $2'})
+# Uninstall
+cd $INSTALL_SRC_DIR/ZoneMinder && make uninstall
+rm -rf $INSTALL_SRC_DIR/ZoneMinder
+rm -rf $PREFIX/share/zoneminder
+rmdir $PROJECT_SYSTEM_CONF_DIR/zoneminder/
+rm -rf /usr/share/perl5/vendor_perl/ZoneMinder
+rm -rf /usr/lib/perl5/vendor_perl/auto/ZoneMinder
+rm -rf $RUNDIR/zm
+#rm -rf $WWW_HTML_DIR/zm
+#rm -rf $WWW_CGI_DIR/zm
+#rm -rf $STATEDIR/lib/mysql/zm
+}
+
+uninstall_flexget_deps () {
+for PYTHON_MODULE in \
+itsdangerous \
+setuptools \
+MarkupSafe \
+Paver \
+feedparser \
+SQLAlchemy \
+PyYAML \
+beautifulsoup4 \
+html5lib \
+PyRSS2Gen \
+pynzb \
+progressbar \
+Jinja2 \
+Werkzeug \
+Flask \
+CherryPy \
+certifi \
+chardet \
+requests \
+six \
+python-dateutil \
+python-tvrage \
+jsonschema \
+plumbum \
+rpyc \
+tmdb3 \
+path.py \
+pbr \
+argparse \
+stevedore \
+babelfish \
+guessit \
+futures \
+tzlocal \
+pytz \
+APScheduler
+#
+do
+# Remove any existing modules
+[ ! -d $INSTALL_SRC_DIR/$PYTHON_MODULE* ] || rm -rf $INSTALL_SRC_DIR/$PYTHON_MODULE*
+rm -rf $PYTHON_SITEDIR/$PYTHON_MODULE* 
+# Install python modules
+echo "Uninstalling $PYTHON_MODULE ..."
+done
+}
+
+uninstall_asterisk () {
+# Stop running asterisk
+systemctl stop asterisk
+# Make build directory
+cd $INSTALL_SRC_DIR/asterisk 
+# Uninstall
+make uninstall-all
+# Remove source directories
+rm -rf $INSTALL_SRC_DIR/asterisk $LIBDIR/asterisk $INCDIR/asterisk.h
+# Remove asterisk user/group
+groupdel asterisk
+userdel -r asterisk
+# Remove systemd files
+rm -f $SYSTEMD_UNITS_DIR_SYSTEM/asterisk.service $SYSTEMD_UNITS_DIR_USER/asterisk.service
+systemctl --system daemon-reload
+# Backup and remove project configs directory
+mv -v $PROJECT_SYSTEM_CONF_DIR/asterisk $PROJECT_SYSTEM_CONF_DIR/asterisk-$ASTERISK_VERSION-backup
+}
+
+# Uninstall dahdi
+uninstall_dahdi () {
+uninstall_src_pkgs dahdi-linux-complete
+uninstall_src_pkgs dahdi
+}
+
+# uninstall chilli
+uninstall_coova_chilli () {
+systemctl stop coova-chilli.service
+uninstall_src_pkgs chilli
+uninstall_src_pkgs coova-chilli
+uninstall_src_pkgs haserl
+# Remove configs /customizations
+rm -f $SYSTEMD_UNITS_DIR_SYSTEM/coova-chilli.service $SYSTEMD_UNITS_DIR_USER/coova-chilli.service
+rm -rf $COOVA_HTML_DIR
+echo "delete from radcheck;" | mysql -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME
+}
+
+uninstall_gstreamer_plugins () {
+for GST_PLUGIN in \
+base \
+good \
+bad \
+ugly 
+do
+uninstall_src_pkgs gst-plugins-$GST_PLUGIN 
+done
+}
+
+uninstall_avplayers () {
+uninstall_src_pkgs livepause
+uninstall_python_pkgs pydvbstreamer
+uninstall_src_pkgs dvbstreamer
+uninstall_src_pkgs tvheadend
+uninstall_src_pkgs xine-ui
+uninstall_src_pkgs xine-lib
+uninstall_src_pkgs xine
+uninstall_src_pkgs vlc 
+#&& rm -f `find /usr/lib -name libvlc*` && rm -f `find $LIBDIR -name libvlc*`
+uninstall_src_pkgs mplayer
+uninstall_src_pkgs ffmpeg
+uninstall_src_pkgs x264 
+uninstall_src_pkgs libdvbpsi
+uninstall_live555
+}
+
+uninstall_hostapd () {
+systemctl stop hostapd.service
+rm -f /usr/sbin/{hostapd,hostapd_cli}
+#rm -rf /etc/hostapd
+rm -rf $INSTALL_SRC_DIR/hostapd
+}
+
+
+
+#######################
+#  INSTALL FUNCTIONS  #
+#######################
+
+install_dir_create () {
+# Create install directory
+[ -d $INSTALL_SRC_DIR ] || mkdir -p $INSTALL_SRC_DIR
+}
+
+ssl_cert_key_generate () {
+# ssl_cert_key_generate [CERT_FILE_PATH] [KEY_FILE_PATH] [DAYS]
+openssl req -new -x509 -nodes -out $1 -keyout $2 -days $3 -subj "/CN=$PROJECT_NAME.$SYSTEM_IDENTIFIER.localhost /O=$PROJECT_NAME /OU=$COMPANY_NAME"
+}
+
+intel_x11_driver_install () {
+VIDEO_ACCELERATION=$1
+# Remove any existing intel drivers
+yum -y remove xorg-x11-drv-intel-*
+# check version
+if [ "$INTEL_X11_DRIVER_VERSION" = "git" ];
+then
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/xf86-video-intel/ $INSTALL_SRC_DIR/xf86-video-intel/
+$INSTALL_SRC_DIR/xf86-video-intel/autogen.sh
+else
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/xf86-video-intel-$INTEL_X11_DRIVER_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v xf86-video-intel-* xf86-video-intel
+fi
+#
+# Compile all
+cd $INSTALL_SRC_DIR/xf86-video-intel
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-xvmc \
+	--enable-$VIDEO_ACCELERATION --with-default-accel=$VIDEO_ACCELERATION \
+	--with-xorg-module-dir=$LIBDIR/xorg/modules
+make && make install
+}
+
+nouveau_x11_driver_install () {
+# Remove any existing nouveau drivers
+yum -y remove xorg-x11-drv-nouveau-*
+# check version
+if [ "$NOUVEAU_X11_DRIVER_VERSION" = "git" ];
+then
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/xf86-video-nouveau/ $INSTALL_SRC_DIR/xf86-video-nouveau/
+$INSTALL_SRC_DIR/xf86-video-nouveau/autogen.sh
+else
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/xf86-video-nouveau-$NOUVEAU_X11_DRIVER_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v xf86-video-nouveau-* xf86-video-nouveau
+fi
+#
+# Compile all
+cd $INSTALL_SRC_DIR/xf86-video-nouveau
+./configure --prefix=$PREFIX --libdir=$LIBDIR \
+	--with-xorg-module-dir=$LIBDIR/xorg/modules
+make && make install
+}
+
+mga_x11_driver_install () {
+# Remove any existing mga drivers
+yum -y remove xorg-x11-drv-mga-*
+# check version
+if [ "$MGA_X11_DRIVER_VERSION" = "git" ];
+then
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/xf86-video-mga/ $INSTALL_SRC_DIR/xf86-video-mga/
+$INSTALL_SRC_DIR/xf86-video-mga/autogen.sh
+else
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/xf86-video-mga-$MGA_X11_DRIVER_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v xf86-video-mga-* xf86-video-mga
+fi
+#
+# Compile all
+cd $INSTALL_SRC_DIR/xf86-video-mga
+./configure --prefix=$PREFIX --libdir=$LIBDIR \
+	--disable-exa --enable-xaa --with-xorg-module-dir=$LIBDIR/xorg/modules
+make && make install
+}
+
+openchrome_x11_driver_install () {
+# Remove any existing openchrome drivers
+yum -y remove xorg-x11-drv-openchrome-*
+# check version
+if [ "$OPENCHROME_X11_DRIVER_VERSION" = "git" ];
+then
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/xf86-video-openchrome/ $INSTALL_SRC_DIR/xf86-video-openchrome/
+$INSTALL_SRC_DIR/xf86-video-openchrome/autogen.sh
+else
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/xf86-video-openchrome-$OPENCHROME_X11_DRIVER_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v xf86-video-openchrome-* xf86-video-openchrome
+fi
+#
+# Compile all
+cd $INSTALL_SRC_DIR/xf86-video-openchrome
+./configure --prefix=$PREFIX --libdir=$LIBDIR \
+	--with-xorg-module-dir=$LIBDIR/xorg/modules
+make && make install
+}
+
+alsa_lib_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/alsa-lib-$ALSA_LIB_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v alsa-lib-* alsa-lib
+# Compile
+cd $INSTALL_SRC_DIR/alsa-lib && ./configure --prefix=$PREFIX \
+--libdir=$LIBDIR
+make && make install
+}
+
+alsa_utils_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/alsa-utils-$ALSA_UTILS_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v alsa-utils-* alsa-utils
+# Compile
+cd $INSTALL_SRC_DIR/alsa-utils && ./configure --prefix=$PREFIX \
+--disable-xmlto --libdir=$LIBDIR
+make && make install
+}
+
+oss_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/oss-*src-gpl.tar.bz2 -C $INSTALL_SRC_DIR
+# Patch make file to disable soundon
+
+# Make build directory
+mkdir $INSTALL_SRC_DIR/oss
+# Compile
+cd $INSTALL_SRC_DIR/oss && \
+$INSTALL_SRC_DIR/oss-*-src-gpl/configure
+make build
+make install
+}
+
+alsa_oss_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/alsa-oss-$ALSA_OSS_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v alsa-oss-* alsa-oss
+# Compile
+cd $INSTALL_SRC_DIR/alsa-oss && ./configure --prefix=$PREFIX --libdir=$LIBDIR
+make && make install
+}
+
+ofono_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/ofono-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v ofono-* ofono
+# Compile
+cd $INSTALL_SRC_DIR/ofono && ./configure --prefix=$PREFIX --libdir=$LIBDIR \
+	--sysconfdir=$CONFDIR --localstatedir=$STATEDIR --mandir=$MANDIR1
+make
+make install
+}
+
+bluez4_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/bluez-4*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v bluez-4* bluez
+# Compile
+cd $INSTALL_SRC_DIR/bluez && ./configure --prefix=$PREFIX --libdir=$LIBDIR \
+--localstatedir=$STATEDIR --enable-test
+make 
+make install
+}
+
+bluez4_configure () {
+# Allow bluetoothd to access dbus
+echo "<!-- This configuration file specifies the required security policies
+     for Bluetooth core daemon to work. -->
+
+<!DOCTYPE busconfig PUBLIC \"-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN\"
+ \"http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd\">
+<busconfig>
+
+  <!-- ../system.conf have denied everything, so we just punch some holes -->
+
+  <policy user=\"root\">
+    <allow own=\"org.bluez\"/>
+    <allow send_destination=\"org.bluez\"/>
+    <allow send_interface=\"org.bluez.Agent\"/>
+    <allow send_interface=\"org.bluez.HandsfreeAgent\"/>
+    <allow send_interface=\"org.bluez.MediaEndpoint\"/>
+    <allow send_interface=\"org.bluez.MediaPlayer\"/>
+    <allow send_interface=\"org.bluez.Watcher\"/>
+    <allow send_interface=\"org.bluez.ThermometerWatcher\"/>
+  </policy>
+
+  <policy at_console=\"true\">
+    <allow send_destination=\"org.bluez\"/>
+  </policy>
+
+  <!-- allow users of lp group (printing subsystem) to 
+       communicate with bluetoothd -->
+  <policy group=\"lp\">
+    <allow send_destination=\"org.bluez\"/>
+  </policy>
+
+  <policy context=\"default\">
+    <deny send_destination=\"org.bluez\"/>
+  </policy>
+
+</busconfig>" > /etc/dbus-1/system.d/bluetooth.conf
+#
+# Pairing scripts
+# Copy simple-agent to binaries directory - used for pairing
+cp -v $INSTALL_SRC_DIR/bluez/test/simple-agent $BINARY_PREFIX/bluez_simple-agent
+# Patch bluez simple-agent binary - so it does not prompt for PIN code
+patch -p1 $BINARY_PREFIX/bluez_simple-agent < $PROJECT_PATCHES_DIR/bluez_simple-agent.patch
+#
+# Copy jambulatv-bluez-pairing script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-bluez-pairing ] || cp -v $PROJECT_BIN_DIR/jambulatv-bluez-pairing $BINARY_PREFIX/
+#
+# Enable bluetooth service
+systemctl enable bluetooth.service
+systemctl start bluetooth.service
+}
+
+bluez5_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/bluez-5*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v bluez-5* bluez
+# Compile
+cd $INSTALL_SRC_DIR/bluez && ./configure --prefix=$PREFIX --libdir=$LIBDIR \
+--localstatedir=$STATEDIR --enable-android=no
+make 
+make install
+}
+
+bluez5_configure () {
+# Pairing scripts
+# Copy simple-agent to binaries directory - used for pairing
+cp -v $INSTALL_SRC_DIR/bluez/test/simple-agent $BINARY_PREFIX/bluez_simple-agent
+# Patch bluez simple-agent binary - so it does not prompt for PIN code
+patch -p1 $BINARY_PREFIX/bluez_simple-agent < $PROJECT_PATCHES_DIR/bluez_simple-agent.patch
+#
+# Copy jambulatv-bluez-pairing script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-bluez-pairing ] || cp -v $PROJECT_BIN_DIR/jambulatv-bluez-pairing $BINARY_PREFIX/
+#
+# Enable bluetooth service
+systemctl enable bluetooth.service
+systemctl start bluetooth.service
+}
+
+sbc_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/sbc-$SBC_VERSION.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v sbc-* sbc
+# Compile
+cd $INSTALL_SRC_DIR/sbc && ./configure --prefix=$PREFIX --libdir=$LIBDIR
+make && make install
+}
+
+pulseaudio_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/pulseaudio-$PULSEAUDIO_VERSION.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v pulseaudio-* pulseaudio
+# Compile
+cd $INSTALL_SRC_DIR/pulseaudio && ./configure --prefix=$PREFIX \
+--libdir=$LIBDIR --sysconfdir=$CONFDIR --localstatedir=$STATEDIR \
+--enable-alsa --enable-bluez PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
+make && make install
+# Add pulse groups
+for PULSE_GROUP in pulse pulse-access
+do
+groupadd -r $PULSE_GROUP
+done
+#
+# Add pulse system user - put them in pulse, audio groups
+useradd -r -c "PulseAudio System" -d $PULSE_HOME_DIR -g pulse -s /sbin/nologin pulse
+# Add pulse user to audio group
+usermod -G audio pulse
+# Add multimedia users to pulse-access group
+usermod -G pulse-access $MULTIMEDIA_USER
+}
+
+# Install alsa-plugins after pulseaudio install
+alsa_plugins_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/alsa-plugins-$ALSA_PLUGINS_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v alsa-plugins-* alsa-plugins
+# Compile
+cd $INSTALL_SRC_DIR/alsa-plugins && ./configure --prefix=/usr \
+--libdir=$LIBDIR PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
+make && make install
+}
+
+pyalsaaudio_install () {
+tar zxvf $PROJECT_TARBALLS_DIR/pyalsaaudio-$PYALSAAUDIO_VERSION.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v pyalsaaudio-* pyalsaaudio
+# Compile
+cd $INSTALL_SRC_DIR/pyalsaaudio 
+python setup.py install --install-lib=$PYTHON_SITEDIR
+}
+
+pulseaudio_query () {
+# Start pulseaudio temporarily in system mode if not running
+ps auxw | grep pulseaudio > /dev/null 2>&1
+PULSEAUDIO_STATE=$?
+[ "$PULSEAUDIO_STATE" = "0" ] || /usr/bin/pulseaudio --system --disallow-module-loading --disallow-exit -D > /dev/null 2>&1
+#
+# Default sink
+PULSE_DEFAULT_SINK=`su -l $MULTIMEDIA_USER -c "pactl list sinks short" | awk {'print $2'} | head -1`
+PULSE_DEFAULT_SOURCE=`su -l $MULTIMEDIA_USER -c "pactl list sources short" | grep monitor | head -1 | awk {'print $2'}`
+# V4L TV Card Loopback device
+TV_AUDIO_SOURCE=`su -l $MULTIMEDIA_USER -c "pactl list" | grep -B1 'SAA713' | grep alsa_input | cut -d : -f2 | sed 's/ //g'`
+}
+
+pulseaudio_configure () {
+# Create pulse dir if it does not exist
+[ -d $PULSE_HOME_DIR ] || mkdir -p $PULSE_HOME_DIR
+# Change ownership to pulse user
+chown -R pulse $PULSE_HOME_DIR
+# Backup system and default pulse files
+cp -v $PULSE_DEFAULT_CONFIG $PULSE_DEFAULT_CONFIG.orig
+# Add multimedia user to video,audio and pulse groups
+usermod -G video,audio,pulse,pulse-access $MULTIMEDIA_USER
+
+# Get needed pulseaudio variables
+pulseaudio_query
+
+# Create customized default.pa file
+# **********************************
+cat <<EOF > $PULSE_DEFAULT_CONFIG
+#!/usr/bin/pulseaudio -nF
+
+### Automatically restore the volume of streams and devices
+load-module module-device-restore
+load-module module-stream-restore
+load-module module-card-restore
+
+### Automatically augment property information from .desktop files
+### stored in /usr/share/application
+load-module module-augment-properties
+
+### Should be after module-*-restore but before module-*-detect
+load-module module-switch-on-port-available
+
+### Automatically load driver modules depending on the hardware available
+.ifexists module-udev-detect.so
+load-module module-udev-detect
+.endif
+
+### Automatically load driver modules for Bluetooth hardware
+.ifexists module-bluetooth-policy.so
+load-module module-bluetooth-policy
+.endif
+
+.ifexists module-bluetooth-discover.so
+load-module module-bluetooth-discover
+.endif
+
+### Load several protocols
+.ifexists module-esound-protocol-unix.so
+load-module module-esound-protocol-unix
+.endif
+load-module module-native-protocol-unix
+
+### Network access 
+load-module module-zeroconf-publish
+load-module module-zeroconf-discover
+
+### Automatically restore the default sink/source when changed by the user
+### during runtime
+### NOTE: This should be loaded as early as possible so that subsequent modules
+### that look up the default sink/source get the right value
+load-module module-default-device-restore
+
+### Automatically move streams to the default sink if the sink they are
+### connected to dies, similar for sources
+load-module module-rescue-streams
+
+### Make sure we always have a sink around, even if it is a null sink.
+load-module module-always-sink
+
+### Honour intended role device property
+load-module module-intended-roles
+
+### Automatically suspend sinks/sources that become idle for too long
+load-module module-suspend-on-idle
+
+### If autoexit on idle is enabled we want to make sure we only quit
+### when no local session needs us anymore.
+.ifexists module-console-kit.so
+load-module module-console-kit
+.endif
+.ifexists module-systemd-login.so
+load-module module-systemd-login
+.endif
+
+### Enable positioned event sounds
+load-module module-position-event-sounds
+
+### Cork music/video streams when a phone stream is active
+load-module module-role-cork
+
+### Modules to allow autoloading of filters (such as echo cancellation)
+### on demand. module-filter-heuristics tries to determine what filters
+### make sense, and module-filter-apply does the heavy-lifting of
+### loading modules and rerouting streams.
+load-module module-filter-heuristics
+load-module module-filter-apply
+
+### DBUS
+.ifexists module-dbus-protocol.so
+load-module module-dbus-protocol
+.endif
+
+
+### Make some devices default
+set-default-sink alsa_output.pci-0000_01_01.0.analog-stereo
+set-default-source alsa_output.pci-0000_01_01.0.analog-stereo.monitor
+
+
+### Jambula Labs
+### Allow access to this pulseaudio server i.e. Network audio server
+### -----------------------------------------------------------------
+load-module module-esound-protocol-tcp auth-anonymous=1
+load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;192.168.0.0/16
+
+# Where INPUT will be played at i.e. Music Source
+#-------------------------------------------------
+# Point to Where Speakers are Located
+#load-module module-alsa-sink device=hw:1,0 sink_name=frontend
+#load-module module-tunnel-sink sink_name=backend server=$NETWORK_IP_ADDRESS
+#load-module module-combine-sink sink_name=all_speakers slaves=frontend,backend
+#load-module module-combine sink_name=all_speakers slaves=$PULSE_DEFAULT_SINK,backend
+#set-default-sink all_speakers
+EOF
+#
+# Allow root user to access pulseaudio server started by Multimedia User
+[ -d $PULSE_ROOT_CONFIG_DIR ] || mkdir -p $PULSE_ROOT_CONFIG_DIR 
+echo "# Allow root user to access pulseaudio server started by $MULTIMEDIA_USER
+default-server = 127.0.0.1" > $PULSE_ROOT_CONFIG_DIR/client.conf
+
+# Add asoundrc file
+cat <<EOF > $CONFDIR/asound.conf
+pcm.!default {
+    type pulse
+    hint.description "$PROJECT_NAME PulseAudio Device"
+}   
+ctl.!default {
+    type pulse
+}
+
+pcm.pulse_monitor {
+  type pulse
+  device $PULSE_DEFAULT_SOURCE
+}
+ctl.pulse_monitor {
+  type pulse
+  device $PULSE_DEFAULT_SOURCE
+}
+EOF
+}
+
+portaudio_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/pa_$PORTAUDIO_VERSION.tgz -C $INSTALL_SRC_DIR
+# Compile
+cd $INSTALL_SRC_DIR/portaudio
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+make && make install
+ldconfig
+}
+
+oss_devices_configure () {
+# Add OSS devices entries i.e. /dev/dspX /dev/mixerX
+cp -v $PROJECT_CONFIGS_DIR/sndcards.conf.sample $MODPROBE_DIR/sndcards.conf
+}
+
+SDL1_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/SDL-$SDL1_VERSION*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v SDL-* SDL1
+# Compile
+cd $INSTALL_SRC_DIR/SDL1
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make && make install
+}
+
+SDL2_install () {
+for SDL_PKG in SDL2 SDL2_image SDL2_mixer SDL2_net SDL2_ttf
+do
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/$SDL_PKG-$SDL2_VERSION*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v $SDL_PKG-* $SDL_PKG
+# Compile
+cd $INSTALL_SRC_DIR/$SDL_PKG
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make && make install
+done
+}
+
+OpenCV_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/OpenCV-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v OpenCV-* OpenCV
+# Compile
+cd $INSTALL_SRC_DIR/OpenCV 
+cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_INSTALL_PREFIX=$PREFIX ../OpenCV
+make && make install
+# Fix the following using CMake --libdir type option?
+#---------------------------------------------------
+# Create links to lib directory
+for LIB_FILE in `ls $PREFIX/lib/libopencv*.so`;
+do
+ln -s $LIB_FILE $LIBDIR/`basename $LIB_FILE`
+done
+# Move opencv.pc to proper libdir
+mv -v $PREFIX/lib/pkgconfig/opencv.pc $LIBDIR/pkgconfig/
+}
+
+openal_soft_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/openal-soft-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v openal-soft-* openal-soft
+# Compile
+cd $INSTALL_SRC_DIR/openal-soft 
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DLIB_SUFFIX=64 
+make && make install
+}
+
+vsxu_install () {
+rsync -avz $PROJECT_GITHUB_DIR/vsxu/ $INSTALL_SRC_DIR/vsxu/
+ln -s $INCDIR/GL/glfw3.h $INCDIR/GL/glfw.h
+# configure
+cd $INSTALL_SRC_DIR/vsxu
+mkdir BUILD
+cd BUILD
+cmake -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_INSTALL_PREFIX=$PREFIX -DGLFW_INCLUDE_PATH=$INCDIR/GL ../../vsxu
+
+echo
+echo "Did configure work? - Enter to proceed"
+read
+make
+echo
+echo "Did make work? - Enter to proceed"
+read
+make install
+
+#make && make install 
+}
+
+ffmpeg_deps_install () {
+# vo-aacenc
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/vo-aacenc-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v vo-aacenc-* vo-aacenc
+# Compile
+cd $INSTALL_SRC_DIR/vo-aacenc && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make && make install
+#
+# vo-amrwbenc
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/vo-amrwbenc-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v vo-amrwbenc-* vo-amrwbenc
+# Compile
+cd $INSTALL_SRC_DIR/vo-amrwbenc && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make && make install
+#
+# fdk-aac
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/fdk-aac-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v fdk-aac-* fdk-aac
+# Compile
+cd $INSTALL_SRC_DIR/fdk-aac && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make && make install
+#
+# libaacplus
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/libaacplus-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libaacplus-* libaacplus
+# Compile
+cd $INSTALL_SRC_DIR/libaacplus
+./autogen.sh
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+# Add 3gpp sources
+cp -v $PROJECT_ZIPS_DIR/26410-800.zip src/
+make && make install
+#
+# gpac
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/gpac-*.tar.gz -C $INSTALL_SRC_DIR
+# Compile
+cd $INSTALL_SRC_DIR/gpac && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make && make install
+#
+# libvdpau
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/libvdpau-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libvdpau-* libvdpau
+# Compile
+cd $INSTALL_SRC_DIR/libvdpau
+./autogen.sh
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make && make install
+#
+# nut
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/nut-*.tar.gz -C $INSTALL_SRC_DIR
+# Compile
+cd $INSTALL_SRC_DIR/nut
+make PREFIX=/usr CFLAGS="-fPIC"
+make PREFIX=/usr CFLAGS="-fPIC" install
+#
+# xavs
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/xavs-*.tar.gz -C $INSTALL_SRC_DIR
+# Compile
+cd $INSTALL_SRC_DIR/xavs
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-pic
+make && make install
+#
+# fluidsynth
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/fluidsynth-*.tar.gz -C $INSTALL_SRC_DIR
+# Compile
+cd $INSTALL_SRC_DIR && mv -v fluidsynth-* fluidsynth
+cd $INSTALL_SRC_DIR/fluidsynth && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make && make install
+#
+# libgoom2-devel
+# Unpack in temporary directory
+tar jxvf $PROJECT_TARBALLS_DIR/libgoom2-devel-*.tar.bz2 -C /tmp
+# Move files to proper destinations
+rsync -avz /tmp/usr/include/ $INCDIR/
+rsync -avz /tmp/usr/lib/ $LIBDIR/
+# Remove temp files
+rm -rf /tmp/usr
+#
+# libffms2-devel
+# Unpack in temporary directory
+tar jxvf $PROJECT_TARBALLS_DIR/libffms2-devel-*.tar.bz2 -C /tmp
+# Move files to proper destinations
+rsync -avz /tmp/usr/include/ $INCDIR/
+rsync -avz /tmp/usr/lib/ $LIBDIR/
+# Remove temp files
+rm -rf /tmp/usr
+}
+
+live555_install () {
+tar zxvf $PROJECT_TARBALLS_DIR/live.$LIVE555_VERSION.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR/live
+# Change install prefix
+for MAKEFILE_PREF in `grep -rl 'PREFIX = /usr/local'`
+do
+sed -i "s:PREFIX = /usr/local:PREFIX = $PREFIX:g" $MAKEFILE_PREF
+done
+# Change lib path
+for MAKEFILE_LIB in `grep -rl '$(PREFIX)/lib'`
+do
+sed -i "s:\$(PREFIX)/lib:$LIBDIR:g" $MAKEFILE_LIB
+done
+# Compile
+./genMakefiles linux
+# Patch Makefile: Add option -DRTSPCLIENT_SYNCHRONOUS_INTERFACE=1
+#patch -p1 $INSTALL_SRC_DIR/live/liveMedia/Makefile < $PROJECT_PATCHES_DIR/livemedia_makefile.patch
+make && make install
+}
+
+libdvbpsi_install () {
+# Remove old libdvbpsi
+yum -y remove libdvbpsi-*
+# unpack
+rsync -avz $PROJECT_GITHUB_DIR/libdvbpsi/ $INSTALL_SRC_DIR/libdvbpsi/
+# configure
+cd $INSTALL_SRC_DIR/libdvbpsi 
+./bootstrap
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-debug
+make && make install
+}
+
+x264_install () {
+# Remove old x264
+yum -y remove x264-*
+# Unpack
+rsync -avz $PROJECT_GITHUB_DIR/x264/ $INSTALL_SRC_DIR/x264/
+# Configure
+cd $INSTALL_SRC_DIR/x264
+./configure --prefix=$PREFIX --enable-shared --enable-pic --system-libx264 --enable-debug --libdir=$LIBDIR 
+make && make install
+}
+
+ffmpeg_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/ffmpeg-$FFMPEG_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v ffmpeg-* ffmpeg
+cd $INSTALL_SRC_DIR/ffmpeg 
+# check for libx264
+which x264 > /dev/null 2>&1
+LIBX264_EXISTS=$?
+# Compile 
+if [ "$LIBX264_EXISTS" = "0" ];
+then
+# compile with x264 libraries
+./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-shared --enable-pic --enable-gpl --enable-nonfree --enable-x11grab --enable-libcdio --enable-libdc1394 --enable-libfaac --enable-libfreetype --enable-libmodplug --enable-libmp3lame --enable-libpulse --enable-librtmp --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libxvid --enable-postproc --enable-runtime-cpudetect --enable-avfilter --enable-swscale --enable-pthreads --enable-vdpau --enable-bzlib --enable-gnutls --enable-libass --enable-libgsm --enable-version3 --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libvo-aacenc --enable-libvo-amrwbenc --enable-libvpx --enable-zlib --enable-libnut --enable-libv4l2 --enable-libaacplus --enable-openssl --enable-bzlib --enable-libxavs --enable-libx264 --enable-openal --enable-libcelt --disable-static --disable-podpages
+else
+# compile withOUT x264 libraries
+./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-shared --enable-pic --enable-gpl --enable-nonfree --enable-x11grab --enable-libcdio --enable-libdc1394 --enable-libfaac --enable-libfreetype --enable-libmodplug --enable-libmp3lame --enable-libpulse --enable-librtmp --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libxvid --enable-postproc --enable-runtime-cpudetect --enable-avfilter --enable-swscale --enable-pthreads --enable-vdpau --enable-bzlib --enable-gnutls --enable-libass --enable-libgsm --enable-version3 --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libvo-aacenc --enable-libvo-amrwbenc --enable-libvpx --enable-zlib --enable-libnut --enable-libv4l2 --enable-libaacplus --enable-openssl --enable-bzlib --enable-libxavs --enable-openal --enable-libcelt --disable-static --disable-podpages
+fi
+#
+make && make install
+}
+
+vlc_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/vlc-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v vlc-* vlc
+# Compile
+cd $INSTALL_SRC_DIR/vlc && ./configure --libdir=$LIBDIR --prefix=$PREFIX \
+--with-contrib=$PREFIX GOOM_CFLAGS="-I$INCDIR" GOOM_LIBS="-L$LIBDIR" PKG_CONFIG_PATH=$LIBDIR/pkgconfig --enable-debug --enable-run-as-root --enable-realrtsp --enable-wma-fixed --enable-shine --enable-omxil --enable-omxil-vout --enable-rpi-omxil --enable-merge-ffmpeg --enable-fdkaac --enable-tremor --enable-android-surface --enable-directfb --enable-aa --enable-opensles --enable-lirc --enable-growl --disable-skins2 --enable-shine=no
+make
+make install
+}
+
+xine_lib_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/xine-lib-$XINE_LIB_VERSION.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v xine-lib-* xine-lib
+# Compile
+cd $INSTALL_SRC_DIR/xine-lib && ./configure --prefix=$PREFIX \
+PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig --libdir=$LIBDIR \
+--with-real-codecs-path=$LIBDIR/codecs \
+--with-w32-path=$LIBDIR/codecs \
+--with-pic= \
+--enable-dvb \
+--enable-v4l2 \
+--enable-vcd \
+--enable-bluray \
+--enable-a52dec \
+--enable-asf \
+--enable-faad \
+--with-pulseaudio \
+--with-alsa \
+--disable-vcd \
+--disable-dxr3 \
+--disable-vaapi
+make && make install
+}
+
+xine_ui_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/xine-ui-$XINE_UI_VERSION.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v xine-ui-* xine-ui
+# Compile
+cd $INSTALL_SRC_DIR/xine-ui && ./configure --prefix=$PREFIX PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig --libdir=$LIBDIR
+make && make install
+}
+
+mplayer_install () {
+# Create MPlayer codecs directory
+[ -d $LIBDIR/codecs ] || mkdir -p $LIBDIR/codecs
+# Add Win32 Codecs
+tar -jxvf $PROJECT_TARBALLS_DIR/mplayer-codecs-all-$MPLAYER_CODECS_VERSION.tar.bz2 --strip-components 1 -C $LIBDIR/codecs/
+# Add RealPlayer Codecs
+cp -rv $PROJECT_CONTRIB_DIR/codecs/RealPlayer/* $LIBDIR/codecs/
+#
+# Test for version type - configure/compile differs due to ffmpeg
+# Release
+if [ "$MPLAYER_VERSION" != "checkout-snapshot" ];
+then
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/MPlayer-$MPLAYER_VERSION.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v MPlayer* mplayer
+else
+# Snapshot
+# Unpack mplayer
+tar jxvf $PROJECT_TARBALLS_DIR/mplayer-$MPLAYER_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v mplayer* mplayer
+# Add ffmpeg latest sources
+#rsync -avz --delete-after $PROJECT_GITHUB_DIR/ffmpeg/ mplayer/ffmpeg/
+tar jxvf $PROJECT_TARBALLS_DIR/ffmpeg-snapshot.tar.bz2 -C $INSTALL_SRC_DIR/mplayer
+fi
+# Patch that adds Uganda frequency table i.e. chanlist
+patch -p1 $INSTALL_SRC_DIR/mplayer/stream/frequencies.c < $PROJECT_PATCHES_DIR/mplayer_frequency_vhf.patch
+# Patch that fixes a problem when playing multiple streams 
+# (separate audio and video) over RTSP with user-specified -rtsp_port #
+patch -p1 $INSTALL_SRC_DIR/mplayer/libmpdemux/demux_rtp.cpp < $PROJECT_PATCHES_DIR/mplayer_demux_rtp.patch
+# Compile
+cd $INSTALL_SRC_DIR/mplayer && ./configure --prefix=$PREFIX \
+--confdir=$CONFDIR --libdir=$LIBDIR \
+--extra-cflags="-I$INCDIR/liveMedia -I$INCDIR/groupsock -I$INCDIR/UsageEnvironment -I$INCDIR/BasicUsageEnvironment" \
+--extra-libs="$LIBDIR/libliveMedia.a $LIBDIR/libUsageEnvironment.a $LIBDIR/libBasicUsageEnvironment.a $LIBDIR/libgroupsock.a -lstdc++" \
+--enable-xv --enable-sdl --enable-radio --enable-radio-capture --enable-radio-v4l2 --enable-tv-v4l2 --enable-pvr --enable-dvb --enable-menu --enable-vcd --enable-bluray --enable-dvdnav --enable-dvdread --enable-pulse
+make && make install
+}
+
+sox_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/sox-$SOX_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v sox-* sox
+# Compile
+cd $INSTALL_SRC_DIR/sox && ./configure --prefix=/usr \
+--libdir=$LIBDIR 
+make -s && make install
+}
+
+tvtime_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/tvtime-$TVTIME_VERSION.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v tvtime-* tvtime
+# Compile
+cd $INSTALL_SRC_DIR/tvtime && ./configure --disable-dependency-tracking --disable-rpath --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make && make install
+}
+
+tvheadend_install () {
+# Unpack
+rsync -avz $PROJECT_GITHUB_DIR/tvheadend/ $INSTALL_SRC_DIR/tvheadend/
+# Update dtv scan tables
+rsync -avz $PROJECT_GITHUB_DIR/dtv-scan-tables/ $PREFIX/share/dvb/
+# Change to tvheadend directory
+cd $INSTALL_SRC_DIR/tvheadend
+# configure tvheadend
+./configure --prefix=$PREFIX --libdir=$LIBDIR --mandir=$MANDIR1 --disable-libav \
+--disable-dvbscan
+make && make install
+}
+
+tvheadend_configure () {
+# Create tvheadend directory if it does not exist
+[ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
+# Copy Uganda DVB-T2 Network setup
+rsync -avz $PROJECT_CONFIGS_DIR/tvheadend/ $TVHEADEND_CONFIG_DIR/
+# Give multimedia user permission to access tvheadend directories
+chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+# Copy tvheadend systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service $SYSTEMD_UNITS_DIR_USER/
+# Enable and start tvheadend if needed
+systemctl enable tvheadend.service
+systemctl start tvheadend.service
+}
+
+fmtools_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/fmtools-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v fmtools-* fmtools
+# Compile
+cd $INSTALL_SRC_DIR/fmtools && ./configure --prefix=$PREFIX \
+	--libdir=$LIBDIR
+make && make install
+}
+
+dvbstreamer_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/dvbstreamer-$DVBSTREAMER_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v dvbstreamer-* dvbstreamer
+cd $INSTALL_SRC_DIR/dvbstreamer 
+# Patches to fix libev configure errors
+cp -v $INCDIR/libev/*.h $INCDIR
+#patch -p1 < $PROJECT_PATCHES_DIR/dvbstreamer_libev.patch # fixed in SVN version
+fgrep -rlZ pkginclude_DATA --include Makefile.am . | xargs -0 sed -i 's/pkginclude_DATA/pkginclude_HEADERS/g'
+#autoreconf -i # Not needed for SVN
+# Compile
+./autogen.sh
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR --disable-atsc --enable-file-streamer
+make && make install
+}
+
+pydvbstreamer_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/pydvbstreamer-$PYDVBSTREAMER_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v pydvbstreamer-* pydvbstreamer
+cd $INSTALL_SRC_DIR/pydvbstreamer 
+# Compile
+python setup.py install --install-lib=$PYTHON_SITEDIR
+}
+
+livepause_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/livepause-$LIVEPAUSE_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v livepause-* livepause
+# Compile
+cd $INSTALL_SRC_DIR/livepause && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR
+make && make install
+}
+
+avplayers_install () {
+live555_install
+libdvbpsi_install
+#---Install ffmpeg first without x264 - will be removed and re-installed shortly
+ffmpeg_install && x264_install 
+#---Uninstall already existing ffmpeg (without x264 libs) and install again w/ x264
+uninstall_src_pkgs ffmpeg && ffmpeg_install
+mplayer_install
+vlc_install
+xine_lib_install
+xine_ui_install
+tvheadend_install
+dvbstreamer_install
+pydvbstreamer_install
+livepause_install 
+}
+
+pyosd_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/pyosd-$PYOSD_VERSION.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v pyosd-* pyosd
+# Compile
+cd $INSTALL_SRC_DIR/pyosd 
+python setup.py install --install-lib=$PYTHON_SITEDIR
+# Patch - default font not working
+patch -p1 $PYTHON_SITEDIR/pyosd/__init__.py < $PROJECT_PATCHES_DIR/pyosd_font.patch
+}
+
+kaa_install () {
+# Create kaa install directory
+[ -d $KAA_INSTALL_DIR ] || mkdir -p $KAA_INSTALL_DIR
+# Loop through all kaa-modules
+for KAA_MODULE in kaa-base kaa-imlib2 kaa-display kaa-metadata kaa-webmetadata kaa-epg kaa-popcorn kaa-candy
+do
+# Copy module to install directory
+rsync -avz --delete-after $KAA_MODULES_GIT_DIR/$KAA_MODULE/ $KAA_INSTALL_DIR/$KAA_MODULE/
+# Install module
+cd $KAA_INSTALL_DIR/$KAA_MODULE
+python setup.py install --install-lib=$PYTHON_SITEDIR
+done
+}
+
+freevo1_install () {
+# Create freevo1 install directory
+[ -d $FREEVO_INSTALL_DIR ] || mkdir -p $FREEVO_INSTALL_DIR
+# Choose freevo verion
+if [ "$FREEVO_VERSION" = "git" ];
+then
+# Copy freevo1-git files to install directory
+rsync -avz --delete-after $FREEVO1_GIT_DIR/ $FREEVO_INSTALL_DIR/
+else
+# Copy freevo1-svn files to install directory
+rsync -avz --delete-after $FREEVO1_SVN_DIR/ $FREEVO_INSTALL_DIR/
+fi
+# Install module
+cd $FREEVO_INSTALL_DIR
+./autogen.sh nodocs
+if [ "$FREEVO_VERSION" = "svn" ];
+then
+# BUG Fix: revision number missing in SVN
+echo "__revision__ = ''" > $FREEVO_INSTALL_DIR/src/revision.py 
+fi
+python setup.py install --install-lib=$PYTHON_SITEDIR
+}
+
+freevo1_configure () {
+# Create config, share, log, cache, lib freevo directories
+for PROJECT_DIR in \
+$PROJECT_SYSTEM_CONF_DIR \
+$PROJECT_SYSTEM_SHARE_DIR \
+$PROJECT_SYSTEM_LOG_DIR \
+$PROJECT_SYSTEM_LIB_DIR \
+$PROJECT_SYSTEM_CACHE_DIR
+do
+mkdir -p $PROJECT_DIR/freevo
+done
+# Create freevo local config directory if non-existent
+[ -d $FREEVO_LOCAL_CONFIG_DIR ] || mkdir -p $FREEVO_LOCAL_CONFIG_DIR
+# Create freevo commands directory if it doesn't exist
+[ -d $FREEVO_SYSTEM_CONFIG_DIR/commands ] || mkdir -p $FREEVO_SYSTEM_CONFIG_DIR/commands
+# Create local settings directory if non-existent(This will be user accessible)
+[ -d $LOCAL_SETTINGS_DIR ] || mkdir -p $LOCAL_SETTINGS_DIR
+# freevo.conf
+$FREEVO_INSTALL_DIR/freevo setup --geometry=$PREFERRED_TV_RESOLUTION --position="0,0" --display="x11" --tv=pal --chanlist="southafrica" --prefix=/etc 
+# local_conf.py
+cp -v $FREEVO_INSTALL_DIR/local_conf.py.example $FREEVO_LOCAL_CONFIG_DIR/local_conf.py
+# patch local_conf.py
+patch -p1 $FREEVO_LOCAL_CONFIG_DIR/local_conf.py < $PROJECT_PATCHES_DIR/local_conf_py_1.patch
+# Add custom local_conf.py file
+cp -v $PROJECT_CONFIGS_DIR/jambulatv_main_conf.py.sample $FREEVO_SYSTEM_CONFIG_DIR/main_conf.py 
+# Add lircrc file
+# Copy Remote control file to above directory
+cp -rv $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/lircrc $FREEVO_SYSTEM_CONFIG_DIR
+# Copy Analog TV channels and frequencies to share directory
+cp -rv $PROJECT_CONTRIB_DIR/tv $PROJECT_SYSTEM_SHARE_DIR
+# Copy static db files e.g. weather to lib directory
+cp -rv $PROJECT_CONTRIB_DIR/db $PROJECT_SYSTEM_LIB_DIR
+# Copy TV files e.g. logos to share directory
+cp -rv $PROJECT_CONTRIB_DIR/tv/logos $PROJECT_SYSTEM_SHARE_DIR/tv
+# Populate commands directory
+cp -rv $PROJECT_CONTRIB_DIR/commands/*fxd $FREEVO_SYSTEM_CONFIG_DIR/commands
+# Add cron entry to cache freevo daily
+echo "
+# Freevo entries
+# --------------
+# Add cron entry to cache freevo daily
+@daily $BINARY_PREFIX/freevo cache --rebuild > /dev/null 2>&1
+" >> $SPOOLDIR/cron/$MULTIMEDIA_USER
+}
+
+freevo1_plugins () {
+# Configure freevo static, log, cache directories
+patch -p1 $FREEVO_INSTALL_DIR/src/config.py < $PROJECT_PATCHES_DIR/freevo_config.py.patch
+# Change Starting freevo to jambulatv
+patch -p1 $FREEVO_INSTALL_DIR/src/main.py < $PROJECT_PATCHES_DIR/main.py.patch
+# Patch utils-misc file - usbstorage plugin
+patch -p1 $FREEVO_INSTALL_DIR/src/util/misc.py < $PROJECT_PATCHES_DIR/misc_usbstorage.patch
+# Patch xine.py so quit takes place when using IPTV wrapper
+patch -p1 $FREEVO_INSTALL_DIR/src/video/plugins/xine.py < $PROJECT_PATCHES_DIR/xine.py.patch
+# move radio to main menu
+mv -v $FREEVO_INSTALL_DIR/src/audio/plugins/radio.py $FREEVO_INSTALL_DIR/src/audio
+}
+
+freevo_skin_customization () {
+# Patch GeeXBox Skin to use a nice font like MsTTF's trebucbd
+patch -p1 $FREEVO_RUNTIME_SKINS_DIR/main/geexbox.fxd  < $PROJECT_PATCHES_DIR/geexbox_skin.patch
+}
+
+xbmc_deps_install () {
+# libnfs
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/libnfs-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libnfs-* libnfs
+# Compile
+cd $INSTALL_SRC_DIR/libnfs && ./bootstrap
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make && make install
+#
+# Next Dependancy
+}
+
+xbmc_install () {
+# Unpack
+unzip -d $INSTALL_SRC_DIR $PROJECT_ZIPS_DIR/xbmc-$XBMC_CODENAME.zip
+cd $INSTALL_SRC_DIR && mv -v xbmc-$KODI_CODENAME xbmc
+# Build JsonSchemaBuilder
+make -C $INSTALL_SRC_DIR/kodi/tools/depends/native/JsonSchemaBuilder/
+cp -v $INSTALL_SRC_DIR/kodi/tools/depends/native/JsonSchemaBuilder/bin/JsonSchemaBuilder $BINARY_PREFIX
+chmod 775 $BINARY_PREFIX/JsonSchemaBuilder
+# Compile
+cd $INSTALL_SRC_DIR/xbmc
+./bootstrap
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd 
+[ ! -d $INCDIR/afpfs-ng ] || ln -s -f $INCDIR/afpfs-ng/* $INCDIR/
+make
+make install
+}
+
+kodi_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/kodi-*$KODI_CODENAME*.tgz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v kodi-*$KODI_CODENAME* kodi
+# Copy kodi-made ffmpeg sources
+cp -v $PROJECT_TARBALLS_DIR/kodi-ffmpeg-$KODI_FFMPEG_VERSION.tar.gz $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/ffmpeg-$KODI_FFMPEG_VERSION.tar.gz
+# Compile
+cd $INSTALL_SRC_DIR/kodi
+./bootstrap
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd 
+[ ! -d $INCDIR/afpfs-ng ] || ln -s -f $INCDIR/afpfs-ng/* $INCDIR/
+make
+make install
+}
+
+xbmc_addons_pvr_install() {
+# Unpack
+rsync -avz $PROJECT_GITHUB_DIR/xbmc-pvr-addons.opdenkamp/ $INSTALL_SRC_DIR/xbmc-pvr-addons.opdenkamp/
+# Compile
+cd $INSTALL_SRC_DIR/xbmc-pvr-addons.opdenkamp  && ./bootstrap
+./configure --prefix=$PREFIX --libdir=$LIBDIR/xbmc/addons --enable-addons-with-dependencies
+make && make install
+# if Plugin is not seen. Fix below
+#ln -s $LIBDIR/pvr.hts $LIBDIR/xbmc/addons/pvr.hts
+}
+
+xbmc_addons_all_install () {
+# Zipped
+for XBMC_ADDON in $ADDITIONAL_XBMC_ADDONS;
+do
+unzip -d $XBMC_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/xbmc-addons/$XBMC_ADDON*.zip
+done
+# Source/GitHub
+rsync -avz $PROJECT_GITHUB_DIR/xbmc-addons/ $XBMC_SYSTEM_ADDONS/
+}
+
+python_xbmc_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/python-xbmc/ $INSTALL_SRC_DIR/python-xbmc/
+cd $INSTALL_SRC_DIR/python-xbmc
+python setup.py install --install-lib=$PYTHON_SITEDIR
+}
+
+xbmc_configure () {
+#
+# User Data
+# **********
+# Create userdata directory
+[ -d $XBMC_USER_DATA ] || mkdir -p $XBMC_USER_DATA
+# Copy Optimized Advanced & GUI settings plus other configs
+for XBMC_CONFIG in \
+	advancedsettings.xml \
+	guisettings.xml \
+	sources.xml \
+	RssFeeds.xml \
+	autoexec.py
+do
+cp -v $PROJECT_CONFIGS_DIR/xbmc/$XBMC_CONFIG $XBMC_USER_DATA/
+done
+# Copy XBMC Lircmap file
+cp -v $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/Lircmap.xml $XBMC_USER_DATA/
+# Give permissions to multimedia user for config directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $XBMC_CONFIG_DIR
+# Make starup script executable
+chmod 755 $XBMC_CONFIG_DIR/autoexec.py
+#
+# Create some default directories if they don't exist
+# ****************************************************
+for FOLDER in $USER_TV_SHOWS_DIR $USER_MOVIES_DIR $USER_MUSIC_DIR $USER_PICTURES_DIR
+do
+cd $MULTIMEDIA_USER_HOME_DIR
+[ -d $FOLDER ] || mkdir -p $FOLDER
+done
+}
+
+xbmc_customization () {
+# Change top left logo at Home screen 
+sed -i "s:<texture>xbmc-logo.png</texture>:<texture>jambulatv-logo.png</texture>:" \
+	$XBMC_SYSTEM_ADDONS/skin.confluence/720p/Home.xml
+# Copy custom top left logo icon
+cp -fv $PROJECT_IMAGES_DIR/jambulatv-xbmc-top-left.png \
+	$XBMC_SYSTEM_ADDONS/skin.$XBMC_SKIN/media/jambulatv-logo.png
+# Copy Splash image for startup
+cp -fv $PROJECT_IMAGES_DIR/jambulatv-xbmc-splash.png $XBMC_SHARE_DIR/media/Splash.png
+}
+
+lircd_configure () {
+# Copy lircd.conf file
+# *********************
+cp -rv $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/lircd.conf $CONFDIR/lirc
+# Enable and start lircd service
+# ******************************
+systemctl enable lircd.service
+systemctl start lircd.service
+
+# Disable the remote from being detected/used as a keyboard
+# **********************************************************
+# Affected remotes include: streamzap
+if [ "$LIRC_REMOTE" = "streamzap" ];
+then
+cat << EOF > $XORG_CONF_DIR/90-streamzap.conf
+Section "InputClass"
+    	Identifier "Ignore Streamzap IR as KEYBOARD or MOUSE"
+	MatchProduct "treamzap|MCE IR"
+    	MatchIsKeyboard "true"    	
+    	Option "Ignore" "true"
+EndSection
+EOF
+fi
+}
+
+x11_configure () {
+# Create a new xorg.conf file
+$XORG_CMD -configure :$XORG_CONF_DISPLAY 
+# Insert Modes line after Display subsection - Insert line after - using sed
+sed "
+/SubSection \"Display\"/ a\
+			Modes		\"$RES1\" \"$RES2\" \"$RES3\"
+" $XORG_CONF_NEW > $XORG_CONF
+# Remove xorg.conf.new file
+rm -f $XORG_CONF_NEW
+}
+
+autologin_lxde () {
+# Backup original conf file
+cp -v $LXDM_CONFIG $LXDM_CONFIG.orig
+# Add auto user plus x server start options
+echo "# Allow passwordless login user
+
+[base]
+autologin=$AUTOLOGIN_USER
+
+[server]
+arg=/usr/bin/X -background none vt1 -nocursor -dpms -quiet
+" > $LXDM_CONFIG
+# Add LXDE sysconfig desktop file
+echo "DISPLAYMANAGER=/usr/sbin/lxdm" > $SYSCONFIG_DESKTOP_FILE
+}
+
+nodm_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/nodm-$NODM_VERSION.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v nodm-* nodm
+# Compile
+cd $INSTALL_SRC_DIR/nodm && ./configure --prefix=$PREFIX 
+make && make install
+}
+
+
+
+autostart_freevo_nodm () {
+# Copy prefdm.service file
+cp -v $PROJECT_INIT_SCRIPTS_DIR/prefdm.service $SYSTEMD_UNITS_DIR_SYSTEM/
+systemctl --system daemon-reload
+# Enable prefdm - starts freevo script
+systemctl enable prefdm.service
+# Remove sysconfig desktop file - not needed by nodm
+[ ! -f $SYSCONFIG_DESKTOP_FILE ] || rm -f $SYSCONFIG_DESKTOP_FILE
+}
+
+autostart_freevo_lxdm () {
+# Backup original autostart file
+cp -v $LXDE_AUTOSTART_FILE $LXDE_AUTOSTART_FILE.orig
+echo "$GENERATE_LOCAL_CONF_SCRIPT
+$XSET_CMD s noblank
+$XSET_CMD s off
+$XSET_CMD -dpms
+$FREEVO_CMD recordserver
+$FREEVO_CMD" > $LXDE_AUTOSTART_FILE
+}
+
+autologin_user_configure () {
+# Allow default user to use 'sudo' e.g. to start X
+echo "# Don't require TTY
+Defaults:$AUTOLOGIN_USER    !requiretty
+# Set Command Aliases
+Cmnd_Alias $(echo $PROJECT_NAME | tr [:lower:] [:upper:]) = $AUTOLOGIN_USER_COMMANDS
+# Set User actions
+$AUTOLOGIN_USER             ALL = NOPASSWD: $(echo $PROJECT_NAME | tr [:lower:] [:upper:])" > $SUDOERS_DIR/$AUTOLOGIN_USER
+# Change sudoer permissions
+chmod 0440 $SUDOERS_DIR/$AUTOLOGIN_USER
+}
+
+autostart_xbmc_service () {
+# Copy jambulatv-display-manager, if none exists in bin directory
+[ -e $BINARY_PREFIX/JambulaTV ] || cp -v $PROJECT_BIN_DIR/JambulaTV $BINARY_PREFIX/
+# Copy jambulatv-display-manager.service file
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-display-manager.service $SYSTEMD_UNITS_DIR_SYSTEM/
+# Force display manager to jambulatv-display-manager.service
+ln -s -f $SYSTEMD_UNITS_DIR_SYSTEM/jambulatv-display-manager.service $SYSTEMD_UNITS_DIR_USER/display-manager.service
+# Sync changes
+systemctl --system daemon-reload
+# Enable xbmc service 
+systemctl enable jambulatv-display-manager.service
+}
+
+tv_cards_configure () {
+cp -v $PROJECT_CONFIGS_DIR/tvcards.conf.sample $MODPROBE_DIR/tvcards.conf
+}
+
+tv_pulse_audio_configure () {
+# Get needed pulseaudio variables
+pulseaudio_query
+# Add loopback
+echo "
+# TV Audio Source via loopback module
+load-module module-loopback source=$TV_AUDIO_SOURCE latency_msec=26" >> $PULSE_DEFAULT_CONFIG
+}
+
+v4l_utils_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/v4l-utils-$V4L_UTILS_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v v4l-utils-* v4l-utils
+# Compile
+cd $INSTALL_SRC_DIR/v4l-utils && ./configure --prefix=$PREFIX \
+	--libdir=$LIBDIR
+make && make install
+}
+
+plymouth_customization () {
+# Add rpm macros file, so that rpmbuild will be located elsewhere
+[ -e $HOME/.rpmmacros ] || echo "%_topdir $RPMBUILD_DIR" > $HOME/.rpmmacros
+# Install plymouth source rpm package in temp location
+rpm -Uvh $PROJECT_RPMS_DIR/plymouth-*.src.rpm
+# Patch plymouth.spec file
+patch -p1 $RPMBUILD_DIR/SPECS/plymouth.spec < $PROJECT_PATCHES_DIR/plymouth.spec.patch
+# Change to rpmbuild dir
+cd $RPMBUILD_DIR
+# Rebuild plymouth
+rpmbuild -bb $RPMBUILD_DIR/SPECS/plymouth.spec
+# Install freshly built and customized plymouth rpm packages
+rpm -Uvh --oldpackage --nodeps --force $RPMBUILD_DIR/RPMS/$(uname -m)/plymouth-*.rpm
+# Remove rpm macros file
+[ -e $HOME/.rpmmacros ] && rm -f $HOME/.rpmmacros
+# Remove rpmbuild directory
+[ -d $RPMBUILD_DIR ] && rm -rf $RPMBUILD_DIR
+#
+# Update System Logo for use with Plymouth themes # Do this before Update
+cp -fv $PROJECT_IMAGES_DIR/jambula-labs.png /usr/share/pixmaps/
+# Change to / dir - otherwise error: "shell-init: error retrieving current directory ..."
+cd /
+# Select Plymouth Theme
+$PLYMOUTH_SET_CMD $PLYMOUTH_THEME
+# Rebuild initrd
+$PLYMOUTH_UPDATE_CMD
+# BUG: Run grub2-mkconfig - fixes, changed theme/logo not showing up
+grub2-mkconfig -o $GRUB2_BOOT_FILE
+}
+
+grub_settings () {
+# Make a copy of grub default file
+cp -v $GRUB2_DEFAULT_FILE $GRUB2_DEFAULT_FILE.orig
+#
+echo "# *******************************
+#  Grub Settings for JambulaTV  #
+# *******************************
+#
+GRUB_TIMEOUT=0
+GRUB_DISTRIBUTOR=\"$PROJECT_NAME\"
+GRUB_DEFAULT=0
+GRUB_DISABLE_SUBMENU=true
+GRUB_TERMINAL_OUTPUT=gfxterm
+GRUB_GFXMODE=$GRUB2_VIDEO_RESOLUTION
+GRUB_GFXPAYLOAD_LINUX=keep
+GRUB_INIT_TUNE=\"$GRUB2_BEEP_SOUND\"
+GRUB_DISABLE_RECOVERY=false
+GRUB_HIDDEN_TIMEOUT=1
+GRUB_HIDDEN_TIMEOUT_QUIET=true
+GRUB_DISABLE_LINUX_UUID=false
+#
+GRUB_CMDLINE_LINUX=\"vconsole.font=latarcyrheb-sun16 $([ -x /usr/sbin/rhcrashkernel-param ] && /usr/sbin/rhcrashkernel-param || :)rhgb quiet $GRUB2_CMD_OPTIONS\"" > $GRUB2_DEFAULT_FILE
+# Patch 10_linux file to remove verbose 'Booting Linux' messages
+#patch -p1 $GRUB2_CONFIG_DIR/10_linux < $PROJECT_PATCHES_DIR/grub_10_linux.patch
+# Fix BUG: Grub error at boot time 
+#cp $GRUB2_BOOT_DIR/locale/en@quot.mo $GRUB2_BOOT_DIR/locale/en.mo
+# Fix True font not found error
+#sed -i 's:SYSFONT="True":SYSFONT="latarcyrheb-sun16":' $SYSCONFIG_i18N_FILE
+# Confirm settings
+grub2-mkconfig -o $GRUB2_BOOT_FILE
+}
+
+openssl_configure () {
+# Patchup Openssl conf file
+patch -Np1 $CONFDIR/pki/tls/openssl.cnf < $PROJECT_PATCHES_DIR/openssl_cnf.patch
+}
+
+internet_usb_3g_configure () {
+# Copy Internet settings file
+cat > $INTERNET_USB_ISP_CONFIG <<EOF
+ISP_NAME=$ISP_NAME_DEFAULT 
+USERNAME=$ISP_USERNAME_DEFAULT
+PASSWORD=$ISP_PASSWORD_DEFAULT
+ACCOUNT_PHONE_NUMBER=
+ACCOUNT_ACCESS_CODE=
+EOF
+# Copy over PPP dialer, chat, ISP and modem initialization scripts
+cp -v $PROJECT_BIN_DIR/jambulatv-ppp* $BINARY_PREFIX/
+# Configure 3G modems to auto start Internet when plugged in
+cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-modems.rules $UDEV_RULES_DIR/
+# Reload udev
+/usr/sbin/udevadm control --reload
+#
+# Copy systemctl init helper file used by udev rules above - DON'T enable
+cp -v $PROJECT_INIT_SCRIPTS_DIR/3g_internet.service $SYSTEMD_UNITS_DIR_USER/
+# enable 3g_internet.service
+systemctl enable 3g_internet.service
+}
+
+internet_mifi_configure () {
+# Copy Internet settings file
+cat > $INTERNET_WIFI_ISP_CONFIG <<EOF
+ISP_NAME=$ISP_NAME_DEFAULT 
+SSID="$WIFI_SSID"
+SECURITY_KEY="$WIFI_SECURITY_KEY"
+EOF
+# Copy jambulatv-connect-2-wifi-ap script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-connect-2-wifi-ap ] || cp -v $PROJECT_BIN_DIR/jambulatv-connect-2-wifi-ap $BINARY_PREFIX/
+}
+
+boot_optimization () {
+# Start mandatory services as a result of what is disabled below
+for NEEDED_SERVICE in \
+network.service
+do
+systemctl start $NEEDED_SERVICE
+systemctl enable $NEEDED_SERVICE
+done
+# Disable services that take a lot longer
+for NOT_NEEDED_SERVICE in \
+systemd-udev-settle.service \
+proc-fs-nfsd.mount \
+var-lib-nfs-rpc_pipefs.mount \
+dmraid-activation.service \
+lvm2-monitor.service \
+dev-hugepages.mount \
+fedora-readonly.service \
+systemd-vconsole-setup.service \
+sendmail.service \
+sm-client.service \
+firewalld.service \
+dnf-makecache.service \
+NetworkManager-dispatcher.service \
+NetworkManager-wait-online.service \
+NetworkManager.service
+do
+systemctl stop $NOT_NEEDED_SERVICE
+systemctl mask $NOT_NEEDED_SERVICE
+done
+}
+
+network_configure () {
+# Configure hostname
+HOSTNAME=$PROJECT_NAME.$SYSTEM_IDENTIFIER.local
+hostname $HOSTNAME 
+echo "NETWORKING=yes
+HOSTNAME=$HOSTNAME" > $SYSCONFIG_NETWORK_FILE
+# Configure Network IP settings
+echo "# Network settings for JambulaTV
+HWADDR=\"$NETWORK_MAC_ADDRESS\"
+DEVICE=\"$NETWORK_ETHERNET_DEVICE\"
+TYPE=\"Ethernet\"
+BOOTPROTO=\"static\"
+ONBOOT=\"yes\"
+NM_CONTROLLED=\"no\"
+IPADDR0=\"$NETWORK_IP_ADDRESS\"
+PREFIX0=\"$NETWORK_MASK_PREFIX\"
+GATEWAY=\"$NETWORK_GATEWAY_ADDRESS\"
+DNS1=\"$NETWORK_DNS_1\"
+DNS2=\"$NETWORK_DNS_2\"
+#DNS3=8.26.56.26
+#DNS4=208.67.222.222
+#DNS5=8.8.8.8" > $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE
+# Add IP Address to hosts file
+echo "# JambulaTV IP-Hostname
+$NETWORK_IP_ADDRESS	$HOSTNAME" >> /etc/hosts
+}
+
+reverse_ssh_configure () {
+# Create reverse ssh script
+cat > $REVERSE_SSH_SCRIPT <<EOF
+#!/bin/sh
+# This script will create a reverse SSH tunnel, which allows access
+# to this box via the ssh server at $REMOTE_SSH_SERVER
+#
+# Prerequisite: Copy local SSH public key to remote server
+# See - ssh-keygen script:jambulatv-ssh-pubkey-copy2remote
+#
+# Variables
+LOCAL_SSH_USER=$LOCAL_SSH_USER
+LOCAL_SSH_SERVER=$LOCAL_SSH_SERVER
+LOCAL_SSH_SERVER_PORT=$LOCAL_SSH_SERVER_PORT
+# Remote SSH server
+MIDDLEMAN_SSH_SERVER_USER=$REMOTE_SSH_SERVER_USER
+MIDDLEMAN_SSH_SERVER=$REMOTE_SSH_SERVER
+MIDDLEMAN_SSH_SERVER_PORT=$REMOTE_SSH_SERVER_PORT
+#
+MIDDLEMAN_SSH_SERVER_AND_USERNAME=\${MIDDLEMAN_SSH_SERVER_USER}@\${MIDDLEMAN_SSH_SERVER}
+PORT_MIDDLEMAN_WILL_LISTEN_ON=$REMOTE_SSH_SERVER_RANDOM_PORT
+# AutoSSH
+AUTOSSH_CMD=$AUTOSSH_CMD
+AUTOSSH_PORT=$AUTOSSH_PORT
+AUTOSSH_GATETIME=$AUTOSSH_GATETIME
+# Notification method
+REVERSE_SSH_NOTIFICATION_METHOD=$REVERSE_SSH_NOTIFICATION_METHOD
+# Google Calendar 
+SMS_VIA_GOOGLE_CALENDAR_SCRIPT=$SMS_VIA_GOOGLE_CALENDAR_SCRIPT 
+GOOGLE_CALENDAR_USERNAME=$GOOGLE_CALENDAR_USERNAME 
+GOOGLE_CALENDAR_PASSWORD=$GOOGLE_CALENDAR_PASSWORD
+GOOGLE_CALENDAR=$GOOGLE_CALENDAR
+#
+#
+#
+# Reverse AutoSSH Script
+# -----------------------
+# Export Variables
+export AUTOSSH_GATETIME
+#
+#
+# Check if autossh is already running
+ps uxw | grep autossh | grep \${AUTOSSH_PORT} > /dev/null 2>&1
+AUTOSSH_STATE=\$?
+# Run AutoSSH only if it is not running already
+[ \"\$AUTOSSH_STATE\" = \"0\" ] || su -l $LOCAL_SSH_USER -c \"\${AUTOSSH_CMD} -M \${AUTOSSH_PORT} -f -N -R *:\${PORT_MIDDLEMAN_WILL_LISTEN_ON}:\${LOCAL_SSH_SERVER}:\${LOCAL_SSH_SERVER_PORT} \${MIDDLEMAN_SSH_SERVER_AND_USERNAME} -p \${MIDDLEMAN_SSH_SERVER_PORT} -oLogLevel=error -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no\" \$LOCAL_SSH_USER
+#
+#
+# Notify of SSH parameters after tunnel has been created
+case \$REVERSE_SSH_NOTIFICATION_METHOD in
+sms)
+echo \"Sending SMS Notification\"
+\${SMS_VIA_GOOGLE_CALENDAR_SCRIPT} \${GOOGLE_CALENDAR_USERNAME} \${GOOGLE_CALENDAR_PASSWORD} \"\${GOOGLE_CALENDAR}\" \"ssh -p \${PORT_MIDDLEMAN_WILL_LISTEN_ON} \${LOCAL_SSH_USER}@\${MIDDLEMAN_SSH_SERVER}\"
+;;
+email)
+echo \"Sending Email notification\"
+;;
+none)
+echo \"No notification is needed\"
+;;
+*)
+echo \"No notification method was specified\"
+;;
+esac
+EOF
+#
+# Make script executable
+chmod 755 $REVERSE_SSH_SCRIPT
+# Display Reverse SSH's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+SSH Reverse Tunnel
+==================
+% To connect to this box from then public Internet i.e. Reverse SSH:
+  From any ssh capable machine you just type:
+  # ssh -p $REMOTE_SSH_SERVER_RANDOM_PORT $LOCAL_SSH_USER@$REMOTE_SSH_SERVER
+#
+EOF
+}
+
+cutter_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/cutter-*.tgz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv cutter* cutter
+# Compile
+cd $INSTALL_SRC_DIR/cutter
+make 
+# Copy to binary directory
+cp -v $INSTALL_SRC_DIR/cutter/cutter $BINARY_PREFIX/
+}
+
+dnsmasq_configure () {
+# make backup copy
+cp -pv $CONFDIR/dnsmasq.conf $CONFDIR/dnsmasq.conf.orig
+# modify dnsmasq.conf file
+cat $PROJECT_CONFIGS_DIR/dnsmasq.conf.sample | \
+   sed -e "s:NETWORK_ETHERNET_DEVICE:$NETWORK_ETHERNET_DEVICE:g" | \
+   sed -e "s:NETWORK_WIRELESS_DEVICE:$NETWORK_WIRELESS_DEVICE:g" | \
+   sed -e "s:NETWORK_IP_ADDRESS:$NETWORK_IP_ADDRESS:g" | \
+   sed -e "s:NETWORK_DOMAIN:$NETWORK_DOMAIN:g" | \
+   sed -e "s:NETWORK_DHCP_RANGE:$NETWORK_DHCP_RANGE:g" \
+	> $CONFDIR/dnsmasq.conf
+# Make dnsmasq server as primary DNS server 
+#sed -i /DNS/d $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE
+#echo "DNS1=\"127.0.0.1\"" >> $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE
+# Enable dnsmasq if needed
+systemctl enable dnsmasq.service
+# Reload dnsmasq
+systemctl restart dnsmasq.service
+# Reload network
+systemctl restart network.service
+}
+
+openresolv_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/openresolv-$OPENRESOLV_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v openresolv-* openresolv
+# Configure
+cd $INSTALL_SRC_DIR/openresolv && ./configure --prefix=$PREFIX  \
+	--libexecdir=$LIBDIR/resolvconf --sysconfdir=$CONFDIR
+# Compile
+make && make install
+}
+
+openresolv_configure () {
+# Create resolvconf.conf file
+echo "# JambulaTV: resolvconf file
+resolv_conf=$CONFDIR/resolv.conf
+
+name_servers=127.0.0.1
+name_servers_append=\"$NETWORK_DNS_1 $NETWORK_DNS_2 $PUBLIC_DNS_SERVERS\"
+
+resolv_conf_local_only=no
+
+dnsmasq_conf=$CONFDIR/dnsmasq-conf.conf
+dnsmasq_resolv=$CONFDIR/dnsmasq-resolv.conf" > $CONFDIR/resolvconf.conf
+#
+# Add to dnsmasq file
+echo "
+# resolvconf stuff
+conf-file=$CONFDIR/dnsmasq-conf.conf
+resolv-file=$CONFDIR/dnsmasq-resolv.conf" >> $CONFDIR/dnsmasq.conf
+#
+# Update resolvconf file
+/usr/sbin/resolvconf -u
+
+# Configure systemd service file
+# ******************************
+# Copy openresolv systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/openresolv.service $SYSTEMD_UNITS_DIR_USER/
+# Enable openresolv if needed
+systemctl enable openresolv.service
+}
+
+wol_configure () {
+# Copy wol init script
+cp -v $PROJECT_INIT_SCRIPTS_DIR/wol@.service $SYSTEMD_UNITS_DIR_USER/
+# Enable wol if needed
+systemctl enable wol@
+# Reload systemctl
+systemctl start wol@$NETWORK_ETHERNET_DEVICE
+}
+
+openvpn_configure () {
+# Create openvpn config directory
+[ -d $OPENVPN_CLIENT_CONFIG_DIR ] || mkdir -p $OPENVPN_CLIENT_CONFIG_DIR
+
+
+# Setup client.conf file
+cat > $OPENVPN_CLIENT_CONFIG_FILE << EOF
+# OpenVPN client config file
+client
+dev tun
+proto $OPENVPN_CLIENT_PROTOCOL
+remote $OPENVPN_SERVER_IP $OPENVPN_SERVER_PORT 
+;resolv-retry infinite
+resolv-retry 0 
+connect-timeout 30
+nobind
+persist-key
+persist-tun
+comp-lzo
+verb 3
+cipher BF-CBC
+# certs/keys
+ca ca.crt
+cert client.crt
+key client.key
+EOF
+# Copy sample OpenVPN certificates and keys
+for KEY in ca.crt client.crt client.key
+do
+cp -v $OPENVPN_SAMPLE_KEYS_DIR/$KEY $OPENVPN_CLIENT_CONFIG_DIR/
+done
+# Display OpenVPN's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+OpenVPN
+=======
+% Copy OpenVPN certs and keys ca.crt client.crt client.key to:
+  $OPENVPN_CLIENT_CONFIG_DIR/
+
+% OpenVPN client start script is located at:
+  $BINARY_PREFIX/jambulatv-openvpn-client
+#
+EOF
+}
+
+dns2tcp_install () {
+tar zxvf $PROJECT_TARBALLS_DIR/dns2tcp-$DNS2TCP_VERSION*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR 
+mv -v dns2tcp-$DNS2TCP_VERSION dns2tcp 
+cd $INSTALL_SRC_DIR/dns2tcp 
+./configure --prefix=/usr --mandir=/usr/share/man
+make && make install
+}
+
+dns2tcpc_configure () {
+# Create dns2tcp client start script
+echo "#!/bin/sh
+# This script will initiate client side DNS2TCP tunnel
+TUNNEL_CLIENT_CMD=`which dns2tcpc`
+TUNNEL_CLIENT_CFG=$CONFDIR/dns2tcpc.conf
+TUNNEL_DOMAIN=$DNS2TCP_DOMAIN
+DNS_SERVER=$DNS2TCP_DNS_SERVER
+DNS_TYPE=TXT
+DNS2TCP_RESOURCE=\$1
+DNS2TCP_LOCAL_PORT=\$2
+DNS2TCP_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/dns2tcpc.log
+#
+#
+# 
+# Check if resource has been specified
+if [ \"x\$DNS2TCP_RESOURCE\" = \"x\" ];
+then
+echo \"Usage: \`basename \$0\` [RESOURCE e.g. vpn] [LOCAL PORT e.g. 11945}
+\"
+exit 1
+elif [ \"x\$DNS2TCP_LOCAL_PORT\" = \"x\" ];
+then
+echo \"Usage: \`basename \$0\` [RESOURCE e.g. vpn] [LOCAL PORT e.g. 11945}
+\"
+exit 1
+fi
+
+
+# Script
+\$TUNNEL_CLIENT_CMD -d 1 -r \$1 -c -z \$TUNNEL_DOMAIN -l \$DNS2TCP_LOCAL_PORT -T \$DNS_TYPE \$DNS_SERVER > \$DNS2TCP_LOG_FILE 2>&1 &
+
+sleep 3
+" > $BINARY_PREFIX/jambulatv-dns2tcp_client
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-dns2tcp_client
+}
+
+dns2tcpd_configure () {
+# Create dns2tcpd config file
+echo "# dns2tcpd.conf
+listen = 0.0.0.0
+port = 53
+user = nobody
+chroot = /var/empty
+domain = $DNS2TCP_DOMAIN
+resources = ssh:127.0.0.1:22, $DNS2TCP_RESOURCE_1:127.0.0.1:222, smtp:127.0.0.1:25, pop3:10.0.0.1:110" > $CONFDIR/dns2tcpd.conf
+
+# Create Server start script
+echo "# This script will initiate server side DNS2TCP tunnel
+
+TUNNEL_CFG=$CONFDIR/dns2tcpd.conf
+TUNNEL_CMD=`which dns2tcpd`
+
+case \$1 in
+
+start)
+\$TUNNEL_CMD -d 1 -f \$TUNNEL_CFG
+;;
+stop)
+killall dns2tcpd
+;;
+status)
+ps auxw | grep dns2tcpd
+;;
+*)
+echo \"Usage Command {start|stop|status}
+\"
+;;
+esac " > $BINARY_PREFIX/jambulatv-dns2tcp_server
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-dns2tcp_server
+}
+
+proxychains_install () {
+rsync -avz $PROJECT_GITHUB_DIR/proxychains/ $INSTALL_SRC_DIR/proxychains/
+# Patch configure - fixes make error
+patch -Np1 $INSTALL_SRC_DIR/proxychains/configure < $PROJECT_PATCHES_DIR/proxychains_configure.patch
+# configure
+cd $INSTALL_SRC_DIR/proxychains
+./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$PROJECT_SYSTEM_CONF_DIR/proxychains
+# Fix sysconfig path
+sed -i "s:sysconfdir:confdir:g" config.mak
+# compile
+make 
+make install
+make install-config
+}
+
+proxychains_configure () {
+sed -i "s:socks4 	127.0.0.1 9050:socks5		127.0.0.1	1080:g" $PROJECT_SYSTEM_CONF_DIR/proxychains/proxychains.conf
+
+echo "http		127.0.0.1	8089
+https		127.0.0.1	8089
+ftp		127.0.0.1	8089" >> $PROJECT_SYSTEM_CONF_DIR/proxychains/proxychains.conf
+#
+# Create symbolic link to proxychains4 binary
+ln -s $BINARY_PREFIX/proxychains4 $BINARY_PREFIX/proxychains
+}
+
+iodine_install () {
+rsync -avz $PROJECT_GITHUB_DIR/iodine/ $INSTALL_SRC_DIR/iodine/
+cd $INSTALL_SRC_DIR/iodine
+make prefix=$PREFIX install
+}
+
+chrony_configure () {
+# Copy chrony.conf file
+cp -v $PROJECT_CONFIGS_DIR/chrony.conf.sample $CONFDIR/chrony.conf
+# Add chronyc password to keys files
+echo "1 $CHRONYC_PASSWD" > $CHRONY_KEYS_FILE
+# Enable chronyd if needed
+systemctl enable chronyd.service
+systemctl restart chronyd.service
+}
+
+beep_spkr_configure () {
+# Enable speaker beeps
+echo "alias platform:pcspkr pcspkr" > $MODPROBE_DIR/beep.conf
+# Set suid bit for beep in order to allow use by non-root users
+chmod 4755 /usr/bin/beep
+# Copy jambulatv-sounds script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-sounds ] || cp -v $PROJECT_BIN_DIR/jambulatv-sounds $BINARY_PREFIX/
+}
+
+beep2_install () {
+# Install beep2 - for on-board speaker notifications
+tar zxvf $PROJECT_TARBALLS_DIR/beep2-$BEEP2_VERSION*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR
+mv -v beep2-$BEEP2_VERSION beep2
+cd $INSTALL_SRC_DIR/beep2
+make && make install
+# Create sounds directory if no-existent
+[ -d $PROJECT_SYSTEM_SHARE_DIR/sounds ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/sounds
+# Copy beep2 sound files
+cp -rv $PROJECT_CONTRIB_DIR/sounds/beep2 $PROJECT_SYSTEM_SHARE_DIR/sounds/
+}
+
+ziproxy_install () {
+tar xvf $PROJECT_TARBALLS_DIR/ziproxy-*.tar.xz -C $INSTALL_SRC_DIR
+# Change to ziproxy directory
+cd $INSTALL_SRC_DIR && mv ziproxy* ziproxy
+cd $INSTALL_SRC_DIR/ziproxy
+# configure ziproxy
+./configure --prefix=$PREFIX \
+  --with-cfgfile=$PROJECT_SYSTEM_CONF_DIR/ziproxy/ziproxy.conf
+make
+make install
+#
+# Add Ziproxy user and group 
+groupadd -r ziproxy
+useradd -r -c "Ziproxy Proxy Server" -g ziproxy ziproxy
+}
+
+ziproxy_configure () {
+# Create ziproxy config directory if it does not exist
+[ -d $PROJECT_SYSTEM_CONF_DIR/ziproxy ] || mkdir -p $PROJECT_SYSTEM_CONF_DIR/ziproxy
+# Copy ziproxy.conf sample file
+cp -v $PROJECT_CONFIGS_DIR/ziproxy.conf.sample $PROJECT_SYSTEM_CONF_DIR/ziproxy/ziproxy.conf
+# Copy ziproxy init script
+cp -v $PROJECT_INIT_SCRIPTS_DIR/ziproxy /etc/init.d/
+# Enable ziproxy if needed
+systemctl enable ziproxy.service
+# Reload systemctl
+systemctl restart ziproxy.service
+}
+
+squid_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/squid-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v squid-* squid
+# Compile
+cd $INSTALL_SRC_DIR/squid && ./configure --prefix=$PREFIX \
+   --libdir=$LIBDIR --sysconfdir=$CONFDIR/squid \
+   --localstatedir=$STATEDIR --enable-ssl --enable-linux-netfilter \
+   --enable-auth --with-logdir=$STATEDIR/log/squid \
+   --with-pidfile=$RUNDIR/squid.pid --with-default-user=squid \
+   --with-swapdir=$STATEDIR/cache/squid \
+   --enable-build-info="$PROJECT_NAME"
+make
+make install
+#
+# Add Squid user and group 
+groupadd -r squid
+useradd -r -c "Squid HTTP Web Cache Proxy Server" -g squid squid
+}
+
+squid_configure () {
+# Copy config file before you proceed to other settings
+cp -v $PROJECT_CONFIGS_DIR/squid.conf.sample $CONFDIR/squid/squid.conf
+# Create cache swap script that is used in systemd init file
+echo "#!/bin/sh
+
+SQUID_CONF=\"$CONFDIR/squid/squid.conf\"
+
+CACHE_SWAP=\`sed -e 's/#.*//g' \$SQUID_CONF | \\
+	grep cache_dir | awk '{ print \$3 }'\`
+
+for adir in \$CACHE_SWAP; do
+	if [ ! -d \$adir/00 ]; then
+		echo -n \"init_cache_dir \$adir... \"
+		squid -N -z -F -f \$SQUID_CONF >> /var/log/squid/squid.out 2>&1
+	fi
+done" > $BINARY_PREFIX/jambulatv-squid-cache-swap
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-squid-cache-swap
+# Change ownership of cache and log files to squid
+chown -R squid:squid $STATEDIR/cache/squid
+chown -R squid:squid $STATEDIR/log/squid
+# Initalise the cache
+/usr/sbin/squid $CONFDIR/squid/squid.conf -z > /dev/null 2>&1
+# Setup systemd service file
+cp -v $PROJECT_INIT_SCRIPTS_DIR/squid.service $SYSTEMD_UNITS_DIR_USER
+# Enable squid if needed
+systemctl enable squid.service
+}
+
+ziproxy_wan_accel_configure () {
+# Copy ziproxy-user conf file
+cp -v $PROJECT_CONFIGS_DIR/ziproxy-user.conf.sample $PROJECT_SYSTEM_CONF_DIR/ziproxy/ziproxy-user.conf
+# Copy ziproxy-link conf file
+cp -v $PROJECT_CONFIGS_DIR/ziproxy-link.conf.sample $PROJECT_SYSTEM_CONF_DIR/ziproxy/ziproxy-link.conf
+# Stop ziproxy
+systemctl stop ziproxy.service
+# Add/replace ziproxy init-startup file
+cp -v $PROJECT_INIT_SCRIPTS_DIR/ziproxy-wan-accel /etc/init.d/ziproxy
+systemctl --system daemon-reload
+# Enable ziproxy if needed
+systemctl enable ziproxy.service
+# Reload systemctl
+systemctl start ziproxy.service
+}
+
+flexget_deps_install () {
+for PYTHON_MODULE in \
+itsdangerous \
+setuptools \
+MarkupSafe \
+Paver \
+feedparser \
+SQLAlchemy \
+PyYAML \
+beautifulsoup4 \
+html5lib \
+PyRSS2Gen \
+pynzb \
+progressbar \
+Jinja2 \
+Werkzeug \
+Flask \
+CherryPy \
+certifi \
+chardet \
+requests \
+six \
+python-dateutil \
+python-tvrage \
+jsonschema \
+plumbum \
+rpyc \
+tmdb3 \
+path.py \
+pbr \
+argparse \
+stevedore \
+babelfish \
+guessit \
+futures \
+tzlocal \
+pytz \
+APScheduler
+#
+do
+# Remove any existing modules
+[ ! -d $INSTALL_SRC_DIR/$PYTHON_MODULE* ] || rm -rf $INSTALL_SRC_DIR/$PYTHON_MODULE*
+rm -rf $PYTHON_SITEDIR/$PYTHON_MODULE* 
+# Install python modules
+echo "Installing $PYTHON_MODULE ..."
+# Unpack using the appropriate too for archive file format
+# gzip
+[ -e $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*gz ] && \
+   tar zxvf $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*gz -C $INSTALL_SRC_DIR
+# bz2
+[ -e $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*bz2 ] && \
+   tar jxvf $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*z2 -C $INSTALL_SRC_DIR
+# zip
+[ -e $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*zip ] && \
+   unzip -d $INSTALL_SRC_DIR $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*z2 
+#
+cd $INSTALL_SRC_DIR
+mv -v *$PYTHON_MODULE* $PYTHON_MODULE
+cd $INSTALL_SRC_DIR/$PYTHON_MODULE
+python setup.py install --install-lib=$PYTHON_SITEDIR
+done
+}
+
+flexget_install () {
+# Remove any existing modules
+[ ! -d $INSTALL_SRC_DIR/FlexGet* ] || rm -rf $INSTALL_SRC_DIR/FlexGet*
+rm -rf $PYTHON_SITEDIR/FlexGet* 
+# Install python modules
+echo "Installing FlexGet ..."
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/Flexget/ $INSTALL_SRC_DIR/Flexget/
+cd $INSTALL_SRC_DIR/Flexget
+pip install -e .
+}
+
+flexget_configure () {
+# create flexget config directory
+[ -d $FLEXGET_CONFIG_DIR ] || mkdir -p $FLEXGET_CONFIG_DIR
+# Create flexget logs directory
+[ -d $PROJECT_SYSTEM_LOG_DIR/flexget ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/flexget
+# Copy copy config .yml files
+cp -v $PROJECT_CONFIGS_DIR/flexget/*.yml $FLEXGET_CONFIG_DIR/
+#
+# Variables file
+if [ ! -e $FLEXGET_CONFIG_DIR/variables.yml ];
+then
+cat $PROJECT_CONFIGS_DIR/flexget/variables.yml.template | \
+   sed -e "s:FLEXGET_CONFIG_DIR:$FLEXGET_CONFIG_DIR:g" | \
+   sed -e "s:PROJECT_PARTITION:$PROJECT_PARTITION:g" | \
+   sed -e "s:PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
+   sed -e "s:TORRENTS_WATCH_DIRECTORY:$TORRENTS_WATCH_DIRECTORY:g" | \
+   sed -e "s:TORRENTS_PENDING_DIRECTORY:$TORRENTS_PENDING_DIRECTORY:g" | \
+   sed -e "s:TORRENTS_COMPLETED_DIRECTORY:$TORRENTS_COMPLETED_DIRECTORY:g" | \
+   sed -e "s:NETCASTS_DIRECTORY:$NETCASTS_DIRECTORY:g" \
+> $FLEXGET_CONFIG_DIR/variables.yml
+fi
+#
+# Create non-existent directories
+for DIR in \
+$TORRENTS_WATCH_DIRECTORY \
+$TORRENTS_PENDING_DIRECTORY \
+$TORRENTS_COMPLETED_DIRECTORY \
+$NETCASTS_DIRECTORY
+do
+# Create directory
+[ -d $DIR ] || mkdir -p $DIR
+# Change  ownership
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $DIR
+done
+#
+# Configure TV series
+if [ ! -e $FLEXGET_CONFIG_DIR/tvseries.yml ];
+then
+# Create sample TV Series feeds
+cat > $FLEXGET_CONFIG_DIR/tvseries.yml << EOF
+series:
+  group 1:
+    - How I Met Your Mother
+    - Lost
+EOF
+fi
+#
+# Netcasts
+if [ ! -e $FLEXGET_CONFIG_DIR/netcasts.yml ];
+then
+# Create sample Netcasts feeds
+cat > $FLEXGET_CONFIG_DIR/netcasts.yml <<EOF
+inputs:
+  - rss: http://feeds.5by5.tv/inbeta # 5by5 - In Beta
+  - rss: http://revision3.com/tzdaily/feed/MP4-Small # TekZilla - Daily" 
+EOF
+fi
+# Directory permissions
+# Change flexget config directory to multimedia user
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $FLEXGET_CONFIG_DIR
+# Change flexget log directory to multimedia user
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/flexget
+#
+# Add Environment file for Systemd
+cat > $SYSCONFIG_DIR/flexget <<EOF
+FLEXGET_CMD="$(which flexget)"
+CONFIG_FILE="$FLEXGET_CONFIG_DIR/config.yml"
+LOG_FILE="$PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log"
+LOCK_FILE="$FLEXGET_CONFIG_DIR/.config-lock"
+EOF
+# Copy flexget systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/flexget.service $SYSTEMD_UNITS_DIR_USER/
+# Run flexget in daemon mode: add timezone file
+echo "$TIMEZONE" > $TIMEZONE_FILE
+#
+# Enable flexget systemd service
+systemctl enable flexget.service
+#
+# Display FlexGet's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+FLEXGET
+=======
+Edit the flexget variables file located at:
+$FLEXGET_CONFIG_DIR/variables.yml
+#
+EOF
+}
+
+rtorrent_install () {
+tar zxvf $PROJECT_TARBALLS_DIR/xmlrpc-c-*gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v xmlrpc* xmlrpc-c
+cd $INSTALL_SRC_DIR/xmlrpc-c
+./configure --prefix=/usr --libdir=$LIBDIR --disable-wininet-client --disable-libwww-client
+make
+make install
+
+# Install libtorrent
+tar zxvf $PROJECT_TARBALLS_DIR/libtorrent-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libtorrent-* libtorrent
+cd $INSTALL_SRC_DIR/libtorrent
+./configure --prefix=/usr --libdir=$LIBDIR
+make
+make install
+#
+# Install rtorrent
+tar zxvf $PROJECT_TARBALLS_DIR/rtorrent-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v rtorrent-* rtorrent
+cd $INSTALL_SRC_DIR/rtorrent
+# Patch for color
+# patch -Np1 < $PROJECT_PATCHES_DIR/rtorrent_color.patch
+# Compile
+./configure --prefix=/usr --libdir=$LIBDIR --with-xmlrpc-c
+make
+make install
+#
+# Add rtorrent user/group
+useradd -r -M -c "Rtorrent Server User" rtorrent -s /sbin/nologin
+}
+
+rtorrent_configure () {
+# Modify and copy .rtorrent.rc.template file
+if [ ! -e $MULTIMEDIA_USER_HOME_DIR/.rtorrent.rc ];
+then
+cat $PROJECT_CONFIGS_DIR/rtorrent.rc.template | \
+   sed -e "s:TORRENTS_WATCH_DIRECTORY:$TORRENTS_WATCH_DIRECTORY:g" | \
+   sed -e "s:TORRENTS_PENDING_DIRECTORY:$TORRENTS_PENDING_DIRECTORY:g" | \
+   sed -e "s:TORRENTS_COMPLETED_DIRECTORY:$TORRENTS_COMPLETED_DIRECTORY:g" | \
+   sed -e "s:RTORRENT_SESSIONS_DIR:$RTORRENT_SESSIONS_DIR:g" \
+> $MULTIMEDIA_USER_HOME_DIR/.rtorrent.rc
+fi
+# Create torrents directories if they do not exist
+for DIR in \
+$TORRENTS_WATCH_DIRECTORY \
+$TORRENTS_PENDING_DIRECTORY \
+$TORRENTS_COMPLETED_DIRECTORY \
+$RTORRENT_SESSIONS_DIR
+do
+# Create directory
+[ -d $DIR ] || mkdir -p $DIR
+# Change  ownership
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $DIR
+# Make torrents directory accessible by samba 
+#chmod -R 777 $DIR
+done
+#
+# Systemctl script
+cp -v $PROJECT_INIT_SCRIPTS_DIR/rtorrent.service $SYSTEMD_UNITS_DIR_USER/
+# Enable rtorrent if needed
+systemctl enable rtorrent.service
+}
+
+rtgui_configure () {
+# Unpack rtgui - Graphical frontend for rtorrent
+tar zxvf $PROJECT_TARBALLS_DIR/rtgui-*.tgz -C $WWW_HTML_DIR
+# Fix Bugs due to 'import_request_variables' function deprecated in PHP 5.4.0+
+cd $WWW_HTML_DIR/rtgui
+#
+for PHP_FILE in dirbrowser.php control.php rssfeed.php settings.php json.php view.php index.php
+do
+sed -i "s/import_request_variables(\"gp\",\"r_\");/extract(\$_REQUEST, EXTR_PREFIX_ALL|EXTR_REFS, \"r\");/g" $PHP_FILE
+done
+#
+# Create config.php file using template and copy to WWW location
+if [ ! -e $WWW_HTML_DIR/rtgui/config.php ];
+then
+cat $PROJECT_CONFIGS_DIR/rtgui.config.php.template | \
+   sed -e "s:TORRENTS_WATCH_DIRECTORY:$TORRENTS_WATCH_DIRECTORY:g" | \
+   sed -e "s:TORRENTS_PENDING_DIRECTORY:$TORRENTS_PENDING_DIRECTORY:g" | \
+   sed -e "s:NETWORK_IP_ADDRESS:$NETWORK_IP_ADDRESS:g" \
+> $WWW_HTML_DIR/rtgui/config.php
+fi
+# Give permissions to web user to acces rtgui
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/rtgui
+}
+
+aria2_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/aria2/ $INSTALL_SRC_DIR/aria2/
+cd $INSTALL_SRC_DIR/aria2
+autoreconf -i
+./configure --prefix=/usr --libdir=$LIBDIR --enable-libaria2
+make && make install
+}
+
+aria2_configure () {
+# Modify and copy aria2.conf.template file
+if [ ! -e $ARIA2_CONFIG_FILE ];
+then
+cat $PROJECT_CONFIGS_DIR/aria2.conf.template | \
+   sed -e "s:ARIA2_DOWNLOADS_DIRECTORY:$ARIA2_DOWNLOADS_DIRECTORY:g" | \
+   sed -e "s:ARIA2_LOG_FILE:$ARIA2_LOG_FILE:g" | \
+   sed -e "s:ARIA2_SAVE_SESSION_FILE:$ARIA2_SAVE_SESSION_FILE:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_COMPLETE_BT_SCRIPT:$ARIA2_DOWNLOAD_COMPLETE_BT_SCRIPT:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_COMPLETE_SCRIPT:$ARIA2_DOWNLOAD_COMPLETE_SCRIPT:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_ERROR_SCRIPT:$ARIA2_DOWNLOAD_ERROR_SCRIPT:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_PAUSE_SCRIPT:$ARIA2_DOWNLOAD_PAUSE_SCRIPT:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_START_SCRIPT:$ARIA2_DOWNLOAD_START_SCRIPT:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_STOP_SCRIPT:$ARIA2_DOWNLOAD_STOP_SCRIPT:g" | \
+   sed -e "s:NETWORK_IP_ADDRESS:$NETWORK_IP_ADDRESS:g" \
+> $ARIA2_CONFIG_FILE
+fi
+# Create Aria2 downloads directory if it does not exist
+[ -d $ARIA2_DOWNLOADS_DIRECTORY ] || mkdir -p $ARIA2_DOWNLOADS_DIRECTORY
+#
+# Copy aria2 systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/aria2.service $SYSTEMD_UNITS_DIR_USER/
+# Enable aria2 if needed
+systemctl enable aria2.service
+}
+
+nginx_install () {
+# Remove any installed httpd/apache packages
+rpm -e --nodeps httpd
+tar zxvf $PROJECT_TARBALLS_DIR/nginx-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR 
+mv -v nginx-* nginx 
+cd $INSTALL_SRC_DIR/nginx 
+./configure --prefix=$PROJECT_SYSTEM_SHARE_DIR --sbin-path=$PREFIX/sbin/nginx \
+	--conf-path=$NGINX_CONF_DIR/nginx.conf \
+        --with-ld-opt="-Wl,-E" --with-perl_modules_path=$LIBDIR/perl5/auto/nginx \
+	--error-log-path=$STATEDIR/log/nginx/error.log \
+	--http-log-path=$STATEDIR/log/nginx/access.log --pid-path=$RUNDIR/nginx.pid \
+	--lock-path=$RUNDIR/lock/subsys/nginx --user=nginx --group=nginx \
+	--with-http_addition_module \
+	--with-http_auth_request_module \
+	--with-http_degradation_module \
+	--with-http_perl_module \
+	--with-http_flv_module \
+	--with-http_geoip_module \
+	--with-google_perftools_module \
+	--with-http_gzip_static_module \
+	--with-http_gunzip_module \
+	--with-http_image_filter_module \
+	--with-http_mp4_module \
+	--with-http_random_index_module \
+	--with-http_realip_module \
+	--with-http_secure_link_module \
+	--with-http_ssl_module \
+	--with-http_stub_status_module \
+	--with-http_sub_module \
+	--with-http_dav_module \
+	--with-http_xslt_module \
+	--with-file-aio \
+	--with-ipv6 \
+	--with-mail \
+	--with-mail_ssl_module \
+	--with-debug
+make && make install
+#
+# Add nginx user and group
+useradd -M -r -c "Nginx Web Server" -s /sbin/nologin -d $SPOOLDIR/nginx nginx
+#
+# Change log directory permissions
+chown -R $WWW_USER:$WWW_GROUP $STATEDIR/log/nginx
+#
+# Change permissions on html directory
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR
+#
+# Copy nginx systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/nginx.service $SYSTEMD_UNITS_DIR_USER/
+# Enable nginx if needed
+systemctl enable nginx.service
+}
+
+nginx_configure () {
+# Create conf.d, includes, and sites-enabled directories
+mkdir /etc/nginx/{conf.d,includes,sites-enabled}
+# Make backup of default config file
+cp -v $NGINX_CONF_DIR/nginx.conf $NGINX_CONF_DIR/nginx.conf.orig
+# Copy nginx.conf
+cp -v $PROJECT_CONFIGS_DIR/nginx/nginx.conf $NGINX_CONF_DIR/
+# Add config, includes and site files
+rsync -av $PROJECT_CONFIGS_DIR/nginx/conf.d/ $NGINX_CONF_DIR/conf.d/
+rsync -av $PROJECT_CONFIGS_DIR/nginx/includes/ $NGINX_CONF_DIR/includes/
+rsync -av $PROJECT_CONFIGS_DIR/nginx/sites-enabled/ $NGINX_CONF_DIR/sites-enabled/
+# Create SSL directory for certificates and keys
+mkdir $NGINX_CONF_DIR/ssl
+# Create SSL certificates and keys
+ssl_cert_key_generate $NGINX_CONF_DIR/ssl/cert.pem $NGINX_CONF_DIR/ssl/cert.key 7300
+# Copy test index.html, *.php and *.cgi files to zm
+cp -v $PROJECT_CONTRIB_DIR/html/* $WWW_HTML_DIR/
+}
+
+nginx_customization () {
+# Add HTML customized files
+rsync -av $PROJECT_CUSTOMIZATION_DIR/nginx/html/ $WWW_HTML_DIR/
+}
+
+php_configure () {
+# Copy www.conf php-fpm config file
+cp -v $PROJECT_CONFIGS_DIR/php-fpm/www.conf $CONFDIR/php-fpm.d/
+# Patch php.ini
+# Make backup of default php.ini file
+cp -v $CONFDIR/php.ini $CONFDIR/php.ini.orig
+patch -Np1 $CONFDIR/php.ini < $PROJECT_PATCHES_DIR/php.ini.patch
+# Change permissions of save session path (php.ini) to web user
+chown -R $WWW_USER:$WWW_GROUP $STATEDIR/lib/php
+#
+# Enable php-fpm
+systemctl enable php-fpm.service
+systemctl start php-fpm.service
+# Enable nginx service
+systemctl enable nginx.service
+systemctl start nginx.service
+}
+
+nginx_fcgiwrap_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/fcgiwrap/ $INSTALL_SRC_DIR/fcgiwrap/
+cd $INSTALL_SRC_DIR/fcgiwrap
+autoreconf -i
+./configure --prefix=/usr --libdir=$LIBDIR 
+make && make install
+}
+
+nginx_spawn_fcgi_configure () {
+# Backup orig spawn-fcgi file
+cp -v $SYSCONFIG_DIR/spawn-fcgi $SYSCONFIG_DIR/spawn-fcgi.orig
+# Patch up spawn-fcgi file
+patch -p1 $SYSCONFIG_DIR/spawn-fcgi < $PROJECT_PATCHES_DIR/spawn.fcgi.patch
+# Enable systemd startup
+systemctl enable spawn-fcgi.service
+# Start fcgiwrap service now 
+systemctl start spawn-fcgi.service
+}
+
+freeradius_install () {
+# Install freeradius server
+tar jxvf $PROJECT_TARBALLS_DIR/freeradius-server-$FREERADIUS_VERS.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v freeradius-server-$FREERADIUS_VERS freeradius-server
+cd $INSTALL_SRC_DIR/freeradius-server
+./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
+--localstatedir=$STATEDIR --enable-fast-install=no
+make 
+make install
+#
+# Add radiusd group and user
+# ***************************
+groupadd -r radiusd
+useradd -r -M -c "Radius Server User" -g radiusd radiusd -s /sbin/nologin
+}
+
+freeradius_configure () {
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+# Create radius database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $FREERADIUS_DB_NAME
+# Generate database tables using MySQL schema
+mysql -u root -p$MYSQL_ROOT_PASSWORD $FREERADIUS_DB_NAME < $FREERADIUS_DB_SCHEMA
+# Generate DB tables using FreeRadius NAS schema (Needed by daloradius -V3 has it)
+#mysql -u root -p$MYSQL_ROOT_PASSWORD $FREERADIUS_DB_NAME < $FREERADIUS_DB_SCHEMA_NAS
+# Create SQL to set privileges on database
+echo "
+GRANT ALL PRIVILEGES ON $FREERADIUS_DB_NAME.* 
+          to $FREERADIUS_DB_USER@localhost IDENTIFIED by '$FREERADIUS_DB_PASS';
+" > $MYSQL_PRIVILEGES_FILE
+# Set Privileges
+mysql -u root -p$MYSQL_ROOT_PASSWORD < $MYSQL_PRIVILEGES_FILE
+
+# Configure SQL modules
+#************************
+# sql module
+cp -v $FREERADIUS_SQL_MODULE_FILE  $FREERADIUS_SQL_MODULE_FILE.orig
+# Modify patch 
+cat $PROJECT_PATCHES_DIR/radius.sql.module.patch \
+| sed -e "s:FREERADIUS_DB_USER:$FREERADIUS_DB_USER:g" \
+| sed -e "s:FREERADIUS_DB_PASS:$FREERADIUS_DB_PASS:g" > /tmp/radius.sql.module.patch
+# Apply patch 
+patch -p1 $FREERADIUS_SQL_MODULE_FILE < /tmp/radius.sql.module.patch
+#
+# sqlcounter module
+cp -v $FREERADIUS_SQLCOUNTER_MODULE_FILE  $FREERADIUS_SQLCOUNTER_MODULE_FILE.orig
+# Apply patch 
+patch -p1 $FREERADIUS_SQLCOUNTER_MODULE_FILE < $PROJECT_PATCHES_DIR/radius.sqlcounter.module.patch
+#
+# Copy INCLUDED files - chillispot.conf
+cp -v $PROJECT_CONFIGS_DIR/radius/chillispot.conf $FREERADIUS_SQL_COUNTERS_DIR/
+
+# Configure radius clients file
+# ******************************
+cp -pv $FREERADIUS_CLIENTS_CONF_FILE $FREERADIUS_CLIENTS_CONF_FILE.orig
+# Modify patch 
+cat $PROJECT_PATCHES_DIR/radius.clients.conf.patch \
+| sed -e "s:FREERADIUS_DB_PASS:$FREERADIUS_DB_PASS:g" > /tmp/radius.clients.conf.patch
+# Apply patch 
+patch -p1 $FREERADIUS_CLIENTS_CONF_FILE < /tmp/radius.clients.conf.patch
+
+# Configure radiusd.conf file
+# ***************************
+cp -pv $FREERADIUS_RADIUSD_FILE $FREERADIUS_RADIUSD_FILE.orig
+# Apply patch 
+patch -p1 $FREERADIUS_RADIUSD_FILE < $PROJECT_PATCHES_DIR/radiusd.conf.patch
+
+# Configure sites-enabled default file
+# ************************************
+# Patch freeradius sites-enabled defaults file
+cp -pv $FREERADIUS_SITES_AVAIL_DEFAULT_FILE $FREERADIUS_SITES_AVAIL_DEFAULT_FILE.orig
+patch -p1 $FREERADIUS_SITES_AVAIL_DEFAULT_FILE < $PROJECT_PATCHES_DIR/radius.sites.available.default.patch
+
+# Configure sites-enabled inner-tunnel file
+# ******************************************
+# Patch freeradius sites-enabled inner.tunnels file
+cp -pv $FREERADIUS_SITES_AVAIL_INNER_TUNNEL_FILE $FREERADIUS_SITES_AVAIL_INNER_TUNNEL_FILE.orig
+patch -p1 $FREERADIUS_SITES_AVAIL_INNER_TUNNEL_FILE < $PROJECT_PATCHES_DIR/radius.sites.available.inner.tunnel.patch
+
+# Add symlink to needed modules (sql, sqlcounter,etc ) in enabled modules directory
+# ********************************************************************************
+for MODULE in sql sqlcounter
+do
+[ -e $FREERADIUS_MODULES_ENABLED_DIR/$MODULE ] || \
+ln -s $FREERADIUS_MODULES_AVAIL_DIR/$MODULE $FREERADIUS_MODULES_ENABLED_DIR/$MODULE
+done
+
+# Change ownership of config and log directories
+# *************************************************
+chown -R radiusd:radiusd $FREERADIUS_DB_CONF_DIR
+
+# Configure systemd service file
+# ******************************
+# Copy radius systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/radiusd.service $SYSTEMD_UNITS_DIR_USER/
+# Enable radiusd if needed
+systemctl enable radiusd.service
+
+# Create Admin User in radius MySQL database
+# ******************************************
+echo "INSERT INTO radcheck (UserName, Attribute, Value, Op) VALUES ('$FREERADIUS_ADMIN_USER', 'Cleartext-Password', '$FREERADIUS_ADMIN_PASS', ':=');" | mysql -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME
+#
+# Start radius for initialization purposes
+# *****************************************
+/usr/sbin/radiusd -X >> /dev/null &
+}
+
+freeradius_test () {
+echo "
+****************
+Running command:
+****************
+
+radtest $FREERADIUS_ADMIN_USER $FREERADIUS_ADMIN_PASS 127.0.0.1 0 $FREERADIUS_DB_PASS
+"
+radtest $FREERADIUS_ADMIN_USER $FREERADIUS_ADMIN_PASS 127.0.0.1 0 $FREERADIUS_DB_PASS
+}
+
+freeradius_attributes_configure () {
+# Add Max-All-Session attribute to dictionary.  Used by daloradius
+echo "
+# Max-All-Session attribute for daloradius
+ATTRIBUTE      Max-All-Session         3000    integer" >> $FREERADIUS_DB_CONF_DIR/dictionary
+}
+
+daloradius_configure () {
+# Unpack daloradius - Web frontend for radius
+tar zxvf $PROJECT_TARBALLS_DIR/daloradius-$DALORADIUS_VERS.tar.gz -C $WWW_HTML_DIR
+cd $WWW_HTML_DIR
+mv -v daloradius-* daloradius
+# Change permissions to www
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/daloradius
+# Copy nginx web server config file
+cp -v $PROJECT_CONFIGS_DIR/webserver/daloradius.conf $NGINX_CONFD_DIR/
+# Populate freeradius database tables with daloradius schema
+mysql -u root -p$MYSQL_ROOT_PASSWORD $FREERADIUS_DB_NAME < $WWW_HTML_DIR/daloradius/contrib/db/mysql-daloradius.sql
+# Modify and copy daloradius config file 
+cat $PROJECT_CONFIGS_DIR/daloradius.conf.php.template | \
+sed -e "s/FREERADIUS_DB_USER/$FREERADIUS_DB_USER/" | \
+sed -e "s/FREERADIUS_DB_PASS/$FREERADIUS_DB_PASS/" | \
+sed -e "s/FREERADIUS_DB_NAME/$FREERADIUS_DB_NAME/" \
+	> $WWW_HTML_DIR/daloradius/library/daloradius.conf.php
+}
+
+coova_chilli_install () {
+# Unpack coova
+tar zxvf $PROJECT_TARBALLS_DIR/coova-chilli-$COOVA_CHILLI_VERS.tar.gz -C $INSTALL_SRC_DIR
+# Check to see if coova version being installed is from SVN 
+echo $COOVA_CHILLI_VERS |grep svn > /dev/null
+if [ "$?" = "0" ];
+then
+COOVA_CHILLI_VERS_IS_SVN=yes
+else
+COOVA_CHILLI_VERS_IS_SVN=no
+fi
+# Prepare install sources/directory
+if [ "$COOVA_CHILLI_VERS_IS_SVN" = "yes" ];
+then
+cd $INSTALL_SRC_DIR/coova-chilli
+sh bootstrap
+else
+cd $INSTALL_SRC_DIR && mv -v coova-chilli-$COOVA_CHILLI_VERS coova-chilli
+cd $INSTALL_SRC_DIR/coova-chilli
+fi 
+# Configure and Compile coova
+./configure --prefix=/usr --libdir=$LIBDIR --localstatedir=$STATEDIR \
+  --sysconfdir=$CONFDIR --enable-ssdp --enable-miniportal --with-openssl \
+  --enable-redirinject --enable-useragent --enable-sessionstate \
+  --enable-sessionid --enable-chilliredir --enable-binstatusfile \
+  --enable-statusfile --disable-static --enable-shared \
+  --enable-largelimits --enable-proxyvsa --enable-chilliproxy \
+  --enable-chilliradsec --with-poll 
+make && make install
+}
+
+haserl_install () {
+# Install haserl - Need for coova chilli embedded miniportal
+tar zxvf $PROJECT_TARBALLS_DIR/haserl-$HASERL_VERS.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v haserl-$HASERL_VERS haserl
+cd $INSTALL_SRC_DIR/haserl
+./configure --prefix=/usr --libdir=$LIBDIR 
+make && make install
+}
+
+coova_chilli_configure () {
+# Configure systemd service file
+# ******************************
+# Copy coovachilli systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/coova-chilli.service $SYSTEMD_UNITS_DIR_USER/
+# Enable coova-chilli if needed
+systemctl enable coova-chilli.service
+
+# Modify chilli config file: UAM, radius passwords, etc...
+# *******************************************************
+cat $PROJECT_CONFIGS_DIR/coova-config.template | \
+sed -e "s/INTERNET_GATEWAY_DEV/$NETWORK_ETHERNET_DEVICE/" | \
+sed -e "s/WIRELESS_DEV/$NETWORK_WIRELESS_DEVICE/" | \
+sed -e "s/HSSECRET/$COOVA_UAM_SECRET/" | \
+sed -e "s/RADIUSSECRET/$FREERADIUS_DB_PASS/" | \
+sed -e "s/HOST_IP/$COOVA_SERVER_IP/" | \
+sed -e "s/JAMBULATV/$COOVA_SERVER_IP/" | \
+sed -e "s/NETWORKSSID/$NETWORK_WIRELESS_SSID/" | \
+sed -e "s/jambulatv.com/$NETWORK_DOMAIN/" | \
+sed -e "s/DNS_SERVER_1/$NETWORK_DNS_1/" | \
+sed -e "s/DNS_SERVER_2/$NETWORK_DNS_2/" | \
+sed -e "s/HOTSPOT_SSID/$NETWORK_WIRELESS_SSID/" | \
+sed -e "s/HOTSPOT_LOCATION/$COMPANY_NAME/" | \
+sed -e "s/HOTSPOT_NETWORK/$NETWORK_WIRELESS_SSID/" | \
+sed -e "s/NAS_MAC_ADDRESS/$NETWORK_WIRELESS_MAC_ADDRESS/" | \
+sed -e "s/NAS_IP_ADDRESS/$COOVA_SERVER_IP/" | \
+sed -e "s/# HS_ADMUSR=chillispot/HS_ADMUSR=$FREERADIUS_ADMIN_USER/" | \
+sed -e "s/# HS_ADMPWD=chillispot/HS_ADMPWD=$FREERADIUS_ADMIN_PASS/" | \
+sed -e "s/# HS_TCP_PORTS=\"80 443\"/HS_TCP_PORTS=\"$COOVA_OPEN_TCP_PORTS\"/" | \
+sed -e "s/ALLOWED_MAC_ADDRESSES/\"$COOVA_PRIVILEGED_MAC\"/" \
+	> $COOVA_CONFIG_FILE
+
+# Setup SSL for coova chilli
+# **************************
+[ -d $COOVA_CONFIG_DIR/ssl ] || mkdir $COOVA_CONFIG_DIR/ssl
+# Create SSL cert/key
+ssl_cert_key_generate $COOVA_CONFIG_DIR/ssl/JambulaTV.crt $COOVA_CONFIG_DIR/ssl/JambulaTV.key 7300
+
+# Specify DHCP Range for WiFi clients 
+# ************************************
+echo "# DHCP Range for WiFi clients 
+dhcpstart $CHILLI_DHCP_START
+dhcpend $CHILLI_DHCP_END" >> $COOVA_CONFIG_DIR/local.conf
+
+# Patch functions file
+# *********************
+patch -p1 $COOVA_CONFIG_DIR/functions < $PROJECT_PATCHES_DIR/coova_functions.patch
+
+# Patch up.sh script to allow HS_UDP_PORTS in config
+# ***************************************************
+patch -p1 $COOVA_CONFIG_DIR/up.sh < $PROJECT_PATCHES_DIR/coova_up_sh.patch
+
+# Create local ipup.sh script for chilli 
+# ***************************************
+echo "#!/bin/sh
+# Jambula Chilli IPUP Script
+# ----------------------------
+# 
+SYSCONFIG_DIR=/etc/sysconfig
+SYSCONFIG_NETWORK_SCRIPTS_DIR=\$SYSCONFIG_DIR/network-scripts
+NETWORK_ETHERNET_DEVICE=\`ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g'\`
+NETWORK_GATEWAY_ADDRESS=\`grep GATEWAY \$SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-\$NETWORK_ETHERNET_DEVICE | cut -d = -f2 | sed \"s/\\\"//g\"\`
+
+# Find default gateway device
+ip route show | grep default | grep ppp > /dev/null 2>&1
+if [ \"\$?\" = \"0\" ];
+then
+INTERNET_GATEWAY_DEV=\`ip link | grep ppp | cut -d : -f2 | head -1 | sed -e 's/ //g'\`
+else
+INTERNET_GATEWAY_DEV=\$NETWORK_ETHERNET_DEVICE
+fi
+
+
+# Delete existing default route
+ip route del default 
+# Set new default route
+ip route add default via \$NETWORK_GATEWAY_ADDRESS
+
+# Allow IP masquerading through this box
+/bin/echo 1 > /proc/sys/net/ipv4/ip_forward
+/usr/sbin/iptables -t nat -A POSTROUTING -o \$INTERNET_GATEWAY_DEV -j MASQUERADE" > $COOVA_CONFIG_DIR/ipup.sh
+#
+# Make script executable
+chmod 755 $COOVA_CONFIG_DIR/ipup.sh
+
+# Create Chilli User in radius MySql database
+# ********************************************
+echo "INSERT INTO radcheck (UserName, Attribute, Value, Op) VALUES ('$COOVA_NORMAL_USER_LOGIN', 'Cleartext-Password', '$COOVA_NORMAL_USER_PASSWORD', ':=');" | mysql -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME
+}
+
+coova_chilli_customization () {
+# Web files
+# *********
+# Create WWW directory if non-existent
+[ -d $COOVA_HTML_DIR ] || mkdir -p $COOVA_HTML_DIR
+#
+# Copy www files
+mv -v $COOVA_CONFIG_DIR/www $COOVA_HTML_DIR
+#
+# Change ownership of coova HTML directory
+chown -R $WWW_USER:$WWW_GROUP $COOVA_HTML_DIR
+
+# Run patches
+# -----------
+# Create uamroot patch points to uamroot to $COOVA_HTML_DIR
+echo "--- uam.sh.orig	2014-03-12 12:23:46.875850707 +0300
++++ uam.sh	2014-03-12 12:24:38.193288853 +0300
+@@ -21,7 +21,7 @@
+     return 0
+ }
+ 
+-uamrootdir=/etc/chilli
++uamrootdir=$COOVA_HTML_DIR
+ uamwwwdir=\"\$uamrootdir/www\"
+ tmpdir=\"/tmp\"
+" > $PROJECT_PATCHES_DIR/coova_uamroot.patch
+# Apply uam file patch
+patch -p1 $COOVA_HTML_DIR/www/uam.sh < $PROJECT_PATCHES_DIR/coova_uamroot.patch
+#
+# Patch logn-config.sh
+patch -p1 $COOVA_HTML_DIR/www/config-local.sh < $PROJECT_PATCHES_DIR/coova_login_config_local.patch  
+#
+# patch login.chi: Redirect to customized Jambula Splash Web Pages
+patch -p1 $COOVA_HTML_DIR/www/login.chi < $PROJECT_PATCHES_DIR/coova_login_chi.patch
+#
+# Patch pre-login screen so it reads 'Redirecting' instead of 'Jambula Labs'
+patch -p1 $COOVA_HTML_DIR/www/coova.html < $PROJECT_PATCHES_DIR/coova_prelogin_title.patch
+#
+# Change all title references from My HotSpot to '$HS_LOCATION'
+patch -p1 $COOVA_HTML_DIR/www/title.tmpl < $PROJECT_PATCHES_DIR/coova_login_title.patch
+#
+# Footer
+patch -p1 $COOVA_HTML_DIR/www/footer.tmpl < $PROJECT_PATCHES_DIR/coova_login_footer.patch
+#
+# Header # Not necessary since splash is used.  I leave it here to be thorough
+patch -p1 $COOVA_HTML_DIR/www/login.tmpl < $PROJECT_PATCHES_DIR/coova_login_header.patch        
+#
+# copy wwwsh binary to coova html directory
+mv -v $COOVA_CONFIG_DIR/wwwsh $COOVA_HTML_DIR/
+#
+# Add splash files dir & custom html files e.g. jambula-pre-login-portal.tmpl to WWW
+cp -rv $PROJECT_CUSTOMIZATION_DIR/coova/html/* $COOVA_HTML_DIR/www/
+#
+# Copy coova.jpg small logo
+cp -fv $PROJECT_IMAGES_DIR/coova.jpg $COOVA_HTML_DIR/www
+#
+# Display Coova Chilli's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+Coova-Chilli
+============
+% Create SSL certificates for coova-chilli:
+ jambulatv-ssl-certificate-signing-request $COOVA_CONFIG_DIR/ssl
+#
+EOF
+}
+
+hostapd_install () {
+# Unpack hostapd 
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/hostap/ $INSTALL_SRC_DIR/hostap/
+cd $INSTALL_SRC_DIR/hostap/hostapd
+patch -Np1 Makefile < $PROJECT_PATCHES_DIR/hostapd.makefile.patch
+cp -v defconfig defconfig.orig
+patch -Np1 defconfig < $PROJECT_PATCHES_DIR/hostapd.defconfig.patch
+cp -v defconfig .config
+make
+make install
+}
+
+hostapd_configure () {
+# Create hostapd config directory
+# *******************************
+[ -d $HOSTAPD_DIR ] || mkdir $HOSTAPD_DIR
+
+# Copy hostapd config files
+# **************************
+cp -v $INSTALL_SRC_DIR/hostapd/hostapd/hostapd.conf $HOSTAPD_DIR/hostapd.conf.orig
+# Make some changes to hostapd.conf; and then
+
+cat $PROJECT_CONFIGS_DIR/hostapd-conf.template | sed -e "s/WIFIDEVICE0/$NETWORK_WIRELESS_DEVICE/" | sed -e "s/NETWORK_WIRELESS_CHANNEL_NO/$NETWORK_WIRELESS_CHANNEL_NO/" | sed -e "s/JAMBULATV/$NETWORK_WIRELESS_SSID/" | sed -e "s/thankgodtodayisfridaynovember5/$NETWORK_WIRELESS_PASSPHRASE/"  > $HOSTAPD_DIR/hostapd.conf
+
+# Configure systemd service file
+# ******************************
+# Copy hostapd systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/hostapd.service $SYSTEMD_UNITS_DIR_USER/
+# Enable hostapd if needed
+systemctl enable hostapd.service
+
+# Disable wpa_supplicant service, which is automatically started by NetworkManager
+# ********************************************************************************
+mv -v $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service \
+      $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service.disabled
+}
+
+youtube_dl_install () {
+cp -v $PROJECT_TARBALLS_DIR/youtube-dl $BINARY_PREFIX
+# Make script executable
+chmod 755 $BINARY_PREFIX/youtube-dl
+# Update to latest version
+$BINARY_PREFIX/youtube-dl -U > /dev/null 2>&1 &
+}
+
+gstreamer_install () {
+tar xvf $PROJECT_TARBALLS_DIR/gstreamer-$GSTREAMER_VERSION.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v gstreamer-* gstreamer
+# Compile
+cd $INSTALL_SRC_DIR/gstreamer && ./configure --prefix=$PREFIX --libdir=$LIBDIR \
+   --localstatedir=$STATEDIR
+make && make install
+}
+
+gstreamer_plugins_install () {
+for GST_PLUGIN in \
+base \
+good \
+bad \
+ugly 
+do
+# unpack
+tar xvf $PROJECT_TARBALLS_DIR/gst-plugins-$GST_PLUGIN-$GSTREAMER_VERSION.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v gst-plugins-$GST_PLUGIN-* gst-plugins-$GST_PLUGIN
+# configure
+cd $INSTALL_SRC_DIR/gst-plugins-$GST_PLUGIN && ./configure --prefix=$PREFIX \
+   --libdir=$LIBDIR --localstatedir=$STATEDIR
+# compile
+make && make install
+done
+}
+
+tumbler_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/tumbler-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v tumbler-* tumbler
+# Compile
+cd $INSTALL_SRC_DIR/tumbler && ./configure --prefix=$PREFIX \
+--libdir=$LIBDIR
+make && make install
+}
+
+rygel_deps_install () {
+# IMPORTANT: USE ONLY LISTED VERSIONS of libgee, tracker
+for DEP_PKG in \
+gssdp \
+gupnp \
+libgee \
+gupnp-av \
+gupnp-dlna \
+tracker
+do
+# unpack
+tar xvf $PROJECT_TARBALLS_DIR/$DEP_PKG-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v $DEP_PKG-* $DEP_PKG
+cd $INSTALL_SRC_DIR/$DEP_PKG 
+# configure
+# Change configure command for gupnp
+if [ "$DEP_PKG" = "gupnp" ];
+then
+./configure --prefix=$PREFIX --libdir=$LIBDIR --localstatedir=$STATEDIR \
+    --with-context-manager=linux
+else
+./configure --prefix=$PREFIX --libdir=$LIBDIR --localstatedir=$STATEDIR
+fi
+# compile
+make && make install
+done
+}
+
+rygel_install () {
+tar xvf $PROJECT_TARBALLS_DIR/rygel-$RYGEL_VERSION.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v rygel-* rygel
+# Compile
+cd $INSTALL_SRC_DIR/rygel && ./configure --prefix=$PREFIX --libdir=$LIBDIR \
+   --sysconfdir=$PROJECT_SYSTEM_CONF_DIR/rygel --localstatedir=$STATEDIR \
+   --with-media-engine=gstreamer --without-ui
+make && make install
+#
+# Add rygel group and user
+groupadd -r rygel
+useradd -r -M -c "Rygel DNLA Server User" -g rygel rygel -s /sbin/nologin
+}
+
+rygel_configure () {
+# Create rygel config directory
+[ -d $PROJECT_SYSTEM_CONF_DIR/rygel ] || mkdir -p $PROJECT_SYSTEM_CONF_DIR/rygel
+# Config file
+cp -v $PROJECT_CONFIGS_DIR/rygel.conf.sample  $PROJECT_SYSTEM_CONF_DIR/rygel/rygel.conf
+# Change permissions of config directory to owner
+chown -R rygel:rygel $PROJECT_SYSTEM_CONF_DIR/rygel
+# Enable rygel service
+cp -v $PROJECT_INIT_SCRIPTS_DIR/rygel.service $SYSTEMD_UNITS_DIR_SYSTEM/
+ln -s $SYSTEMD_UNITS_DIR_SYSTEM/rygel.service $SYSTEMD_UNITS_DIR_USER/rygel.service
+systemctl --system daemon-reload
+# Enable rygel if needed
+systemctl enable rygel.service
+}
+
+minidlna_install () {
+# Install minidlna
+tar zxvf $PROJECT_TARBALLS_DIR/minidlna-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v minidlna* minidlna
+# Patches
+patch -Np1 $INSTALL_SRC_DIR/minidlna/upnpglobalvars.h < $PROJECT_PATCHES_DIR/minidlna.upnpglobalvars.patch
+patch -Np1 $INSTALL_SRC_DIR/minidlna/upnpsoap.h < $PROJECT_PATCHES_DIR/minidlna.upnpsoap.patch
+# copy icons.c file
+cp -fv $PROJECT_IMAGES_DIR/minidlna.logo $INSTALL_SRC_DIR/minidlna/icons.c
+# Configure
+cd $INSTALL_SRC_DIR/minidlna
+./configure --prefix=$PREFIX --libdir=$LIBDIR --localstatedir=$STATEDIR \
+   --sysconfdir=$PROJECT_SYSTEM_CONF_DIR --enable-tivo \
+   --enable-netgear --enable-readynas --with-os-name=$PROJECT_NAME \
+   --with-os-version=$PROJECT_VERSION --with-os-url=$PROJECT_URL
+make 
+make install
+#
+# Add minidlna group and user
+groupadd -r minidlna
+useradd -r -M -c "MiniDLNA Server User" -g minidlna minidlna -s /sbin/nologin
+}
+
+minidlna_configure () {
+# Create minidlna config directory
+if [ ! -e $PROJECT_SYSTEM_CONF_DIR/minidlna.conf ];
+then
+# Use template to generate minidlna.conf file
+cat $PROJECT_CONFIGS_DIR/minidlna.conf.sample | \
+	sed -e "s:USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" | \
+	sed -e "s:USER_MOVIES_DIR:$USER_MOVIES_DIR:g" | \
+	sed -e "s:USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
+	sed -e "s:USER_PICTURES_DIR:$USER_PICTURES_DIR:g" > $PROJECT_SYSTEM_CONF_DIR/minidlna.conf
+fi
+# Change permissions of config directory to owner
+chown -R minidlna:minidlna $PROJECT_SYSTEM_CONF_DIR/minidlna.conf
+# Create minidlna cache, logs directories
+[ -d $PROJECT_SYSTEM_CACHE_DIR/minidlna ] || mkdir -p $PROJECT_SYSTEM_CACHE_DIR/minidlna
+[ -d $PROJECT_SYSTEM_LOG_DIR/minidlna ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/minidlna
+# Change permissions of cache, log directories to owner/group
+chown -R minidlna:minidlna $PROJECT_SYSTEM_CACHE_DIR/minidlna
+chown -R minidlna:minidlna $PROJECT_SYSTEM_LOG_DIR/minidlna
+# minidlna service
+cp -v $PROJECT_INIT_SCRIPTS_DIR/minidlna.service $SYSTEMD_UNITS_DIR_USER/
+# Enable minidlna if needed
+systemctl enable minidlna.service
+#
+# Display miniDLNA's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+MiniDLNA
+========
+% Do an initial scan of media directories  using the command:
+  $BINARY_PREFIX/minidlnad -R -f $PROJECT_SYSTEM_CONF_DIR/minidlna/minidlna.conf
+#
+EOF
+}
+
+xupnpd_install () {
+# Install xupnpd server
+tar zxvf $PROJECT_TARBALLS_DIR/xupnpd*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR/xupnpd/src
+make
+}
+
+xupnpd_configure () {
+# Copy all files from source
+rsync -av $INSTALL_SRC_DIR/xupnpd/src/ $PROJECT_SYSTEM_CONF_DIR/xupnpd/
+# Change xupnd directory permissions
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_CONF_DIR/xupnpd
+#
+# Use template to generate xupnpd.lua file
+cat $PROJECT_CONFIGS_DIR/xupnpd.lua.sample | \
+	sed -e "s/WIRELESS_DEV/$NETWORK_WIRELESS_DEVICE/" | \
+	sed -e "s/MULTICAST_PROXY_IP/$COOVA_SERVER_IP/" | \
+	sed -e "s:USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" | \
+	sed -e "s:USER_MOVIES_DIR:$USER_MOVIES_DIR:g" | \
+	sed -e "s:NETCASTS_DIRECTORY:$NETCASTS_DIRECTORY:g" | \
+	sed -e "s:USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
+	sed -e "s:USER_PICTURES_DIR:$USER_PICTURES_DIR:g" | \
+	sed -e "s:PLAYLISTS_DIRECTORY:$PLAYLISTS_DIRECTORY:g" | \
+	sed -e "s:DEVICE_UUID:$SYSTEM_UUID:g" > $PROJECT_SYSTEM_CONF_DIR/xupnpd/xupnpd.lua
+#
+# Add playlists directory
+[ -d $PLAYLISTS_DIRECTORY ] || mkdir -p $PLAYLISTS_DIRECTORY
+# Add Live TV playlists if any
+ls $PROJECT_CONTRIB_DIR/tv/digital/*.m3u /dev/null 2>&1 && \
+cp -v $PROJECT_CONTRIB_DIR/tv/digital/*.m3u $PLAYLISTS_DIRECTORY/
+# Change playlist directory permissions: Give owner and Web user
+chown -R $MULTIMEDIA_USER:$WWW_GROUP $PLAYLISTS_DIRECTORY
+chmod -R 775 $PLAYLISTS_DIRECTORY
+#
+# Copy xupnpd systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/xupnpd.service $SYSTEMD_UNITS_DIR_USER/
+# Enable and start xupnpd if needed
+systemctl enable xupnpd.service
+}
+
+video_on_demand_configure () {
+# Create incron tab file for vlm vod
+echo "
+$VLM_VOD_DIRECTORY IN_CREATE $VLM_VOD_CREATE_SCRIPT \$#
+$VLM_VOD_DIRECTORY IN_DELETE $VLM_VOD_DELETE_SCRIPT \$# 
+" > $INCRON_DIRECTORY/vlm_vod
+# Create vlm vod directory
+[ -d $VLM_VOD_DIRECTORY ] || mkdir -p $VLM_VOD_DIRECTORY
+# Enable incrond.service at boot
+systemctl enable incrond.service
+# Start incrond.service at boot
+systemctl start incrond.service
+# Add vlm vod scripts if they don't exist in bin directory
+for SCRIPT in \
+	jambulatv-create-video-on-demand \
+	jambulatv-delete-video-on-demand \
+	jambulatv-create-tv-on-demand \
+	jambulatv-vlc-vlm-server
+do
+[ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX/
+done
+}
+
+tv_on_demand_configure () {
+# Add vlm vod scripts if they don't exist in bin directory
+for SCRIPT in \
+	jambulatv-create-tv-on-demand \
+	jambulatv-vlc-vlm-server
+do
+[ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX/
+done
+# Create TV on Demand?
+#$BINARY_PREFIX/jambulatv-create-tv-on-demand
+}
+
+rtmpdump_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/rtmpdump/ $INSTALL_SRC_DIR/rtmpdump/
+cd $INSTALL_SRC_DIR/rtmpdump
+# Change prefix in Makefile
+sed -i "s:prefix=/usr/local:prefix=/usr:g" Makefile
+make SYS=posix
+make install
+}
+
+iptv_support () {
+# Copy IPTV xml files to html directory
+cp -rv $PROJECT_CONTRIB_DIR/iptv $WWW_HTML_DIR
+# Change MPlayer and Xine binaries to use jambulatv wrappers
+cp -v $FREEVO_USER_HOME_DIR/freevo.conf $FREEVO_USER_HOME_DIR/freevo.conf.orig
+cat $FREEVO_USER_HOME_DIR/freevo.conf.orig | \
+  sed -e "s:mplayer = /bin/mplayer:mplayer = /usr/bin/jambulatv-mplayer:g" | \
+  sed -e "s:xine = /bin/xine:xine = /usr/bin/jambulatv-xine:g" \
+    > $FREEVO_USER_HOME_DIR/freevo.conf
+}
+
+dvb_drivers_support () {
+# Hauppauge WinTV MiniStick
+cp -v $PROJECT_FIRMWARE_DIR/sms1xxx-hcw-55xxx-dvbt-02.fw $FIRMWARE_DIR
+}
+
+w_scan_install () {
+# Remove existing w_scan rpm package if any
+rpm -q w_scan > /dev/null 2>&1 && rpm -e --nodeps w_scan
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/w_scan-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v w_scan-* w_scan
+# Compile
+cd $INSTALL_SRC_DIR/w_scan && ./configure --prefix=$PREFIX \
+--libdir=$LIBDIR
+make && make install
+}
+
+email_smtp_install () {
+# Install Email - A standalone SMTP-Like client (Required)
+rsync -av --delete-after $PROJECT_GITHUB_DIR/eMail/ $INSTALL_SRC_DIR/eMail/
+cd $INSTALL_SRC_DIR/eMail
+./configure --prefix=$PREFIX --with-ssl --mandir $MANDIR1 --sysconfdir $CONFDIR
+make && make install
+}
+
+email_smtp_configure () {
+# BUG: Fix email not running if VCARD is not properly defined 
+cp -v $EMAIL_CONFIG_DIR/email.conf $EMAIL_CONFIG_DIR/email.conf.orig
+cat $EMAIL_CONFIG_DIR/email.conf.orig | \
+	sed -e 's/SIGNATURE_FILE/#SIGNATURE_FILE/g' | \
+	sed -e 's/VCARD =/#VCARD =/g' > $EMAIL_CONFIG_DIR/email.conf
+}
+
+freeswitch_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/freeswitch/ $INSTALL_SRC_DIR/freeswitch/
+cd $INSTALL_SRC_DIR/freeswitch
+./bootstrap.sh
+./configure --prefix=$PREFIX --libdir=$LIBDIR/freeswitch \
+  --sysconfdir=$CONFDIR/freeswitch --localstatedir=$STATEDIR \
+  --with-modinstdir=$PREFIX/freeswitch/mod \
+  --with-dbdir=$PREFIX/freeswitch/db \
+  --with-soundsdir=$PREFIX/freeswitch/sounds \
+  --with-recordingsdir==$PREFIX/freeswitch/recordings \
+  --with-grammardir=$PREFIX/freeswitch/grammar \
+  --with-scriptdir=$PREFIX/freeswitch/scripts \
+  --with-htdocsdir=$WWW_HTML_DIR/freeswitch
+make all install 
+#
+# Make sounds directory
+#[ -d $PREFIX/freeswitch/sounds ] || mkdir -p $PREFIX/freeswitch/sounds
+# Copy sounds packages to source directory
+cp -v $PROJECT_TARBALLS_DIR/freeswitch-sounds-*.tar.gz $INSTALL_SRC_DIR/freeswitch
+cd $INSTALL_SRC_DIR/freeswitch
+# Make
+make cd-sounds-install           
+make cd-moh-install  
+}
+
+gsmopen_install () {
+# gsm_open pre-requisite - gsmlib
+cd $INSTALL_SRC_DIR/freeswitch/src/mod/endpoints/mod_gsmopen/gsmlib/gsmlib-1.10-patched-13ubuntu
+./configure prefix=/usr
+make
+make install
+ldconfig
+# gsm_open pre-requisite - libctb
+cd $INSTALL_SRC_DIR/freeswitch/src/mod/endpoints/mod_gsmopen/libctb-*/build
+make prefix=/usr DEBUG=0 GPIB=0
+make DEBUG=0 GPIB=0 install
+#ln -s /usr/lib/libctb-0.16.so $LIBDIR/libctb-0.16.so
+ldconfig
+# Make and install gsm_open
+cd $INSTALL_SRC_DIR/freeswitch/src/mod/endpoints/mod_gsmopen
+make
+make install
+}
+
+gsmopen_configure () {
+cd $INSTALL_SRC_DIR/freeswitch/src/mod/endpoints/mod_gsmopen/configs
+cp -v gsmopen.conf.xml /etc/freeswitch/autoload_configs/
+#/etc/freeswitch/autoload_configs/gsmopen.conf.xml
+}
+
+owncloud_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/owncloud-*tar.bz2 -C $WWW_HTML_DIR
+# Change permissions to allow for install
+chmod -R 777 $WWW_HTML_DIR/owncloud
+# Copy owncloud nginx config file or run the command:
+[ -e $NGINX_CONF_DIR/sites-enabled/owncloud ] || cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/owncloud $NGINX_CONF_DIR/sites-enabled/
+# Restart nginx
+systemctl restart nginx.service
+# Display OwnCloud's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+OwnCloud
+========
+% To finish setup, use a client PC to open the URL below:
+  http://$NETWORK_IP_ADDRESS:$(grep -i owncloud $PORTS_ASSIGNED_FILE | awk {'print $1'})
+#
+EOF
+}
+
+
+dahdi_install () {
+# Install Dahdi
+tar zxvf $PROJECT_TARBALLS_DIR/dahdi-linux-complete-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v dahdi-linux-complete-* dahdi-linux-complete
+cd $INSTALL_SRC_DIR/dahdi-linux-complete 
+# Copy dahdi firmware files
+#cp -v $PROJECT_FIRMWARE_DIR/dahdi/* linux/drivers/dahdi/firmware/
+make all
+make install
+make config 
+}
+
+libpri_install () {
+# Install libpri
+tar zxvf $PROJECT_TARBALLS_DIR/libpri-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libpri-* libpri
+cd $INSTALL_SRC_DIR/libpri
+make
+make install
+}
+
+asterisk_install () {
+# Unpack asterisk
+tar zxvf $PROJECT_TARBALLS_DIR/asterisk-11*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v asterisk-11* asterisk
+# Copy MP3 Decoder into addons directory
+tar zxvf $PROJECT_TARBALLS_DIR/mp3-decoder.tgz -C $INSTALL_SRC_DIR/asterisk/addons/
+# Change to asterisk directory
+cd $INSTALL_SRC_DIR/asterisk
+./configure --prefix=$PREFIX --libdir=$LIBDIR \
+	--with-ssl=$INCDIR/openssl \
+	--with-srtp=$INCDIR/srtp 
+# Generate menuselect.makeopts file
+cat > menuselect.makeopts <<EOF
+MENUSELECT_ADDONS=chan_ooh323 app_mysql app_saycountpl cdr_mysql 
+MENUSELECT_APPS=app_skel app_fax app_ivrdemo app_jack app_meetme app_osplookup app_saycounted app_dahdibarge app_readfile app_setcallerid 
+MENUSELECT_BRIDGES=
+MENUSELECT_CDR=cdr_pgsql cdr_radius cdr_tds cdr_sqlite 
+MENUSELECT_CEL=cel_pgsql cel_radius cel_tds 
+MENUSELECT_CHANNELS=chan_mgcp chan_misdn chan_nbs chan_vpb chan_gtalk chan_h323 chan_jingle 
+MENUSELECT_CODECS=
+MENUSELECT_FORMATS=
+MENUSELECT_FUNCS=
+MENUSELECT_PBX=
+MENUSELECT_RES=res_calendar_ews res_calendar_exchange res_config_ldap res_config_pgsql res_config_sqlite res_corosync res_fax_spandsp res_pktccops res_snmp res_timing_kqueue res_jabber 
+MENUSELECT_TESTS=test_abstract_jb test_acl test_amihooks test_aoc test_app test_ast_format_str_reduce test_astobj2 test_astobj2_thrash test_callerid test_config test_db test_devicestate test_dlinklists test_event test_expr test_format_api test_func_file test_gosub test_hashtab_thrash test_heap test_jitterbuf test_linkedlists test_locale test_logger test_netsock2 test_pbx test_poll test_sched test_security_events test_skel test_stringfields test_strings test_substitution test_time test_utils test_voicemail_api test_xml_escape 
+MENUSELECT_CFLAGS=LOADABLE_MODULES BUILD_NATIVE 
+MENUSELECT_OPTS_app_voicemail=FILE_STORAGE 
+MENUSELECT_UTILS=astcanary astdb2sqlite3 astdb2bdb 
+MENUSELECT_AGIS=
+MENUSELECT_EMBED=
+MENUSELECT_CORE_SOUNDS=CORE-SOUNDS-EN-WAV CORE-SOUNDS-EN-ULAW CORE-SOUNDS-EN-ALAW CORE-SOUNDS-EN-GSM 
+MENUSELECT_MOH=MOH-OPSOUND-WAV MOH-OPSOUND-ULAW MOH-OPSOUND-ALAW MOH-OPSOUND-GSM 
+MENUSELECT_EXTRA_SOUNDS=EXTRA-SOUNDS-EN-WAV EXTRA-SOUNDS-EN-ULAW EXTRA-SOUNDS-EN-ALAW EXTRA-SOUNDS-EN-GSM 
+MENUSELECT_BUILD_DEPS=chan_local app_voicemail app_confbridge res_monitor res_agi res_adsi res_smdi res_odbc res_xmpp res_crypto res_http_websocket res_ael_share G711_NEW_ALGORITHM 
+MENUSELECT_DEPSFAILED=MENUSELECT_APPS=app_jack
+MENUSELECT_DEPSFAILED=MENUSELECT_APPS=app_osplookup
+MENUSELECT_DEPSFAILED=MENUSELECT_CDR=cdr_pgsql
+MENUSELECT_DEPSFAILED=MENUSELECT_CDR=cdr_radius
+MENUSELECT_DEPSFAILED=MENUSELECT_CDR=cdr_tds
+MENUSELECT_DEPSFAILED=MENUSELECT_CEL=cel_pgsql
+MENUSELECT_DEPSFAILED=MENUSELECT_CEL=cel_radius
+MENUSELECT_DEPSFAILED=MENUSELECT_CEL=cel_tds
+MENUSELECT_DEPSFAILED=MENUSELECT_CHANNELS=chan_misdn
+MENUSELECT_DEPSFAILED=MENUSELECT_CHANNELS=chan_nbs
+MENUSELECT_DEPSFAILED=MENUSELECT_RES=res_config_ldap
+MENUSELECT_DEPSFAILED=MENUSELECT_RES=res_config_pgsql
+MENUSELECT_DEPSFAILED=MENUSELECT_RES=res_config_sqlite
+MENUSELECT_DEPSFAILED=MENUSELECT_RES=res_corosync
+MENUSELECT_DEPSFAILED=MENUSELECT_RES=res_fax_spandsp
+MENUSELECT_DEPSFAILED=MENUSELECT_RES=res_snmp
+MENUSELECT_DEPSFAILED=MENUSELECT_RES=res_timing_kqueue
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_abstract_jb
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_acl
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_amihooks
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_aoc
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_app
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_ast_format_str_reduce
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_astobj2
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_astobj2_thrash
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_callerid
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_config
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_db
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_devicestate
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_dlinklists
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_event
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_expr
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_format_api
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_func_file
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_gosub
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_hashtab_thrash
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_heap
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_jitterbuf
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_linkedlists
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_locale
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_logger
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_netsock2
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_pbx
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_poll
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_sched
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_security_events
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_skel
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_stringfields
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_strings
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_substitution
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_time
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_utils
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_voicemail_api
+MENUSELECT_DEPSFAILED=MENUSELECT_TESTS=test_xml_escape
+EOF
+#
+# Apply chan_mobile patches
+patch -Np1 $INSTALL_SRC_DIR/asterisk/addons/chan_mobile.c < $PROJECT_PATCHES_DIR/chan_mobile_SMS_polling.patch
+patch -Np1 $INSTALL_SRC_DIR/asterisk/addons/chan_mobile.c < $PROJECT_PATCHES_DIR/chan_mobile-port-autodetect.patch
+#
+# Sounds
+#--------
+# Extract core, moh, and extra sounds versions from Makefile
+ASTERISK_CORE_SOUNDS_VERSION=$(grep 'CORE_SOUNDS_VERSION:=' $INSTALL_SRC_DIR/asterisk/sounds/Makefile | cut -d '=' -f2)
+ASTERISK_MOH_SOUNDS_VERSION=$(grep 'MOH_VERSION:=' $INSTALL_SRC_DIR/asterisk/sounds/Makefile | cut -d '=' -f2)
+ASTERISK_EXTRA_SOUNDS_VERSION=$(grep 'EXTRA_SOUNDS_VERSION:=' $INSTALL_SRC_DIR/asterisk/sounds/Makefile | cut -d '=' -f2)
+# Change to asterisk sounds directory
+cd $INSTALL_SRC_DIR/asterisk/sounds
+# Cycle through codecs and fix versions to current
+for CODEC in wav ulaw alaw gsm;
+do
+# copy current core, moh, and extra sounds packages
+cp -v $PROJECT_TARBALLS_DIR/asterisk*$CODEC*gz $INSTALL_SRC_DIR/asterisk/sounds/
+# Create links to current core, moh, and extra sounds package
+ln -s asterisk-core-sounds-en-$CODEC-current.tar.gz \
+asterisk-core-sounds-en-$CODEC-$ASTERISK_CORE_SOUNDS_VERSION.tar.gz
+ln -s asterisk-moh-opsound-$CODEC-current.tar.gz \
+asterisk-moh-opsound-$CODEC-$ASTERISK_MOH_SOUNDS_VERSION.tar.gz
+ln -s asterisk-extra-sounds-en-$CODEC-current.tar.gz \
+asterisk-extra-sounds-en-$CODEC-$ASTERISK_EXTRA_SOUNDS_VERSION.tar.gz
+done
+#
+cd $INSTALL_SRC_DIR/asterisk
+# make
+make
+# Install
+make install
+# Generate sample configs
+make samples
+#
+# Add asterisk group and user 
+groupadd -r asterisk
+useradd -r -M -c "Asterisk PBX User" -g asterisk asterisk -s /sbin/nologin
+}
+
+asterisk_configure () {
+# Systemctl start script
+cp -v $PROJECT_INIT_SCRIPTS_DIR/asterisk.service $SYSTEMD_UNITS_DIR_USER/
+# Enable asterisk
+systemctl enable asterisk.service
+# Create asterisk directory in JambulaTV configs directory
+[ -d $PROJECT_SYSTEM_CONF_DIR/asterisk ] || mkdir -p $PROJECT_SYSTEM_CONF_DIR/asterisk
+# Copy Jambula customized asterisk config files
+rsync -avz $PROJECT_CONFIGS_DIR/asterisk/ $PROJECT_SYSTEM_CONF_DIR/asterisk/
+#
+# Jambula Asterisk files configuration
+for CONFIG_FILE in extensions.conf sip.conf voicemail.conf chan_mobile.conf musiconhold.conf xmpp.conf motif.conf confbridge.conf http.conf
+do
+# Backup config file
+cp -v $CONFDIR/asterisk/$CONFIG_FILE $CONFDIR/asterisk/$CONFIG_FILE.orig
+# Modify config file to include JambulaTV customized file
+echo "#include $PROJECT_SYSTEM_CONF_DIR/asterisk/$CONFIG_FILE" > $CONFDIR/asterisk/$CONFIG_FILE
+done
+#
+# Backup asterisk.conf file
+cp -v $CONFDIR/asterisk/asterisk.conf $CONFDIR/asterisk/asterisk.conf.orig
+# Allow use of #exec statements
+sed -i "s/;execincludes = yes/execincludes = yes/g"  $CONFDIR/asterisk/asterisk.conf
+# Add customized sounds
+rsync -av $PROJECT_CONTRIB_DIR/sounds/asterisk/ /var/lib/asterisk/sounds/en/
+# Add music-on-hold files
+rsync -av $PROJECT_CONTRIB_DIR/music/asterisk/ /var/lib/asterisk/
+# Link to default moh
+ln -s /var/lib/asterisk/moh /var/lib/asterisk/moh.default
+#
+# Add execincludes script to add site dialplan type
+cat > $ASTERISK_AGI_BIN_DIR/include_config.sh <<EOF
+#!/bin/sh
+
+# Determine global DIALPLAN_NAME variable
+DIALPLAN_TYPE=\$(cat $PROJECT_SYSTEM_CONF_DIR/asterisk/globals.conf | sed /^\;/d | grep ^DIALPLAN_NAME | tail -n 1 | cut -d '=' -f2 | sed 's/^ //')
+
+# Include DialPlan Type 
+[ ! -e $PROJECT_SYSTEM_CONF_DIR/asterisk/extensions_\$DIALPLAN_TYPE.conf ] || \\
+echo "#include $PROJECT_SYSTEM_CONF_DIR/asterisk/extensions_\$DIALPLAN_TYPE.conf"
+EOF
+# Make script executable
+chmod 755 $ASTERISK_AGI_BIN_DIR/include_config.sh
+#
+# Add execincludes script to add sip providers config
+cat > $ASTERISK_AGI_BIN_DIR/include_sip_providers.sh <<EOF
+#!/bin/sh
+REMOTE_SIP_HOST=$SIP_PROVIDER_HOSTNAME
+#
+# Ping Internet
+ping -c 3 -W 3 \$REMOTE_SIP_HOST > /dev/null 2>&1
+REMOTE_SIP_HOST_PING_STATUS=\$?
+# 
+# Include SIP Provider if there's connectivity
+if [ "\$REMOTE_SIP_HOST_PING_STATUS" = "0" ] && [ -e $PROJECT_SYSTEM_CONF_DIR/asterisk/sip_providers.config ];
+then
+# Include SIP Providers 
+echo "#include $PROJECT_SYSTEM_CONF_DIR/asterisk/sip_providers.config"
+fi
+EOF
+# Make script executable
+chmod 755 $ASTERISK_AGI_BIN_DIR/include_sip_providers.sh
+#
+# Setup SSL for Asterisk
+# **********************
+[ -d $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl ] || mkdir $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl
+# Create SSL cert/key
+ssl_cert_key_generate $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.crt $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.key 7300
+#
+# Caller ID
+# ---------
+# Add asterisk callerid update scripts if they don't exist in bin directory
+for SCRIPT in \
+jambulatv-callerid-update-batch \
+jambulatv-callerid-update-single
+do
+[ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX/
+done
+#
+# WebRTC
+# ------
+# Copy jssip files for WebRTC
+rsync -avz --delete-after $PROJECT_CONTRIB_DIR/html/jssip/ $WWW_HTML_DIR/jssip/
+# Change permissions of sipml5 to www owner
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/html/jssip
+}
+
+chan_dongle_install () {
+# Unpack
+unzip -d $INSTALL_SRC_DIR $PROJECT_ZIPS_DIR/asterisk-chan-dongle*.zip
+cd $INSTALL_SRC_DIR/asterisk-chan-dongle-asterisk11
+# Compile
+aclocal && autoconf && automake -a
+# configure 
+DESTDIR="$LIBDIR/asterisk/modules" ./configure --prefix=$PREFIX
+make
+make install
+}
+
+chan_mobile_configure () {
+# First available mobile device in group
+# ---------------------------------------
+# Add agi script to query chan_mobile active device in realtime
+cat > $ASTERISK_AGI_BIN_DIR/active_mobile_device.sh << EOF
+#!/bin/sh
+ASTERISK_CONNECT_CMD='/usr/sbin/asterisk -rx'
+MOBILE_PHONE_GROUP=\$@
+MOBILE_PHONE_STATUS=Free
+#
+# Usage
+if [[ x\$MOBILE_PHONE_GROUP = x ]];
+then
+echo "Usage: ./\$(basename \$0) [GROUP NUMBER]"
+exit 1
+fi
+#
+# Find first available/free mobile phone to use as trunk
+FIRST_AVAILABLE_PHONE=\$(\$ASTERISK_CONNECT_CMD 'mobile show devices' | awk '\$3 == '\$MOBILE_PHONE_GROUP'' | grep \$MOBILE_PHONE_STATUS | awk {'print \$1'} | head -1 | sed 's: ::g')
+#
+echo -n \$FIRST_AVAILABLE_PHONE
+EOF
+#
+# Make script executable
+chmod 755 $ASTERISK_AGI_BIN_DIR/active_mobile_device.sh
+#
+# First available mobile group
+# ----------------------------
+# Add agi script to query chan_mobile available mobile group in realtime
+cat > $ASTERISK_AGI_BIN_DIR/available_mobile_group.sh << EOF
+#!/bin/sh
+ASTERISK_CONNECT_CMD='/usr/sbin/asterisk -rx'
+MOBILE_PHONE_STATUS=Free
+#
+# Find first available/free mobile phone to use as trunk
+FIRST_AVAILABLE_MOBILE_GROUP=\$(\$ASTERISK_CONNECT_CMD 'mobile show devices' | grep \$MOBILE_PHONE_STATUS | awk {'print \$3'} | head -1 | sed 's: ::g')
+#
+echo -n \$FIRST_AVAILABLE_MOBILE_GROUP
+EOF
+#
+# Make script executable
+chmod 755 $ASTERISK_AGI_BIN_DIR/available_mobile_group.sh
+}
+
+chan_dongle_configure () {
+# copy dongle.conf file
+cp -v $PROJECT_CONFIGS_DIR/asterisk/dongle.conf $PROJECT_SYSTEM_CONF_DIR/asterisk/dongle.conf
+# Include dongle.conf file
+echo "#include /etc/JambulaTV/asterisk/dongle.conf" > $CONFDIR/asterisk/dongle.conf
+}
+
+chan_motif_configure () {
+# Enable ICE Support - Needed for Google Voice - Chan_Motif
+echo "
+icesupport=true" >> $CONFDIR/asterisk/rtp.conf
+# Add execincludes script to add GoogleVoice and other XMPP providers
+cat > $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh <<EOF
+#!/bin/sh
+GV_SERVER=talk.google.com
+GV_USERNAME=$GOOGLE_VOICE_USERNAME
+GV_PASSWORD=$GOOGLE_VOICE_PASSWORD
+#
+REMOTE_XMPP_HOST=8.8.8.8 # Use IP Address NOT DOMAIN NAME!!!
+#
+# Ping Internet
+ping -c 3 -W 3 \$REMOTE_XMPP_HOST > /dev/null 2>&1
+REMOTE_XMPP_HOST_PING_STATUS=\$?
+# 
+# Include XMPP Provider if there's connectivity
+if [ "\$REMOTE_XMPP_HOST_PING_STATUS" = "0" ] && [ -e /etc/JambulaTV/asterisk/xmpp.conf ];
+then
+# Include XMPP Providers 
+echo "; Google
+[google]
+type=client
+serverhost=\$GV_SERVER
+username=\$GV_USERNAME
+secret=\$GV_PASSWORD
+priority=100
+port=5222
+usetls=yes
+usesasl=yes
+status=available
+statusmessage=\"I am available\"
+timeout=5
+"
+fi
+EOF
+# Make script executable
+chmod 755 $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
+}
+
+cepstral_install () {
+# Unpack Cepstral tarball with correct architecture
+case $PROJECT_SYSTEM_ARCH in
+x86_64)
+tar zxvf $PROJECT_TARBALLS_DIR/cepstral/Cepstral_${CEPSTRAL_VOICE}*_x86_64-linux_$CEPSTRAL_VERSION.tar.gz -C $INSTALL_SRC_DIR
+;;
+i686)
+tar zxvf $PROJECT_TARBALLS_DIR/cepstral/Cepstral_${CEPSTRAL_VOICE}*_i386-linux_$CEPSTRAL_VERSION.tar.gz -C $INSTALL_SRC_DIR
+;;
+*)
+echo "Unknown platform.  Not installing Cepstral"
+break
+;;
+esac
+#
+cd $INSTALL_SRC_DIR
+mv -v Cepstral_${CEPSTRAL_VOICE}* cepstral
+# Change location of binaries
+sed -i "s:/usr/local/bin:$BINARY_PREFIX:g" $INSTALL_SRC_DIR/cepstral/install.sh
+# Install
+cd $INSTALL_SRC_DIR/cepstral
+./install.sh $CEPSTRAL_EULA $CEPSTRAL_PREFIX #<- Agree to EULA first!
+# Add swift libs to /etc/ld.so.conf 
+echo "$CEPSTRAL_PREFIX/lib" > /etc/ld.so.conf.d/swift.conf
+ldconfig
+#
+# Remove swift symbolic link if it exists
+[ -e $BINARY_PREFIX/swift ] && rm -f $BINARY_PREFIX/swift
+# Add padsp wrapper around /usr/bin/swift link to prevent audio dev errors
+cat > $BINARY_PREFIX/swift << EOF
+#!/bin/sh
+if [ -x $BINARY_PREFIX/padsp ]; 
+then 
+exec $BINARY_PREFIX/padsp $CEPSTRAL_PREFIX/bin/swift "\$@" 
+else 
+exec $CEPSTRAL_PREFIX/bin/swift "\$@" 
+fi 
+EOF
+# Make it executable
+chmod 755 $BINARY_PREFIX/swift
+}
+
+cepstral_register () {
+# Register Swift Voice - Do not use linked binary!
+$CEPSTRAL_PREFIX/bin/swift --reg-voice --customer-name "$CEPSTRAL_CUSTOMER_NAME" --company-name "$CEPSTRAL_COMPANY_NAME" --voice-name $CEPSTRAL_VOICE --license-key "$CEPSTRAL_LICENSE_KEY"
+}
+
+app_swift_install () {
+# Unpack
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/app_swift/ $INSTALL_SRC_DIR/app_swift/
+# Install 
+cd $INSTALL_SRC_DIR/app_swift
+./configure
+make
+make install
+}
+
+app_swift_configure () {
+# Change from default voice if not Allison
+[ "$CEPSTRAL_VOICE" = "Allison-8kHz" ] || \
+sed -i "s:voice=Allison-8kHz:voice=$CEPSTRAL_VOICE:" $CONFDIR/asterisk/swift.conf
+cd $INSTALL_SRC_DIR/app_swift
+make reload
+}
+
+unimrcp_deps_install () {
+tar zxvf $PROJECT_TARBALLS_DIR/unimrcp-deps-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v unimrcp-deps-* unimrcp-deps
+cd $INSTALL_SRC_DIR/unimrcp-deps
+# Don't prompt in build-dep-libs.sh install script
+sed -i "s:read yn:yn=y:" build-dep-libs.sh 
+# Build apr, apr-util, sofia-sip
+./build-dep-libs.sh
+}
+
+cepstral_plugin_add_2_unimrcp () {
+# unpack cepstral plugin
+tar zxvf $PROJECT_TARBALLS_DIR/Cepstral_Plugin_*.tar.gz -C /tmp
+# Replace files acinclude.m4 and configure.ac 
+cp -f /tmp/Cepstral_Plugin*/acinclude.m4 $INSTALL_SRC_DIR/unimrcp/
+cp -f /tmp/Cepstral_Plugin*/configure.ac $INSTALL_SRC_DIR/unimrcp/
+# Add file swift.m4 into the folder /build/acmacros
+cp -v /tmp/Cepstral_Plugin*/swift.m4 $INSTALL_SRC_DIR/unimrcp/build/acmacros/
+# Add folder mrcp-cepstral into the folder /plugins
+cp -rv /tmp/Cepstral_Plugin*/mrcp-cepstral $INSTALL_SRC_DIR/unimrcp/plugins/
+# Replace file Makefile.am in the folder /plugins
+cp -rv /tmp/Cepstral_Plugin*/Makefile.am $INSTALL_SRC_DIR/unimrcp/plugins/
+}
+
+unimrcp_install () {
+# Unpack unimcrp
+tar zxvf $PROJECT_TARBALLS_DIR/unimrcp-1*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v unimrcp-1* unimrcp 
+# Add cepstral plugin
+# cepstral_plugin_add_2_unimrcp # Fail's to compile
+# Change to unimrcp root folder
+cd $INSTALL_SRC_DIR/unimrcp
+# Configure depending on machine architecture
+case $PROJECT_SYSTEM_ARCH in
+x86_64)
+CFLAGS=-m64 CXXFLAGS=-m64 LDFLAGS=-m64 ./configure
+;;
+i686)
+CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 ./configure 
+;;
+esac
+# Compile and install
+make
+make install
+# Install the default configuration
+cd $INSTALL_SRC_DIR/unimrcp/conf
+make def-conf
+# Install the default data files
+cd $INSTALL_SRC_DIR/unimrcp/data
+make def-data
+# Build Doxygen generated documentation
+#make dox
+}
+
+asterisk_unimrcp_install () {
+tar zxvf $PROJECT_TARBALLS_DIR/asterisk-unimrcp-*.tar.gz -C $INSTALL_SRC_DIR
+# Change to asterisk-unimrcp directory
+cd $INSTALL_SRC_DIR && mv asterisk-unimrcp* asterisk-unimrcp
+cd $INSTALL_SRC_DIR/asterisk-unimrcp
+# configure asterisk-unimrcp
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+make
+make install
+}
+
+heyu_install () {
+tar zxvf $PROJECT_TARBALLS_DIR/heyu-$HEYU_VERSION.tar.gz -C $INSTALL_SRC_DIR
+# Change to heyu directory
+cd $INSTALL_SRC_DIR && mv heyu* heyu
+cd $INSTALL_SRC_DIR/heyu
+# configure heyu
+./configure --prefix=$PREFIX --libdir=$LIBDIR \
+	--sysconfdir=$PROJECT_SYSTEM_CONF_DIR --localstatedir=$STATEDIR
+make
+make install
+}
+
+heyu_configure () {
+# Create heyu directory in JambulaTV configs directory
+[ -d $PROJECT_SYSTEM_CONF_DIR/heyu ] || mkdir -p $PROJECT_SYSTEM_CONF_DIR/heyu
+# Copy Jambula customized asterisk config files
+cp -v $PROJECT_CONFIGS_DIR/heyu/ $PROJECT_SYSTEM_CONF_DIR/heyu/
+# Link to heyu directory from $HOME
+[ -d $HOME/.heyu ] || mkdir -p $HOME/.heyu
+ln -s $PROJECT_CONFIGS_DIR/heyu/x10.conf $HOME/.heyu/x10config
+ln -s $PROJECT_CONFIGS_DIR/heyu/x10.sched $HOME/.heyu/x10.sched
+# Create spool directory
+[ -d $STATEDIR/tmp/heyu ] || mkdir -p $STATEDIR/tmp/heyu
+# Create log directory
+[ -d $PROJECT_SYSTEM_LOG_DIR/heyu ] || mkdir $PROJECT_SYSTEM_LOG_DIR/heyu
+# Systemctl start script
+cp -v $PROJECT_INIT_SCRIPTS_DIR/heyu.service $SYSTEMD_UNITS_DIR_SYSTEM/
+ln -s $SYSTEMD_UNITS_DIR_SYSTEM/heyu.service $SYSTEMD_UNITS_DIR_USER/heyu.service
+systemctl --system daemon-reload
+# Enable heyu if needed
+systemctl enable heyu.service
+}
+
+jabberd_configure () {
+# Add customized config files: sm.xml, c2s.xml, s2s.xml, router.xml
+for JABBERD_CONFIG in sm.xml c2s.xml s2s.xml router.xml;
+do
+# Change password while copying to /etc/jabberd directory
+cat $PROJECT_CONFIGS_DIR/jabberd/$JABBERD_CONFIG | sed -e "s:JABBERD_PASSWORD_CHANGE_ME:$JABBERD_PASSWORD:g" | sed -e "s:LIBDIR:$LIBDIR:g" > /etc/jabberd/$JABBERD_CONFIG
+done
+# Create jabberd logs directory
+[ -d $PROJECT_SYSTEM_LOG_DIR/jabberd ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/jabberd
+# Allow jabber user to access logs
+chown -R jabber:jabber $PROJECT_SYSTEM_LOG_DIR/jabberd 
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding" && sleep 5
+# Create jabberd database
+mysql -u root -p$MYSQL_ROOT_PASSWORD < $JABBERD_DB_CREATE
+# Create SQL to set privileges on database
+echo "GRANT select,insert,delete,update ON jabberd2.* to jabberd2@localhost IDENTIFIED by '$JABBERD_PASSWD';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+# Copy modified jabberd2 systemd file - i.e. Start after MySQL, otherwise,services fail
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jabberd*.service $SYSTEMD_UNITS_DIR_SYSTEM/
+# Enable jabberd.service
+systemctl enable jabberd.service
+systemctl start jabberd.service
+}
+
+jabberd_add_users () {
+# Asterisk res_xmpp user
+echo "INSERT INTO authreg (username, realm, password) values ('asterisk', 'JambulaTV', 'jazzy1');" | mysql -u jabberd2 -p$JABBERD_PASSWD jabberd2
+}
+
+zoneminder_pre_install () {
+# Install pre-requisite Perl modules that are not packaged
+# X10 module
+tar zxvf $PROJECT_TARBALLS_DIR/X10-$PERL_X10_VERSION.tar.gz -C $INSTALL_SRC_DIR
+# Change to perl_X10 directory
+cd $INSTALL_SRC_DIR && mv X10* perl_X10
+cd $INSTALL_SRC_DIR/perl_X10
+perl Makefile.PL
+make
+make install
+#
+# Net-SFTP-Foreign module
+tar zxvf $PROJECT_TARBALLS_DIR/Net-SFTP-Foreign-$PERL_NET_SFTP_FOREIGN_VERSION.tar.gz -C $INSTALL_SRC_DIR
+# Change to Net-SFTP-Foreign directory
+cd $INSTALL_SRC_DIR && mv Net-SFTP-Foreign* perl_Net-SFTP-Foreign
+cd $INSTALL_SRC_DIR/perl_Net-SFTP-Foreign
+perl Makefile.PL
+make
+make install
+}
+
+zoneminder_install () {
+rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
+# Patches
+# a) Logitech Quickam USB webcams not displaying image
+# Replace LIBDIR variable in patch
+sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > /tmp/zmdc.pl.patch
+#
+# Patch
+patch -p1 $INSTALL_SRC_DIR/ZoneMinder/scripts/zmdc.pl.in < /tmp/zmdc.pl.patch
+#
+cd $INSTALL_SRC_DIR/ZoneMinder
+# bootstrap
+./bootstrap.sh
+# configure zoneminder
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-mysql \
+--sysconfdir=$PROJECT_SYSTEM_CONF_DIR \
+--localstatedir=$STATEDIR --enable-mmap=yes --with-libarch=lib \
+--with-ffmpeg=$PREFIX --with-webuser=$WWW_USER \
+--with-webgroup=$WWW_GROUP --with-webhost=$HOSTNAME \
+--with-extralibs="-L$PREFIX -L$LIBDIR -L$PREFIX/lib -L$LIBDIR/mysql" \
+--with-webdir=$WWW_HTML_DIR/zm --with-cgidir=$WWW_HTML_DIR/zm \
+ZM_DB_HOST=$ZONEMINDER_DB_HOST ZM_DB_NAME=$ZONEMINDER_DB_NAME \
+ZM_DB_USER=$ZONEMINDER_DB_USER ZM_DB_PASS=$ZONEMINDER_DB_PASS \
+ZM_RUNDIR=$RUNDIR/zm ZM_TMPDIR=/tmp/zm \
+ZM_LOGDIR=$PROJECT_SYSTEM_LOG_DIR/zoneminder \
+ZM_SSL_LIB=openssl CPPFLAGS="-D__STDC_CONSTANT_MACROS ${CPPFLAGS}"
+#
+make
+make install
+#
+#
+# Create logs directory for Zoneminder
+[ -d $PROJECT_SYSTEM_LOG_DIR/zoneminder ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/zoneminder
+# Change permissions on logging directory
+chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_LOG_DIR/zoneminder
+}
+
+zoneminder_configure () {
+# Copy systemd script- this defers from source file to kill errors during start
+cp -v $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service $SYSTEMD_UNITS_DIR_USER/
+# Enable zoneminder
+systemctl enable zoneminder.service
+#
+# Add nginx web server config file for ZoneMinder if not present
+[ -f $NGINX_CONF_DIR/sites-enabled/zoneminder ] || \
+cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/zoneminder $NGINX_CONF_DIR/sites-enabled/
+# Add nginx user to video group
+usermod -G video $WWW_USER
+#
+# Change permissions on zoneminder.conf - or web interface wont display
+chmod 644 $PROJECT_SYSTEM_CONF_DIR/zm.conf
+# Copy test index.html, *.php and *.cgi files to zm
+cp -rv $PROJECT_CONTRIB_DIR/html/* $WWW_HTML_DIR/zm/
+# Make .php and .cgi files executable
+cd $WWW_HTML_DIR/zm
+chmod 755 *.php *.cgi
+#
+# Create Events directory for ZoneMinder under user's home directory
+[ -d $ZONEMINDER_EVENTS_DIRECTORY ] || mkdir -p $ZONEMINDER_EVENTS_DIRECTORY
+# Change permissions
+chown -R $WWW_USER:$WWW_GROUP $ZONEMINDER_EVENTS_DIRECTORY
+# Remove default events directory and link to specified home direcory
+[ ! -d $WWW_HTML_DIR/zm ] || rm -rf $WWW_HTML_DIR/zm/events
+ln -s $ZONEMINDER_EVENTS_DIRECTORY $WWW_HTML_DIR/zm/events
+#
+# MySQL DB for ZoneMinder
+# ------------------------
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+# Create zoneminder database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $ZONEMINDER_DB_NAME
+# Generate database tables using schema
+mysql -u root -p$MYSQL_ROOT_PASSWORD $ZONEMINDER_DB_NAME < $ZONEMINDER_DB_SCHEMA
+# Set privileges on zoneminder database
+echo "GRANT ALL PRIVILEGES ON $ZONEMINDER_DB_NAME.* to $ZONEMINDER_DB_USER@localhost IDENTIFIED by '$ZONEMINDER_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+#
+# Add customized data to Config table
+mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Config.sql
+#
+# Add sample USB webcams
+mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Monitors.sql
+#
+# USB Webcams
+#------------
+# Copy udev rules file for USB webcams - Naming scheme instead of /dev/videoX
+cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-webcams.rules $UDEV_RULES_DIR
+# Reload udev
+/usr/sbin/udevadm control --reload
+}
+
+zoneminder_zms_inetd () {
+# Add port to services
+echo "
+zms-inetd	$ZONEMINDER_ZMS_INETD_PORT/tcp		# Zoneminder ZMS inetd-wrapper" >> $CONFDIR/services
+#
+# Add xinetd file
+cat > $CONFDIR/xinetd.d/zms <<EOF
+# description: zms
+#
+service zms-inetd
+{
+        disable         = no
+        id              = zms-inetd
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = nginx
+        port            = $ZONEMINDER_ZMS_INETD_PORT
+        server          = $ZONEMINDER_ZMS_INETD_SCRIPT 
+}
+EOF
+#
+# Copy zms-inetd script if it does not exist
+[ -e $ZONEMINDER_ZMS_INETD_SCRIPT ] || cp -v $PROJECT_BIN_DIR/jambulatv-zms-inetd $ZONEMINDER_ZMS_INETD_SCRIPT
+# Change permissions
+chmod 755 $ZONEMINDER_ZMS_INETD_SCRIPT
+chown $WWW_USER:$WWW_GROUP $ZONEMINDER_ZMS_INETD_SCRIPT
+#
+# Restart xinetd service
+systemctl restart xinetd.service
+#
+}
+
+motion_install () {
+rsync -avz $PROJECT_GITHUB_DIR/motion/ $INSTALL_SRC_DIR/motion/
+# configure
+cd $INSTALL_SRC_DIR/motion
+./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$PROJECT_SYSTEM_CONF_DIR/motion
+make
+make install
+}
+
+motion_configure () {
+# Create motion's html directory
+[ -d $WWW_HTML_DIR/motion ] || mkdir $WWW_HTML_DIR/motion
+# Copy sample motion.conf
+cat $PROJECT_CONFIGS_DIR/motion.conf.sample | \
+	sed -e "s:MOTION_DB_USER:$MOTION_DB_USER:g" | \
+	sed -e "s:MOTION_DB_PASS:$MOTION_DB_PASS:g" \
+	> $PROJECT_SYSTEM_CONF_DIR/motion/motion.conf
+#
+# Systemctl script - > Not yet ready
+#cp -v $PROJECT_INIT_SCRIPTS_DIR/motion.service $SYSTEMD_UNITS_DIR_SYSTEM/
+#ln -s $SYSTEMD_UNITS_DIR_SYSTEM/motion.service $SYSTEMD_UNITS_DIR_USER/motion.service
+#systemctl --system daemon-reload
+# Enable motion if needed
+#systemctl enable motion.service
+#
+# Use chkconfig instead
+cp -v $PROJECT_INIT_SCRIPTS_DIR/motion.init $CONFDIR/init.d/motion
+chkconfig --add motion
+chkconfig motion on
+#
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+# Create motion database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $MOTION_DB_NAME
+# Set privileges on motion database
+echo "GRANT ALL PRIVILEGES ON $MOTION_DB_NAME.* to $MOTION_DB_USER@localhost IDENTIFIED by '$MOTION_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+# Generate motion database tables using schema
+#echo "CREATE TABLE security (camera int, filename char(80) not null, frame int, file_type int, time_stamp timestamp(14), event_time_stamp timestamp(14));" | mysql -u $MOTION_DB_USER -p$MOTION_DB_PASS $MOTION_DB_NAME
+echo "CREATE TABLE security (camera int, filename char(80) not null, frame int, file_type int, time_stamp timestamp, event_time_stamp timestamp);" | mysql -u $MOTION_DB_USER -p$MOTION_DB_PASS $MOTION_DB_NAME
+}
+
+libdbi_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/libdbi-$LIBDBI_VERSION.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libdbi-* libdbi
+# Configure
+cd $INSTALL_SRC_DIR/libdbi && ./configure --prefix=$PREFIX --libdir=$LIBDIR
+# Compile
+make && make install
+}
+
+icinga1_install () {
+# Create icinga user account
+useradd -m $ICINGA_USER
+# Give password to icinga user
+echo "$ICINGA_PASS" | passwd --stdin $ICINGA_USER
+# Create icinga group
+groupadd $ICINGA_CMD_GROUP
+# Add members to icinga group
+usermod -a -G $ICINGA_CMD_GROUP $ICINGA_USER
+usermod -a -G $ICINGA_CMD_GROUP $WWW_USER
+# Create icinga directories
+[ -d $STATEDIR/log/icinga ] || mkdir -p $STATEDIR/log/icinga
+[ -d $STATEDIR/rw ] || mkdir -p $STATEDIR/rw 
+[ -d $STATEDIR/cache/icinga ] || mkdir -p $STATEDIR/cache/icinga
+[ -d $SPOOLDIR/icinga ] || mkdir -p $SPOOLDIR/icinga
+# Set permissions on icinga directories to icinga user
+chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/log/icinga
+chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/rw
+chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/cache/icinga
+chown -R $ICINGA_USER:$ICINGA_GROUP $SPOOLDIR/icinga
+#
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/icinga-$ICINGA1_VERSION.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v icinga-* icinga
+# Configure
+cd $INSTALL_SRC_DIR/icinga && ./configure --prefix=$PREFIX \
+--libdir=$LIBDIR --sysconfdir=$CONFDIR/icinga \
+--sbindir=$WWW_CGI_DIR/icinga --localstatedir=$STATEDIR \
+--datarootdir=$WWW_HTML_DIR/icinga --with-httpd-conf=$NGINX_CONFD_DIR \
+--with-icinga-user=$ICINGA_USER --with-icinga-group=$ICINGA_GROUP \
+--with-web-user=$WWW_USER --with-web-group=$WWW_GROUP \
+--with-command-group=$ICINGA_CMD_GROUP --with-log-dir=$STATEDIR/log \
+--with-lockfile=$STATEDIR/rw/icinga.lock \
+--with-icinga-chkfile=$STATEDIR/rw/icinga.check \
+--with-ext-cmd-file-dir=$STATEDIR/rw
+# Compile
+make all
+make install
+make install-init
+make install-config
+make install-eventhandlers
+make install-commandmode
+}
+
+nagios_plugins_install () {
+# Unpack 
+tar zxvf $PROJECT_TARBALLS_DIR/nagios-plugins-$NAGIOS_PLUGINS_VERSION.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v nagios-plugins-$NAGIOS_PLUGINS_VERSION nagios-plugins 
+cd $INSTALL_SRC_DIR/nagios-plugins
+# Compile
+./configure --prefix=$PREFIX --with-cgiurl=$WWW_CGI_DIR/icinga \
+--with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP
+make && make install
+}
+
+icinga1_configure () {
+# Copy icinga main config file - icinga.cfg 
+cp -v $PROJECT_CONFIGS_DIR/icinga/icinga.cfg $CONFDIR/icinga/
+# Copy icinga objects for monitoring
+cp -v $PROJECT_CONFIGS_DIR/icinga/objects/* $CONFDIR/icinga/conf.d/
+#
+# Allow icinga user to use 'sudo' ie: events_handler commands
+echo "Defaults:$ICINGA_USER    !requiretty
+$ICINGA_USER             ALL = (ALL) NOPASSWD: ALL" > $SUDOERS_DIR/$ICINGA_USER
+# Change sudoer permissions
+chmod 0440 $SUDOERS_DIR/$ICINGA_USER
+#
+# Add nginx web server config file
+cp -v $PROJECT_CONFIGS_DIR/webserver/icinga.conf $NGINX_CONFD_DIR/
+# Restart nginx
+systemctl restart nginx.service
+# Enable icinga to start at boot time
+systemctl enable icinga.service
+# Start icinga
+systemctl start icinga.service
+# Create account for logging into classic web interface
+htpasswd -b -c $CONFDIR/icinga/htpasswd.users icingaadmin $ICINGA_ADMIN_PASS
+}
+
+icinga2_install () {
+# Unpack
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/icinga2/ $INSTALL_SRC_DIR/icinga2/
+cd $INSTALL_SRC_DIR/icinga2
+# Build
+mkdir $INSTALL_SRC_DIR/icinga2/build
+cd $INSTALL_SRC_DIR/icinga2/build
+cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX -DUSE_SYSTEMD=ON \
+   -DICINGA2_PLUGINDIR=$MONITORING_PLUGINS_DIR -DICINGA2_WITH_PGSQL=OFF \
+   -DICINGA2_SYSCONFIGFILE=$CONFDIR/sysconfig/icinga2 \
+   -DCMAKE_INSTALL_SYSCONFDIR=$CONFDIR -DCMAKE_INSTALL_LOCALSTATEDIR=$STATEDIR \
+   -DICINGA2_USER=$ICINGA_USER -DICINGA2_GROUP=$ICINGA_GROUP \
+   -DICINGA2_COMMAND_GROUP=$ICINGA_CMD_GROUP
+make && make install
+#
+# Create icinga group
+groupadd $ICINGA_CMD_GROUP
+# Create icinga user 
+useradd -c "Icinga User" -d $SPOOLDIR/$ICINGA_USER -s /sbin/nologin -G $ICINGA_CMD_GROUP $ICINGA_USER
+usermod -a -G $ICINGA_CMD_GROUP $WWW_USER
+}
+
+monitoring_plugins_install () {
+# Unpack 
+tar zxvf $PROJECT_TARBALLS_DIR/monitoring-plugins-$MONITORING_PLUGINS_VERSION.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v monitoring-plugins-$MONITORING_PLUGINS_VERSION monitoring-plugins 
+cd $INSTALL_SRC_DIR/monitoring-plugins
+# Compile
+./configure --prefix=$PREFIX --libdir=$LIBDIR --libexecdir=$MONITORING_PLUGINS_DIR \
+	--with-cgiurl=$WWW_CGI_DIR/icinga --with-fping-command=$FPING_CMD \
+	--with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP
+make && make install
+}
+
+icinga2_ido_mysql () {
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+# Create icinga database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $ICINGA_DB_NAME
+# Set privileges on icinga database
+echo "GRANT ALL PRIVILEGES ON $ICINGA_DB_NAME.* to '$ICINGA_DB_USER'@'localhost' IDENTIFIED by '$ICINGA_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+# Populate icinga database tables using ido MySQL schema
+mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $PROJECT_CONTRIB_DIR/icinga2/ido-mysql/schema/mysql.sql
+#
+# Add MySQL DB login credentials to ido-mysql.conf
+cat > $ICINGA2_FEATURES_AVAIL_DIR/ido-mysql.conf << EOF
+/**
+ * Jambula - db_ido_mysql 
+ * Library which implements IDO functionality for MySQL
+ */
+
+library "db_ido_mysql"
+
+object IdoMysqlConnection "ido-mysql" {
+  user = "$ICINGA_DB_USER"
+  password = "$ICINGA_DB_PASS"
+  host = "localhost"
+  database = "$ICINGA_DB_NAME"
+}
+EOF
+#
+# Enable icinga2 ido-mysql
+icinga2 feature enable ido-mysql
+}
+
+icinga2_configure () {
+# Enable command ido-mysql livestatus compatlog
+icinga2 feature enable command livestatus compatlog
+# Create custom config dirctory
+[ -d $ICINGA2_CUSTOM_CONFIG_DIR ] || mkdir $ICINGA2_CUSTOM_CONFIG_DIR
+# Copy Icinga objects files
+cp -v $PROJECT_CONFIGS_DIR/icinga2/conf.d/*.conf $ICINGA2_CUSTOM_CONFIG_DIR/
+# Copy Icinga scripts files
+cp -v $PROJECT_CONFIGS_DIR/icinga2/scripts/* $ICINGA2_SCRIPTS_DIR/
+# Copy contributed plugins - See https://github.com/zikusooka/icinga-nagios-plugins 
+rsync -av $PROJECT_CONTRIB_DIR/icinga2/plugins/ $MONITORING_PLUGINS_DIR/
+# Give icinga user permission to access icinga2 directories
+# /etc/icinga2
+chown -R $ICINGA_USER:$ICINGA_GROUP $ICINGA2_CONFIG_DIR
+# /var/lib/icinga2
+chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/lib/icinga2
+# /usr/lib/icinga2
+chown -R $ICINGA_USER:$ICINGA_GROUP $LIBDIR/icinga2
+# /usr/share/icinga2
+chown -R $ICINGA_USER:$ICINGA_GROUP $PREFIX/share/icinga2
+# /var/log/icinga2
+chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/log/icinga2
+# /var/cache/icinga2
+chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/cache/icinga2
+# Copy icinga2 systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/icinga2.service $SYSTEMD_UNITS_DIR_USER/
+systemctl enable icinga2.service
+systemctl start icinga2.service
+# Allow icinga user to use 'sudo' ie: events_handler commands
+# IMPORTANT: Refine what icinga can execute !!!
+echo "Defaults:$ICINGA_USER    !requiretty
+$ICINGA_USER             ALL = (ALL) NOPASSWD: ALL" > $SUDOERS_DIR/$ICINGA_USER
+# Change sudoer permissions
+chmod 0440 $SUDOERS_DIR/$ICINGA_USER
+# Check config
+icinga2 daemon -C
+}
+
+icingaweb2_install () {
+# Copy icingaweb2 source files
+rsync -av --delete-after $PROJECT_GITHUB_DIR/icingaweb2/ $WWW_HTML_DIR/icingaweb2/
+# Add icingaweb2 group
+groupadd -r $ICINGA2_WEB_GROUP
+# Make web user a member of the system group "icingaweb2" group
+usermod -a -G $ICINGA2_WEB_GROUP $ICINGA2_WEB_USER
+# Add icinga wwww user to icingacmd group
+usermod -a -G $ICINGA_CMD_GROUP $ICINGA2_WEB_USER
+# Change permissions to WWW user
+chown -R $ICINGA2_WEB_USER:$ICINGA2_WEB_GROUP $WWW_HTML_DIR/icingaweb2
+# Setup config directory
+$WWW_HTML_DIR/icingaweb2/bin/icingacli setup config directory --group $ICINGA2_WEB_GROUP --config $PROJECT_SYSTEM_CONF_DIR/icingaweb2
+# Generate setup token
+$WWW_HTML_DIR/icingaweb2/bin/icingacli setup token create --config $PROJECT_SYSTEM_CONF_DIR/icingaweb2 > $ICINGA2_WEB_TOKEN_FILE
+# Copy icingaweb2 nginx config file or run the command:
+# '$WWW_HTML_DIR/icingaweb2/bin/icingacli setup config webserver nginx --document-root $WWW_HTML_DIR/icingaweb2/public > $NGINX_CONF_DIR/sites-enabled/icingaweb2'
+[ -e $NGINX_CONF_DIR/sites-enabled/icingaweb2 ] || cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/icingaweb2 $NGINX_CONF_DIR/sites-enabled/
+# Restart nginx
+systemctl restart nginx.service
+# Add DB schema for icingaweb2
+mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $WWW_HTML_DIR/icingaweb2/etc/schema/mysql.schema.sql 
+#
+# Display IcingaWeb's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+IcingaWeb2
+==========
+% To finish setup, use a client PC to open the URL below:
+  http://$NETWORK_IP_ADDRESS:$(grep -i icingaweb2 $PORTS_ASSIGNED_FILE | awk {'print $1'})
+
+NOTE: Setup token is:  $(cat $ICINGA2_WEB_TOKEN_FILE)
+#
+EOF
+}
+
+icinga2_ui_configure () {
+# Add nginx web server config file
+cp -v $PROJECT_CONFIGS_DIR/webserver/icinga.conf $NGINX_CONFD_DIR/
+
+# Restart nginx
+systemctl restart nginx.service
+# Create account for logging into classic web interface
+htpasswd -b -c $CONFDIR/icinga/htpasswd.users icingaadmin $ICINGA_ADMIN_PASS
+}
+
+gdata_install () {
+#Remove gdata rpm
+[ rpm -q python-gdata > /dev/null 2>&1 ] && rpm -e --nodeps  python-gdata
+# Copy sources to project HTML directory
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/gdata-python-client/ $INSTALL_SRC_DIR/gdata-python-client/
+cd $INSTALL_SRC_DIR/gdata-python-client
+python setup.py install
+}
+
+google_sms_setup () {
+# Copy to binary path
+cp -v $PROJECT_GITHUB_DIR/google-sms/google-sms.py $BINARY_PREFIX/
+# Make it executable
+chmod 755 $BINARY_PREFIX/google-sms.py
+}
+
+vncserver_configure () {
+# Create vnc home folder
+[ -d $AUTOLOGIN_USER_HOME_DIR/.vnc ] || mkdir -p $AUTOLOGIN_USER_HOME_DIR/.vnc
+# Change permissions to owner
+chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/.vnc
+# Create VNC Password file
+echo "$VNC_PASSWORD" | vncpasswd -f > $AUTOLOGIN_USER_HOME_DIR/.vnc/passwd
+
+# Create VNC X startup file
+cat > $AUTOLOGIN_USER_HOME_DIR/.vnc/xstartup << EOF
+#!/bin/sh
+if [ -e /usr/bin/startlxde ];
+then
+# Start LXDE
+/usr/bin/startlxde
+else
+# Start other DM
+[ ! -e /etc/X11/xinit/xinitrc ] || /etc/X11/xinit/xinitrc
+[ -r \$HOME/.Xresources ] && xrdb \$HOME/.Xresources
+xsetroot -solid grey
+xterm -geometry 80x24+10+10 -ls -title "\$VNCDESKTOP Desktop" &
+twm &
+fi
+EOF
+# Make xstartup file executable - otherwise display will not show!!!
+chmod 755 $AUTOLOGIN_USER_HOME_DIR/.vnc/xstartup
+# Modify systemd service file to suit local conditions
+cat $SYSTEMD_UNITS_DIR_SYSTEM/vncserver@.service | \
+sed -e "s:/sbin/runuser -l <USER>:/sbin/runuser -l $AUTOLOGIN_USER:g" | sed -e "s:/usr/bin/vncserver %i:/usr/bin/vncserver %i -name $PROJECT_NAME -PasswordFile $AUTOLOGIN_USER_HOME_DIR/.vnc/passwd:g" \
+ > /etc/systemd/system/vncserver@:$VNC_DISPLAY.service
+# Enable and start vncserver systemd service
+systemctl enable vncserver@:$VNC_DISPLAY.service
+systemctl start vncserver@:$VNC_DISPLAY.service
+}
+
+firefox_install () {
+# Unpack firefox tarball with correct architecture
+case $PROJECT_SYSTEM_ARCH in
+x86_64)
+tar jxvf $PROJECT_TARBALLS_DIR/firefox/x86_64/firefox-*.tar.bz2 -C $INSTALL_SRC_DIR
+;;
+i686)
+tar jxvf $PROJECT_TARBALLS_DIR/firefox/i686/firefox-*.tar.bz2 -C $INSTALL_SRC_DIR
+;;
+*)
+echo "Unknown platform.  Not installing firefox"
+;;
+esac
+#
+# Create link
+ln -s $INSTALL_SRC_DIR/firefox/firefox-bin $BINARY_PREFIX/firefox
+# Add desktop entry
+cat > /usr/share/applications/firefox.desktop << EOF
+[Desktop Entry]
+Version=1.0
+Name=Firefox
+GenericName=Web Browser
+Comment=Browse the Web
+Exec=firefox %u
+Icon=$INSTALL_SRC_DIR/firefox/browser/chrome/icons/default/default48.png
+Terminal=false
+Type=Application
+MimeType=text/html;text/xml;application/xhtml+xml;application/vnd.mozilla.xul+xml;text/mml;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true
+Categories=Network;WebBrowser;
+Keywords=web;browser;internet;
+X-Desktop-File-Install-Version=0.21
+EOF
+}
+
+minisapserver_install () {
+tar xvf $PROJECT_TARBALLS_DIR/minisapserver-$MINISAPSERVER_VERSION.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v minisapserver-* minisapserver
+# Compile
+cd $INSTALL_SRC_DIR/minisapserver && ./configure --prefix=$PREFIX \
+--libdir=$LIBDIR --sysconfdir=$PROJECT_SYSTEM_CONF_DIR/minisapserver --localstatedir=$STATEDIR
+make && make install
+}
+
+libusb_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/libusb-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libusb-* libusb
+# Compile all
+cd $INSTALL_SRC_DIR/libusb
+./configure --prefix=$PREFIX --libdir=$LIBDIR 
+make
+make install
+}
+
+gnokii_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/gnokii-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v gnokii-* gnokii
+# Compile all
+cd $INSTALL_SRC_DIR/gnokii
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+make
+make install
+}
+
+gammu_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/gammu-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v gammu-* gammu
+# Compile all
+cd $INSTALL_SRC_DIR/gammu
+./configure --prefix=$PREFIX --enable-backup
+make
+make install
+}
+
+sphinxbase_install () {
+# unpack
+rsync -avz $PROJECT_GITHUB_DIR/sphinxbase/ $INSTALL_SRC_DIR/sphinxbase/
+# configure
+cd $INSTALL_SRC_DIR/sphinxbase 
+./autogen.sh
+./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
+--localstatedir=$STATEDIR
+make
+make install
+}
+
+pocketsphinx_install () {
+# Install pocketsphinx server
+# unpack
+rsync -avz $PROJECT_GITHUB_DIR/pocketsphinx/ $INSTALL_SRC_DIR/pocketsphinx/
+# configure
+cd $INSTALL_SRC_DIR/pocketsphinx 
+./autogen.sh
+./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
+--localstatedir=$STATEDIR
+make
+make install
+}
+
+remind_configure () {
+# Create reminder directory
+[ -d $REMINDERS_DIRECTORY ] || mkdir -p $REMINDERS_DIRECTORY
+# Add sample remind files
+rsync -av $PROJECT_CONTRIB_DIR/remind/ $REMINDERS_DIRECTORY/
+# Give multimedia user permissions to reminder directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $REMINDERS_DIRECTORY
+# Copy jambulatv-remind script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-remind ] || cp -v $PROJECT_BIN_DIR/jambulatv-remind $BINARY_PREFIX/
+# NOTE: remind script was added to autoexec.py startup for kodi
+}
+
+# -----------------------------------------------------
+# Virtual WiFi Dual Interfaces Support i.e. Connectify
+# -----------------------------------------------------
+virtual_wifi_interfaces_supported () {
+lsmod | grep mac80211 | grep 'ath9k' || exit 1
+}
+
+stop_hotspot () {
+# stop coova-chilli if active
+systemctl -q is-active coova-chilli && systemctl stop coova-chilli.service
+# stop hostapd if active
+systemctl -q is-active hostapd.service && systemctl stop hostapd.service
+}
+
+stop_wifi_client () {
+# Stop wpa_supplicant
+killall wpa_supplicant
+}
+
+start_hotspot () {
+# start hostapd if not active
+systemctl -q is-active hostapd.service || systemctl start hostapd.service
+# start coova-chilli if not active
+systemctl -q is-active coova-chilli || systemctl start coova-chilli.service
+}
+
+delete_virtual_interfaces () {
+# Remove current Wifi and other existing virtual interfaces
+for DEV in $WIFI_AP_INTERFACE $WIFI_STATION_INTERFACE;
+do
+echo "Removing $DEV:"
+iw dev $DEV del > /dev/null 2>&1
+done
+}
+
+create_virtual_interfaces () {
+# Create station interface
+iw phy phy$WIFI_PHY_DEV interface add $WIFI_STATION_INTERFACE type station
+# Set MAC address
+#ip link set dev $WIFI_STATION_INTERFACE address 6c:be:e9:2b:42:eb
+
+# Take station UP
+ip link set $WIFI_STATION_INTERFACE up
+# Create AP interface
+iw phy phy$WIFI_PHY_DEV interface add $WIFI_AP_INTERFACE type __ap
+# Set MAC Address
+#ip link set dev $WIFI_AP_INTERFACE address b4:75:0e:2f:7e:14
+}
+
+# Create dual virtual interfaces using one single wifi
+virtual_wifi_interfaces_configure () {
+virtual_wifi_interfaces_supported 
+stop_hotspot
+delete_virtual_interfaces 
+create_virtual_interfaces
+#
+# If script is being run manually, do the following
+#start_hotspot
+# Allow SSID to show up
+#echo "Sleeping for $WIFI_WAIT_TIME seconds ..."
+#sleep $WIFI_WAIT_TIME
+}
+
+
+
+# --------------
+#  FINAL NOTES
+# --------------
+post_install_notice () {
+# Echo post install header 
+clear
+echo "Congratulations!
+****************
+
+Initial setup of $PROJECT_NAME is complete, however, several components will need
+to be configured after you reboot.  
+
+Details are listed in the following file which has been saved as:
+
+[$POST_INSTALL_NOTES]
+
+Press 'Enter' to proceed reading this file ...
+(To quit after viewing the file, press 'q')
+"
+read
+#
+# Print post install notes to screen
+less $POST_INSTALL_NOTES
+}
+###################
+# End End End End #
+###################
+
+# Display this app's post install/configuration information, and output to final notice
+#echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+
+#
+#EOF

@@ -1,0 +1,43 @@
+<sources>
+
+    <programs>
+        <default pathversion="1"></default>
+    </programs>
+
+    <video>
+<!-- Movies -->
+        <default pathversion="1"></default>
+        <source>
+            <name>Movies</name>
+            <path pathversion="1">/JambulaTV/Videos/Movies</path>
+            <allowsharing>true</allowsharing>
+        </source>
+<!-- TV Shows -->
+        <source>
+            <name>TV Shows</name>
+            <path pathversion="1">/JambulaTV/Videos/TV_Shows</path>
+            <allowsharing>true</allowsharing>
+        </source>
+    </video>
+
+    <music>
+        <default pathversion="1"></default>
+<!-- Music -->
+        <source>
+            <name>Music</name>
+            <path pathversion="1">/JambulaTV/Music</path>
+            <allowsharing>true</allowsharing>
+        </source>
+    </music>
+
+    <pictures>
+        <default pathversion="1"></default>
+<!-- Pictures -->
+        <source>
+            <name>Pictures</name>
+            <path pathversion="1">/JambulaTV/Pictures</path>
+            <allowsharing>true</allowsharing>
+        </source>
+    </pictures>
+
+</sources>

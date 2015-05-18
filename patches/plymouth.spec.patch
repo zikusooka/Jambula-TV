@@ -1,0 +1,22 @@
+--- plymouth.spec.OLD	2013-10-31 17:32:04.000000000 +0300
++++ plymouth.spec.NEW	2015-03-19 17:20:22.201945962 +0300
+@@ -245,14 +245,14 @@
+ %patch0 -p1 -b .dont-timeout-waiting
+ 
+ # Change the default theme
+-sed -i -e 's/fade-in/charge/g' src/plymouthd.defaults
++sed -i -e 's/fade-in/spinfinity/g' src/plymouthd.defaults
+ 
+ %build
+ %configure --enable-tracing --disable-tests                      \
+-           --with-logo=%{_datadir}/pixmaps/system-logo-white.png \
+-           --with-background-start-color-stop=0x0073B3           \
+-           --with-background-end-color-stop=0x00457E             \
+-           --with-background-color=0x3391cd                      \
++           --with-logo=%{_datadir}/pixmaps/jambula-labs.png      \
++           --with-background-start-color-stop=0x000000           \
++           --with-background-end-color-stop=0x000000             \
++           --with-background-color=0x000000                      \
+            --disable-gdm-transition                              \
+            --enable-systemd-integration                          \
+            --without-system-root-install                         \

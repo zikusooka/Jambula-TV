@@ -1,0 +1,14 @@
+[Unit]
+Description=FlexGet Daemon
+After=network.target
+
+[Service]
+User=jambula
+EnvironmentFile=-/etc/sysconfig/flexget
+ExecStartPre=/bin/rm -f ${LOCK_FILE}
+ExecStart=/bin/sh -c "${FLEXGET_CMD} -c ${CONFIG_FILE} -l ${LOG_FILE} daemon start"
+ExecStop=/bin/sh -c "${FLEXGET_CMD} -c ${CONFIG_FILE} -l ${LOG_FILE} daemon stop"
+ExecReload=/bin/sh -c "${FLEXGET_CMD} -c ${CONFIG_FILE} -l ${LOG_FILE} daemon reload"
+
+[Install]
+WantedBy=multi-user.target

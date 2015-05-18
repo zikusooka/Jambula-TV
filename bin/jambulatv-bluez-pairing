@@ -1,0 +1,192 @@
+#!/bin/sh
+product=JambulaTV
+workdir=/root/$product
+patchdir=$workdir/patches
+srcdir=/usr/src/jambula
+
+SCANNED_BT_DEV_FILE=/tmp/scanned_bt_devices
+DONGLES_QTY=`hciconfig |grep Type  | wc -l`
+DONGLES_FOUND=`hciconfig -a |grep Manufacturer | cut -d ":" -f2`
+
+BLUETOOTH_LIB_DIR=/var/lib/bluetooth
+
+SIMPLE_AGENT_CMD=/usr/bin/bluez_simple-agent 
+SIMPLE_AGENT_PATCH=$patchdir/bluez/bluez_simple-agent.patch
+
+PIN_CODE=0987
+
+
+
+
+
+
+
+
+###############
+# MAIN SCRIPT #
+###############
+# Create simple-agent command if it does NOT exit
+if [ ! -e $SIMPLE_AGENT_CMD ];
+then
+# Copy simple-agent script from Bluez sources to executable PATH
+cp -f $srcdir/bluez/test/simple-agent $SIMPLE_AGENT_CMD
+# Patch command simple-agent source code to include PIN code
+patch -Np1  $SIMPLE_AGENT_CMD < $SIMPLE_AGENT_PATCH
+fi
+
+
+
+# Remove old scanned file
+rm -f $SCANNED_BT_DEV_FILE 
+#
+
+# Prompt to put phones in discoverable mode
+clear
+echo "################################################################################
+I am now going to attempt to pair your phone(s) with this system, please 
+do the following:
+################################################################################
+
+1. Connect any bluetooth dongel(s) to the System
+
+2. Turn on bluetooth on your mobile phone(s)
+
+3. Place your phone(s) in discoverable mode immediatelly after you Enter
+
+4. When phone prompts you for a pin code, please enter: 
+
+<<<<< $PIN_CODE  >>>>>
+
+To Proceed, Hit ENTER ...
+"
+read
+
+
+
+clear 
+ps aux |grep bluetoothd > /dev/null
+BLUEZD=$?
+
+# Restart Bluetoothd if already running
+[ "$BLUEZD" != "0" ] || /usr/bin/systemctl restart bluetooth.service
+# Start Bluetoothd if not running
+[ "$BLUEZD" = "0" ] || /usr/bin/systemctl start bluetooth.service
+
+# Pause
+echo "
+Sleeping for 5 seconds ...
+" && sleep 5
+
+
+
+clear
+# Scan for Phones and dump to file
+hcitool scan # <- Needed to allow time for devices to broadcast
+echo "
+Sleeping for 20 seconds ...
+" && sleep 20
+
+clear
+hcitool scan # <- Needed to allow time for devices to broadcast
+
+#SCANLIST=`hcitool scan | awk {'print $2'} > $SCANNED_BT_DEV_FILE`
+SCANLIST=`hcitool scan | sed -e 's/Scanning ...//' | sed '/^$/d' | awk {'print NR FS $1 FS $2'} > $SCANNED_BT_DEV_FILE`
+
+
+
+# DONGLES FOUND
+###############
+#clear
+#echo "I found the following [$DONGLES_QTY] Bluetooth Dongle(s):
+
+#$DONGLES_FOUND
+
+#"
+#sleep 5
+
+# Count to offset overshoot +1
+let "BT_DONGLES_COUNT = $DONGLES_QTY - 1"
+
+
+
+# CYCLE THROUGH ALL THE USB DONGLES
+###################################
+DEV_NO=-1
+while let "DEV_NO < $BT_DONGLES_COUNT"
+do
+let "DEV_NO = DEV_NO + 1"
+# Determine Device name
+DONGLE_MAC_ADDRESS=`hcitool dev |grep hci$DEV_NO | awk {'print $2'}`
+DONGLE_MANUFACTURER=`hciconfig -a hci$DEV_NO |grep Manufacturer | cut -d ":" -f2| cut -d "(" -f1`
+BT_OBJECT_PATH=`dbus-send --system --print-reply --dest=org.bluez / \
+    org.bluez.Manager.FindAdapter string:hci$DEV_NO |awk '/object path/ {print $3}'`
+BT_ID=`echo $BT_OBJECT_PATH | cut -d "/" -f4`
+BT_DEV=`echo $BT_OBJECT_PATH | cut -d "/" -f5 | sed -e 's/\"//'`
+#
+clear
+echo "Which phone will you attach to the dongle named$DONGLE_MANUFACTURER? 
+Enter 1, 2, 3, ... 
+
+`cat $SCANNED_BT_DEV_FILE | 
+while read line
+do
+echo $line
+#awk {'print NR FS $1 FS $2'}
+done`
+
+
+
+"
+read PHONE_INPUT_NO
+#
+BD_ADDRESS_PHONE=`awk '$1=='$PHONE_INPUT_NO'{print $2}' $SCANNED_BT_DEV_FILE`
+PHONE_NAME=`awk '$1=='$PHONE_INPUT_NO'{print $3}' $SCANNED_BT_DEV_FILE`
+BD_ADDRESS_PHONE_ALT_FMT=`echo "$BD_ADDRESS_PHONE" | sed -e 's/:/_/g'`
+
+
+
+
+
+# RUN PAIRING SCRIPTS
+######################
+clear
+# Make Discoverable
+echo "Making Bluetooth dongle$DONGLE_MANUFACTURER discoverable:"
+dbus-send --system --type=method_call --print-reply --dest=org.bluez /org/bluez/$BT_ID/$BT_DEV org.bluez.Adapter.SetProperty string:Discoverable variant:boolean:true
+
+
+
+# Cleanup old pairings
+echo
+echo
+echo
+# See if lastused file exists and look for this phone address
+if [ -e $BLUETOOTH_LIB_DIR/$DONGLE_MAC_ADDRESS/lastused ];
+then
+grep "$BD_ADDRESS_PHONE" $BLUETOOTH_LIB_DIR/$DONGLE_MAC_ADDRESS/lastused > /dev/null
+BLUEZUSED=$?
+fi
+# Remove Stale if it exists already
+if [ "$BLUEZUSED" = "0" ];
+then
+dbus-send --system --print-reply --dest=org.bluez /org/bluez/$BT_ID/$BT_DEV \
+    org.bluez.Adapter.RemoveDevice objpath:/org/bluez/$BT_ID/$BT_DEV/dev_$BD_ADDRESS_PHONE_ALT_FMT && dbus-send --system --print-reply --dest=org.bluez /org/bluez/$BT_ID/$BT_DEV \
+    org.bluez.Adapter.RemoveDevice objpath:/org/bluez/$BT_ID/$BT_DEV/dev_$BD_ADDRESS_PHONE_ALT_FMT
+fi
+
+
+
+# Pair bluetooth device
+echo
+echo
+echo
+echo "Pairing Bluetooth device $PHONE_NAME:"
+# Bond Default Device
+dbus-send --system --print-reply --dest=org.bluez /org/bluez/$BT_ID/$BT_DEV org.bluez.Adapter.CreateDevice string:$BD_ADDRESS_PHONE
+
+# Use simple agent to permanently bond device to system
+$SIMPLE_AGENT_CMD $BT_DEV $BD_ADDRESS_PHONE
+
+# Pause a bit
+sleep 15
+done

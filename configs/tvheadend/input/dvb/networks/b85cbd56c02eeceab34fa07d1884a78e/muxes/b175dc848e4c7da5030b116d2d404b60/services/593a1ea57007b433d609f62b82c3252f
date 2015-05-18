@@ -1,0 +1,37 @@
+{
+	"sid": 2670,
+	"lcn": 160,
+	"lcn2": 0,
+	"svcname": "Disney Junior",
+	"provider": "MCA",
+	"dvb_servicetype": 1,
+	"prefcapid": 0,
+	"prefcapid_lock": 0,
+	"enabled": true,
+	"pcr": 2672,
+	"pmt": 2671,
+	"stream": [
+		{
+			"pid": 760,
+			"type": "CA",
+			"position": 262144,
+			"caidlist": [
+				{
+					"caid": 1544
+				}
+			]
+		},
+		{
+			"pid": 2672,
+			"type": "H264",
+			"position": 0
+		},
+		{
+			"pid": 2673,
+			"type": "AAC",
+			"position": 0,
+			"language": "eng",
+			"audio_type": 0
+		}
+	]
+}

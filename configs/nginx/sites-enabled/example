@@ -1,0 +1,19 @@
+    server {
+        listen 80;
+
+        server_name  jambulatv.com www.jambulatv.com;
+        root   html;
+        index  index.html index.htm index.php;
+
+        location / {
+        }
+
+        location ~ \.php$ {
+            include  includes/php_params;
+        }
+ 
+    	location ~* \.(cgi|chi)$ {
+            include  includes/cgi_params;
+    	}  
+
+    }

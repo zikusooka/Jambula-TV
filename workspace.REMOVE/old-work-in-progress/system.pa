@@ -1,0 +1,41 @@
+#!/usr/bin/pulseaudio -nF
+load-module module-device-restore
+load-module module-stream-restore
+load-module module-card-restore
+load-module module-augment-properties
+load-module module-udev-detect
+load-module module-bluetooth-policy
+load-module module-bluetooth-discover
+#load-module module-bluetooth-device address=
+#load-module module-bluetooth-proximity
+load-module module-esound-protocol-unix
+load-module module-native-protocol-unix
+load-module module-default-device-restore
+load-module module-rescue-streams
+load-module module-always-sink
+load-module module-intended-roles
+load-module module-suspend-on-idle
+load-module module-console-kit
+load-module module-systemd-login
+load-module module-position-event-sounds
+load-module module-role-cork
+load-module module-filter-heuristics
+load-module module-filter-apply
+load-module module-dbus-protocol
+load-module module-switch-on-port-available
+load-module module-raop-discover
+load-module module-zeroconf-publish
+load-module module-native-protocol-tcp auth-anonymous=1
+load-module module-esound-protocol-tcp auth-anonymous=1
+load-module module-zeroconf-discover
+load-module module-cli-protocol-tcp
+load-module module-http-protocol-tcp
+#load-module module-x11-publish
+load-module module-lirc config=/etc/JambulaTV/freevo/lircrc appname=freevo
+load-module module-tunnel-sink sink_name=backend server=0.0.0.0
+#load-module module-tunnel-sink sink_name=backend server=192.168.0.11
+
+# TV Audio Source via loopback module
+load-module module-loopback source=alsa_input.pci-0000_06_03.0.analog-stereo sink=alsa_output.pci-0000_00_14.0.analog-stereo latency_msec=26
+
+#load-module module-oss device="/dev/dsp" sink_name=Testing source_name=input

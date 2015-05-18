@@ -1,0 +1,13 @@
+# Uganda Holidays
+#
+# Easter days
+SET easter EASTERDATE(YEAR(TODAY()))
+OMIT [TRIGGER(easter-46)] +1 MSG Ash Wednesday %b
+OMIT [TRIGGER(easter-7)] +1 MSG Palm Sunday %b
+REM [TRIGGER(easter-2)] +14 MSG Good Friday %b
+REM [TRIGGER(easter)] +14 MSG Easter Sunday %b
+REM [TRIGGER(easter+1)] +1 MSG Easter Monday %b
+OMIT [TRIGGER(easter+39)] +1 MSG Ascension Day %b
+OMIT [TRIGGER(easter+49)] +1 MSG Pentecost %b
+
+

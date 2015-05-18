@@ -1,0 +1,29 @@
+#!/bin/sh
+PREFIX=/usr
+CONFDIR=/etc
+BINARY_PREFIX=/usr/bin
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=$CONFDIR/$PROJECT_NAME
+PROJECT_SYSTEM_SHARE_DIR=$PREFIX/share/$PROJECT_NAME
+
+VLM_VOD_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/vlm
+VLM_VOD_CONFIG_FILE=$VLM_VOD_CONFIG_DIR/vlm.conf
+VLM_VOD_DIRECTORY=/JambulaTV/vlm_vod
+
+VLM_SERVER_SCRIPT=$BINARY_PREFIX/jambulatv-vlc-vlm-server
+
+
+
+# Create vlm directory if it does not exist
+[ -d $VLM_VOD_CONFIG_DIR ] || mkdir -p $VLM_VOD_CONFIG_DIR
+
+# Add entry to vlm.conf file
+echo "#VOD for item: $@
+new `echo $@ | cut -d . -f1` vod enabled
+setup `echo $@ | cut -d . -f1` input 'file://$VLM_VOD_DIRECTORY/$@'
+" >> $VLM_VOD_CONFIG_FILE
+
+# Kill existing vlm processes
+kill `ps auxw | grep vlm-conf | awk {'print $2'} | head -1`
+# Restart vlm server
+$VLM_SERVER_SCRIPT &

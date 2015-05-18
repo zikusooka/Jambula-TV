@@ -1,0 +1,14 @@
+[Unit]
+Description=JambulaTV Entertainment and Multimedia System powered by Jambula Labs
+Documentation=man:jambulatv-display-manager(8)
+After=plymouth-quit.service
+
+[Service]
+Type=oneshot
+
+ExecStart=/usr/bin/beep
+ExecStart=/usr/bin/xinit /usr/bin/JambulaTV start-xbmc
+#ExecStart=/usr/bin/xinit /usr/bin/kodi
+
+[Install]
+WantedBy=multi-user.target

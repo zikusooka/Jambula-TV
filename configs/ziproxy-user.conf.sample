@@ -1,0 +1,42 @@
+# Ziproxy-User
+
+Port = 8516
+
+AccessLog = "/var/log/ziproxy-user-access.log"
+
+NextProxy="127.0.0.1"
+NextPort=8518
+
+TransparentProxy = true
+ConventionalProxy = true
+AllowMethodCONNECT = true
+UseContentLength = false
+LosslessCompressCT = {
+        "shockwave", "msword", "msexcel", "mspowerpoint", "rtf", "postscript",  
+        "java", "javascript", "staroffice", "vnd.", "futuresplash", 
+        "asp", "class", "font", "truetype-font", "php", "cgi", "executable",
+        "shellscript", "perl", "python", "awk", "dvi", "css",
+        "xhtml+xml", "rss+xml", "xml", "pdf", "tar"
+}
+ProcessJPG = true
+ProcessPNG = true
+ProcessGIF = true
+ImageQuality = {95,95,95,95}
+ProcessJP2 = true
+ProcessToJP2 = false
+ForceOutputNoJP2 = true
+
+ConnTimeout = 0
+MaxUncompressedGzipRatio = 4000
+MinUncompressedGzipStreamEval = 250000
+MaxSize = 2097152
+Gzip = true
+PreemptNameRes = true
+PreemptNameResMax = 10
+PreemptNameResBC = true
+WA_MSIE_FriendlyErrMsgs = false
+ProcessHTML = true
+ProcessCSS = true
+ProcessJS = false
+ProcessHTML_JS = false
+JP2ImageQuality = {95,95,95,95}

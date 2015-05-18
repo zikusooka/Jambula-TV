@@ -1,0 +1,20 @@
+    server {
+        listen 8511;
+
+        server_name  jambulatv_playlists;
+        root   /JambulaTV/Playlists;
+        index  index.html index.htm index.php;
+	autoindex on;
+
+        location / {
+        }
+
+        location ~ \.php$ {
+            include  includes/php_params;
+        }
+ 
+    	location ~* \.(cgi|chi)$ {
+            include  includes/cgi_params;
+    	}  
+
+    }

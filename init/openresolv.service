@@ -1,0 +1,10 @@
+[Unit]
+Description=Openresolv, a framework for managing multiple DNS configurations
+After=syslog.target network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/resolvconf -u
+
+[Install]
+WantedBy=multi-user.target

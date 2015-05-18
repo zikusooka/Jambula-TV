@@ -1,0 +1,37 @@
+{
+	"sid": 1120,
+	"lcn": 70,
+	"lcn2": 0,
+	"svcname": "Channel O",
+	"provider": "MCA",
+	"dvb_servicetype": 1,
+	"prefcapid": 0,
+	"prefcapid_lock": 0,
+	"enabled": true,
+	"pcr": 1122,
+	"pmt": 1121,
+	"stream": [
+		{
+			"pid": 996,
+			"type": "CA",
+			"position": 262144,
+			"caidlist": [
+				{
+					"caid": 1544
+				}
+			]
+		},
+		{
+			"pid": 1122,
+			"type": "H264",
+			"position": 0
+		},
+		{
+			"pid": 1123,
+			"type": "AAC",
+			"position": 0,
+			"language": "eng",
+			"audio_type": 0
+		}
+	]
+}

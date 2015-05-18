@@ -1,0 +1,16 @@
+#!/bin/sh
+# See how many messages are in the mail queue
+THRESHOLD=10
+
+MAIL_COUNT=$(mailq | tail -1 | awk {'print $5'})
+
+if [ "$MAIL_COUNT" > "$THRESHOLD" ];
+then
+echo "CRITICAL - Mail Queue is over threshold of $MAIL_COUNT"
+exit 2
+
+else
+echo "OK - Mail Queue is normal"
+exit 0
+
+fi

@@ -1,0 +1,11 @@
+--- uam.sh.orig	2014-03-12 12:23:46.875850707 +0300
++++ uam.sh	2014-03-12 12:24:38.193288853 +0300
+@@ -21,7 +21,7 @@
+     return 0
+ }
+ 
+-uamrootdir=/etc/chilli
++uamrootdir=/usr/share/JambulaTV/html/coova
+ uamwwwdir="$uamrootdir/www"
+ tmpdir="/tmp"
+

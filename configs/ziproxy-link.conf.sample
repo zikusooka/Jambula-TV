@@ -1,0 +1,42 @@
+# Ziproxy-Link
+
+Port = 8517
+Address = "127.0.0.1"
+
+AccessLog = "/var/log/ziproxy-link-access.log"
+
+TransparentProxy = false
+ConventionalProxy = true
+AllowMethodCONNECT = true
+UseContentLength = false
+LosslessCompressCT = {
+        "shockwave", "msword", "msexcel", "mspowerpoint", "rtf", "postscript",  
+        "java", "javascript", "staroffice", "vnd.", "futuresplash", 
+        "asp", "class", "font", "truetype-font", "php", "cgi", "executable",
+        "shellscript", "perl", "python", "awk", "dvi", "css",
+        "xhtml+xml", "rss+xml", "xml", "pdf", "tar"
+}
+ProcessJPG = false
+ProcessPNG = false
+ProcessGIF = false
+ImageQuality = {20,15,15,15}
+ProcessJP2 = false
+ProcessToJP2 = true
+ForceOutputNoJP2 = false
+AnnounceJP2Capability = true
+
+ConnTimeout = 0
+MaxUncompressedGzipRatio = 4000
+MinUncompressedGzipStreamEval = 250000
+MaxSize = 2097152
+Gzip = true
+PreemptNameRes = true
+PreemptNameResMax = 10
+PreemptNameResBC = true
+WA_MSIE_FriendlyErrMsgs = false
+JP2ImageQuality = {20,15,15,15}
+DecompressIncomingGzipData = true
+
+# Foreign Proxy cache -WAN accelerator
+#NextProxy="REMOTE_PROXY_SERVER_IP_ADDRESS"
+#NextPort="REMOTE_PROXY_SERVER_PORT"

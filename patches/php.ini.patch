@@ -1,0 +1,20 @@
+--- /tmp/php.ini	2013-03-17 15:44:46.524497441 +0300
++++ php.ini	2013-03-17 16:03:09.345469964 +0300
+@@ -208,7 +208,7 @@
+ ; Development Value: Off
+ ; Production Value: Off
+ ; http://php.net/short-open-tag
+-short_open_tag = Off
++short_open_tag = On
+ 
+ ; Allow ASP-style <% %> tags.
+ ; http://php.net/asp-tags
+@@ -875,7 +875,7 @@
+ [Date]
+ ; Defines the default timezone used by the date functions
+ ; http://php.net/date.timezone
+-;date.timezone =
++date.timezone = Africa/Kampala
+ 
+ ; http://php.net/date.default-latitude
+ ;date.default_latitude = 31.7667

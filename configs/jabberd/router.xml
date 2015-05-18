@@ -1,0 +1,74 @@
+<router>
+  <id>router</id>
+  <pidfile>/var/lib/jabberd/pid/router.pid</pidfile>
+
+  <log type='file'> <!-- "syslog", "file" or "stdout" -->
+    <file>/var/log/JambulaTV/jabberd/router.log</file>
+  </log>
+
+  <local>
+    <ip>0.0.0.0</ip>
+    <port>5347</port>
+    <users>/etc/jabberd/router-users.xml</users>
+    <secret>JABBERD_PASSWORD_CHANGE_ME</secret>
+    <!--
+    <pemfile>/etc/jabberd/server.pem</pemfile>
+    -->
+  </local>
+
+  <check>
+    <interval>60</interval>
+    <keepalive>0</keepalive>
+  </check>
+
+  <io>
+    <max_fds>1024</max_fds>
+    <limits>
+      <bytes>0</bytes>
+      <connects>0</connects>
+    </limits>
+
+    <access>
+      <order>allow,deny</order>
+      <!--
+      <allow ip='127.0.0.0' mask='255.0.0.0'/>
+      -->
+      <!--
+      <allow ip='12.34.56.78'/>
+      -->
+      <!--
+      <deny ip='127.0.0.1' mask='255.0.0.0'/>
+      <deny ip='87.65.43.21'/>
+      -->
+    </access>
+  </io>
+
+  <aliases>
+    <!--
+    <alias name='conference.domain.com' target='muclinker'/>
+    -->
+  </aliases>
+
+  <aci>
+    <acl type='all'>
+      <user>jabberd</user>
+    </acl>
+    <!--
+    <acl type='bind'>
+    </acl>
+    -->
+    <!--
+    <acl type='default-route'>
+      <user>s2s</user>
+    </acl>
+    -->
+    <!--
+    <acl type='log'>
+      <user>msglog</user>
+    </acl>
+    -->
+
+    <filter>/etc/jabberd/router-filter.xml</filter>
+  </aci>
+
+</router>

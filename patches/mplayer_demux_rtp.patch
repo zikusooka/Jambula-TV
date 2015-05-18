@@ -1,0 +1,13 @@
+--- demux_rtp.cpp.orig	2012-03-05 13:14:38.000000000 -0500
++++ demux_rtp.cpp	2012-09-20 13:34:05.886112488 -0400
+@@ -222,7 +222,10 @@
+       }
+ 
+       if (rtsp_port)
++      {
+           subsession->setClientPortNum (rtsp_port);
++          rtsp_port += 2;	// RTP+RTCP uses two ports; give next stream the next two ports
++      }
+ 
+       if (!subsession->initiate()) {
+ 	fprintf(stderr, "Failed to initiate \"%s/%s\" RTP subsession: %s\n", subsession->mediumName(), subsession->codecName(), env->getResultMsg());

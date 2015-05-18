@@ -1,0 +1,10 @@
+# Pinnacle PCTV DVB  Adapter
+# To find those variables, run ../contrib/scripts/udev-properties.sh
+# -------------------------------------------------------------------
+# Add 
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ENV{ID_MODEL}=="PCTV_290e", ENV{ID_VENDOR_ID}=="2013", ENV{ID_MODEL_ID}=="024f", TAG+="systemd", ENV{SYSTEMD_WANTS}+="tvheadend.service"
+#
+# Remove
+ACTION=="remove", ENV{SUBSYSTEM}=="dvb", ENV{DVB_ADAPTER_NUM}=="0", ENV{DVB_DEVICE_NUM}=="0", RUN+="/usr/bin/systemctl stop tvheadend.service"
+
+

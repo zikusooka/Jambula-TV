@@ -1,0 +1,19 @@
+--- /usr/src/jambulatv/bluez/test/simple-agent	2014-01-21 03:12:58.000000000 +0300
++++ /usr/bin/bluez_simple-agent	2014-07-31 21:50:27.122189276 +0300
+@@ -13,6 +13,7 @@
+   import gobject as GObject
+ import bluezutils
+ 
++BLUEZ_PIN_CODE = "0987"
+ BUS_NAME = 'org.bluez'
+ AGENT_INTERFACE = 'org.bluez.Agent1'
+ AGENT_PATH = "/test/agent"
+@@ -67,7 +68,7 @@
+ 	def RequestPinCode(self, device):
+ 		print("RequestPinCode (%s)" % (device))
+ 		set_trusted(device)
+-		return ask("Enter PIN Code: ")
++		return (BLUEZ_PIN_CODE)
+ 
+ 	@dbus.service.method(AGENT_INTERFACE,
+ 					in_signature="o", out_signature="u")

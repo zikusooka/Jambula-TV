@@ -1,0 +1,16 @@
+[Unit]
+Description=Icinga host/service/network monitoring system
+After=mysqld.service
+
+[Service]
+Type=forking
+EnvironmentFile=/etc/sysconfig/icinga2
+ExecStartPre=/bin/mkdir -p ${ICINGA2_RUN_DIR}/icinga2/cmd
+ExecStartPre=/bin/mkdir -p /var/log/icinga2/compat
+ExecStartPre=/usr/lib/icinga2/prepare-dirs /etc/sysconfig/icinga2
+ExecStart=/usr/sbin/icinga2 daemon -d -e ${ICINGA2_ERROR_LOG}
+PIDFile=/var/run/icinga2/icinga2.pid
+ExecReload=/usr/lib/icinga2/safe-reload /etc/sysconfig/icinga2
+
+[Install]
+WantedBy=multi-user.target

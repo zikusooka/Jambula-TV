@@ -1,0 +1,91 @@
+#!/bin/sh
+
+# Variables
+NETWORK_IP_ADDRESS=`hostname -i`
+COOVA_SERVER_IP=`grep 'HS_UAMLISTEN=' /etc/chilli/config | cut -d = -f2 | awk {'print $1'}`
+COOVA_CONFIG_DIR=/etc/chilli
+COOVA_CONFIG_FILE=$COOVA_CONFIG_DIR/config
+COOVA_MAIN_CONFIG_FILE=$COOVA_CONFIG_DIR/main.conf
+CHRONYC_CMD=/usr/bin/chronyc
+CHRONY_KEYS_FILE=/etc/chrony.keys
+CHRONYC_PASSWD=`awk {'print $2'} $CHRONY_KEYS_FILE`
+
+BEEP_SOUNDS_SCRIPT=/usr/bin/jambulatv-sounds
+
+DNS_STATUS=$1
+
+
+
+# Run commands/processes depending on availability of DNS servers
+#################################################################
+if [ "$DNS_STATUS" = "UP" ];
+
+then
+# DNS on: Internet is UP
+# -----------------------
+#
+# Remove dnsmasq entries for local resolution
+[ ! -e /etc/dnsmasq.d/dns_off.conf ] || rm -f /etc/dnsmasq.d/dns_off.conf
+# Restart dnsmasq.service
+systemctl restart dnsmasq.service
+
+# Since Internet is now up - Do other stuff that requires connectivity
+# --------------------------------------------------------------------
+# Take chrony on-line: Update clock time
+$CHRONYC_CMD <<EOF
+password $CHRONYC_PASSWD
+online
+EOF
+
+# Configure CoovaChilli DomainDNSlocal
+# ------------------------------------
+# Get previous domains dns local value
+PREVIOUS_HS_DOMAINDNSLOCAL=`grep 'HS_DOMAINDNSLOCAL=' $COOVA_CONFIG_FILE | awk {'print $1'}`
+# Set chilli domain DNS locals to 'off' since internet on
+sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=off:g" $COOVA_CONFIG_FILE 
+
+# Sound alert beep
+# ----------------
+[ -x $BEEP_SOUNDS_SCRIPT ] && $BEEP_SOUNDS_SCRIPT online
+
+else
+
+# DNS off: Internet is DOWN
+#--------------------------
+#
+# Add entries to dnsmasq for local resolution
+echo "address=/#/$COOVA_SERVER_IP
+address=/#/$NETWORK_IP_ADDRESS" > /etc/dnsmasq.d/dns_off.conf
+# Restart dnsmasq.service
+systemctl restart dnsmasq.service
+
+# Since Internet is now down - Stop stuff that requires connectivity
+# ------------------------------------------------------------------
+# Take chrony off-line
+$CHRONYC_CMD <<EOF
+password $CHRONYC_PASSWD
+offline
+EOF
+
+# Configure CoovaChilli DomainDNSlocal
+# ------------------------------------
+# Get previous domains dns local value
+PREVIOUS_HS_DOMAINDNSLOCAL=`grep 'HS_DOMAINDNSLOCAL=' $COOVA_CONFIG_FILE | awk {'print $1'}`
+# Set chilli domain DNS locals to 'on' since internet off
+sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=on:g" $COOVA_CONFIG_FILE 
+
+# Sound alert beep
+# ----------------
+[ -x $BEEP_SOUNDS_SCRIPT ] && $BEEP_SOUNDS_SCRIPT offline
+
+fi
+
+
+# Run processes whenever thereis a change in status i.e. UP or DOWN
+###################################################################
+# 1) Restart captive portal: coova-chilli
+/usr/bin/jambulatv-chilli reload
+# 2) Restart wireless access point: hostapd
+systemctl restart hostapd
+# Log timestamp: for debugging purposes only
+#echo "$(date): Internet status changed to: [$DNS_STATUS]" >> /root/chilli_starts.log # 

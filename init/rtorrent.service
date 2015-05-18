@@ -1,0 +1,12 @@
+[Unit]
+Description=The rTorrent Service
+After=syslog.target network.target remote-fs.target
+
+[Service]
+User=jambula
+Type=forking
+ExecStart=/usr/bin/screen -A -fa -d -m -S Torrent /usr/bin/rtorrent
+ExecStop=/usr/bin/screen -S Torrent -X quit
+
+[Install]
+WantedBy=multi-user.target

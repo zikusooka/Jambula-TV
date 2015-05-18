@@ -1,0 +1,67 @@
+#!/bin/sh
+CONFDIR=/etc
+STATEDIR=/var
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=$CONFDIR/$PROJECT_NAME
+PROJECT_SYSTEM_LOG_DIR=$STATEDIR/log/$PROJECT_NAME
+
+VLM_VOD_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/vlm
+VLM_VOD_CONFIG_FILE=$VLM_VOD_CONFIG_DIR/vlm.conf
+VLM_VOD_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/vlm_server.log
+
+TV_STREAMING_DEVICE=/dev/video1
+NETWORK_IP_ADDRESS=`hostname -i`
+
+
+
+# Functions
+# ---------
+vlm_server_start () {
+# check for status of streaming device i.e. is it already in use
+lsof $TV_STREAMING_DEVICE > /dev/null 2>&1
+STREAM_DEV_STATUS=$?
+if [ "$STREAM_DEV_STATUS" = "0" ];
+then
+echo "Error: The device [$TV_STREAMING_DEVICE] is currently in use" > $VLM_VOD_LOG_FILE 2>&1
+exit 1
+fi
+# Killall pulseaudio for now
+killall pulseaudio > /dev/null 2>&1 || killall -9 pulseaudio > /dev/null 2>&1
+# start VLM server
+/usr/bin/cvlc -vvv --x11-display :0 -I telnet --vlm-conf $VLM_VOD_CONFIG_FILE --telnet-host $NETWORK_IP_ADDRESS --telnet-port 4212 --telnet-password videolan --rtsp-host 0.0.0.0 --rtsp-port 554 --rtsp-throttle-users 0 --rtsp-session-timeout 10 > $VLM_VOD_LOG_FILE 2>&1 &
+}
+
+
+vlm_server_stop () {
+# Kill VLM server
+killall vlc > /dev/null 2>&1 || killall -9 vlc > /dev/null 2>&1
+# Restart pulseaudio
+/usr/bin/pulseaudio --system --disallow-module-loading --disallow-exit -D > /dev/null 2>&1 &
+}
+
+
+
+# Script
+# ------
+case $@ in
+
+start)
+vlm_server_start
+;;
+
+stop)
+vlm_server_stop
+;;
+
+restart)
+vlm_server_stop
+vlm_server_start
+;;
+
+*)
+clear
+echo "Usage: `basename $0` [start|stop|restart]
+"
+;;
+
+esac

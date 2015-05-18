@@ -1,0 +1,37 @@
+{
+	"sid": 1440,
+	"lcn": 16,
+	"lcn2": 0,
+	"svcname": "VoxAfrica",
+	"provider": "MCA",
+	"dvb_servicetype": 1,
+	"prefcapid": 0,
+	"prefcapid_lock": 0,
+	"enabled": true,
+	"pcr": 1442,
+	"pmt": 1441,
+	"stream": [
+		{
+			"pid": 950,
+			"type": "CA",
+			"position": 262144,
+			"caidlist": [
+				{
+					"caid": 1544
+				}
+			]
+		},
+		{
+			"pid": 1442,
+			"type": "H264",
+			"position": 0
+		},
+		{
+			"pid": 1443,
+			"type": "AAC",
+			"position": 0,
+			"language": "eng",
+			"audio_type": 0
+		}
+	]
+}

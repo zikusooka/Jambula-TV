@@ -1,0 +1,52 @@
+#!/bin/sh
+# Available in functions file
+INTERNET_WIFI_ISP_CONFIG=/etc/JambulaTV/internet-mobile-wifi.cfg
+WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
+WIFI_INTERFACES_AVAILABLE=$(sudo iw dev |grep Interface |wc -l)
+# Variable specific to this script
+WIFI_SSID=$(grep -i SSID $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+number_of_interfaces () { 
+# Quit if less than 2 WiFi devices are detected
+if [ "$WIFI_INTERFACES_AVAILABLE" -lt "2" ];
+then
+echo "CRITICAL: Sorry, WiFi dual Interface mode is not supported"
+exit 2
+else
+# Set WiFi station Interface
+WIFI_STATION_INTERFACE=$(sudo iw dev |grep -B 4 'type managed' |grep Interface | tail -1 | awk {'print $2'})
+fi
+}
+
+scan_4_wifi () {
+# Take station UP
+sudo ip link set $WIFI_STATION_INTERFACE up
+#
+# Scan for AP, and get scanned SSID
+sudo iw dev $WIFI_STATION_INTERFACE scan | grep -i SSID | cut -d : -f2 | sed 's/ //' | grep $WIFI_SSID > /dev/null 2>&1
+SCAN_RESULT=$?
+}
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+number_of_interfaces
+scan_4_wifi
+
+# See if there's a match for my AP
+if [ "$SCAN_RESULT" = "0" ];
+then
+echo "OK - Wireless Access Point ($WIFI_SSID) Available"
+exit 0
+
+else
+echo "WARNING - Wireless Access Point ($WIFI_SSID) Not Available"
+exit 1
+
+fi

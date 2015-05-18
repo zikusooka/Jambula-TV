@@ -1,0 +1,14 @@
+--- upnpglobalvars.h.orig	2015-03-20 21:09:44.698094230 +0300
++++ upnpglobalvars.h	2015-03-20 21:10:43.061812684 +0300
+@@ -60,9 +60,9 @@
+ #define MINIDLNA_VERSION "1.1.4"
+ 
+ #ifdef NETGEAR
+-# define SERVER_NAME "ReadyDLNA"
++# define SERVER_NAME "JambulaTV-DLNA"
+ #else
+-# define SERVER_NAME "MiniDLNA"
++# define SERVER_NAME "JambulaTV-DLNA"
+ #endif
+ 
+ #define USE_FORK 1

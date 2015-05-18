@@ -1,0 +1,665 @@
+Index: chan_mobile.c
+===================================================================
+--- chan_mobile.c	(revision 284880)
++++ chan_mobile.c	(working copy)
+@@ -22,6 +22,8 @@
+  *
+  * \author Dave Bowerman <david.bowerman@gmail.com>
+  *
++ * \author Andreas Daasch <krafte@rockall.de>
++ *
+  * \ingroup channel_drivers
+  */
+ 
+@@ -126,9 +128,12 @@
+ 	struct ast_smoother *smoother;			/* our smoother, for making 48 byte frames */
+ 	int sco_socket;					/* sco socket descriptor */
+ 	pthread_t monitor_thread;			/* monitor thread handle */
++	pthread_t pollsms_thread;			/* sms polling thread handle */
+ 	int timeout;					/*!< used to set the timeout for rfcomm data (may be used in the future) */
+ 	unsigned int no_callsetup:1;
+-	unsigned int has_sms:1;
++	char sms_charset[16];
++	unsigned int has_sms_indication:1;
++	unsigned int has_sms_polling:1;
+ 	unsigned int do_alignment_detection:1;
+ 	unsigned int alignment_detection_triggered:1;
+ 	unsigned int blackberry:1;
+@@ -161,6 +166,8 @@
+ static int handle_response_ring(struct mbl_pvt *pvt, char *buf);
+ static int handle_response_cmti(struct mbl_pvt *pvt, char *buf);
+ static int handle_response_cmgr(struct mbl_pvt *pvt, char *buf);
++static int handle_response_cmgl(struct mbl_pvt *pvt, char *buf);
++static int handle_response_cscs(struct mbl_pvt *pvt, char *buf);
+ static int handle_response_cusd(struct mbl_pvt *pvt, char *buf);
+ static int handle_sms_prompt(struct mbl_pvt *pvt, char *buf);
+ 
+@@ -351,6 +358,7 @@
+ static int hfp_parse_ciev(struct hfp_pvt *hfp, char *buf, int *value);
+ static char *hfp_parse_clip(struct hfp_pvt *hfp, char *buf);
+ static int hfp_parse_cmti(struct hfp_pvt *hfp, char *buf);
++static int hfp_parse_cmgl(struct hfp_pvt *hfp, char *buf);
+ static int hfp_parse_cmgr(struct hfp_pvt *hfp, char *buf, char **from_number, char **text);
+ static int hfp_parse_brsf(struct hfp_pvt *hfp, const char *buf);
+ static int hfp_parse_cind(struct hfp_pvt *hfp, char *buf);
+@@ -373,6 +381,9 @@
+ static int hfp_send_dtmf(struct hfp_pvt *hfp, char digit);
+ static int hfp_send_cmgf(struct hfp_pvt *hfp, int mode);
+ static int hfp_send_cnmi(struct hfp_pvt *hfp);
++static int hfp_send_cmgl(struct hfp_pvt *hfp);
++static int hfp_send_cmgl_test(struct hfp_pvt *hfp);
++static int hfp_send_cscs(struct hfp_pvt *hfp, const char *charset);
+ static int hfp_send_cmgr(struct hfp_pvt *hfp, int index);
+ static int hfp_send_cmgs(struct hfp_pvt *hfp, const char *number);
+ static int hfp_send_sms_text(struct hfp_pvt *hfp, const char *message);
+@@ -409,6 +420,8 @@
+ 	AT_CLIP,
+ 	AT_CMTI,
+ 	AT_CMGR,
++	AT_CMGL,
++	AT_CSCS,
+ 	AT_SMS_PROMPT,
+ 	AT_CMS_ERROR,
+ 	/* at commands */
+@@ -425,6 +438,7 @@
+ 	AT_CMER,
+ 	AT_CIND_TEST,
+ 	AT_CUSD,
++	AT_CMGL_TEST,
+ } at_message_t;
+ 
+ static int at_match_prefix(char *buf, char *prefix);
+@@ -501,8 +515,8 @@
+ 				group,
+ 				pvt->adapter->id,
+ 				pvt->connected ? "Yes" : "No",
+-				(!pvt->connected) ? "None" : (pvt->owner) ? "Busy" : (pvt->outgoing_sms || pvt->incoming_sms) ? "SMS" : (mbl_has_service(pvt)) ? "Free" : "No Service",
+-				(pvt->has_sms) ? "Yes" : "No"
++				(!pvt->connected) ? "None" : (pvt->owner) ? "Busy" : (pvt->outgoing_sms || pvt->incoming_sms) ? "SMS" : "Free",
++				(pvt->has_sms_indication || pvt->has_sms_polling) ? "Yes" : "No"
+ 		       );
+ 		ast_mutex_unlock(&pvt->lock);
+ 	}
+@@ -787,7 +801,7 @@
+ 		goto e_unlock_pvt;
+ 	}
+ 
+-	if (!pvt->has_sms) {
++	if (!pvt->has_sms_indication && !pvt->has_sms_polling) {
+ 		ast_log(LOG_ERROR,"Bluetooth device %s doesn't handle SMS -- SMS will not be sent.\n", args.device);
+ 		goto e_unlock_pvt;
+ 	}
+@@ -1595,14 +1609,16 @@
+ 	 * time looking for the string '\r\nOK\r\n'.  If we only find a partial
+ 	 * match, we place that in the buffer and try again. */
+ 
+-	for (;;) {
+-		if ((res = rfcomm_read_until_crlf(rsock, buf, count, in_count)) != 1) {
+-			break;
++	/*if ((res = rfcomm_read_until_crlf(rsock, buf, count, in_count)) != 1) {
++		return res;
+ 		}
+ 
+ 		rfcomm_append_buf(buf, count, in_count, '\r');
+-		rfcomm_append_buf(buf, count, in_count, '\n');
++	rfcomm_append_buf(buf, count, in_count, '\n');*/
+ 
++	for (;;) {
++
++
+ 		if ((res = rfcomm_read_and_expect_char(rsock, &c, '\r')) != 1) {
+ 			if (res != -2) {
+ 				break;
+@@ -1621,17 +1637,110 @@
+ 			rfcomm_append_buf(buf, count, in_count, c);
+ 			continue;
+ 		}
++
++		if ((res = read(rsock, &c, 1)) < 1) {
++			break;
++		}
++
++		if( c != 'O') {
++
++			if( c=='E'){
++				if ((res = rfcomm_read_and_expect_char(rsock, &c, 'R')) != 1) {
++					if (res != -2) {
++						break;
++					}
++					rfcomm_append_buf(buf, count, in_count, '\r');
++					rfcomm_append_buf(buf, count, in_count, '\n');
++					rfcomm_append_buf(buf, count, in_count, 'E');
++					rfcomm_append_buf(buf, count, in_count, c);
++					continue;
++				}
++
++				if ((res = rfcomm_read_and_expect_char(rsock, &c, 'R')) != 1) {
++					if (res != -2) {
++						break;
++					}
++					rfcomm_append_buf(buf, count, in_count, '\r');
++					rfcomm_append_buf(buf, count, in_count, '\n');
++					rfcomm_append_buf(buf, count, in_count, 'E');
++					rfcomm_append_buf(buf, count, in_count, 'R');
++					rfcomm_append_buf(buf, count, in_count, c);
++					continue;
++				}
++
+ 		if ((res = rfcomm_read_and_expect_char(rsock, &c, 'O')) != 1) {
+ 			if (res != -2) {
+ 				break;
+ 			}
++					rfcomm_append_buf(buf, count, in_count, '\r');
++					rfcomm_append_buf(buf, count, in_count, '\n');
++					rfcomm_append_buf(buf, count, in_count, 'E');
++					rfcomm_append_buf(buf, count, in_count, 'R');
++					rfcomm_append_buf(buf, count, in_count, 'R');
++					rfcomm_append_buf(buf, count, in_count, c);
++					continue;
++				}
+ 
++				if ((res = rfcomm_read_and_expect_char(rsock, &c, 'R')) != 1) {
++					if (res != -2) {
++						break;
++					}
+ 			rfcomm_append_buf(buf, count, in_count, '\r');
+ 			rfcomm_append_buf(buf, count, in_count, '\n');
++					rfcomm_append_buf(buf, count, in_count, 'E');
++					rfcomm_append_buf(buf, count, in_count, 'R');
++					rfcomm_append_buf(buf, count, in_count, 'R');
++					rfcomm_append_buf(buf, count, in_count, 'O');
+ 			rfcomm_append_buf(buf, count, in_count, c);
+ 			continue;
+ 		}
+ 
++				if ((res = rfcomm_read_and_expect_char(rsock, &c, '\r')) != 1) {
++					if (res != -2) {
++						break;
++					}
++
++					rfcomm_append_buf(buf, count, in_count, '\r');
++					rfcomm_append_buf(buf, count, in_count, '\n');
++					rfcomm_append_buf(buf, count, in_count, 'E');
++					rfcomm_append_buf(buf, count, in_count, 'R');
++					rfcomm_append_buf(buf, count, in_count, 'R');
++					rfcomm_append_buf(buf, count, in_count, 'O');
++					rfcomm_append_buf(buf, count, in_count, 'R');
++					rfcomm_append_buf(buf, count, in_count, c);
++					continue;
++				}
++
++				if ((res = rfcomm_read_and_expect_char(rsock, &c, '\n')) != 1) {
++					if (res != -2) {
++						break;
++					}
++
++					rfcomm_append_buf(buf, count, in_count, '\r');
++					rfcomm_append_buf(buf, count, in_count, '\n');
++					rfcomm_append_buf(buf, count, in_count, 'E');
++					rfcomm_append_buf(buf, count, in_count, 'R');
++					rfcomm_append_buf(buf, count, in_count, 'R');
++					rfcomm_append_buf(buf, count, in_count, 'O');
++					rfcomm_append_buf(buf, count, in_count, 'R');
++					rfcomm_append_buf(buf, count, in_count, '\r');
++					rfcomm_append_buf(buf, count, in_count, c);
++					continue;
++				}
++
++				/* we have successfully parsed a '\r\nERROR\r\n' string */
++				return 1;
++
++			}
++
++
++
++			rfcomm_append_buf(buf, count, in_count, '\r');
++			rfcomm_append_buf(buf, count, in_count, '\n');
++			rfcomm_append_buf(buf, count, in_count, c);
++			continue;
++		}
++
+ 		if ((res = rfcomm_read_and_expect_char(rsock, &c, 'K')) != 1) {
+ 			if (res != -2) {
+ 				break;
+@@ -1723,10 +1832,15 @@
+ 	if (res != 1)
+ 		return res;
+ 
+-	/* check for CMGR, which contains an embedded \r\n pairs terminated by
+-	 * an \r\nOK\r\n message */
+-	if (*in_count >= 5 && !strncmp(*buf - *in_count, "+CMGR", 5)) {
+-		return rfcomm_read_cmgr(rsock, buf, count, in_count);
++	/* check for CMGR, CSCS or CMGL, which contains an embedded \r\n but does not end with \r\n
++	 * so we have to read to the trailingg \r\nOK\r\n
++	 */
++	if (*in_count >= 5 && ( !strncmp(*buf - *in_count, "+CMGR", 5)
++		|| !strncmp(*buf - *in_count, "+CMGL", 5)
++		|| !strncmp(*buf - *in_count, "+CSCS", 5))) {
++		rfcomm_append_buf(buf, count, in_count, '\r');
++		rfcomm_append_buf(buf, count, in_count, '\n');
++		return rfcomm_read_until_ok(rsock, buf, count, in_count);
+ 	}
+ 
+ 	return 1;
+@@ -2023,6 +2137,10 @@
+ 		return AT_CLIP;
+ 	} else if (at_match_prefix(buf, "+CMGR:")) {
+ 		return AT_CMGR;
++	} else if (at_match_prefix(buf, "+CMGL:")) {
++		return AT_CMGL;
++	} else if (at_match_prefix(buf, "+CSCS:")) {
++		return AT_CSCS;
+ 	} else if (at_match_prefix(buf, "+VGM:")) {
+ 		return AT_VGM;
+ 	} else if (at_match_prefix(buf, "+VGS:")) {
+@@ -2075,6 +2193,12 @@
+ 		return "AT+CMTI";
+ 	case AT_CMGR:
+ 		return "AT+CMGR";
++	case AT_CMGL:
++                return "AT+CMGL";
++	case AT_CMGL_TEST:
++                return "AT+CMGL=?";
++	case AT_CSCS:
++                return "AT+CSCS";
+ 	case AT_SMS_PROMPT:
+ 		return "SMS PROMPT";
+ 	case AT_CMS_ERROR:
+@@ -2211,6 +2335,35 @@
+ }
+ 
+ /*!
++ * \brief Parse a CMGL response.
++ * \param hfp an hfp_pvt struct
++ * \param buf the buffer to parse (null terminated)
++ * \return -1 on error (parse error) or the index of the new sms message
++ */
++static int hfp_parse_cmgl(struct hfp_pvt *hfp, char *buf)
++{
++	int index = -1;
++
++	/* parse cmgl info in the following format:
++	 * +CMGL: <index>,<status>,<from number>\r\n<text>
++	 */
++
++	ast_debug(1, "[%s] parsing CMGL event '%s'\n", hfp->owner->id, buf);
++
++
++
++	if (!sscanf(buf, "+CMGL: %d", &index)) {
++		ast_debug(2, "[%s] error parsing CMGL event '%s'\n", hfp->owner->id, buf);
++		return -1;
++	}
++
++	ast_debug(1, "[%s] message index is '%d'\n", hfp->owner->id, index);
++
++	return index;
++}
++
++
++/*!
+  * \brief Parse a CMGR message.
+  * \param hfp an hfp_pvt struct
+  * \param buf the buffer to parse (null terminated)
+@@ -2232,7 +2385,7 @@
+ 	 */
+ 	state = 0;
+ 	s = strlen(buf);
+-	for (i = 0; i < s && s != 6; i++) {
++	for (i = 0; i < s && state != 6; i++) {
+ 		switch (state) {
+ 		case 0: /* search for start of the number section (,) */
+ 			if (buf[i] == ',') {
+@@ -2502,6 +2655,18 @@
+ }
+ 
+ /*!
++ * \brief Set the SMS charset.
++ * \param hfp an hfp_pvt struct
++ * \param smss charset string
++ */
++static int hfp_send_cscs(struct hfp_pvt *hfp, const char *  charset)
++{
++	char cmd[32];
++	snprintf(cmd, sizeof(cmd), "AT+CSCS=%s\r", charset);
++	return rfcomm_write(hfp->rsock, cmd);
++}
++
++/*!
+  * \brief Setup SMS new message indication.
+  * \param hfp an hfp_pvt struct
+  */
+@@ -2511,6 +2676,25 @@
+ }
+ 
+ /*!
++ * \brief Read all unread SMS message.
++ * \param hfp an hfp_pvt struct
++ */
++static int hfp_send_cmgl(struct hfp_pvt *hfp)
++{
++	return rfcomm_write(hfp->rsock, "AT+CMGL=\"REC UNREAD\"\r");
++}
++
++/*!
++ * \brief Send CGML test.
++ * \param hfp an hfp_pvt struct
++ */
++static int hfp_send_cmgl_test(struct hfp_pvt *hfp)
++{
++	return rfcomm_write(hfp->rsock, "AT+CMGL=?\r");
++}
++
++
++/*!
+  * \brief Read an SMS message.
+  * \param hfp an hfp_pvt struct
+  * \param index the location of the requested message
+@@ -3233,7 +3417,7 @@
+ 			ast_debug(1, "[%s] volume level synchronization successful\n", pvt->id);
+ 
+ 			/* set the SMS operating mode to text mode */
+-			if (pvt->has_sms) {
++			if (pvt->has_sms_indication || pvt->has_sms_polling) {
+ 				if (hfp_send_cmgf(pvt->hfp, 1) || msg_queue_push(pvt, AT_OK, AT_CMGF)) {
+ 					ast_debug(1, "[%s] error setting CMGF\n", pvt->id);
+ 					goto e_return;
+@@ -3250,7 +3434,12 @@
+ 			break;
+ 		case AT_CNMI:
+ 			ast_debug(1, "[%s] sms new message indication enabled\n", pvt->id);
+-			pvt->has_sms = 1;
++			pvt->has_sms_indication = 1;
++			pvt->has_sms_polling = 0;
++			if (hfp_send_cscs(pvt->hfp,"?") || msg_queue_push(pvt, AT_CSCS, AT_CSCS)) {
++				ast_debug(1, "[%s] error querying CSCS\n", pvt->id);
++				goto e_return;
++			}
+ 			break;
+ 		/* end initialization stuff */
+ 
+@@ -3267,10 +3456,17 @@
+ 		case AT_CHUP:
+ 			ast_debug(1, "[%s] successful hangup\n", pvt->id);
+ 			break;
++		case AT_CMGR:
++			ast_debug(1, "[%s] successfully read sms message\n", pvt->id);
++			pvt->incoming_sms = 0;
++			break;
+ 		case AT_CMGS:
+ 			ast_debug(1, "[%s] successfully sent sms message\n", pvt->id);
+ 			pvt->outgoing_sms = 0;
+ 			break;
++		case AT_CSCS:
++			ast_debug(1, "[%s] successfully set sms charset\n", pvt->id);
++			break;
+ 		case AT_VTS:
+ 			ast_debug(1, "[%s] digit sent successfully\n", pvt->id);
+ 			break;
+@@ -3284,6 +3480,12 @@
+ 		}
+ 		msg_queue_free_and_pop(pvt);
+ 	} else if (entry) {
++		if(entry->response_to == AT_CMGL ){
++			ast_debug(1, "[%s] no new SMS.\n", pvt->id);
++			msg_queue_free_and_pop(pvt);
++			return 0;
++		}
++
+ 		ast_debug(1, "[%s] received AT message 'OK' when expecting %s, ignoring\n", pvt->id, at_msg2str(entry->expected));
+ 	} else {
+ 		ast_debug(1, "[%s] received unexpected AT message 'OK'\n", pvt->id);
+@@ -3310,6 +3512,7 @@
+ 			|| entry->expected == AT_ERROR
+ 			|| entry->expected == AT_CMS_ERROR
+ 			|| entry->expected == AT_CMGR
++			|| entry->expected == AT_CMGL_TEST
+ 			|| entry->expected == AT_SMS_PROMPT)) {
+ 		switch (entry->response_to) {
+ 
+@@ -3341,13 +3544,22 @@
+ 			}
+ 			break;
+ 		case AT_CMGF:
+-			pvt->has_sms = 0;
++			pvt->has_sms_indication = 0;
++			pvt->has_sms_polling = 0;
+ 			ast_debug(1, "[%s] error setting CMGF\n", pvt->id);
+ 			ast_debug(1, "[%s] no SMS support\n", pvt->id);
+ 			break;
+ 		case AT_CNMI:
+-			pvt->has_sms = 0;
++			pvt->has_sms_indication = 0;
+ 			ast_debug(1, "[%s] error setting CNMI\n", pvt->id);
++			if (hfp_send_cmgl_test(pvt->hfp) || msg_queue_push(pvt, AT_CMGL_TEST, AT_CMGL_TEST)) {
++				ast_debug(1, "[%s] error testing CMGL\n", pvt->id);
++				goto e_return;
++			}
++			break;
++		case AT_CMGL_TEST:
++			pvt->has_sms_polling = 0;
++			ast_debug(1, "[%s] error testing CMGL\n", pvt->id);
+ 			ast_debug(1, "[%s] no SMS support\n", pvt->id);
+ 			break;
+ 		/* end initialization stuff */
+@@ -3372,6 +3584,9 @@
+ 			ast_debug(1, "[%s] error sending sms message\n", pvt->id);
+ 			pvt->outgoing_sms = 0;
+ 			break;
++		case AT_CSCS:
++			ast_verb(3, "%s Failed to set sms charset\n", pvt->id);
++			break;
+ 		case AT_VTS:
+ 			ast_debug(1, "[%s] error sending digit\n", pvt->id);
+ 			break;
+@@ -3385,6 +3600,11 @@
+ 		}
+ 		msg_queue_free_and_pop(pvt);
+ 	} else if (entry) {
++		if(entry->response_to == AT_CMGL ){
++			ast_debug(1, "[%s] received AT message 'ERROR' while polling for SMS.\n", pvt->id);
++			msg_queue_free_and_pop(pvt);
++			return 0;
++		}
+ 		ast_debug(1, "[%s] received AT message 'ERROR' when expecting %s, ignoring\n", pvt->id, at_msg2str(entry->expected));
+ 	} else {
+ 		ast_debug(1, "[%s] received unexpected AT message 'ERROR'\n", pvt->id);
+@@ -3586,7 +3806,9 @@
+ 	if ((msg = msg_queue_head(pvt)) && msg->expected == AT_CMGR) {
+ 		msg_queue_free_and_pop(pvt);
+ 
+-		if (hfp_parse_cmgr(pvt->hfp, buf, &from_number, &text)) {
++		if (hfp_parse_cmgr(pvt->hfp, buf, &from_number, &text)
++				|| msg_queue_push(pvt, AT_OK, AT_CMGR)) {
++
+ 			ast_debug(1, "[%s] error parsing sms message, disconnecting\n", pvt->id);
+ 			return -1;
+ 		}
+@@ -3616,6 +3838,78 @@
+ }
+ 
+ /*!
++ * \brief Handle AT+CMGL messages.
++ * \param pvt a mbl_pvt structure
++ * \param buf a null terminated buffer containing an AT message
++ * \retval 0 success
++ * \retval -1 error
++ */
++static int handle_response_cmgl(struct mbl_pvt *pvt, char *buf){
++
++	struct msg_queue_entry *msg;
++
++	if ((msg = msg_queue_head(pvt)) && msg->expected == AT_CMGL) {
++		msg_queue_free_and_pop(pvt);
++
++		int index = hfp_parse_cmgl(pvt->hfp, buf);
++		if (index > 0) {
++			ast_debug(1, "[%s] incoming sms message\n", pvt->id);
++
++			if (hfp_send_cmgr(pvt->hfp, index)
++					|| msg_queue_push(pvt, AT_CMGR, AT_CMGR)) {
++				ast_debug(1, "[%s] error sending CMGL to retrieve SMS message\n", pvt->id);
++				return -1;
++			}
++
++			pvt->incoming_sms = 1;
++			return 0;
++		} else {
++			ast_debug(1, "[%s] error parsing sms message index\n", pvt->id);
++			return 0;
++		}
++	} else if(msg->expected == AT_CMGL_TEST){
++		msg_queue_free_and_pop(pvt);
++		ast_debug(1, "[%s] CMGL test successfull, enabling sms polling\n", pvt->id);
++		pvt->has_sms_polling = 1;
++		ast_debug(1, "[%s] Querying charsets:\n", pvt->id);
++		if (hfp_send_cscs(pvt->hfp,"?") || msg_queue_push(pvt, AT_CSCS, AT_CSCS)) {
++			ast_debug(1, "[%s] error querying CSCS\n", pvt->id);
++			return 0;
++		}
++	} else {
++		ast_debug(1, "[%s] got unexpected +CMGL message, ignoring\n", pvt->id);
++	}
++
++	return 0;
++}
++
++/*!
++ * \brief Handle AT+CSCS messages.
++ * \param pvt a mbl_pvt structure
++ * \param buf a null terminated buffer containing an AT message
++ * \retval 0 success
++ * \retval -1 error
++ */
++static int handle_response_cscs(struct mbl_pvt *pvt, char *buf)
++{
++	struct msg_queue_entry *msg;
++
++	if ((msg = msg_queue_head(pvt)) && msg->expected == AT_CSCS) {
++		msg_queue_free_and_pop(pvt);
++		ast_verb(3, "Bluetooth Device %s supports following charsets:\n%s\n", pvt->id, buf);
++		ast_verb(3, "Setting charset to: %s\n", pvt->sms_charset);
++		if (hfp_send_cscs(pvt->hfp,pvt->sms_charset) || msg_queue_push(pvt, AT_OK, AT_CSCS)) {
++				ast_debug(1, "[%s] error setting CSCS\n", pvt->id);
++				return 0;
++		}
++	} else {
++		ast_debug(1, "[%s] got unexpected +CSCS message, ignoring\n", pvt->id);
++	}
++
++	return 0;
++}
++
++/*!
+  * \brief Send an SMS message from the queue.
+  * \param pvt a mbl_pvt structure
+  * \param buf a null terminated buffer containing an AT message
+@@ -3667,7 +3961,31 @@
+ 	return 0;
+ }
+ 
++static void *do_poll_sms(void *data)
++{
++	struct mbl_pvt *pvt = (struct mbl_pvt *)data;
+ 
++	sleep(20); //wait for initialization
++	ast_verb(3, "%s Start polling for SMS.\n", pvt->id);
++
++	while (!check_unloading()) {
++		if(pvt->has_sms_polling != 1)
++			break;
++		ast_mutex_lock(&pvt->lock);
++		if(pvt->hfp->initialized && (pvt->incoming == 0) && (pvt->outgoing == 0) ){
++			if (hfp_send_cmgl(pvt->hfp)
++			|| msg_queue_push(pvt, AT_CMGL, AT_CMGL)) {
++				msg_queue_free_and_pop(pvt);
++				ast_debug(1, "[%s] error polling sms message\n", pvt->id);
++			}
++		}
++		ast_mutex_unlock(&pvt->lock);
++		sleep(10); //polling frequency
++	}
++
++	return NULL;
++}
++
+ static void *do_monitor_phone(void *data)
+ {
+ 	struct mbl_pvt *pvt = (struct mbl_pvt *)data;
+@@ -3801,6 +4119,22 @@
+ 			}
+ 			ast_mutex_unlock(&pvt->lock);
+ 			break;
++		case AT_CSCS:
++			ast_mutex_lock(&pvt->lock);
++			if (handle_response_cscs(pvt, buf)) {
++				ast_mutex_unlock(&pvt->lock);
++				goto e_cleanup;
++			}
++			ast_mutex_unlock(&pvt->lock);
++			break;
++		case AT_CMGL:
++			ast_mutex_lock(&pvt->lock);
++			if (handle_response_cmgl(pvt, buf)) {
++				ast_mutex_unlock(&pvt->lock);
++				goto e_cleanup;
++			}
++			ast_mutex_unlock(&pvt->lock);
++			break;
+ 		case AT_CMGR:
+ 			ast_mutex_lock(&pvt->lock);
+ 			if (handle_response_cmgr(pvt, buf)) {
+@@ -4042,6 +4376,9 @@
+ 			pvt->monitor_thread = AST_PTHREADT_NULL;
+ 			return 0;
+ 		}
++		if (ast_pthread_create_background(&pvt->pollsms_thread, NULL, do_poll_sms, pvt) < 0) {
++				pvt->pollsms_thread = AST_PTHREADT_NULL;
++		}
+ 	} else {
+ 		if (ast_pthread_create_background(&pvt->monitor_thread, NULL, do_monitor_headset, pvt) < 0) {
+ 			pvt->monitor_thread = AST_PTHREADT_NULL;
+@@ -4309,7 +4646,9 @@
+ 	pvt->sco_socket = -1;
+ 	pvt->monitor_thread = AST_PTHREADT_NULL;
+ 	pvt->ring_sched_id = -1;
+-	pvt->has_sms = 1;
++	pvt->has_sms_indication = 1;
++	pvt->has_sms_polling = 1;
++	ast_copy_string(pvt->sms_charset,"ASCII",sizeof("ASCII"));
+ 
+ 	/* setup the smoother */
+ 	if (!(pvt->smoother = ast_smoother_new(DEVICE_FRAME_SIZE))) {
+@@ -4344,7 +4683,12 @@
+ 			/* group is set to 0 if invalid */
+ 			pvt->group = atoi(v->value);
+ 		} else if (!strcasecmp(v->name, "sms")) {
+-			pvt->has_sms = ast_true(v->value);
++			pvt->has_sms_indication = ast_true(v->value);
++			pvt->has_sms_polling = ast_true(v->value);
++		} else if (!strcasecmp(v->name, "sms_polling")) {
++			pvt->has_sms_polling = ast_true(v->value);
++		} else if (!strcasecmp(v->name, "sms_charset")) {
++			ast_copy_string(pvt->sms_charset, v->value, sizeof(pvt->sms_charset));
+ 		} else if (!strcasecmp(v->name, "nocallsetup")) {
+ 			pvt->no_callsetup = ast_true(v->value);
+ 
+@@ -4352,7 +4696,7 @@
+ 				ast_debug(1, "Setting nocallsetup mode for device %s.\n", pvt->id);
+ 		} else if (!strcasecmp(v->name, "blackberry")) {
+ 			pvt->blackberry = ast_true(v->value);
+-			pvt->has_sms = 0;
++			pvt->has_sms_indication = 0;
+ 		}
+ 	}
+ 
+@@ -4366,7 +4710,8 @@
+ 		pvt->hfp->rport = pvt->rfcomm_port;
+ 		pvt->hfp->nocallsetup = pvt->no_callsetup;
+ 	} else {
+-		pvt->has_sms = 0;
++		pvt->has_sms_indication = 0;
++		pvt->has_sms_polling = 0;
+ 	}
+ 
+ 	AST_RWLIST_WRLOCK(&devices);

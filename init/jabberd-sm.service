@@ -1,0 +1,11 @@
+[Unit]
+Description=Jabber IM Session Manager
+After=mysqld.service network.target
+BindTo=jabberd.service
+
+[Service]
+User=jabber
+ExecStart=/usr/bin/sm -c /etc/jabberd/sm.xml
+
+[Install]
+WantedBy=multi-user.target

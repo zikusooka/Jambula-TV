@@ -1,0 +1,26 @@
+--- branches/11/res/res_xmpp.c	2013/01/03 15:38:39	378411
++++ branches/11/res/res_xmpp.c	2013/01/11 23:04:53	378917
+@@ -431,6 +431,10 @@
+ 
+ 	ast_xmpp_client_disconnect(client);
+ 
++	if (client->filter) {
++		iks_filter_delete(client->filter);
++	}
++
+ 	if (client->stack) {
+ 		iks_stack_delete(client->stack);
+ 	}
+@@ -3394,12 +3398,6 @@
+ 		iks_disconnect(client->parser);
+ 	}
+ 
+-	/* Disconnecting the parser and going back to a disconnected state means any hooks should no longer be present */
+-	if (client->filter) {
+-		iks_filter_delete(client->filter);
+-		client->filter = NULL;
+-	}
+-
+ 	client->state = XMPP_STATE_DISCONNECTED;
+ 
+ 	return 0;

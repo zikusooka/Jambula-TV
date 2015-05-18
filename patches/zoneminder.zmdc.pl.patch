@@ -1,0 +1,13 @@
+--- zmdc.pl.orig	2014-03-24 16:15:07.312084481 +0300
++++ zmdc.pl	2014-03-24 17:18:24.757700019 +0300
+@@ -59,6 +59,10 @@
+ $ENV{SHELL} = '/bin/sh' if exists $ENV{SHELL};
+ delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
+ 
++# AEx Bug fix for USB webcams like Logitech Quickam STX
++$ENV{LD_PRELOAD} = 'LIBDIR/libv4l/v4l1compat.so';
++$ENV{LD_PRELOAD} = 'LIBDIR/libv4l/v4l2convert.so';
++
+ my @daemons = (
+     'zmc',
+     'zma',

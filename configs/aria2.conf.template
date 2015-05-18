@@ -1,0 +1,104 @@
+dir = ARIA2_DOWNLOADS_DIRECTORY
+log = ARIA2_LOG_FILE
+
+log-level = debug
+console-log-level = info
+
+save-session = ARIA2_SAVE_SESSION_FILE
+
+daemon = true
+
+disable-ipv6 = true
+
+user-agent = ""
+
+max-concurrent-downloads = 5
+max-connection-per-server = 1
+
+continue = true
+
+check-integrity = true
+
+lowest-speed-limit = 30K
+
+min-split-size = 5M
+split = 5
+
+remote-time = true
+
+check-certificate = true
+
+http-accept-gzip = true
+
+enable-http-pipelining = true
+
+# FTP
+ftp-pasv = true
+ftp-reuse-connection = true
+
+# Bittorent
+bt-exclude-tracker = "*"
+bt-external-ip = "NETWORK_IP_ADDRESS"
+bt-max-open-files = 100
+bt-max-peers = 55
+bt-min-crypto-level = arc4
+bt-require-crypto = true
+#bt-request-peer-speed-limit = 5OK
+bt-save-metadata = false
+bt-stop-timeout = 0
+bt-tracker-connect-timeout = 10
+bt-tracker-interval = 900
+bt-tracker-timeout = 10
+
+enable-dht = true
+
+dht-listen-port = 6881
+
+enable-peer-exchange = true
+
+follow-torrent = true
+
+listen-port = 6881
+
+max-overall-upload-limit = 1K
+max-overall-download-limit = 0
+
+#max-upload-limit = 1K
+#max-download-limit = 0
+
+peer-id-prefix = ""
+
+seed-ratio = 1.0
+
+seed-time = 900
+
+#metalink-language = en-GB
+#metalink-location = uk
+#metalink-os = 
+#metalink-preferred-protocol = http
+
+enable-rpc = true
+rpc-listen-all = true
+#rpc-listen-port =
+#rpc-user = username
+#rpc-passwd = passwd
+
+allow-overwrite = false
+always-resume = true
+auto-file-renaming = false
+
+disk-cache = 0
+
+event-poll = epoll
+
+file-allocation = falloc 
+
+# Scripts
+on-bt-download-complete = ARIA2_DOWNLOAD_COMPLETE_BT_SCRIPT
+on-download-complete = ARIA2_DOWNLOAD_COMPLETE_SCRIPT
+on-download-error = ARIA2_DOWNLOAD_ERROR_SCRIPT
+on-download-pause = ARIA2_DOWNLOAD_PAUSE_SCRIPT
+on-download-start = ARIA2_DOWNLOAD_START_SCRIPT
+on-download-stop = ARIA2_DOWNLOAD_STOP_SCRIPT
+
+summary-interval = 0

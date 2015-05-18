@@ -1,0 +1,35 @@
+server {
+         listen 8520;
+         server_name JambulaCAM;
+         root /usr/share/JambulaTV/html/zm;
+         index index.php;
+
+         location / {
+         }
+
+         error_page  404 /index.html;
+         error_page  500 502 503 504  /50x.html;
+        
+	 location = /50x.html {
+	     root /usr/share/JambulaTV/html;
+         }
+
+	 location ~ \.php$ {
+             include  includes/php_params;
+         }
+	
+	 location /zms-inetd {
+   	     proxy_pass  http://127.0.0.1:8521;
+	 } 
+
+    	 location ~* \.(cgi|chi)$ {
+             include  includes/cgi_params;
+    	 }  
+
+	 location ~* .*\.(?:m4a|mp4|mov)$ {
+	     mp4;
+             mp4_buffer_size     1M;
+             mp4_max_buffer_size 5M;
+    	 }
+
+       }

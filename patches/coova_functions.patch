@@ -1,0 +1,11 @@
+--- functions.orig	2012-09-26 21:30:56.703773667 +0300
++++ functions	2012-09-26 21:33:01.162770567 +0300
+@@ -83,7 +83,7 @@
+ uamlisten	$HS_UAMLISTEN
+ uamport         $HS_UAMPORT
+ dhcpif		$HS_LANIF
+-uamallowed	"www.coova.org${HS_UAMSERVER:+,$HS_UAMSERVER}$webadmin$uamallow"
++uamallowed	"$HS_UAMSERVER$webadmin$uamallow"
+ uamanydns
+ $(cat $configs1)
+ $HS_RAW_CONFIG1

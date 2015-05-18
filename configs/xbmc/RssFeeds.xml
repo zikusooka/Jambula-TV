@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rssfeeds>
+  <!--RSS feeds. To have multiple feeds, just add a feed to the set. You can also have multiple sets.-->
+  <!--To use different sets in your skin, each must be called from skin with a unique id.-->
+
+  <set id="1">
+<!-- CHIMP REPORTS -->
+<!-- Biggest News -->
+	<feed updateinterval="30">http://chimpreports.com/?feed=rss2&cat=6</feed>
+<!-- Business -->
+	<feed updateinterval="30">http://chimpreports.com/?feed=rss2&cat=3</feed>
+<!-- Health -->
+	<feed updateinterval="30">http://chimpreports.com/?feed=rss2&cat=5</feed>
+<!-- Regional -->
+	<feed updateinterval="30">http://chimpreports.com/?feed=rss2&cat=10</feed>
+<!-- Sports -->
+	<feed updateinterval="30">http://chimpreports.com/?feed=rss2&cat=11</feed>
+<!-- Entertainment -->
+	<feed updateinterval="30">http://chimpreports.com/?feed=rss2&cat=4</feed>
+  </set>
+
+  <set id="2">
+
+<!-- BBC NEWS -->
+	<feed updateinterval="30">http://feeds.bbci.co.uk/news/rss.xml</feed>
+	<feed updateinterval="30">http://feeds.bbci.co.uk/news/world/africa/rss.xml</feed>
+  </set>
+
+<!-- ALL AFRICA -->
+ <set id="3">
+	<feed updateinterval="30">http://allafrica.com/tools/headlines/rdf/uganda/headlines.rdf</feed>
+	<feed updateinterval="30">http://allafrica.com/tools/headlines/rdf/kenya/headlines.rdf</feed>
+  </set>
+
+<!-- NEW VISION -->
+<set id="4">
+	<feed updateinterval="30">http://www.newvision.co.ug/feed.aspx?cat_id=1</feed>
+	<feed updateinterval="30">http://www.newvision.co.ug/feed.aspx?cat_id=3</feed>
+	<feed updateinterval="30">http://www.newvision.co.ug/feed.aspx?cat_id=397</feed>
+  </set>
+
+<!-- MONITOR -->
+ <set id="5">
+	<feed updateinterval="30">http://www.monitor.co.ug/-/691150/691150/-/view/asFeed/-/11emxavz/-/index.xml </feed>
+
+  </set>
+
+</rssfeeds>

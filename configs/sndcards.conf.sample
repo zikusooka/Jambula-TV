@@ -1,0 +1,9 @@
+# Create /dev/dsp* /dev/mixer* entries
+install snd-pcm /sbin/modprobe --ignore-install snd-pcm && /sbin/modprobe snd-pcm-oss && /sbin/modprobe snd-seq-device && /sbin/modprobe snd-seq-oss
+
+# Order the cards # Note: IDs found using 'aplay -L' command
+#options snd_hda_intel id=Generic,VT82xx index=2,0
+#
+# USB Audio device for webcam
+options snd_usb_audio index=5
+

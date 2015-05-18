@@ -1,0 +1,13 @@
+[Unit]
+Description=CoovaChilli WiFi Access and Captive Portal Server.
+After=syslog.target network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/jambulatv-chilli start
+ExecReload=/usr/bin/jambulatv-chilli restart
+ExecStop=/usr/bin/jambulatv-chilli stop
+User=root
+
+[Install]
+WantedBy=multi-user.target

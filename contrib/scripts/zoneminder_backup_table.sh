@@ -1,0 +1,35 @@
+#!/bin/sh
+clear
+
+PROJECT_NAME=JambulaTV
+PROJECT_VERSION=2.0
+ROOT_DIR=/JambulaTV
+PROJECT_BASE_DIR=$ROOT_DIR/RELEASE-$PROJECT_VERSION
+PROJECT_CONFIGS_DIR=$PROJECT_BASE_DIR/configs
+
+ZONEMINDER_DB_HOST=localhost
+ZONEMINDER_DB_NAME=zm
+ZONEMINDER_DB_SCHEMA=$INSTALL_SRC_DIR/ZoneMinder/db/zm_create.sql
+ZONEMINDER_DB_USER=jambula
+ZONEMINDER_DB_PASS=jambulazm1
+
+ZONEMINDER_DB_TABLE=$1
+
+
+if [ "x$ZONEMINDER_DB_TABLE" = "x" ]
+then
+clear
+echo "Usage: `basename $0` [TABLE_NAME e.g. Config]
+"
+exit 1
+fi
+
+
+
+mysqldump -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME $ZONEMINDER_DB_TABLE > $PROJECT_CONFIGS_DIR/zoneminder/$ZONEMINDER_DB_TABLE.sql
+
+echo "I've dumped the following table:
+
+$PROJECT_CONFIGS_DIR/zoneminder/$ZONEMINDER_DB_TABLE.sql
+
+"

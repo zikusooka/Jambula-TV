@@ -1,0 +1,11 @@
+--- clients.conf.default	2014-08-21 16:57:59.255290753 +0300
++++ clients.conf	2014-08-21 16:58:46.831890721 +0300
+@@ -107,7 +107,7 @@
+ 	#  The default secret below is only for testing, and should
+ 	#  not be used in any real environment.
+ 	#
+-	secret = testing123
++	secret = FREERADIUS_DB_PASS
+ 
+ 	#
+ 	#  Old-style clients do not send a Message-Authenticator

@@ -1,0 +1,63 @@
+--- /usr/src/jambula/coova-chilli/miniportal/config-local.sh	2014-02-27 22:04:26.886435050 +0300
++++ config-local.sh	2014-03-15 15:06:12.919500151 +0300
+@@ -23,7 +23,7 @@
+ COOVA_SESSIONID=$CHI_SESSION_ID
+ COOVA_CHALLENGE=$CHI_CHALLENGE
+ PORTAL_SESSIONID=${COOKIE_PORTAL_SESSIONID:-$SESSIONID}
+-FORM_userurl=${FORM_userurl:-http://www.coova.org/}
++FORM_userurl=${FORM_userurl:-$HS_PROVIDER_LINK}
+     
+ http_redirect2() {
+ cat <<EOF
+@@ -89,6 +89,23 @@
+     echo "<div id=\"body\">"
+ }
+ 
++header_jambula() {
++    echo "<html><head>"
++
++    uamfile title 0
++
++    echo "<meta http-equiv=\"Cache-control\" content=\"no-cache\"/>
++<meta http-equiv=\"Pragma\" content=\"no-cache\"/>"
++
++    echo "<script>"
++    uamfile "js" 0 
++    echo "</script>"
++
++    echo "$1</head><body$2>"
++
++    echo "<div id=\"body\">"
++}
++
+ footer() {
+     echo "</div>" 
+ 
+@@ -96,7 +113,7 @@
+ 
+     echo "<table style=\"clear:both;margin:auto;padding-top:10px;\" height=\"30\">
+ <tr><td valign=\"center\" align=\"center\" style=\"color:#666;font-size:60%;\">Powered by</td>
+-<td valign=\"center\" align=\"center\"><a href=\"http://coova.org/\"><img border=0 src=\"coova.jpg\"></a>
++<td valign=\"center\" align=\"center\"><a href=\"$HS_PROVIDER_LINK\"><img border=0 src=\"coova.jpg\"></a>
+ </td></tr></table></body></html>"
+ }
+ 
+@@ -212,11 +229,17 @@
+     (uamfile "$file" 0
+ 	echo
+ 	echo "-------------------------------------------------"
+-	echo "Powered by Coova - http://www.coova.org/"
++	echo "Powered by $HS_PROVIDER - $HS_PROVIDER_LINK"
+ 	echo) | /usr/sbin/sendmail -t -f "$from" && return 0
+     return 1;
+ }
+ 
++check_dns_jambula() {
++REMOTE_DOMAIN_NAME=google.com
++host -W 1 $REMOTE_DOMAIN_NAME 208.67.222.222 > /dev/null 2>&1
++DNS_STATUS=$?
++}
++
+ FORM_username="${FORM_username:-$FORM_UserName}"
+ FORM_username="${FORM_username:-$FORM_Username}"
+ FORM_password="${FORM_password:-$FORM_Password}"

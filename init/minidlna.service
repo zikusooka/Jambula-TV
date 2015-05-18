@@ -1,0 +1,12 @@
+[Unit]
+Description=MiniDLNA is a DLNA/UPnP-AV server software
+After=syslog.target local-fs.target network.target coova-chilli.service
+
+[Service]
+Type=forking
+User=minidlna
+Group=minidlna
+ExecStart=/usr/sbin/minidlnad -f /etc/JambulaTV/minidlna.conf -P /var/run/minidlna.pid
+
+[Install]
+WantedBy=multi-user.target

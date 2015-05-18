@@ -1,0 +1,51 @@
+<HTML>
+
+<table border="0" id="statusTable" style="padding-top:4px;font-size:70%">
+<tr id="connectRow">
+<td><span id="statusMessage">Connected</span></td>
+<td><a href="#" onClick="return disconnect();">logout</a></td>
+</tr>
+<tr id="sessionIdRow">
+<td id="sessionIdLabel" class="chilliLabel"><b>Session ID</b></td>
+<td id="sessionId" class="chilliValue">Not available</td>
+</tr>
+<tr id="sessionTimeoutRow">
+<td id="sessionTimeoutLabel" class="chilliLabel"><b>Max Session Time</b></td>
+<td id="sessionTimeout" class="chilliValue">Not available</td>
+</tr>
+<tr id="idleTimeoutRow">
+<td id="idleTimeoutLabel" class="chilliLabel"><b>Max Idle Time</b></td>
+<td id="idleTimeout" class="chilliValue">Not available</td>
+</tr>
+<tr id="startTimeRow">
+<td id="startTimeLabel" class="chilliLabel"><b>Start Time</b></td>
+<td id="startTime" class="chilliValue">Not available</td>
+</tr>
+<tr id="sessionTimeRow">
+<td id="sessionTimeLabel" class="chilliLabel"><b>Session Time</b></td>
+<td id="sessionTime" class="chilliValue">Not available</td>
+</tr>
+<tr id="idleTimeRow">
+<td id="idleTimeLabel" class="chilliLabel"><b>Idle Time</b></td>
+<td id="idleTime" class="chilliValue">Not available</td>
+</tr>
+<tr id="inputOctetsRow">
+<td id="inputOctetsLabel" class="chilliLabel"><b>Downloaded</b></td>
+<td id="inputOctets" class="chilliValue">N/A</td>
+</tr>
+<tr id="outputOctetsRow">
+<td id="outputOctetsLabel" class="chilliValueLabel"><b>Uploaded</b></td>
+<td id="outputOctets" class="chilliValue">N/A</td>
+</tr>
+<tr id="originalURLRow">
+<td id="originalURLLabel" class="chilliValueLabel"><b>Original URL</b></td>
+<td id="originalURL" class="chilliValue">N/A</td>
+</tr>
+</table>
+
+<script language="javascript" type="text/javascript">
+var chilliController = { interval:30 , host:"chilli" , port:false , ident:'00' , ssl:false , uamService: false };
+</script>
+<script language="javascript" type="text/javascript" src="ChilliLibrary.js"></script>
+<script language="javascript" type="text/javascript" src="chilliController.js"></script>
+</HTML>

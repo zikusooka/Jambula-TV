@@ -1,0 +1,315 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>$LOCATION_NAME</title>
+  <link href="./splash_files/style.css" rel="stylesheet" type="text/css">
+
+  <script language="javascript" type="text/javascript">
+var chilliController = { interval:30 , host:"chilli" , port:false , ident:'00' , ssl:false , uamService: false };
+  </script>
+
+  <script language="javascript" type="text/javascript" src="ChilliLibrary.js">
+  </script>
+
+  <script language="javascript" type="text/javascript" src="chilliController.js">
+  </script>
+
+  <script language="javascript" type="text/javascript">
+    var blur = 0;
+    var starttime = new Date();
+    var startclock = starttime.getTime();
+    var mytimeleft = 0;
+
+    function doTime() {
+      window.setTimeout( "doTime()", 1000 );
+      t = new Date();
+      time = Math.round((t.getTime() - starttime.getTime())/1000);
+      if (mytimeleft) {
+        time = mytimeleft - time;
+        if (time <= 0) {
+          window.location = "$loginpath?res=popup3&uamip=$uamip&uamport=$uamport";
+        }
+      }
+      if (time < 0) time = 0;
+      hours = (time - (time % 3600)) / 3600;
+      time = time - (hours * 3600);
+      mins = (time - (time % 60)) / 60;
+      secs = time - (mins * 60);
+      if (hours < 10) hours = "0" + hours;
+      if (mins < 10) mins = "0" + mins;
+      if (secs < 10) secs = "0" + secs;
+      title = "Online time: " + hours + ":" + mins + ":" + secs;
+      if (mytimeleft) {
+        title = "Remaining time: " + hours + ":" + mins + ":" + secs;
+      }
+      if(document.all || document.getElementById){
+         document.title = title;
+      }
+      else {   
+        self.status = title;
+      }
+    }
+
+    function popUp(URL) {
+      if (self.name != "chillispot_popup") {
+        chillispot_popup = window.open(URL, 'chillispot_popup', 'toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=0,width=500,height=375');
+      }
+    }
+
+    function doOnLoad(result, URL, userurl, redirurl, timeleft) {
+      if (timeleft) {
+        mytimeleft = timeleft;
+      }
+      if ((result == 1) && (self.name == "chillispot_popup")) {
+        doTime();
+      }
+      if ((result == 1) && (self.name != "chillispot_popup")) {
+        chillispot_popup = window.open(URL, 'chillispot_popup', 'toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=0,width=500,height=375');
+      }
+      if ((result == 2) || result == 5) {
+        document.form1.UserName.focus()
+      }
+      if ((result == 2) && (self.name != "chillispot_popup")) {
+        chillispot_popup = window.open('', 'chillispot_popup', 'toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=0,width=400,height=200');
+        chillispot_popup.close();
+      }
+      if ((result == 12) && (self.name == "chillispot_popup")) {
+        doTime();
+        if (redirurl) {
+          opener.location = redirurl;
+        }
+        else if (opener.home) {
+          opener.home();
+        }
+        else {
+          opener.location = "about:home";
+        }
+        self.focus();
+        blur = 0;
+      }
+      if ((result == 13) && (self.name == "chillispot_popup")) {
+        self.focus();
+        blur = 1;
+      }
+    }
+
+    function doOnBlur(result) {
+      if ((result == 12) && (self.name == "chillispot_popup")) {
+        if (blur == 0) {
+          blur = 1;
+          self.focus();
+        }
+      }
+    }
+  </script>
+
+<!-- Popup a seperate window showing stats -->
+  <script language="javascript" type="text/javascript">
+function popup_meter(url) {
+        newwindow = window.open(url, 'name', 'toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=0,width=300,height=300');
+	if (window.focus) {newwindow.focus()}
+	return false;
+}
+  </script>
+
+<!-- Timer of 600 secs, then redirect -->
+  <script type="text/javascript">
+(function () {
+    var timeLeft = 600,
+        cinterval;
+
+    var timeDec = function (){
+        timeLeft--;
+        document.getElementById('countdown').innerHTML = timeLeft;
+        if(timeLeft === 0){
+            clearInterval(cinterval);
+        }
+    };
+
+    cinterval = setInterval(timeDec, 1000);
+})(); 
+  </script>
+
+</head>
+
+
+
+<!-- Not working yet !!!
+<body onLoad="javascript:doOnLoad($result, '$loginpath?res=popup2&uamip=$uamip&uamport=$uamport&userurl=$userurl&redirurl=$redirurl&timeleft=$timeleft','$userurldecode', '$redirurldecode', '$timeleft')" onBlur = 'javascript:doOnBlur($result)'>
+-->
+
+
+<body>
+
+<table style="text-align: left; width: 100%; height: 100%; margin-left: auto; margin-right: auto;" border="0" cellpadding="0" cellspacing="0">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+      <div id="wrapper">
+      <div id="header">
+      <div id="nav">&nbsp;<a href="#About_Us">About
+us</a>&nbsp; |&nbsp; <a href="$HS_PROVIDER_LINK/">Products &amp; Services&nbsp; |&nbsp; </a><a href="#Contact_Us">Contact us</a> </div>
+      <div id="bg"> </div>
+      <div id="main-content">
+      <div id="left-column">
+<div id="logo"><img src="./splash_files/big-paw.gif" alt="Pet Logo" align="left" height="45" width="42"> <span style="font-weight: bold;" class="logotxt1">$LOCATION_NAME</span><span class="logotxt2"><br>
+      <span style="margin-left: 15px;">Smart technologies&nbsp; for
+your
+hotspot<br>
+      </span></span></div>
+      <div class="box">
+      <div style="text-align: left;"> </div>
+      
+      
+      <div> 
+      <h2 style="text-align: left; color: rgb(250, 115, 147);"><big><big><span style="font-weight: bold;"><span style="color: rgb(102, 102, 102);">Internet is:&nbsp;</span><span style="color: rgb(51, 255, 51);"> <span style="color: red;">OFF</span></span></span></big></big><br>
+      </h2>
+      <big><big><span style="font-weight: bold;"><span style="color: rgb(51, 255, 51);"></span></span></big></big><br style="font-weight: bold; color: rgb(51, 51, 255);">
+      <div style="text-align: left;"><span style="font-weight: bold; color: rgb(51, 51, 255);"><span style="color: black;">
+
+</span></span>
+
+
+<span style="font-weight: bold; color: rgb(51, 51, 255);"><span style="color: black;">Currently,
+you will not be able to access the Internet using this HotSpot.&nbsp; This
+may be due to a temporary problem.&nbsp; If so, please contact your Network
+Administrator or try again later.&nbsp; I will try to redirect you to</span> 
+      <a href="${FORM_redirurl:-$FORM_userurl}">${FORM_redirurl:-$FORM_userurl}</a>
+      <br>
+
+<span style="color: black;">in <span id="countdown">600</span> seconds ...</span></span><br>
+      </div>
+      <br>
+      </div>
+      </div>
+      
+      <div class="box">
+      <h1 style="color: rgb(250, 115, 147);">Available Resources</h1>
+      <p> <b>1. Watch <a href="http://$HS_UAMLISTEN:8511/LiveTV.ts" target="_blank">Live TV</a>
+      <br>
+      <br>
+2. Watch <a href="http://$HS_UAMLISTEN:8511/Video.ts" target="_blank">Movies and Shows</a> <br>
+      <br>
+3. Make phone calls using our web based <a href="http://$HS_UAMLISTEN/sipml5/call.html" target="_blank">SIP client</a>
+      <br>
+      </b><b><br>
+4. View <a href="http://$HS_UAMLISTEN:8520/index.php?view=montage&group=0" target="_blank">CCTV</a> security cameras.
+      <br>
+      </b>
+      
+      <br>
+      <b>5. Show <a href="#" onclick="return popup_meter('session_info.html')">current session info</a> in a separate Window <br>
+      <br>
+
+      <b>6. Please <a href="#" onClick="return disconnect();">Disconnect</a> from portal <br>
+      <br>
+Thank you for using our services and products. <br>
+You can learn more about this product at: 
+<a href="$HS_PROVIDER_LINK" target="_blank">$HS_PROVIDER</a>
+
+      
+      </b></p>
+      </div>
+      <br>
+      </div>
+      <div id="right-column"> 
+
+<!-- AEx Labs Connection Statistics -->
+      <div class="sidebar">
+      <h3><a name="Curent_Session"></a>Current Session Info</h3>
+      </div>
+      <div class="box">
+<table border="0" id="statusTable" style="padding-left:5px;font-size:70%">
+<tr id="connectRow">
+<td><span id="statusMessage">Connected</span></td>
+<td><a href="#" onClick="return disconnect();">logout</a></td>
+</tr>
+<tr id="sessionIdRow">
+<td id="sessionIdLabel" class="chilliLabel"><b>Session ID</b></td>
+<td id="sessionId" class="chilliValue">Not available</td>
+</tr>
+<tr id="sessionTimeoutRow">
+<td id="sessionTimeoutLabel" class="chilliLabel"><b>Max Session Time</b></td>
+<td id="sessionTimeout" class="chilliValue">Not available</td>
+</tr>
+<tr id="idleTimeoutRow">
+<td id="idleTimeoutLabel" class="chilliLabel"><b>Max Idle Time</b></td>
+<td id="idleTimeout" class="chilliValue">Not available</td>
+</tr>
+<tr id="startTimeRow">
+<td id="startTimeLabel" class="chilliLabel"><b>Start Time</b></td>
+<td id="startTime" class="chilliValue">Not available</td>
+</tr>
+<tr id="sessionTimeRow">
+<td id="sessionTimeLabel" class="chilliLabel"><b>Session Time</b></td>
+<td id="sessionTime" class="chilliValue">Not available</td>
+</tr>
+<tr id="idleTimeRow">
+<td id="idleTimeLabel" class="chilliLabel"><b>Idle Time</b></td>
+<td id="idleTime" class="chilliValue">Not available</td>
+</tr>
+<tr id="inputOctetsRow">
+<td id="inputOctetsLabel" class="chilliLabel"><b>Downloaded</b></td>
+<td id="inputOctets" class="chilliValue">N/A</td>
+</tr>
+<tr id="outputOctetsRow">
+<td id="outputOctetsLabel" class="chilliValueLabel"><b>Uploaded</b></td>
+<td id="outputOctets" class="chilliValue">N/A</td>
+</tr>
+<tr id="originalURLRow">
+<td id="originalURLLabel" class="chilliValueLabel"><b>Original URL</b></td>
+<td id="originalURL" class="chilliValue">N/A</td>
+</tr>
+</table>
+
+
+      </div>
+
+
+      <div class="sidebar">
+      <h3><a name="About_Us"></a>About Us</h3>
+
+      <p>$HS_PROVIDER specializes in providing customized UNIX
+solutions to offices and homes in Africa. We are one of the few
+companies in East Africa that are helping new businesses and
+organizations use non-proprietary and 'less expensive 'open-source'
+solutions.&nbsp; <a href="$HS_PROVIDER_LINK">Read more</a> ...<br>
+      </p>
+</div>
+      
+      <div class="sidebar">
+      <h3><a name="Contact_Us"></a>Contact Us</h3>
+ 
+      
+      <div class="box">
+      <ul><li>Technical support: <span style="font-weight: bold;"><a href="mailto:support@$HS_DNS_DOMAIN">Email</a></span></li><li>Sales and Quotes:<br>
+          <span style="font-weight: bold;">077-633-8000</span></li><li>Learn more:<br>
+          <a style="font-weight: bold;" href="$HS_PROVIDER_LINK/">Website</a></li></ul></div>
+
+</div>
+
+
+</div>
+   
+
+
+<div id="footer">Copyright �
+2014 <a href="http://www.$HS_DNS_DOMAIN">$LOCATION_NAME</a>. All rights
+reserved.<span style="">       
+      <br>
+This HotSpot is powered by:
+<a href="$HS_PROVIDER_LINK/">$HS_PROVIDER</a>
+      </span></div>
+      </div>
+      </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<br>
+
+</body></html>

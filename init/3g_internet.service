@@ -1,0 +1,9 @@
+[Unit]
+Description=JambulaTV 3G Internet via USB Hotplug
+After=syslog.target network.target
+
+[Service]
+ExecStart=/bin/sh -c "/usr/bin/jambulatv-ppp-modem-add"
+ExecStop=/bin/sh -c "/usr/bin/jambulatv-ppp-modem-remove"
+Type=forking
+RemainAfterExit=yes

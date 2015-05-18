@@ -1,0 +1,83 @@
+<s2s>
+  <id>s2s</id>
+
+  <pidfile>/var/lib/jabberd/pid/s2s.pid</pidfile>
+
+  <router>
+    <ip>127.0.0.1</ip>            
+    <port>5347</port>            
+    <user>jabberd</user>          
+    <pass>JABBERD_PASSWORD_CHANGE_ME</pass>           
+    <!--
+    <pemfile>/etc/jabberd/server.pem</pemfile>
+    -->
+    <retry>
+      <init>3</init>
+      <lost>3</lost>
+      <sleep>2</sleep>
+    </retry>
+  </router>
+
+  <log type='file'> <!-- "syslog", "file" or "stdout" -->
+    <file>/var/log/JambulaTV/jabberd/s2s.log</file>
+  </log>
+
+  <local>
+    <ip>0.0.0.0</ip>
+    <port>5269</port>
+        <!--
+    <origin>1.2.3.4</origin>
+    -->
+    <!--
+    <pemfile>/etc/jabberd/server.pem</pemfile>
+    -->
+    <!--
+    <verify-mode>7</verify-mode>
+    -->
+    <!--
+    <cachain>/etc/jabberd/cachain.pem</cachain>
+    -->
+  </local>
+
+  <io>
+    <max_fds>1024</max_fds>
+    <limits>
+      <stanzasize>65535</stanzasize>
+    </limits>
+    <!--
+    <compression/>
+    -->
+  </io>
+
+  <check>
+    <interval>60</interval>
+    <queue>60</queue>
+    <retry>300</retry>
+    <idle>86400</idle>
+    <keepalive>0</keepalive>
+    <dnscache>300</dnscache>
+  </check>
+
+  <stats>
+    <!--
+    <packet>/var/lib/jabberd/stats/s2s.packets</packet>
+    -->
+  </stats>
+
+  <lookup>
+    <srv>xmpp-server</srv>
+    <srv>jabber</srv>
+    <!--
+    <resolve-ipv6/>
+    -->
+    <min-ttl>30</min-ttl>
+    <max-ttl>86400</max-ttl>
+    <etc-hosts-ttl>86400</etc-hosts-ttl>
+    <bad-host-timeout>3600</bad-host-timeout>
+    <!--
+    <no-cache/>
+    -->
+  </lookup>
+
+  <out-reuse-conn/>
+</s2s>

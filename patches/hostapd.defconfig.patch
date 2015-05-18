@@ -1,0 +1,65 @@
+--- /tmp/defconfig	2015-03-02 00:06:54.035083108 +0300
++++ /usr/src/jambulatv/hostap/hostapd/defconfig	2015-03-02 00:41:56.400672626 +0300
+@@ -111,9 +111,9 @@
+ #CONFIG_EAP_FAST=y
+ 
+ # Wi-Fi Protected Setup (WPS)
+-#CONFIG_WPS=y
++CONFIG_WPS=y
+ # Enable UPnP support for external WPS Registrars
+-#CONFIG_WPS_UPNP=y
++CONFIG_WPS_UPNP=y
+ # Enable WPS support with NFC config method
+ #CONFIG_WPS_NFC=y
+ 
+@@ -135,7 +135,7 @@
+ #CONFIG_RADIUS_SERVER=y
+ 
+ # Build IPv6 support for RADIUS operations
+-CONFIG_IPV6=y
++#CONFIG_IPV6=y
+ 
+ # IEEE Std 802.11r-2008 (Fast BSS Transition)
+ #CONFIG_IEEE80211R=y
+@@ -145,14 +145,14 @@
+ #CONFIG_DRIVER_RADIUS_ACL=y
+ 
+ # IEEE 802.11n (High Throughput) support
+-#CONFIG_IEEE80211N=y
++CONFIG_IEEE80211N=y
+ 
+ # Wireless Network Management (IEEE Std 802.11v-2011)
+ # Note: This is experimental and not complete implementation.
+-#CONFIG_WNM=y
++CONFIG_WNM=y
+ 
+ # IEEE 802.11ac (Very High Throughput) support
+-#CONFIG_IEEE80211AC=y
++CONFIG_IEEE80211AC=y
+ 
+ # Remove debugging code that is printing out debug messages to stdout.
+ # This can be used to reduce the size of the hostapd considerably if debugging
+@@ -161,7 +161,7 @@
+ 
+ # Add support for writing debug log to a file: -f /tmp/hostapd.log
+ # Disabled by default.
+-#CONFIG_DEBUG_FILE=y
++CONFIG_DEBUG_FILE=y
+ 
+ # Add support for sending all debug messages (regardless of debug verbosity)
+ # to the Linux kernel tracing facility. This helps debug the entire stack by
+@@ -278,7 +278,7 @@
+ #CONFIG_INTERWORKING=y
+ 
+ # Hotspot 2.0
+-#CONFIG_HS20=y
++CONFIG_HS20=y
+ 
+ # Enable SQLite database support in hlr_auc_gw, EAP-SIM DB, and eap_user_file
+ #CONFIG_SQLITE=y
+@@ -313,4 +313,4 @@
+ # For more details refer to:
+ # http://wireless.kernel.org/en/users/Documentation/acs
+ #
+-#CONFIG_ACS=y
++CONFIG_ACS=y
