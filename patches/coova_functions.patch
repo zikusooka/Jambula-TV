@@ -1,5 +1,14 @@
---- functions.orig	2012-09-26 21:30:56.703773667 +0300
-+++ functions	2012-09-26 21:33:01.162770567 +0300
+--- functions.original	2015-05-28 22:30:29.632032052 +0300
++++ functions	2015-05-28 22:34:05.440827359 +0300
+@@ -54,7 +54,7 @@
+ HS_PAP_OK=${HS_PAP_OK:-on}
+ HS_DNS1=${HS_DNS1:-$HS_DNS}
+ HS_DNS1=${HS_DNS1:-$(grep '^nameserver' /etc/resolv.conf | head -n1 | awk '{print $2}')}
+-HS_WANIF=${HS_WANIF:-$(route -n|grep '^0.0.0.0'|head -n1|awk '{print $8}')}
++HS_WANIF=${HS_WANIF:-$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')}
+ 
+ bailout() { echo $1; exit; }
+ 
 @@ -83,7 +83,7 @@
  uamlisten	$HS_UAMLISTEN
  uamport         $HS_UAMPORT

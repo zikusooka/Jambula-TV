@@ -4,7 +4,7 @@
 # Variables
 TIME = 15000  # ms
 ICON = "jambulatv-logo.png"
-KODI_GUI_SETTINGS="/JambulaTV/.xbmc/userdata/guisettings.xml"
+KODI_GUI_SETTINGS = "/JambulaTV/.kodi/userdata/guisettings.xml"
 
 # Import modules
 import sys
@@ -34,6 +34,8 @@ for services in root.findall('services'):
    TITLE = services.find('devicename').text
 # HTTP URL
 HTTP_URL = "http://127.0.0.1:" + HTTP_PORT + "/jsonrpc"
+
+ICON = '/usr/share/kodi/addons/Aeon-Nox/media/DefaultIconInfo.png'
 
 
 

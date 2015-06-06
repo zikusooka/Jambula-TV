@@ -1,0 +1,11 @@
+--- my.cnf.orig	2015-06-06 02:17:24.590981928 +0300
++++ my.cnf	2015-06-06 02:18:57.785506909 +0300
+@@ -20,6 +20,8 @@
+ log-error=/var/log/mysqld.log
+ pid-file=/var/run/mysqld/mysqld.pid
+ 
++max_allowed_packet=32M
++
+ [mysqld_safe]
+ 
+ #

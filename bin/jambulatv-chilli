@@ -27,7 +27,7 @@ if [ "$?" = "0" ];
 then
 INTERNET_GATEWAY_DEV=`ip link | grep ppp | cut -d : -f2 | head -1 | sed -e 's/ //g'`
 else
-INTERNET_GATEWAY_DEV=$(ip route | grep default | awk '{print $(NF)}')
+INTERNET_GATEWAY_DEV=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 fi
 # Set previous HS_WANIF variable
 PREVIOUS_HS_WANIF=`grep 'HS_WANIF=' $COOVA_CONFIG_FILE | awk {'print $1'}`

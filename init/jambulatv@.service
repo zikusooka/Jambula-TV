@@ -1,0 +1,14 @@
+[Unit]
+Description=JambulaTV Entertainment and Multimedia System powered by Jambula Labs
+Documentation=man:jambulatv(8)
+After=plymouth-quit.service
+
+[Service]
+User=jambula
+Type=forking
+ExecStartPre=/bin/sh -c '/usr/bin/JambulaTV -kill %i > /dev/null 2>&1 || :'
+ExecStart=/bin/sh -c '/usr/bin/JambulaTV %i'
+ExecStop=/bin/sh -c '/usr/bin/JambulaTV -kill %i > /dev/null 2>&1 || :'
+
+[Install]
+WantedBy=multi-user.target

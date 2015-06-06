@@ -1,9 +1,0 @@
-#/usr/src/jambula/oss-v4.2-build2007-src-gpl/setup/Linux/make.local
---- make.local.orig	2013-01-23 09:35:55.090757516 +0300
-+++ make.local	2013-01-23 09:36:39.140797061 +0300
-@@ -18,4 +18,4 @@
- install:	copy
- 	cd ${OSSLIBDIR}/build && sh install.sh
- 	sync
--	soundoff && sync && soundon && echo "OSS has started OK"
-+	#soundoff && sync && soundon && echo "OSS has started OK"

@@ -11,7 +11,7 @@ TODAYS_REMINDERS_FILE=/tmp/reminders
 OSD_SCRIPT=/usr/bin/jambulatv-osd
 OSD_WAIT=15
 
-KODI_GUI_SETTINGS="/JambulaTV/.xbmc/userdata/guisettings.xml"
+KODI_GUI_SETTINGS="/JambulaTV/.kodi/userdata/guisettings.xml"
 KODI_WEBSERVER_PORT=$(grep webserverport $KODI_GUI_SETTINGS | sed 's:<webserverport>::' | sed 's:</webserverport>::' | sed 's: ::g')
 
 

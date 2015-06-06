@@ -1,6 +1,6 @@
---- /etc/chilli/up.sh.orig	2014-07-23 19:54:36.000000000 +0300
-+++ /etc/chilli/up.sh	2014-07-23 20:05:03.962185710 +0300
-@@ -44,6 +44,13 @@
+--- /usr/src/jambulatv/coova-chilli/conf/up.sh	2015-05-28 22:30:24.239887252 +0300
++++ up.sh	2015-06-06 02:43:48.990909126 +0300
+@@ -44,10 +44,20 @@
  		    done
  		}
  		
@@ -14,3 +14,10 @@
  		ipt_in -p udp -d 255.255.255.255 --destination-port 67:68 -j ACCEPT
  		ipt_in -p udp -d $ADDR --destination-port 67:68 -j ACCEPT
  		ipt_in -p udp --dst $ADDR --dport 53 -j ACCEPT
+ 		ipt_in -p icmp --dst $ADDR -j ACCEPT
++
++                # JambulaTV:  Allow UPNP/DLNA traffic
++		ipt_in -p udp -d 239.255.255.250 --destination-port 1900 -j ACCEPT
+ 		
+ 		ipt -A INPUT -i $TUNTAP --dst $ADDR -j DROP
+ 		

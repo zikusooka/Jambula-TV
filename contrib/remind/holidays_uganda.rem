@@ -1,13 +1,27 @@
+# DO NOT REMOVE THIS STATEMENT !!! 
+BANNER % 
+#
+# ---------------
 # Uganda Holidays
+# ---------------
+#
+REM  1 Jan			 +3	MSG New Year's Day %b
+REM 26 Jan			 +3	MSG NRM Day %b
+REM  8 Mar			 +3	MSG International Women's Day %b
 #
 # Easter days
-SET easter EASTERDATE(YEAR(TODAY()))
-OMIT [TRIGGER(easter-46)] +1 MSG Ash Wednesday %b
-OMIT [TRIGGER(easter-7)] +1 MSG Palm Sunday %b
-REM [TRIGGER(easter-2)] +14 MSG Good Friday %b
-REM [TRIGGER(easter)] +14 MSG Easter Sunday %b
-REM [TRIGGER(easter+1)] +1 MSG Easter Monday %b
-OMIT [TRIGGER(easter+39)] +1 MSG Ascension Day %b
-OMIT [TRIGGER(easter+49)] +1 MSG Pentecost %b
-
-
+SET  easter EASTERDATE(YEAR(TODAY()))
+OMIT [TRIGGER(easter-46)] 	 +1	MSG Ash Wednesday %b
+OMIT [TRIGGER(easter-7)] 	 +1 	MSG Palm Sunday %b
+REM  [TRIGGER(easter-2)] 	+14 	MSG Good Friday %b
+REM  [TRIGGER(easter)] 		+14 	MSG Easter Sunday %b
+REM  [TRIGGER(easter+1)] 	 +1 	MSG Easter Monday %b
+OMIT [TRIGGER(easter+39)] 	 +1 	MSG Ascension Day %b
+OMIT [TRIGGER(easter+49)] 	 +1 	MSG Pentecost %b
+#
+REM  1 May	 		 +3	MSG International Labor Day %b
+REM  3 June	 		 +3	MSG Uganda Matyr's Day %b
+REM  9 June	 		 +3	MSG National Hero's Day %b
+REM  9 Oct	 		 +3	MSG Independence Day %b
+REM 25 Dec	 		 +3	MSG Christmas Day %b
+REM 26 Dec	 		 +3	MSG Boxing Day %b

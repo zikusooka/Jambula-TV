@@ -1,6 +1,6 @@
---- /tmp/php.ini	2013-03-17 15:44:46.524497441 +0300
-+++ php.ini	2013-03-17 16:03:09.345469964 +0300
-@@ -208,7 +208,7 @@
+--- php.ini.orig	2015-03-20 11:00:02.000000000 +0300
++++ php.ini	2015-06-06 02:14:13.924816083 +0300
+@@ -209,7 +209,7 @@
  ; Development Value: Off
  ; Production Value: Off
  ; http://php.net/short-open-tag
@@ -9,7 +9,16 @@
  
  ; Allow ASP-style <% %> tags.
  ; http://php.net/asp-tags
-@@ -875,7 +875,7 @@
+@@ -382,7 +382,7 @@
+ ; Maximum execution time of each script, in seconds
+ ; http://php.net/max-execution-time
+ ; Note: This directive is hardcoded to 0 for the CLI SAPI
+-max_execution_time = 30
++max_execution_time = 120
+ 
+ ; Maximum amount of time each script may spend parsing request data. It's a good
+ ; idea to limit this time on productions servers in order to eliminate unexpectedly
+@@ -880,7 +880,7 @@
  [Date]
  ; Defines the default timezone used by the date functions
  ; http://php.net/date.timezone

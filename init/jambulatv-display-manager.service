@@ -1,14 +1,16 @@
 [Unit]
-Description=JambulaTV Entertainment and Multimedia System powered by Jambula Labs
+Description=X11 Display Manager for JambulaTV
 Documentation=man:jambulatv-display-manager(8)
+Conflicts=getty@tty1.service
 After=plymouth-quit.service
 
 [Service]
-Type=oneshot
-
-ExecStart=/usr/bin/beep
-ExecStart=/usr/bin/xinit /usr/bin/JambulaTV start-xbmc
-#ExecStart=/usr/bin/xinit /usr/bin/kodi
+User=jambula
+ExecStartpre=/usr/bin/pulseaudio -D
+ExecStart=/usr/bin/xinit /usr/bin/kodi
+ExecStop=/usr/bin/killall kodi ; /usr/bin/killall X
+Restart=on-abort
+IgnoreSIGPIPE=no
 
 [Install]
-WantedBy=multi-user.target
+Alias=display-manager.service

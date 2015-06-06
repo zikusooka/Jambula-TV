@@ -21,7 +21,7 @@ directory = TORRENTS_PENDING_DIRECTORY
 # Watch a directory for new torrents, and stop those that have been
 # deleted.
 
-schedule = watch_directory,5,5,"load_start=TORRENTS_WATCH_DIRECTORY/*.torrent"
+schedule = watch_directory,5,5,"load.start=TORRENTS_WATCH_DIRECTORY/*.torrent"
 
 schedule = untied_directory,10,10,remove_untied=
 schedule = tied_directory,55,5,start_tied=
@@ -31,11 +31,11 @@ schedule = untied_directory,5,5,close_untied=
 
 # Move to completed_torrents directory on finish
 # -----------------------------------------------
-system.method.set_key = event.download.finished,move_complete,"d.set_directory=TORRENTS_COMPLETED_DIRECTORY;execute=mv,-u,$d.get_base_path=,TORRENTS_COMPLETED_DIRECTORY"
+method.set_key = event.download.finished,move_complete,"d.set_directory=TORRENTS_COMPLETED_DIRECTORY;execute=mv,-u,$d.get_base_path=,TORRENTS_COMPLETED_DIRECTORY"
 #
 # Remove .torrent file in watch folder
 # -------------------------------------
-system.method.set_key = event.download.finished,remove_torrent,"execute=rm,$d.get_tied_to_file="
+method.set_key = event.download.finished,remove_torrent,"execute=rm,$d.get_tied_to_file="
 
 
 # The ip address reported to the tracker.
@@ -108,7 +108,7 @@ dht = auto
 dht_port = 6881
 
 # Enable peer exchange (for torrents not marked private)
-peer_exchange = yes
+protocol.pex.set = yes
 
 # rtgui - xmlrpc
 ################

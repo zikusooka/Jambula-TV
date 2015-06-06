@@ -4,6 +4,6 @@
 # To find those variables, run ../contrib/scripts/udev-properties.sh
 # ------------------------------------------------------------------
 # Logitech, Inc. Webcam C200
-KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTR{name}=="UVC Camera (046d:0802)",  NAME="v4l/video%n", GROUP="video", MODE="0660", SYMLINK+="video-C200-0", OPTIONS="last_rule" 
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTR{name}=="UVC Camera (046d:0802)", GROUP="video", MODE="0660", SYMLINK+="video-C200-0", OPTIONS="last_rule" 
 # Logitech QuickCam STX
-KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTR{name}=="gspca main driver",  NAME="v4l/video%n", GROUP="video", MODE="0660", SYMLINK+="video-quickcam-0", OPTIONS="last_rule"
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTR{name}=="gspca main driver", GROUP="video", MODE="0660", SYMLINK+="video-quickcam-0", OPTIONS="last_rule"

@@ -1,17 +1,18 @@
 #!/bin/sh
 # Set variables
-AUTOLOGIN_USER=jambula
-JAMBULATV_LOG=/var/log/jambulatv.log
-XBMC_CMD=/usr/bin/xbmc
+JAMBULATV_LOG=/var/log/JambulaTV/messages
+KODI_CMD=/usr/bin/kodi
+XINIT_CMD=/usr/bin/xinit
+LXDM_CMD=/usr/sbin/lxdm 
 # See if Intel 828XXX VGA exists 
 lspci | grep VGA | grep 'Intel Corporation 828' > /dev/null 2>&1
 INTEL_VGA_EXISTS=$?
 # if it exists, set environment for VGA cards with no hardware acceleration
 if [ "$INTEL_VGA_EXISTS" = "0" ];
 then
-XBMC_START_ARGS="MESA_GL_VERSION_OVERRIDE=3.0"
+XBMC_START_ARGS="$XINIT_CMD MESA_GL_VERSION_OVERRIDE=3.0"
 else
-XBMC_START_ARGS=""
+XBMC_START_ARGS="$XINIT_"
 fi
 
 # Export variables
@@ -22,69 +23,30 @@ export
 
 
 
-###############
-#  Functions  #
-###############
-xbmc_pre_settings () {
-echo "`date`: JambulaTV started" > $JAMBULATV_LOG
-}
-
-xbmc_start () {
-su -l $AUTOLOGIN_USER -c "$XBMC_START_ARGS $XBMC_CMD"
-}
-
-xbmc_stop () {
-su -l $AUTOLOGIN_USER -c '/usr/bin/killall xbmc xbmc-bin' 
-}
-
-lxde_start () {
-/usr/sbin/lxdm 
-}
-
-lxde_stop () {
-killall X
-}
-
-
-
 #################
 #  MAIN SCRIPT  #
 #################
 case $@ in
 
-# XBMC
-start-xbmc)
-xbmc_pre_settings
-xbmc_start
-;;
+# KODI
+kodi)
+# Pre-settings for kodi
+echo "$(date): JambulaTV started" > $JAMBULATV_LOG
 
-stop-xbmc)
-xbmc_stop
-;;
-
-restart-xbmc)
-xbmc_stop
-xbmc_start
+# Start kodi using xinit
+$XBMC_START_ARGS $KODI_CMD
 ;;
 
 # LXDE
-start-lxde)
-lxde_start
-;;
-
-stop-lxde)
-lxde_stop
-;;
-
-restart-lxde)
-lxde_stop
-lxde_start
+lxde)
+$LXDM_CMD
 ;;
 
 *)
 clear
 echo "Usage: $(basename $0) \
-[start-xbmc|stop-xbmc|restart-xbmc|start-lxde|stop-lxde|restart-lxde]"
+[kodi|lxde]
+NOTE: This script should really not be run alone.  See jambulatv@.service"
 ;;
 
 esac

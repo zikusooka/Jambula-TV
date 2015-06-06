@@ -1,0 +1,24 @@
+    server {
+        listen 8522;
+
+        server_name  jambulatv_rtgui;
+        root   html/rtgui;
+        index  index.html index.htm index.php;
+
+        location / {
+        }
+
+        location ~ \.php$ {
+            include  includes/php_params;
+        }
+ 
+    	location ~* \.(cgi|chi)$ {
+            include  includes/cgi_params;
+    	}  
+
+    	location ~ ^/RPC2$ {
+	    scgi_pass 127.0.0.1:5000;
+	    include scgi_params;
+    	}
+
+    }

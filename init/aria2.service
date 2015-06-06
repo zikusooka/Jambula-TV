@@ -5,6 +5,7 @@ After=network.target
 [Service]
 User=jambula
 ExecStart=/usr/bin/aria2c --conf-path=/etc/JambulaTV/aria2.conf -D
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

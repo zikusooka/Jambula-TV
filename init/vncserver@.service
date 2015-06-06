@@ -1,0 +1,14 @@
+[Unit]
+Description=Remote desktop service (VNC)
+After=network.target
+
+[Service]
+User=jambula
+Type=forking
+# Clean any existing files in /tmp/.X11-unix environment
+ExecStartPre=/bin/sh -c '/usr/bin/vncserver -kill %i > /dev/null 2>&1 || :'
+ExecStart=/bin/sh -c '/usr/bin/vncserver %i -name JambulaTV -PasswordFile /JambulaTV/.vnc/passwd'
+ExecStop=/bin/sh -c '/usr/bin/vncserver -kill %i > /dev/null 2>&1 || :'
+
+[Install]
+WantedBy=multi-user.target

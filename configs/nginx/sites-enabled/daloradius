@@ -1,0 +1,25 @@
+server {
+        listen 8523;
+
+        server_name Jambula_HotSpot;
+        root   html/daloradius;
+        index  index.html index.htm index.php;
+
+
+        location / {
+                 root html/daloradius;
+                 index index.php;
+                 if (!-e $request_filename) {
+                         rewrite ^/(.*)$ /index.php?q=$1 last;
+                 }
+         }
+
+        location ~ \.php$ {
+            include  includes/php_params;
+        }
+ 
+    	location ~* \.(cgi|chi)$ {
+            include  includes/cgi_params;
+    	}  
+
+    }

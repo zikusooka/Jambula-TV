@@ -168,7 +168,7 @@ beacon_int=100
 # DTIM (delivery traffic information message) period (range 1..255):
 # number of beacons between DTIMs (1 = every beacon includes DTIM element)
 # (default: 2)
-dtim_period=2
+dtim_period=1
 
 # Maximum number of stations allowed in station table. New stations will be
 # rejected after the station table is full. IEEE 802.11 has a limit of 2007
@@ -1057,9 +1057,10 @@ wpa_key_mgmt=WPA-PSK
 # TKIP will be used as the group cipher.
 # (dot11RSNAConfigPairwiseCiphersTable)
 # Pairwise cipher for WPA (v1) (default: TKIP)
-wpa_pairwise=TKIP # Don't use CCMP - Connection breaks!!!
+# Don't use CCMP - Connection breaks!!!
+wpa_pairwise=CCMP TKIP
 # Pairwise cipher for RSN/WPA2 (default: use wpa_pairwise value)
-#rsn_pairwise=CCMP
+rsn_pairwise=CCMP
 
 # Time interval for rekeying GTK (broadcast/multicast encryption keys) in
 # seconds. (dot11RSNAConfigGroupRekeyTime)
