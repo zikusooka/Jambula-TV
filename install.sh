@@ -12,7 +12,6 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #  MAIN SCRIPT  #
 #################
 
-cat <<EOF > /dev/null 
 # Install custom kernel
 kernel_install 
 
@@ -285,14 +284,7 @@ owncloud_install
 # Post install Notes
 post_install_notice
 #
-EOF
 
 # ---------
 # The End
 # ---------
-
-
-
-
-
-exit
