@@ -1733,6 +1733,9 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service $SYSTEMD_UNITS_DIR_USER/
 # Enable and start tvheadend if needed
 systemctl enable tvheadend.service
 systemctl start tvheadend.service
+#
+# Copy jambulatv-dvbt-scan used to scan 4 DVB-T services, if none exists in bin directory
+[ -e $BINARY_PREFIX/jambulatv-dvbt-scan ] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/
 }
 
 fmtools_install () {
