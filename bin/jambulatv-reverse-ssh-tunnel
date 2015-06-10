@@ -1,0 +1,84 @@
+#!/bin/sh
+# This script will create a reverse SSH tunnel, which allows access
+# to this box via the ssh server at remote1.jambulatv.com
+#
+#
+# Variables
+REVERSE_SSH_CONFIG=/etc/JambulaTV/reverse-ssh.cfg
+EXPECT_TIMEOUT=60
+
+# Import variables
+. $REVERSE_SSH_CONFIG
+
+# Export Variables
+export AUTOSSH_GATETIME
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Ping remote ssh server
+ping -c 3 -W 3 $MIDDLEMAN_SSH_SERVER > /dev/null 2>&1
+HOST_STATUS_VAL=$?
+if [ $HOST_STATUS_VAL != 0 ];
+then
+logger $(basename $0) Failed:
+exit 1
+fi
+
+# Create public key if none exists
+[ -e $HOME/.ssh/id_rsa.pub ] || ssh-keygen -t rsa -f $HOME/.ssh/id_rsa -N ""
+
+# See if I can connect without a password
+ssh -o BatchMode=yes -p $MIDDLEMAN_SSH_SERVER_PORT $MIDDLEMAN_SSH_SERVER_USER@$MIDDLEMAN_SSH_SERVER "/bin/echo OK" > /dev/null 2>&1
+SSH_EXIT=$?
+
+if [ "$SSH_EXIT" != "0" ];
+then
+# Setup passwordless access to SSH server i.e. Copy local SSH public key to remote server.
+expect -c "set timeout $EXPECT_TIMEOUT; 
+spawn ssh-copy-id -i $HOME/.ssh/id_rsa.pub -p $MIDDLEMAN_SSH_SERVER_PORT $MIDDLEMAN_SSH_SERVER_USER@$MIDDLEMAN_SSH_SERVER; expect ?;
+send yes\n;
+expect assword;
+send $MIDDLEMAN_SSH_SERVER_PASS\n;
+interact"
+fi
+
+
+
+##################
+# SSH CONNECTION #
+##################
+#
+# Check if autossh is already running
+ps uxw | grep autossh | grep ${AUTOSSH_PORT} > /dev/null 2>&1
+AUTOSSH_STATE=$?
+# Run AutoSSH only if it is not running already
+[ "$AUTOSSH_STATE" = "0" ] || su -l root -c "${AUTOSSH_CMD} -M ${AUTOSSH_PORT} -f -N -R *:${PORT_MIDDLEMAN_WILL_LISTEN_ON}:${LOCAL_SSH_SERVER}:${LOCAL_SSH_SERVER_PORT} ${MIDDLEMAN_SSH_SERVER_AND_USERNAME} -p ${MIDDLEMAN_SSH_SERVER_PORT} -oLogLevel=error -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no" $LOCAL_SSH_USER
+#
+#
+# Notify of SSH parameters after tunnel has been created
+case $REVERSE_SSH_NOTIFICATION_METHOD in
+sms)
+echo "Sending SMS Notification"
+${SMS_VIA_GOOGLE_CALENDAR_SCRIPT} ${GOOGLE_CALENDAR_USERNAME} ${GOOGLE_CALENDAR_PASSWORD} "${GOOGLE_CALENDAR}" "ssh -p ${PORT_MIDDLEMAN_WILL_LISTEN_ON} ${LOCAL_SSH_USER}@${MIDDLEMAN_SSH_SERVER}"
+;;
+email)
+cat > $EMAIL_VIA_GMAIL_CMD $REVERSE_SSH_NOTIFICATION_EMAIL "JambulaTV: Reverse SSH has been established at ${MIDDLEMAN_SSH_SERVER}" << EOF
+
+To connect:
+
+ssh -p ${PORT_MIDDLEMAN_WILL_LISTEN_ON} ${LOCAL_SSH_USER}@${MIDDLEMAN_SSH_SERVER}
+
+EOF
+;;
+none)
+echo "No notification is needed"
+;;
+*)
+echo "ssh -p ${PORT_MIDDLEMAN_WILL_LISTEN_ON} ${LOCAL_SSH_USER}@${MIDDLEMAN_SSH_SERVER}"
+
+;;
+esac
