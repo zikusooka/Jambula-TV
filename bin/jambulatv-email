@@ -1,0 +1,45 @@
+#!/bin/sh
+EMAIL_TO_ADDRESS_REMOTE=$1
+EMAIL_SUBJECT="$2"
+EMAIL_BODY="$3"
+EMAIL_GMAIL_CONFIG=/etc/JambulaTV/email-gmail.cfg
+
+# Import variables
+. $EMAIL_GMAIL_CONFIG
+
+# Set username and password
+EMAIL_SMTP_AUTH_USERNAME=$EMAIL_SMTP_AUTH_USERNAME
+EMAIL_SMTP_AUTH_PASSWORD=$(echo $EMAIL_SMTP_AUTH_ENCRYPT | base64 -d)
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+if [ "x$EMAIL_TO_ADDRESS_REMOTE" = "x" ];
+then
+echo "Usage:  ./`basename $0` [ADDRESS] [SUBJECT] [MESSAGE]
+"
+exit 1
+
+elif [ "x$EMAIL_SUBJECT" = "x" ];
+then
+echo "Usage:  ./`basename $0` [ADDRESS] [SUBJECT] [MESSAGE]
+"
+exit 1
+
+elif [ "x$EMAIL_BODY" = "x" ];
+then
+echo "Usage:  ./`basename $0` [ADDRESS] [SUBJECT] [MESSAGE]
+"
+exit 1
+
+fi
+
+
+# Email stats
+#-------------
+echo "$EMAIL_BODY" | $EMAIL_CMD $EMAIL_OPTIONS \
+  -s "$EMAIL_SUBJECT" -n $EMAIL_FROM_FULLNAME -f $EMAIL_FROM_ADDRESS \
+  -r $EMAIL_SMTP_SERVER_NAME -p $EMAIL_SMTP_SERVER_PORT -m LOGIN \
+  -u $EMAIL_SMTP_AUTH_USERNAME -i $EMAIL_SMTP_AUTH_PASSWORD \
+   $EMAIL_TO_ADDRESS_REMOTE

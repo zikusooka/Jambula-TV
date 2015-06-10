@@ -13,4 +13,4 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #################
 
 
-reverse_ssh_configure
+email_via_gmail_setup
