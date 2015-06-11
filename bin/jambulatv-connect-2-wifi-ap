@@ -66,13 +66,18 @@ sudo wpa_supplicant -B -D $WIFI_DRIVER -i $WIFI_STATION_INTERFACE -c $WIFI_WPA_C
 check_link_status () {
 # Check link status
 WIFI_LINK_STATUS=$(sudo iw dev $WIFI_STATION_INTERFACE link)
+
+echo "WIFI_LINK_STATUS=$WIFI_LINK_STATUS" > /tmp/link_status
+
 #
 if [ "$WIFI_LINK_STATUS" = "Not connected." ];
 then
 echo "Connection to $WIFI_SSID failed!. Exiting ..."
 exit 1
 else
-# Display success essage on Screen
+# Beep to alert: Connected WiFi AP
+/usr/bin/beep
+# Display success message on Screen
 $OSD_SCRIPT -m "$CONNECTED_MSG"
 fi
 }
@@ -101,10 +106,14 @@ fi
 #################
 #  MAIN SCRIPT  #
 #################
+# Find WiFi interface to be used as station
+number_of_interfaces
+
+# Act according to who called this script
 case $ICINGA2_AP_STATUS in
 OK)
-# Beep to alert WiFi AP found
-/usr/bin/beep
+# Started by icinga2
+echo "Wireless Access Point ($WIFI_SSID) Available"
 ;;
 WARNING)
 # Quit script since Icinga2 detects no WiFi AP
@@ -112,17 +121,16 @@ exit 1
 ;;
 *)
 # Scan for WiFi AP If not running via icinga2 i.e. manual
-number_of_interfaces 
 scan_4_wifi
 quit_not_found
 ;;
 esac
-#
+
 # Go futher if there's available AP
 generate_wpa_config
 connect_2_access_point 
 sleep 5
-check_link_status 
+check_link_status
 get_ip_address
 
 # Restart coova-chilli in order to Change default Internet gateway device
