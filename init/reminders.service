@@ -1,0 +1,10 @@
+[Unit]
+Description = JambulaTV reminders for birthdays, holidays, anniversaries, alerts, etc
+After = graphical.target
+
+[Service]
+Type = simple
+ExecStart = /usr/bin/jambulatv-remind
+
+[Install]
+WantedBy = graphical.target

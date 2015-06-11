@@ -1,0 +1,9 @@
+[Unit]
+Description = 2 Hours Timer
+
+[Timer]
+OnBootSec = 5min
+OnUnitActiveSec = 120min
+
+[Install]
+WantedBy = multi-user.target

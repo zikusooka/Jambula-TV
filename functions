@@ -5319,7 +5319,10 @@ rsync -av $PROJECT_CONTRIB_DIR/remind/ $REMINDERS_DIRECTORY/
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $REMINDERS_DIRECTORY
 # Copy jambulatv-remind script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-remind ] || cp -v $PROJECT_BIN_DIR/jambulatv-remind $BINARY_PREFIX/
-# NOTE: remind script was added to autoexec.py startup for kodi
+# Copy reminder .timer and .service files
+cp -v $PROJECT_INIT_SCRIPTS_DIR/reminders.{timer,service} $SYSTEMD_UNITS_DIR_USER/
+# Enable reminders.timer which will start the service automagically
+systemctl enable reminders.timer
 }
 
 # -----------------------------------------------------
