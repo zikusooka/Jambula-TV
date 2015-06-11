@@ -2385,7 +2385,7 @@ $NETWORK_IP_ADDRESS	$HOSTNAME" >> /etc/hosts
 
 wireless_interfaces_configure () {
 # Create udev rules file for wlan* - Naming scheme instead of biosdev names
-cat > $UDEV_RULES_DIR/96-jambulatv.wifi-net.rules <<EOF
+cat > $UDEV_RULES_DIR/60-jambulatv.wifi-net.rules <<EOF
 # $WIFI_AP_INTERFACE
 SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_AP_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_AP_INTERFACE"
 # $WIFI_STATION_INTERFACE

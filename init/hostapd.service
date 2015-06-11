@@ -5,7 +5,7 @@ After=dnsmasq.service
 [Service]
 Type=forking
 PIDFile=/run/hostapd.pid
-ExecStartPre=/bin/mkdir /var/run/hostapd
+ExecStartPre=/bin/mkdir -p /var/run/hostapd
 ExecStart=/usr/sbin/hostapd /etc/hostapd/hostapd.conf -P /run/hostapd.pid -B
 
 [Install]
