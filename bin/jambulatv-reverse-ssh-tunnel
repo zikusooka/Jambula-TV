@@ -5,6 +5,7 @@
 #
 # Variables
 REVERSE_SSH_CONFIG=/etc/JambulaTV/reverse-ssh.cfg
+TMP_EMAIL_FILE=/tmp/email.tmp
 EXPECT_TIMEOUT=60
 
 # Import variables
@@ -66,13 +67,17 @@ echo "Sending SMS Notification"
 ${SMS_VIA_GOOGLE_CALENDAR_SCRIPT} ${GOOGLE_CALENDAR_USERNAME} ${GOOGLE_CALENDAR_PASSWORD} "${GOOGLE_CALENDAR}" "ssh -p ${PORT_MIDDLEMAN_WILL_LISTEN_ON} ${LOCAL_SSH_USER}@${MIDDLEMAN_SSH_SERVER}"
 ;;
 email)
-cat > $EMAIL_VIA_GMAIL_CMD $REVERSE_SSH_NOTIFICATION_EMAIL "JambulaTV: Reverse SSH has been established at ${MIDDLEMAN_SSH_SERVER}" << EOF
+# Create temp email file
+cat > $TMP_EMAIL_FILE << EOF
+Reverse SSH has been established at ${MIDDLEMAN_SSH_SERVER}.  
 
-To connect:
+To connect, run the following command from any terminal:
 
 ssh -p ${PORT_MIDDLEMAN_WILL_LISTEN_ON} ${LOCAL_SSH_USER}@${MIDDLEMAN_SSH_SERVER}
 
 EOF
+# Send email
+$EMAIL_VIA_GMAIL_CMD $REVERSE_SSH_NOTIFICATION_EMAIL "JambulaTV: Reverse SSH connection has been made" "$(cat $TMP_EMAIL_FILE)"
 ;;
 none)
 echo "No notification is needed"
