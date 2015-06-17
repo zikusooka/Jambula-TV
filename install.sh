@@ -88,6 +88,7 @@ kodi_addons_install
 # Tools used by Kodi
 inputlirc_install
 inputlirc_configure
+kodi_remote_configure
 
 #kodi_lircd_configure
 kodi_osd_configure 

@@ -2146,6 +2146,36 @@ EOF
 fi
 }
 
+kodi_remote_configure () {
+# Prevent IR remotes from being seen as Keyboards
+cat > $XORG_CONF_DIR/90-jambulatv-remotes.conf << EOF
+# Streamzap Remote
+Section "InputClass"
+    	Identifier "Ignore Streamzap IR as KEYBOARD or MOUSE"
+	MatchProduct "Streamzap IR"
+    	MatchIsKeyboard "true"    	
+    	Option "Ignore" "true"
+EndSection
+
+# PCTV Remote
+Section "InputClass"
+    	Identifier "Ignore em28xx IR as KEYBOARD or MOUSE"
+	MatchProduct "em28xx IR"
+    	MatchIsKeyboard "true"    	
+    	Option "Ignore" "true"
+EndSection
+
+# MCE Remote
+Section "InputClass"
+    	Identifier "Ignore MCE IR as KEYBOARD or MOUSE"
+	MatchProduct "MCE IR"
+    	MatchIsKeyboard "true"    	
+    	Option "Ignore" "true"
+EndSection
+EOF
+
+}
+
 python_xbmc_install () {
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/python-xbmc/ $INSTALL_SRC_DIR/python-xbmc/
 cd $INSTALL_SRC_DIR/python-xbmc
