@@ -364,6 +364,7 @@ PUBLIC_DNS_SERVERS="8.8.8.8 208.67.222.222 8.26.56.26 107.170.95.180 77.88.8.8"
 # Dynamic variables
 # -----------------
 LIRC_REMOTE=intex #streamzap
+REMOTE_METHOD=inputlirc #lircd
 
 WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
@@ -2077,6 +2078,35 @@ systemctl --system daemon-reload
 systemctl enable jambulatv-display-manager.service
 }
 
+kodi_input_configure () {
+# Prevent IR remotes from being seen as Keyboards
+cat > $XORG_CONF_DIR/90-jambulatv-remotes.conf << EOF
+# Streamzap Remote
+Section "InputClass"
+    	Identifier "Ignore Streamzap IR as KEYBOARD or MOUSE"
+	MatchProduct "Streamzap IR"
+    	MatchIsKeyboard "true"    	
+    	Option "Ignore" "true"
+EndSection
+
+# PCTV Remote
+Section "InputClass"
+    	Identifier "Ignore em28xx IR as KEYBOARD or MOUSE"
+	MatchProduct "em28xx IR"
+    	MatchIsKeyboard "true"    	
+    	Option "Ignore" "true"
+EndSection
+
+# MCE Remote
+Section "InputClass"
+    	Identifier "Ignore MCE IR as KEYBOARD or MOUSE"
+	MatchProduct "MCE IR"
+    	MatchIsKeyboard "true"    	
+    	Option "Ignore" "true"
+EndSection
+EOF
+}
+
 inputlirc_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/inputlirc*.tar.gz -C $INSTALL_SRC_DIR
@@ -2119,61 +2149,43 @@ InputLirc / Remote
 EOF
 }
 
-kodi_lircd_configure () {
+kodi_lircmap_configure () {
+# Use either lircd or inputlirc
+case $REMOTE_METHOD in
+lircd)
 # Copy lircd.conf file
-# *********************
 cp -rv $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/lircd.conf $CONFDIR/lirc
-# Copy KODI Lircmap file
 cp -v $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/Lircmap.xml $KODI_SYSTEM_SYS
 # Enable and start lircd service
-# ******************************
 systemctl enable lircd.service
 systemctl start lircd.service
-
-# Disable the remote from being detected/used as a keyboard
-# **********************************************************
-# Affected remotes include: streamzap
-if [ "$LIRC_REMOTE" = "streamzap" ];
-then
-cat << EOF > $XORG_CONF_DIR/90-streamzap.conf
-Section "InputClass"
-    	Identifier "Ignore Streamzap IR as KEYBOARD or MOUSE"
-	MatchProduct "treamzap|MCE IR"
-    	MatchIsKeyboard "true"    	
-    	Option "Ignore" "true"
-EndSection
-EOF
-fi
+;;
+inputlirc)
+# Disable lircd.service
+systemctl disable lircd.service
+# Remove LircMap in Home if any exists
+[ ! -e $KODI_USER_DATA/Lircmap.xml ] || \
+	mv -v $KODI_USER_DATA/Lircmap.xml $KODI_USER_DATA/Lircmap.xml.bak
+# Copy lircmap from sources into system if it does not esist
+[ -e $KODI_SYSTEM_SYS/Lircmap.xml ] || \
+cp -v $INSTALL_SRC_DIR/kodi/system/Lircmap.xml $KODI_SYSTEM_SYS/Lircmap.xml
+# Patch system Lircmap.xml
+patch -p1 $KODI_SYSTEM_SYS/Lircmap.xml < $PROJECT_PATCHES_DIR/kodi.lircmap.xml.patch
+# NOTE: You can also use contributed Lircmap.xml file
+#cp -v $PROJECT_CONTRIB_DIR/remotes/devinput/Lircmap.xml $KODI_SYSTEM_SYS
+;;
+esac
 }
 
 kodi_remote_configure () {
-# Prevent IR remotes from being seen as Keyboards
-cat > $XORG_CONF_DIR/90-jambulatv-remotes.conf << EOF
-# Streamzap Remote
-Section "InputClass"
-    	Identifier "Ignore Streamzap IR as KEYBOARD or MOUSE"
-	MatchProduct "Streamzap IR"
-    	MatchIsKeyboard "true"    	
-    	Option "Ignore" "true"
-EndSection
-
-# PCTV Remote
-Section "InputClass"
-    	Identifier "Ignore em28xx IR as KEYBOARD or MOUSE"
-	MatchProduct "em28xx IR"
-    	MatchIsKeyboard "true"    	
-    	Option "Ignore" "true"
-EndSection
-
-# MCE Remote
-Section "InputClass"
-    	Identifier "Ignore MCE IR as KEYBOARD or MOUSE"
-	MatchProduct "MCE IR"
-    	MatchIsKeyboard "true"    	
-    	Option "Ignore" "true"
-EndSection
-EOF
-
+kodi_input_configure
+kodi_lircmap_configure 
+# If inputlirc
+if [ "$REMOTE_METHOD" = "inputlirc" ];
+then
+inputlirc_install
+inputlirc_configure
+fi
 }
 
 python_xbmc_install () {
