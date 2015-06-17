@@ -2077,6 +2077,48 @@ systemctl --system daemon-reload
 systemctl enable jambulatv-display-manager.service
 }
 
+inputlirc_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/inputlirc*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v inputlirc* inputlirc
+cd $INSTALL_SRC_DIR/inputlirc
+# Change prefix in Makefile
+sed -i "s:PREFIX ?= /usr/local:PREFIX ?= /usr:g" Makefile
+# Compile
+make
+make install
+}
+
+inputlirc_configure () {
+# Add Environment file for Systemd
+cat > $SYSCONFIG_DIR/inputlirc <<EOF
+LIRC_OPTIONS="-g -m 0 -c"
+LIRC_DEVICE="/dev/input/jambulatv-remote"
+EOF
+# Copy inputlircd systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/inputlircd.service $SYSTEMD_UNITS_DIR_USER/
+# Enable inputlircd if needed
+systemctl enable inputlircd.service
+#
+# Display Inputlirc's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+InputLirc / Remote
+==================
+% I have configured inputlirc to read the remote at:
+
+  LIRC_DEVICE="/dev/input/jambulatv-remote" See /etc/sysconfig/inputlirc
+
+% However, this node does not exist.  You will need to setup a UDEV rule to rename the the
+  actual remote node (like /dev/input/event12) to this.  Use the tool: 
+
+  ir-keytable
+
+#
+EOF
+}
+
 kodi_lircd_configure () {
 # Copy lircd.conf file
 # *********************
