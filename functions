@@ -2120,6 +2120,10 @@ make install
 }
 
 inputlirc_configure () {
+# Copy udev rules 4 remotes - rename to /dev/input/jambulatv-remote instead of ../eventX
+cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-remotes.rules $UDEV_RULES_DIR
+# Reload udev
+/usr/sbin/udevadm control --reload
 # Add Environment file for Systemd
 cat > $SYSCONFIG_DIR/inputlirc <<EOF
 LIRC_OPTIONS="-g -m 0 -c"
@@ -2166,13 +2170,8 @@ systemctl disable lircd.service
 # Remove LircMap in Home if any exists
 [ ! -e $KODI_USER_DATA/Lircmap.xml ] || \
 	mv -v $KODI_USER_DATA/Lircmap.xml $KODI_USER_DATA/Lircmap.xml.bak
-# Copy lircmap from sources into system if it does not esist
-[ -e $KODI_SYSTEM_SYS/Lircmap.xml ] || \
-cp -v $INSTALL_SRC_DIR/kodi/system/Lircmap.xml $KODI_SYSTEM_SYS/Lircmap.xml
-# Patch system Lircmap.xml
-patch -p1 $KODI_SYSTEM_SYS/Lircmap.xml < $PROJECT_PATCHES_DIR/kodi.lircmap.xml.patch
-# NOTE: You can also use contributed Lircmap.xml file
-#cp -v $PROJECT_CONTRIB_DIR/remotes/devinput/Lircmap.xml $KODI_SYSTEM_SYS
+# a) Using contributed Lircmap.xml
+cp -v $PROJECT_CONTRIB_DIR/remotes/devinput/Lircmap.xml $KODI_SYSTEM_SYS
 ;;
 esac
 }

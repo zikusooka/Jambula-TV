@@ -1,0 +1,5 @@
+# Hauppauge WinTV MiniStick
+KERNEL=="event*", ATTRS{idVendor}=="2040", ATTRS{idProduct}=="c000", SYMLINK="input/jambulatv-remote"
+
+# Pinnacle PCTV 290e
+KERNEL=="event*", ATTRS{idVendor}=="2013", ATTRS{idProduct}=="024f", SYMLINK="input/jambulatv-remote"
