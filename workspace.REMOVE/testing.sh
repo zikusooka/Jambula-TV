@@ -12,3 +12,5 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #  MAIN SCRIPT  #
 #################
 
+MONITORING_PLUGINS_DIR=/usr/lib/nagios/plugins
+check_logfiles_install 
