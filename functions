@@ -5022,6 +5022,18 @@ make
 make install
 }
 
+check_logfiles_install () {
+# unpack
+rsync -avz $PROJECT_GITHUB_DIR/check_logfiles/ $INSTALL_SRC_DIR/check_logfiles/
+cd $INSTALL_SRC_DIR/check_logfiles 
+# autoconf
+aclocal && autoconf && automake -a
+# configure
+./configure --prefix=$MONITORING_PLUGINS_DIR --libexecdir=$MONITORING_PLUGINS_DIR --with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP
+make
+make install
+}
+
 icinga2_ido_mysql () {
 # Enable and start mysql service if it is not running
 systemctl -q is-active mysqld.service || systemctl enable mysqld.service

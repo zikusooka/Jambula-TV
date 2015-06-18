@@ -176,6 +176,7 @@ hostapd_configure
 # -----------
 icinga2_install # Takes a very long time ~ 1 hour
 monitoring_plugins_install
+check_logfiles_install
 icinga2_ido_mysql
 icinga2_configure
 icingaweb2_install
