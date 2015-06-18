@@ -363,8 +363,8 @@ PUBLIC_DNS_SERVERS="8.8.8.8 208.67.222.222 8.26.56.26 107.170.95.180 77.88.8.8"
 
 # Dynamic variables
 # -----------------
-LIRC_REMOTE=intex #streamzap
-REMOTE_METHOD=inputlirc #lircd
+LIRC_REMOTE=pctv-290e #intex #streamzap
+LIRC_DAEMON=inputlirc #lircd
 
 WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
@@ -2124,10 +2124,15 @@ inputlirc_configure () {
 cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-remotes.rules $UDEV_RULES_DIR
 # Reload udev
 /usr/sbin/udevadm control --reload
+#
+# Copy ir-key tables for remote - used in start file
+cp -v $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/ir-keytable.cfg $CONFDIR/lirc
+#
 # Add Environment file for Systemd
 cat > $SYSCONFIG_DIR/inputlirc <<EOF
 LIRC_OPTIONS="-g -m 0 -c"
 LIRC_DEVICE="/dev/input/jambulatv-remote"
+IR_KEYTABLE="$CONFDIR/lirc/ir-keytable.cfg"
 EOF
 # Copy inputlircd systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/inputlircd.service $SYSTEMD_UNITS_DIR_USER/
@@ -2142,20 +2147,19 @@ InputLirc / Remote
 ==================
 % I have configured inputlirc to read the remote at:
 
-  LIRC_DEVICE="/dev/input/jambulatv-remote" See /etc/sysconfig/inputlirc
+  LIRC_DEVICE="/dev/input/jambulatv-remote"
 
-% However, this node does not exist.  You will need to setup a UDEV rule to rename the the
-  actual remote node (like /dev/input/event12) to this.  Use the tool: 
+% Take a look at: $UDEV_RULES_DIR/96-jambulatv.usb-remotes.rules 
+  and ensure that your remote devices will be renamed to the above after plugging in
 
-  ir-keytable
-
+  For help, use: ir-keytable
 #
 EOF
 }
 
 kodi_lircmap_configure () {
 # Use either lircd or inputlirc
-case $REMOTE_METHOD in
+case $LIRC_DAEMON in
 lircd)
 # Copy lircd.conf file
 cp -rv $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/lircd.conf $CONFDIR/lirc
@@ -2170,8 +2174,8 @@ systemctl disable lircd.service
 # Remove LircMap in Home if any exists
 [ ! -e $KODI_USER_DATA/Lircmap.xml ] || \
 	mv -v $KODI_USER_DATA/Lircmap.xml $KODI_USER_DATA/Lircmap.xml.bak
-# a) Using contributed Lircmap.xml
-cp -v $PROJECT_CONTRIB_DIR/remotes/devinput/Lircmap.xml $KODI_SYSTEM_SYS
+# Copy contributed Lircmap.xml
+cp -v $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/Lircmap.xml $KODI_SYSTEM_SYS
 ;;
 esac
 }
@@ -2180,7 +2184,7 @@ kodi_remote_configure () {
 kodi_input_configure
 kodi_lircmap_configure 
 # If inputlirc
-if [ "$REMOTE_METHOD" = "inputlirc" ];
+if [ "$LIRC_DAEMON" = "inputlirc" ];
 then
 inputlirc_install
 inputlirc_configure
