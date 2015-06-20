@@ -2200,7 +2200,7 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 
 kodi_osd_configure () {
 # Install python-xbmc -helper
-python_xbmc_install
+#python_xbmc_install # No longer needed since we are using HTTP JSON RPC Calls
 # Copy jambulatv-osd wrapper for startup services, if none exists in bin directory
 [ -e $BINARY_PREFIX/jambulatv-osd ] || cp -v $PROJECT_BIN_DIR/jambulatv-osd $BINARY_PREFIX/
 }

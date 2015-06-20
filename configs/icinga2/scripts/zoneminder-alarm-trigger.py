@@ -22,7 +22,6 @@ import sys
 import argparse
 import os
 import warnings
-from xbmcjson import XBMC, PLAYER_VIDEO
 import xml.etree.ElementTree as ET
 
 # Get Kodi web server variables
