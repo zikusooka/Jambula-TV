@@ -4771,9 +4771,10 @@ usermod -G video $WWW_USER
 chmod 644 $PROJECT_SYSTEM_CONF_DIR/zm.conf
 # Copy test index.html, *.php and *.cgi files to zm
 cp -rv $PROJECT_CONTRIB_DIR/html/test* $WWW_HTML_DIR/zm/
+# Make nph-zms behave like cgi script since we are on nginx i.e. We want jpeg image
+ln -s $WWW_HTML_DIR/zm/nph-zms $WWW_HTML_DIR/zm/jpeg.cgi
 # Make .php and .cgi files executable
-cd $WWW_HTML_DIR/zm
-chmod 755 *.php *.cgi
+cd $WWW_HTML_DIR/zm && chmod 755 *.php *.cgi
 #
 # Create Events directory for ZoneMinder under user's home directory
 [ -d $ZONEMINDER_EVENTS_DIRECTORY ] || mkdir -p $ZONEMINDER_EVENTS_DIRECTORY
