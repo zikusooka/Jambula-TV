@@ -70,9 +70,23 @@ def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=
     conn.close()
     return data
 
+
+
+#  Jambula Labs: De-activate screensaver
+def xbmc_poke_screen(xbmc_host, xbmc_port=xbmc_port):
+    for x in range(0, len(xbmc_host)):                                                  
+	screenSaverStatus = send_json_command(xbmc_host[x], xbmc_port, 'XBMC.GetInfoBooleans', params={'booleans':['System.ScreenSaverActive']})
+        if screenSaverStatus == {u'System.ScreenSaverActive': True}:
+	  send_json_command(xbmc_host[x], xbmc_port, "Input.Select")
+
+# Display Camera where motion was detected
 def xbmc_doorbell(xbmc_host, xbmc_port=xbmc_port):
     for x in range(0, len(xbmc_host)):
         result = send_json_command(xbmc_host[x], xbmc_port, 'Addons.ExecuteAddon',{'addonid':'script.doorbell','params':{'CamID':str(dbvar['CamID']),'CamName':str(dbvar['CamName'])}})
-        print xbmc_host[x]+": "+result
+ 
 
+# Jambula Labs: Poke screen if screensaver is active
+xbmc_poke_screen(xbmc_host)
+
+# Display Camera alarm
 xbmc_doorbell(xbmc_host)
