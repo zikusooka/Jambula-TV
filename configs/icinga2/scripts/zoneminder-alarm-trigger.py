@@ -1,6 +1,14 @@
-#!/usr/bin/env python
-# Display Announcements on JambulaTV Screen
+#!/usr/bin/python
+# This script is called by the ZoneMinderAlarm daemon/script and notifies
+# all XBMC installations to overlay pictures on the screen
+# It requires the doorbell xbmc plugin
+# http://homeawesomation.wordpress.com/2013/02/18/doorbell-ipcam-xbmc-update/
+# Credit for send_json_command to u/sffjunkie
+# http://forum.xbmc.org/showthread.php?tid=92196
 #
+# Modified for use with JambulaTV - Jambula Labs
+# --
+
 # Variables
 KODI_GUI_SETTINGS = "/JambulaTV/.kodi/userdata/guisettings.xml"
 TIME = 15000  # ms
@@ -16,29 +24,30 @@ import os
 import warnings
 import xml.etree.ElementTree as ET
 
-__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2015-2016 All rights reserved'
-
 # Get Kodi web server variables
 tree = ET.parse(KODI_GUI_SETTINGS)
 root = tree.getroot()
 for services in root.findall('services'):
    username = services.find('webserverusername').text
    password = services.find('webserverpassword').text
-   xbmc_title = services.find('devicename').text
    xbmc_port = services.find('webserverport').text
    xbmc_host=['127.0.0.1']
-
-# Parse arguments/ message
-parser = argparse.ArgumentParser(description='Display Announcements on JambulaTV Screen')
-parser.add_argument('-m','--message', help='The message you want displayed.  Wrap it in quotes',required=True)
-args = parser.parse_args()
-
-MESSAGE = args.message
 
 
 
 # Main Script 
 # -----------
+args = ['CamID','CamName']
+dbvar = {'CamID': 1,
+    'CamName': 'Default'}
+for item in sys.argv:
+    arg = item.split('=')
+    i = arg[0]
+    if arg[0] in args:
+        j = arg[1]
+        dbvar.update({arg[0]:arg[1]})
+
+
 def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=username, password=password):
     command = {'jsonrpc': '2.0', 'id': id, 'method': method}
     if params is not None: command['params'] = params
@@ -61,21 +70,22 @@ def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=
     return data
 
 
-# De-activate screensaver
+
+#  Jambula Labs: De-activate screensaver
 def xbmc_poke_screen(xbmc_host, xbmc_port=xbmc_port):
     for x in range(0, len(xbmc_host)):                                                  
 	screenSaverStatus = send_json_command(xbmc_host[x], xbmc_port, 'XBMC.GetInfoBooleans', params={'booleans':['System.ScreenSaverActive']})
         if screenSaverStatus == {u'System.ScreenSaverActive': True}:
 	  send_json_command(xbmc_host[x], xbmc_port, "Input.Select")
 
-# Display message on screen
-def xbmc_osd_message(xbmc_host, xbmc_port=xbmc_port):
+# Display Camera where motion was detected
+def xbmc_doorbell(xbmc_host, xbmc_port=xbmc_port):
     for x in range(0, len(xbmc_host)):
-        result = send_json_command(xbmc_host[x], xbmc_port, 'GUI.ShowNotification', params={'title':xbmc_title, 'message':MESSAGE, 'displaytime':TIME, 'image':ICON})
+        result = send_json_command(xbmc_host[x], xbmc_port, 'Addons.ExecuteAddon',{'addonid':'script.doorbell','params':{'CamID':str(dbvar['CamID']),'CamName':str(dbvar['CamName'])}})
+ 
 
-
-# Poke screen if screensaver is active
+# Jambula Labs: Poke screen if screensaver is active
 xbmc_poke_screen(xbmc_host)
 
-# Display message on screen
-xbmc_osd_message(xbmc_host)
+# Display Camera alarm
+xbmc_doorbell(xbmc_host)

@@ -17,6 +17,7 @@ PREFIX=/usr
 CONFDIR=/etc
 STATEDIR=/var
 RUNDIR=/run
+TMPDIR=/tmp
 SOURCESDIR=/opt
 KERNELS_SRC_DIR=/usr/src/kernels
 SPOOLDIR=$STATEDIR/spool
@@ -142,7 +143,7 @@ KODI_USER_ADDONS=$KODI_CONFIG_DIR/addons
 KODI_SYSTEM_DATA=$KODI_SHARE_DIR/userdata
 KODI_SYSTEM_ADDONS=$KODI_SHARE_DIR/addons
 KODI_SYSTEM_SYS=$KODI_SHARE_DIR/system
-ADDITIONAL_KODI_ADDONS="plugin.audio.jazzradio.com plugin.audio.npr plugin.audio.radio_de plugin.video.aljazeera plugin.video.cbsnews_com plugin.video.discovery_com plugin.video.diy plugin.video.espn_3 plugin.video.espn.video plugin.video.foodnetwork plugin.video.fox.news plugin.video.guardian plugin.video.itbn_org plugin.video.kidsplace plugin.video.npr plugin.video.revision3 plugin.video.rt plugin.video.techcrunch plugin.video.ted.talks plugin.video.twit plugin.video.world.news.live plugin.video.zoneminder rtorrent repository.superrepo.org.gotham.all script.commands script.facebook.media script.game.netwalk script.rss.editor script.service.alarmclock weather.metoffice weather.weatherchina weather.worldweatheronline weather.wunderground"
+ADDITIONAL_KODI_ADDONS="plugin.audio.jazzradio.com plugin.audio.npr plugin.audio.radio_de plugin.video.aljazeera plugin.video.cbsnews_com plugin.video.discovery_com plugin.video.diy plugin.video.espn_3 plugin.video.espn.video plugin.video.foodnetwork plugin.video.fox.news plugin.video.guardian plugin.video.itbn_org plugin.video.kidsplace plugin.video.npr plugin.video.revision3 plugin.video.rt plugin.video.techcrunch plugin.video.ted.talks plugin.video.twit plugin.video.world.news.live plugin.video.zoneminder rtorrent repository.superrepo.org.gotham.all script.commands script.doorbell script.facebook.media script.game.netwalk script.rss.editor script.service.alarmclock weather.metoffice weather.weatherchina weather.worldweatheronline weather.wunderground"
 
 X11_DRIVER="" # intel|nouveau|mga|openchrome
 INTEL_X11_DRIVER_VERSION=git
@@ -269,14 +270,14 @@ TIMEZONE_FILE=/etc/timezone
 NGINX_CONF_DIR=/etc/nginx
 NGINX_CONFD_DIR=$NGINX_CONF_DIR/conf.d
 
-RPMBUILD_DIR=/tmp/rpmbuild
+RPMBUILD_DIR=$TMPDIR/rpmbuild
 
 WWW_USER=nginx
 WWW_GROUP=nginx
 WWW_HTML_DIR=$PROJECT_SYSTEM_SHARE_DIR/html
 WWW_CGI_DIR=$PROJECT_SYSTEM_SHARE_DIR/cgi-bin
 
-MYSQL_PRIVILEGES_FILE=/tmp/freeradius-priviledges.sql
+MYSQL_PRIVILEGES_FILE=$TMPDIR/freeradius-priviledges.sql
 
 FREERADIUS_DB_NAME=radius
 FREERADIUS_DB_USER=radius
@@ -451,7 +452,7 @@ FPING_CMD=/usr/sbin/fping
 # Icingaweb2
 ICINGA2_WEB_USER=$WWW_USER
 ICINGA2_WEB_GROUP=icingaweb2
-ICINGA2_WEB_TOKEN_FILE=/tmp/icingaweb2_setup_token
+ICINGA2_WEB_TOKEN_FILE=$TMPDIR/icingaweb2_setup_token
 ICINGA2_WEB_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/icingaweb2
 ICINGA2_WEB_AUTH_FILE=$ICINGA2_WEB_CONFIG_DIR/authentication.ini
 ICINGA2_WEB_CONF_FILE=$ICINGA2_WEB_CONFIG_DIR/config.ini
@@ -544,12 +545,12 @@ exit 0
 fi
 #
 # Make temporary backup folder
-[ ! -d /tmp/flexget_deps ] || rm -rf /tmp/flexget_deps
-mkdir /tmp/flexget_deps
+[ ! -d $TMPDIR/flexget_deps ] || rm -rf $TMPDIR/flexget_deps
+mkdir $TMPDIR/flexget_deps
 if [ -d $PROJECT_TARBALLS_DIR/flexget_deps ];
 then
 # Remove old packages
-mv -v $PROJECT_TARBALLS_DIR/flexget_deps/*{gz,bz2,zip} /tmp/flexget_deps/
+mv -v $PROJECT_TARBALLS_DIR/flexget_deps/*{gz,bz2,zip} $TMPDIR/flexget_deps/
 else
 # Create Download directory
 mkdir $PROJECT_TARBALLS_DIR/flexget_deps
@@ -1512,19 +1513,19 @@ make && make install
 # Unpack in temporary directory
 tar jxvf $PROJECT_TARBALLS_DIR/libgoom2-devel-*.tar.bz2 -C /tmp
 # Move files to proper destinations
-rsync -avz /tmp/usr/include/ $INCDIR/
-rsync -avz /tmp/usr/lib/ $LIBDIR/
+rsync -avz $TMPDIR/usr/include/ $INCDIR/
+rsync -avz $TMPDIR/usr/lib/ $LIBDIR/
 # Remove temp files
-rm -rf /tmp/usr
+rm -rf $TMPDIR/usr
 #
 # libffms2-devel
 # Unpack in temporary directory
-tar jxvf $PROJECT_TARBALLS_DIR/libffms2-devel-*.tar.bz2 -C /tmp
+tar jxvf $PROJECT_TARBALLS_DIR/libffms2-devel-*.tar.bz2 -C $TMPDIR
 # Move files to proper destinations
-rsync -avz /tmp/usr/include/ $INCDIR/
-rsync -avz /tmp/usr/lib/ $LIBDIR/
+rsync -avz $TMPDIR/usr/include/ $INCDIR/
+rsync -avz $TMPDIR/usr/lib/ $LIBDIR/
 # Remove temp files
-rm -rf /tmp/usr
+rm -rf $TMPDIR/usr
 }
 
 live555_install () {
@@ -2199,7 +2200,7 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 
 kodi_osd_configure () {
 # Install python-xbmc -helper
-python_xbmc_install
+#python_xbmc_install # No longer needed since we are using HTTP JSON RPC Calls
 # Copy jambulatv-osd wrapper for startup services, if none exists in bin directory
 [ -e $BINARY_PREFIX/jambulatv-osd ] || cp -v $PROJECT_BIN_DIR/jambulatv-osd $BINARY_PREFIX/
 }
@@ -3419,9 +3420,9 @@ cp -v $FREERADIUS_SQL_MODULE_FILE  $FREERADIUS_SQL_MODULE_FILE.orig
 # Modify patch 
 cat $PROJECT_PATCHES_DIR/radius.sql.module.patch \
 | sed -e "s:FREERADIUS_DB_USER:$FREERADIUS_DB_USER:g" \
-| sed -e "s:FREERADIUS_DB_PASS:$FREERADIUS_DB_PASS:g" > /tmp/radius.sql.module.patch
+| sed -e "s:FREERADIUS_DB_PASS:$FREERADIUS_DB_PASS:g" > $TMPDIR/radius.sql.module.patch
 # Apply patch 
-patch -p1 $FREERADIUS_SQL_MODULE_FILE < /tmp/radius.sql.module.patch
+patch -p1 $FREERADIUS_SQL_MODULE_FILE < $TMPDIR/radius.sql.module.patch
 #
 # sqlcounter module
 cp -v $FREERADIUS_SQLCOUNTER_MODULE_FILE  $FREERADIUS_SQLCOUNTER_MODULE_FILE.orig
@@ -3436,9 +3437,9 @@ cp -v $PROJECT_CONFIGS_DIR/radius/chillispot.conf $FREERADIUS_SQL_COUNTERS_DIR/
 cp -pv $FREERADIUS_CLIENTS_CONF_FILE $FREERADIUS_CLIENTS_CONF_FILE.orig
 # Modify patch 
 cat $PROJECT_PATCHES_DIR/radius.clients.conf.patch \
-| sed -e "s:FREERADIUS_DB_PASS:$FREERADIUS_DB_PASS:g" > /tmp/radius.clients.conf.patch
+| sed -e "s:FREERADIUS_DB_PASS:$FREERADIUS_DB_PASS:g" > $TMPDIR/radius.clients.conf.patch
 # Apply patch 
-patch -p1 $FREERADIUS_CLIENTS_CONF_FILE < /tmp/radius.clients.conf.patch
+patch -p1 $FREERADIUS_CLIENTS_CONF_FILE < $TMPDIR/radius.clients.conf.patch
 #
 # Configure radiusd.conf file
 # ***************************
@@ -3688,9 +3689,9 @@ echo "--- uam.sh.orig	2014-03-12 12:23:46.875850707 +0300
 -uamrootdir=/etc/chilli
 +uamrootdir=$COOVA_HTML_DIR
  uamwwwdir=\"\$uamrootdir/www\"
- tmpdir=\"/tmp\"" > /tmp/coova_uamroot.patch 
+ tmpdir=\"/tmp\"" > $TMPDIR/coova_uamroot.patch 
 # Apply uam file patch
-patch -p1 $COOVA_HTML_DIR/www/uam.sh < /tmp/coova_uamroot.patch
+patch -p1 $COOVA_HTML_DIR/www/uam.sh < $TMPDIR/coova_uamroot.patch
 #
 # Patch logn-config.sh
 patch -p1 $COOVA_HTML_DIR/www/config-local.sh < $PROJECT_PATCHES_DIR/coova_login_config_local.patch  
@@ -4579,14 +4580,14 @@ cepstral_plugin_add_2_unimrcp () {
 # unpack cepstral plugin
 tar zxvf $PROJECT_TARBALLS_DIR/Cepstral_Plugin_*.tar.gz -C /tmp
 # Replace files acinclude.m4 and configure.ac 
-cp -f /tmp/Cepstral_Plugin*/acinclude.m4 $INSTALL_SRC_DIR/unimrcp/
-cp -f /tmp/Cepstral_Plugin*/configure.ac $INSTALL_SRC_DIR/unimrcp/
+cp -f $TMPDIR/Cepstral_Plugin*/acinclude.m4 $INSTALL_SRC_DIR/unimrcp/
+cp -f $TMPDIR/Cepstral_Plugin*/configure.ac $INSTALL_SRC_DIR/unimrcp/
 # Add file swift.m4 into the folder /build/acmacros
-cp -v /tmp/Cepstral_Plugin*/swift.m4 $INSTALL_SRC_DIR/unimrcp/build/acmacros/
+cp -v $TMPDIR/Cepstral_Plugin*/swift.m4 $INSTALL_SRC_DIR/unimrcp/build/acmacros/
 # Add folder mrcp-cepstral into the folder /plugins
-cp -rv /tmp/Cepstral_Plugin*/mrcp-cepstral $INSTALL_SRC_DIR/unimrcp/plugins/
+cp -rv $TMPDIR/Cepstral_Plugin*/mrcp-cepstral $INSTALL_SRC_DIR/unimrcp/plugins/
 # Replace file Makefile.am in the folder /plugins
-cp -rv /tmp/Cepstral_Plugin*/Makefile.am $INSTALL_SRC_DIR/unimrcp/plugins/
+cp -rv $TMPDIR/Cepstral_Plugin*/Makefile.am $INSTALL_SRC_DIR/unimrcp/plugins/
 }
 
 unimrcp_install () {
@@ -4727,9 +4728,9 @@ zoneminder_install () {
 rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
 # Patches
 # Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
-sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > /tmp/zmdc.pl.patch
+sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > $TMPDIR/zmdc.pl.patch
 # Patch
-patch -p1 $INSTALL_SRC_DIR/ZoneMinder/scripts/zmdc.pl.in < /tmp/zmdc.pl.patch
+patch -p1 $INSTALL_SRC_DIR/ZoneMinder/scripts/zmdc.pl.in < $TMPDIR/zmdc.pl.patch
 #
 cd $INSTALL_SRC_DIR/ZoneMinder
 # bootstrap
@@ -4742,7 +4743,7 @@ cd $INSTALL_SRC_DIR/ZoneMinder
 --with-cgidir=$WWW_HTML_DIR/zm \
 ZM_DB_HOST=$ZONEMINDER_DB_HOST ZM_DB_NAME=$ZONEMINDER_DB_NAME \
 ZM_DB_USER=$ZONEMINDER_DB_USER ZM_DB_PASS=$ZONEMINDER_DB_PASS \
-ZM_RUNDIR=$RUNDIR/zm ZM_TMPDIR=/tmp/zm \
+ZM_RUNDIR=$RUNDIR/zm ZM_TMPDIR=$TMPDIR/zm \
 ZM_LOGDIR=$PROJECT_SYSTEM_LOG_DIR/zoneminder \
 ZM_SSL_LIB=openssl CPPFLAGS="-D__STDC_CONSTANT_MACROS ${CPPFLAGS}"
 make
@@ -4770,9 +4771,10 @@ usermod -G video $WWW_USER
 chmod 644 $PROJECT_SYSTEM_CONF_DIR/zm.conf
 # Copy test index.html, *.php and *.cgi files to zm
 cp -rv $PROJECT_CONTRIB_DIR/html/test* $WWW_HTML_DIR/zm/
+# Make nph-zms behave like cgi script since we are on nginx i.e. We want jpeg image
+ln -s $WWW_HTML_DIR/zm/nph-zms $WWW_HTML_DIR/zm/jpeg.cgi
 # Make .php and .cgi files executable
-cd $WWW_HTML_DIR/zm
-chmod 755 *.php *.cgi
+cd $WWW_HTML_DIR/zm && chmod 755 *.php *.cgi
 #
 # Create Events directory for ZoneMinder under user's home directory
 [ -d $ZONEMINDER_EVENTS_DIRECTORY ] || mkdir -p $ZONEMINDER_EVENTS_DIRECTORY
@@ -4801,6 +4803,29 @@ mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJEC
 #
 # Add sample USB webcams
 mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Monitors.sql
+#
+# Load Zones for above Monitors
+#------------------------------
+# Set number of cameras
+ZONEMINDER_CAMERAS_NO=$(echo "SELECT COUNT(Id) from Monitors;" | mysql -sN -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME)
+# Clear temporary SQL file for Zones table if it exists
+[ ! -e $TMPDIR/zm-zones.sql ] || rm -f $TMPDIR/zm-zones.sql
+# Create temporary SQL file for Zones table
+POSITION=1
+while let "POSITION <= $ZONEMINDER_CAMERAS_NO" 
+do
+# Set variables
+TABLE_ID=$POSITION
+MONITOR_ID=$(echo "SELECT Id from Monitors WHERE Id = '$TABLE_ID';" | mysql -sN -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME)
+# Create SQL statements
+cat >> $TMPDIR/zm-zones.sql << EOF
+INSERT INTO \`Zones\` VALUES ('$TABLE_ID','$MONITOR_ID','All','Active','Percent',4,'0,0 319,0 319,239 0,239',76800,16711680,'Blobs',25,NULL,2304,57600,3,3,2304,57600,1536,NULL,1,NULL,0,0);
+EOF
+let "POSITION = $POSITION + 1"
+done
+#
+# Load Zones table
+mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $TMPDIR/zm-zones.sql
 #
 # USB Webcams
 #------------
@@ -5018,6 +5043,18 @@ cd $INSTALL_SRC_DIR/monitoring-plugins
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --libexecdir=$MONITORING_PLUGINS_DIR \
 	--with-cgiurl=$WWW_CGI_DIR/icinga --with-fping-command=$FPING_CMD \
 	--with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP
+make
+make install
+}
+
+check_logfiles_install () {
+# unpack
+rsync -avz $PROJECT_GITHUB_DIR/check_logfiles/ $INSTALL_SRC_DIR/check_logfiles/
+cd $INSTALL_SRC_DIR/check_logfiles 
+# autoconf
+aclocal && autoconf && automake -a
+# configure
+./configure --prefix=$MONITORING_PLUGINS_DIR --libexecdir=$MONITORING_PLUGINS_DIR --with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP --with-seekfiles-dir=$TMPDIR
 make
 make install
 }
