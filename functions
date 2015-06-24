@@ -2064,6 +2064,16 @@ cp -fv $PROJECT_IMAGES_DIR/kodi/top-left.png \
 cp -fv $PROJECT_IMAGES_DIR/kodi/splash.png $KODI_SHARE_DIR/media/Splash.png
 }
 
+kodi_scripts () {
+# Picture-In-Picture
+# Copy jambulatv-pip script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-pip ] || cp -v $PROJECT_BIN_DIR/jambulatv-pip $BINARY_PREFIX/
+# Create kodi scripts directory
+[ -d $KODI_SHARE_DIR/scripts ] || mkdir -p $KODI_SHARE_DIR/scripts
+# Copy pip.py script for picture in picture
+cp -v $PROJECT_UTILS_DIR/pip.py $KODI_SHARE_DIR/scripts
+}
+
 kodi_jambulatv_service_configure () {
 # Copy JambulaTV wrapper for startup services, if none exists in bin directory
 [ -e $BINARY_PREFIX/JambulaTV ] || cp -v $PROJECT_BIN_DIR/JambulaTV $BINARY_PREFIX/

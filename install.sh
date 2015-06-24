@@ -80,7 +80,8 @@ fmtools_install
 kodi_deps_install
 kodi_install
 kodi_configure
-kodi_customization 
+kodi_customization
+kodi_scripts
 kodi_platform_install # Needed for PVR and Some Addons
 kodi_pvr_hts_install
 kodi_addons_install
