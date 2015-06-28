@@ -2187,6 +2187,8 @@ systemctl disable lircd.service
 	mv -v $KODI_USER_DATA/Lircmap.xml $KODI_USER_DATA/Lircmap.xml.bak
 # Copy contributed Lircmap.xml
 cp -v $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/Lircmap.xml $KODI_SYSTEM_SYS
+# Copy contributed remote.xml
+cp -v $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/remote.xml $KODI_SYSTEM_SYS/keymaps
 ;;
 esac
 }

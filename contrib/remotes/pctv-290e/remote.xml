@@ -200,7 +200,8 @@
       <hash>AudioNextLanguage</hash>
       <pageplus>SkipNext</pageplus>
       <pageminus>SkipPrevious</pageminus>
-      <blue>System.Exec("sudo /usr/bin/jambulatv-pip" "toggle-switch")</blue>
+      <yellow>RunScript(/usr/share/kodi/scripts/pip.py, change-channels)</yellow>
+      <blue>RunScript(/usr/share/kodi/scripts/pip.py, toggle-switch)</blue>
     </remote>
   </FullscreenVideo>
   <VideoTimeSeek>
