@@ -4,7 +4,7 @@ PROJECT_VERSION=3
 PROJECT_URL="http://www.jambulatv.com"
 COMPANY_NAME="Jambula Labs"
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.1-rc6"
+KERNEL_VERSION="4.1"
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
@@ -864,8 +864,7 @@ mv -v linux-$KERNEL_VERSION $KERNEL_VERSION.$KERNEL_NAME
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 #
 # Apply patches
-# rtl8192cu - dhcp not working
-#patch -p1 < $PROJECT_PATCHES_DIR/kernel.rtlwifi.dhcp.patch
+#patch -p1 < $PROJECT_PATCHES_DIR/XXXXXXXX.patch
 #
 # Remove stale .o files and dependencies lying around
 make mrproper
