@@ -2,6 +2,13 @@
 <splash>true</splash>
 <loglevel>1</loglevel>
 <hideconnectionlostwarning>true</hideconnectionlostwarning>
+
+<videoextensions>
+  <add>.ts|.mkv</add>
+  <remove>.ex3|.ex4</remove>
+</videoextensions>
+
+
   <gui>
     <algorithmdirtyregions>1</algorithmdirtyregions>
     <nofliptimeout>0</nofliptimeout>
