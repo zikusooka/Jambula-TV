@@ -279,7 +279,7 @@ pocketsphinx_install
 # ----------------
 # Cloud and Backup support
 owncloud_install
-
+owncloud_configure
 
 # ---------
 # Notices

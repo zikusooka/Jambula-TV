@@ -517,7 +517,8 @@ ASTERISK_AGI_BIN_DIR=$STATEDIR/lib/asterisk/agi-bin
 # OwnCloud
 OWNCLOUD_ADMIN_USER=jambulatv
 OWNCLOUD_ADMIN_PASS=3jambulatv
-#
+OWNCLOUD_CONFIG_DIR=$WWW_HTML_DIR/owncloud/config
+OWNCLOUD_CONFIG_FILE=$OWNCLOUD_CONFIG_DIR/config.php
 
 
 
@@ -4151,6 +4152,17 @@ chmod -R 777 $WWW_HTML_DIR/owncloud
 [ -e $NGINX_CONF_DIR/sites-enabled/owncloud ] || cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/owncloud $NGINX_CONF_DIR/sites-enabled/
 # Restart nginx
 systemctl restart nginx.service
+}
+
+owncloud_configure () {
+# Create data directory for owncloud
+[ -d $PROJECT_SYSTEM_LOG_DIR/owncloud ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/owncloud
+# Change permissions on logging directory
+chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_LOG_DIR/owncloud
+#
+# Add link to /JambulaTV folder - Find a better way to access these files
+ln -s $PROJECT_PARTITION $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/files/$PROJECT_NAME
+#
 # Display OwnCloud's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
@@ -4164,6 +4176,10 @@ OwnCloud
 
   username = $OWNCLOUD_ADMIN_USER
   password = $OWNCLOUD_ADMIN_PASS
+
+  IMPORTANT: At the login page, make sure you change the Data Folder to:
+
+  $PROJECT_SYSTEM_LOG_DIR/owncloud
 #
 EOF
 }
