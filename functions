@@ -4177,9 +4177,21 @@ OwnCloud
   username = $OWNCLOUD_ADMIN_USER
   password = $OWNCLOUD_ADMIN_PASS
 
-  IMPORTANT: At the login page, make sure you change the Data Folder to:
+  IMPORTANT: 
+
+  1) At the login page, make sure you change the Data Folder to:
 
   $PROJECT_SYSTEM_LOG_DIR/owncloud
+
+  2) Add Wireless IP Access to config file as follows.  This file is created after log in.
+
+  vim $OWNCLOUD_CONFIG_FILE
+
+ 'trusted_domains' => 
+  array (
+    0 => '$NETWORK_IP_ADDRESS', '$COOVA_SERVER_IP'
+  ),
+
 #
 EOF
 }
