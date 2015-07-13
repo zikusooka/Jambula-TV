@@ -160,7 +160,7 @@ templates:
     priority: 5
     include: [ '{{secrets.netcasts.include}}' ]
     exec:
-      auto_escape: yes
+      auto_escape: no
       on_start:
         # Add timestamp to log file
         phase: echo "$(date '+%F %H:%M'):" >> '{{secrets.netcasts.logfile}}'
