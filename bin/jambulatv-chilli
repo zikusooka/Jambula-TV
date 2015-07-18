@@ -1,5 +1,5 @@
 #!/bin/sh
-# CoovaChilli init script
+# Coova-Chilli init script
 PREFIX=/usr
 PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_SHARE_DIR=$PREFIX/share/$PROJECT_NAME
@@ -9,7 +9,8 @@ WWW_HTML_DIR=$PROJECT_SYSTEM_SHARE_DIR/html
 COOVA_HTML_DIR=$WWW_HTML_DIR/coova
 LOGFILE=/var/log/$PROJECT_NAME/chilli.log
 REMOTE_DOMAIN_NAME=google.com
-LOCAL_DNS_SERVER=`grep 'HS_UAMLISTEN=' $COOVA_CONFIG_FILE | cut -d '=' -f2 | awk {'print $1'}`
+PRIMARY_DNS_SERVER=$(grep 'HS_UAMLISTEN=' $COOVA_CONFIG_FILE | cut -d '=' -f2 | awk {'print $1'} | sed 's: ::g') # 172.16.0.1
+
 
 # Source function library.
 . /etc/rc.d/init.d/functions
@@ -17,64 +18,88 @@ LOCAL_DNS_SERVER=`grep 'HS_UAMLISTEN=' $COOVA_CONFIG_FILE | cut -d '=' -f2 | awk
 [ -f /usr/sbin/chilli ] || exit 0
 
 
-
 # Jambula chilli functions:
 # -------------------------
-set_default_gateway_device () {
-# Find default gateway device
-ip route show | grep default | grep ppp > /dev/null 2>&1
-if [ "$?" = "0" ];
-then
-INTERNET_GATEWAY_DEV=`ip link | grep ppp | cut -d : -f2 | head -1 | sed -e 's/ //g'`
-else
-INTERNET_GATEWAY_DEV=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
-fi
-# Set previous HS_WANIF variable
-PREVIOUS_HS_WANIF=`grep 'HS_WANIF=' $COOVA_CONFIG_FILE | awk {'print $1'}`
+get_system_dns_settings () {
+# Number of DNS settings
+NUMBER_OF_DNS=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | wc -l)
 #
+# Primary DNS 1
+SECONDARY_DNS_SERVER=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 1')
+# Set DNS2 if more than 1
+if [ "$NUMBER_OF_DNS" -gt "1" ];
+then
+# Secondary DNS 2
+TETIARY_DNS_SERVER=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 2')
+else
+TETIARY_DNS_SERVER=$SECONDARY_DNS_SERVER
+fi
+}
+
+get_chilli_dns_settings () {
+# HS_DNS1
+PREVIOUS_HS_DNS1=$(grep 'HS_DNS1=' $COOVA_CONFIG_FILE | cut -d '=' -f2)
+# HS_DNS2
+PREVIOUS_HS_DNS2=$(grep 'HS_DNS2=' $COOVA_CONFIG_FILE | cut -d '=' -f2)
+# HS_DOMAINDNSLOCAL
+PREVIOUS_HS_DOMAINDNSLOCAL=$(grep 'HS_DOMAINDNSLOCAL=' $COOVA_CONFIG_FILE)
+}
+
+check_internet_status () {
+# Get DNS settings first
+get_system_dns_settings
+# check Internet connectivity
+host -W 1 $REMOTE_DOMAIN_NAME $SECONDARY_DNS_SERVER > /dev/null 2>&1
+INTERNET_STATUS=$?
+}
+
+check_local_dns_status () {
+host -W 1 $REMOTE_DOMAIN_NAME > /dev/null 2>&1
+DNS_STATUS=$?
+}
+
+set_chilli_internet_device () {
+check_internet_status 
+# Based on connectivity, get default gateway device
+if [ "$INTERNET_STATUS" = "0" ];
+then
+INTERNET_GATEWAY_DEV=$(ip route show | grep default | awk {'print $5'})
+else
+INTERNET_GATEWAY_DEV=
+fi
+#
+# Get previous HS_WANIF variable
+PREVIOUS_HS_WANIF=$(grep 'HS_WANIF=' $COOVA_CONFIG_FILE | awk {'print $1'})
 # Replace previous HS_WANIF with current and active Internet device
 sed -i "s:$PREVIOUS_HS_WANIF:HS_WANIF=$INTERNET_GATEWAY_DEV:g" $COOVA_CONFIG_FILE
 }
 
-set_dns_nameservers () {
-# Set DNS 1
-PREVIOUS_HS_DNS1=`grep 'HS_DNS1=' $COOVA_CONFIG_FILE`
-# Current DNS 1
-CURRENT_DNS1=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 1'`
+set_chilli_dns_settings () {
+# Get current/previous DNS settings
+get_system_dns_settings
+get_chilli_dns_settings
+check_internet_status 
 #
-CURRENT_HS_DNS1=HS_DNS1=$CURRENT_DNS1
-
-# Set DNS 2
-PREVIOUS_HS_DNS2=`grep 'HS_DNS2=' $COOVA_CONFIG_FILE`
-#
-# Number of DNS settings
-NUMBER_OF_DNS=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | wc -l`
-#
-# Add second DNS if more than 1 setting
-if [ "$NUMBER_OF_DNS" -gt "1" ];
+# Based on connectivity, do:
+if [ "$INTERNET_STATUS" = "0" ];
 then
-# Current DNS 2
-CURRENT_DNS2=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 2'` 
-else
-CURRENT_DNS2=$CURRENT_DNS1
-fi
-CURRENT_HS_DNS2=HS_DNS2=$CURRENT_DNS2
 #
-# Coova-chilli: Set domains local feature
-PREVIOUS_HS_DOMAINDNSLOCAL=`grep 'HS_DOMAINDNSLOCAL=' $COOVA_CONFIG_FILE`
-host -W 1 $REMOTE_DOMAIN_NAME $CURRENT_DNS1 > /dev/null 2>&1
-DNS_STATUS=$?
-if [ "$DNS_STATUS" = "0" ];
-then
-# Set to off since internet on
-sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=off:g" $COOVA_CONFIG_FILE 
+# Set chilli domains local feature to OFF since internet on
+sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=off:g" $COOVA_CONFIG_FILE
 else
-# Set to on since internet off
+# Set chilli domains local feature to ON since internet off
 sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=on:g" $COOVA_CONFIG_FILE 
+#
 fi
+#
+# Set chilli DNS servers to primary local & seconary foreign  domain name servers
+sed -i "s:HS_DNS1=$PREVIOUS_HS_DNS1:HS_DNS1=$PRIMARY_DNS_SERVER:g" $COOVA_CONFIG_FILE
+sed -i "s:HS_DNS2=$PREVIOUS_HS_DNS2:HS_DNS2=$SECONDARY_DNS_SERVER:g" $COOVA_CONFIG_FILE
 }
 
+
 # Default chilli functions
+# ------------------------
 . /etc/chilli/functions
 
 MULTI=$(ls /etc/chilli/*/chilli.conf 2>/dev/null)
@@ -112,8 +137,8 @@ case $1 in
     start)
         echo -n "Starting $prog: "
 	
-	set_default_gateway_device
-	set_dns_nameservers
+        set_chilli_internet_device
+        set_chilli_dns_settings
 
         /sbin/modprobe tun >/dev/null 2>&1
         echo 1 > /proc/sys/net/ipv4/ip_forward
