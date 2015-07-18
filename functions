@@ -3336,8 +3336,6 @@ rsync -av $PROJECT_CONFIGS_DIR/nginx/sites-enabled/ $NGINX_CONF_DIR/sites-enable
 mkdir $NGINX_CONF_DIR/ssl
 # Create SSL certificates and keys
 ssl_cert_key_generate $NGINX_CONF_DIR/ssl/cert.pem $NGINX_CONF_DIR/ssl/cert.key 7300
-# Copy contributed test index.html, *.php and *.cgi files to zm
-rsync -av $PROJECT_CONTRIB_DIR/html/ $WWW_HTML_DIR/
 }
 
 nginx_customization () {
@@ -4435,7 +4433,7 @@ done
 # WebRTC
 # ------
 # Copy jssip files for WebRTC
-rsync -avz --delete-after $PROJECT_CONTRIB_DIR/html/jssip/ $WWW_HTML_DIR/jssip/
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/jssip/ $WWW_HTML_DIR/jssip/
 # Change permissions of sipml5 to www owner
 chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/jssip
 }
@@ -4815,7 +4813,7 @@ usermod -G video $WWW_USER
 # Change permissions on zoneminder.conf - or web interface wont display
 chmod 644 $PROJECT_SYSTEM_CONF_DIR/zm.conf
 # Copy test index.html, *.php and *.cgi files to zm
-cp -rv $PROJECT_CONTRIB_DIR/html/test* $WWW_HTML_DIR/zm/
+cp -rv $PROJECT_CUSTOMIZATION_DIR/nginx/html/test* $WWW_HTML_DIR/zm/
 # Make nph-zms behave like cgi script since we are on nginx i.e. We want jpeg image
 ln -s $WWW_HTML_DIR/zm/nph-zms $WWW_HTML_DIR/zm/jpeg.cgi
 # Make .php and .cgi files executable
