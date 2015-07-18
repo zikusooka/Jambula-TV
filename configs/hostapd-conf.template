@@ -1058,7 +1058,7 @@ wpa_key_mgmt=WPA-PSK
 # (dot11RSNAConfigPairwiseCiphersTable)
 # Pairwise cipher for WPA (v1) (default: TKIP)
 # Don't use CCMP - Connection breaks!!!
-wpa_pairwise=CCMP TKIP
+wpa_pairwise=TKIP
 # Pairwise cipher for RSN/WPA2 (default: use wpa_pairwise value)
 rsn_pairwise=CCMP
 
