@@ -3733,6 +3733,11 @@ cp -rv $PROJECT_CUSTOMIZATION_DIR/coova/html/* $COOVA_HTML_DIR/www/
 # Copy coova.jpg small logo
 cp -fv $PROJECT_IMAGES_DIR/coova.jpg $COOVA_HTML_DIR/www
 #
+# Patch default nginx virtual host to enable redirection to hotspot portal page
+patch -p1 $NGINX_CONF_DIR/sites-enabled/default < $PROJECT_PATCHES_DIR/nginx.default.portal.patch
+#
+systemctl restart nginx
+#
 # Display Coova Chilli's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #

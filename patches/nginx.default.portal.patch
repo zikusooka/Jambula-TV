@@ -1,0 +1,14 @@
+--- /opt/JambulaTV/configs/nginx/sites-enabled/default	2015-07-18 21:32:42.602413376 +0300
++++ default	2015-07-18 21:28:16.463003001 +0300
+@@ -5,6 +5,11 @@
+         root   html;
+         index  index.html index.htm index.php;
+ 	
++            # Redirect to HotSpot Portal for wireless clients
++            if ($remote_addr ~* 172.16.0) {
++            return 301 http://172.16.0.1:4990/www/login.chi;
++            }
++
+         location / {
+         }
+ 

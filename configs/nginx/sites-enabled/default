@@ -1,10 +1,10 @@
     server {
         listen 80;
 
-        server_name  jambulatv.com www.jambulatv.com;
+        server_name  _;
         root   html;
         index  index.html index.htm index.php;
-
+	
         location / {
         }
 
