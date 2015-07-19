@@ -51,7 +51,7 @@ templates:
       smtp_username: '{{secrets.email.smtp_username}}'
       smtp_password: '{{secrets.email.smtp_password}}'
       smtp_tls: yes
-
+    
 
 
 ##############
@@ -163,10 +163,9 @@ templates:
       auto_escape: no
       on_start:
         # Add timestamp to log file
-        phase: echo "$(date '+%F %H:%M'):" >> '{{secrets.netcasts.logfile}}'
+        phase: echo "# $(date '+%F %H:%M'):" >> '{{secrets.netcasts.logfile}}'
       on_output:
-        # Download netcasts
-        #for_accepted: wget -c --limit-rate='{{secrets.wget.limit_rate}}' -b -a '{{secrets.wget.logfile}}' -P '{{secrets.netcasts.download}}' %(url)s
+        # Copy netcasts URLS to input-file for aria2c
         for_accepted: echo "%(url)s" >> '{{secrets.netcasts.download_script}}'
       on_exit:
         # Add URL to log file
