@@ -163,13 +163,17 @@ templates:
       auto_escape: no
       on_start:
         # Add timestamp to log file
-        phase: echo "# $(date '+%F %H:%M'):" >> '{{secrets.netcasts.logfile}}'
+        phase: echo "# $(date '+%F %H:%M'):" >> '{{secrets.netcasts.download_log}}'
       on_output:
         # Copy netcasts URLS to input-file for aria2c
-        for_accepted: echo "%(url)s" >> '{{secrets.netcasts.download_script}}'
+        for_accepted: echo "%(url)s" >> '{{secrets.netcasts.download_file}}'
       on_exit:
         # Add URL to log file
-        for_accepted: echo -e "%(url)s" >> '{{secrets.netcasts.logfile}}'
+        for_accepted: echo "%(url)s" >> '{{secrets.netcasts.download_log}}'
+
+        # Start aria2
+        phase: /bin/sh '{{secrets.netcasts.download_script}}' '{{secrets.netcasts.download_dir}}' '{{secrets.netcasts.download_file}}' '{{secrets.email.to}}'
+
     accept_all: yes
 
 

@@ -32,13 +32,14 @@ netcasts:
   path: PROJECT_PARTITION # Netcasts path for free space calculations
   exists: PROJECT_PARTITION
   include: FLEXGET_CONFIG_DIR/netcasts.yml
-  logfile: PROJECT_SYSTEM_LOG_DIR/flexget/netcasts.log
-  download: NETCASTS_DIRECTORY
-  download_script: SCRIPTS_DIR/get_netcasts
+  download_dir: NETCASTS_DIRECTORY
+  download_file: NETCASTS_DIRECTORY/inputfile.DO.NOT.REMOVE
+  download_log: PROJECT_SYSTEM_LOG_DIR/flexget/netcasts.log
+  download_script: /usr/bin/jambulatv-fetch-podcasts
   day_of_week: sun,mon,tue,wed,thu,fri,sat
   hour: 5
   minute: 15
 
 wget:
-  logfile: PROJECT_SYSTEM_LOG_DIR/flexget/wget.log
+  wget_log: PROJECT_SYSTEM_LOG_DIR/flexget/wget.log
   limit_rate: 14k
