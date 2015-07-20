@@ -3249,8 +3249,8 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $ARIA2_LOG_FILE
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $ARIA2_DOWNLOADS_DIRECTORY
 # Copy aria2 systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/aria2.service $SYSTEMD_UNITS_DIR_USER/
-# Enable aria2 if needed
-systemctl enable aria2.service
+# Enable aria2 if needed # Don't enable since flexget start aria2 during fetch of netcasts
+#systemctl enable aria2.service
 }
 
 samba_configure () {
