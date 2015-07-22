@@ -1,0 +1,47 @@
+#!/bin/sh
+# Variables
+ARIA2_CMD=/usr/bin/aria2c 
+ARIA2_OPTIONS="-c -D -q --no-conf true --disable-ipv6 true"
+ARIA2_LOG_FILE=/var/log/JambulaTV/aria2.log
+ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT=/tmp/aria2-on-download-complete.sh
+ARIA2_DIRECTORY=$1 
+ARIA2_INPUT_FILE=$2 
+EMAIL_NOTIFICATION_ADDRESS=$3
+EMAIL_NOTIFICATION_SCRIPT=/usr/bin/jambulatv-email
+# Default variables if no args 
+[ "x$ARIA2_DIRECTORY" = "x" ] && ARIA2_DIRECTORY=/JambulaTV/Netcasts
+[ "x$ARIA2_INPUT_FILE" = "x" ] && ARIA2_INPUT_FILE=/JambulaTV/Netcasts/inputfile.DO.NOT.REMOVE
+[ "x$EMAIL_NOTIFICATION_ADDRESS" = "x" ] && EMAIL_NOTIFICATION_ADDRESS="username@yourdomain"
+
+
+
+# Generate 'On-Download-X' Scripts
+# ---------------------------------
+# Generate On-Download-Complete Script
+cat > $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT << EOF
+#!/bin/sh
+# Perform the following after aria2 download is completed
+#
+# Email notifying completion
+$EMAIL_NOTIFICATION_SCRIPT $EMAIL_NOTIFICATION_ADDRESS "Podcasts - Download of \$(basename \$3) Completed" "Your podcast is located at \$3"
+
+# Remove Input file if download completed successfully
+[ -e $ARIA2_INPUT_FILE ] && rm -f $ARIA2_INPUT_FILE
+EOF
+#
+# Make script executable
+chmod 755 $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT
+
+
+# Add empty input file if non-exists
+# ----------------------------------
+if [ ! -e $ARIA2_INPUT_FILE ];
+then
+touch $ARIA2_INPUT_FILE
+chmod 666 $ARIA2_INPUT_FILE
+fi
+
+
+# Start/Resume Downloads
+# ----------------------
+$ARIA2_CMD $ARIA2_OPTIONS -d $ARIA2_DIRECTORY -i $ARIA2_INPUT_FILE -l $ARIA2_LOG_FILE --on-download-complete=$ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT
