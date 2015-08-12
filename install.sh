@@ -76,15 +76,15 @@ tvheadend_install
 tvheadend_configure
 fmtools_install
 
-# Kodi (formerly XBMC)
+# Kodi Dependencies 
 kodi_deps_install
-kodi_install
+# Kodi (formerly XBMC)
+kodi_install # Takes ~160 minutes
+kodi_pvr_hts_install
+kodi_addons_install
 kodi_configure
 kodi_customization
 kodi_scripts
-kodi_platform_install # Needed for PVR and Some Addons
-kodi_pvr_hts_install
-kodi_addons_install
 
 # Tools used by Kodi
 kodi_remote_configure

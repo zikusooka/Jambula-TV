@@ -18,7 +18,7 @@
     </retry>
   </router>
 
-    <log type='file'> <!-- "syslog", "file" or "stdout" -->
+    <log type='syslog'> <!-- "syslog", "file" or "stdout" -->
     <file>/var/log/JambulaTV/jabberd/c2s.log</file>
   </log>
 

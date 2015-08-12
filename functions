@@ -133,9 +133,10 @@ FREEVO_VERSION=svn
 
 TVHEADEND_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.hts/tvheadend
 
-KODI_CODENAME=Isengard
-KODI_FFMPEG_VERSION=2.6.2-$KODI_CODENAME-alpha
+KODI_VERSION=15.1 #15.0
 
+KODI_BRANCH=Isengard
+KODI_TAG=$KODI_VERSION-$KODI_BRANCH
 KODI_PREFERRED_SKIN=Aeon-Nox
 KODI_DEFAULT_SKIN=confluence
 KODI_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.kodi
@@ -254,6 +255,8 @@ NETWORK_MAC_ADDRESS=`ip addr show | grep ether | awk {'print $2'} | head -1`
 SYSTEM_UUID=$(uuid)
 SYSTEM_IDENTIFIER=$(echo $SYSTEM_UUID | cut -d - -f5)
 #SYSTEM_IDENTIFIER=`echo $NETWORK_MAC_ADDRESS | sed -e 's/://g'`
+
+SYSTEM_CPU_CORES=$(grep -i 'cpu cores' /proc/cpuinfo | sort -u | cut -d : -f2 | sed 's/ //g')
 
 PORTS_ASSIGNED_FILE=$PROJECT_DOCS_DIR/ports_assigned
 
@@ -1953,60 +1956,111 @@ make
 make install
 }
 
-kodi_deps_install () {
-libnfs_install
-libusb_install
-libcec_install
-}
-
-kodi_install () {
-# Unpack
-tar zxvf $PROJECT_TARBALLS_DIR/kodi-*$KODI_CODENAME*.tgz -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v kodi-*$KODI_CODENAME* kodi
-# Copy kodi-made ffmpeg sources
-cp -v $PROJECT_TARBALLS_DIR/kodi-ffmpeg-$KODI_FFMPEG_VERSION.tar.gz $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/ffmpeg-$KODI_FFMPEG_VERSION.tar.gz
-# Build JsonSchemaBuilder
-make -C $INSTALL_SRC_DIR/kodi/tools/depends/native/JsonSchemaBuilder/
-cp -v $INSTALL_SRC_DIR/kodi/tools/depends/native/JsonSchemaBuilder/bin/JsonSchemaBuilder $BINARY_PREFIX
-chmod 775 $BINARY_PREFIX/JsonSchemaBuilder
-# Compile
-cd $INSTALL_SRC_DIR/kodi
-./bootstrap
-#./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd
-./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-libcec=no
-cd $INSTALL_SRC_DIR/kodi
-[ ! -d $INCDIR/afpfs-ng ] || ln -s -f $INCDIR/afpfs-ng/* $INCDIR/
+platform_install () {
+rsync -av $PROJECT_GITHUB_DIR/platform/ $INSTALL_SRC_DIR/platform/
+cd $INSTALL_SRC_DIR/platform
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR
 make
 make install
-# Clean up - saves upto 1.5GB
-make clean
-}
-
-kodi_addons_install() {
-# pvr.hts
-rsync -av $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts/pvr.hts $KODI_SYSTEM_ADDONS/
-#
-# Others - zipped
-for KODI_ADDON in $ADDITIONAL_KODI_ADDONS;
-do
-unzip -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
-done
 }
 
 kodi_platform_install () {
 rsync -av $PROJECT_GITHUB_DIR/kodi-platform/ $INSTALL_SRC_DIR/kodi-platform/
 cd $INSTALL_SRC_DIR/kodi-platform
-cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=$LIBDIR
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR
 make
 make install
 }
 
-kodi_pvr_hts_install() {
-rsync -av $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts/ $INSTALL_SRC_DIR/kodi/pvr.hts/
-cd $INSTALL_SRC_DIR/kodi/pvr.hts
-cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_MODULE_PATH=$LIBDIR/kodi
+kodi_deps_install () {
+libnfs_install
+libusb_install
+libcec_install
+# Needed for Addons like PVR.HTS
+platform_install 
+kodi_platform_install
+}
+
+kodi_install () {
+# Archive and Unpack specified kodi Kodi
+# --------------------------------------
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/kodi-$KODI_BRANCH
+# Unpack desired git branch/tag
+case $KODI_TAG in
+master)
+# master branch i.e. HEAD
+git archive --format tar.gz --prefix=kodi/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+;;
+*)
+# Check to see if desired branch/tag exists
+git tag -l | grep $KODI_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+if [ "$TAG_EXISTS" = "0" ];
+then
+git archive --format tar.gz --prefix=kodi/ $KODI_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=kodi/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Display Kodi's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+KODI Version
+============
+% The Kodi branch you specified, does not exist, so I used master/ HEAD instead
+
+#
+EOF
+fi
+;;
+esac
+#
+# Set FFmpeg version for kodi
+# ----------------------------
+KODI_FFMPEG_VERSION=$(grep VERSION $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/FFMPEG-VERSION | grep Isengard | cut -d "=" -f2)
+cd $PROJECT_GITHUB_DIR/kodi-FFmpeg
+# Archive to kodi ffmpeg target folders directory
+git archive -o $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/ffmpeg-$KODI_FFMPEG_VERSION.tar.gz --prefix=ffmpeg-$KODI_FFMPEG_VERSION/ $KODI_FFMPEG_VERSION
+#
+# JsonSchemaBuilder
+# -----------------
+if [ ! -x $BINARY_PREFIX/JsonSchemaBuilder ];
+then
+# Build JsonSchemaBuilder, if not available
+make -C $INSTALL_SRC_DIR/kodi/tools/depends/native/JsonSchemaBuilder/
+cp -v $INSTALL_SRC_DIR/kodi/tools/depends/native/JsonSchemaBuilder/bin/JsonSchemaBuilder $BINARY_PREFIX
+chmod 775 $BINARY_PREFIX/JsonSchemaBuilder
+fi
+#
+# Compile
+# -------
+cd $INSTALL_SRC_DIR/kodi
+./bootstrap
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-libcec=no
+cd $INSTALL_SRC_DIR/kodi
+[ ! -d $INCDIR/afpfs-ng ] || ln -s -f $INCDIR/afpfs-ng/* $INCDIR/
+# Make Install
+make -j$SYSTEM_CPU_CORES
+make install
+# Clean up - saves upto 1.5GB
+make clean
+}
+
+kodi_pvr_hts_install () {
+tar zxvf $PROJECT_TARBALLS_DIR/kodi-addons/pvr.hts*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v pvr.hts* pvr.hts
+cd $INSTALL_SRC_DIR/pvr.hts
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi
 make
 make install
+}
+
+kodi_addons_install() {
+# Others - zipped
+for KODI_ADDON in $ADDITIONAL_KODI_ADDONS;
+do
+unzip -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
+done
 }
 
 kodi_configure () {
@@ -2979,7 +3033,7 @@ do
 rm -rf $PYTHON_SITEDIR/$PYTHON_MODULE* 
 # Install python modules
 echo "Installing $PYTHON_MODULE ..."
-# Unpack using the appropriate too for archive file format
+# Unpack using the appropriate tool for archive file format
 # gzip
 [ -e $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*gz ] && \
    tar zxvf $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*gz -C $INSTALL_SRC_DIR
