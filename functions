@@ -4219,6 +4219,8 @@ owncloud_configure () {
 # Change permissions on logging directory
 chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_LOG_DIR/owncloud
 #
+# Make custom files directory if not existent
+[ -d $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/files ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/files
 # Add link to /JambulaTV folder - Find a better way to access these files
 ln -s $PROJECT_PARTITION $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/files/$PROJECT_NAME
 #
