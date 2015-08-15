@@ -76,12 +76,12 @@ LOCAL_SETTINGS_DIR=$PROJECT_PARTITION/local_settings
 # User's media folders
 USER_MUSIC_DIR=$PROJECT_PARTITION/Music
 USER_PICTURES_DIR=$PROJECT_PARTITION/Pictures
+PODCASTS_DIRECTORY=$PROJECT_PARTITION/Podcasts
 USER_VIDEOS_DIR=$PROJECT_PARTITION/Videos
 USER_TV_SHOWS_DIR=$USER_VIDEOS_DIR/TV_Shows
 USER_TV_RECORDINGS_DIR=$USER_VIDEOS_DIR/TV_Recordings
 USER_MOVIES_DIR=$USER_VIDEOS_DIR/Movies
 
-NETCASTS_DIRECTORY=$USER_VIDEOS_DIR/Podcasts
 PLAYLISTS_DIRECTORY=$PROJECT_PARTITION/Playlists
 
 # Remind
@@ -2090,7 +2090,7 @@ chmod 755 $KODI_USER_DATA/autoexec.py
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR
 #
 # Create some default media directories if they don't exist
-for FOLDER in $USER_TV_SHOWS_DIR $USER_MOVIES_DIR $USER_TV_RECORDINGS_DIR $NETCASTS_DIRECTORY $USER_MUSIC_DIR $USER_PICTURES_DIR
+for FOLDER in $USER_TV_SHOWS_DIR $USER_MOVIES_DIR $USER_TV_RECORDINGS_DIR $PODCASTS_DIRECTORY $USER_MUSIC_DIR $USER_PICTURES_DIR
 do
 cd $MULTIMEDIA_USER_HOME_DIR
 # Create directory
@@ -3080,7 +3080,7 @@ cat $PROJECT_CONFIGS_DIR/flexget/variables.yml.template | \
    sed -e "s:TORRENTS_WATCH_DIRECTORY:$TORRENTS_WATCH_DIRECTORY:g" | \
    sed -e "s:TORRENTS_PENDING_DIRECTORY:$TORRENTS_PENDING_DIRECTORY:g" | \
    sed -e "s:TORRENTS_COMPLETED_DIRECTORY:$TORRENTS_COMPLETED_DIRECTORY:g" | \
-   sed -e "s:NETCASTS_DIRECTORY:$NETCASTS_DIRECTORY:g" \
+   sed -e "s:PODCASTS_DIRECTORY:$PODCASTS_DIRECTORY:g" \
 > $FLEXGET_CONFIG_DIR/variables.yml
 fi
 #
@@ -3089,7 +3089,7 @@ for DIR in \
 $TORRENTS_WATCH_DIRECTORY \
 $TORRENTS_PENDING_DIRECTORY \
 $TORRENTS_COMPLETED_DIRECTORY \
-$NETCASTS_DIRECTORY
+$PODCASTS_DIRECTORY
 do
 # Create directory
 [ -d $DIR ] || mkdir -p $DIR
@@ -3109,16 +3109,19 @@ series:
 EOF
 fi
 #
-# Netcasts
-if [ ! -e $FLEXGET_CONFIG_DIR/netcasts.yml ];
+# Podcasts
+if [ ! -e $FLEXGET_CONFIG_DIR/podcasts.yml ];
 then
-# Create sample Netcasts feeds
-cat > $FLEXGET_CONFIG_DIR/netcasts.yml <<EOF
+# Create sample Podcasts feeds
+cat > $FLEXGET_CONFIG_DIR/podcasts.yml <<EOF
 inputs:
   - rss: http://feeds.5by5.tv/inbeta # 5by5 - In Beta
   - rss: http://revision3.com/tzdaily/feed/MP4-Small # TekZilla - Daily" 
 EOF
 fi
+# Copy jambulatv-fetch-podcasts script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-fetch-podcasts ] || cp -v $PROJECT_BIN_DIR/jambulatv-fetch-podcasts $BINARY_PREFIX/
+#
 # Directory permissions
 # Change flexget config directory to multimedia user
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $FLEXGET_CONFIG_DIR
@@ -3262,7 +3265,7 @@ aria2_install () {
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/aria2/ $INSTALL_SRC_DIR/aria2/
 cd $INSTALL_SRC_DIR/aria2
 autoreconf -i
-./configure --prefix=/usr --libdir=$LIBDIR --enable-libaria2
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-libaria2
 make
 make install
 # Cache recently shared libraries 
@@ -3303,7 +3306,7 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $ARIA2_LOG_FILE
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $ARIA2_DOWNLOADS_DIRECTORY
 # Copy aria2 systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/aria2.service $SYSTEMD_UNITS_DIR_USER/
-# Enable aria2 if needed # Don't enable since flexget start aria2 during fetch of netcasts
+# Enable aria2 if needed # Don't enable since flexget start aria2 during fetch of podcasts
 #systemctl enable aria2.service
 }
 
@@ -4024,7 +4027,7 @@ cat $PROJECT_CONFIGS_DIR/xupnpd.lua.sample | \
 	sed -e "s/MULTICAST_PROXY_IP/$COOVA_SERVER_IP/" | \
 	sed -e "s:USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" | \
 	sed -e "s:USER_MOVIES_DIR:$USER_MOVIES_DIR:g" | \
-	sed -e "s:NETCASTS_DIRECTORY:$NETCASTS_DIRECTORY:g" | \
+	sed -e "s:PODCASTS_DIRECTORY:$PODCASTS_DIRECTORY:g" | \
 	sed -e "s:USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
 	sed -e "s:USER_PICTURES_DIR:$USER_PICTURES_DIR:g" | \
 	sed -e "s:PLAYLISTS_DIRECTORY:$PLAYLISTS_DIRECTORY:g" | \
@@ -4216,13 +4219,14 @@ systemctl restart nginx.service
 owncloud_configure () {
 # Create data directory for owncloud
 [ -d $PROJECT_SYSTEM_LOG_DIR/owncloud ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/owncloud
-# Change permissions on logging directory
-chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_LOG_DIR/owncloud
-#
+# Make custom cache directory if not existent
+[ -d $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/cache ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/cache
 # Make custom files directory if not existent
 [ -d $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/files ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/files
 # Add link to /JambulaTV folder - Find a better way to access these files
 ln -s $PROJECT_PARTITION $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/files/$PROJECT_NAME
+# Change permissions on data directory
+chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_LOG_DIR/owncloud
 #
 # Display OwnCloud's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF

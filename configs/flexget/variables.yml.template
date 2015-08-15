@@ -28,13 +28,13 @@ movies:
   hour: 3
   minute: 5
 
-netcasts:
-  path: PROJECT_PARTITION # Netcasts path for free space calculations
+podcasts:
+  path: PROJECT_PARTITION # Podcasts path for free space calculations
   exists: PROJECT_PARTITION
-  include: FLEXGET_CONFIG_DIR/netcasts.yml
-  download_dir: NETCASTS_DIRECTORY
-  download_file: NETCASTS_DIRECTORY/inputfile.DO.NOT.REMOVE
-  download_log: PROJECT_SYSTEM_LOG_DIR/flexget/netcasts.log
+  include: FLEXGET_CONFIG_DIR/podcasts.yml
+  download_dir: PODCASTS_DIRECTORY
+  download_file: PODCASTS_DIRECTORY/inputfile.DO.NOT.REMOVE
+  download_log: PROJECT_SYSTEM_LOG_DIR/flexget/podcasts.log
   download_script: /usr/bin/jambulatv-fetch-podcasts
   day_of_week: sun,mon,tue,wed,thu,fri,sat
   hour: 5

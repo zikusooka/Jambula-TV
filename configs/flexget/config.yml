@@ -148,31 +148,31 @@ templates:
       #  - 480p+
       #  - "!dts !cam !10bit"
 
-# Netcasts 
+# Podcasts 
 # --------
-  netcasts:
+  podcasts:
     free_space:
-      path: '{{secrets.netcasts.path}}'
+      path: '{{secrets.podcasts.path}}'
       space: 1000
     exists:
-      - '{{secrets.netcasts.exists}}'
+      - '{{secrets.podcasts.exists}}'
     limit_new: 5
     priority: 5
-    include: [ '{{secrets.netcasts.include}}' ]
+    include: [ '{{secrets.podcasts.include}}' ]
     exec:
       auto_escape: no
       on_start:
         # Add timestamp to log file
-        phase: echo "# $(date '+%F %H:%M'):" >> '{{secrets.netcasts.download_log}}'
+        phase: echo "# $(date '+%F %H:%M'):" >> '{{secrets.podcasts.download_log}}'
       on_output:
-        # Copy netcasts URLS to input-file for aria2c
-        for_accepted: echo "%(url)s" >> '{{secrets.netcasts.download_file}}'
+        # Copy podcasts URLS to input-file for aria2c
+        for_accepted: echo "%(url)s" >> '{{secrets.podcasts.download_file}}'
       on_exit:
         # Add URL to log file
-        for_accepted: echo "%(url)s" >> '{{secrets.netcasts.download_log}}'
+        for_accepted: echo "%(url)s" >> '{{secrets.podcasts.download_log}}'
 
         # Start aria2
-        phase: /bin/sh '{{secrets.netcasts.download_script}}' '{{secrets.netcasts.download_dir}}' '{{secrets.netcasts.download_file}}' '{{secrets.email.to}}'
+        phase: /bin/sh '{{secrets.podcasts.download_script}}' '{{secrets.podcasts.download_dir}}' '{{secrets.podcasts.download_file}}' '{{secrets.email.to}}'
 
     accept_all: yes
 
@@ -236,10 +236,10 @@ tasks:
   trakt_movies:
     template: movies_trakt
 
-  # Netcasts
+  # Podcasts
   # --------
   internet_tv:
-    template: netcasts
+    template: podcasts
 
 
 
@@ -270,9 +270,9 @@ schedules:
 
   - tasks: [internet_tv]
     schedule:
-      day_of_week: '{{secrets.netcasts.day_of_week}}'
-      hour: '{{secrets.netcasts.hour}}'
-      minute: '{{secrets.netcasts.minute}}'
+      day_of_week: '{{secrets.podcasts.day_of_week}}'
+      hour: '{{secrets.podcasts.hour}}'
+      minute: '{{secrets.podcasts.minute}}'
       day: '*'
       week: '*'
       month: '*'

@@ -9,8 +9,8 @@ ARIA2_INPUT_FILE=$2
 EMAIL_NOTIFICATION_ADDRESS=$3
 EMAIL_NOTIFICATION_SCRIPT=/usr/bin/jambulatv-email
 # Default variables if no args 
-[ "x$ARIA2_DIRECTORY" = "x" ] && ARIA2_DIRECTORY=/JambulaTV/Netcasts
-[ "x$ARIA2_INPUT_FILE" = "x" ] && ARIA2_INPUT_FILE=/JambulaTV/Netcasts/inputfile.DO.NOT.REMOVE
+[ "x$ARIA2_DIRECTORY" = "x" ] && ARIA2_DIRECTORY=/JambulaTV/Podcasts
+[ "x$ARIA2_INPUT_FILE" = "x" ] && ARIA2_INPUT_FILE=/JambulaTV/Podcasts/inputfile.DO.NOT.REMOVE
 [ "x$EMAIL_NOTIFICATION_ADDRESS" = "x" ] && EMAIL_NOTIFICATION_ADDRESS="username@yourdomain"
 
 
@@ -25,8 +25,11 @@ cat > $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT << EOF
 # Email notifying completion
 $EMAIL_NOTIFICATION_SCRIPT $EMAIL_NOTIFICATION_ADDRESS "Podcasts - Download of \$(basename \$3) Completed" "Your podcast is located at \$3"
 
+# Check for unfinished downloads
+ls $ARIA2_DIRECTORY/*.aria2 > /dev/null 2>&1
+UNFINISH_EXISTS=\$?
 # Remove Input file if download completed successfully
-[ -e $ARIA2_INPUT_FILE ] && rm -f $ARIA2_INPUT_FILE
+[ \$UNFINISH_EXISTS != 0 ] && rm -f $ARIA2_INPUT_FILE
 EOF
 #
 # Make script executable
