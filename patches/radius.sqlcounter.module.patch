@@ -1,45 +1,9 @@
---- sqlcounter.orig	2014-08-26 19:29:12.560283576 +0300
-+++ sqlcounter	2014-08-26 19:58:07.700362245 +0300
-@@ -40,7 +40,7 @@
- #
- sqlcounter dailycounter {
- 	sql_module_instance = sql
--	dialect = ${modules.sql.dialect}
-+	dialect = mysql
- 
- 	counter_name = Daily-Session-Time
- 	check_name = Max-Daily-Session
-@@ -54,7 +54,7 @@
- 
- sqlcounter monthlycounter {
- 	sql_module_instance = sql
--	dialect = ${modules.sql.dialect}
-+	dialect = mysql
- 
- 	counter_name = Monthly-Session-Time
- 	check_name = Max-Monthly-Session
-@@ -67,7 +67,7 @@
- 
- sqlcounter noresetcounter {
- 	sql_module_instance = sql
--	dialect = ${modules.sql.dialect}
-+	dialect = mysql
- 
- 	counter_name = Max-All-Session-Time
- 	check_name = Max-All-Session
-@@ -84,7 +84,7 @@
- #  attribute.
- sqlcounter expire_on_login {
- 	sql_module_instance = sql
--	dialect = ${modules.sql.dialect}
-+	dialect = mysql
- 
- 	counter_name = Expire-After-Initial-Login
- 	check_name = Expire-After
+--- sqlcounter.orig	2015-05-25 17:10:37.208048048 +0300
++++ sqlcounter	2015-08-27 21:04:22.465147679 +0300
 @@ -93,3 +93,6 @@
  
  	$INCLUDE ${modconfdir}/sql/counter/${dialect}/${.:instance}.conf
  }
 +
-+
-+$INCLUDE ${modconfdir}/sql/counter/mysql/chillispot.conf
++# Add chillispot SQL counters
++$INCLUDE ${modconfdir}/sql/counter/${modules.sql.dialect}/chillispot.conf

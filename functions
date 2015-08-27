@@ -803,6 +803,19 @@ rm -rf $COOVA_HTML_DIR
 echo "delete from radcheck;" | mysql -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME
 }
 
+# uninstall freeradius
+uninstall_freeradius () {
+systemctl stop radiusd.service
+uninstall_src_pkgs freeradius-server
+rm -rf $(whereis freeradius)
+rm -rf $(whereis radiusd)
+mv -v /etc/raddb /etc/raddb.$(date +%Y%m%d)
+# Remove user
+userdel radiusd
+}
+
+
+
 uninstall_gstreamer_plugins () {
 for GST_PLUGIN in \
 base \
@@ -3473,8 +3486,6 @@ mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Defa
 mysqladmin -p$MYSQL_ROOT_PASSWORD create $FREERADIUS_DB_NAME
 # Generate database tables using MySQL schema
 mysql -u root -p$MYSQL_ROOT_PASSWORD $FREERADIUS_DB_NAME < $FREERADIUS_DB_SCHEMA
-# Generate DB tables using FreeRadius NAS schema (Needed by daloradius -V3 has it)
-#mysql -u root -p$MYSQL_ROOT_PASSWORD $FREERADIUS_DB_NAME < $FREERADIUS_DB_SCHEMA_NAS
 # Create SQL to set privileges on database
 echo "
 GRANT ALL PRIVILEGES ON $FREERADIUS_DB_NAME.* 
@@ -3530,12 +3541,14 @@ cp -pv $FREERADIUS_SITES_AVAIL_INNER_TUNNEL_FILE $FREERADIUS_SITES_AVAIL_INNER_T
 patch -p1 $FREERADIUS_SITES_AVAIL_INNER_TUNNEL_FILE < $PROJECT_PATCHES_DIR/radius.sites.available.inner.tunnel.patch
 #
 # Add symlink to needed modules (sql, sqlcounter,etc ) in enabled modules directory
+# IMPORTANT: Order is very Important
 # ********************************************************************************
-for MODULE in sql sqlcounter
-do
-[ -e $FREERADIUS_MODULES_ENABLED_DIR/$MODULE ] || \
-ln -s $FREERADIUS_MODULES_AVAIL_DIR/$MODULE $FREERADIUS_MODULES_ENABLED_DIR/$MODULE
-done
+# sql
+[ -e $FREERADIUS_MODULES_ENABLED_DIR/1.sql ] || \
+ln -s $FREERADIUS_MODULES_AVAIL_DIR/sql $FREERADIUS_MODULES_ENABLED_DIR/1.sql
+# sqlcounter
+[ -e $FREERADIUS_MODULES_ENABLED_DIR/2.sqlcounter ] || \
+ln -s $FREERADIUS_MODULES_AVAIL_DIR/sqlcounter $FREERADIUS_MODULES_ENABLED_DIR/2.sqlcounter
 #
 # Change ownership of config and log directories
 # *************************************************
@@ -3620,13 +3633,7 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/coova-chilli/ $INSTALL_SRC_DIR/coo
 cd $INSTALL_SRC_DIR/coova-chilli
 sh bootstrap
 # Configure and Compile coova
-./configure --prefix=/usr --libdir=$LIBDIR --localstatedir=$STATEDIR \
-  --sysconfdir=$CONFDIR --enable-ssdp --enable-miniportal --with-openssl \
-  --enable-redirinject --enable-useragent --enable-sessionstate \
-  --enable-sessionid --enable-chilliredir --enable-binstatusfile \
-  --enable-statusfile --disable-static --enable-shared \
-  --enable-largelimits --enable-proxyvsa --enable-chilliproxy \
-  --enable-chilliradsec --with-poll
+./configure --prefix=/usr --libdir=$LIBDIR --localstatedir=$STATEDIR --sysconfdir=$CONFDIR --with-openssl --with-poll --disable-static --enable-shared --enable-libjson --enable-miniportal --enable-chilliredir --enable-useragent --enable-sessionstate --enable-sessionid --enable-binstatusfile --enable-statusfile --enable-largelimits --enable-proxyvsa --enable-chilliproxy --enable-chilliradsec --enable-ssdp --enable-mdns --enable-redirinject
 make
 make install
 # Cache recently shared libraries 
