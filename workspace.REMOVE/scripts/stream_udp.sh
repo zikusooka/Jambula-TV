@@ -21,10 +21,12 @@ LOG_FILE=/var/log/JambulaTV/vlc_tv_streaming.log
 OSD_SCRIPT=/usr/bin/jambulatv-on-screen-display
 
 # Determine Wired and Wireless IP Addresses
-HOST_IP_ADDRESS=`hostname -i`
+NETWORK_ETHERNET_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
+NETWORK_IP_ADDRESS=$(ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
+
 WIRELESS_DEV=`iwconfig 2>&1 | grep "IEEE" | awk {'print $1'} | head -n 1`
 # HTTP IP Address (Wired)
-DST_HTTP_ADDRESS_WIRED=$HOST_IP_ADDRESS
+DST_HTTP_ADDRESS_WIRED=$NETWORK_IP_ADDRESS
 
 # HTTP IP Address (Wireless)
 DST_HTTP_ADDRESS_WIRELESS_DEFAULT=172.16.0.1

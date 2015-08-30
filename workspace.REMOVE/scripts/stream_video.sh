@@ -27,7 +27,8 @@ VLC_OPTIONS="-I dummy --daemon --loop"
 LOG_FILE=/var/log/vlc_video_streaming.log
 OSD_SCRIPT=/diskA/equator/scripts/AExBox/utilities/on-screen-display.py
 
-HOST_IP_ADDRESS=`hostname -i`
+NETWORK_ETHERNET_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
+NETWORK_IP_ADDRESS=$(ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
 
 WIRELESS_DEV=`iwconfig 2>&1 | grep "IEEE" | awk {'print $1'} | head -n 1`
 
