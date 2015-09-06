@@ -2076,6 +2076,13 @@ done
 }
 
 kodi_configure () {
+# Reconfigure PolicyKit to enable poweroff, suspend and similiar functions 
+cat > /etc/polkit-1/localauthority/50-local.d/kodi_shutdown.pkla <<EOF
+[Actions for jambula user]
+Identity=unix-user:$AUTOLOGIN_USER
+Action=org.freedesktop.devicekit.power.*;org.freedesktop.upower.*;org.freedesktop.consolekit.system.*;org.freedesktop.login1.*
+ResultAny=yes
+EOF
 #
 # User Data
 # **********
