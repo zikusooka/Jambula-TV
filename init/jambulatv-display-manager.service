@@ -5,9 +5,9 @@ Conflicts=getty@tty1.service
 After=plymouth-quit.service
 
 [Service]
+Environment=CRASHLOG_DIR=/var/log/JambulaTV 
 User=jambula
-ExecStartpre=/usr/bin/pulseaudio -D
-ExecStart=/usr/bin/xinit /usr/bin/kodi
+ExecStart=/usr/bin/xinit /usr/bin/dbus-launch /usr/bin/kodi-standalone -- :0 -nolisten tcp
 ExecStop=/usr/bin/killall kodi ; /usr/bin/killall X
 Restart=on-abort
 IgnoreSIGPIPE=no
