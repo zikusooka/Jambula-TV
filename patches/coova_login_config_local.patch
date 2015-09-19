@@ -1,14 +1,16 @@
---- /usr/src/jambula/coova-chilli/miniportal/config-local.sh	2014-02-27 22:04:26.886435050 +0300
-+++ config-local.sh	2014-03-15 15:06:12.919500151 +0300
-@@ -23,7 +23,7 @@
+--- /usr/src/jambulatv/coova-chilli/miniportal/config-local.sh	2015-08-22 13:55:22.734781175 +0300
++++ config-local.sh	2015-09-19 15:30:03.195719244 +0300
+@@ -23,8 +23,8 @@
  COOVA_SESSIONID=$CHI_SESSION_ID
  COOVA_CHALLENGE=$CHI_CHALLENGE
  PORTAL_SESSIONID=${COOKIE_PORTAL_SESSIONID:-$SESSIONID}
--FORM_userurl=${FORM_userurl:-http://www.coova.org/}
+-FORM_userurl=${FORM_userurl:-http://coova.github.io/}
+-    
 +FORM_userurl=${FORM_userurl:-$HS_PROVIDER_LINK}
-     
++   
  http_redirect2() {
  cat <<EOF
+ HTTP/1.1 302 Redirect
 @@ -89,6 +89,23 @@
      echo "<div id=\"body\">"
  }
@@ -46,7 +48,7 @@
      (uamfile "$file" 0
  	echo
  	echo "-------------------------------------------------"
--	echo "Powered by Coova - http://www.coova.org/"
+-	echo "Powered by Coova - http://coova.github.io/"
 +	echo "Powered by $HS_PROVIDER - $HS_PROVIDER_LINK"
  	echo) | /usr/sbin/sendmail -t -f "$from" && return 0
      return 1;
