@@ -28,7 +28,7 @@ then
 # Remove dnsmasq entries for local resolution
 [ ! -e /etc/dnsmasq.d/dns_off.conf ] || rm -f /etc/dnsmasq.d/dns_off.conf
 # Restart dnsmasq.service
-systemctl restart dnsmasq.service
+#systemctl restart dnsmasq.service
 
 # Since Internet is now up - Do other stuff that requires connectivity
 # --------------------------------------------------------------------
@@ -84,6 +84,7 @@ fi
 
 # Run processes whenever thereis a change in status i.e. UP or DOWN
 ###################################################################
+exit
 # 1) Restart captive portal: coova-chilli
 /usr/bin/jambulatv-chilli reload
 # 2) Restart wireless access point: hostapd
