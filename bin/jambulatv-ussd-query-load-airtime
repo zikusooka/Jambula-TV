@@ -1,0 +1,162 @@
+#!/bin/sh
+# Check and Load Airtime
+# The heavy lifting here is done by mmcli which is the cLI interface for ModemManager
+#
+# Variables
+#----------
+USSD_TEMP_FILE=/tmp/ussd-$USER.raw
+USSD_LOGFILE=/var/log/gsm-ussd.log
+ACTION=$1
+PROVIDER=$2
+RECHARGE_CODE=$3
+
+MODEMCONTROLDEV=/dev/ttyUSB2
+
+# mmcli modem index
+MODEM_INDEX=$(mmcli -L | grep Modem | cut -d / -f6 | cut -d " " -f1)
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+# Commands
+mmcli_command () {
+#mmcli -m $MODEM_INDEX --3gpp-ussd-initiate="$@" || mmcli -m $MODEM_INDEX -e
+mmcli -m $MODEM_INDEX --3gpp-ussd-initiate="$@"
+}
+
+quit_if_result_empty () {
+# Quit if modem did't respond properly
+if [ ! -s "$USSD_TEMP_FILE" ];
+then
+clear
+echo "Error: Please run script again"
+exit 1
+fi
+}
+
+
+# -------
+# Airtel
+# -------
+load_airtime_airtel () {
+# Check if rechage code has been provided
+if [ "x$RECHARGE_CODE" = "x" ];
+then
+clear
+echo "Usage: $(basename $0) recharge [RECHARGE CODE]"
+exit 1
+fi
+#
+mmcli_command "*130*$RECHARGE_CODE#" | cut -d . -f1 > $USSD_TEMP_FILE
+quit_if_result_empty
+LOAD_STATUS=$(cat $USSD_TEMP_FILE)
+}
+
+query_voice_balance_airtel () {
+mmcli_command "*131#" | sed "s/USSD session initiated; new reply from network: 'Acct bal is //" | awk {'print $1, $2'} | cut -d . -f1 > $USSD_TEMP_FILE
+quit_if_result_empty
+VOICE_BALANCE=$(cat $USSD_TEMP_FILE)
+}
+
+# Query Data Balance
+query_data_balance_airtel () {
+# Run ussd command
+mmcli_command "*175**4#" | sed "s/USSD session initiated; new reply from network: 'Your main volume is //" | awk {'print $1,$2'} > $USSD_TEMP_FILE
+quit_if_result_empty
+DATA_BALANCE=$(cat $USSD_TEMP_FILE)
+}
+
+# Airtel Promotions
+# -----------------
+# Activate - Night Pack
+activate_data_promo_airtel_night () {
+mmcli_command  "*175*2**1**6**2#" | sed "s/USSD session initiated; new reply from network: '//" > $USSD_TEMP_FILE
+quit_if_result_empty
+DATA_PROMO=$(cat $USSD_TEMP_FILE)
+}
+
+
+# -------
+# SMART 
+# -------
+load_airtime_smart () {
+# Check if rechage code has been provided
+if [ "x$RECHARGE_CODE" = "x" ];
+then
+clear
+echo "Usage: $(basename $0) recharge [RECHARGE CODE]"
+exit 1
+fi
+#
+mmcli_command "*130*$RECHARGE_CODE#" | cut -d . -f1 > $USSD_TEMP_FILE
+quit_if_result_empty
+LOAD_STATUS=$(cat $USSD_TEMP_FILE)
+}
+
+query_voice_balance_smart () {
+mmcli_command "*131#" | grep 'Account balance:' | cut -d : -f3 | cut -d , -f1 > $USSD_TEMP_FILE
+quit_if_result_empty
+VOICE_BALANCE=$(cat $USSD_TEMP_FILE)
+}
+
+# Query Smart Data Balance
+query_data_balance_smart () {
+# Run ussd command
+mmcli_command "*131#" | grep 'Daily vol:' | cut -d : -f2 | cut -d , -f1 > $USSD_TEMP_FILE
+quit_if_result_empty
+DATA_BALANCE=$(cat $USSD_TEMP_FILE)
+}
+
+# Smart Promotions
+#-----------------
+# Activate - Smart Daily pack (999/=)
+activate_data_promo_smart_day () {
+mmcli_command  "*100*1**1**3**6**3#" | sed "s/USSD session initiated; new reply from network: '//" > $USSD_TEMP_FILE
+quit_if_result_empty
+DATA_PROMO=$(cat $USSD_TEMP_FILE)
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+# Enable modem
+mmcli -m $MODEM_INDEX -e > /dev/null 2>&1
+
+case $ACTION in
+
+recharge)
+load_airtime_${PROVIDER} $RECHARGE_CODE
+echo "Loading status: $LOAD_STATUS"
+;;
+
+balance-data)
+query_data_balance_${PROVIDER}
+echo "Remaining DATA Balance is: $DATA_BALANCE"
+;;
+
+balance-voice)
+query_voice_balance_${PROVIDER} 
+echo "Remaining VOICE Balance is: $VOICE_BALANCE"
+;;
+
+night-pack)
+activate_data_promo_${PROVIDER}_night
+echo "Activation status is: $DATA_PROMO"
+;;
+
+day-pack)
+activate_data_promo_${PROVIDER}_day
+echo "Activation status is: $DATA_PROMO"
+;;
+
+*)
+clear
+echo "Usage: $(basename $0) [recharge|balance-data|balance-voice|night-pack|day-pack] [provider] [RECHARGE_CODE]"
+exit 1
+;;
+esac

@@ -1,0 +1,16 @@
+#!/bin/sh
+# Get current PPP signal strength
+
+# Variables
+MODEM_INDEX=$(mmcli -L | grep Modem | cut -d / -f6 | cut -d " " -f1)
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+# Enable modem
+mmcli -m $MODEM_INDEX -e > /dev/null 2>&1
+
+# Get signal strength
+mmcli -m $MODEM_INDEX --simple-status | grep 'signal quality' | cut -d : -f2 | awk {'print $1'} | sed "s:'::g"
