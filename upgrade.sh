@@ -12,6 +12,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 upgrade_kodi () {
 uninstall_kodi
 kodi_install
+kodi_pvr_hts_install
 kodi_addons_install
 kodi_customization
 kodi_scripts

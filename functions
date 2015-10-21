@@ -2066,9 +2066,8 @@ make clean
 }
 
 kodi_pvr_hts_install () {
-tar zxvf $PROJECT_TARBALLS_DIR/kodi-addons/pvr.hts*.tar.gz -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v pvr.hts* pvr.hts
-cd $INSTALL_SRC_DIR/pvr.hts
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts-$KODI_BRANCH/ $INSTALL_SRC_DIR/kodi-pvr.hts/
+cd $INSTALL_SRC_DIR/kodi-pvr.hts
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi
 make
 make install
