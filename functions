@@ -177,7 +177,7 @@ RYGEL_VERSION=0.19.4
 HEYU_VERSION=2.11-rc1
 LIBDBI_VERSION=0.9.0
 ICINGA1_VERSION=1.9.3
-ICINGA2_VERSION=2.2.3
+ICINGA2_TAG=v2.3.11
 ICINGA2_VERSION_PREVIOUS=$(which icinga2 2>&1 /dev/null && icinga2 --version | head -1 | cut -d : -f2 | sed 's: ::' | sed 's:)::')
 NAGIOS_PLUGINS_VERSION=1.4.16
 MINISAPSERVER_VERSION=0.3.8
@@ -680,11 +680,14 @@ systemctl stop icinga2.service
 # disable service
 systemctl disable icinga2.service
 
+# Drop MySQL DB
+mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $ICINGA_DB_NAME
+
 # Remove user and groups
 groupdel $ICINGA_CMD_GROUP
 userdel -r $ICINGA_USER
 # /etc
-mv -v $CONFDIR/icinga2 icinga2.$ICINGA2_VERSION_PREVIOUS
+mv -v $CONFDIR/icinga2 $CONFDIR/icinga2.$ICINGA2_VERSION_PREVIOUS
 rm -f $CONFDIR/rc.d/rc{0,1,2,3,4,5,6}.d/*icinga2
 rm -f $CONFDIR/bash_completion.d/icinga2
 rm -f $CONFDIR/logrotate.d/icinga2
@@ -698,6 +701,7 @@ rm -rf $STATEDIR/spool/icinga2
 rm -f $SYSTEMD_UNITS_DIR_SYSTEM/icinga2.service
 rm -f $PREFIX/sbin/icinga2*
 rm -rf $LIBDIR/icinga2
+rm -rf $PREFIX/lib/icinga2
 rm -rf $PREFIX/share/doc/icinga2
 rm -rf $PREFIX/share/icinga2*
 rm -f $MANDIR8/icinga2*
@@ -2001,8 +2005,8 @@ kodi_platform_install
 }
 
 kodi_install () {
-# Archive and Unpack specified kodi Kodi
-# --------------------------------------
+# Archive and Unpack specified kodi Tag
+# -------------------------------------
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/kodi-$KODI_BRANCH
 # Unpack desired git branch/tag
@@ -5138,8 +5142,39 @@ htpasswd -b -c $CONFDIR/icinga/htpasswd.users icingaadmin $ICINGA_ADMIN_PASS
 }
 
 icinga2_install () {
-# Unpack
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/icinga2/ $INSTALL_SRC_DIR/icinga2/
+# Archive and Unpack specified icinga2 Tag
+# ----------------------------------------
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/icinga2
+# Unpack desired git branch/tag
+case $ICINGA2_TAG in
+master)
+# master branch i.e. HEAD
+git archive --format tar.gz --prefix=icinga2/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+;;
+*)
+# Check to see if desired branch/tag exists
+git tag -l | grep $ICINGA2_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+if [ "$TAG_EXISTS" = "0" ];
+then
+git archive --format tar.gz --prefix=icinga2/ $ICINGA2_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=icinga2/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Display Kodi's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+ICINGA2 Version
+============
+% The Kodi branch you specified, does not exist, so I used master/ HEAD instead
+
+#
+EOF
+fi
+;;
+esac
+#
 cd $INSTALL_SRC_DIR/icinga2
 # Build
 mkdir $INSTALL_SRC_DIR/icinga2/build

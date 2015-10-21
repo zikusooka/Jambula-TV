@@ -19,6 +19,13 @@ kodi_scripts
 kodi_lircmap_configure 
 }
 
+upgrade_icinga2 () {
+uninstall_icinga2 
+icinga2_install
+icinga2_ido_mysql 
+icinga2_configure 
+}
+
 
 
 #################
@@ -26,3 +33,6 @@ kodi_lircmap_configure
 #################
 
 #upgrade_kodi
+
+#upgrade_icinga2
+
