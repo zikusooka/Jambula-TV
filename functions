@@ -133,7 +133,7 @@ FREEVO_VERSION=svn
 
 TVHEADEND_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.hts/tvheadend
 
-KODI_VERSION=15.1 #15.0
+KODI_VERSION=15.2 #15.1
 
 KODI_BRANCH=Isengard
 KODI_TAG=$KODI_VERSION-$KODI_BRANCH
@@ -636,6 +636,15 @@ PKG_LEFTOVERS_EXIST=$?
 [ "$PKG_LEFTOVERS_EXIST" != "0" ] || rm -rf `whereis $1`
 }
 
+
+# Uninstall kodi
+uninstall_kodi () {
+# Stop kodi
+systemctl stop jambulatv-display-manager.service
+# Uninstall kodi
+uninstall_src_pkgs kodi
+}
+
 uninstall_oss () {
 # Make build directory
 cd $INSTALL_SRC_DIR/oss && make clean
@@ -812,8 +821,6 @@ mv -v /etc/raddb /etc/raddb.$(date +%Y%m%d)
 # Remove user
 userdel radiusd
 }
-
-
 
 uninstall_gstreamer_plugins () {
 for GST_PLUGIN in \

@@ -1,13 +1,27 @@
 #!/bin/sh
+PROJECT_NAME=JambulaTV
+SOURCESDIR=/opt
+PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 
 # Source functions file
-. /JambulaTV/RELEASE-2.0/functions
+. $PROJECT_BASE_DIR/functions
 
 
-exit
 
-uninstall_avplayers
-avplayers_install
+# Upgrade Kodi
+upgrade_kodi () {
+uninstall_kodi
+kodi_install
+kodi_addons_install
+kodi_customization
+kodi_scripts
+kodi_lircmap_configure 
+}
 
-uninstall_flexget_deps
 
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+#upgrade_kodi
