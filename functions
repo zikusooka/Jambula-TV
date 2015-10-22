@@ -605,7 +605,16 @@ guessit \
 futures \
 pytz \
 tzlocal \
-apscheduler
+apscheduler \
+aniso8601 \
+Flask-RESTful \
+ordereddict \
+flask-restplus \
+webassets \
+Flask-Assets \
+cssmin \
+Flask-Compress \
+Flask-Login
 #
 do
 pip -v install --no-install -d $PROJECT_TARBALLS_DIR/flexget_deps $PYTHON_MODULE
@@ -746,6 +755,9 @@ rm -rf $RUNDIR/zm
 }
 
 uninstall_flexget () {
+# Stop running instance
+systemctl stop flexget.service
+# Uninstall
 pip uninstall flexget
 rm -rf $INSTALL_SRC_DIR/Flexget
 }
@@ -787,7 +799,16 @@ guessit \
 futures \
 pytz \
 tzlocal \
-APScheduler
+APScheduler \
+aniso8601 \
+Flask-RESTful \
+ordereddict \
+flask-restplus \
+webassets \
+Flask-Assets \
+cssmin \
+Flask-Compress \
+Flask-Login
 #
 do
 # Remove any existing modules
@@ -3075,7 +3096,16 @@ guessit \
 futures \
 pytz \
 tzlocal \
-APScheduler
+APScheduler \
+aniso8601 \
+Flask-RESTful \
+ordereddict \
+flask-restplus \
+webassets \
+Flask-Assets \
+cssmin \
+Flask-Compress \
+Flask-Login
 #
 do
 # Remove any existing modules

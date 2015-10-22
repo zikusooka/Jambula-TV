@@ -19,6 +19,11 @@ kodi_scripts
 kodi_lircmap_configure 
 }
 
+upgrade_flexget () {
+uninstall_flexget
+flexget_install
+}
+
 upgrade_icinga2 () {
 uninstall_icinga2 
 icinga2_install
@@ -39,6 +44,8 @@ icingaweb2_configure
 #################
 
 #upgrade_kodi
+
+#upgrade_flexget
 
 #upgrade_icinga2
 #upgrade_icingaweb2
