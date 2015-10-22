@@ -26,6 +26,12 @@ icinga2_ido_mysql
 icinga2_configure 
 }
 
+upgrade_icingaweb2 () {
+uninstall_icingaweb2
+icingaweb2_install
+icingaweb2_configure 
+}
+
 
 
 #################
@@ -35,4 +41,5 @@ icinga2_configure
 #upgrade_kodi
 
 #upgrade_icinga2
+#upgrade_icingaweb2
 

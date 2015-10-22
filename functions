@@ -178,7 +178,7 @@ HEYU_VERSION=2.11-rc1
 LIBDBI_VERSION=0.9.0
 ICINGA1_VERSION=1.9.3
 ICINGA2_TAG=v2.3.11
-ICINGA2_VERSION_PREVIOUS=$(which icinga2 2>&1 /dev/null && icinga2 --version | head -1 | cut -d : -f2 | sed 's: ::' | sed 's:)::')
+ICINGAWEB2_TAG=v2.0.0
 NAGIOS_PLUGINS_VERSION=1.4.16
 MINISAPSERVER_VERSION=0.3.8
 DNS2TCP_VERSION=0.5.2
@@ -454,6 +454,13 @@ MONITORING_PLUGINS_DIR=$LIBDIR/nagios/plugins
 FPING_CMD=/usr/sbin/fping
 
 # Icingaweb2
+ICINGAWEB2_DB_NAME=icingaweb2
+ICINGAWEB2_DB_USER=icingaweb2
+ICINGAWEB2_DB_PASS=jambula2
+ICINGAWEB2_ADMIN_USER=jambulatv
+ICINGAWEB2_ADMIN_PASS=jambulatv2
+ICINGAWEB2_ADMIN_PASS_HASH=$(openssl passwd -1 $ICINGAWEB2_ADMIN_PASS)
+#
 ICINGA2_WEB_USER=$WWW_USER
 ICINGA2_WEB_GROUP=icingaweb2
 ICINGA2_WEB_TOKEN_FILE=$TMPDIR/icingaweb2_setup_token
@@ -462,6 +469,7 @@ ICINGA2_WEB_AUTH_FILE=$ICINGA2_WEB_CONFIG_DIR/authentication.ini
 ICINGA2_WEB_CONF_FILE=$ICINGA2_WEB_CONFIG_DIR/config.ini
 ICINGA2_WEB_RESOURCES_FILE=$ICINGA2_WEB_CONFIG_DIR/resources.ini
 ICINGA2_WEB_ROLES_FILE=$ICINGA2_WEB_CONFIG_DIR/roles.ini
+ICINGA2_WEB_GROUPS_FILE=$ICINGA2_WEB_CONFIG_DIR/groups.ini
 
 # VNC
 VNC_DISPLAY=3
@@ -675,19 +683,18 @@ done
 }
 
 uninstall_icinga2 () {
+ICINGA2_PREVIOUS_VERSION=$(icinga2 --version | head -1 | cut -d : -f2 | sed 's: ::' | sed 's:)::')
 # stop icinga2 service
 systemctl stop icinga2.service
 # disable service
 systemctl disable icinga2.service
-
 # Drop MySQL DB
 mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $ICINGA_DB_NAME
-
 # Remove user and groups
 groupdel $ICINGA_CMD_GROUP
 userdel -r $ICINGA_USER
 # /etc
-mv -v $CONFDIR/icinga2 $CONFDIR/icinga2.$ICINGA2_VERSION_PREVIOUS
+mv -v $CONFDIR/icinga2 $CONFDIR/icinga2.$ICINGA2_PREVIOUS_VERSION
 rm -f $CONFDIR/rc.d/rc{0,1,2,3,4,5,6}.d/*icinga2
 rm -f $CONFDIR/bash_completion.d/icinga2
 rm -f $CONFDIR/logrotate.d/icinga2
@@ -706,6 +713,18 @@ rm -rf $PREFIX/share/doc/icinga2
 rm -rf $PREFIX/share/icinga2*
 rm -f $MANDIR8/icinga2*
 rm -rf $INSTALL_SRC_DIR/icinga2
+}
+
+uninstall_icingaweb2 () {
+ICINGAWEB2_PREVIOUS_VERSION=$(cat $WWW_HTML_DIR/icingaweb2/VERSION | cut -d - -f1)
+# Backup config dir
+mv -v $PROJECT_SYSTEM_CONF_DIR/icingaweb2 $PROJECT_SYSTEM_CONF_DIR/icingaweb2.$ICINGAWEB2_PREVIOUS_VERSION
+# Remove icingaweb2 user/group
+groupdel $ICINGA2_WEB_GROUP 
+# Drop MySQL DB
+mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $ICINGAWEB2_DB_NAME
+# Remove icingaweb2 html/source files
+rm -rf $WWW_HTML_DIR/icingaweb2/
 }
 
 uninstall_zoneminder () {
@@ -2017,7 +2036,7 @@ git archive --format tar.gz --prefix=kodi/ HEAD | (cd $INSTALL_SRC_DIR/ && tar z
 ;;
 *)
 # Check to see if desired branch/tag exists
-git tag -l | grep $KODI_TAG > /dev/null 2>&1
+git tag -l | grep -x $KODI_TAG > /dev/null 2>&1
 TAG_EXISTS=$?
 if [ "$TAG_EXISTS" = "0" ];
 then
@@ -5154,7 +5173,7 @@ git archive --format tar.gz --prefix=icinga2/ HEAD | (cd $INSTALL_SRC_DIR/ && ta
 ;;
 *)
 # Check to see if desired branch/tag exists
-git tag -l | grep $ICINGA2_TAG > /dev/null 2>&1
+git tag -l | grep -x $ICINGA2_TAG > /dev/null 2>&1
 TAG_EXISTS=$?
 if [ "$TAG_EXISTS" = "0" ];
 then
@@ -5231,7 +5250,7 @@ mysqladmin -p$MYSQL_ROOT_PASSWORD create $ICINGA_DB_NAME
 # Set privileges on icinga database
 echo "GRANT ALL PRIVILEGES ON $ICINGA_DB_NAME.* to '$ICINGA_DB_USER'@'localhost' IDENTIFIED by '$ICINGA_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
 # Populate icinga database tables using ido MySQL schema
-mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $PROJECT_CONTRIB_DIR/icinga2/ido-mysql/schema/mysql.sql
+mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $PREFIX/share/icinga2-ido-mysql/schema/mysql.sql
 #
 # Add MySQL DB login credentials to ido-mysql.conf
 cat > $ICINGA2_FEATURES_AVAIL_DIR/ido-mysql.conf << EOF
@@ -5304,8 +5323,39 @@ EOF
 }
 
 icingaweb2_install () {
-# Copy icingaweb2 source files
-rsync -av --delete-after $PROJECT_GITHUB_DIR/icingaweb2/ $WWW_HTML_DIR/icingaweb2/
+# Archive and unpack specified icingaweb2 Tag
+# -------------------------------------------
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/icingaweb2
+# Unpack desired git branch/tag
+case $ICINGAWEB2_TAG in
+master)
+# master branch i.e. HEAD
+git archive --format tar.gz --prefix=icingaweb2/ HEAD | (cd $WWW_HTML_DIR/ && tar zxvf -)
+;;
+*)
+# Check to see if desired branch/tag exists
+git tag -l | grep -x $ICINGAWEB2_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+if [ "$TAG_EXISTS" = "0" ];
+then
+git archive --format tar.gz --prefix=icingaweb2/ $ICINGAWEB2_TAG | (cd $WWW_HTML_DIR/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=icingaweb2/ HEAD | (cd $WWW_HTML_DIR/ && tar zxvf -)
+# Display Kodi's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+ICINGAWEB2 Version
+==================
+% The Kodi branch you specified, does not exist, so I used master/ HEAD instead
+
+#
+EOF
+fi
+;;
+esac
+#
 # Add icingaweb2 group
 groupadd -r $ICINGA2_WEB_GROUP
 # Make web user a member of the system group "icingaweb2" group
@@ -5321,8 +5371,23 @@ $WWW_HTML_DIR/icingaweb2/bin/icingacli setup config directory --group $ICINGA2_W
 [ -e $NGINX_CONF_DIR/sites-enabled/icingaweb2 ] || cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/icingaweb2 $NGINX_CONF_DIR/sites-enabled/
 # Restart nginx
 systemctl restart nginx.service
+
 # Add DB schema for icingaweb2
-mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $WWW_HTML_DIR/icingaweb2/etc/schema/mysql.schema.sql 
+#mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $WWW_HTML_DIR/icingaweb2/etc/schema/mysql.schema.sql 
+
+# Database 4 icingaweb2
+# ---------------------
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+# Create icinga database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $ICINGAWEB2_DB_NAME
+# Set privileges on icinga database
+echo "GRANT ALL PRIVILEGES ON $ICINGAWEB2_DB_NAME.* to '$ICINGAWEB2_DB_USER'@'localhost' IDENTIFIED by '$ICINGAWEB2_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+# Add DB schema for icingaweb2
+mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME < $WWW_HTML_DIR/icingaweb2/etc/schema/mysql.schema.sql 
 }
 
 icingaweb2_configure () {
@@ -5337,14 +5402,15 @@ resource            = "icingaweb_db"
 EOF
 # Config file
 cat > $ICINGA2_WEB_CONF_FILE <<EOF
-[logging]
-log                 = "syslog"
-level               = "ERROR"
-application         = "icingaweb2"
+[global]
+show_stacktraces = "1"
+config_backend = "db"
+config_resource = "icingaweb_db"
 
-[preferences]
-store               = "db"
-resource            = "icingaweb_db"
+[logging]
+log = "syslog"
+level = "ERROR"
+application = "icingaweb2"
 EOF
 # Resources file
 cat > $ICINGA2_WEB_RESOURCES_FILE << EOF
@@ -5353,10 +5419,11 @@ type                = "db"
 db                  = "mysql"
 host                = "localhost"
 port                = "3306"
-dbname              = "$ICINGA_DB_NAME"
-username            = "$ICINGA_DB_USER"
-password            = "$ICINGA_DB_PASS"
-prefix              = "icingaweb_"
+dbname = "$ICINGAWEB2_DB_NAME"
+username = "$ICINGAWEB2_DB_USER"
+password = "$ICINGAWEB2_DB_PASS"
+charset = ""
+persistent = "0"
 
 [icinga_ido]
 type                = "db"
@@ -5366,12 +5433,23 @@ port                = "3306"
 dbname              = "$ICINGA_DB_NAME"
 username            = "$ICINGA_DB_USER"
 password            = "$ICINGA_DB_PASS"
+charset = ""
+persistent = "0"
 EOF
+#
 # Roles file
 cat > $ICINGA2_WEB_ROLES_FILE <<EOF
-[admins]
+[Administrators]
 users               = "$ICINGA_DB_USER"
 permissions         = "*"
+groups = "Administrators"
+EOF
+#
+# Groups file
+cat > $ICINGA2_WEB_GROUPS_FILE <<EOF
+[icingaweb2]
+backend = "db"
+resource = "icingaweb_db"
 EOF
 #
 # Create modules directories if they do not exist
@@ -5395,8 +5473,8 @@ cat > $ICINGA2_WEB_CONFIG_DIR/modules/monitoring/config.ini <<EOF
 protected_customvars = "*pw*,*pass*,community"
 EOF
 # instances.ini
-cat > $ICINGA2_WEB_CONFIG_DIR/modules/monitoring/instances.ini <<EOF
-[icinga]
+cat > $ICINGA2_WEB_CONFIG_DIR/modules/monitoring/ommandtransports.ini <<EOF
+[icinga2]
 transport           = "local"
 path                = "$RUNDIR/icinga2/cmd/icinga2.cmd"
 EOF
@@ -5411,6 +5489,13 @@ EOF
 # Change directory permissions to allow web user
 chown -R $ICINGA2_WEB_USER:$ICINGA2_WEB_GROUP $ICINGA2_WEB_CONFIG_DIR
 #
+# Create Icingaweb2 Admin User in MySQL database
+echo "INSERT INTO icingaweb_user (name, active, password_hash, ctime) VALUES ('$ICINGAWEB2_ADMIN_USER', '1', '$ICINGAWEB2_ADMIN_PASS_HASH', NOW());" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
+# Create Icingaweb2 Admin Group in MySQL database
+echo "INSERT INTO icingaweb_group VALUES (1,'Administrators', NULL, NOW(), NULL);" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
+# Add Icingaweb2 User to Admin Group in MySQL database
+echo "INSERT INTO icingaweb_group_membership (group_id, username, ctime) VALUES ('1', '$ICINGAWEB2_ADMIN_USER', NOW());" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
+#
 # Display IcingaWeb's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
@@ -5420,19 +5505,20 @@ IcingaWeb2
 % I have automagically setup icingaweb2 for you. To access, open the URL below:
   http://$NETWORK_IP_ADDRESS:$(grep -i icingaweb2 $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
-username            = "$ICINGA_DB_USER"
-password            = "$ICINGA_DB_PASS"
+username            = "$ICINGAWEB2_ADMIN_USER"
+password            = "$ICINGAWEB2_ADMIN_PASS"
 
 NOTE: In case you need to do setup manually,
 $(cat $ICINGA2_WEB_TOKEN_FILE)
 #
 EOF
+# Restart nginx
+systemctl restart nginx.service
 }
 
 icinga2_ui_configure () {
 # Add nginx web server config file
 cp -v $PROJECT_CONFIGS_DIR/webserver/icinga.conf $NGINX_CONFD_DIR/
-
 # Restart nginx
 systemctl restart nginx.service
 # Create account for logging into classic web interface
