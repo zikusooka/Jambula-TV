@@ -3140,6 +3140,11 @@ echo "Installing FlexGet ..."
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/Flexget/ $INSTALL_SRC_DIR/Flexget/
 cd $INSTALL_SRC_DIR/Flexget
 pip install -e .
+# Set directory permissions - incase of upgrades
+# Change flexget config directory to multimedia user
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $FLEXGET_CONFIG_DIR
+# Change flexget log directory to multimedia user
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/flexget
 }
 
 flexget_configure () {
