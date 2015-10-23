@@ -530,7 +530,7 @@ OWNCLOUD_ADMIN_USER=jambulatv
 OWNCLOUD_ADMIN_PASS=3jambulatv
 OWNCLOUD_CONFIG_DIR=$WWW_HTML_DIR/owncloud/config
 OWNCLOUD_CONFIG_FILE=$OWNCLOUD_CONFIG_DIR/config.php
-
+OWNCLOUD_DATA_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Cloud
 
 
 
@@ -864,6 +864,11 @@ rm -rf $(whereis radiusd)
 mv -v /etc/raddb /etc/raddb.$(date +%Y%m%d)
 # Remove user
 userdel radiusd
+}
+
+uninstall_owncloud () {
+# Remove owncloud HTML files
+rm -rf $WWW_HTML_DIR/owncloud
 }
 
 uninstall_gstreamer_plugins () {
@@ -4293,19 +4298,42 @@ chmod -R 777 $WWW_HTML_DIR/owncloud
 [ -e $NGINX_CONF_DIR/sites-enabled/owncloud ] || cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/owncloud $NGINX_CONF_DIR/sites-enabled/
 # Restart nginx
 systemctl restart nginx.service
+#
+# Generate owncloud instance ID
+/usr/bin/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$(grep -i owncloud $PORTS_ASSIGNED_FILE | awk {'print $1'})
+# Get instance ID
+OWNCLOUD_INSTANCE_ID=$(grep 'instanceid' $WWW_HTML_DIR/owncloud/config/config.php | awk {'print $3'} | sed "s:'::g" | cut -d , -f1)
+# Generate initial owncloud config
+cat > $WWW_HTML_DIR/owncloud/config/config.php << EOF
+<?php
+\$CONFIG = array (
+  'instanceid' => '$OWNCLOUD_INSTANCE_ID',
+  'trusted_domains' => 
+  array (
+    0 => '$NETWORK_IP_ADDRESS', '$COOVA_SERVER_IP'
+  ),
+  'datadirectory' => '$OWNCLOUD_DATA_DIRECTORY',
+  'overwrite.cli.url' => 'http://$NETWORK_IP_ADDRESS:$(grep -i owncloud $PORTS_ASSIGNED_FILE | awk {'print $1'})',
+  'dbtype' => 'sqlite3',
+  'logfile' => '$PROJECT_SYSTEM_LOG_DIR/owncloud.log',
+  'logtimezone' => '$TIMEZONE',
+  'mail_domain' => '$NETWORK_DOMAIN',
+  'mail_from_address' => '$PROJECT_NAME',
+);
+EOF
 }
 
 owncloud_configure () {
 # Create data directory for owncloud
-[ -d $PROJECT_SYSTEM_LOG_DIR/owncloud ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/owncloud
+[ -d $OWNCLOUD_DATA_DIRECTORY ] || mkdir -p $OWNCLOUD_DATA_DIRECTORY
 # Make custom cache directory if not existent
-[ -d $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/cache ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/cache
+[ -d $OWNCLOUD_DATA_DIRECTORY/$OWNCLOUD_ADMIN_USER/cache ] || mkdir -p $OWNCLOUD_DATA_DIRECTORY/$OWNCLOUD_ADMIN_USER/cache
 # Make custom files directory if not existent
-[ -d $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/files ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/files
+[ -d $OWNCLOUD_DATA_DIRECTORY/$OWNCLOUD_ADMIN_USER/files ] || mkdir -p $OWNCLOUD_DATA_DIRECTORY/$OWNCLOUD_ADMIN_USER/files
 # Add link to /JambulaTV folder - Find a better way to access these files
-ln -s $PROJECT_PARTITION $PROJECT_SYSTEM_LOG_DIR/owncloud/$OWNCLOUD_ADMIN_USER/files/$PROJECT_NAME
+ln -s $PROJECT_PARTITION $OWNCLOUD_DATA_DIRECTORY/$OWNCLOUD_ADMIN_USER/files/$PROJECT_NAME
 # Change permissions on data directory
-chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_LOG_DIR/owncloud
+chown -R $WWW_USER:$WWW_GROUP $OWNCLOUD_DATA_DIRECTORY
 #
 # Display OwnCloud's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
@@ -4323,19 +4351,11 @@ OwnCloud
 
   IMPORTANT: 
 
-  1) At the login page, make sure you change the Data Folder to:
+  At the login page, make sure the Data Folder is set to:
 
-  $PROJECT_SYSTEM_LOG_DIR/owncloud
-
-  2) Add Wireless IP Access to config file as follows.  This file is created after log in.
-
-  vim $OWNCLOUD_CONFIG_FILE
-
- 'trusted_domains' => 
-  array (
-    0 => '$NETWORK_IP_ADDRESS', '$COOVA_SERVER_IP'
-  ),
-
+ 
+  $OWNCLOUD_DATA_DIRECTORY
+ 
 #
 EOF
 }

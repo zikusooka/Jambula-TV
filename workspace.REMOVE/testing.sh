@@ -14,3 +14,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 
 
 
+
+# xupnp - Line 4143
+#/usr/bin/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' http://$NETWORK_IP_ADDRESS:9981/playlist/channels
+
