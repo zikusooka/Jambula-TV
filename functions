@@ -4138,7 +4138,9 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 XUPNPD
 ========
 % Please setup a TV playlist for use by xupnpd.  For example:
-  lynx -dump http://$NETWORK_IP_ADDRESS:9981/playlist/channels > $PLAYLISTS_DIRECTORY/LiveTV.m3u
+
+  /usr/bin/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' http://$NETWORK_IP_ADDRESS:9981/playlist/channels
+
 #
 EOF
 }
