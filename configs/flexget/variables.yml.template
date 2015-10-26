@@ -43,3 +43,10 @@ podcasts:
 wget:
   wget_log: PROJECT_SYSTEM_LOG_DIR/flexget/wget.log
   limit_rate: 14k
+
+tv_feeds:
+  kickass: "https://kickass.unblocked.la/tv/?rss=1"
+  ezrss: "https://eztv.ag/ezrss.xml"
+  torrentz: "https://torrentz.eu/feed_verified?q=tv"
+  extratorrent: "http://extratorrent.tv/#/rss.xml"
+  torlock: "http://www.torlock.com/television/rss.xml"

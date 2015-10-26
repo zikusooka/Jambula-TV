@@ -188,15 +188,12 @@ tasks:
   # --------
   tv_shows:
     inputs:
-      - rss: { url: 'https://kickass.to/tv/?rss=1', silent: yes }  # KICKASS
-      #- rss: { url: 'http://ezrss.it/feed/', silent: yes }  # EZRSS
-      - rss: { url: 'http://kat.ph/tv/?rss=1', silent: yes }  # KAT
-      - rss: { url: 'http://rss.bt-chat.com/?group=3', silent: yes }  # BT-Chat 
-      - rss: { url: 'https://torrentz.eu/feed_verified?q=tv', silent: yes }  # Torrentz
-      - rss: { url: 'http://extratorrent.cc/rss.xml?cid=8', silent: yes }  # Extra Torrent
-      - rss: { url: 'http://showrss.info/feeds/all.rss', silent: yes }  # Karmorra 
-      #- rss: { url: 'http://thepiratebay.se/rss', silent: yes }  #
-      - rss: { url: 'http://www.torlock.com/television/rss.xml', silent: yes }  # TorLock
+      - rss: { url: '{{secrets.tv_feeds.kickass}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.ezrss}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.torrentz}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.extratorrent}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.torlock}}', silent: yes }
+
     template: 
       - tv
 
