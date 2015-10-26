@@ -369,8 +369,9 @@ PUBLIC_DNS_SERVERS="8.8.8.8 208.67.222.222 8.26.56.26 107.170.95.180 77.88.8.8"
 
 # Dynamic variables
 # -----------------
-LIRC_REMOTE=pctv-290e #intex #streamzap
-LIRC_DAEMON=inputlirc #lircd
+IR_REMOTE=pctv-290e #intex #streamzap #samsung
+IR_DAEMON=inputlirc #lircd
+IR_PROTOCOL=NEC
 
 WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
@@ -1952,7 +1953,7 @@ patch -p1 $FREEVO_LOCAL_CONFIG_DIR/local_conf.py < $PROJECT_PATCHES_DIR/local_co
 cp -v $PROJECT_CONFIGS_DIR/jambulatv_main_conf.py.sample $FREEVO_SYSTEM_CONFIG_DIR/main_conf.py 
 # Add lircrc file
 # Copy Remote control file to above directory
-cp -rv $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/lircrc $FREEVO_SYSTEM_CONFIG_DIR
+cp -rv $PROJECT_CONTRIB_DIR/remotes/$IR_REMOTE/lircrc $FREEVO_SYSTEM_CONFIG_DIR
 # Copy Analog TV channels and frequencies to share directory
 cp -rv $PROJECT_CONTRIB_DIR/tv $PROJECT_SYSTEM_SHARE_DIR
 # Copy static db files e.g. weather to lib directory
@@ -2267,13 +2268,14 @@ cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-remotes.rules $UDEV_RULES_DIR
 /usr/sbin/udevadm control --reload
 #
 # Copy ir-key tables for remote - used in start file
-cp -v $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/ir-keytable.cfg $CONFDIR/lirc
+cp -v $PROJECT_CONTRIB_DIR/remotes/$IR_REMOTE/ir-keytable.cfg $CONFDIR/lirc
 #
 # Add Environment file for Systemd
 cat > $SYSCONFIG_DIR/inputlirc <<EOF
 LIRC_OPTIONS="-g -m 0 -c"
 LIRC_DEVICE="/dev/input/jambulatv-remote"
 IR_KEYTABLE="$CONFDIR/lirc/ir-keytable.cfg"
+IR_PROTOCOL="$IR_PROTOCOL"
 EOF
 # Copy inputlircd systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/inputlircd.service $SYSTEMD_UNITS_DIR_USER/
@@ -2300,11 +2302,11 @@ EOF
 
 kodi_lircmap_configure () {
 # Use either lircd or inputlirc
-case $LIRC_DAEMON in
+case $IR_DAEMON in
 lircd)
 # Copy lircd.conf file
-cp -rv $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/lircd.conf $CONFDIR/lirc
-cp -v $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/Lircmap.xml $KODI_SYSTEM_SYS
+cp -rv $PROJECT_CONTRIB_DIR/remotes/$IR_REMOTE/lircd.conf $CONFDIR/lirc
+cp -v $PROJECT_CONTRIB_DIR/remotes/$IR_REMOTE/Lircmap.xml $KODI_SYSTEM_SYS
 # Enable and start lircd service
 systemctl enable lircd.service
 systemctl start lircd.service
@@ -2316,9 +2318,9 @@ systemctl disable lircd.service
 [ ! -e $KODI_USER_DATA/Lircmap.xml ] || \
 	mv -v $KODI_USER_DATA/Lircmap.xml $KODI_USER_DATA/Lircmap.xml.bak
 # Copy contributed Lircmap.xml
-cp -v $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/Lircmap.xml $KODI_SYSTEM_SYS
+cp -v $PROJECT_CONTRIB_DIR/remotes/$IR_REMOTE/Lircmap.xml $KODI_SYSTEM_SYS
 # Copy contributed remote.xml
-cp -v $PROJECT_CONTRIB_DIR/remotes/$LIRC_REMOTE/remote.xml $KODI_SYSTEM_SYS/keymaps
+cp -v $PROJECT_CONTRIB_DIR/remotes/$IR_REMOTE/remote.xml $KODI_SYSTEM_SYS/keymaps
 ;;
 esac
 }
@@ -2327,7 +2329,7 @@ kodi_remote_configure () {
 kodi_input_configure
 kodi_lircmap_configure 
 # If inputlirc
-if [ "$LIRC_DAEMON" = "inputlirc" ];
+if [ "$IR_DAEMON" = "inputlirc" ];
 then
 inputlirc_install
 inputlirc_configure
