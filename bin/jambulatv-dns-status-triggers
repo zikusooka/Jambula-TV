@@ -28,7 +28,7 @@ then
 # Remove dnsmasq entries for local resolution
 [ ! -e /etc/dnsmasq.d/dns_off.conf ] || rm -f /etc/dnsmasq.d/dns_off.conf
 # Restart dnsmasq.service
-#systemctl restart dnsmasq.service
+systemctl restart dnsmasq.service
 
 # Since Internet is now up - Do other stuff that requires connectivity
 # --------------------------------------------------------------------
@@ -52,7 +52,7 @@ sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=off:g" $COOVA_CONFIG_FIL
 else
 
 # DNS off: Internet is DOWN
-#--------------------------
+# --------------------------
 #
 # Add entries to dnsmasq for local resolution
 echo "address=/#/$COOVA_SERVER_IP
@@ -84,10 +84,8 @@ fi
 
 # Run processes whenever thereis a change in status i.e. UP or DOWN
 ###################################################################
-exit
-# 1) Restart captive portal: coova-chilli
+# Restart captive portal: coova-chilli
 /usr/bin/jambulatv-chilli reload
-# 2) Restart wireless access point: hostapd
-systemctl restart hostapd
+#
 # Log timestamp: for debugging purposes only
 #echo "$(date): Internet status changed to: [$DNS_STATUS]" >> /root/chilli_starts.log # 
