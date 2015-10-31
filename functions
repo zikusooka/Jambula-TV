@@ -268,6 +268,7 @@ ISP_USERNAME_DEFAULT=none
 ISP_PASSWORD_DEFAULT=none
 
 FLEXGET_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/flexget
+FLEXGET_DEPENDENCIES="itsdangerous setuptools MarkupSafe Paver feedparser SQLAlchemy PyYAML beautifulsoup4 html5lib PyRSS2Gen pynzb progressbar Jinja2 Werkzeug Flask-0 CherryPy certifi chardet requests six python-dateutil python-tvrage jsonschema plumbum rpyc tmdb3 path.py pbr argparse stevedore babelfish guessit futures pytz tzlocal APScheduler aniso8601 Flask-RESTful ordereddict flask-restplus webassets Flask-Assets cssmin Flask-Compress Flask-Login pycparser cffi ipaddress enum34 pyasn1 idna cryptography pyOpenSSL ndg_httpsclient pathlib pyScss" # IMPORTANT-Make similar packages like Flask distinctive
 
 TIMEZONE="Africa/Kampala"
 TIMEZONE_FILE=/etc/timezone
@@ -570,53 +571,7 @@ else
 mkdir $PROJECT_TARBALLS_DIR/flexget_deps
 fi
 # Install update python modules
-for PYTHON_MODULE in \
-itsdangerous \
-setuptools \
-MarkupSafe \
-Paver \
-feedparser \
-SQLAlchemy \
-PyYAML \
-beautifulsoup4 \
-html5lib \
-PyRSS2Gen \
-pynzb \
-progressbar \
-Jinja2 \
-Werkzeug \
-flask \
-CherryPy \
-certifi \
-chardet \
-requests \
-six \
-python-dateutil \
-python-tvrage \
-jsonschema \
-plumbum \
-rpyc \
-tmdb3 \
-path.py \
-pbr \
-argparse \
-stevedore \
-babelfish \
-guessit \
-futures \
-pytz \
-tzlocal \
-apscheduler \
-aniso8601 \
-Flask-RESTful \
-ordereddict \
-flask-restplus \
-webassets \
-Flask-Assets \
-cssmin \
-Flask-Compress \
-Flask-Login
-#
+for PYTHON_MODULE in $FLEXGET_DEPENDENCIES
 do
 pip -v install --no-install -d $PROJECT_TARBALLS_DIR/flexget_deps $PYTHON_MODULE
 clear
@@ -759,64 +714,20 @@ uninstall_flexget () {
 # Stop running instance
 systemctl stop flexget.service
 # Uninstall
-pip uninstall flexget
+pip uninstall -y flexget
 rm -rf $INSTALL_SRC_DIR/Flexget
 }
 
+
+
 uninstall_flexget_deps () {
-for PYTHON_MODULE in \
-itsdangerous \
-setuptools \
-MarkupSafe \
-Paver \
-feedparser \
-SQLAlchemy \
-PyYAML \
-beautifulsoup4 \
-html5lib \
-PyRSS2Gen \
-pynzb \
-progressbar \
-Jinja2 \
-Werkzeug \
-Flask \
-CherryPy \
-certifi \
-chardet \
-requests \
-six \
-python-dateutil \
-python-tvrage \
-jsonschema \
-plumbum \
-rpyc \
-tmdb3 \
-path.py \
-pbr \
-argparse \
-stevedore \
-babelfish \
-guessit \
-futures \
-pytz \
-tzlocal \
-APScheduler \
-aniso8601 \
-Flask-RESTful \
-ordereddict \
-flask-restplus \
-webassets \
-Flask-Assets \
-cssmin \
-Flask-Compress \
-Flask-Login
-#
+for PYTHON_MODULE in $FLEXGET_DEPENDENCIES
 do
-# Remove any existing modules
-[ ! -d $INSTALL_SRC_DIR/$PYTHON_MODULE* ] || rm -rf $INSTALL_SRC_DIR/$PYTHON_MODULE*
-rm -rf $PYTHON_SITEDIR/$PYTHON_MODULE* 
-# Install python modules
+# Uninstall python modules
 echo "Uninstalling $PYTHON_MODULE ..."
+pip uninstall -y $PYTHON_MODULE
+# Remove source files
+[ ! -d $INSTALL_SRC_DIR/$PYTHON_MODULE ] || rm -rf $INSTALL_SRC_DIR/$PYTHON_MODULE
 done
 }
 
@@ -3067,58 +2978,12 @@ systemctl start ziproxy.service
 }
 
 flexget_deps_install () {
-for PYTHON_MODULE in \
-itsdangerous \
-setuptools \
-MarkupSafe \
-Paver \
-feedparser \
-SQLAlchemy \
-PyYAML \
-beautifulsoup4 \
-html5lib \
-PyRSS2Gen \
-pynzb \
-progressbar \
-Jinja2 \
-Werkzeug \
-Flask \
-CherryPy \
-certifi \
-chardet \
-requests \
-six \
-python-dateutil \
-python-tvrage \
-jsonschema \
-plumbum \
-rpyc \
-tmdb3 \
-path.py \
-pbr \
-argparse \
-stevedore \
-babelfish \
-guessit \
-futures \
-pytz \
-tzlocal \
-APScheduler \
-aniso8601 \
-Flask-RESTful \
-ordereddict \
-flask-restplus \
-webassets \
-Flask-Assets \
-cssmin \
-Flask-Compress \
-Flask-Login
-#
+for PYTHON_MODULE in $FLEXGET_DEPENDENCIES
 do
 # Remove any existing modules
 [ ! -d $INSTALL_SRC_DIR/$PYTHON_MODULE* ] || rm -rf $INSTALL_SRC_DIR/$PYTHON_MODULE*
-rm -rf $PYTHON_SITEDIR/$PYTHON_MODULE* 
-# Install python modules
+rm -rf $PYTHON_SITEDIR/$PYTHON_MODULE*
+# Install python module
 echo "Installing $PYTHON_MODULE ..."
 # Unpack using the appropriate tool for archive file format
 # gzip

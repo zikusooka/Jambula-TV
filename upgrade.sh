@@ -19,6 +19,12 @@ kodi_scripts
 kodi_lircmap_configure 
 }
 
+upgrade_flexget_deps () {
+#download_flexget_deps
+uninstall_flexget_deps 
+flexget_deps_install
+}
+
 upgrade_flexget () {
 uninstall_flexget
 flexget_install
@@ -50,6 +56,7 @@ owncloud_install
 
 #upgrade_kodi
 
+#upgrade_flexget_deps 
 #upgrade_flexget
 
 #upgrade_icinga2
