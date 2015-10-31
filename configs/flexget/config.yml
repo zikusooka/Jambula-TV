@@ -86,7 +86,6 @@ templates:
   #--------
   movies:
     limit_new: 1
-   # Some feeds might include TV Shows, ignore them
     regexp:
       reject:
         - s\d+e\d+: {from: title}
@@ -96,16 +95,6 @@ templates:
       if: 173
       proper_movies: 171
     #imdb_lookup: yes
-    rottentomatoes:
-      min_critics_score: 80
-      min_audience_score: 85
-      #require_certified_fresh: yes
-      #accept_actors, accept_directors, accept_mpaa_ratings, max_year, min_audience_rating, min_audience_score, min_average_score, min_critics_rating, min_critics_score, min_year, reject_actors, reject_directors, reject_genres, reject_mpaa_ratings
-      min_year: 2012
-      reject_genres:
-        - horror
-      reject_mpaa_ratings:
-        - PG-13
 #    imdb_required: yes
 #    imdb:
 #      min_score: 6.0
@@ -120,7 +109,7 @@ templates:
     quality: 
       - 480p+
       - "!dts !cam !10bit"
-    #movie_queue: accept
+    movie_queue: accept
     content_size:
       max: 800
       min: 600
@@ -188,11 +177,12 @@ tasks:
   # --------
   tv_shows:
     inputs:
+      - rss: { url: '{{secrets.tv_feeds.kat}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.ezrss}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.torrentz}}', silent: yes }
-      - rss: { url: '{{secrets.tv_feeds.extratorrent}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.torlock}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.mininova}}', silent: yes }
 
     template: 
       - tv
@@ -204,9 +194,14 @@ tasks:
     discover:
       what:
         - emit_movie_queue: yes
-        - rottentomatoes_list:
-            movies:
-              - box_office
+        #- rottentomatoes_list:
+        #    api_key: rh8chjzp8vu6gnpwj88736uv
+        #    movies:
+        #      - box_office
+        #    dvds:
+        #      - top_rentals
+        #      - upcoming
+
       from:
         #- piratebay:
         #    category: movies
@@ -218,13 +213,14 @@ tasks:
         - kat:
             category: movies
             verified: yes
+
     inputs:
-      - rss: { url: 'http://www.torlock.com/movies/rss.xml', silent: yes }  # TorLock 
-      - rss: { url: 'http://torrentz.eu/feed_verified?q=movies', silent: yes }  # Torrentz 
-      - rss: { url: 'http://rss.thepiratebay.org/207', silent: yes }  # The Pirate Bay
-      - rss: http://kat.ph/movies/?rss=1 
-      - rss: http://www.mininova.org/rss.xml?cat=4 # Mininova
-      - rss: http://isohunt.com/js/rss/?iht=1  # IsoHunt
+      - rss: { url: '{{secrets.movie_feeds.kat}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.kickass}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.torrentz}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.torlock}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.mininova}}', silent: yes }
+
     template: 
       - movies
 
