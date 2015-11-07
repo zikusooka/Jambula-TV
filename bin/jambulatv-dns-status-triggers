@@ -82,10 +82,14 @@ sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=on:g" $COOVA_CONFIG_FILE
 fi
 
 
-# Run processes whenever thereis a change in status i.e. UP or DOWN
+# Run processes whenever there's a change in status i.e. UP or DOWN
 ###################################################################
-# Restart captive portal: coova-chilli
+# 1) Reload configs for captive portal: coova-chilli
 /usr/bin/jambulatv-chilli reload
+#systemctl restart coova-chilli
+#
+# 2) Restart wireless access point: hostapd
+#systemctl restart hostapd
 #
 # Log timestamp: for debugging purposes only
 #echo "$(date): Internet status changed to: [$DNS_STATUS]" >> /root/chilli_starts.log # 
