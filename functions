@@ -3658,22 +3658,19 @@ SYSCONFIG_DIR=/etc/sysconfig
 SYSCONFIG_NETWORK_SCRIPTS_DIR=\$SYSCONFIG_DIR/network-scripts
 NETWORK_ETHERNET_DEVICE=\`ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g'\`
 NETWORK_GATEWAY_ADDRESS=\`grep GATEWAY \$SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-\$NETWORK_ETHERNET_DEVICE | cut -d = -f2 | sed \"s/\\\"//g\"\`
-
-# Find default gateway device
-ip route show | grep default | grep ppp > /dev/null 2>&1
-if [ \"\$?\" = \"0\" ];
-then
-INTERNET_GATEWAY_DEV=\`ip link | grep ppp | cut -d : -f2 | head -1 | sed -e 's/ //g'\`
-else
-INTERNET_GATEWAY_DEV=\$NETWORK_ETHERNET_DEVICE
-fi
+INTERNET_GATEWAY_DEV=\$(ip route show | grep default | sed -n 's/^.*dev //p' | awk {'print \$1'})
+INTERNET_GATEWAY_IP=\$(ip route list | grep \$INTERNET_GATEWAY_DEV | awk {'print \$1'} | tail -1)
 
 
+
+#################
+#  MAIN SCRIPT  #
+#################
 # Delete existing default route
 ip route del default 
 # Set new default route
-[ "x\$NETWORK_GATEWAY_ADDRESS" = "x" ] || ip route add default via \$NETWORK_GATEWAY_ADDRESS
-
+ip route add default via \$INTERNET_GATEWAY_IP
+#
 # Allow IP masquerading through this box
 /bin/echo 1 > /proc/sys/net/ipv4/ip_forward
 /usr/sbin/iptables -t nat -A POSTROUTING -o \$INTERNET_GATEWAY_DEV -j MASQUERADE" > $COOVA_CONFIG_DIR/ipup.sh
