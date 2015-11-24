@@ -594,12 +594,11 @@ cd $INSTALL_SRC_DIR/$1
 make uninstall && make clean && make distclean
 cd $INSTALL_SRC_DIR
 rm -rf $1
+fi
+#
 whereis $1 > /dev/null
 PKG_LEFTOVERS_EXIST=$?
 [ "$PKG_LEFTOVERS_EXIST" != "0" ] || rm -rf `whereis $1`
-else
-echo "The package: $1 is not installed"
-fi
 }
 
 uninstall_python_pkgs () {
@@ -671,6 +670,7 @@ rm -rf $STATEDIR/log/icinga2 \
 rm -rf $STATEDIR/spool/icinga2
 # /usr
 rm -f $SYSTEMD_UNITS_DIR_SYSTEM/icinga2.service
+systemctl --system daemon-reload
 rm -f $PREFIX/sbin/icinga2*
 rm -rf $LIBDIR/icinga2
 rm -rf $PREFIX/lib/icinga2
@@ -759,11 +759,16 @@ uninstall_src_pkgs dahdi
 # uninstall chilli
 uninstall_coova_chilli () {
 systemctl stop coova-chilli.service
-uninstall_src_pkgs chilli
-uninstall_src_pkgs coova-chilli
+mv -v $CONFDIR/chilli $CONFDIR/chilli.$(date +%Y%m%d)
+mv -v $COOVA_HTML_DIR $COOVA_HTML_DIR.$(date +%Y%m%d)
 # Remove configs /customizations
 rm -f $SYSTEMD_UNITS_DIR_SYSTEM/coova-chilli.service $SYSTEMD_UNITS_DIR_USER/coova-chilli.service
-rm -rf $COOVA_HTML_DIR
+systemctl --system daemon-reload
+uninstall_src_pkgs coova-chilli
+uninstall_src_pkgs chilli
+rm -rf $INSTALL_SRC_DIR/coova-chilli
+# Replace default nginx config
+cp -vf $PROJECT_CONFIGS_DIR/nginx/sites-enabled/default $NGINX_CONF_DIR/sites-enabled/
 echo "delete from radcheck;" | mysql -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME
 }
 
@@ -773,7 +778,7 @@ systemctl stop radiusd.service
 uninstall_src_pkgs freeradius-server
 rm -rf $(whereis freeradius)
 rm -rf $(whereis radiusd)
-mv -v /etc/raddb /etc/raddb.$(date +%Y%m%d)
+mv -v $CONFDIR/raddb $CONFDIR/raddb.$(date +%Y%m%d)
 # Remove user
 userdel radiusd
 }
@@ -3573,6 +3578,12 @@ EOF
 coova_chilli_install () {
 # Unpack coova
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/coova-chilli/ $INSTALL_SRC_DIR/coova-chilli/
+#
+# BUG?: Patch Makefile to not treat warnins as errors
+patch -p1 $INSTALL_SRC_DIR/coova-chilli/src/Makefile.am < $PROJECT_PATCHES_DIR/coova_src_Makefile.am.patch
+#
+# Patch redir.c to allow general logging of User-Agent
+patch -p1 $INSTALL_SRC_DIR/coova-chilli/src/redir.c < $PROJECT_PATCHES_DIR/coova_src_redir.c.patch
 # Prepare install sources/directory
 cd $INSTALL_SRC_DIR/coova-chilli
 sh bootstrap
@@ -3582,6 +3593,10 @@ make
 make install
 # Cache recently shared libraries 
 ldconfig
+# Copy coovachilli systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/coova-chilli.service $SYSTEMD_UNITS_DIR_USER/
+# Enable coova-chilli if needed
+systemctl enable coova-chilli.service
 }
 
 haserl_install () {
@@ -3595,12 +3610,6 @@ make install
 }
 
 coova_chilli_configure () {
-# Configure systemd service file
-# ******************************
-# Copy coovachilli systemd file 
-cp -v $PROJECT_INIT_SCRIPTS_DIR/coova-chilli.service $SYSTEMD_UNITS_DIR_USER/
-# Enable coova-chilli if needed
-systemctl enable coova-chilli.service
 # Copy jambulatv-chilli script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-chilli ] || cp -v $PROJECT_BIN_DIR/jambulatv-chilli $BINARY_PREFIX/
 
@@ -3659,7 +3668,11 @@ SYSCONFIG_NETWORK_SCRIPTS_DIR=\$SYSCONFIG_DIR/network-scripts
 NETWORK_ETHERNET_DEVICE=\`ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g'\`
 NETWORK_GATEWAY_ADDRESS=\`grep GATEWAY \$SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-\$NETWORK_ETHERNET_DEVICE | cut -d = -f2 | sed \"s/\\\"//g\"\`
 INTERNET_GATEWAY_DEV=\$(ip route show | grep default | sed -n 's/^.*dev //p' | awk {'print \$1'})
+# Gateway device
+if [ \"x\$INTERNET_GATEWAY_DEV\" != \"x\" ];
+then
 INTERNET_GATEWAY_IP=\$(ip route list | grep \$INTERNET_GATEWAY_DEV | awk {'print \$1'} | tail -1)
+fi
 
 
 
@@ -3667,13 +3680,16 @@ INTERNET_GATEWAY_IP=\$(ip route list | grep \$INTERNET_GATEWAY_DEV | awk {'print
 #  MAIN SCRIPT  #
 #################
 # Delete existing default route
-ip route del default 
+ip route del default > /dev/null 2>&1
 # Set new default route
-ip route add default via \$INTERNET_GATEWAY_IP
+[ \"x\$INTERNET_GATEWAY_IP\" = \"x\" ] || ip route add default via \$INTERNET_GATEWAY_IP
 #
 # Allow IP masquerading through this box
+if [ \"x\$INTERNET_GATEWAY_DEV\" != \"x\" ];
+then
 /bin/echo 1 > /proc/sys/net/ipv4/ip_forward
-/usr/sbin/iptables -t nat -A POSTROUTING -o \$INTERNET_GATEWAY_DEV -j MASQUERADE" > $COOVA_CONFIG_DIR/ipup.sh
+/usr/sbin/iptables -t nat -A POSTROUTING -o \$INTERNET_GATEWAY_DEV -j MASQUERADE
+fi" > $COOVA_CONFIG_DIR/ipup.sh
 #
 # Make script executable
 chmod 755 $COOVA_CONFIG_DIR/ipup.sh
@@ -3732,7 +3748,7 @@ patch -p1 $COOVA_HTML_DIR/www/login.tmpl < $PROJECT_PATCHES_DIR/coova_login_head
 # copy wwwsh binary to coova html directory
 mv -v $COOVA_CONFIG_DIR/wwwsh $COOVA_HTML_DIR/
 #
-# Add splash files dir & custom html files e.g. jambula-pre-login-portal.tmpl to WWW
+# Add landing pages & custom html files to WWW
 cp -rv $PROJECT_CUSTOMIZATION_DIR/coova/html/* $COOVA_HTML_DIR/www/
 #
 # Copy coova.jpg small logo

@@ -48,6 +48,13 @@ uninstall_owncloud
 owncloud_install
 }
 
+upgrade_coova_chilli () {
+uninstall_coova_chilli
+coova_chilli_install
+coova_chilli_configure
+coova_chilli_customization
+}
+
 
 
 #################
@@ -63,3 +70,5 @@ owncloud_install
 #upgrade_icingaweb2
 
 #upgrade_owncloud 
+
+#upgrade_coova_chilli

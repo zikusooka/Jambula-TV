@@ -1,5 +1,5 @@
---- /usr/src/jambulatv/coova-chilli/miniportal/config-local.sh	2015-08-22 13:55:22.734781175 +0300
-+++ config-local.sh	2015-09-19 15:30:03.195719244 +0300
+--- /usr/src/jambulatv/coova-chilli/miniportal/config-local.sh	2015-11-22 08:57:46.247269748 +0300
++++ config-local.sh	2015-11-24 11:22:39.883778377 +0300
 @@ -23,8 +23,8 @@
  COOVA_SESSIONID=$CHI_SESSION_ID
  COOVA_CHALLENGE=$CHI_CHALLENGE
@@ -11,40 +11,78 @@
  http_redirect2() {
  cat <<EOF
  HTTP/1.1 302 Redirect
-@@ -89,6 +89,23 @@
-     echo "<div id=\"body\">"
- }
- 
-+header_jambula() {
-+    echo "<html><head>"
-+
-+    uamfile title 0
-+
-+    echo "<meta http-equiv=\"Cache-control\" content=\"no-cache\"/>
-+<meta http-equiv=\"Pragma\" content=\"no-cache\"/>"
-+
-+    echo "<script>"
-+    uamfile "js" 0 
-+    echo "</script>"
-+
-+    echo "$1</head><body$2>"
-+
-+    echo "<div id=\"body\">"
-+}
-+
- footer() {
-     echo "</div>" 
- 
-@@ -96,7 +113,7 @@
+@@ -96,7 +96,69 @@
  
      echo "<table style=\"clear:both;margin:auto;padding-top:10px;\" height=\"30\">
  <tr><td valign=\"center\" align=\"center\" style=\"color:#666;font-size:60%;\">Powered by</td>
 -<td valign=\"center\" align=\"center\"><a href=\"http://coova.org/\"><img border=0 src=\"coova.jpg\"></a>
 +<td valign=\"center\" align=\"center\"><a href=\"$HS_PROVIDER_LINK\"><img border=0 src=\"coova.jpg\"></a>
++</td></tr></table></body></html>"
++}
++
++jambula_detect_device() {
++/usr/bin/journalctl -r -o cat --no-pager | grep -m 1 -i User-Agent | while read LINE
++do
++	case $LINE in
++		(*iPhone*|*iPad*|*iPod*)
++		USER_AGENT="iOS"
++		;;
++		*Meego*|*Android*)
++		USER_AGENT="Android"
++		;;
++		*BlackBerry*)
++		USER_AGENT="Blackberry"
++		;;
++		*Opera*Mini*)
++		USER_AGENT="OperaMini"
++		;;
++		*IEMobile*)
++		USER_AGENT="WinMobile"
++		;;
++		*)
++		USER_AGENT="Other"
++		;;
++	esac	
++		echo "$USER_AGENT" > /tmp/chilli_uagent
++done
++# Set detected device variable
++export DETECTED_DEVICE=$(cat /tmp/chilli_uagent)
++}
++
++jambula_header() {
++    echo "<html>"
++    echo "<head>"
++    uamfile title 0
++
++    echo "<meta http-equiv=\"Cache-control\" content=\"no-cache\"/>"
++    echo "<meta http-equiv=\"Pragma\" content=\"no-cache\"/>"
++    echo "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
++    echo "<style>"
++    uamfile "landing/css/w3" 0 
++    echo "</style>"
++
++    echo "<script>"
++    uamfile "js" 0 
++    echo "</script>"
++    echo "$1</head>"
++
++    echo "<body$2>"
++    # Put header here
++    echo "<div id=\"body\">"
++}
++
++jambula_footer() {
++    echo "</div>" 
++
++    uamfile "footer" 1 
++
++    echo "<table style=\"clear:both;margin:auto;padding-top:10px;\" height=\"30\">
++<tr><td valign=\"center\" align=\"center\" style=\"color:#666;font-size:60%;\">Powered by</td>
++<td valign=\"center\" align=\"center\"><a href=\"$HS_PROVIDER_LINK\"><img border=0 src=\"coova.jpg\"></a>
  </td></tr></table></body></html>"
  }
  
-@@ -212,11 +229,17 @@
+@@ -212,11 +274,17 @@
      (uamfile "$file" 0
  	echo
  	echo "-------------------------------------------------"
@@ -54,7 +92,7 @@
      return 1;
  }
  
-+check_dns_jambula() {
++jambula_check_dns() {
 +REMOTE_DOMAIN_NAME=google.com
 +host -W 1 $REMOTE_DOMAIN_NAME 208.67.222.222 > /dev/null 2>&1
 +DNS_STATUS=$?

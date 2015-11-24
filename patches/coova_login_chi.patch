@@ -1,6 +1,6 @@
---- /usr/src/jambulatv/coova-chilli/miniportal/login.chi	2014-07-23 19:54:34.790232793 +0300
-+++ login.chi	2014-07-24 12:39:28.750326336 +0300
-@@ -14,35 +14,44 @@
+--- /usr/src/jambulatv/coova-chilli/miniportal/login.chi	2015-11-22 08:57:46.119261735 +0300
++++ login.chi	2015-11-24 11:23:12.406830326 +0300
+@@ -14,35 +14,51 @@
  # You should have received a copy of the GNU General Public License
  # along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
@@ -33,20 +33,27 @@
 -	    header "<meta http-equiv=\"refresh\" content=\"5;url=${url}\"/>"
 -	    uamfile "login_success" 1
 -	    footer
++                 
++            # Detect device platform
++            jambula_detect_device
++            
++            # check for DNS connectivity
++            jambula_check_dns
 +
-+            check_dns_jambula
 +	    # Check if Internet is ON
 +	    if [ "$DNS_STATUS" = "0" ];
 +		then
 +	    # Internet On
-+	    header_jambula "<meta http-equiv=\"refresh\" content=\"30;url=${url}\"/>"
-+    	    uamfile "post_login_internet_on" 1
++	    jambula_header "<meta http-equiv=\"refresh\" content=\"30;url=${url}\"/>"
++	    uamfile "landing/internet_on/${DETECTED_DEVICE}" 1
++	    jambula_footer
 +	    exit
 +
 +		else
 +	    # Internet off
-+	    header_jambula "<meta http-equiv=\"refresh\" content=\"600;url=${url}\"/>"
-+    	    uamfile "post_login_internet_off" 1
++	    jambula_header "<meta http-equiv=\"refresh\" content=\"600;url=${url}\"/>"
++	    uamfile "landing/internet_off/${DETECTED_DEVICE}" 1
++	    jambula_footer
  	    exit
 +	    fi
  	    ;;
@@ -59,7 +66,7 @@
      
      if [ "$FORM_res" =  "failed" ]
      then
-@@ -54,14 +63,7 @@
+@@ -54,14 +70,7 @@
  	fi
      fi
      
@@ -68,7 +75,7 @@
 -    uamfile "login_footer" 1 
 -    [ "$HS_REG_MODE" = "self" ] && uamfile "login_register" 1 
 -    [ "$HS_USE_MAP" = "on" ] && uamfile "login_map" 1 
-+    	    uamfile "pre_login_portal" 1
++    	    uamfile "landing/pre_login" 1
      
 -    footer
 -    
