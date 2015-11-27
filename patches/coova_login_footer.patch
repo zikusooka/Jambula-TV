@@ -1,8 +1,12 @@
---- /usr/src/jambula/coova-chilli/miniportal/footer.tmpl	2013-07-09 15:12:27.000000000 +0300
-+++ footer.tmpl	2014-03-15 15:14:39.490111989 +0300
-@@ -1,4 +1,4 @@
+--- /usr/src/jambulatv/coova-chilli/miniportal/footer.tmpl	2014-08-27 02:00:15.000000000 +0300
++++ footer.tmpl	2015-11-24 20:47:07.800258859 +0300
+@@ -1,4 +1,8 @@
  <!--
    --  Footer below every page
    -->
 -This service is provided for free and used at your own risk.
-+This service is brought to you by $HS_PROVIDER.
++<br>
++This service is brought to you by <a href="$HS_PROVIDER_LINK/">$LOCATION_NAME</a>
++
++<p>Copyright (C) 2016-2017 <a href="$JAMBULA_PRODUCT_WEBSITE">$JAMBULA_PRODUCT</a>. All rights
++reserved.</p>

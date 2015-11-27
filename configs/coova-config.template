@@ -196,8 +196,10 @@ JAMBULA_PRODUCT="JambulaTV"
 JAMBULA_PRODUCT_WEBSITE="http://www.jambulatv.com"
 # Emails
 JAMBULA_SUPPORT_EMAIL="support@jambulatv.com"
+# Remote control
+JAMBULA_REMOTE_CONTROL="http://$HS_UAMLISTEN:8510"
 # Live TV
-JAMBULA_TV_ACCESS="http://$HS_UAMLISTEN:9981/playlist/channels"
+JAMBULA_LIVE_TV_ACCESS="http://$HS_UAMLISTEN:9981/playlist/channels"
 # Videos
 JAMBULA_VIDEO_ACCESS="http://$HS_UAMLISTEN:8511/Video.ts"
 # SIP Calls
@@ -208,7 +210,6 @@ JAMBULA_CCTV_ACCESS="http://$HS_UAMLISTEN:8520/index.php?view=montage&group=0"
 ###
 #   WISPr RADIUS Attribute support
 #
-
 HS_LOC_NAME="HOTSPOT_LOCATION"
 HS_LOC_NETWORK=HOTSPOT_NETWORK
 HS_LOC_AC=07			   
