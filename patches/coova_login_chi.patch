@@ -1,5 +1,5 @@
 --- /usr/src/jambulatv/coova-chilli/miniportal/login.chi	2015-11-22 08:57:46.119261735 +0300
-+++ login.chi	2015-11-24 11:23:12.406830326 +0300
++++ login.chi	2015-11-27 17:05:12.973106763 +0300
 @@ -14,35 +14,51 @@
  # You should have received a copy of the GNU General Public License
  # along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -47,14 +47,14 @@
 +	    jambula_header "<meta http-equiv=\"refresh\" content=\"30;url=${url}\"/>"
 +	    uamfile "landing/internet_on/${DETECTED_DEVICE}" 1
 +	    jambula_footer
-+	    exit
+ 	    exit
 +
 +		else
 +	    # Internet off
 +	    jambula_header "<meta http-equiv=\"refresh\" content=\"600;url=${url}\"/>"
 +	    uamfile "landing/internet_off/${DETECTED_DEVICE}" 1
 +	    jambula_footer
- 	    exit
++	    exit
 +	    fi
  	    ;;
      esac
@@ -66,17 +66,21 @@
      
      if [ "$FORM_res" =  "failed" ]
      then
-@@ -54,14 +70,7 @@
+@@ -53,15 +69,10 @@
+ 	    error "Username and/or passowrd was not valid"
  	fi
      fi
++    		
++            jambula_header
++    	    uamfile "landing/pre_login" 1
++            jambula_footer
      
 -    loginform 
 -    
 -    uamfile "login_footer" 1 
 -    [ "$HS_REG_MODE" = "self" ] && uamfile "login_register" 1 
 -    [ "$HS_USE_MAP" = "on" ] && uamfile "login_map" 1 
-+    	    uamfile "landing/pre_login" 1
-     
+-    
 -    footer
 -    
 -fi
