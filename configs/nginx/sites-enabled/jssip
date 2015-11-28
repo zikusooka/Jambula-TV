@@ -1,0 +1,20 @@
+    server {
+        listen 8524;
+
+        server_name  jambulatv_sip;
+        root   html/jssip;
+        index  index.html index.htm index.php;
+	autoindex on;
+
+        location / {
+        }
+
+        location ~ \.php$ {
+            include  includes/php_params;
+        }
+ 
+    	location ~* \.(cgi|chi)$ {
+            include  includes/cgi_params;
+    	}  
+
+    }
