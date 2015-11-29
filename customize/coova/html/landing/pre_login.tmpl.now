@@ -1,38 +1,49 @@
-<body>
+<head>
+</head>
 
-<!-- Jambula Logo and Moto -->
+<body>
+<!-- Header -->
 <br>
 <img src="landing/images/jambula.png" alt="Jambula Labs" style="width:100%">
 <br>
 <header class="w3-container">
-<font class="w3-text-purple"> Smart technologies for your HotSpot!</font>
+<font align="center"> Smart technologies for your HotSpot!</font>
 </header>
-<br>
 
-<!-- Header Image -->
+<br>
+<!-- Internet Not Available -->
 <div class="w3-container">
-<div class="w3-card-2">
-<img src="landing/images/sandiego01.jpg" class="w3-animate-opacity" alt="Madison, WI" style="width:100%">
+<div class="w3-card-4" style="width:100%">
+ <img src="landing/images/sandiego01.jpg" class="w3-animate-opacity" alt="Madison, WI" style="width:100%">
 </div>
 <br>
 
-<!-- Welcome Message -->
-Welcome to <b>$JAMBULA_PRODUCT!</b> 
-<br>
+      Welcome to <b>$JAMBULA_PRODUCT!</b> <br>
+
+      <br>
 You will need to accept our terms and conditions before you can access the Internet and
 multimedia resources using this HotSpot.  If you really care, you may want to take a look at the $(href terms.chi "terms and conditions.")
 
-<!-- FORM -->
-       <p>
       <form method="post" action="login.chi" name="form"><INPUT TYPE="hidden" NAME="userurl" VALUE="$FORM_userurl">
-      <input name="username" value="coovuser" type="hidden">
-      <input name="password" value="coovpass" type="hidden">
-      <button class="w3-btn w3-round w3-round-xxlarge w3-text-purple">
-      <input name="submit" value="I agree with your Terms and Conditions" type="submit">
-      </button>
+
+        <span style="font-weight: bold;">
+
+ </span><input name="username" value="coovuser" type="hidden"> <span style="font-weight: bold;"><br>
+
+        </span><input name="password" value="coovpass" type="hidden">
+
+
+<button class="w3-btn w3-round w3-round-xxlarge w3-text-purple">
+        <input name="submit" value="I agree with your Terms and Conditions" type="submit">
+</button>
+
+
       </form>
-      </p>
+
 </div>
+
+
+<div class="w3-row-padding w3-margin-top">
 
 <!-- About Us -->
 <div class="w3-half">
@@ -55,14 +66,10 @@ organizations use non-proprietary and 'less expensive' open-source solutions.<a 
     <div class="w3-container">
       <h3><a name="Contact_Us"></a>Contact Us</h3> 
     <img src="landing/images/charlotte05.jpg" alt="Charlotte, NC" style="width:100%">
-      <br><br><p><li>Technical support: <span style="font-weight: bold; text-decoration:none"><a href="mailto:$JAMBULA_SUPPORT_EMAIL">Email</a></span></li><li>Sales and Quotes:
-          <span style="font-weight: bold;"><a href="tel:0776338000">+256-(0)77-633-8000</a>  </span></li><li>Learn more at:
-          <a style="font-weight: bold;" href="$JAMBULA_PRODUCT_WEBSITE/">$JAMBULA_PRODUCT website</a></li></p>
+      <p><li>Technical support: <span style="font-weight: bold; text-decoration:none"><a href="mailto:$JAMBULA_SUPPORT_EMAIL">Email</a></span></li><li>Sales and Quotes:
+          <span style="font-weight: bold;">077-633-8000</span></li><li>Learn more:
+          <a style="font-weight: bold;" href="$JAMBULA_PRODUCT_WEBSITE/">Website</a></li></p>
     </div>
   </div>
 </div>
 
-</body>
-
-<!-- Footer --> 
-<div class="w3-container">

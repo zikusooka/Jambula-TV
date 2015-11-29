@@ -1,45 +1,37 @@
 <head>
-
   <script language="javascript" type="text/javascript">
 var chilliController = { interval:30 , host:"chilli" , port:false , ident:'00' , ssl:false , uamService: false };
   </script>
-
 <!-- Jambula Labs: -->
   <script language="javascript" type="text/javascript" src="landing/scripts/ChilliLibrary.js">
   </script>
-
 <!-- Jambula Labs: -->
   <script language="javascript" type="text/javascript" src="landing/scripts/chilliController.js">
   </script>
-
 <!-- Jambula Labs: -->
 <script language="javascript" type="text/javascript" src="landing/scripts/chillispot.js">
   </script>
-
 <!-- Jambula Labs: Popup a seperate window showing stats -->
 <script language="javascript" type="text/javascript" src="landing/scripts/popup_stats.js">
   </script>
-
 <!-- Jambula Labs: Timer of 600 secs, then redirect -->
   <script language="javascript" type="text/javascript" src="landing/scripts/timer.js">
   </script>
-
 </head>
 
 <body>
-
-<!-- Header -->
+<!-- Jambula Logo - Internet Off -->
 <br>
 <img src="landing/images/hotspot-internet-off.png" alt="Jambula Labs" style="width:100%">
 <br>
 <header class="w3-container">
 <font align="center"> Smart technologies for your HotSpot!</font>
 </header>
-
 <br>
+
 <!-- Internet Not Available -->
 <div class="w3-container">
-<div class="w3-card-4" style="width:100%">
+<div class="w3-card-2" style="width:100%">
  <img src="landing/images/madison03.jpg" class="w3-animate-opacity" alt="Madison, WI" style="width:100%">
 </div>
 <br>
@@ -51,8 +43,6 @@ Administrator or try again later. I will try to redirect you to
 </div>
 
 <!-- Available resources -->
-<div class="w3-row-padding w3-margin-top">
-
 <div class="w3-half">
   <div class="w3-card-2">
     <div class="w3-container">
@@ -64,14 +54,14 @@ Administrator or try again later. I will try to redirect you to
 </thead>
 <tbody>
 <tr>
-  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_TV_REMOTE" target="_blank">Remote Control</a></td>
-  <td class="w3-topnav"><a href="$JAMBULA_TV_REMOTE" target="_blank">
+  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_REMOTE_CONTROL" target="_blank">Remote Control</a></td>
+  <td class="w3-topnav"><a href="$JAMBULA_REMOTE_CONTROL" target="_blank">
   <img src="landing/images/icons/remote05.jpg" alt="Remote"></a></td>
 </tr>
 
 <tr>
-  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_TV_ACCESS" target="_blank">Live TV</a></td>
- <td class="w3-topnav"><a href="$JAMBULA_TV_ACCESS" target="_blank">
+  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_LIVE_TV_ACCESS" target="_blank">Live TV</a></td>
+ <td class="w3-topnav"><a href="$JAMBULA_LIVE_TV_ACCESS" target="_blank">
   <img src="landing/images/icons/tv01.jpg" alt="Live TV"></a></td>
 </tr>
 
@@ -181,11 +171,10 @@ Administrator or try again later. I will try to redirect you to
     <div class="w3-container">
       <h3><a name="About_Us"></a>About Us</h3>
     <img src="landing/images/chicago01.jpg" alt="Chicago, IL" style="width:100%">
-      <p>$LOCATION_NAME specializes in providing customized UNIX
+      <p>$LOCATION_NAME, specializes in providing customized UNIX
 solutions to offices and homes in Africa. We are one of the few
 companies in East Africa that are helping new businesses and
-organizations use non-proprietary and 'less expensive 'open-source'
-solutions.&nbsp; <a href="$HS_PROVIDER_LINK">Read more</a> ...<br>
+organizations use non-proprietary and 'less expensive' open-source solutions.<a href="$HS_PROVIDER_LINK"> Read more</a> ...<br>
       </p>
     </div>
   </div>
@@ -197,13 +186,14 @@ solutions.&nbsp; <a href="$HS_PROVIDER_LINK">Read more</a> ...<br>
     <div class="w3-container">
       <h3><a name="Contact_Us"></a>Contact Us</h3> 
     <img src="landing/images/charlotte01.jpg" alt="Charlotte, NC" style="width:100%">
-      <p><li>Technical support: <span style="font-weight: bold;"><a href="mailto:$JAMBULA_SUPPORT_EMAIL">Email</a></span></li><li>Sales and Quotes:
-          <span style="font-weight: bold;">077-633-8000</span></li><li>Learn more:
-          <a style="font-weight: bold;" href="$JAMBULA_PRODUCT_WEBSITE/">Website</a></li></p>
+<br><br><p><li>Technical support: <span style="font-weight: bold; text-decoration:none"><a href="mailto:$JAMBULA_SUPPORT_EMAIL">Email</a></span></li><li>Sales and Quotes:
+          <span style="font-weight: bold;"><a href="tel:0776338000">+256-(0)77-633-8000</a>  </span></li><li>Learn more at:
+          <a style="font-weight: bold;" href="$JAMBULA_PRODUCT_WEBSITE/">$JAMBULA_PRODUCT website</a></li></p>
     </div>
   </div>
 </div>
 
-
-</div>
 </body>
+
+<!-- Footer --> 
+<div class="w3-container">
