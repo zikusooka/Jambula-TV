@@ -3967,7 +3967,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 MiniDLNA
 ========
 % Do an initial scan of media directories  using the command:
-  $BINARY_PREFIX/minidlnad -R -f $PROJECT_SYSTEM_CONF_DIR/minidlna/minidlna.conf
+  minidlnad -R -f $PROJECT_SYSTEM_CONF_DIR/minidlna.conf
 #
 EOF
 }

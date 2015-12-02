@@ -188,11 +188,8 @@ icingaweb2_configure
 # --------
 
 # DLNA/UPnP
-xupnpd_install
-xupnpd_configure
-# minidlna: No support for playlists, live TV
-#minidlna_install
-#minidlna_configure
+minidlna_install
+minidlna_configure
 
 # VoD Streaming
 video_on_demand_configure
