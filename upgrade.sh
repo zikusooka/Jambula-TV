@@ -55,6 +55,12 @@ coova_chilli_configure
 coova_chilli_customization
 }
 
+upgrade_hostapd () {
+uninstall_hostapd
+hostapd_install
+hostapd_configure 
+}
+
 
 
 #################
@@ -72,3 +78,5 @@ coova_chilli_customization
 #upgrade_owncloud 
 
 #upgrade_coova_chilli
+
+#upgrade_hostapd

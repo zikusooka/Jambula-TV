@@ -761,8 +761,8 @@ uninstall_coova_chilli () {
 systemctl stop coova-chilli.service
 mv -v $CONFDIR/chilli $CONFDIR/chilli.$(date +%Y%m%d)
 mv -v $COOVA_HTML_DIR $COOVA_HTML_DIR.$(date +%Y%m%d)
-# Remove configs /customizations
-rm -f $SYSTEMD_UNITS_DIR_SYSTEM/coova-chilli.service $SYSTEMD_UNITS_DIR_USER/coova-chilli.service
+# Remove systemd files
+rm -f $SYSTEMD_UNITS_DIR_USER/coova-chilli.service
 systemctl --system daemon-reload
 uninstall_src_pkgs coova-chilli
 uninstall_src_pkgs chilli
@@ -819,7 +819,11 @@ uninstall_live555
 uninstall_hostapd () {
 systemctl stop hostapd.service
 rm -f /usr/sbin/{hostapd,hostapd_cli}
-rm -rf /etc/hostapd
+mv -v $CONFDIR/hostapd $CONFDIR/hostapd.$(date +%Y%m%d)
+# Remove systemd files
+rm -f $SYSTEMD_UNITS_DIR_USER/hostapd.service
+systemctl --system daemon-reload
+# Remove source files
 rm -rf $INSTALL_SRC_DIR/hostap*
 }
 
@@ -3786,29 +3790,27 @@ patch -p1 defconfig < $PROJECT_PATCHES_DIR/hostapd.defconfig.patch
 cp -v defconfig .config
 make
 make install
+# Copy hostapd systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/hostapd.service $SYSTEMD_UNITS_DIR_USER/
+# Enable hostapd if needed
+systemctl enable hostapd.service
 }
 
 hostapd_configure () {
 # Create hostapd config directory
 # *******************************
 [ -d $HOSTAPD_DIR ] || mkdir $HOSTAPD_DIR
-
+#
 # Copy hostapd config files
 # **************************
 cp -v $INSTALL_SRC_DIR/hostap/hostapd/hostapd.conf $HOSTAPD_DIR/hostapd.conf.orig
 # Make some changes to hostapd.conf; and then
 cat $PROJECT_CONFIGS_DIR/hostapd-conf.template | sed -e "s/WIFIDEVICE0/$WIFI_AP_INTERFACE/" | sed -e "s/NETWORK_WIRELESS_CHANNEL_NO/$NETWORK_WIRELESS_CHANNEL_NO/" | sed -e "s/JAMBULATV/$NETWORK_WIRELESS_SSID/" | sed -e "s/thankgodtodayisfridaynovember5/$NETWORK_WIRELESS_PASSPHRASE/"  > $HOSTAPD_DIR/hostapd.conf
-
-# Configure systemd service file
-# ******************************
-# Copy hostapd systemd file 
-cp -v $PROJECT_INIT_SCRIPTS_DIR/hostapd.service $SYSTEMD_UNITS_DIR_USER/
-# Enable hostapd if needed
-systemctl enable hostapd.service
-
+#
 # Disable wpa_supplicant service, which is automatically started by NetworkManager
 # ********************************************************************************
-mv -v $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service \
+[ ! -f $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service ] || \
+      mv -v $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service \
       $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service.disabled
 }
 
