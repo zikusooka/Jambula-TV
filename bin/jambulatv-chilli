@@ -161,7 +161,7 @@ case $1 in
 	
 	ip addr add 0.0.0.0 dev $HS_LANIF
 
-       	daemon /usr/sbin/chilli --conf=$CONFIG --pidfile=$pidfile
+       	daemon /usr/sbin/chilli -f --conf=$CONFIG --pidfile=$pidfile &
 
         echo
 	;;
