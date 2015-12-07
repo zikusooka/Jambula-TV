@@ -6,6 +6,10 @@
         index  index.html index.htm index.php;
 	
         location / {
+            # Redirect to HotSpot Portal for wireless clients
+            if ($remote_addr ~* 172.16.0) {
+            rewrite  ^       http://172.16.0.1:4990/www/login.chi;
+            }
         }
 
         location ~ \.php$ {
