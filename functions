@@ -533,6 +533,7 @@ OWNCLOUD_ADMIN_PASS=3jambulatv
 OWNCLOUD_CONFIG_DIR=$WWW_HTML_DIR/owncloud/config
 OWNCLOUD_CONFIG_FILE=$OWNCLOUD_CONFIG_DIR/config.php
 OWNCLOUD_DATA_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Cloud
+OWNCLOUD_WWW_SERVER_NAME=$(grep server_name $PROJECT_CONFIGS_DIR/nginx/sites-enabled/owncloud | awk {'print $2'} | sed 's/;//')
 
 
 
@@ -4188,13 +4189,13 @@ systemctl restart nginx.service
 # Get instance ID
 OWNCLOUD_INSTANCE_ID=$(grep 'instanceid' $WWW_HTML_DIR/owncloud/config/config.php | awk {'print $3'} | sed "s:'::g" | cut -d , -f1)
 # Generate initial owncloud config
-cat > $WWW_HTML_DIR/owncloud/config/config.php << EOF
+cat > $OWNCLOUD_CONFIG_FILE << EOF
 <?php
 \$CONFIG = array (
   'instanceid' => '$OWNCLOUD_INSTANCE_ID',
   'trusted_domains' => 
   array (
-    0 => '$NETWORK_IP_ADDRESS', '$COOVA_SERVER_IP'
+    0 => '$NETWORK_IP_ADDRESS', '$COOVA_SERVER_IP', '$OWNCLOUD_WWW_SERVER_NAME'
   ),
   'datadirectory' => '$OWNCLOUD_DATA_DIRECTORY',
   'overwrite.cli.url' => 'http://$NETWORK_IP_ADDRESS:$(grep -i owncloud $PORTS_ASSIGNED_FILE | awk {'print $1'})',
