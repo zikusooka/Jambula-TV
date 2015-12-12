@@ -15,7 +15,7 @@ var chilliController = { interval:30 , host:"chilli" , port:false , ident:'00' ,
 <script language="javascript" type="text/javascript" src="landing/scripts/popup_stats.js">
   </script>
 <!-- Jambula Labs: Timer of 600 secs, then redirect -->
-  <script language="javascript" type="text/javascript" src="landing/scripts/timer.js">
+  <script language="javascript" type="text/javascript" src="landing/scripts/timer_600.js">
   </script>
 </head>
 
@@ -53,52 +53,173 @@ Administrator or try again later. I will try to redirect you to
 <thead>
 </thead>
 <tbody>
+
+<!-- Remote control - Kodi -->
 <tr>
-  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_REMOTE_CONTROL" target="_blank">Remote Control</a></td>
-  <td class="w3-topnav"><a href="$JAMBULA_REMOTE_CONTROL" target="_blank">
-  <img src="landing/images/icons/remote05.jpg" alt="Remote"></a></td>
+  <td class="w3-topnav w3-vmiddle">
+<a href="$JAMBULA_REMOTE_CONTROL" target="_blank">Remote Control</a>
+</td>
+  <td class="w3-topnav">
+<a href="$JAMBULA_REMOTE_CONTROL" target="_blank"><img src="landing/images/icons/remote05.jpg" alt="Remote"></a>
+  </td>
+  <td>
+<font class="w3-small w3-vmiddle" align="left">
+Control TV remote.
+<br>
+<a href="" target="_blank"></a> 
+</font>
+  </td>
 </tr>
 
+<!-- Live TV - TVheadend -->
 <tr>
-  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_LIVE_TV_ACCESS" target="_blank">Live TV</a></td>
- <td class="w3-topnav"><a href="$JAMBULA_LIVE_TV_ACCESS" target="_blank">
-  <img src="landing/images/icons/tv01.jpg" alt="Live TV"></a></td>
+  <td class="w3-topnav w3-vmiddle">
+<a href="$JAMBULA_LIVE_TV_ACCESS" target="_blank">Live TV</a>
+  </td>
+  <td class="w3-topnav">
+<a href="$JAMBULA_LIVE_TV_ACCESS" target="_blank">
+  <img src="landing/images/icons/tv01.jpg" alt="Live TV"></a>
+  </td>
+  <td>
+<font class="w3-small w3-vmiddle" align="left">
+Watch Live TV.
+<br>
+<a href="" target="_blank"></a>
+</font>
+  </td>
 </tr>
 
+<!-- Videos - Kodi -->
 <tr>
-  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_VIDEO_ACCESS" target="_blank">TV Shows and Movies</a></td>
-  <td class="w3-topnav"><a href="$JAMBULA_VIDEO_ACCESS" target="_blank">
-<img src="landing/images/icons/tvshows01.jpg" alt="TV Shows and Movies"></a></td>
+  <td class="w3-topnav w3-vmiddle">
+<a href="$JAMBULA_VIDEO_ACCESS" target="_blank">Videos</a>
+  </td>
+  <td class="w3-topnav">
+<a href="$JAMBULA_VIDEO_ACCESS" target="_blank"><img src="landing/images/icons/tvshows01.jpg" alt="Videos"></a>
+  </td>
+  <td>
+<font class="w3-small w3-vmiddle" align="left">
+Play TV Shows and Movies.
+<br>
+<a href="" target="_blank"></a>
+</font>
+  </td>
 </tr>
 
+<!-- VOIP Phone - jSSIP -->
 <tr>
-  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_PHONE_ACCESS" target="_blank">Web Phone</a></td>
-  <td class="w3-topnav"><a href="$JAMBULA_PHONE_ACCESS" target="_blank">
-<img src="landing/images/icons/sip01.jpg" alt="Web Phone"></a></td>
+  <td class="w3-topnav w3-vmiddle">
+<a href="$JAMBULA_PHONE_ACCESS" target="_blank">Phone</a>
+</td>
+  <td class="w3-topnav">
+<a href="$JAMBULA_PHONE_ACCESS" target="_blank">
+<img src="landing/images/icons/sip01.jpg" alt="Phone"></a>
+  </td>
+  <td>
+<font class="w3-small w3-vmiddle" align="left">
+Connect to VOIP PBX system.
+<br>
+<a href="" target="_blank"></a>
+</font>
+  </td>
 </tr>
 
+<!-- CCTV - ZoneMinder -->
 <tr>
-  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_CCTV_ACCESS" target="_blank">CCTV Cameras</a></td>
-  <td class="w3-topnav"><a href="$JAMBULA_CCTV_ACCESS" target="_blank">
-<img src="landing/images/icons/cctv01.jpg" alt="CCTV"></a></td>
+  <td class="w3-topnav w3-vmiddle">
+<a href="$JAMBULA_CCTV_ACCESS" target="_blank">CCTV</a>
+  </td>
+  <td class="w3-topnav">
+<a href="$JAMBULA_CCTV_ACCESS" target="_blank"><img src="landing/images/icons/cctv01.jpg" alt="CCTV"></a>
+  </td>
+  <td>
+<font class="w3-small w3-vmiddle" align="left">
+View security Cameras.
+<br>
+<a href="" target="_blank"></a>
+</font>
+  </td>
 </tr>
 
+<!-- Files - Owncloud -->
 <tr>
-  <td class="w3-topnav w3-vmiddle"><a href="#" onclick="return popup_meter('landing/session_info.html')">Session Info</a></td>
+  <td class="w3-topnav w3-vmiddle">
+<a href="$JAMBULA_FILES_ACCESS" target="_blank">Files</a>
+</td>
+  <td class="w3-topnav">
+<a href="$JAMBULA_FILES_ACCESS" target="_blank">
+<img src="landing/images/icons/files01.jpg" alt="Files"></a>
+  </td>
+  <td>
+<font class="w3-small w3-vmiddle" align="left">
+Manage your Files.
+<br>
+<a href="" target="_blank"></a>
+</font>
+  </td>
+</tr>
+
+<!-- Torrents - rtGUI -->
+<tr>
+  <td class="w3-topnav w3-vmiddle">
+<a href="$JAMBULA_TORRENTS_ACCESS" target="_blank">Torrents</a>
+</td>
+  <td class="w3-topnav">
+<a href="$JAMBULA_TORRENTS_ACCESS" target="_blank">
+<img src="landing/images/icons/torrents02.jpg" alt="Torrents"></a>
+  </td>
+  <td>
+<font class="w3-small w3-vmiddle" align="left">
+Manage your torrents.
+<br>
+<a href="" target "_blank"></a>
+</font>
+  </td>
+</tr>
+
+<!-- Current session information -->
+<tr>
+  <td class="w3-topnav w3-vmiddle"><a href="#" onclick="return popup_meter('landing/session_info.html')">Session</a></td>
   <td class="w3-topnav"><a href="#" onclick="return popup_meter('landing/session_info.html')">
-<img src="landing/images/icons/info03.jpg" alt="CCTV"></a></td>
+<img src="landing/images/icons/info03.jpg" alt="Session Info"></a>
+  </td>
+  <td>
+<font class="w3-small w3-vmiddle" align="left">
+View connection stats e.g. data used.
+<br>
+<a href="" target="_blank"></a> 
+</font>
+  </td>
 </tr>
 
+<!-- About Jambula -->
 <tr>
-  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_PRODUCT_WEBSITE" target="_blank">About $JAMBULA_PRODUCT</a></td>
+  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_PRODUCT_WEBSITE" target="_blank">About Us</a></td>
   <td class="w3-topnav"><a href="$JAMBULA_PRODUCT_WEBSITE">
-<img src="landing/images/icons/jambulatv.jpg" alt="$JAMBULA_PRODUCT"></a></td>
+<img src="landing/images/icons/jambulatv.jpg" alt="$JAMBULA_PRODUCT"></a>
+  </td>
+  <td>
+<font class="w3-small w3-vmiddle" align="left">
+See our products & services.
+<br>
+<a href="" target="_blank"></a> 
+</font>
+  </td>
 </tr>
 
+<!-- Disconnect - Logoff -->
 <tr>
   <td class="w3-topnav w3-vmiddle"><a href="http://logout/">Disconnect</a></td>
   <td class="w3-topnav"><a href="http://logout/">
-<img src="landing/images/icons/logout03.jpg" alt="Log Off"></a></td>
+<img src="landing/images/icons/logout03.jpg" alt="Log Off"></a>
+  </td>
+  <td>
+<font class="w3-small w3-vmiddle" align="left">
+Sign out of HotSpot.
+<br>
+<a href="" target="_blank"></a> 
+</font>
+  </td>
 </tr>
 
 </tbody>

@@ -15,21 +15,21 @@ var chilliController = { interval:30 , host:"chilli" , port:false , ident:'00' ,
 <script language="javascript" type="text/javascript" src="landing/scripts/popup_stats.js">
   </script>
 <!-- Jambula Labs: Timer of 600 secs, then redirect -->
-  <script language="javascript" type="text/javascript" src="landing/scripts/timer_600.js">
+  <script language="javascript" type="text/javascript" src="landing/scripts/timer_30.js">
   </script>
 </head>
 
 <body>
-<!-- Jambula Logo - Internet Off -->
+<!-- Jambula Logo - Internet On -->
 <br>
-<img src="landing/images/hotspot-internet-off.png" alt="Jambula Labs" style="width:100%">
+<img src="landing/images/hotspot-internet-on.png" alt="Jambula Labs" style="width:100%">
 <br>
 <header class="w3-container">
 <font align="center"> Smart technologies for your HotSpot!</font>
 </header>
 <br>
 
-<!-- Internet Not Available -->
+<!-- Internet Available -->
 <div class="w3-container">
 <div class="w3-card-2" style="width:100%">
  <img src="landing/images/madison03.jpg" class="w3-animate-opacity" alt="Madison, WI" style="width:100%">
@@ -39,7 +39,7 @@ Currently, you will not be able to access the Internet using this HotSpot. This
 may be due to a temporary problem. If so, please contact your Network
 Administrator or try again later. I will try to redirect you to
       <a href="${FORM_redirurl:-$FORM_userurl}">${FORM_redirurl:-$FORM_userurl}</a>
-      <br> in <span id="countdown">600</span> seconds ...
+      <br> in <span id="countdown">30</span> seconds ...
 </div>
 
 <!-- Available resources -->

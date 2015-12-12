@@ -4,6 +4,12 @@
 <link rel="stylesheet" href="landing/css/w3.tmpl">
 </head>
 
+<script language="javascript" type="text/javascript">
+var chilliController = { interval:30 , host:"chilli" , port:false , ident:'00' , ssl:false , uamService: false };
+</script>
+<script language="javascript" type="text/javascript" src="ChilliLibrary.js"></script>
+<script language="javascript" type="text/javascript" src="chilliController.js"></script>
+
 <table border="0" id="statusTable" style="padding-top:4px;font-size:70%">
 <tr id="connectRow">
 <td><span id="statusMessage"><b>Connected</b></span></td>
@@ -47,9 +53,4 @@
 </tr>
 </table>
 
-<script language="javascript" type="text/javascript">
-var chilliController = { interval:30 , host:"chilli" , port:false , ident:'00' , ssl:false , uamService: false };
-</script>
-<script language="javascript" type="text/javascript" src="ChilliLibrary.js"></script>
-<script language="javascript" type="text/javascript" src="chilliController.js"></script>
 </HTML>

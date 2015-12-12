@@ -15,29 +15,27 @@ var chilliController = { interval:30 , host:"chilli" , port:false , ident:'00' ,
 <script language="javascript" type="text/javascript" src="landing/scripts/popup_stats.js">
   </script>
 <!-- Jambula Labs: Timer of 600 secs, then redirect -->
-  <script language="javascript" type="text/javascript" src="landing/scripts/timer_600.js">
+  <script language="javascript" type="text/javascript" src="landing/scripts/timer_30.js">
   </script>
 </head>
 
 <body>
-<!-- Jambula Logo - Internet Off -->
+<!-- Jambula Logo - Internet On -->
 <br>
-<img src="landing/images/hotspot-internet-off.png" alt="Jambula Labs" style="width:100%">
+<img src="landing/images/hotspot-internet-on.png" alt="Jambula Labs" style="width:100%">
 <br>
 <header class="w3-container">
 <font align="center"> Smart technologies for your HotSpot!</font>
 </header>
 <br>
 
-<!-- Internet Not Available -->
+<!-- Internet Available -->
 <div class="w3-container">
 <div class="w3-card-2" style="width:100%">
  <img src="landing/images/madison03.jpg" class="w3-animate-opacity" alt="Madison, WI" style="width:100%">
 </div>
 <br>
-Currently, you will not be able to access the Internet using this HotSpot. This
-may be due to a temporary problem. If so, please contact your Network
-Administrator or try again later. I will try to redirect you to
+       You will be redirected to
       <a href="${FORM_redirurl:-$FORM_userurl}">${FORM_redirurl:-$FORM_userurl}</a>
       <br> in <span id="countdown">600</span> seconds ...
 </div>
@@ -54,77 +52,77 @@ Administrator or try again later. I will try to redirect you to
 </thead>
 <tbody>
 
-<!-- Remote control - Yatse -->
+<!-- Remote control - Kodi -->
 <tr>
   <td class="w3-topnav w3-vmiddle">
-<a href="intent://command/show/remote#Intent;scheme=yatse;package=org.leetzone.android.yatsewidgetfree;S.browser_fallback_url=https://play.google.com/store/apps/details?id=org.leetzone.android.yatsewidgetfree;end" target="_blank">Remote Control</a>
+<a href="$JAMBULA_REMOTE_CONTROL" target="_blank">Remote Control</a>
 </td>
   <td class="w3-topnav">
-<a href="intent://command/show/remote#Intent;scheme=yatse;package=org.leetzone.android.yatsewidgetfree;S.browser_fallback_url=https://play.google.com/store/apps/details?id=org.leetzone.android.yatsewidgetfree;end" target="_blank"><img src="landing/images/icons/remote05.jpg" alt="Remote"></a>
+<a href="$JAMBULA_REMOTE_CONTROL" target="_blank"><img src="landing/images/icons/remote05.jpg" alt="Remote"></a>
   </td>
   <td>
 <font class="w3-small w3-vmiddle" align="left">
-Use this device to control TV.
+Control TV remote.
 <br>
-<a href="https://play.google.com/store/apps/details?id=org.leetzone.android.yatsewidgetfree" target="_blank">Yatse</a> is needed
+<a href="" target="_blank"></a> 
 </font>
   </td>
 </tr>
 
-<!-- Live TV - TVheadend client (TVHClient) -->
+<!-- Live TV - TVheadend -->
 <tr>
   <td class="w3-topnav w3-vmiddle">
-<a href="intent://#Intent;scheme=tvhclient;package=org.tvheadend.tvhclient;S.browser_fallback_url=https://play.google.com/store/apps/details?id=org.tvheadend.tvhclient;end" target="_blank">Live TV</a>
+<a href="$JAMBULA_LIVE_TV_ACCESS" target="_blank">Live TV</a>
   </td>
   <td class="w3-topnav">
-<a href="intent://#Intent;scheme=tvhclient;package=org.tvheadend.tvhclient;S.browser_fallback_url=https://play.google.com/store/apps/details?id=org.tvheadend.tvhclient;end" target="_blank">
+<a href="$JAMBULA_LIVE_TV_ACCESS" target="_blank">
   <img src="landing/images/icons/tv01.jpg" alt="Live TV"></a>
   </td>
   <td>
 <font class="w3-small w3-vmiddle" align="left">
 Watch Live TV.
 <br>
-<a href="https://play.google.com/store/apps/details?id=org.tvheadend.tvhclient" target="_blank">TVHClient</a> is needed
+<a href="" target="_blank"></a>
 </font>
   </td>
 </tr>
 
-<!-- Videos - BubbleUPNP -->
+<!-- Videos - Kodi -->
 <tr>
   <td class="w3-topnav w3-vmiddle">
-<a href="intent://#Intent;scheme=db-7gss6o105yhetoa;package=com.bubblesoft.android.bubbleupnp;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.bubblesoft.android.bubbleupnp;end" target="_blank">Videos</a>
+<a href="$JAMBULA_VIDEO_ACCESS" target="_blank">Videos</a>
   </td>
   <td class="w3-topnav">
-<a href="intent://#Intent;scheme=db-7gss6o105yhetoa;package=com.bubblesoft.android.bubbleupnp;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.bubblesoft.android.bubbleupnp;end" target="_blank"><img src="landing/images/icons/tvshows01.jpg" alt="Videos"></a>
+<a href="$JAMBULA_VIDEO_ACCESS" target="_blank"><img src="landing/images/icons/tvshows01.jpg" alt="Videos"></a>
   </td>
   <td>
 <font class="w3-small w3-vmiddle" align="left">
 Play TV Shows and Movies.
 <br>
-<a href="https://play.google.com/store/apps/details?id=com.mxtech.videoplayer.ad" target="_blank">MX Player</a> is required
+<a href="" target="_blank"></a>
 </font>
   </td>
 </tr>
 
-<!-- VOIP Phone - Zoiper -->
+<!-- VOIP Phone - jSSIP -->
 <tr>
   <td class="w3-topnav w3-vmiddle">
-<a href="intent://#Intent;scheme=zoiper;package=com.zoiper.android.app;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.zoiper.android.app;end" target="_blank">Phone</a>
+<a href="$JAMBULA_PHONE_ACCESS" target="_blank">Phone</a>
 </td>
   <td class="w3-topnav">
-<a href="intent://#Intent;scheme=zoiper;package=com.zoiper.android.app;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.zoiper.android.app;end" target="_blank">
+<a href="$JAMBULA_PHONE_ACCESS" target="_blank">
 <img src="landing/images/icons/sip01.jpg" alt="Phone"></a>
   </td>
   <td>
 <font class="w3-small w3-vmiddle" align="left">
 Connect to VOIP PBX system.
 <br>
-<a href="https://play.google.com/store/apps/details?id=com.zoiper.android.app" target="_blank">Zoiper</a> is needed
+<a href="" target="_blank"></a>
 </font>
   </td>
 </tr>
 
-<!-- CCTV - ZmView -->
+<!-- CCTV - ZoneMinder -->
 <tr>
   <td class="w3-topnav w3-vmiddle">
 <a href="$JAMBULA_CCTV_ACCESS" target="_blank">CCTV</a>
@@ -136,63 +134,43 @@ Connect to VOIP PBX system.
 <font class="w3-small w3-vmiddle" align="left">
 View security Cameras.
 <br>
-A <a href="https://play.google.com/store/apps/details?id=com.html5clouds.zmview" target="_blank">native app</a>, is also available.
+<a href="" target="_blank"></a>
 </font>
   </td>
 </tr>
-
 
 <!-- Files - Owncloud -->
 <tr>
   <td class="w3-topnav w3-vmiddle">
-<a href="intent://#Intent;scheme=@2131492882;package=com.owncloud.android;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.owncloud.android;end" target="_blank">Files-1</a>
+<a href="$JAMBULA_FILES_ACCESS" target="_blank">Files</a>
 </td>
   <td class="w3-topnav">
-<a href="intent://#Intent;scheme=@2131492882;package=com.owncloud.android;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.owncloud.android;end" target="_blank">
+<a href="$JAMBULA_FILES_ACCESS" target="_blank">
 <img src="landing/images/icons/files01.jpg" alt="Files"></a>
   </td>
   <td>
 <font class="w3-small w3-vmiddle" align="left">
 Manage your Files.
 <br>
-<a href="https://play.google.com/store/apps/details?id=com.owncloud.android" target="_blank">OwnCloud</a> is needed
+<a href="" target="_blank"></a>
 </font>
   </td>
 </tr>
 
-
-<!-- Files - oCloud -->
+<!-- Torrents - rtGUI -->
 <tr>
   <td class="w3-topnav w3-vmiddle">
-<a href="intent://#Intent;scheme=@2131165556;package=com.ocloud24.android;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.ocloud24.android;end" target="_blank">Files-2</a>
+<a href="$JAMBULA_TORRENTS_ACCESS" target="_blank">Torrents</a>
 </td>
   <td class="w3-topnav">
-<a href="intent://#Intent;scheme=@2131165556;package=com.ocloud24.android;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.ocloud24.android;end" target="_blank">
-<img src="landing/images/icons/files01.jpg" alt="Files"></a>
-  </td>
-  <td>
-<font class="w3-small w3-vmiddle" align="left">
-Manage your Files.
-<br>
-<a href="https://play.google.com/store/apps/details?id=com.ocloud24.android" target="_blank">oCloud</a> is needed
-</font>
-  </td>
-</tr>
-
-<!-- Torrents - Transdrone -->
-<tr>
-  <td class="w3-topnav w3-vmiddle">
-<a href="intent://#Intent;scheme=magnet;package=org.transdroid.lite;S.browser_fallback_url=https://play.google.com/store/apps/details?id=org.transdroid.lite;end" target="_blank">Torrents</a>
-</td>
-  <td class="w3-topnav">
-<a href="intent://#Intent;scheme=magnet;package=org.transdroid.lite;S.browser_fallback_url=https://play.google.com/store/apps/details?id=org.transdroid.lite;end" target="_blank">
+<a href="$JAMBULA_TORRENTS_ACCESS" target="_blank">
 <img src="landing/images/icons/torrents02.jpg" alt="Torrents"></a>
   </td>
   <td>
 <font class="w3-small w3-vmiddle" align="left">
 Manage your torrents.
 <br>
-<a href="https://play.google.com/store/apps/details?id=org.transdroid.lite" target="_blank">Transdrone</a> is needed
+<a href="" target "_blank"></a>
 </font>
   </td>
 </tr>
@@ -214,13 +192,13 @@ View connection stats e.g. data used.
 
 <!-- About Jambula -->
 <tr>
-  <td class="w3-topnav w3-vmiddle"><a href="landing/about_us.html" target="_blank">About Us</a></td>
-  <td class="w3-topnav"><a href="landing/about_us.html" target="_blank">
+  <td class="w3-topnav w3-vmiddle"><a href="$JAMBULA_PRODUCT_WEBSITE" target="_blank">About Us</a></td>
+  <td class="w3-topnav"><a href="$JAMBULA_PRODUCT_WEBSITE">
 <img src="landing/images/icons/jambulatv.jpg" alt="$JAMBULA_PRODUCT"></a>
   </td>
   <td>
 <font class="w3-small w3-vmiddle" align="left">
-See our products and services.
+See our products & services.
 <br>
 <a href="" target="_blank"></a> 
 </font>
