@@ -13,17 +13,22 @@ CHRONYC_PASSWD=`awk {'print $2'} $CHRONY_KEYS_FILE`
 
 BEEP_SOUNDS_SCRIPT=/usr/bin/jambulatv-sounds
 
+DEBUG_FILE=/root/host_status.log
 DNS_STATUS=$1
+LAST_DNS_STATUS=$2
 
 
 
-# Run commands/processes depending on availability of DNS servers
-#################################################################
-if [ "$DNS_STATUS" = "UP" ];
+###################################################################
+# Run commands/processes depending on availability of DNS servers #
+###################################################################
 
-then
 # DNS on: Internet is UP
 # -----------------------
+if [ "$DNS_STATUS" = "UP" ] && [ "$LAST_DNS_STATUS" = "DOWN" ];
+then
+# Debug
+echo "$(date): New State = Up | Old State = Down" >> $DEBUG_FILE  
 #
 # Remove dnsmasq entries for local resolution
 [ ! -e /etc/dnsmasq.d/dns_off.conf ] || rm -f /etc/dnsmasq.d/dns_off.conf
@@ -49,8 +54,12 @@ sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=off:g" $COOVA_CONFIG_FIL
 # ----------------
 [ -x $BEEP_SOUNDS_SCRIPT ] && $BEEP_SOUNDS_SCRIPT online
 
-else
 
+elif [ "$DNS_STATUS" = "DOWN" ] && [ "$LAST_DNS_STATUS" = "UP" ];
+then
+# Debug
+echo "$(date): New State = Down | Old State = Up" >> $DEBUG_FILE
+#
 # DNS off: Internet is DOWN
 # --------------------------
 #
@@ -79,6 +88,12 @@ sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=on:g" $COOVA_CONFIG_FILE
 # ----------------
 [ -x $BEEP_SOUNDS_SCRIPT ] && $BEEP_SOUNDS_SCRIPT offline
 
+else
+# Debug
+echo "$(date): Unknown - New State = [$DNS_STATUS] | Old State = [$LAST_DNS_STATUS]" >> $DEBUG_FILE
+# Quit
+exit
+
 fi
 
 
@@ -91,5 +106,5 @@ fi
 # 2) Restart wireless access point: hostapd
 #systemctl restart hostapd
 #
-# Log timestamp: for debugging purposes only
-#echo "$(date): Internet status changed to: [$DNS_STATUS]" >> /root/chilli_starts.log # 
+# Reload WiFi driver for buggy chipsets
+#/usr/bin/lsusb | grep -i RTL8188CUS > /dev/null 2>&1 && /usr/sbin/rmmod rtl8192cu && /usr/sbin/modprobe rtl8192cu debug=5 && /usr/bin/systemctl restart hostapd.service
