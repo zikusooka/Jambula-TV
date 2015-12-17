@@ -5426,6 +5426,15 @@ EOF
 [ -e $ICINGA2_WEB_CONFIG_DIR/enabledModules/monitoring ] || \
 	ln -s $WWW_HTML_DIR/icingaweb2/modules/monitoring \
 	$ICINGA2_WEB_CONFIG_DIR/enabledModules/monitoring
+# Documentation
+# Link to doc under enabledModules directory if it does not exist
+[ -e $ICINGA2_WEB_CONFIG_DIR/enabledModules/doc ] || \
+	ln -s $WWW_HTML_DIR/icingaweb2/modules/doc \
+	$ICINGA2_WEB_CONFIG_DIR/enabledModules/doc
+# Add Icinga2 documentation
+[ -d $WWW_HTML_DIR/icingaweb2/doc/icinga2 ] || mkdir $WWW_HTML_DIR/icingaweb2/doc/icinga2
+rsync -av $PROJECT_GITHUB_DIR/icinga2/doc $WWW_HTML_DIR/icingaweb2/doc/icinga2/doc/
+#
 # Change directory permissions to allow web user
 chown -R $ICINGA2_WEB_USER:$ICINGA2_WEB_GROUP $ICINGA2_WEB_CONFIG_DIR
 #
