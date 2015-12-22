@@ -7,7 +7,7 @@ After=plymouth-quit.service
 [Service]
 Environment=CRASHLOG_DIR=/var/log/JambulaTV 
 User=jambula
-ExecStart=/usr/bin/xinit /usr/bin/dbus-launch /usr/bin/kodi-standalone -- :0 -nolisten tcp
+ExecStart=/usr/bin/xinit /usr/bin/dbus-launch --exit-with-session /usr/bin/kodi-standalone -- -nocursor :0 -nolisten tcp
 ExecStop=/usr/bin/killall kodi ; /usr/bin/killall X
 Restart=on-abort
 IgnoreSIGPIPE=no

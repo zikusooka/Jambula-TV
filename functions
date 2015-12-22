@@ -2502,6 +2502,11 @@ do
 systemctl stop $NOT_NEEDED_SERVICE
 systemctl mask $NOT_NEEDED_SERVICE
 done
+#
+# Quit plymouth only after mysqld.service - Makes handoff to kodi less rougher
+sed -i "s:After=rc-local.service:After=mysqld.service rc-local.service:" $SYSTEMD_UNITS_DIR_SYSTEM/plymouth-quit.service
+# Reload 
+systemctl --system daemon-reload
 }
 
 wired_interfaces_configure () {
