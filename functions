@@ -236,7 +236,6 @@ CHRONYC_CMD=/usr/bin/chronyc
 
 PLYMOUTH_THEME=spinfinity 
 PLYMOUTH_SET_CMD=/usr/sbin/plymouth-set-default-theme
-PLYMOUTH_UPDATE_CMD=/usr/libexec/plymouth/plymouth-update-initrd
 
 SYSTEMD_UNITS_DIR_SYSTEM=/usr/lib/systemd/system
 SYSTEMD_UNITS_DIR_USER=/etc/systemd/system
@@ -2387,10 +2386,8 @@ rpm -Uvh --oldpackage --nodeps --force $RPMBUILD_DIR/RPMS/$(uname -m)/plymouth-*
 cp -fv $PROJECT_IMAGES_DIR/jambula-labs.png /usr/share/pixmaps/
 # Change to / dir - otherwise error: "shell-init: error retrieving current directory ..."
 cd /
-# Select Plymouth Theme
-$PLYMOUTH_SET_CMD $PLYMOUTH_THEME
-# Rebuild initrd
-$PLYMOUTH_UPDATE_CMD
+# Select Plymouth Theme & Rebuild initrd
+$PLYMOUTH_SET_CMD -R $PLYMOUTH_THEME
 # BUG: Run grub2-mkconfig - fixes, changed theme/logo not showing up
 grub2-mkconfig -o $GRUB2_BOOT_FILE
 }
