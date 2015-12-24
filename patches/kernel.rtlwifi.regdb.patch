@@ -1,0 +1,11 @@
+--- drivers/net/wireless/rtlwifi/regd.c	2015-06-22 08:05:43.000000000 +0300
++++ regd.c	2015-12-22 12:37:00.853013614 +0300
+@@ -47,7 +47,7 @@
+  *scan on all world regulatory domains
+  */
+ #define RTL819x_2GHZ_CH01_11	\
+-	REG_RULE(2412-10, 2462+10, 40, 0, 20, 0)
++	REG_RULE(2412-10, 2484+10, 40, 0, 33, 0)
+ 
+ /*
+  *We enable active scan on these a case
