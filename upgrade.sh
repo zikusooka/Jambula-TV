@@ -8,6 +8,14 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 
 
 
+# Upgrade Linux Kernel
+upgrade_kernel () {
+NEW_KERNEL=4.1.15
+#
+kernel_upgrade_1
+kernel_upgrade_2
+}
+
 # Upgrade Kodi
 upgrade_kodi () {
 uninstall_kodi
@@ -66,6 +74,8 @@ hostapd_configure
 #################
 #  MAIN SCRIPT  #
 #################
+
+#upgrade_kernel
 
 #upgrade_kodi
 

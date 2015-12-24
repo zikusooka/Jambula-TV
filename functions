@@ -586,6 +586,101 @@ echo "Update completed. All flexget dependencies are located in [$PROJECT_TARBAL
 #  UNINSTALL FUNCTIONS  #
 #########################
 
+kernel_upgrade_1 () {
+SOURCESDIR=/opt
+PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
+# Source functions file
+. $PROJECT_BASE_DIR/functions
+KERNEL_VERSION=$NEW_KERNEL
+# See how much space is left
+AVAILABLE_DISK_SPACE_ROOT=$(df /|grep -v block | awk {'print $4'})
+DISK_THRESHOLD_ROOT=140 #15GB
+if [ "$AVAILABLE_DISK_SPACE_ROOT" -gt "$DISK_THRESHOLD_ROOT" ];
+then
+# quit
+clear
+cat <<EOF
+You do not have enough space to compile the kernel.  Please free up some space before 
+proceeding ...
+EOF
+exit 1
+fi
+#
+# Check if desired kernel exists
+uname -r | grep -i $KERNEL_VERSION > /dev/null 2>&1
+if [ "$?" != "0" ];
+then
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/linux-$KERNEL_VERSION.tar.xz  -C $KERNELS_SRC_DIR
+cd $KERNELS_SRC_DIR/
+# Rename sources directory to our name
+mv -v linux-$KERNEL_VERSION $KERNEL_VERSION.$KERNEL_NAME
+cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
+#
+# Apply patches
+patch -p1 ./drivers/net/wireless/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
+#
+echo
+echo
+echo "Did Patch install correctly? Enter to proceed"
+echo
+echo
+read
+#
+# Remove stale .o files and dependencies lying around
+make mrproper
+# Add our .config file
+cp -v $PROJECT_CONFIGS_DIR/kernel.config .config
+# Compile
+make oldconfig
+# Notice
+clear
+cat <<EOF
+
+Next run kernel_2 to compile & install the Linux kernel $KERNEL_VERSION 
+
+However, do the following before proceeding:
+
+Create more space - a whole lot like 10GB e.g.  Move project /opt/JambulaTV into Storage area.  
+
+Press Enter when you are done...
+
+EOF
+#
+read
+#
+fi
+}
+
+kernel_upgrade_2 () {
+# Source functions file
+. /JambulaTV/TV/functions
+KERNEL_VERSION=$NEW_KERNEL
+echo "
+You are about to install the latest Linux kernel version [$KERNEL_VERSION], 
+
+CAUTION:  This will take up to 6 hours! 
+
+If you are sure and want to proceed, press enter ...
+"
+read
+cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
+make bzImage
+make modules
+make modules_install
+make install
+# Clean up - saves upto 8GB
+#make clean
+echo 
+echo
+echo "
+Done: Remember to:
+1. Copy .config file to project configs directory
+2. Run make clean
+3. Change Kernel Version in functions file
+"
+}
+
 uninstall_src_pkgs () {
 if [ -d $INSTALL_SRC_DIR/$1 ];
 then
