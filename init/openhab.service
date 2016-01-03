@@ -1,0 +1,17 @@
+[Unit]
+Description=OpenHAB home automation platform.
+After=network.target
+
+[Service]
+Type=forking
+Environment=HOME=/usr/src/jambulatv/openhab
+WorkingDirectory=/usr/src/jambulatv/openhab
+User=jambula
+Group=jambula
+ExecStart=/usr/src/jambulatv/openhab/start.sh
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

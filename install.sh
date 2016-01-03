@@ -278,6 +278,13 @@ pocketsphinx_install
 owncloud_install
 owncloud_configure
 
+# ----------------
+# Home Automation 
+# ----------------
+# OpenHAB
+#openhab_install
+#openhab_configure
+
 # ---------
 # Notices
 # ---------

@@ -4817,6 +4817,58 @@ make
 make install
 }
 
+openhab_install () {
+# Create install directory
+mkdir -p $INSTALL_SRC_DIR/openhab
+# Unpack runtime
+unzip -d $INSTALL_SRC_DIR/openhab $PROJECT_ZIPS_DIR/distribution-*-runtime.zip
+# Unpack addons
+unzip -d $INSTALL_SRC_DIR/openhab/addons $PROJECT_ZIPS_DIR/distribution-*-addons.zip
+}
+
+openhab_configure () {
+# Set port
+OPENHAB_HTTP_PORT=$(grep -i openhab $PORTS_ASSIGNED_FILE | awk {'print $1'})
+OPENHAB_HTTPS_PORT=8536
+# Change default server parameters
+cp -v $INSTALL_SRC_DIR/openhab/server/eclipse.ini $INSTALL_SRC_DIR/openhab/server/eclipse.ini.orig
+cat $INSTALL_SRC_DIR/openhab/server/eclipse.ini.orig | \
+	sed -e "s:-Dopenhab.configfile=../configurations/openhab.cfg:-Dopenhab.configfile=$PROJECT_SYSTEM_CONF_DIR/openhab.cfg:" | \
+	sed -e "s:-Dorg.osgi.service.http.port=8080:-Dorg.osgi.service.http.port=$OPENHAB_HTTP_PORT:" > $INSTALL_SRC_DIR/openhab/server/eclipse.ini
+# Change config parameters and copy file to project configs location
+cat $INSTALL_SRC_DIR/openhab/configurations/openhab_default.cfg | \
+	sed -e "s:#zwave\:port=:#zwave\:port=/dev/ttyUSB0:" > $PROJECT_SYSTEM_CONF_DIR/openhab.cfg
+# Create Link file
+ln -s $PROJECT_SYSTEM_CONF_DIR/openhab.cfg $INSTALL_SRC_DIR/openhab/configurations/openhab.cfg
+# Change parameters in start file
+cp -v $INSTALL_SRC_DIR/openhab/start.sh $INSTALL_SRC_DIR/openhab/start.sh.orig
+cat $INSTALL_SRC_DIR/openhab/start.sh.orig | \
+	sed -e "s:HTTP_PORT=8080:HTTP_PORT=$OPENHAB_HTTP_PORT:" | \
+	sed -e "s:HTTPS_PORT=8443:HTTPS_PORT=$OPENHAB_HTTPS_PORT:" > $INSTALL_SRC_DIR/openhab/start.sh
+# Make start up file executable
+chmod 755 $INSTALL_SRC_DIR/openhab/start.sh
+# Give permissions to multimedia user for openhab directories and config file
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $INSTALL_SRC_DIR/openhab
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_CONF_DIR/openhab.cfg
+#
+# Copy openhab systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/openhab.service $SYSTEMD_UNITS_DIR_USER/
+# Enable and start openhab if needed
+systemctl enable openhab.service
+#
+#
+# Display openhab usage information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+OpenHAB Access
+==============
+% To access openHAB, use a client PC to open the URL below:
+  http://$NETWORK_IP_ADDRESS:$(grep -i openhab $PORTS_ASSIGNED_FILE | awk {'print $1'})
+#
+EOF
+}
+
 heyu_install () {
 tar zxvf $PROJECT_TARBALLS_DIR/heyu-$HEYU_VERSION.tar.gz -C $INSTALL_SRC_DIR
 # Change to heyu directory
