@@ -134,4 +134,4 @@ check_link_status
 get_ip_address
 
 # Restart coova-chilli in order to Change default Internet gateway device
-systemctl restart coova-chilli
+/usr/bin/jambulatv-chilli reload
