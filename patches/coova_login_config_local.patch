@@ -1,5 +1,5 @@
 --- /usr/src/jambulatv/coova-chilli/miniportal/config-local.sh	2015-11-22 08:57:46.247269748 +0300
-+++ config-local.sh	2015-12-12 16:18:38.582940347 +0300
++++ config-local.sh	2016-01-09 17:07:06.936012549 +0300
 @@ -23,8 +23,8 @@
  COOVA_SESSIONID=$CHI_SESSION_ID
  COOVA_CHALLENGE=$CHI_CHALLENGE
@@ -85,7 +85,7 @@
  </td></tr></table></body></html>"
  }
  
-@@ -212,11 +277,17 @@
+@@ -212,11 +277,18 @@
      (uamfile "$file" 0
  	echo
  	echo "-------------------------------------------------"
@@ -97,7 +97,8 @@
  
 +jambula_check_dns() {
 +REMOTE_DOMAIN_NAME=google.com
-+host -W 1 $REMOTE_DOMAIN_NAME 208.67.222.222 > /dev/null 2>&1
++SYSTEM_DNS_SERVER=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 1')
++host -W 1 $REMOTE_DOMAIN_NAME $SYSTEM_DNS_SERVER > /dev/null 2>&1
 +DNS_STATUS=$?
 +}
 +
