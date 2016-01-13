@@ -2721,12 +2721,23 @@ cat $PROJECT_CONFIGS_DIR/dnsmasq.conf.sample | \
    sed -e "s:NETWORK_ETHERNET_DEVICE:$NETWORK_ETHERNET_DEVICE:g" | \
    sed -e "s:WIFI_AP_INTERFACE:$WIFI_AP_INTERFACE:g" | \
    sed -e "s:NETWORK_IP_ADDRESS:$NETWORK_IP_ADDRESS:g" | \
+   sed -e "s:WIFI_IP_ADDRESS:$COOVA_SERVER_IP:g" | \
    sed -e "s:NETWORK_DOMAIN:$NETWORK_DOMAIN:g" | \
    sed -e "s:NETWORK_DHCP_RANGE:$NETWORK_DHCP_RANGE:g" \
 	> $CONFDIR/dnsmasq.conf
 # Make dnsmasq server as primary DNS server 
-#sed -i /DNS/d $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE
-#echo "DNS1=\"127.0.0.1\"" >> $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE
+sed -i /DNS/d $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE
+echo "DNS1=\"127.0.0.1\"" >> $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE
+# Add resolvconf stuff if run after initial install
+if [ -e /usr/sbin/resolvconf ];
+then
+# Add to dnsmasq file
+echo "
+# resolvconf stuff
+conf-file=$CONFDIR/dnsmasq-conf.conf
+resolv-file=$CONFDIR/dnsmasq-resolv.conf" >> $CONFDIR/dnsmasq.conf
+fi
+#
 # Enable dnsmasq if needed
 systemctl enable dnsmasq.service
 # Reload dnsmasq
@@ -4129,7 +4140,7 @@ video_on_demand_configure () {
 # Create incron tab file for vlm vod
 echo "
 $VLM_VOD_DIRECTORY IN_CREATE $VLM_VOD_CREATE_SCRIPT \$#
-$VLM_VOD_DIRECTORY IN_DELETE $VLM_VOD_DELETE_SCRIPT \$# 
+#$VLM_VOD_DIRECTORY IN_DELETE $VLM_VOD_DELETE_SCRIPT \$# 
 " > $INCRON_DIRECTORY/vlm_vod
 # Create vlm vod directory
 [ -d $VLM_VOD_DIRECTORY ] || mkdir -p $VLM_VOD_DIRECTORY

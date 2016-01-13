@@ -39,7 +39,7 @@ enable-dbus
 #interface= # DON'T enable - Remote DNS lookups will fail!!!
 
 #except-interface=
-#listen-address=
+listen-address=127.0.0.1, NETWORK_IP_ADDRESS, WIFI_IP_ADDRESS
 #no-dhcp-interface=
 no-dhcp-interface=WIFI_AP_INTERFACE
 
