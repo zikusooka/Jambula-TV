@@ -388,7 +388,7 @@ WIFI_WAIT_TIME=40
 
 NETWORK_ETHERNET_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 NETWORK_IP_ADDRESS=$(ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
-NETWORK_GATEWAY_ADDRESS=$(ip route show | grep default | awk {'print $3'})
+NETWORK_GATEWAY_ADDRESS=$(ip route list | grep default | sed 's/^.*via //' | awk {'print $1'})
 NETWORK_MASK_PREFIX=24
 NETWORK_DOMAIN=jambulatv.com
 NETWORK_WIRELESS_SSID="JambulaTV"
@@ -3780,11 +3780,11 @@ SYSCONFIG_DIR=/etc/sysconfig
 SYSCONFIG_NETWORK_SCRIPTS_DIR=\$SYSCONFIG_DIR/network-scripts
 NETWORK_ETHERNET_DEVICE=\`ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g'\`
 NETWORK_GATEWAY_ADDRESS=\`grep GATEWAY \$SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-\$NETWORK_ETHERNET_DEVICE | cut -d = -f2 | sed \"s/\\\"//g\"\`
-INTERNET_GATEWAY_DEV=\$(ip route show | grep default | sed -n 's/^.*dev //p' | awk {'print \$1'})
+INTERNET_GATEWAY_DEV=\$(ip route list | grep default | sed -n 's/^.*dev //p' | awk {'print \$1'})
 # Gateway device
 if [ \"x\$INTERNET_GATEWAY_DEV\" != \"x\" ];
 then
-INTERNET_GATEWAY_IP=\$(ip route list | grep \$INTERNET_GATEWAY_DEV | awk {'print \$1'} | tail -1)
+INTERNET_GATEWAY_IP=\$(ip route list | grep default | sed -n 's/^.*via //p' | awk {'print \$1'})
 fi
 
 

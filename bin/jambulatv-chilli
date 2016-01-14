@@ -63,7 +63,7 @@ check_internet_status
 # Based on connectivity, get default gateway device
 if [ "$INTERNET_STATUS" = "0" ];
 then
-INTERNET_GATEWAY_DEV=$(ip route show | grep default | awk {'print $5'})
+INTERNET_GATEWAY_DEV=$(ip route list | grep default | sed -n 's/^.*dev //p' | awk {'print $1'})
 else
 INTERNET_GATEWAY_DEV=
 fi
