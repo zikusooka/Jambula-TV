@@ -69,6 +69,12 @@ hostapd_install
 hostapd_configure 
 }
 
+upgrade_tvheadend () {
+systemctl stop tvheadend.service
+uninstall_src_pkgs tvheadend
+tvheadend_install
+}
+
 
 
 #################
@@ -90,3 +96,5 @@ hostapd_configure
 #upgrade_coova_chilli
 
 #upgrade_hostapd
+
+#upgrade_tvheadend
