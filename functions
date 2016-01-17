@@ -137,8 +137,8 @@ KODI_VERSION=15.2 #15.1
 
 KODI_BRANCH=Isengard
 KODI_TAG=$KODI_VERSION-$KODI_BRANCH
-KODI_PREFERRED_SKIN=Aeon-Nox
 KODI_DEFAULT_SKIN=confluence
+KODI_PREFERRED_SKIN=$KODI_DEFAULT_SKIN #Aeon-Nox
 KODI_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.kodi
 KODI_SHARE_DIR=$PREFIX/share/kodi
 KODI_USER_DATA=$KODI_CONFIG_DIR/userdata
@@ -2191,6 +2191,8 @@ done
 }
 
 kodi_customization () {
+case $KODI_PREFERRED_SKIN in
+Aeon-Nox)
 # Copy preferred skin files to addons directory
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/$KODI_PREFERRED_SKIN/ \
 	$KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/
@@ -2198,11 +2200,18 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/$KODI_PREFERRED_SKIN/ 
 cp -v $KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg \
 	$KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.original.jpg
 # Change default background for preferred skin
-cp -fv $PROJECT_IMAGES_DIR/kodi/background-aeon-nox.jpg $KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg
+cp -fv $PROJECT_IMAGES_DIR/kodi/background.jpg $KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg
+;;
 #
+confluence)
+cp -fv $PROJECT_IMAGES_DIR/kodi/background.jpg \
+	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/SKINDEFAULT.jpg
 # Change top left logo at Home screen 
 sed -i "s:<texture>kodi-logo.png</texture>:<texture>jambulatv-logo.png</texture>:" \
 	$KODI_SYSTEM_ADDONS/skin.$KODI_DEFAULT_SKIN/720p/Home.xml
+;;
+esac
+#
 # Copy custom top left logo icon
 cp -fv $PROJECT_IMAGES_DIR/kodi/top-left.png \
 	$KODI_SYSTEM_ADDONS/skin.$KODI_DEFAULT_SKIN/media/jambulatv-logo.png
