@@ -24,12 +24,12 @@ get_system_dns_settings () {
 # Number of DNS settings
 NUMBER_OF_DNS=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | wc -l)
 #
-# Primary DNS 1
+# DNS 1
 SECONDARY_DNS_SERVER=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 1')
 # Set DNS2 if more than 1
 if [ "$NUMBER_OF_DNS" -gt "1" ];
 then
-# Secondary DNS 2
+# DNS 2
 TETIARY_DNS_SERVER=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 2')
 else
 TETIARY_DNS_SERVER=$SECONDARY_DNS_SERVER
@@ -86,15 +86,19 @@ then
 #
 # Set chilli domains local feature to OFF since internet on
 sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=off:g" $COOVA_CONFIG_FILE
+# Set chilli DNS servers to foreign  domain name servers
+sed -i "s:HS_DNS1=$PREVIOUS_HS_DNS1:HS_DNS1=$SECONDARY_DNS_SERVER:g" $COOVA_CONFIG_FILE
+sed -i "s:HS_DNS2=$PREVIOUS_HS_DNS2:HS_DNS2=$TETIARY_DNS_SERVER:g" $COOVA_CONFIG_FILE
+#
 else
 # Set chilli domains local feature to ON since internet off
 sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=on:g" $COOVA_CONFIG_FILE 
 #
-fi
-#
-# Set chilli DNS servers to primary local & seconary foreign  domain name servers
+# Set chilli DNS servers to primary local & secondary foreign  domain name servers
 sed -i "s:HS_DNS1=$PREVIOUS_HS_DNS1:HS_DNS1=$PRIMARY_DNS_SERVER:g" $COOVA_CONFIG_FILE
 sed -i "s:HS_DNS2=$PREVIOUS_HS_DNS2:HS_DNS2=$SECONDARY_DNS_SERVER:g" $COOVA_CONFIG_FILE
+#
+fi
 }
 
 
@@ -141,6 +145,7 @@ case $1 in
         set_chilli_dns_settings
 
         /sbin/modprobe tun >/dev/null 2>&1
+
         echo 1 > /proc/sys/net/ipv4/ip_forward
 
 	[ -e /dev/net/tun ] || {
@@ -151,6 +156,7 @@ case $1 in
 	}
 
 	writeconfig
+
         radiusconfig
 
 	test ${HS_ADMINTERVAL:-0} -gt 0 && {	
@@ -158,10 +164,8 @@ case $1 in
 		echo "*/$HS_ADMINTERVAL * * * * $0 radconfig"
 		) | crontab - 2>&-
 	}
-	
-	ip addr add 0.0.0.0 dev $HS_LANIF
 
-       	daemon /usr/sbin/chilli -f --conf=$CONFIG --pidfile=$pidfile &
+	daemon /usr/sbin/chilli -f --conf=$CONFIG --pidfile=$pidfile &
 
         echo
 	;;
