@@ -48,6 +48,20 @@ fi
 export WIFI_FOUND
 }
 
+disconnect_4rm_access_point () {
+# PIDs
+DHCLIENT_PID=$(sudo ps auxw | grep dhclient | grep $WIFI_STATION_INTERFACE | head -1 | awk {'print $2'})
+WPA_SUPPLICANT_PID=$(sudo ps auxw | grep wpa_supplicant | grep $WIFI_STATION_INTERFACE | head -1 | awk {'print $2'})
+#
+# Kill dhclient
+[ "x$DHCLIENT_PID" = "x" ] || sudo kill $DHCLIENT_PID >> /dev/null
+# Kill wpa_supplicant
+[ "x$WPA_SUPPLICANT_PID" = "x" ] || sudo kill $WPA_SUPPLICANT_PID >> /dev/null
+# Flush Wifi station interface
+sudo ip addr flush dev $WIFI_STATION_INTERFACE 
+#sudo ip link set $WIFI_STATION_INTERFACE down
+}
+
 generate_wpa_config () {
 grep "ssid=\"$WIFI_SSID\"" $WIFI_WPA_CONFIG_FILE > /dev/null 2>&1
 WPA_EXISTS=$?
@@ -57,8 +71,8 @@ sudo wpa_passphrase $WIFI_SSID $WIFI_SECURITY_KEY >> $WIFI_WPA_CONFIG_FILE
 }
 
 connect_2_access_point () {
-# Kill existing wpa_supplicant processes
-sudo killall wpa_supplicant || killall -9 wpa_supplicant
+# Disconnect any existing WiFi processes
+disconnect_4rm_access_point
 # Connect to HotSpot
 sudo wpa_supplicant -B -D $WIFI_DRIVER -i $WIFI_STATION_INTERFACE -c $WIFI_WPA_CONFIG_FILE
 }
@@ -66,9 +80,8 @@ sudo wpa_supplicant -B -D $WIFI_DRIVER -i $WIFI_STATION_INTERFACE -c $WIFI_WPA_C
 check_link_status () {
 # Check link status
 WIFI_LINK_STATUS=$(sudo iw dev $WIFI_STATION_INTERFACE link)
-
+#
 echo "WIFI_LINK_STATUS=$WIFI_LINK_STATUS" > /tmp/link_status
-
 #
 if [ "$WIFI_LINK_STATUS" = "Not connected." ];
 then
@@ -116,7 +129,9 @@ OK)
 echo "Wireless Access Point ($WIFI_SSID) Available"
 ;;
 WARNING)
-# Quit script since Icinga2 detects no WiFi AP
+# Quit script since Icinga2 detects no WiFi AP.  Before though, kill any previous WiFi
+# connections
+disconnect_4rm_access_point
 exit 1
 ;;
 *)
@@ -133,5 +148,5 @@ sleep 5
 check_link_status
 get_ip_address
 
-# Restart coova-chilli in order to Change default Internet gateway device
-/usr/bin/jambulatv-chilli reload
+# Reload coova-chilli in order to change default gateway device and DNS settings
+#/usr/bin/jambulatv-chilli restart
