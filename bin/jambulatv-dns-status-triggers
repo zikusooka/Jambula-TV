@@ -13,9 +13,43 @@ CHRONYC_PASSWD=`awk {'print $2'} $CHRONY_KEYS_FILE`
 
 BEEP_SOUNDS_SCRIPT=/usr/bin/jambulatv-sounds
 
-DEBUG_FILE=/root/host_status.log
+DEBUG_FILE=/tmp/internet_status.log
 DNS_STATUS=$1
 LAST_DNS_STATUS=$2
+
+RESOLVCONF_CONFIG=/etc/resolvconf.conf
+PUBLIC_DNS_SERVERS="8.8.8.8 208.67.222.222 8.26.56.26 107.170.95.180 77.88.8.8"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+get_system_dns_settings () {
+# Number of DNS settings
+NUMBER_OF_DNS=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | wc -l)
+#
+# DNS 1
+SECONDARY_DNS_SERVER=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 1')
+# Set DNS2 if more than 1
+if [ "$NUMBER_OF_DNS" -gt "1" ];
+then
+# DNS 2
+TETIARY_DNS_SERVER=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 2')
+else
+TETIARY_DNS_SERVER=$SECONDARY_DNS_SERVER
+fi
+}
+
+update_dns_servers () {
+# Get current nameservers
+get_system_dns_settings
+# Add new ISP nameservers to resolvconf
+sed -i /name_servers_append/d $RESOLVCONF_CONFIG
+sed -i "/name_servers=127.0.0.1/a name_servers_append=\"$SECONDARY_DNS_SERVER $TETIARY_DNS_SERVER $PUBLIC_DNS_SERVERS\"" $RESOLVCONF_CONFIG
+# Update resolvconf
+/usr/sbin/resolvconf -u
+}
 
 
 
@@ -29,7 +63,10 @@ if [ "$DNS_STATUS" = "UP" ] && [ "$LAST_DNS_STATUS" = "DOWN" ];
 then
 # Debug
 echo "$(date): New State = Up | Old State = Down" >> $DEBUG_FILE  
-#
+
+# Update to current DNS i.e. resolvconf
+update_dns_servers
+
 # Remove dnsmasq entries for local resolution
 [ ! -e /etc/dnsmasq.d/dns_off.conf ] || rm -f /etc/dnsmasq.d/dns_off.conf
 # Restart dnsmasq.service
@@ -99,9 +136,8 @@ fi
 
 # Run processes whenever there's a change in status i.e. UP or DOWN
 ###################################################################
-# 1) Reload configs for captive portal: coova-chilli
-/usr/bin/jambulatv-chilli reload
-#systemctl restart coova-chilli
+# 1) Restart coova-chilli in order to change default gateway device and DNS settings
+/usr/bin/jambulatv-chilli restart
 #
 # 2) Restart wireless access point: hostapd
 #systemctl restart hostapd
