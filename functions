@@ -525,6 +525,20 @@ INCRON_DIRECTORY=/etc/incron.d
 
 # Asterisk
 ASTERISK_AGI_BIN_DIR=$STATEDIR/lib/asterisk/agi-bin
+# Asterisk AMI
+ASTERISK_AMI_USER=JambulaTV
+ASTERISK_AMI_PASS=JambulaTV
+# Asterisk DB i.e. FreePBX
+ASTERISK_DB_NAME=asterisk
+ASTERISK_DB_USER=asterisk
+ASTERISK_DB_PASS=jambula2
+# CDR DB
+ASTERISK_CDR_DB_NAME=asteriskcdr
+ASTERISK_CDR_DB_USER=$ASTERISK_DB_USER
+ASTERISK_CDR_DB_PASS=$ASTERISK_DB_PASS
+
+ASTERISK_FILES_USER=asterisk
+ASTERISK_FILES_GROUP=$WWW_USER
 
 # OwnCloud
 OWNCLOUD_ADMIN_USER=jambulatv
@@ -813,8 +827,6 @@ pip uninstall -y flexget
 rm -rf $INSTALL_SRC_DIR/Flexget
 }
 
-
-
 uninstall_flexget_deps () {
 for PYTHON_MODULE in $FLEXGET_DEPENDENCIES
 do
@@ -843,12 +855,32 @@ rm -f $SYSTEMD_UNITS_DIR_SYSTEM/asterisk.service $SYSTEMD_UNITS_DIR_USER/asteris
 systemctl --system daemon-reload
 # Backup and remove project configs directory
 mv -v $PROJECT_SYSTEM_CONF_DIR/asterisk $PROJECT_SYSTEM_CONF_DIR/asterisk-$ASTERISK_VERSION-backup
+# Drop asterisk database - CAUTION: Take care - CDR/FreePBX data is there!!!
+mysqladmin -p$MYSQL_ROOT_PASSWORD drop $ASTERISK_DB_NAME
 }
 
 # Uninstall dahdi
 uninstall_dahdi () {
 uninstall_src_pkgs dahdi-linux-complete
 uninstall_src_pkgs dahdi
+}
+
+# Uninstall freepbx
+uninstall_freepbx () {
+# Remove FreePBX config & webroot files
+rm -f $CONFDIR/amportal.conf 
+rm -f $CONFDIR/freepbx.conf
+rm -rf $WWW_HTML_DIR/freepbx 
+rm -rf $INSTALL_SRC_DIR/freepbx
+# Drop database data for tests/new installs
+echo "
+CAUTION: Take care here - CDR/FreePBX data is about to be dropped !!!
+====================================================================
+"
+mysqladmin -p$MYSQL_ROOT_PASSWORD drop $ASTERISK_CDR_DB_NAME
+mysqladmin -p$MYSQL_ROOT_PASSWORD drop $ASTERISK_DB_NAME
+# Restart asterisk service
+systemctl restart asterisk.service
 }
 
 # uninstall chilli
@@ -4705,6 +4737,80 @@ EOF
 chmod 755 $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 }
 
+freepbx_preinstall () {
+# Unpack freepbx
+tar zxvf $PROJECT_TARBALLS_DIR/freepbx-*.tgz -C $INSTALL_SRC_DIR
+#
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+#
+# 1) Create Asterisk CDR database for FreePBX
+# --------------------------------------------
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $ASTERISK_CDR_DB_NAME
+# Set privileges on asterisk database
+echo "GRANT ALL PRIVILEGES ON $ASTERISK_CDR_DB_NAME.* to '$ASTERISK_CDR_DB_USER'@'localhost' IDENTIFIED by '$ASTERISK_CDR_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+# Populate Asterisk CDR database  for FreePBX
+mysql -u $ASTERISK_CDR_DB_USER -p$ASTERISK_CDR_DB_PASS $ASTERISK_CDR_DB_NAME < $INSTALL_SRC_DIR/freepbx/installlib/SQL/cdr.sql
+#
+# 2) Create Asterisk database for FreePBX
+# ----------------------------------------
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $ASTERISK_DB_NAME
+# Set privileges on asterisk database
+echo "GRANT ALL PRIVILEGES ON $ASTERISK_DB_NAME.* to '$ASTERISK_DB_USER'@'localhost' IDENTIFIED by '$ASTERISK_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+# Populate Asterisk CDR database for FreePBX 
+mysql -u $ASTERISK_DB_USER -p$ASTERISK_DB_PASS $ASTERISK_DB_NAME < $INSTALL_SRC_DIR/freepbx/installlib/SQL/asterisk.sql
+#
+# Start asterisk service if it is not running
+systemctl -q is-active asterisk.service || systemctl start asterisk.service
+}
+
+freepbx_install () {
+# Check/fix errors in asterisk.conf file
+sed -i "s:\[directories\](!):\[directories\]:g" $CONFDIR/asterisk/asterisk.conf 
+
+sed -i "s:;runuser:runuser:g" $CONFDIR/asterisk/asterisk.conf 
+sed -i "s:;rungroup:rungroup:g" $CONFDIR/asterisk/asterisk.conf 
+
+# Restart asterisk service
+systemctl restart asterisk.service
+
+#systemctl stop asterisk.service
+
+# Change to base
+cd $INSTALL_SRC_DIR/freepbx
+
+# Start asterisk
+#./start_asterisk start
+
+# Install
+./install --dbengine="mysql" \
+	--dbname="$ASTERISK_DB_NAME" \
+	--cdrdbname="$ASTERISK_CDR_DB_NAME" \
+	--dbuser="$ASTERISK_DB_USER" \
+	--dbpass="$ASTERISK_DB_PASS" \
+	--user="$ASTERISK_FILES_USER" \
+	--group="$ASTERISK_FILES_GROUP" \
+	--webroot="$WWW_HTML_DIR/freepbx" \
+	--astetcdir="$PROJECT_SYSTEM_CONF_DIR/asterisk" \
+	--ampcgibin="$WWW_CGI_DIR" \
+	--no-interaction
+
+exit
+# Fix permissions on php sessions, asterisk, and freepbx directories
+
+chown -R nginx $STATEDIR/lib/php/session
+
+chown -R nginx $STATEDIR/log/asterisk
+
+chown -R nginx $WWW_HTML_DIR/freepbx
+
+chown -R nginx /root/.gnupg
+
+}
+
 cepstral_install () {
 # Unpack Cepstral tarball with correct architecture
 case $PROJECT_SYSTEM_ARCH in
@@ -4904,7 +5010,7 @@ make install
 heyu_configure () {
 # Create heyu directory in JambulaTV configs directory
 [ -d $PROJECT_SYSTEM_CONF_DIR/heyu ] || mkdir -p $PROJECT_SYSTEM_CONF_DIR/heyu
-# Copy Jambula customized asterisk config files
+# Copy Jambula customized config files
 cp -v $PROJECT_CONFIGS_DIR/heyu/ $PROJECT_SYSTEM_CONF_DIR/heyu/
 # Link to heyu directory from $HOME
 [ -d $HOME/.heyu ] || mkdir -p $HOME/.heyu

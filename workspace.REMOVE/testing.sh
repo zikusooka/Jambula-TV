@@ -11,4 +11,12 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #################
 #  MAIN SCRIPT  #
 #################
+#ASTERISK_FILES_USER=root #asterisk #nginx
+uninstall_freepbx
+
+
+freepbx_preinstall
+
+
+freepbx_install
 

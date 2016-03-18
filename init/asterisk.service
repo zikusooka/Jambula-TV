@@ -6,10 +6,11 @@ After=network.target
 Type=forking
 Environment=HOME=/var/lib/asterisk
 WorkingDirectory=/var/lib/asterisk
-User=root
-Group=root
-ExecStart=/usr/sbin/safe_asterisk 
-#ExecStart=/usr/sbin/asterisk -f -C /etc/asterisk/asterisk.conf
+
+ExecStart=/usr/sbin/safe_asterisk -U asterisk -G asterisk
+#ExecStart=/usr/sbin/asterisk -f -U asterisk -G asterisk -vvvg -c -C /etc/asterisk/asterisk.conf
+
+
 ExecStop=/usr/sbin/asterisk -rx 'core stop now'
 ExecReload=/usr/sbin/asterisk -rx 'core reload'
 
