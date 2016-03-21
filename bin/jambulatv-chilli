@@ -5,6 +5,7 @@ PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_SHARE_DIR=$PREFIX/share/$PROJECT_NAME
 COOVA_CONFIG_DIR=/etc/chilli
 COOVA_CONFIG_FILE=$COOVA_CONFIG_DIR/config
+COOVA_CONFIG_MAIN_FILE=$COOVA_CONFIG_DIR/main.conf
 WWW_HTML_DIR=$PROJECT_SYSTEM_SHARE_DIR/html
 COOVA_HTML_DIR=$WWW_HTML_DIR/coova
 LOGFILE=/var/log/$PROJECT_NAME/chilli.log
@@ -89,6 +90,15 @@ sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=off:g" $COOVA_CONFIG_FIL
 # Set chilli DNS servers to foreign  domain name servers
 sed -i "s:HS_DNS1=$PREVIOUS_HS_DNS1:HS_DNS1=$SECONDARY_DNS_SERVER:g" $COOVA_CONFIG_FILE
 sed -i "s:HS_DNS2=$PREVIOUS_HS_DNS2:HS_DNS2=$TETIARY_DNS_SERVER:g" $COOVA_CONFIG_FILE
+
+# BUG (Fix!!!) Edit main.conf directly - config not written first time
+#sed -i /dns1/d $COOVA_CONFIG_MAIN_FILE
+#sed -i /dns2/d $COOVA_CONFIG_MAIN_FILE
+#cat >> $COOVA_CONFIG_MAIN_FILE <<EOF
+#dns1 "$SECONDARY_DNS_SERVER"
+#dns2 "$TETIARY_DNS_SERVER"
+#EOF
+
 #
 else
 # Set chilli domains local feature to ON since internet off
@@ -207,5 +217,9 @@ case $1 in
         echo "Usage: $0 {start|stop|restart|reload|radconfig}"
         exit 1
 esac
+
+
+#echo "$(date): $(grep -i dns /etc/chilli/main.conf)" >> /tmp/dns
+
 
 exit $?

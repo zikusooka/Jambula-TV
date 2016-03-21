@@ -21,7 +21,10 @@ TMPDIR=/tmp
 SOURCESDIR=/opt
 KERNELS_SRC_DIR=/usr/src/kernels
 SPOOLDIR=$STATEDIR/spool
+VARLIBDIR=$STATEDIR/lib
+LOGDIR=$STATEDIR/log
 BINARY_PREFIX=/usr/bin
+SBINARY_PREFIX=/usr/sbin
 #LIBDIR=$PREFIX/lib64
 # Libraries directory
 case $(uname -m) in
@@ -539,6 +542,11 @@ ASTERISK_CDR_DB_PASS=$ASTERISK_DB_PASS
 
 ASTERISK_FILES_USER=asterisk
 ASTERISK_FILES_GROUP=$WWW_USER
+#ASTERISK_FILES_GROUP=asterisk
+
+#ASTERISK_FILES_USER=$WWW_USER
+#ASTERISK_FILES_GROUP=asterisk
+
 
 # OwnCloud
 OWNCLOUD_ADMIN_USER=jambulatv
@@ -840,7 +848,7 @@ done
 
 uninstall_asterisk () {
 # Stop running asterisk
-systemctl stop asterisk
+systemctl stop asterisk || kill -9 $(ps auxw | grep asterisk | awk {'print $2'})
 # Make build directory
 cd $INSTALL_SRC_DIR/asterisk 
 # Uninstall
@@ -867,11 +875,19 @@ uninstall_src_pkgs dahdi
 
 # Uninstall freepbx
 uninstall_freepbx () {
-# Remove FreePBX config & webroot files
+# Remove amportal, FreePBX config & webroot files
+rm -f $SBINARY_PREFIX/amportal
 rm -f $CONFDIR/amportal.conf 
+rm -rf $VARLIBDIR/asterisk/bin
 rm -f $CONFDIR/freepbx.conf
+rm -f $CONFDIR/asterisk/freepbx_module_admin.conf
+rm -f $CONFDIR/asterisk/extensions_override_freepbx.conf
+rm -f $CONFDIR/asterisk/freepbx_chown.conf
+rm -rf $SPOOLDIR/asterisk/.gnupg
+rm -f $LOGDIR/asterisk/freepbx*
 rm -rf $WWW_HTML_DIR/freepbx 
 rm -rf $INSTALL_SRC_DIR/freepbx
+#
 # Drop database data for tests/new installs
 echo "
 CAUTION: Take care here - CDR/FreePBX data is about to be dropped !!!
@@ -879,6 +895,9 @@ CAUTION: Take care here - CDR/FreePBX data is about to be dropped !!!
 "
 mysqladmin -p$MYSQL_ROOT_PASSWORD drop $ASTERISK_CDR_DB_NAME
 mysqladmin -p$MYSQL_ROOT_PASSWORD drop $ASTERISK_DB_NAME
+# Stop running asterisk
+killall asterisk > /dev/null || kill -9 $(ps auxw | grep asterisk | awk {'print $2'}) > /dev/null
+killall safe_asterisk > /dev/null || kill -9 $(ps auxw | grep safe_asterisk | awk {'print $2'}) > /dev/null
 # Restart asterisk service
 systemctl restart asterisk.service
 }
@@ -4547,6 +4566,19 @@ useradd -r -M -c "Asterisk PBX User" -g asterisk asterisk -s /sbin/nologin
 }
 
 asterisk_configure () {
+# Set permissions on asterisk directories
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $PROJECT_SYSTEM_CONF_DIR/asterisk
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/run/asterisk
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/spool/asterisk/
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/log/asterisk
+# Set permissions on asterisk directories
+chmod -R 764 $PROJECT_SYSTEM_CONF_DIR/asterisk
+chmod -R 764 $CONFDIR/asterisk
+chmod -R 764 $STATEDIR/run/asterisk
+chmod -R 764 $STATEDIR/spool/asterisk/
+chmod -R 764 $STATEDIR/log/asterisk
+#
 # Systemctl start script
 cp -v $PROJECT_INIT_SCRIPTS_DIR/asterisk.service $SYSTEMD_UNITS_DIR_USER/
 # Enable asterisk
@@ -4774,41 +4806,48 @@ sed -i "s:\[directories\](!):\[directories\]:g" $CONFDIR/asterisk/asterisk.conf
 sed -i "s:;runuser:runuser:g" $CONFDIR/asterisk/asterisk.conf 
 sed -i "s:;rungroup:rungroup:g" $CONFDIR/asterisk/asterisk.conf 
 
-# Restart asterisk service
-systemctl restart asterisk.service
+# Copy customized manager.conf for JambulaTV
+cp -v -f $PROJECT_CONFIGS_DIR/asterisk/manager.conf $CONFDIR/asterisk
+# Change permissions on manager.conf
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk/manager.conf
 
-#systemctl stop asterisk.service
+# Restart asterisk service
+#systemctl restart asterisk.service
+
+systemctl stop asterisk.service
 
 # Change to base
 cd $INSTALL_SRC_DIR/freepbx
 
 # Start asterisk
-#./start_asterisk start
+./start_asterisk start
 
 # Install
-./install --dbengine="mysql" \
-	--dbname="$ASTERISK_DB_NAME" \
-	--cdrdbname="$ASTERISK_CDR_DB_NAME" \
-	--dbuser="$ASTERISK_DB_USER" \
-	--dbpass="$ASTERISK_DB_PASS" \
-	--user="$ASTERISK_FILES_USER" \
-	--group="$ASTERISK_FILES_GROUP" \
-	--webroot="$WWW_HTML_DIR/freepbx" \
-	--astetcdir="$PROJECT_SYSTEM_CONF_DIR/asterisk" \
-	--ampcgibin="$WWW_CGI_DIR" \
-	--no-interaction
-
-exit
-# Fix permissions on php sessions, asterisk, and freepbx directories
-
-chown -R nginx $STATEDIR/lib/php/session
-
-chown -R nginx $STATEDIR/log/asterisk
-
-chown -R nginx $WWW_HTML_DIR/freepbx
-
-chown -R nginx /root/.gnupg
-
+./install --dbengine="mysql" --dbname="$ASTERISK_DB_NAME" --cdrdbname="$ASTERISK_CDR_DB_NAME" --dbuser="$ASTERISK_DB_USER" --dbpass="$ASTERISK_DB_PASS" --user="$ASTERISK_FILES_USER" --group="$ASTERISK_FILES_GROUP" --webroot="$WWW_HTML_DIR/freepbx" --ampcgibin="$WWW_CGI_DIR" --astetcdir="$PROJECT_SYSTEM_CONF_DIR/asterisk" --no-interaction
+#
+# Fix permissions on FreePBX, Asterisk, and PHP Sessions directories
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $WWW_HTML_DIR/freepbx
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $PROJECT_SYSTEM_CONF_DIR/asterisk
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/run/asterisk
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/spool/asterisk/
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/log/asterisk
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/lib/php/session
+# Set permissions on asterisk, php directories
+chmod -R 764 $PROJECT_SYSTEM_CONF_DIR/asterisk
+chmod -R 764 $CONFDIR/asterisk
+chmod -R 764 $STATEDIR/run/asterisk
+chmod -R 764 $STATEDIR/spool/asterisk/
+chmod -R 764 $STATEDIR/log/asterisk
+chmod -R 775 $STATEDIR/lib/php/session
+#
+# make nginx run under 'asterisk' group
+sed -i "s:user  nginx;:user  nginx asterisk;:g" $NGINX_CONF_DIR/nginx.conf
+# Restart nginx
+systemctl restart nginx.service
+#
+# Run retrieve_conf as root
+#/var/lib/asterisk/bin/retrieve_conf
 }
 
 cepstral_install () {
