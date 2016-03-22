@@ -1,0 +1,20 @@
+    server {
+        listen 8527;
+
+        server_name  jambulapbx;
+        root   html/freepbx;
+        index  index.html index.htm index.php;
+	autoindex on;
+
+        location / {
+        }
+
+        location ~ \.php$ {
+            include  includes/php_params;
+        }
+ 
+    	location ~* \.(cgi|chi)$ {
+            include  includes/cgi_params;
+    	}  
+
+    }

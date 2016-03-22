@@ -11,13 +11,8 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #################
 #  MAIN SCRIPT  #
 #################
-patch -p1 $COOVA_CONFIG_DIR/functions < $PROJECT_PATCHES_DIR/coova_functions.patch
-
-exit
-
 
 uninstall_freepbx
-
 
 freepbx_preinstall
 
