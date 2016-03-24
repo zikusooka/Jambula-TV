@@ -249,6 +249,9 @@ dahdi_install
 libpri_install
 asterisk_install
 asterisk_configure 
+# FreePBX GUI
+freepbx_preinstall
+freepbx_install
 
 # XMPP
 chan_motif_configure

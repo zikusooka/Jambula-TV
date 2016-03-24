@@ -16,6 +16,4 @@ uninstall_freepbx
 
 freepbx_preinstall
 
-
 freepbx_install
-

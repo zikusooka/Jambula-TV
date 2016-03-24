@@ -11,7 +11,7 @@ AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print 
 AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/jambulatv*"
 MULTIMEDIA_USER=$AUTOLOGIN_USER
 MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
-
+#
 # System directories
 PREFIX=/usr
 CONFDIR=/etc
@@ -539,14 +539,14 @@ ASTERISK_DB_PASS=jambula2
 ASTERISK_CDR_DB_NAME=asteriskcdr
 ASTERISK_CDR_DB_USER=$ASTERISK_DB_USER
 ASTERISK_CDR_DB_PASS=$ASTERISK_DB_PASS
-
+# User/Group
 ASTERISK_FILES_USER=asterisk
 ASTERISK_FILES_GROUP=$WWW_USER
-#ASTERISK_FILES_GROUP=asterisk
-
-#ASTERISK_FILES_USER=$WWW_USER
-#ASTERISK_FILES_GROUP=asterisk
-
+# FreePBX
+FREEPBX_ADMIN_USER=jambulatv
+FREEPBX_ADMIN_PASS=jambulatv321
+FREEPBX_ADMIN_PASS_HASH=$(echo -n $FREEPBX_ADMIN_PASS | sha1sum | awk {'print $1'})
+FREEPBX_ADMIN_EMAIL=freepbx@jambulatv.com
 
 # OwnCloud
 OWNCLOUD_ADMIN_USER=jambulatv
@@ -883,6 +883,8 @@ rm -f $CONFDIR/freepbx.conf
 rm -f $CONFDIR/asterisk/freepbx_module_admin.conf
 rm -f $CONFDIR/asterisk/extensions_override_freepbx.conf
 rm -f $CONFDIR/asterisk/freepbx_chown.conf
+rm -f $CONFDIR/JambulaTV/asterisk/manager.conf* 
+rm -f $CONFDIR/asterisk/manager.conf*
 rm -rf $SPOOLDIR/asterisk/.gnupg
 rm -f $LOGDIR/asterisk/freepbx*
 rm -rf $WWW_HTML_DIR/freepbx 
@@ -4566,18 +4568,18 @@ useradd -r -M -c "Asterisk PBX User" -g asterisk asterisk -s /sbin/nologin
 }
 
 asterisk_configure () {
-# Set permissions on asterisk directories
+# Set ownership/permissions on asterisk directories
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $PROJECT_SYSTEM_CONF_DIR/asterisk
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/run/asterisk
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/spool/asterisk/
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/log/asterisk
 # Set permissions on asterisk directories
-chmod -R 775 $PROJECT_SYSTEM_CONF_DIR/asterisk
-chmod -R 775 $CONFDIR/asterisk
-chmod -R 775 $STATEDIR/run/asterisk
-chmod -R 775 $STATEDIR/spool/asterisk/
-chmod -R 775 $STATEDIR/log/asterisk
+chmod -R 764 $PROJECT_SYSTEM_CONF_DIR/asterisk
+chmod -R 764 $CONFDIR/asterisk
+chmod -R 764 $STATEDIR/run/asterisk
+chmod -R 764 $STATEDIR/spool/asterisk/
+chmod -R 764 $STATEDIR/log/asterisk
 #
 # Systemctl start script
 cp -v $PROJECT_INIT_SCRIPTS_DIR/asterisk.service $SYSTEMD_UNITS_DIR_USER/
@@ -4802,53 +4804,56 @@ systemctl -q is-active asterisk.service || systemctl start asterisk.service
 freepbx_install () {
 # Check/fix errors in asterisk.conf file
 sed -i "s:\[directories\](!):\[directories\]:g" $CONFDIR/asterisk/asterisk.conf 
-
 sed -i "s:;runuser:runuser:g" $CONFDIR/asterisk/asterisk.conf 
 sed -i "s:;rungroup:rungroup:g" $CONFDIR/asterisk/asterisk.conf 
-
+#
 # Copy customized manager.conf for JambulaTV
-#cp -v -f $PROJECT_CONFIGS_DIR/asterisk/manager.conf $PROJECT_SYSTEM_CONF_DIR/asterisk
-#cp -v -f $PROJECT_CONFIGS_DIR/asterisk/manager.conf $CONFDIR/asterisk
-
+[ -f $CONFDIR/asterisk/manager.conf ] || \
+cp -v -f $PROJECT_CONFIGS_DIR/asterisk/manager.conf $CONFDIR/asterisk
+# Make manager.conf accessible - retrieve_conf needs this
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk/manager.conf
+#
 # Restart asterisk service
 systemctl restart asterisk.service
-
-# Change to base
-cd $INSTALL_SRC_DIR/freepbx
-
 # Wait for Asterisk to start fully
 echo
 echo "Waiting for Asterisk to start fully ..."
 sleep 15
 #
-# Install
-./install --dbengine="mysql" --dbname="$ASTERISK_DB_NAME" --cdrdbname="$ASTERISK_CDR_DB_NAME" --dbuser="$ASTERISK_DB_USER" --dbpass="$ASTERISK_DB_PASS" --user="$ASTERISK_FILES_USER" --group="$ASTERISK_FILES_GROUP" --webroot="$WWW_HTML_DIR/freepbx" --ampcgibin="$WWW_CGI_DIR" --astetcdir="$PROJECT_SYSTEM_CONF_DIR/asterisk" --no-interaction
-#./install -f --dbengine="mysql" --dbname="$ASTERISK_DB_NAME" --cdrdbname="$ASTERISK_CDR_DB_NAME" --dbuser="$ASTERISK_DB_USER" --dbpass="$ASTERISK_DB_PASS" --user="$ASTERISK_FILES_USER" --group="$ASTERISK_FILES_GROUP" --webroot="$WWW_HTML_DIR/freepbx" --ampcgibin="$WWW_CGI_DIR" --no-interaction
-#
-# Give asterisk user i.e. asterisk access to Asterisk directories
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $PROJECT_SYSTEM_CONF_DIR/asterisk
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/run/asterisk
-# Give www user i.e. nginx access to Asterisk, and FreePBX files
-chown -R $WWW_USER:$ASTERISK_FILES_GROUP $STATEDIR/spool/asterisk/
-chown -R $WWW_USER:$ASTERISK_FILES_GROUP $WWW_HTML_DIR/freepbx
-chown -R $WWW_USER:$ASTERISK_FILES_GROUP $STATEDIR/log/asterisk
-chown -R $WWW_USER:$ASTERISK_FILES_USER $STATEDIR/lib/php/session
-# Set permissions on asterisk, php directories
-chmod -R 775 $PROJECT_SYSTEM_CONF_DIR/asterisk
-chmod -R 775 $CONFDIR/asterisk
-chmod -R 775 $STATEDIR/run/asterisk
-chmod -R 775 $STATEDIR/spool/asterisk/
-chmod -R 775 $STATEDIR/log/asterisk
-chmod -R 775 $STATEDIR/lib/php/session
-#
 # make nginx run under 'asterisk' group
-sed -i "s:user  nginx;:user  nginx asterisk;:g" $NGINX_CONF_DIR/nginx.conf
+sed -i "s:user  nginx;:user  $ASTERISK_FILES_USER $ASTERISK_FILES_GROUP;:g" $NGINX_CONF_DIR/nginx.conf
 # Restart nginx
 systemctl restart nginx.service
 #
-# Run retrieve_conf as root
-/var/lib/asterisk/bin/retrieve_conf
+# make php-fpm run under 'asterisk' group
+sed -i "s:user = nginx:user = $ASTERISK_FILES_USER:g" $CONFDIR/php-fpm.d/www.conf
+sed -i "s:group = nginx:group = $ASTERISK_FILES_GROUP:g" $CONFDIR/php-fpm.d/www.conf
+# Restart php-fpm
+systemctl restart php-fpm.service
+#
+# Change to base
+cd $INSTALL_SRC_DIR/freepbx
+# Install
+./install -f --dbengine="mysql" --dbname="$ASTERISK_DB_NAME" --cdrdbname="$ASTERISK_CDR_DB_NAME" --dbuser="$ASTERISK_DB_USER" --dbpass="$ASTERISK_DB_PASS" --user="$ASTERISK_FILES_USER" --group="$ASTERISK_FILES_GROUP" --webroot="$WWW_HTML_DIR/freepbx" --ampcgibin="$WWW_CGI_DIR" --astetcdir="$PROJECT_SYSTEM_CONF_DIR/asterisk" --no-interaction
+#
+# Run retrieve_conf again
+$VARLIBDIR/asterisk/bin/retrieve_conf
+#
+# Set ownership on asterisk directories
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $PROJECT_SYSTEM_CONF_DIR/asterisk
+# Set ownership/permissions on nginx folders
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $PROJECT_SYSTEM_SHARE_DIR/fastcgi_temp
+chmod -R 764 $PROJECT_SYSTEM_SHARE_DIR/fastcgi_temp
+#
+# Set ownership/permissions on php session directories
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/lib/php/session
+chmod -R 764 $STATEDIR/lib/php/session
+#
+# Add FreePBX Admin User
+# User/Pass
+echo "INSERT INTO ampusers (username, password_sha1, sections) VALUES ('$FREEPBX_ADMIN_USER', '$FREEPBX_ADMIN_PASS_HASH', '*');" | mysql -u $ASTERISK_DB_USER -p$ASTERISK_DB_PASS $ASTERISK_DB_NAME
+# Email
+#echo "INSERT INTO admin (email) VALUES ('$FREEPBX_ADMIN_EMAIL');" | mysql -u $ASTERISK_DB_USER -p$ASTERISK_DB_PASS $ASTERISK_DB_NAME
 #
 #
 # Display freepbx usage information, and output to final notice
@@ -4859,6 +4864,10 @@ FreePBX Access
 ==============
 % To access FreePBX, use a client PC to open the URL below:
   http://$NETWORK_IP_ADDRESS:$(grep -i freepbx $PORTS_ASSIGNED_FILE | awk {'print $1'})
+
+username            = "$FREEPBX_ADMIN_USER"
+password            = "$FREEPBX_ADMIN_PASS"
+
 #
 EOF
 }
