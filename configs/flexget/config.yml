@@ -23,7 +23,7 @@ templates:
         - \bASAP\b: {from: title}
         - \bNL.Subs.DutchReleaseTeam\b: {from: title}
         
-    torrent_alive: yes # 10 # Require at least 40 seeds of any torrent
+    #torrent_alive: yes # 10 # Require at least 40 seeds of any torrent
     content_filter:
       require:
         - '*.avi'
@@ -62,7 +62,7 @@ templates:
   # --
   tv:
     content_size:
-      max: 450
+      max: 490
     free_space:
       path: '{{secrets.tv.path}}'
       space: 1000
@@ -71,7 +71,7 @@ templates:
     series:
       settings:
         group 1:
-          quality: "hdtv 720p webrip !480p !10bit"
+          quality: "h264 xvid"
           propers: no 
           identified_by: ep
           tracking: backfill
@@ -80,7 +80,7 @@ templates:
     include: [ '{{secrets.tv.include}}' ]
     download: '{{secrets.tv.download}}'
     verify_ssl_certificates: no
-    only_new : yes
+    #only_new : yes
 
   # Movies 
   #--------
@@ -177,10 +177,10 @@ tasks:
   # --------
   tv_shows:
     inputs:
+      - rss: { url: '{{secrets.tv_feeds.torrentz}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.kat}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.ezrss}}', silent: yes }
-      - rss: { url: '{{secrets.tv_feeds.torrentz}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.mininova}}', silent: yes }
 
