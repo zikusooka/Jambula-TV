@@ -252,6 +252,7 @@ asterisk_configure
 # FreePBX GUI
 freepbx_preinstall
 freepbx_install
+freepbx_configure
 
 # XMPP
 chan_motif_configure

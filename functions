@@ -547,6 +547,12 @@ FREEPBX_ADMIN_USER=jambulatv
 FREEPBX_ADMIN_PASS=jambulatv321
 FREEPBX_ADMIN_PASS_HASH=$(echo -n $FREEPBX_ADMIN_PASS | sha1sum | awk {'print $1'})
 FREEPBX_ADMIN_EMAIL=freepbx@jambulatv.com
+FREEPBX_EXTENSION_000=600
+FREEPBX_EXTENSION_000_NAME="Jambula SwitchBoard"
+FREEPBX_EXTENSION_000_PASS="ellis2012"
+FREEPBX_EXTENSION_WEBRTC_001=601
+FREEPBX_EXTENSION_WEBRTC_001_NAME="Jambula WebRTC"
+FREEPBX_EXTENSION_WEBRTC_001_PASS="ellis2012"
 
 # OwnCloud
 OWNCLOUD_ADMIN_USER=jambulatv
@@ -4772,6 +4778,13 @@ chmod 755 $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 }
 
 freepbx_preinstall () {
+# Remove/backup old asterisk config files
+mv -v $PROJECT_SYSTEM_CONF_DIR/asterisk $PROJECT_SYSTEM_CONF_DIR/asterisk.nofreepbx
+mv -v $CONFDIR/asterisk $CONFDIR/asterisk.nofreepbx
+# Regenerate asterisk sample files
+cd $INSTALL_SRC_DIR/asterisk && make samples
+# Change permissions
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk
 # Unpack freepbx
 tar zxvf $PROJECT_TARBALLS_DIR/freepbx-*.tgz -C $INSTALL_SRC_DIR
 #
@@ -4808,7 +4821,6 @@ sed -i "s:;runuser:runuser:g" $CONFDIR/asterisk/asterisk.conf
 sed -i "s:;rungroup:rungroup:g" $CONFDIR/asterisk/asterisk.conf 
 #
 # Copy customized manager.conf for JambulaTV
-[ -f $CONFDIR/asterisk/manager.conf ] || \
 cp -v -f $PROJECT_CONFIGS_DIR/asterisk/manager.conf $CONFDIR/asterisk
 # Make manager.conf accessible - retrieve_conf needs this
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk/manager.conf
@@ -4852,8 +4864,107 @@ chmod -R 764 $STATEDIR/lib/php/session
 # Add FreePBX Admin User
 # User/Pass
 echo "INSERT INTO ampusers (username, password_sha1, sections) VALUES ('$FREEPBX_ADMIN_USER', '$FREEPBX_ADMIN_PASS_HASH', '*');" | mysql -u $ASTERISK_DB_USER -p$ASTERISK_DB_PASS $ASTERISK_DB_NAME
-# Email
-#echo "INSERT INTO admin (email) VALUES ('$FREEPBX_ADMIN_EMAIL');" | mysql -u $ASTERISK_DB_USER -p$ASTERISK_DB_PASS $ASTERISK_DB_NAME
+}
+
+freepbx_configure () {
+# -----------------
+# SIP Configuration
+# ------------------
+# Main Extension
+echo "INSERT INTO devices (id, tech, dial, devicetype, user, description ) VALUES ('$FREEPBX_EXTENSION_000', 'sip', 'SIP/$FREEPBX_EXTENSION_000', 'fixed', '$FREEPBX_EXTENSION_000', '$FREEPBX_EXTENSION_000_NAME');" | mysql -u $ASTERISK_DB_USER -p$ASTERISK_DB_PASS $ASTERISK_DB_NAME
+# 
+echo "INSERT INTO users (extension, password, name, voicemail, ringtimer, outboundcid ) VALUES ('$FREEPBX_EXTENSION_000', '$FREEPBX_EXTENSION_000_PASS', '$FREEPBX_EXTENSION_000_NAME', 'default', '0', '$FREEPBX_EXTENSION_000');" | mysql -u $ASTERISK_DB_USER -p$ASTERISK_DB_PASS $ASTERISK_DB_NAME
+#
+# WebRTC Extension
+echo "INSERT INTO devices (id, tech, dial, devicetype, user, description ) VALUES ('$FREEPBX_EXTENSION_WEBRTC_001', 'sip', 'SIP/$FREEPBX_EXTENSION_WEBRTC_001', 'fixed', '$FREEPBX_EXTENSION_WEBRTC_001', '$FREEPBX_EXTENSION_WEBRTC_001_NAME');" | mysql -u $ASTERISK_DB_USER -p$ASTERISK_DB_PASS $ASTERISK_DB_NAME
+# 
+echo "INSERT INTO users (extension, password, name, voicemail, ringtimer, outboundcid ) VALUES ('$FREEPBX_EXTENSION_WEBRTC_001', '$FREEPBX_EXTENSION_WEBRTC_001_PASS', '$FREEPBX_EXTENSION_WEBRTC_001_NAME', 'default', '0', '$FREEPBX_EXTENSION_WEBRTC_001');" | mysql -u $ASTERISK_DB_USER -p$ASTERISK_DB_PASS $ASTERISK_DB_NAME
+
+# Add extensions to voicemail config
+# WebRTC
+sed -i "/\[default\]/a $FREEPBX_EXTENSION_WEBRTC_001 => $FREEPBX_EXTENSION_WEBRTC_001_PASS,$FREEPBX_EXTENSION_WEBRTC_001_NAME,,,attach=no|saycid=no|envelope=no|delete=no" $PROJECT_SYSTEM_CONF_DIR/asterisk/voicemail.conf
+# Main Extension
+sed -i "/\[default\]/a $FREEPBX_EXTENSION_000 => $FREEPBX_EXTENSION_000_PASS,$FREEPBX_EXTENSION_000_NAME,,,attach=no|saycid=no|envelope=no|delete=no" $PROJECT_SYSTEM_CONF_DIR/asterisk/voicemail.conf
+
+# Add jambula extensions to sip_custom config
+cat > $PROJECT_SYSTEM_CONF_DIR/asterisk/sip_custom.conf << EOF
+; @ Jambula Labs, Copyright (c) 2016-2017. All Rights Reserved.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Jambula-PBX SIP Settings
+
+;externip = 196.0.X.X
+;localnet = 192.168.0.255/255.255.255.0
+
+; SIP Templates
+[Office1](!)
+type=friend
+context=stdexten
+dtmfmode=rfc2833
+qualify=yes
+nat=force_rport
+canreinvite=no
+
+
+; Main extension i.e. SwitchBoard
+[$FREEPBX_EXTENSION_000](Office1)
+deny=0.0.0.0/0.0.0.0
+host=dynamic
+trustpid=yes
+sendpid=no
+port=5060
+qualifyfreq=60
+transport=udp,tcp,tls
+avpf=no
+force_avp=no
+icesupport=no
+encryption=no
+namedcallgroup=
+namedpickupgroup=
+permit=0.0.0.0/0.0.0.0
+dial=SIP/601
+mailbox=$FREEPBX_EXTENSION_000@default
+callerid=$FREEPBX_EXTENSION_000_NAME <$FREEPBX_EXTENSION_000>
+callcounter=yes
+faxdetect=no
+secret=$FREEPBX_EXTENSION_000_PASS
+
+; Web RTC Client
+[$FREEPBX_EXTENSION_WEBRTC_001](Office1)
+mailbox=$FREEPBX_EXTENSION_WEBRTC_001
+host=dynamic
+callerid="Jambula WebRTC" <$FREEPBX_EXTENSION_WEBRTC_001>
+nat=force_rport
+avpf=yes                       
+force_avp=yes 
+encryption=yes
+transport=udp,ws,wss                   
+icesupport=yes
+directmedia=no
+;DTLS
+dtlsenable=yes 
+dtlsverify=no 
+dtlscertfile=$PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.crt
+dtlsprivatekey=$PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.key
+dtlssetup=actpass 
+secret=$FREEPBX_EXTENSION_WEBRTC_001_PASS
+
+
+; ExecInclude for Sip Providers
+#exec $VARLIBDIR/asterisk/agi-bin/include_sip_providers.sh
+EOF
+
+# Allow use of #exec statements
+sed -i '/\[options\]/a execincludes = yes' $CONFDIR/asterisk/asterisk.conf
+
+# Add SIP providers files
+[ -e $PROJECT_CONFIGS_DIR/asterisk/sip_providers.config ] && \
+cp -v $PROJECT_CONFIGS_DIR/asterisk/sip_providers.config $PROJECT_SYSTEM_CONF_DIR/asterisk
+
+# Setup SSL for Asterisk
+[ -d $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl ] || mkdir $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl
+# Create SSL cert/key
+ssl_cert_key_generate $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.crt $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.key 7300
+#
 #
 #
 # Display freepbx usage information, and output to final notice
