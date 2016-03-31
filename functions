@@ -25,7 +25,6 @@ VARLIBDIR=$STATEDIR/lib
 LOGDIR=$STATEDIR/log
 BINARY_PREFIX=/usr/bin
 SBINARY_PREFIX=/usr/sbin
-#LIBDIR=$PREFIX/lib64
 # Libraries directory
 case $(uname -m) in
 x86_64)
@@ -322,6 +321,7 @@ IPTABLES_CMD=/usr/sbin/iptables
 
 JABBERD_CONF_DIR=$CONFDIR/jabberd
 JABBERD_ROUTER_USERS_FILE=$JABBERD_CONF_DIR/router-users.xml
+JABBERD_TEMPLATES_DIR=$JABBERD_CONF_DIR/templates
 JABBERD_DB_CREATE=/usr/share/jabberd/db-setup.mysql
 
 JABBERD_PASSWORD=`grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //'`
@@ -527,6 +527,7 @@ VLM_VOD_DELETE_SCRIPT=$BINARY_PREFIX/jambulatv-delete-video-on-demand
 INCRON_DIRECTORY=/etc/incron.d
 
 # Asterisk
+ASTERISK_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/asterisk
 ASTERISK_AGI_BIN_DIR=$STATEDIR/lib/asterisk/agi-bin
 # Asterisk AMI
 ASTERISK_AMI_USER=JambulaTV
@@ -542,7 +543,17 @@ ASTERISK_CDR_DB_PASS=$ASTERISK_DB_PASS
 # User/Group
 ASTERISK_FILES_USER=asterisk
 ASTERISK_FILES_GROUP=$WWW_USER
+# XMPP
+ASTERISK_XMPP_USERNAME=asterisk
+ASTERISK_XMPP_PASSWORD=jazzy1
+ASTERISK_XMPP_RESOURCE=jambulatv
+USER_001_XMPP_USERNAME=jambula
+USER_001_XMPP_PASSWORD=jambulatv
+USER_001_XMPP_RESOURCE=jambulatv
+#
+ASTERISK_DIALPLAN_NAME=office01
 # FreePBX
+FREEPBX_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/freepbx
 FREEPBX_ADMIN_USER=jambulatv
 FREEPBX_ADMIN_PASS=jambulatv321
 FREEPBX_ADMIN_PASS_HASH=$(echo -n $FREEPBX_ADMIN_PASS | sha1sum | awk {'print $1'})
@@ -553,6 +564,7 @@ FREEPBX_EXTENSION_000_PASS="ellis2012"
 FREEPBX_EXTENSION_WEBRTC_001=601
 FREEPBX_EXTENSION_WEBRTC_001_NAME="Jambula WebRTC"
 FREEPBX_EXTENSION_WEBRTC_001_PASS="ellis2012"
+FREEPBX_DIALPLAN_NAME=office04
 
 # OwnCloud
 OWNCLOUD_ADMIN_USER=jambulatv
@@ -868,7 +880,7 @@ userdel -r asterisk
 rm -f $SYSTEMD_UNITS_DIR_SYSTEM/asterisk.service $SYSTEMD_UNITS_DIR_USER/asterisk.service
 systemctl --system daemon-reload
 # Backup and remove project configs directory
-mv -v $PROJECT_SYSTEM_CONF_DIR/asterisk $PROJECT_SYSTEM_CONF_DIR/asterisk-$ASTERISK_VERSION-backup
+mv -v $ASTERISK_CONF_DIR $ASTERISK_CONF_DIR-$ASTERISK_VERSION-backup
 # Drop asterisk database - CAUTION: Take care - CDR/FreePBX data is there!!!
 mysqladmin -p$MYSQL_ROOT_PASSWORD drop $ASTERISK_DB_NAME
 }
@@ -889,10 +901,10 @@ rm -f $CONFDIR/freepbx.conf
 rm -f $CONFDIR/asterisk/freepbx_module_admin.conf
 rm -f $CONFDIR/asterisk/extensions_override_freepbx.conf
 rm -f $CONFDIR/asterisk/freepbx_chown.conf
-rm -f $CONFDIR/JambulaTV/asterisk/manager.conf* 
 rm -f $CONFDIR/asterisk/manager.conf*
 rm -rf $SPOOLDIR/asterisk/.gnupg
 rm -f $LOGDIR/asterisk/freepbx*
+rm -rf $FREEPBX_CONF_DIR
 rm -rf $WWW_HTML_DIR/freepbx 
 rm -rf $INSTALL_SRC_DIR/freepbx
 #
@@ -4575,13 +4587,13 @@ useradd -r -M -c "Asterisk PBX User" -g asterisk asterisk -s /sbin/nologin
 
 asterisk_configure () {
 # Set ownership/permissions on asterisk directories
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $PROJECT_SYSTEM_CONF_DIR/asterisk
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $ASTERISK_CONF_DIR
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/run/asterisk
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/spool/asterisk/
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/log/asterisk
 # Set permissions on asterisk directories
-chmod -R 764 $PROJECT_SYSTEM_CONF_DIR/asterisk
+chmod -R 764 $ASTERISK_CONF_DIR
 chmod -R 764 $CONFDIR/asterisk
 chmod -R 764 $STATEDIR/run/asterisk
 chmod -R 764 $STATEDIR/spool/asterisk/
@@ -4592,9 +4604,16 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/asterisk.service $SYSTEMD_UNITS_DIR_USER/
 # Enable asterisk
 systemctl enable asterisk.service
 # Create asterisk directory in JambulaTV configs directory
-[ -d $PROJECT_SYSTEM_CONF_DIR/asterisk ] || mkdir -p $PROJECT_SYSTEM_CONF_DIR/asterisk
+[ -d $ASTERISK_CONF_DIR ] || mkdir -p $ASTERISK_CONF_DIR
 # Copy Jambula customized asterisk config files
-rsync -avz $PROJECT_CONFIGS_DIR/asterisk/ $PROJECT_SYSTEM_CONF_DIR/asterisk/
+rsync -av $PROJECT_CONFIGS_DIR/asterisk/ $ASTERISK_CONF_DIR/
+#
+# Asterisk custom DialPlans
+for PBX_CONFIG_FILE in globals.conf extensions.conf
+do
+sed -i "s:JAMBULA_DIALPLAN_NAME:$ASTERISK_DIALPLAN_NAME:g" \
+	$ASTERISK_CONF_DIR/$PBX_CONFIG_FILE
+done
 #
 # Jambula Asterisk files configuration
 for CONFIG_FILE in extensions.conf sip.conf voicemail.conf chan_mobile.conf musiconhold.conf xmpp.conf motif.conf confbridge.conf http.conf
@@ -4602,7 +4621,7 @@ do
 # Backup config file
 cp -v $CONFDIR/asterisk/$CONFIG_FILE $CONFDIR/asterisk/$CONFIG_FILE.orig
 # Modify config file to include JambulaTV customized file
-echo "#include $PROJECT_SYSTEM_CONF_DIR/asterisk/$CONFIG_FILE" > $CONFDIR/asterisk/$CONFIG_FILE
+echo "#include $ASTERISK_CONF_DIR/$CONFIG_FILE" > $CONFDIR/asterisk/$CONFIG_FILE
 done
 #
 # Backup asterisk.conf file
@@ -4621,11 +4640,11 @@ cat > $ASTERISK_AGI_BIN_DIR/include_config.sh <<EOF
 #!/bin/sh
 
 # Determine global DIALPLAN_NAME variable
-DIALPLAN_TYPE=\$(cat $PROJECT_SYSTEM_CONF_DIR/asterisk/globals.conf | sed /^\;/d | grep ^DIALPLAN_NAME | tail -n 1 | cut -d '=' -f2 | sed 's/^ //')
+DIALPLAN_TYPE=\$(cat $ASTERISK_CONF_DIR/globals.conf | sed /^\;/d | grep ^DIALPLAN_NAME | tail -n 1 | cut -d '=' -f2 | sed 's/^ //')
 
 # Include DialPlan Type 
-[ ! -e $PROJECT_SYSTEM_CONF_DIR/asterisk/extensions_\$DIALPLAN_TYPE.conf ] || \\
-echo "#include $PROJECT_SYSTEM_CONF_DIR/asterisk/extensions_\$DIALPLAN_TYPE.conf"
+[ ! -e $ASTERISK_CONF_DIR/extensions_\$DIALPLAN_TYPE.conf ] || \\
+echo "#include $ASTERISK_CONF_DIR/extensions_\$DIALPLAN_TYPE.conf"
 EOF
 # Make script executable
 chmod 755 $ASTERISK_AGI_BIN_DIR/include_config.sh
@@ -4640,10 +4659,10 @@ ping -c 3 -W 3 \$REMOTE_SIP_HOST > /dev/null 2>&1
 REMOTE_SIP_HOST_PING_STATUS=\$?
 # 
 # Include SIP Provider if there's connectivity
-if [ "\$REMOTE_SIP_HOST_PING_STATUS" = "0" ] && [ -e $PROJECT_SYSTEM_CONF_DIR/asterisk/sip_providers.config ];
+if [ "\$REMOTE_SIP_HOST_PING_STATUS" = "0" ] && [ -e $ASTERISK_CONF_DIR/sip_providers.config ];
 then
 # Include SIP Providers 
-echo "#include $PROJECT_SYSTEM_CONF_DIR/asterisk/sip_providers.config"
+echo "#include $ASTERISK_CONF_DIR/sip_providers.config"
 fi
 EOF
 # Make script executable
@@ -4651,9 +4670,9 @@ chmod 755 $ASTERISK_AGI_BIN_DIR/include_sip_providers.sh
 #
 # Setup SSL for Asterisk
 # **********************
-[ -d $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl ] || mkdir $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl
+[ -d $ASTERISK_CONF_DIR/ssl ] || mkdir $ASTERISK_CONF_DIR/ssl
 # Create SSL cert/key
-ssl_cert_key_generate $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.crt $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.key 7300
+ssl_cert_key_generate $ASTERISK_CONF_DIR/ssl/JambulaTV.crt $ASTERISK_CONF_DIR/ssl/JambulaTV.key 7300
 #
 # Caller ID
 # ---------
@@ -4731,7 +4750,7 @@ chmod 755 $ASTERISK_AGI_BIN_DIR/available_mobile_group.sh
 
 chan_dongle_configure () {
 # copy dongle.conf file
-cp -v $PROJECT_CONFIGS_DIR/asterisk/dongle.conf $PROJECT_SYSTEM_CONF_DIR/asterisk/dongle.conf
+cp -v $PROJECT_CONFIGS_DIR/asterisk/dongle.conf $ASTERISK_CONF_DIR/dongle.conf
 # Include dongle.conf file
 echo "#include /etc/JambulaTV/asterisk/dongle.conf" > $CONFDIR/asterisk/dongle.conf
 }
@@ -4779,8 +4798,10 @@ chmod 755 $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 
 freepbx_preinstall () {
 # Remove/backup old asterisk config files
-mv -v $PROJECT_SYSTEM_CONF_DIR/asterisk $PROJECT_SYSTEM_CONF_DIR/asterisk.nofreepbx
-mv -v $CONFDIR/asterisk $CONFDIR/asterisk.nofreepbx
+[ -d $CONFDIR/asterisk ] && mv -v $CONFDIR/asterisk $CONFDIR/asterisk.nofreepbx
+[ -d $FREEPBX_CONF_DIR ] && mv -v $FREEPBX_CONF_DIR $FREEPBX_CONF_DIR.nofreepbx
+[ -d $ASTERISK_CONF_DIR ] && mv -v $ASTERISK_CONF_DIR $ASTERISK_CONF_DIR.nofreepbx
+#
 # Regenerate asterisk sample files
 cd $INSTALL_SRC_DIR/asterisk && make samples
 # Change permissions
@@ -4846,13 +4867,13 @@ systemctl restart php-fpm.service
 # Change to base
 cd $INSTALL_SRC_DIR/freepbx
 # Install
-./install -f --dbengine="mysql" --dbname="$ASTERISK_DB_NAME" --cdrdbname="$ASTERISK_CDR_DB_NAME" --dbuser="$ASTERISK_DB_USER" --dbpass="$ASTERISK_DB_PASS" --user="$ASTERISK_FILES_USER" --group="$ASTERISK_FILES_GROUP" --webroot="$WWW_HTML_DIR/freepbx" --ampcgibin="$WWW_CGI_DIR" --astetcdir="$PROJECT_SYSTEM_CONF_DIR/asterisk" --no-interaction
+./install -f --dbengine="mysql" --dbname="$ASTERISK_DB_NAME" --cdrdbname="$ASTERISK_CDR_DB_NAME" --dbuser="$ASTERISK_DB_USER" --dbpass="$ASTERISK_DB_PASS" --user="$ASTERISK_FILES_USER" --group="$ASTERISK_FILES_GROUP" --webroot="$WWW_HTML_DIR/freepbx" --ampcgibin="$WWW_CGI_DIR" --astetcdir="$FREEPBX_CONF_DIR" --no-interaction
 #
 # Run retrieve_conf again
 $VARLIBDIR/asterisk/bin/retrieve_conf
 #
-# Set ownership on asterisk directories
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $PROJECT_SYSTEM_CONF_DIR/asterisk
+# Set ownership on FreePBX config directory
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $FREEPBX_CONF_DIR
 # Set ownership/permissions on nginx folders
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $PROJECT_SYSTEM_SHARE_DIR/fastcgi_temp
 chmod -R 764 $PROJECT_SYSTEM_SHARE_DIR/fastcgi_temp
@@ -4882,12 +4903,12 @@ echo "INSERT INTO users (extension, password, name, voicemail, ringtimer, outbou
 
 # Add extensions to voicemail config
 # WebRTC
-sed -i "/\[default\]/a $FREEPBX_EXTENSION_WEBRTC_001 => $FREEPBX_EXTENSION_WEBRTC_001_PASS,$FREEPBX_EXTENSION_WEBRTC_001_NAME,,,attach=no|saycid=no|envelope=no|delete=no" $PROJECT_SYSTEM_CONF_DIR/asterisk/voicemail.conf
+sed -i "/\[default\]/a $FREEPBX_EXTENSION_WEBRTC_001 => $FREEPBX_EXTENSION_WEBRTC_001_PASS,$FREEPBX_EXTENSION_WEBRTC_001_NAME,,,attach=no|saycid=no|envelope=no|delete=no" $FREEPBX_CONF_DIR/voicemail.conf
 # Main Extension
-sed -i "/\[default\]/a $FREEPBX_EXTENSION_000 => $FREEPBX_EXTENSION_000_PASS,$FREEPBX_EXTENSION_000_NAME,,,attach=no|saycid=no|envelope=no|delete=no" $PROJECT_SYSTEM_CONF_DIR/asterisk/voicemail.conf
+sed -i "/\[default\]/a $FREEPBX_EXTENSION_000 => $FREEPBX_EXTENSION_000_PASS,$FREEPBX_EXTENSION_000_NAME,,,attach=no|saycid=no|envelope=no|delete=no" $FREEPBX_CONF_DIR/voicemail.conf
 
 # Add jambula extensions to sip_custom config
-cat > $PROJECT_SYSTEM_CONF_DIR/asterisk/sip_custom.conf << EOF
+cat > $FREEPBX_CONF_DIR/sip_custom.conf << EOF
 ; @ Jambula Labs, Copyright (c) 2016-2017. All Rights Reserved.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Jambula-PBX SIP Settings
@@ -4943,8 +4964,8 @@ directmedia=no
 ;DTLS
 dtlsenable=yes 
 dtlsverify=no 
-dtlscertfile=$PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.crt
-dtlsprivatekey=$PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.key
+dtlscertfile=$FREEPBX_CONF_DIR/ssl/JambulaTV.crt
+dtlsprivatekey=$FREEPBX_CONF_DIR/ssl/JambulaTV.key
 dtlssetup=actpass 
 secret=$FREEPBX_EXTENSION_WEBRTC_001_PASS
 
@@ -4958,12 +4979,27 @@ sed -i '/\[options\]/a execincludes = yes' $CONFDIR/asterisk/asterisk.conf
 
 # Add SIP providers files
 [ -e $PROJECT_CONFIGS_DIR/asterisk/sip_providers.config ] && \
-cp -v $PROJECT_CONFIGS_DIR/asterisk/sip_providers.config $PROJECT_SYSTEM_CONF_DIR/asterisk
+cp -v $PROJECT_CONFIGS_DIR/asterisk/sip_providers.config $FREEPBX_CONF_DIR
 
 # Setup SSL for Asterisk
-[ -d $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl ] || mkdir $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl
+[ -d $FREEPBX_CONF_DIR/ssl ] || mkdir $FREEPBX_CONF_DIR/ssl
 # Create SSL cert/key
-ssl_cert_key_generate $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.crt $PROJECT_SYSTEM_CONF_DIR/asterisk/ssl/JambulaTV.key 7300
+ssl_cert_key_generate $FREEPBX_CONF_DIR/ssl/JambulaTV.crt $FREEPBX_CONF_DIR/ssl/JambulaTV.key 7300
+
+# ----------------------------
+# Other FreePBX Configuration
+# ----------------------------
+# Copy FreePBX Jambula customized asterisk config files
+rsync -av $PROJECT_CONFIGS_DIR/freepbx/ $FREEPBX_CONF_DIR/
+# FreePBX custom DialPlans
+for PBX_CONFIG_FILE in globals_custom.conf extensions_override_freepbx.conf
+do
+sed -i "s:JAMBULA_DIALPLAN_NAME:$FREEPBX_DIALPLAN_NAME:g" \
+	$FREEPBX_CONF_DIR/$PBX_CONFIG_FILE
+done
+# Set ownership on FreePBX config directory
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $FREEPBX_CONF_DIR
+#
 #
 #
 #
@@ -5225,9 +5261,8 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/jabberd*.service $SYSTEMD_UNITS_DIR_SYSTEM/
 # Symlink jabberd/authreg_mysql.so, storage_mysql.so if on x86-64 plaform
 if [ $LIBDIR = $PREFIX/lib64 ];
 then
-[ -d $PREFIX/lib/jabberd ] || mkdir $PREFIX/lib/jabberd
-ln -s $LIBDIR/jabberd/authreg_mysql.so $PREFIX/lib/jabberd/authreg_mysql.so
-ln -s $LIBDIR/jabberd/storage_mysql.so $PREFIX/lib/jabberd/storage_mysql.so
+[ -d $PREFIX/lib/jabberd ] && rm -rf $PREFIX/lib/jabberd
+ln -s $LIBDIR/jabberd $PREFIX/lib/jabberd
 fi
 # Enable jabberd.service
 systemctl enable jabberd.service
@@ -5235,8 +5270,16 @@ systemctl start jabberd.service
 }
 
 jabberd_add_users () {
-# Asterisk res_xmpp user
-echo "INSERT INTO authreg (username, realm, password) values ('asterisk', 'JambulaTV', 'jazzy1');" | mysql -u jabberd2 -p$JABBERD_PASSWD jabberd2
+# Asterisk xmpp user
+echo "INSERT INTO authreg (username, realm, password) values ('$ASTERISK_XMPP_USERNAME', '$ASTERISK_XMPP_RESOURCE', '$ASTERISK_XMPP_PASSWORD');" | mysql -u jabberd2 -p$JABBERD_PASSWD jabberd2
+# Normal xmpp user
+echo "INSERT INTO authreg (username, realm, password) values ('$USER_001_XMPP_USERNAME', '$USER_001_XMPP_RESOURCE', '$USER_001_XMPP_PASSWORD');" | mysql -u jabberd2 -p$JABBERD_PASSWD jabberd2
+# Add normal xmpp user to roster
+sed -i "/<\/query>/d" $JABBERD_TEMPLATES_DIR/roster.xml
+cat >> $JABBERD_TEMPLATES_DIR/roster.xml <<EOF
+<item name='$USER_001_XMPP_USERNAME' jid='$USER_001_XMPP_USERNAME@$USER_001_XMPP_RESOURCE' subscription='none'><group>Asterisk</group></item> 
+</query>
+EOF
 }
 
 zoneminder_pre_install () {
