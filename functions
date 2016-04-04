@@ -544,6 +544,7 @@ ASTERISK_CDR_DB_PASS=$ASTERISK_DB_PASS
 ASTERISK_FILES_USER=asterisk
 ASTERISK_FILES_GROUP=$WWW_USER
 # XMPP
+ASTERISK_XMPP_HOST=jambulatv
 ASTERISK_XMPP_USERNAME=asterisk
 ASTERISK_XMPP_PASSWORD=jazzy1
 ASTERISK_XMPP_RESOURCE=jambulatv
@@ -4607,13 +4608,18 @@ systemctl enable asterisk.service
 [ -d $ASTERISK_CONF_DIR ] || mkdir -p $ASTERISK_CONF_DIR
 # Copy Jambula customized asterisk config files
 rsync -av $PROJECT_CONFIGS_DIR/asterisk/ $ASTERISK_CONF_DIR/
-#
-# Asterisk custom DialPlans
-for PBX_CONFIG_FILE in globals.conf extensions.conf
-do
+
+# Jambula custom dialplan in extensions files
 sed -i "s:JAMBULA_DIALPLAN_NAME:$ASTERISK_DIALPLAN_NAME:g" \
-	$ASTERISK_CONF_DIR/$PBX_CONFIG_FILE
-done
+	$ASTERISK_CONF_DIR/extensions.conf
+#
+# global variables 
+cp -v $ASTERISK_CONF_DIR/globals.conf $ASTERISK_CONF_DIR/globals.conf.orig
+cat $ASTERISK_CONF_DIR/globals.conf.orig | sed -e "s:JAMBULA_USER_001_XMPP_USERNAME:$USER_001_XMPP_USERNAME:g" | sed -e "s:JAMBULA_ASTERISK_XMPP_HOST:$ASTERISK_XMPP_HOST:g" | sed -e "s:JAMBULA_USER_001_XMPP_RESOURCE:$USER_001_XMPP_RESOURCE:g" | sed -e "s:JAMBULA_DIALPLAN_NAME:$ASTERISK_DIALPLAN_NAME:g"> $ASTERISK_CONF_DIR/globals.conf 
+#
+# XMPP variables
+cp -v $ASTERISK_CONF_DIR/xmpp.conf $ASTERISK_CONF_DIR/xmpp.conf.orig
+cat $ASTERISK_CONF_DIR/xmpp.conf.orig | sed -e "s:JAMBULA_ASTERISK_XMPP_USERNAME:$ASTERISK_XMPP_USERNAME:g" | sed -e "s:JAMBULA_ASTERISK_XMPP_PASSWORD:$ASTERISK_XMPP_PASSWORD:g" | sed -e "s:JAMBULA_USER_001_XMPP_USERNAME:$USER_001_XMPP_USERNAME:g" | sed -e "s:JAMBULA_ASTERISK_XMPP_HOST:$ASTERISK_XMPP_HOST:g" > $ASTERISK_CONF_DIR/xmpp.conf
 #
 # Jambula Asterisk files configuration
 for CONFIG_FILE in extensions.conf sip.conf voicemail.conf chan_mobile.conf musiconhold.conf xmpp.conf motif.conf confbridge.conf http.conf
@@ -4991,12 +4997,18 @@ ssl_cert_key_generate $FREEPBX_CONF_DIR/ssl/JambulaTV.crt $FREEPBX_CONF_DIR/ssl/
 # ----------------------------
 # Copy FreePBX Jambula customized asterisk config files
 rsync -av $PROJECT_CONFIGS_DIR/freepbx/ $FREEPBX_CONF_DIR/
-# FreePBX custom DialPlans
-for PBX_CONFIG_FILE in globals_custom.conf extensions_override_freepbx.conf
-do
+
+# Jambula custom dialPlan in extensions files
 sed -i "s:JAMBULA_DIALPLAN_NAME:$FREEPBX_DIALPLAN_NAME:g" \
-	$FREEPBX_CONF_DIR/$PBX_CONFIG_FILE
-done
+	$FREEPBX_CONF_DIR/extensions_override_freepbx.conf
+# Global variables 
+cp -v $FREEPBX_CONF_DIR/globals_custom.conf $FREEPBX_CONF_DIR/globals_custom.conf.orig
+cat $FREEPBX_CONF_DIR/globals_custom.conf.orig | sed -e "s:JAMBULA_USER_001_XMPP_USERNAME:$USER_001_XMPP_USERNAME:g" | sed -e "s:JAMBULA_ASTERISK_XMPP_HOST:$ASTERISK_XMPP_HOST:g" | sed -e "s:JAMBULA_USER_001_XMPP_RESOURCE:$USER_001_XMPP_RESOURCE:g" | sed -e "s:JAMBULA_DIALPLAN_NAME:$FREEPBX_DIALPLAN_NAME:g"> $FREEPBX_CONF_DIR/globals_custom.conf 
+#
+# XMPP variables
+cp -v $FREEPBX_CONF_DIR/xmpp.conf $FREEPBX_CONF_DIR/xmpp.conf.orig
+cat $FREEPBX_CONF_DIR/xmpp.conf.orig | sed -e "s:JAMBULA_ASTERISK_XMPP_USERNAME:$ASTERISK_XMPP_USERNAME:g" | sed -e "s:JAMBULA_ASTERISK_XMPP_PASSWORD:$ASTERISK_XMPP_PASSWORD:g" | sed -e "s:JAMBULA_USER_001_XMPP_USERNAME:$USER_001_XMPP_USERNAME:g" | sed -e "s:JAMBULA_ASTERISK_XMPP_HOST:$ASTERISK_XMPP_HOST:g" > $FREEPBX_CONF_DIR/xmpp.conf 
+#
 # Set ownership on FreePBX config directory
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $FREEPBX_CONF_DIR
 #
