@@ -3867,6 +3867,7 @@ if [ \"x\$INTERNET_GATEWAY_DEV\" != \"x\" ];
 then
 INTERNET_GATEWAY_IP=\$(ip route list | grep default | sed -n 's/^.*via //p' | awk {'print \$1'})
 fi
+TUNTAP=\$(basename \$DEV)
 
 
 
@@ -3883,7 +3884,10 @@ if [ \"x\$INTERNET_GATEWAY_DEV\" != \"x\" ];
 then
 /bin/echo 1 > /proc/sys/net/ipv4/ip_forward
 /usr/sbin/iptables -t nat -A POSTROUTING -o \$INTERNET_GATEWAY_DEV -j MASQUERADE
-fi" > $COOVA_CONFIG_DIR/ipup.sh
+fi
+
+# Tun on multicast on tun tap device
+ip link set \$TUNTAP multicast on" > $COOVA_CONFIG_DIR/ipup.sh
 #
 # Make script executable
 chmod 755 $COOVA_CONFIG_DIR/ipup.sh
@@ -5011,6 +5015,15 @@ cat $FREEPBX_CONF_DIR/xmpp.conf.orig | sed -e "s:JAMBULA_ASTERISK_XMPP_USERNAME:
 #
 # Set ownership on FreePBX config directory
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $FREEPBX_CONF_DIR
+}
+
+freepbx_modules () {
+# Asterisk PhoneBook Module
+tar zxvf $PROJECT_TARBALLS_DIR/freepbx_modules/phonebook*tar.gz -C $WWW_HTML_DIR/freepbx/admin/modules
+cd $WWW_HTML_DIR/freepbx/admin/modules 
+mv -v phonebook* phonebook
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP phonebook
+$SBINARY_PREFIX/fwconsole ma installlocal phonebook
 #
 #
 #
