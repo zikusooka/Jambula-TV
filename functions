@@ -140,7 +140,7 @@ KODI_VERSION=15.2 #15.1
 KODI_BRANCH=Isengard
 KODI_TAG=$KODI_VERSION-$KODI_BRANCH
 KODI_DEFAULT_SKIN=confluence
-KODI_PREFERRED_SKIN=$KODI_DEFAULT_SKIN #Aeon-Nox
+KODI_PREFERRED_SKIN=aeonmq6 #$KODI_DEFAULT_SKIN #Aeon-Nox
 KODI_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.kodi
 KODI_SHARE_DIR=$PREFIX/share/kodi
 KODI_USER_DATA=$KODI_CONFIG_DIR/userdata
@@ -2281,6 +2281,19 @@ cp -fv $PROJECT_IMAGES_DIR/kodi/background.jpg \
 # Change top left logo at Home screen 
 sed -i "s:<texture>kodi-logo.png</texture>:<texture>jambulatv-logo.png</texture>:" \
 	$KODI_SYSTEM_ADDONS/skin.$KODI_DEFAULT_SKIN/720p/Home.xml
+;;
+aeonmq6)
+# Unzip skin files to addons directory
+for SKIN_ADDON in \
+context.cinemavision \
+script.cinemavision \
+script.aeonmq6.extrapack \
+skin.aeonmq6
+do
+unzip -d $KODI_SYSTEM_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
+done
+# Change default background for preferred skin
+cp -fv $PROJECT_IMAGES_DIR/kodi/background.jpg $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg
 ;;
 esac
 #

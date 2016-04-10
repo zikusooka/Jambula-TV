@@ -12,6 +12,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #  MAIN SCRIPT  #
 #################
 
+
 uninstall_freepbx
 
 freepbx_preinstall
