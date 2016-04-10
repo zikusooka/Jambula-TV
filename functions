@@ -1882,8 +1882,8 @@ rsync -avz $PROJECT_GITHUB_DIR/dtv-scan-tables/ $PREFIX/share/dvb/
 # Change to tvheadend directory
 cd $INSTALL_SRC_DIR/tvheadend
 # configure tvheadend
-./configure --prefix=$PREFIX --libdir=$LIBDIR --mandir=$MANDIR1 --disable-libav \
---disable-dvbscan
+./configure --prefix=$PREFIX --libdir=$LIBDIR --mandir=$MANDIR1 --disable-ffmpeg_static \
+	--disable-libav --disable-dvbscan
 make && make install
 }
 
