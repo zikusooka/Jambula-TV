@@ -1,5 +1,6 @@
 trakt:
   username: TRAKT_USERNAME
+  watchlist: JambulaTV
 
 global:
   rtorrent_magnet: TORRENTS_WATCH_DIRECTORY
@@ -16,6 +17,10 @@ tv:
   exists_series: TORRENTS_COMPLETED_DIRECTORY
   include: FLEXGET_CONFIG_DIR/tvseries.yml
   download: TORRENTS_WATCH_DIRECTORY
+
+  series_completed_dir: JambulaTV/Torrents/completed
+  series_jambulatv_dir: JambulaTV/Videos/TV_Shows
+
   day_of_week: sun,mon,tue,wed,thu,fri,sat
   hour: 2
   minute: 1

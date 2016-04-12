@@ -53,11 +53,9 @@ templates:
       smtp_tls: yes
     
 
-
 ##############
 #  Templates #
 ##############
-
   # TV
   # --
   tv:
@@ -75,12 +73,22 @@ templates:
           propers: no 
           identified_by: ep
           tracking: backfill
-    thetvdb_lookup: yes
     priority: 10
     include: [ '{{secrets.tv.include}}' ]
     download: '{{secrets.tv.download}}'
     verify_ssl_certificates: no
-    #only_new : yes
+
+    # Pull TV shows from trakt.tv watchlist
+    discover:
+      what: 
+        - emit_series:
+            from_start: yes
+        - trakt_list:
+            username: '{{secrets.trakt.username}}'
+            list: '{{secrets.trakt.watchlist}}'
+            type: shows
+      from:
+        - torrentz: verified
 
   # Movies 
   #--------
@@ -94,48 +102,34 @@ templates:
     plugin_priority:
       if: 173
       proper_movies: 171
-    #imdb_lookup: yes
-#    imdb_required: yes
-#    imdb:
-#      min_score: 6.0
-#      min_votes: 10000
-#      min_year: 2012
-#      reject_genres:
-#        - horror
-#        - animation
-#        - musical
-#      accept_languages:
-#        - english
+    # Lists
+    discover:
+      what:
+    # List of wanted movies
+        - movie_list: wanted_movies
+    # Pull movies from trakt.tv watchlist and add to the movie queue
+        - trakt_list:
+            username: '{{secrets.trakt.username}}'
+            list: '{{secrets.trakt.watchlist}}'
+            type: movies
+      from:
+        - torrentz: verified
+    # 
     quality: 
       - 480p+
       - "!dts !cam !10bit"
-    movie_queue: accept
     content_size:
-      max: 800
+      max: 49900
       min: 600
     free_space:
       path: '{{secrets.movies.path}}'
       space: 1000
-    seen_movies: strict
     exists_movie:
       - '{{secrets.movies.exists_movie}}'
     only_new: no
     priority: 15
     download: '{{secrets.movies.download}}'
-
-# Movies - Trakt 
-# --------------
-# Pull movies from trakt.tv watchlist and add to the movie queue
-  #trakt_list:
-    #username: '{{secrets.trakt.username}}'
-    #list: watchlist
-    #type: movies
-    #accept_all: yes
-    #movie_queue: add
-    #settings:
-     # quality:
-      #  - 480p+
-      #  - "!dts !cam !10bit"
+    accept_all: yes
 
 # Podcasts 
 # --------
@@ -166,11 +160,9 @@ templates:
     accept_all: yes
 
 
-
 ###########
 #  TASKS  #
 ###########
-
 tasks:
 
   # TV Shows
@@ -183,63 +175,56 @@ tasks:
       - rss: { url: '{{secrets.tv_feeds.ezrss}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.mininova}}', silent: yes }
-
     template: 
       - tv
 
   # Movies
   # ------
   movies:
-    # Specific movies in Queue
-    discover:
-      what:
-        - emit_movie_queue: yes
-        #- rottentomatoes_list:
-        #    api_key: rh8chjzp8vu6gnpwj88736uv
-        #    movies:
-        #      - box_office
-        #    dvds:
-        #      - top_rentals
-        #      - upcoming
-
-      from:
-        #- piratebay:
-        #    category: movies
-        #    sort_by: leechers
-        #- isohunt: movies
-        #- flexget_archive: yes
-        #- newtorrents: movies
-        - torrentz: verified
-        - kat:
-            category: movies
-            verified: yes
-
     inputs:
       - rss: { url: '{{secrets.movie_feeds.kat}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.torrentz}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.mininova}}', silent: yes }
-
     template: 
       - movies
-
-  # Trakt - Movies
-  # --------------
-  trakt_movies:
-    template: movies_trakt
 
   # Podcasts
   # --------
   internet_tv:
     template: podcasts
 
+  # Move TV Shows to Kodi directory
+  # -------------------------------
+  move_tv_shows:
+    priority: 21
+    disable:
+      - retry_failed
+      - email
+    metainfo_series: yes
+    require_field: [series_name, series_id, series_season]
+    accept_all: yes
+    filesystem:
+      path: 
+        - "/{{secrets.tv.series_completed_dir}}"
+      recursive: yes
+      retrieve: 
+        - files
+        - dirs
+      regexp: '.*\.(avi|mkv|mp4|m4v|iso)$' 
+    move:
+      to: "/{{secrets.tv.series_jambulatv_dir}}/{{series_name}}/Season_{{'%02d'|format(series_season)}}"
+      filename: "{{series_name}}.{{series_id}}.{{quality|upper}}"
+      #clean_source: 50
+      along:
+        - sub
+        - srt
 
 
 ##############
 #  Scheduler #
 ##############
-#
 schedules:
   - tasks: [tv_shows]
     schedule:
