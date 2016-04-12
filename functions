@@ -269,7 +269,7 @@ ISP_USERNAME_DEFAULT=none
 ISP_PASSWORD_DEFAULT=none
 
 FLEXGET_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/flexget
-FLEXGET_DEPENDENCIES="itsdangerous setuptools MarkupSafe Paver feedparser SQLAlchemy PyYAML beautifulsoup4 html5lib PyRSS2Gen pynzb progressbar Jinja2 Werkzeug Flask-0 CherryPy certifi chardet requests six python-dateutil python-tvrage jsonschema plumbum rpyc tmdb3 path.py pbr argparse stevedore babelfish guessit futures pytz tzlocal APScheduler aniso8601 Flask-RESTful ordereddict flask-restplus webassets Flask-Assets cssmin Flask-Compress Flask-Login pycparser cffi ipaddress enum34 pyasn1 idna cryptography pyOpenSSL ndg_httpsclient pathlib pyScss" # IMPORTANT-Make similar packages like Flask distinctive
+FLEXGET_DEPENDENCIES="itsdangerous setuptools MarkupSafe Paver feedparser SQLAlchemy PyYAML beautifulsoup4 html5lib PyRSS2Gen pynzb progressbar Jinja2 Werkzeug Flask CherryPy certifi chardet requests six jsonschema python-dateutil python-tvrage functools32 plumbum rpyc tmdb3 path.py pbr argparse stevedore babelfish setuptools_scm pytest-runner rebulk guessit futures pytz tzlocal APScheduler aniso8601 Flask-RESTful ordereddict flask-restplus webassets Flask-Assets cssmin Flask-Compress Flask-Login pycparser cffi ipaddress enum34 pyasn1 idna cryptography pyOpenSSL ndg_httpsclient pathlib pyScss pytvmaze Safe Flask-Cors"
 
 TIMEZONE="Africa/Kampala"
 TIMEZONE_FILE=/etc/timezone
@@ -3192,26 +3192,51 @@ systemctl start ziproxy.service
 flexget_deps_install () {
 for PYTHON_MODULE in $FLEXGET_DEPENDENCIES
 do
+# Set module's package filename & strip version from it
+MODULE_PKG=$(basename $(ls $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE* | head -1))
+MODULE_VERS=$(echo $MODULE_PKG|sed "s:$PYTHON_MODULE-::g"|sed "s:.tar.gz::g"|sed "s:.tar.bz2::g"|sed "s:.zip::g")
 # Remove any existing modules
-[ ! -d $INSTALL_SRC_DIR/$PYTHON_MODULE* ] || rm -rf $INSTALL_SRC_DIR/$PYTHON_MODULE*
+[ ! -d $INSTALL_SRC_DIR/$PYTHON_MODULE ] || rm -rf $INSTALL_SRC_DIR/$PYTHON_MODULE
 rm -rf $PYTHON_SITEDIR/$PYTHON_MODULE*
 # Install python module
 echo "Installing $PYTHON_MODULE ..."
 # Unpack using the appropriate tool for archive file format
 # gzip
-[ -e $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*gz ] && \
-   tar zxvf $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*gz -C $INSTALL_SRC_DIR
+[ -e $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE-$MODULE_VERS*gz ] && \
+   tar zxvf $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE-$MODULE_VERS*gz -C $INSTALL_SRC_DIR
 # bz2
-[ -e $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*bz2 ] && \
-   tar jxvf $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*z2 -C $INSTALL_SRC_DIR
+[ -e $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE-$MODULE_VERS*bz2 ] && \
+   tar jxvf $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE-$MODULE_VERS*bz2 -C $INSTALL_SRC_DIR
 # zip
-[ -e $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*zip ] && \
-   unzip -d $INSTALL_SRC_DIR $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE*zip
-#
+[ -e $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE-$MODULE_VERS*zip ] && \
+   unzip -d $INSTALL_SRC_DIR $PROJECT_TARBALLS_DIR/flexget_deps/$PYTHON_MODULE-$MODULE_VERS*zip
+# Install
 cd $INSTALL_SRC_DIR
+# Packages that don't match filename when untarred
+if [ "$PYTHON_MODULE" = "python-tvrage" ];
+then
 mv -v *$PYTHON_MODULE* $PYTHON_MODULE
+else
+# All other packages
+mv -v *$PYTHON_MODULE-$MODULE_VERS* $PYTHON_MODULE
+fi
+#
 cd $INSTALL_SRC_DIR/$PYTHON_MODULE
 python setup.py install --install-lib=$PYTHON_SITEDIR
+#
+#
+echo
+echo
+echo 
+echo "Did python module [$PYTHON_MODULE] install correctly?"
+echo 
+echo "Enter to proceed...."
+echo
+echo
+read
+clear
+#
+#
 done
 }
 
