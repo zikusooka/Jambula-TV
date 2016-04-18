@@ -3523,6 +3523,22 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/aria2.service $SYSTEMD_UNITS_DIR_USER/
 #systemctl enable aria2.service
 }
 
+python_telegram_bot_install () {
+# future - dependency for python-telegram-bot
+tar zxvf $PROJECT_TARBALLS_DIR/future-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v future-* future
+# Compile
+cd $INSTALL_SRC_DIR/future 
+python setup.py install --install-lib=$PYTHON_SITEDIR
+#
+# python-telegram-bot
+tar zxvf $PROJECT_TARBALLS_DIR/python-telegram-bot-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v python-telegram-bot-* python-telegram-bot
+# Compile
+cd $INSTALL_SRC_DIR/python-telegram-bot 
+python setup.py install --install-lib=$PYTHON_SITEDIR
+}
+
 samba_configure () {
 # Patch samba smb.conf
 patch -p1 $CONFDIR/samba/smb.conf < $PROJECT_PATCHES_DIR/samba.smb.conf.patch
