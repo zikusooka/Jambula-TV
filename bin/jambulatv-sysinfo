@@ -3,8 +3,8 @@ b=`tput bold`
 n=`tput sgr0`
 # IP Settings
 # ***********
-NETWORK_ETHERNET_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
-NETWORK_IP_ADDRESS=$(ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
+NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
+NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
 NETWORK_GATEWAY_ADDRESS=$(ip route list | grep default | sed 's/^.*via //' | awk {'print $1'})
 # DNS Settings
 # *************
@@ -70,7 +70,7 @@ echo -e ""
 echo -e "${n}Hostname:${b} $(hostname) \t ${n}Kernel:${b} $(uname -or)"
 echo -e "${n}Private IP Address:${b} $NETWORK_IP_ADDRESS \t ${n}Public IP address:${b} $PUBLIC_IP_ADDRESS"
 echo -e "${n}Private IP Gateway:${b} $NETWORK_GATEWAY_ADDRESS \t ${n}DNS Address:${b} $CURRENT_DNS1"
-echo -e "${n}Uptime:${b} $(uptime | cut -d" " -f 4-7 | cut -d"," -f1-2) \t\t\t ${n}CPU Load:${b} $(cat /proc/loadavg | cut -d" " -f1-3)"
+echo -e "${n}Uptime:${b} $(uptime | cut -d" " -f 4-7 | cut -d"," -f1-2) \t\t ${n}CPU Load:${b} $(cat /proc/loadavg | cut -d" " -f1-3)"
 echo -e "${n}CPU Used (Average):${b} $CPU_USED \t\t ${n}CPU Temp (Average):${b} $CPU_TEMP"
 echo -e "${n}Disk Used (Average):${b} $DISK_USED \t\t ${n}Disk Temp (Average):${b} $DISK_TEMP"
 echo -e "${n}Free Memory:${b} `cat /proc/meminfo | grep MemFree | awk {'print int($2/1000)'}` MB \t\t\t ${n}Total memory:${b} `cat /proc/meminfo | grep MemTotal | awk {'print int($2/1000)'}` MB"

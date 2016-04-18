@@ -2750,6 +2750,16 @@ Version:$PROJECT_VERSION
 EOF
 }
 
+motd_configure () {
+cat > $CONFDIR/cron.d/motd << EOF
+*/3 * * * * root $BINARY_PREFIX/jambulatv-sysinfo > $CONFDIR/motd
+EOF
+# Copy jambulatv-sysinfo script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-sysinfo ] || cp -v $PROJECT_BIN_DIR/jambulatv-sysinfo $BINARY_PREFIX/
+# Remove ssh lastlog
+sed -i 's:#PrintLastLog yes:PrintLastLog no:' $CONFDIR/ssh/sshd_config
+}
+
 reverse_ssh_configure () {
 # Create SSH server, username, password credentials that will be used for this box
 cat > $REVERSE_SSH_CONFIG << EOF

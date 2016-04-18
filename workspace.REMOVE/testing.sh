@@ -13,6 +13,8 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #################
 
 
+exit
+
 uninstall_freepbx
 
 freepbx_preinstall
