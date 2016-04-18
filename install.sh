@@ -106,6 +106,7 @@ kodi_jambulatv_service_configure
 # -----------------
 # System Settings
 # -----------------
+release_info_configure
 boot_optimization
 wired_interfaces_configure
 wireless_interfaces_configure

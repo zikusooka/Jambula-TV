@@ -1,6 +1,5 @@
 #!/bin/sh
 PROJECT_NAME=JambulaTV
-PROJECT_VERSION=3
 PROJECT_URL="http://www.jambulatv.com"
 COMPANY_NAME="Jambula Labs"
 KERNEL_NAME="$PROJECT_NAME"
@@ -72,6 +71,8 @@ PROJECT_SYSTEM_LOG_DIR=$STATEDIR/log/$PROJECT_NAME
 PROJECT_SYSTEM_LIB_DIR=$STATEDIR/lib/$PROJECT_NAME
 PROJECT_SYSTEM_CACHE_DIR=$STATEDIR/cache/$PROJECT_NAME
 
+PROJECT_VERSION=$(cd $PROJECT_BASE_DIR && git tag -l | tail -1 && cd)
+PROJECT_RELEASE_FILE=$PROJECT_SYSTEM_CONF_DIR/release
 PROJECT_PARTITION=/$PROJECT_NAME
 LOCAL_SETTINGS_DIR=$PROJECT_PARTITION/local_settings
 
@@ -2739,6 +2740,14 @@ SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_STATION_MA
 EOF
 # Reload udev
 /usr/sbin/udevadm control --reload
+}
+
+release_info_configure () {
+# Add release info
+cat > $PROJECT_RELEASE_FILE <<EOF
+Product:$PROJECT_NAME
+Version:$PROJECT_VERSION
+EOF
 }
 
 reverse_ssh_configure () {
