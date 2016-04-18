@@ -1,0 +1,89 @@
+#!/bin/bash
+b=`tput bold`
+n=`tput sgr0`
+# IP Settings
+# ***********
+NETWORK_ETHERNET_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
+NETWORK_IP_ADDRESS=$(ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
+NETWORK_GATEWAY_ADDRESS=$(ip route list | grep default | sed 's/^.*via //' | awk {'print $1'})
+# DNS Settings
+# *************
+# Current DNS 1
+CURRENT_DNS1=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 1'`
+#
+# Number of DNS settings
+NUMBER_OF_DNS=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | wc -l`
+#
+# Add second DNS if more than 1 setting
+if [ "$NUMBER_OF_DNS" -gt "1" ];
+then
+# Current DNS 2
+CURRENT_DNS2=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 2'` 
+else
+CURRENT_DNS2=$CURRENT_DNS1
+fi
+#
+# Check if Internet connection is up
+host -W 1 google.com 8.8.8.8 > /dev/null 2>&1
+INTERNET_ALIVE=$?
+if [ "$INTERNET_ALIVE" = "0" ];
+then
+# Public IP Address
+# -----------------
+PUBLIC_IP_ADDRESS=$(wget -O - -q ipchicken.com | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | uniq)
+# Weather: https://developer.forecast.io/docs/v2
+# ----------------------------------------------
+APIKEY=631f3b499aeb738a4e64a66d70d96395
+APIURL="https://api.forecast.io/forecast"
+# Kampala
+LATITUDE="0.3136"
+LONGITUDE="32.5811"
+FORECAST=$(curl -s $APIURL/$APIKEY/$LATITUDE,$LONGITUDE?exclude=hourly,minutely,daily,alerts,flags)
+TEMPERATURE_F=$(echo $FORECAST | cut -d ',' -f 11 | cut -d ':' -f 2 | sed s/\"//g)F
+TEMPERATURE_C=$(printf %.1f $(echo "scale=2;(5/9)*($TEMPERATURE_F-32)" | bc))C
+CITY=$(echo $FORECAST | cut -d ',' -f 3 | cut -d ':' -f 2 | sed s/\"//g | cut -d '/' -f 2)
+SUMMARY=$(echo $FORECAST | cut -d ',' -f 6 | cut -d ':' -f 2 | sed s/\"//g)
+else
+CITY="cat /etc/timezone | cut -d / -f2"
+fi
+#
+# Other variables
+# ---------------
+CPUTIME=$(ps -eo pcpu | awk 'NR>1' | awk '{tot=tot+$1} END {print tot}')
+CPUCORES=$(cat /proc/cpuinfo | grep -c processor)
+CPU_USED=$(echo $CPUTIME / $CPUCORES | bc)%
+CPU_TEMP=$(echo)C
+DISK_USED=$(df / | awk '{ a = $5 } END { print a }')
+DISK_TEMP=$(hddtemp | cut -d : -f3 | sed 's: ::g')
+
+
+RELEASE_FILE=/etc/JambulaTV/release
+PRODUCT=$(grep -i Product $RELEASE_FILE | cut -d : -f2)
+VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
+HEADER=$(figlet $PRODUCT $VERSION)
+
+echo -e "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+"
+echo -e "\e[32;5;196m $HEADER"
+
+echo -e ""
+echo -e "${n}Hostname:${b} $(hostname) \t ${n}Kernel:${b} $(uname -or)"
+echo -e "${n}Private IP Address:${b} $NETWORK_IP_ADDRESS \t ${n}Public IP address:${b} $PUBLIC_IP_ADDRESS"
+echo -e "${n}Private IP Gateway:${b} $NETWORK_GATEWAY_ADDRESS \t ${n}DNS Address:${b} $CURRENT_DNS1"
+echo -e "${n}Uptime:${b} $(uptime | cut -d" " -f 4-7 | cut -d"," -f1-2) \t\t\t ${n}CPU Load:${b} $(cat /proc/loadavg | cut -d" " -f1-3)"
+echo -e "${n}CPU Used (Average):${b} $CPU_USED \t\t ${n}CPU Temp (Average):${b} $CPU_TEMP"
+echo -e "${n}Disk Used (Average):${b} $DISK_USED \t\t ${n}Disk Temp (Average):${b} $DISK_TEMP"
+echo -e "${n}Free Memory:${b} `cat /proc/meminfo | grep MemFree | awk {'print int($2/1000)'}` MB \t\t\t ${n}Total memory:${b} `cat /proc/meminfo | grep MemTotal | awk {'print int($2/1000)'}` MB"
+
+echo -e "${n}Temperature ($CITY):${b}$TEMPERATURE_C \t\t ${n}Weather: ${b}$SUMMARY"
+echo -e "${n}Available updates:${b} `if [[ ! -n "${up}" ]]; then echo "system up-to-date"; else echo $up; fi`\n"
+
+echo -e "\e[0m"
+
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+"
+#echo "Checking for system updates:"
+#while ps aux | grep -e [y]um > /dev/null; do echo -n .;sleep 1; done &
+#up=`yum -e0 -d0 check-update | awk '{print $1}'`
+
+
