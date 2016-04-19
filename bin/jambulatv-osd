@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # Display Announcements on JambulaTV Screen
 #
-# Variables
-KODI_GUI_SETTINGS = "/JambulaTV/.kodi/userdata/guisettings.xml"
-TIME = 15000  # ms
-ICON = '/usr/share/kodi/addons/Aeon-Nox/media/DefaultIconInfo.png'
-
 # Import modules
 import json
 import httplib
@@ -13,11 +8,31 @@ import base64
 import sys
 import argparse
 import os
+import commands
 import warnings
 import xml.etree.ElementTree as ET
 
+
+# Variables
+JAMBULATV_VIRTUAL_TERMINAL = 'tty2'
+KODI_GUI_SETTINGS = '/JambulaTV/.kodi/userdata/guisettings.xml'
+TIME = 15000  # ms
+ICON = '/usr/share/kodi/addons/Aeon-Nox/media/DefaultIconInfo.png'
+
+# Copyright
 __author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2015-2016 All rights reserved'
 
+
+# Quit if active screen console is not running kodi
+status, active_virtual_terminal = commands.getstatusoutput("cat /sys/class/tty/tty0/active")
+if active_virtual_terminal != (JAMBULATV_VIRTUAL_TERMINAL):
+  sys.exit("Error: JambulaTV is not running on active terminal");
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+#
 # Get Kodi web server variables
 tree = ET.parse(KODI_GUI_SETTINGS)
 root = tree.getroot()
