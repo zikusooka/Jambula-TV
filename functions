@@ -3546,6 +3546,21 @@ cd $INSTALL_SRC_DIR/python-telegram-bot
 python setup.py install --install-lib=$PYTHON_SITEDIR
 }
 
+sleekxmpp_install () {
+# dnspython - dependency for sleekxmpp
+unzip -d $INSTALL_SRC_DIR $PROJECT_TARBALLS_DIR/dnspython-*.zip
+cd $INSTALL_SRC_DIR && mv -v dnspython-* dnspython
+# Compile
+cd $INSTALL_SRC_DIR/dnspython 
+python setup.py install --install-lib=$PYTHON_SITEDIR
+# sleekxmpp 
+tar zxvf $PROJECT_TARBALLS_DIR/sleekxmpp-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v sleekxmpp-* sleekxmpp
+# Compile
+cd $INSTALL_SRC_DIR/sleekxmpp 
+python setup.py install --install-lib=$PYTHON_SITEDIR
+}
+
 samba_configure () {
 # Patch samba smb.conf
 patch -p1 $CONFDIR/samba/smb.conf < $PROJECT_PATCHES_DIR/samba.smb.conf.patch

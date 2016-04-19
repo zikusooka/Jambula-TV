@@ -5,7 +5,14 @@ n=`tput sgr0`
 # ***********
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
+
 NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route list | grep default | sed 's/^.*via //' | awk {'print $1'})
+# If No Gateway
+if [ "x$NETWORK_GATEWAY_ADDRESS" = "x" ];
+then
+NETWORK_GATEWAY_ADDRESS=000.000.000.000
+fi
+#
 # DNS Settings
 # *************
 # Current DNS 1
@@ -22,41 +29,40 @@ CURRENT_DNS2=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | se
 else
 CURRENT_DNS2=$CURRENT_DNS1
 fi
-#
+
 # Check if Internet connection is up
 host -W 1 google.com 8.8.8.8 > /dev/null 2>&1
 INTERNET_ALIVE=$?
 if [ "$INTERNET_ALIVE" = "0" ];
 then
+INTERNET_STATE=ON
 # Public IP Address
 # -----------------
 PUBLIC_IP_ADDRESS=$(wget -O - -q ipchicken.com | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | uniq)
-# Weather: https://developer.forecast.io/docs/v2
-# ----------------------------------------------
-APIKEY=631f3b499aeb738a4e64a66d70d96395
-APIURL="https://api.forecast.io/forecast"
-# Kampala
-LATITUDE="0.3136"
-LONGITUDE="32.5811"
-FORECAST=$(curl -s $APIURL/$APIKEY/$LATITUDE,$LONGITUDE?exclude=hourly,minutely,daily,alerts,flags)
-TEMPERATURE_F=$(echo $FORECAST | cut -d ',' -f 11 | cut -d ':' -f 2 | sed s/\"//g)
-TEMPERATURE_C=$(printf %.1f $(echo "scale=2;(5/9)*($TEMPERATURE_F-32)" | bc))
-CITY=$(echo $FORECAST | cut -d ',' -f 3 | cut -d ':' -f 2 | sed s/\"//g | cut -d '/' -f 2)
-SUMMARY=$(echo $FORECAST | cut -d ',' -f 6 | cut -d ':' -f 2 | sed s/\"//g)
+# Source weather functions
+. /usr/bin/jambulatv-weather-api
+# Updates
+UPDATES_AVAILABLE=None
 else
-CITY="cat /etc/timezone | cut -d / -f2"
+INTERNET_STATE=OFF
+TEMPERATURE_C=0
+CITY=$(cat /etc/timezone | cut -d / -f2)
+SUMMARY=Unknown
+UPDATES_AVAILABLE=Unknown
 fi
+
 #
 # Other variables
 # ---------------
+CPU_MODEL=$(cat /proc/cpuinfo | grep  'model name' | head -1 | cut -d : -f2 | sed 's:^ ::' | awk {'print $1FS$2'})
+CPU_SPEED=$(cat /proc/cpuinfo | grep  'cpu MHz' | head -1 | cut -d : -f2 | sed 's:^ ::' | cut -d . -f1)
 CPUTIME=$(ps -eo pcpu | awk 'NR>1' | awk '{tot=tot+$1} END {print tot}')
 CPUCORES=$(cat /proc/cpuinfo | grep -c processor)
 CPU_USED=$(echo $CPUTIME / $CPUCORES | bc)%
 DISK_AVAIL_ROOT=$(df -h / | awk '{ a = $4 } END { print a }')
 DISK_AVAIL_JAMBULA=$(df -h /JambulaTV | awk '{ a = $4 } END { print a }')
 DISK_TEMP=$(hddtemp | cut -d : -f3 | sed 's: ::g')
-DISK_1_SIZE=$(parted -l |grep 'Disk /' | head -1 | awk {'print $3'})
-
+DISK_ROOT=$(parted -l | grep Disk | head -1 | sed 's/://' | awk {'print $2FS$3'})
 
 RELEASE_FILE=/etc/JambulaTV/release
 PRODUCT=$(grep -i Product $RELEASE_FILE | cut -d : -f2)
@@ -71,8 +77,11 @@ echo -e "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 echo -e "\e[32;5;196m $HEADER"
 # Copyright
 echo -e "\e[32;5;196m\t©2015-$YEAR Jambula Labs All Rights Reserved."
-# Time
 echo -e ""
+# Internet
+echo -e "${n}Internet Status:${b} $INTERNET_STATE \t\t\t ${n}Updates:${b} $UPDATES_AVAILABLE"
+echo -e ""
+# Date
 echo -e "${n}Date:${b} $(date +'%A, %d %b %Y') \t\t ${n}Uptime:${b} $(uptime | awk {'print $3'} | sed 's/,//')" 
 # Weather
 echo -e "${n}Temperature in $CITY:${b} ${TEMPERATURE_C}\xc2\xb0C \t\t ${n}Weather: ${b}$SUMMARY"
@@ -82,15 +91,15 @@ echo -e "${n}Hostname:${b} $(hostname) \t ${n}Kernel:${b} $(uname -or)"
 echo -e "${n}Private IP Address:${b} $NETWORK_IP_ADDRESS \t ${n}Public IP address:${b} $PUBLIC_IP_ADDRESS"
 echo -e "${n}Private IP Gateway:${b} $NETWORK_GATEWAY_ADDRESS \t ${n}DNS Address:${b} $CURRENT_DNS1"
 # CPU
+echo -e "${n}CPU Model:${b} $CPU_MODEL \t\t\t ${n}CPU Speed:${b} $CPU_SPEED MHz"
 echo -e "${n}Average CPU Usage:${b} $CPU_USED \t\t\t ${n}CPU Load:${b} $(cat /proc/loadavg | cut -d' ' -f1-3)"
 # Disks
 echo -e "${n}Available Disk Space [/]:${b} $DISK_AVAIL_ROOT \t\t ${n}Disk Space [/JambulaTV]:${b} $DISK_AVAIL_JAMBULA"
-echo -e "${n}Root Disk Size:${b} $DISK_1_SIZE \t\t\t ${n}Disk Temp:${b} $DISK_TEMP"
+echo -e "${n}Primary Disk:${b} $DISK_ROOT \t\t ${n}Disk Temp:${b} $DISK_TEMP"
 # Memory
 echo -e "${n}Available Memory:${b} `cat /proc/meminfo | grep MemFree | awk {'print int($2/1000)'}` MB \t\t ${n}Total memory:${b} `cat /proc/meminfo | grep MemTotal | awk {'print int($2/1000)'}` MB"
 # Updates
 echo -e ""
-echo -e "${n}Available updates:${b} `if [[ ! -n "${up}" ]]; then echo "system up-to-date"; else echo $up; fi`\n"
 
 echo -e "\e[0m"
 
