@@ -5,7 +5,7 @@ n=`tput sgr0`
 # ***********
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
-NETWORK_GATEWAY_ADDRESS=$(ip route list | grep default | sed 's/^.*via //' | awk {'print $1'})
+NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route list | grep default | sed 's/^.*via //' | awk {'print $1'})
 # DNS Settings
 # *************
 # Current DNS 1
@@ -39,8 +39,8 @@ APIURL="https://api.forecast.io/forecast"
 LATITUDE="0.3136"
 LONGITUDE="32.5811"
 FORECAST=$(curl -s $APIURL/$APIKEY/$LATITUDE,$LONGITUDE?exclude=hourly,minutely,daily,alerts,flags)
-TEMPERATURE_F=$(echo $FORECAST | cut -d ',' -f 11 | cut -d ':' -f 2 | sed s/\"//g)F
-TEMPERATURE_C=$(printf %.1f $(echo "scale=2;(5/9)*($TEMPERATURE_F-32)" | bc))C
+TEMPERATURE_F=$(echo $FORECAST | cut -d ',' -f 11 | cut -d ':' -f 2 | sed s/\"//g)
+TEMPERATURE_C=$(printf %.1f $(echo "scale=2;(5/9)*($TEMPERATURE_F-32)" | bc))
 CITY=$(echo $FORECAST | cut -d ',' -f 3 | cut -d ':' -f 2 | sed s/\"//g | cut -d '/' -f 2)
 SUMMARY=$(echo $FORECAST | cut -d ',' -f 6 | cut -d ':' -f 2 | sed s/\"//g)
 else
@@ -52,38 +52,51 @@ fi
 CPUTIME=$(ps -eo pcpu | awk 'NR>1' | awk '{tot=tot+$1} END {print tot}')
 CPUCORES=$(cat /proc/cpuinfo | grep -c processor)
 CPU_USED=$(echo $CPUTIME / $CPUCORES | bc)%
-CPU_TEMP=$(echo)C
-DISK_USED=$(df / | awk '{ a = $5 } END { print a }')
+DISK_AVAIL_ROOT=$(df -h / | awk '{ a = $4 } END { print a }')
+DISK_AVAIL_JAMBULA=$(df -h /JambulaTV | awk '{ a = $4 } END { print a }')
 DISK_TEMP=$(hddtemp | cut -d : -f3 | sed 's: ::g')
+DISK_1_SIZE=$(parted -l |grep 'Disk /' | head -1 | awk {'print $3'})
 
 
 RELEASE_FILE=/etc/JambulaTV/release
 PRODUCT=$(grep -i Product $RELEASE_FILE | cut -d : -f2)
 VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
 HEADER=$(figlet $PRODUCT $VERSION)
+YEAR=$(date +%Y)
 
 echo -e "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 "
+# Header
 echo -e "\e[32;5;196m $HEADER"
-
+# Copyright
+echo -e "\e[32;5;196m\t©2015-$YEAR Jambula Labs All Rights Reserved."
+# Time
 echo -e ""
+echo -e "${n}Date:${b} $(date +'%A, %d %b %Y') \t\t ${n}Uptime:${b} $(uptime | awk {'print $3'} | sed 's/,//')" 
+# Weather
+echo -e "${n}Temperature in $CITY:${b} ${TEMPERATURE_C}\xc2\xb0C \t\t ${n}Weather: ${b}$SUMMARY"
+# Host
 echo -e "${n}Hostname:${b} $(hostname) \t ${n}Kernel:${b} $(uname -or)"
+# IP Addresses
 echo -e "${n}Private IP Address:${b} $NETWORK_IP_ADDRESS \t ${n}Public IP address:${b} $PUBLIC_IP_ADDRESS"
 echo -e "${n}Private IP Gateway:${b} $NETWORK_GATEWAY_ADDRESS \t ${n}DNS Address:${b} $CURRENT_DNS1"
-echo -e "${n}Uptime:${b} $(uptime | cut -d" " -f 4-7 | cut -d"," -f1-2) \t\t ${n}CPU Load:${b} $(cat /proc/loadavg | cut -d" " -f1-3)"
-echo -e "${n}CPU Used (Average):${b} $CPU_USED \t\t ${n}CPU Temp (Average):${b} $CPU_TEMP"
-echo -e "${n}Disk Used (Average):${b} $DISK_USED \t\t ${n}Disk Temp (Average):${b} $DISK_TEMP"
-echo -e "${n}Free Memory:${b} `cat /proc/meminfo | grep MemFree | awk {'print int($2/1000)'}` MB \t\t\t ${n}Total memory:${b} `cat /proc/meminfo | grep MemTotal | awk {'print int($2/1000)'}` MB"
-
-echo -e "${n}Temperature ($CITY):${b}$TEMPERATURE_C \t\t ${n}Weather: ${b}$SUMMARY"
+# CPU
+echo -e "${n}Average CPU Usage:${b} $CPU_USED \t\t\t ${n}CPU Load:${b} $(cat /proc/loadavg | cut -d' ' -f1-3)"
+# Disks
+echo -e "${n}Available Disk Space [/]:${b} $DISK_AVAIL_ROOT \t\t ${n}Disk Space [/JambulaTV]:${b} $DISK_AVAIL_JAMBULA"
+echo -e "${n}Root Disk Size:${b} $DISK_1_SIZE \t\t\t ${n}Disk Temp:${b} $DISK_TEMP"
+# Memory
+echo -e "${n}Available Memory:${b} `cat /proc/meminfo | grep MemFree | awk {'print int($2/1000)'}` MB \t\t ${n}Total memory:${b} `cat /proc/meminfo | grep MemTotal | awk {'print int($2/1000)'}` MB"
+# Updates
+echo -e ""
 echo -e "${n}Available updates:${b} `if [[ ! -n "${up}" ]]; then echo "system up-to-date"; else echo $up; fi`\n"
 
 echo -e "\e[0m"
 
+fortune -s
+echo -e ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 "
 #echo "Checking for system updates:"
 #while ps aux | grep -e [y]um > /dev/null; do echo -n .;sleep 1; done &
 #up=`yum -e0 -d0 check-update | awk '{print $1}'`
-
-
