@@ -2748,6 +2748,13 @@ cat > $PROJECT_RELEASE_FILE <<EOF
 Product:$PROJECT_NAME
 Version:$PROJECT_VERSION
 EOF
+# Change issue/issue.net files
+for ISSUEFILE in issue issue.net
+do
+cat > $CONFDIR/$ISSUEFILE <<EOF
+$(figlet $PROJECT_NAME $PROJECT_VERSION)
+EOF
+done
 }
 
 motd_configure () {

@@ -64,6 +64,7 @@ VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
 HEADER=$(figlet $PRODUCT $VERSION)
 YEAR=$(date +%Y)
 
+reset
 echo -e "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 "
 # Header

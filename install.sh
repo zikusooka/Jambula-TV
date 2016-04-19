@@ -292,6 +292,11 @@ owncloud_configure
 #openhab_install
 #openhab_configure
 
+# ------------------------
+# Notifications/ Messaging
+# ------------------------
+python_telegram_bot_install
+
 # ---------
 # Notices
 # ---------

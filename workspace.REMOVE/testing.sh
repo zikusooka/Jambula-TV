@@ -12,7 +12,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #  MAIN SCRIPT  #
 #################
 
-python_telegram_bot_install
+
 exit
 
 uninstall_freepbx
