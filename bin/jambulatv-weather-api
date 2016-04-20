@@ -1,0 +1,44 @@
+#!/bin/sh
+API=2
+
+# Functions
+# ----------
+weather_forecast_io () {
+# Forecast.io: https://developer.forecast.io/docs/v2
+# ---------------------------------------------------
+APIKEY=631f3b499aeb738a4e64a66d70d96395
+APIURL="https://api.forecast.io/forecast"
+# Kampala
+LATITUDE="0.3136"
+LONGITUDE="32.5811"
+FORECAST=$(curl -s $APIURL/$APIKEY/$LATITUDE,$LONGITUDE?exclude=hourly,minutely,daily,alerts,flags)
+TEMPERATURE_F=$(echo $FORECAST | cut -d ',' -f 11 | cut -d ':' -f 2 | sed s/\"//g)
+TEMPERATURE_C=$(printf %.1f $(echo "scale=2;(5/9)*($TEMPERATURE_F-32)" | bc))
+CITY=$(echo $FORECAST | cut -d ',' -f 3 | cut -d ':' -f 2 | sed s/\"//g | cut -d '/' -f 2)
+SUMMARY=$(echo $FORECAST | cut -d ',' -f 6 | cut -d ':' -f 2 | sed s/\"//g)
+}
+
+weather_openweathermap () {
+# OpenWeatherMap: api.openweathermap.org/data/2.5/weather
+# -------------------------------------------------------
+APIKEY="9141b00d5d6fcf3074a72efdb07d6135"
+APIURL="api.openweathermap.org/data/2.5/weather"
+CITY=$(cat /etc/timezone | cut -d / -f2)
+UNITS=metric
+FORECAST=$(curl -s $APIURL?q="$CITY&units=$UNITS&appid=$APIKEY")
+TEMPERATURE_C=$(echo $FORECAST | jq '.main' | grep temp | tail -1 | awk {'print $2'})
+SUMMARY=$(echo $FORECAST | jq '.weather' | grep description | cut -d : -f2 | sed 's:"::g' | sed 's:^ ::' | sed 's:,::g')
+}
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+case $API in
+1)
+weather_forecast_io
+;;
+2)
+weather_openweathermap
+;;
+esac
