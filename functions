@@ -2761,8 +2761,9 @@ motd_configure () {
 cat > $CONFDIR/cron.d/motd << EOF
 */3 * * * * root $BINARY_PREFIX/jambulatv-sysinfo > $CONFDIR/motd
 EOF
-# Copy jambulatv-sysinfo script, if it does not exist in bin directory
+# Copy jambulatv-sysinfo & weather-api scripts, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-sysinfo ] || cp -v $PROJECT_BIN_DIR/jambulatv-sysinfo $BINARY_PREFIX/
+[ -e $BINARY_PREFIX/jambulatv-weather-api ] || cp -v $PROJECT_BIN_DIR/jambulatv-weather-api $BINARY_PREFIX/
 # Remove ssh lastlog
 sed -i 's:#PrintLastLog yes:PrintLastLog no:' $CONFDIR/ssh/sshd_config
 }

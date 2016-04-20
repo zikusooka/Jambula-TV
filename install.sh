@@ -295,6 +295,7 @@ owncloud_configure
 # ------------------------
 # Notifications/ Messaging
 # ------------------------
+sleekxmpp_install 
 python_telegram_bot_install
 
 # ---------
