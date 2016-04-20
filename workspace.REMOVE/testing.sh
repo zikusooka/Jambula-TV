@@ -12,8 +12,6 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #  MAIN SCRIPT  #
 #################
 
-
-
 exit
 
 uninstall_freepbx
