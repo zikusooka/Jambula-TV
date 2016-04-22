@@ -256,7 +256,6 @@ NETWORK_MAC_ADDRESS=`ip addr show | grep ether | awk {'print $2'} | head -1`
 
 SYSTEM_UUID=$(uuid)
 SYSTEM_IDENTIFIER=$(echo $SYSTEM_UUID | cut -d - -f5)
-#SYSTEM_IDENTIFIER=`echo $NETWORK_MAC_ADDRESS | sed -e 's/://g'`
 
 SYSTEM_CPU_CORES=$(grep -i 'cpu cores' /proc/cpuinfo | sort -u | cut -d : -f2 | sed 's/ //g')
 
@@ -2747,6 +2746,8 @@ release_info_configure () {
 cat > $PROJECT_RELEASE_FILE <<EOF
 Product:$PROJECT_NAME
 Version:$PROJECT_VERSION
+
+Serial:jTV$SYSTEM_IDENTIFIER
 EOF
 # Change issue/issue.net files
 for ISSUEFILE in issue issue.net
