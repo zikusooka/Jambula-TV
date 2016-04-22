@@ -51,7 +51,20 @@ templates:
       smtp_username: '{{secrets.email.smtp_username}}'
       smtp_password: '{{secrets.email.smtp_password}}'
       smtp_tls: yes
-    
+ 
+    send_telegram:
+      bot_token: '{{secrets.telegram.bot_token}}'
+      parse_mode: markdown
+      recipients:
+        - username: '{{secrets.telegram.username}}'
+        #- fullname: 
+            #first: '{{secrets.telegram.first_name}}'
+            #sur: '{{secrets.telegram.sur_name}}'
+      template: |+
+        *[JambulaTV] The following {{task|replace("s", "(s)")}} have been queued for download:
+        
+        *{{title}}
+
 
 ##############
 #  Templates #
@@ -202,9 +215,15 @@ tasks:
     disable:
       - retry_failed
       - email
+      - send_telegram # Will send using jambulatv-telegram below
     metainfo_series: yes
     require_field: [series_name, series_id, series_season]
     accept_all: yes
+    seen: local
+    all_series:
+      parse_only: yes
+    parsing:
+      series: guessit
     filesystem:
       path: 
         - "/{{secrets.tv.series_completed_dir}}"
@@ -216,17 +235,36 @@ tasks:
     move:
       to: "/{{secrets.tv.series_jambulatv_dir}}/{{series_name}}/Season_{{'%02d'|format(series_season)}}"
       filename: "{{series_name}}.{{series_id}}.{{quality|upper}}"
-      #clean_source: 50
+      clean_source: 1
       along:
         - sub
         - srt
+    exec:
+      auto_escape: yes
+      on_start:
+    # Create dummy 50K file
+        phase: truncate -s 2M '/{{secrets.tv.series_completed_dir}}/DO.NOT.REMOVE.ME'
+      on_output:
+        # Send telegram message
+        for_accepted: 
+          - jambulatv-telegram sendmessage '{{secrets.telegram.bot_token}}' "[JambulaTV] The TV Series {{title}} was successfully downloaded. You may find it at {{url}}"
+    # 
+    # Scan kodi video library
+    kodi_library:
+      action: scan
+      category: video
+      url: '{{secrets.kodi.url}}'
+      port: 8510
+      #port: '{{secrets.kodi.port}}'
+      username: '{{secrets.kodi.username}}'
+      password: '{{secrets.kodi.password}}'
 
 
 ##############
 #  Scheduler #
 ##############
 schedules:
-  - tasks: [tv_shows]
+  - tasks: [tv_shows, move_tv_shows]
     schedule:
       day_of_week: '{{secrets.tv.day_of_week}}'
       hour: '{{secrets.tv.hour}}'      
@@ -246,7 +284,7 @@ schedules:
       month: '*'
       year: '*'
 
-  - tasks: [internet_tv]
+  - tasks: [internet_tv, move_tv_shows]
     schedule:
       day_of_week: '{{secrets.podcasts.day_of_week}}'
       hour: '{{secrets.podcasts.hour}}'
