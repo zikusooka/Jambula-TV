@@ -8,6 +8,7 @@ templates:
     regexp:
       reject:
         - (s|d)ub(s|bed)?\b: {from: title}   # subbed/dubbed/etc videos
+        #- dub(s|bed)?\b: {from: title}   # subbed/dubbed/etc videos
         - \b(duo|tri|quadri|tetra|penta)logy\b: {from: title}   # Series
         - \b3-?D\b: {from: title}   # 3D displays
         - \btrailer\b: {from: title}   # Trailers matched as movies
@@ -239,6 +240,7 @@ tasks:
       along:
         - sub
         - srt
+        - extrafanart
     exec:
       auto_escape: yes
       on_start:
@@ -247,7 +249,7 @@ tasks:
       on_output:
         # Send telegram message
         for_accepted: 
-          - jambulatv-telegram sendmessage '{{secrets.telegram.bot_token}}' "[JambulaTV] The TV Series {{title}} was successfully downloaded. You may find it at {{url}}"
+          - jambulatv-telegram sendmessage '{{secrets.telegram.bot_token}}' "[JambulaTV] The Series {{title}} was successfully downloaded. You may find it under 'TV Shows' on your JambulaTV. Enjoy!"
     # 
     # Scan kodi video library
     kodi_library:
@@ -284,7 +286,7 @@ schedules:
       month: '*'
       year: '*'
 
-  - tasks: [internet_tv, move_tv_shows]
+  - tasks: [internet_tv]
     schedule:
       day_of_week: '{{secrets.podcasts.day_of_week}}'
       hour: '{{secrets.podcasts.hour}}'
