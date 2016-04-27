@@ -29,10 +29,8 @@ tv:
   exists_series: TORRENTS_COMPLETED_DIRECTORY
   include: FLEXGET_CONFIG_DIR/tvseries.yml
   download: TORRENTS_WATCH_DIRECTORY
-
   series_completed_dir: JambulaTV/Torrents/completed
   series_jambulatv_dir: JambulaTV/Videos/TV_Shows
-
   day_of_week: sun,mon,tue,wed,thu,fri,sat
   hour: 2
   minute: 1
@@ -41,6 +39,8 @@ movies:
   path: PROJECT_PARTITION # Movies path for free space calculations
   exists_movie: TORRENTS_COMPLETED_DIRECTORY
   download: TORRENTS_WATCH_DIRECTORY
+  movies_completed_dir: JambulaTV/Torrents/completed
+  movies_jambulatv_dir: JambulaTV/Videos/Movies
   day_of_week: sun,mon,tue,wed,thu,fri,sat
   hour: 3
   minute: 5
