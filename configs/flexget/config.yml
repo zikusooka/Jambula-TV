@@ -7,44 +7,44 @@ templates:
   global:
     regexp:
       reject:
-        - (s|d)ub(s|bed)?\b: {from: title}   # subbed/dubbed/etc videos
-        #- dub(s|bed)?\b: {from: title}   # subbed/dubbed/etc videos
+        - \b(s|d)ub(s|bed)?\b: {from: title}   # subbed/dubbed/etc videos
         - \b(duo|tri|quadri|tetra|penta)logy\b: {from: title}   # Series
         - \b3-?D\b: {from: title}   # 3D displays
-        - \btrailer\b: {from: title}   # Trailers matched as movies
-        - \bR5\b: {from: title}   # Poor quality types
-        - \bWEBSCR\b: {from: title}   # Features like "720p"
+        - \btrailer\b: {from: title}   # Trailers
+        - \bR5\b: {from: title}   
+        - \bWEBSCR\b: {from: title}   
         - \bWEB-DL\b: {from: title}   
         - \bWEB\b: {from: title}   
         - \bscreener\b: {from: title}
         - \bTS\b: {from: title}
         - \bCam\b: {from: title}
-        - '{C_P}': {from: title}   # Poor quality releases
-        - TrTd TeaM: {from: title}
-        - \[TNTVillage\]: {from: title}
-        - \[facepalm\]: {from: title}
+        - \bTrTd TeaM\b: {from: title}
+        - \b\[TNTVillage\]\b: {from: title}
+        - \b\[facepalm\]\b: {from: title}
         - \bASAP\b: {from: title}
         - \bNL.Subs.DutchReleaseTeam\b: {from: title}
-        - FASTSUB: {from: title}
-        - VOSTFR: {from: title}
-        - Subtitulado: {from: title}
-        - \bNORDiC\b: {from: title}
-        - \biPad\b: {from: title}
-        - /\b(ita|ger|fra|spa|swe|nor|nordic|fr|kor|esp|nl|pl)\b/i: {from: title}
         - \bITA\b: {from: title}
         - \bR6\b: {from: title}
         - \bTemporada\b: {from: title}
-        - /\bDual\b/i: {from: title}
-        - /\bJapanese\b/i: {from: title}
-        - /\bFrench\b/i: {from: title}
-        - /\bGerman\b/i: {from: title}
-        - /\bHindi\b/i: {from: title}
-        - /\bSpanish\b/i: {from: title}
-        - /\bDutch\b/i: {from: title}
-        - /\bItalian\b/i: {from: title}
-        - /\bHDCAM\b/i: {from: title}
+        - \bNORDiC\b: {from: title}
+        - \biPad\b: {from: title}
         - \bSCR\b: {from: title}
-        - \MULTi: {from: title}
+        - \bMULTi\b: {from: title}
+        - \bFASTSUB\b: {from: title}
+        - \bVOSTFR\b: {from: title}
+        - \bSubtitulado\b: {from: title}
+        - '{C_P}': {from: title}   # Poor quality releases
+        - /\b(ita|ger|fra|spa|swe|nor|nordic|fr|kor|esp|nl|pl)\b/i: {from: title}
+        - /\bDual\b/i: {from: title}
+        - /\bJAPANESE\b/i: {from: title}
+        - /\bFRENCH\b/i: {from: title}
+        - /\bSWEDISH\b/i: {from: title}
+        - /\bGERMAN\b/i: {from: title}
+        - /\bHINDI\b/i: {from: title}
+        - /\bSPANISH\b/i: {from: title}
+        - /\bDUTCH\b/i: {from: title}
+        - /\bITALIAN\b/i: {from: title}
+        - /\bHDCAM\b/i: {from: title}
 
     #torrent_alive: yes # 10 # Require at least 40 seeds of any torrent
     content_filter:
@@ -130,16 +130,7 @@ templates:
   #--------
   movies:
     limit_new: 1
-    regexp:
-      reject:
-        - s\d+e\d+: {from: title}
-        - '\d{4}.\d{2}.\d{2}': {from: title}
-        - \d+x\d+: {from: title}
-    plugin_priority:
-      if: 173
-      proper_movies: 171
-
-# Filter based on IMDB score, rating, etc
+    # Filter based on IMDB score, rating, etc
     imdb_required: yes
     imdb:
       min_score: 8.0
@@ -167,7 +158,7 @@ templates:
         - torrentz: verified
     # 
     quality: 
-      - 480p+
+      - "h264 xvid"
       - "!dts !cam !10bit"
     content_size:
       max: 49900
