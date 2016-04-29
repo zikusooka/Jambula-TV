@@ -149,8 +149,21 @@ KODI_USER_ADDONS=$KODI_CONFIG_DIR/addons
 KODI_SYSTEM_DATA=$KODI_SHARE_DIR/userdata
 KODI_SYSTEM_ADDONS=$KODI_SHARE_DIR/addons
 KODI_SYSTEM_SYS=$KODI_SHARE_DIR/system
-ADDITIONAL_KODI_ADDONS="plugin.audio.jazzradio.com plugin.audio.npr plugin.audio.radio_de plugin.video.aljazeera plugin.video.cbsnews_com plugin.video.discovery_com plugin.video.diy plugin.video.espn_3 plugin.video.espn.video plugin.video.foodnetwork plugin.video.fox.news plugin.video.guardian plugin.video.itbn_org plugin.video.kidsplace plugin.video.npr plugin.video.revision3 plugin.video.rt plugin.video.techcrunch plugin.video.ted.talks plugin.video.twit plugin.video.world.news.live plugin.video.zoneminder rtorrent repository.superrepo.org.gotham.all script.commands script.doorbell script.facebook.media script.game.netwalk script.rss.editor script.service.alarmclock weather.metoffice weather.weatherchina weather.worldweatheronline weather.wunderground"
-
+# Kodi Addons
+# -----------
+# Repositories
+KODI_ADDONS_REPOSITORIES="repository.xbmc.org repository.metalkettle repository.xbmchub repository.podgod repository.Kinkin repo.natko1412"
+# Required
+KODI_ADDONS_REQUIRED="metadata.album.universal metadata.common.theaudiodb.com metadata.artists.universal script.module.simplejson service.library.data.provider metadata.artists.universal metadata.common.allmusic.com metadata.common.fanart.tv metadata.common.htbackdrops.com metadata.common.imdb.com metadata.common.musicbrainz.org metadata.common.themoviedb.org metadata.themoviedb.org metadata.tvdb.com plugin.program.rtorrent script.module.addon.signals script.module.beautifulsoup script.module.requests script.module.youtube.dl service.xbmc.versioncheck plugin.video.youtube script.common.plugin.cache script.module.addon.common script.module.beautifulsoup4 script.module.httplib2 script.module.liveresolver script.module.mechanize script.module.parsedom script.module.simple.downloader script.module.urlresolver"
+# Live TV
+KODI_ADDONS_LIVETV="plugin.video.livemix plugin.video.footballhighlightssubreddit plugin.video.uktvnow plugin.video.ukturk plugin.video.ustvnow.tva plugin.video.phstreams plugin.video.ccloudtv plugin.video.channelpear plugin.video.F.T.V"
+# Sports
+KODI_ADDONS_SPORTS="plugin.video.castaway plugin.video.prosport plugin.video.sportsmix plugin.video.SportsDevil-livestreamer"
+# Jambula Custom
+KODI_ADDONS_JAMBULA="script.doorbell"
+# Miscellaneous
+KODI_ADDONS_MISC="service.nextup.notification weather.openweathermap.extended"
+#
 X11_DRIVER="" # intel|nouveau|mga|openchrome
 INTEL_X11_DRIVER_VERSION=git
 NOUVEAU_X11_DRIVER_VERSION=git
@@ -2211,10 +2224,15 @@ make install
 }
 
 kodi_addons_install() {
-# Others - zipped
-for KODI_ADDON in $ADDITIONAL_KODI_ADDONS;
+for KODI_ADDON in \
+$KODI_ADDONS_REPOSITORIES \
+$KODI_ADDONS_REQUIRED \
+$KODI_ADDONS_LIVETV \
+$KODI_ADDONS_SPORTS \
+$KODI_ADDONS_JAMBULA \
+$KODI_ADDONS_MISC;
 do
-unzip -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
+unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
 done
 }
 
@@ -2288,6 +2306,7 @@ for SKIN_ADDON in \
 context.cinemavision \
 script.cinemavision \
 script.aeonmq6.extrapack \
+resource.uisounds.aeonmq6 \
 skin.aeonmq6
 do
 unzip -d $KODI_SYSTEM_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
