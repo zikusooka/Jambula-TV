@@ -75,6 +75,25 @@ uninstall_src_pkgs tvheadend
 tvheadend_install
 }
 
+upgrade_freepbx () {
+uninstall_freepbx
+freepbx_preinstall
+freepbx_install
+freepbx_configure
+freepbx_modules
+}
+
+upgrade_asterisk () {
+#download_asterisk_deps
+uninstall_asterisk
+uninstall_dahdi
+uninstall_libpri
+dahdi_install
+libpri_install
+asterisk_install 
+asterisk_configure 
+upgrade_freepbx
+}
 
 
 #################
@@ -98,3 +117,7 @@ tvheadend_install
 #upgrade_hostapd
 
 #upgrade_tvheadend
+
+#upgrade_freepbx
+
+#upgrade_asterisk

@@ -10,6 +10,7 @@ AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print 
 AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/jambulatv*"
 MULTIMEDIA_USER=$AUTOLOGIN_USER
 MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
+BACKUPS_DIR=$ROOT_DIR/Backups
 #
 # System directories
 PREFIX=/usr
@@ -600,6 +601,48 @@ ping -c 3 -W 3 $REMOTE_HOST_NAME > /dev/null 2>&1
 INTERNET_STATUS_VAL=$?
 }
 
+download_asterisk_deps () {
+# Download updated asterisk sounds
+# ---------------------------------
+# Check Internet connectivity
+check_internet_connectivity_ping 
+if [ "$INTERNET_STATUS_VAL" != "0" ];
+then
+clear
+echo "You are not connected to the Internet.  Sorry, I can not proceed.
+"
+exit 0
+fi
+#
+# Make temporary backup folder
+[ ! -d $TMPDIR/asterisk_deps ] || rm -rf $TMPDIR/asterisk_deps
+mkdir $TMPDIR/asterisk_deps
+# Change to output directory
+cd $TMPDIR/asterisk_deps
+# Dahdi
+wget -c http://downloads.asterisk.org/pub/telephony/dahdi-linux-complete/dahdi-linux-complete-current.tar.gz
+# Libpri
+wget -c http://downloads.asterisk.org/pub/telephony/libpri/libpri-current.tar.gz
+# Asterisk core
+wget -c http://downloads.asterisk.org/pub/telephony/asterisk/asterisk-11-current.tar.gz
+# Asterisk Sounds
+for CODEC in wav ulaw alaw gsm;
+do
+# Sounds Core
+wget -c http://downloads.asterisk.org/pub/telephony/sounds/asterisk-core-sounds-en-$CODEC-current.tar.gz
+# Sounds Extra
+wget -c http://downloads.asterisk.org/pub/telephony/sounds/asterisk-extra-sounds-en-$CODEC-current.tar.gz
+# Sounds MOH
+wget -c http://downloads.asterisk.org/pub/telephony/sounds/asterisk-moh-opsound-$CODEC-current.tar.gz
+done
+#
+# Move files to source tarballs directory
+mv -v $TMPDIR/asterisk_deps/* $PROJECT_TARBALLS_DIR
+#
+echo "Update completed. All asterisk dependencies have been moved to [$PROJECT_TARBALLS_DIR]"
+exit
+}
+
 download_flexget_deps () {
 # Download fresh and updated flexget dependencies
 # ------------------------------------------------
@@ -881,12 +924,25 @@ done
 uninstall_asterisk () {
 # Stop running asterisk
 systemctl stop asterisk || kill -9 $(ps auxw | grep asterisk | awk {'print $2'})
+# Backup sqlite database - contains CallerID lookups etc..
+mv -v $VARLIBDIR/asterisk/astdb.sqlite3 /$BACKUPS_DIR
 # Make build directory
 cd $INSTALL_SRC_DIR/asterisk 
 # Uninstall
 make uninstall-all
 # Remove source directories
 rm -rf $INSTALL_SRC_DIR/asterisk $LIBDIR/asterisk $INCDIR/asterisk.h
+# See if other process like www i.e. nginx are running under user asterisk - remove and restart
+# nginx
+sed -i "s:user  $ASTERISK_FILES_USER $ASTERISK_FILES_GROUP;:user  nginx;:g" $NGINX_CONF_DIR/nginx.conf
+# php-fpm
+sed -i "s:user = $ASTERISK_FILES_USER:user = nginx:g" $CONFDIR/php-fpm.d/www.conf
+sed -i "s:group = $ASTERISK_FILES_GROUP:group = nginx:g" $CONFDIR/php-fpm.d/www.conf
+# Restart nginx
+systemctl restart nginx.service
+# Restart php-fpm
+systemctl restart php-fpm.service
+#
 # Remove asterisk user/group
 groupdel asterisk
 userdel -r asterisk
@@ -894,6 +950,7 @@ userdel -r asterisk
 rm -f $SYSTEMD_UNITS_DIR_SYSTEM/asterisk.service $SYSTEMD_UNITS_DIR_USER/asterisk.service
 systemctl --system daemon-reload
 # Backup and remove project configs directory
+[ -d $ASTERISK_CONF_DIR ] && \
 mv -v $ASTERISK_CONF_DIR $ASTERISK_CONF_DIR-$ASTERISK_VERSION-backup
 # Drop asterisk database - CAUTION: Take care - CDR/FreePBX data is there!!!
 mysqladmin -p$MYSQL_ROOT_PASSWORD drop $ASTERISK_DB_NAME
@@ -903,6 +960,11 @@ mysqladmin -p$MYSQL_ROOT_PASSWORD drop $ASTERISK_DB_NAME
 uninstall_dahdi () {
 uninstall_src_pkgs dahdi-linux-complete
 uninstall_src_pkgs dahdi
+}
+
+# Uninstall libpri
+uninstall_libpri () {
+uninstall_src_pkgs libpri
 }
 
 # Uninstall freepbx
@@ -1068,6 +1130,8 @@ install_dir_create () {
 [ -d $INSTALL_SRC_DIR ] || mkdir -p $INSTALL_SRC_DIR
 # create project configuration directory
 [ -d $PROJECT_SYSTEM_CONF_DIR ] || mkdir -p $PROJECT_SYSTEM_CONF_DIR
+# create backups directory
+[ -d $BACKUPS_DIR ] || mkdir -p $BACKUPS_DIR
 }
 
 ssl_cert_key_generate () {
@@ -4710,14 +4774,14 @@ useradd -r -M -c "Asterisk PBX User" -g asterisk asterisk -s /sbin/nologin
 
 asterisk_configure () {
 # Set ownership/permissions on asterisk directories
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $ASTERISK_CONF_DIR
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $VARLIBDIR/asterisk
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/run/asterisk
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/spool/asterisk/
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/log/asterisk
 # Set permissions on asterisk directories
-chmod -R 764 $ASTERISK_CONF_DIR
 chmod -R 764 $CONFDIR/asterisk
+chmod -R 764 $VARLIBDIR/asterisk
 chmod -R 764 $STATEDIR/run/asterisk
 chmod -R 764 $STATEDIR/spool/asterisk/
 chmod -R 764 $STATEDIR/log/asterisk
@@ -4818,6 +4882,10 @@ done
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/jssip/ $WWW_HTML_DIR/jssip/
 # Change permissions of sipml5 to www owner
 chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/jssip
+#
+# Set ownership/permissions on asterisk custom directory
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $ASTERISK_CONF_DIR
+chmod -R 764 $ASTERISK_CONF_DIR
 }
 
 chan_dongle_install () {
@@ -4881,6 +4949,9 @@ chan_dongle_configure () {
 cp -v $PROJECT_CONFIGS_DIR/asterisk/dongle.conf $ASTERISK_CONF_DIR/dongle.conf
 # Include dongle.conf file
 echo "#include /etc/JambulaTV/asterisk/dongle.conf" > $CONFDIR/asterisk/dongle.conf
+# Set ownership/permissions on asterisk custom directory
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $ASTERISK_CONF_DIR
+chmod -R 764 $ASTERISK_CONF_DIR
 }
 
 chan_motif_configure () {
@@ -4926,7 +4997,7 @@ chmod 755 $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 
 freepbx_preinstall () {
 # Remove/backup old asterisk config files
-[ -d $CONFDIR/asterisk ] && mv -v $CONFDIR/asterisk $CONFDIR/asterisk.nofreepbx
+[ -d $CONFDIR/asterisk ] && mv -v $CONFDIR/asterisk $CONFDIR/asterisk.nofreepbx.$(date +%I%M)
 [ -d $FREEPBX_CONF_DIR ] && mv -v $FREEPBX_CONF_DIR $FREEPBX_CONF_DIR.nofreepbx
 [ -d $ASTERISK_CONF_DIR ] && mv -v $ASTERISK_CONF_DIR $ASTERISK_CONF_DIR.nofreepbx
 #
@@ -4974,6 +5045,9 @@ cp -v -f $PROJECT_CONFIGS_DIR/asterisk/manager.conf $CONFDIR/asterisk
 # Make manager.conf accessible - retrieve_conf needs this
 chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk/manager.conf
 #
+# Set ownership/permissions on asterisk /var/lib directories - AST Start fails if not set
+chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $VARLIBDIR/asterisk
+chmod -R 764 $VARLIBDIR/asterisk
 # Restart asterisk service
 systemctl restart asterisk.service
 # Wait for Asterisk to start fully
