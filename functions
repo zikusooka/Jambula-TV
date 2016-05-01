@@ -7,7 +7,7 @@ KERNEL_VERSION="4.1.15"
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
-AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/jambulatv*"
+AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*"
 MULTIMEDIA_USER=$AUTOLOGIN_USER
 MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
 BACKUPS_DIR=$ROOT_DIR/Backups
@@ -194,8 +194,6 @@ RYGEL_VERSION=0.19.4
 HEYU_VERSION=2.11-rc1
 LIBDBI_VERSION=0.9.0
 ICINGA1_VERSION=1.9.3
-ICINGA2_TAG=v2.3.11
-ICINGAWEB2_TAG=v2.0.0
 NAGIOS_PLUGINS_VERSION=1.4.16
 MINISAPSERVER_VERSION=0.3.8
 DNS2TCP_VERSION=0.5.2
@@ -293,8 +291,8 @@ NGINX_CONFD_DIR=$NGINX_CONF_DIR/conf.d
 
 RPMBUILD_DIR=$TMPDIR/rpmbuild
 
-WWW_USER=nginx
-WWW_GROUP=nginx
+WWW_USER=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $2'})
+WWW_GROUP=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $3'} | sed 's:;::')
 WWW_HTML_DIR=$PROJECT_SYSTEM_SHARE_DIR/html
 WWW_CGI_DIR=$PROJECT_SYSTEM_SHARE_DIR/cgi-bin
 
@@ -844,11 +842,17 @@ ICINGA2_PREVIOUS_VERSION=$(icinga2 --version | head -1 | cut -d : -f2 | sed 's: 
 systemctl stop icinga2.service
 # disable service
 systemctl disable icinga2.service
+# Remove icinga systemd file
+[ -f $SYSTEMD_UNITS_DIR_USER/icinga2.service ] && \
+	rm -f $SYSTEMD_UNITS_DIR_USER/icinga2.service
 # Drop MySQL DB
 mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $ICINGA_DB_NAME
 # Remove user and groups
 groupdel $ICINGA_CMD_GROUP
 userdel -r $ICINGA_USER
+# Remove sudoers file
+[ -f $SUDOERS_DIR/icinga ] && \
+	rm -f $SUDOERS_DIR/icinga
 # /etc
 mv -v $CONFDIR/icinga2 $CONFDIR/icinga2.$ICINGA2_PREVIOUS_VERSION
 rm -f $CONFDIR/rc.d/rc{0,1,2,3,4,5,6}.d/*icinga2
@@ -882,6 +886,8 @@ groupdel $ICINGA2_WEB_GROUP
 mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $ICINGAWEB2_DB_NAME
 # Remove icingaweb2 html/source files
 rm -rf $WWW_HTML_DIR/icingaweb2/
+[ -f $NGINX_CONF_DIR/sites-enabled/icingaweb2 ] &&
+	rm -f $NGINX_CONF_DIR/sites-enabled/icingaweb2
 }
 
 uninstall_zoneminder () {
@@ -5812,6 +5818,8 @@ icinga2_install () {
 # ----------------------------------------
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/icinga2
+# Get latest icinga2 tag
+ICINGA2_TAG=$(git tag -l | sort -u | tail -1)
 # Unpack desired git branch/tag
 case $ICINGA2_TAG in
 master)
@@ -5845,14 +5853,18 @@ cd $INSTALL_SRC_DIR/icinga2
 # Build
 mkdir $INSTALL_SRC_DIR/icinga2/build
 cd $INSTALL_SRC_DIR/icinga2/build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX -DUSE_SYSTEMD=ON \
-   -DICINGA2_PLUGINDIR=$MONITORING_PLUGINS_DIR -DICINGA2_WITH_PGSQL=OFF \
-   -DICINGA2_SYSCONFIGFILE=$CONFDIR/sysconfig/icinga2 \
-   -DCMAKE_INSTALL_SYSCONFDIR=$CONFDIR -DCMAKE_INSTALL_LOCALSTATEDIR=$STATEDIR \
-   -DICINGA2_USER=$ICINGA_USER -DICINGA2_GROUP=$ICINGA_GROUP \
-   -DICINGA2_COMMAND_GROUP=$ICINGA_CMD_GROUP
+# Make
+cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_SYSCONFDIR=$CONFDIR -DCMAKE_INSTALL_LOCALSTATEDIR=$STATEDIR -DICINGA2_USER=$ICINGA_USER -DICINGA2_GROUP=$ICINGA_GROUP -DICINGA2_GIT_VERSION_INFO=OFF -DICINGA2_COMMAND_GROUP=$ICINGA_CMD_GROUP -DICINGA2_PLUGINDIR=$MONITORING_PLUGINS_DIR -DICINGA2_RUNDIR=$RUNDIR -DICINGA2_SYSCONFIGFILE=$SYSCONFIG_DIR/icinga2 -DICINGA2_WITH_MYSQL=ON -DICINGA2_WITH_PGSQL=OFF -DICINGA2_WITH_TESTS=OFF -DUSE_SYSTEMD=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=FALSE
 make 
 make install
+#
+# BUG?
+# Move /usr/etc/icinga2 /etc/icinga2
+rsync -avz $PREFIX/etc/icinga2/ $ICINGA2_CONFIG_DIR/
+rm -rf $PREFIX/etc/icinga2
+# Move logrotate
+rsync -avz $PREFIX/etc/logrotate.d/ $CONFDIR/logrotate.d/
+rm -rf $PREFIX/etc/logrotate.d
 #
 # Create icinga group
 groupadd $ICINGA_CMD_GROUP
@@ -5974,6 +5986,9 @@ icingaweb2_install () {
 # -------------------------------------------
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/icingaweb2
+# Get latest icinga2 tag
+ICINGAWEB2_TAG=$(git tag -l | sort -u | tail -1)
+#
 # Unpack desired git branch/tag
 case $ICINGAWEB2_TAG in
 master)
@@ -6142,8 +6157,10 @@ EOF
 [ -d $WWW_HTML_DIR/icingaweb2/doc/icinga2 ] || mkdir $WWW_HTML_DIR/icingaweb2/doc/icinga2
 rsync -av $PROJECT_GITHUB_DIR/icinga2/doc $WWW_HTML_DIR/icingaweb2/doc/icinga2/doc/
 #
-# Change directory permissions to allow web user
+# Change directory owner/group to allow web user
 chown -R $ICINGA2_WEB_USER:$ICINGA2_WEB_GROUP $ICINGA2_WEB_CONFIG_DIR
+# Make symlinks to modules accessible
+chmod -R 777 $ICINGA2_WEB_CONFIG_DIR/enabledModules
 #
 # Create Icingaweb2 Admin User in MySQL database
 echo "INSERT INTO icingaweb_user (name, active, password_hash, ctime) VALUES ('$ICINGAWEB2_ADMIN_USER', '1', '$ICINGAWEB2_ADMIN_PASS_HASH', NOW());" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
@@ -6159,7 +6176,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 IcingaWeb2
 ==========
 % I have automagically setup icingaweb2 for you. To access, open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i icingaweb2 $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$PROJECT_NAME:$(grep -i icingaweb2 $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 username            = "$ICINGAWEB2_ADMIN_USER"
 password            = "$ICINGAWEB2_ADMIN_PASS"
