@@ -46,7 +46,6 @@ templates:
         - /\bITALIAN\b/i: {from: title}
         - /\bHDCAM\b/i: {from: title}
 
-    #torrent_alive: yes # 10 # Require at least 40 seeds of any torrent
     content_filter:
       require:
         - '*.avi'
@@ -105,7 +104,7 @@ templates:
     series:
       settings:
         group 1:
-          quality: "h264 xvid"
+          quality: "h264 xvid !720p"
           propers: no 
           identified_by: ep
           tracking: backfill
@@ -130,6 +129,8 @@ templates:
   #--------
   movies:
     limit_new: 1
+    seen_movies:
+      matching: strict
     # Filter based on IMDB score, rating, etc
     imdb_required: yes
     imdb:
@@ -275,7 +276,7 @@ tasks:
         - dirs
       regexp: '.*\.(avi|mkv|mp4|m4v|iso)$' 
     move:
-      to: "/{{secrets.tv.series_jambulatv_dir}}/{{series_name}}/Season_{{'%02d'|format(series_season)}}"
+      to: "/{{secrets.tv.series_jambulatv_dir}}/{{series_name|replace(' ', '_')}}/Season_{{'%02d'|format(series_season)}}"
       filename: "{{series_name}}.{{series_id}}.{{quality|upper}}"
       clean_source: 2
       along:
