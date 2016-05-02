@@ -18,6 +18,9 @@ TELEGRAM_API_BOT=""
 
 # Generate 'On-Download-X' Scripts
 # ---------------------------------
+# Remove existing Aria2c download script
+[ -f $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT ] && sudo rm -f $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT
+#
 # Generate On-Download-Complete Script
 cat > $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT << EOF
 #!/bin/sh
