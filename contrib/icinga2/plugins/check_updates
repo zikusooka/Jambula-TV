@@ -1,0 +1,48 @@
+#!/bin/sh
+# This plugin will monitor systemd and report any failed units
+# 
+# NOTE: You need to have your icinga environment properly setup
+#
+# Copyright (C) 2016-2017 Joseph Zikusooka.
+#
+# Contact me at: joseph AT zikusooka.com
+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+REMOTE_VERSION=$(git ls-remote -t ssh://root@git.jambulatv.com:222/home/jambula/JambulaTV.git | grep -v '\^{}$' | awk {'print $2'} | cut -d / -f3 | sort -u | tail -1)
+RELEASE_FILE=/etc/JambulaTV/release
+LOCAL_VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
+
+
+
+# Check if Internet connection is up
+host -W 1 google.com 8.8.8.8 > /dev/null 2>&1
+INTERNET_ALIVE=$?
+# Quit if No connection
+[ "$INTERNET_ALIVE" = "0" ] || exit 1
+
+# Compare local with remote version 
+if [ $LOCAL_VERSION = $REMOTE_VERSION ] || [ "x$REMOTE_VERSION" = "x" ];
+then
+# No Updates Available
+echo "Up to Date"
+exit 0
+
+else
+echo "Update Available: $REMOTE_VERSION"
+exit 2
+
+fi

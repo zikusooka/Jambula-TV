@@ -6135,7 +6135,7 @@ cat > $ICINGA2_WEB_CONFIG_DIR/modules/monitoring/config.ini <<EOF
 protected_customvars = "*pw*,*pass*,community"
 EOF
 # instances.ini
-cat > $ICINGA2_WEB_CONFIG_DIR/modules/monitoring/ommandtransports.ini <<EOF
+cat > $ICINGA2_WEB_CONFIG_DIR/modules/monitoring/commandtransports.ini <<EOF
 [icinga2]
 transport           = "local"
 path                = "$RUNDIR/icinga2/cmd/icinga2.cmd"
