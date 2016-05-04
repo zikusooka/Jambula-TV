@@ -44,6 +44,7 @@ templates:
         - /\bSPANISH\b/i: {from: title}
         - /\bDUTCH\b/i: {from: title}
         - /\bITALIAN\b/i: {from: title}
+        - /\bLATIN\b/i: {from: title}
         - /\bHDCAM\b/i: {from: title}
 
     content_filter:
@@ -278,7 +279,7 @@ tasks:
     move:
       to: "/{{secrets.tv.series_jambulatv_dir}}/{{series_name|replace(' ', '_')}}/Season_{{'%02d'|format(series_season)}}"
       filename: "{{series_name}}.{{series_id}}.{{quality|upper}}"
-      clean_source: 2
+      clean_source: 5
       along:
         - sub
         - srt
@@ -286,8 +287,8 @@ tasks:
     exec:
       auto_escape: yes
       on_start:
-    # Create dummy 3M file
-        phase: truncate -s 3M '/{{secrets.tv.series_completed_dir}}/DO.NOT.REMOVE.ME'
+    # Create dummy 6M file
+        phase: truncate -s 6M '/{{secrets.tv.series_completed_dir}}/DO.NOT.REMOVE.ME'
       on_output:
         # Send telegram message
         for_accepted: 
