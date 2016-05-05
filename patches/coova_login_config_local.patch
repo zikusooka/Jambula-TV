@@ -1,5 +1,5 @@
 --- /usr/src/jambulatv/coova-chilli/miniportal/config-local.sh	2015-11-22 08:57:46.247269748 +0300
-+++ config-local.sh	2016-01-09 17:07:06.936012549 +0300
++++ /usr/share/JambulaTV/html/coova/www/config-local.sh	2016-05-05 14:05:03.217810869 +0300
 @@ -23,8 +23,8 @@
  COOVA_SESSIONID=$CHI_SESSION_ID
  COOVA_CHALLENGE=$CHI_CHALLENGE
@@ -11,7 +11,7 @@
  http_redirect2() {
  cat <<EOF
  HTTP/1.1 302 Redirect
-@@ -96,7 +96,72 @@
+@@ -96,7 +96,73 @@
  
      echo "<table style=\"clear:both;margin:auto;padding-top:10px;\" height=\"30\">
  <tr><td valign=\"center\" align=\"center\" style=\"color:#666;font-size:60%;\">Powered by</td>
@@ -46,6 +46,7 @@
 +		USER_AGENT="Other"
 +		;;
 +	esac	
++		# Copy detected UA string to temp file 
 +		echo "$USER_AGENT" > /tmp/chilli_uagent
 +done
 +# Set detected device variable
@@ -85,7 +86,7 @@
  </td></tr></table></body></html>"
  }
  
-@@ -212,11 +277,18 @@
+@@ -212,11 +278,18 @@
      (uamfile "$file" 0
  	echo
  	echo "-------------------------------------------------"

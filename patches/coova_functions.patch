@@ -1,11 +1,11 @@
 --- /usr/src/jambulatv/coova-chilli/conf/functions	2015-11-22 08:57:45.934250154 +0300
-+++ /etc/chilli/functions	2016-03-21 12:33:09.627749453 +0300
++++ /etc/chilli/functions	2016-05-05 16:32:14.575879081 +0300
 @@ -54,7 +54,7 @@
  HS_PAP_OK=${HS_PAP_OK:-on}
  HS_DNS1=${HS_DNS1:-$HS_DNS}
  HS_DNS1=${HS_DNS1:-$(grep '^nameserver' /etc/resolv.conf | head -n1 | awk '{print $2}')}
 -HS_WANIF=${HS_WANIF:-$(route -n|grep '^0.0.0.0'|head -n1|awk '{print $8}')}
-+HS_WANIF=$(ip route list | grep default | sed -n 's/^.*dev //p' | awk {'print $1'})
++#HS_WANIF=$(ip route list | grep default | sed -n 's/^.*dev //p' | awk {'print $1'})
  
  bailout() { echo $1; exit; }
  

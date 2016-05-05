@@ -11,6 +11,4 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #################
 #  MAIN SCRIPT  #
 #################
-# Modify chilli config file: UAM, radius passwords, etc...
-# *******************************************************
 

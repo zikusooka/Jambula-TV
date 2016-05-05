@@ -1,5 +1,5 @@
 --- /usr/src/jambulatv/coova-chilli/miniportal/login.chi	2015-11-22 08:57:46.119261735 +0300
-+++ /usr/share/JambulaTV/html/coova/www/login.chi	2016-05-04 11:31:42.583468351 +0300
++++ /usr/share/JambulaTV/html/coova/www/login.chi	2016-05-05 14:15:38.508962795 +0300
 @@ -14,35 +14,50 @@
  # You should have received a copy of the GNU General Public License
  # along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -9,7 +9,7 @@
  . ./config.sh
  
 +# Detect device platform
-+#jambula_detect_device
++jambula_detect_device
 +
 +# Check challenge
  if [ -n "$FORM_username" -a -n "$COOVA_CHALLENGE" ]

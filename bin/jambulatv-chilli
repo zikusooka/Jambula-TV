@@ -66,7 +66,8 @@ if [ "$INTERNET_STATUS" = "0" ];
 then
 INTERNET_GATEWAY_DEV=$(ip route list | grep default | sed -n 's/^.*dev //p' | awk {'print $1'})
 else
-INTERNET_GATEWAY_DEV=
+# Set to ethernet device - leaving it blank causes errors in coova up.sh scipt
+INTERNET_GATEWAY_DEV=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 fi
 #
 # Get previous HS_WANIF variable
@@ -104,13 +105,12 @@ else
 # Set chilli domains local feature to ON since internet off
 sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=on:g" $COOVA_CONFIG_FILE 
 #
-# Set chilli DNS servers to primary local & secondary foreign  domain name servers
+# Set chilli DNS servers to primary/local domain name servers
 sed -i "s:HS_DNS1=$PREVIOUS_HS_DNS1:HS_DNS1=$PRIMARY_DNS_SERVER:g" $COOVA_CONFIG_FILE
-sed -i "s:HS_DNS2=$PREVIOUS_HS_DNS2:HS_DNS2=$SECONDARY_DNS_SERVER:g" $COOVA_CONFIG_FILE
+sed -i "s:HS_DNS2=$PREVIOUS_HS_DNS2:HS_DNS2=$PRIMARY_DNS_SERVER:g" $COOVA_CONFIG_FILE
 #
 fi
 }
-
 
 # Default chilli functions
 # ------------------------
