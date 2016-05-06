@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-template=$(cat <<TEMPLATE
-$SERVICEOUTPUT
 
-TEMPLATE
-)
+/usr/bin/jambulatv-osd -m "$OSDMESSAGE"
 
-/usr/bin/jambulatv-osd -m "$template"
+# DEBUG:
+#echo "$(date): $SERVICEDISPLAYNAME
+#--------------------------------------
+
+#/usr/bin/jambulatv-osd -m \"$OSDMESSAGE\"
+#" >> /tmp/osd_messages
