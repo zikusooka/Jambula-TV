@@ -10,6 +10,7 @@ DATE_TODAY_UMEME_FORMAT=$(date +'%A,%d')
 DATE_AFTER_TOMORROW_DAY_FORMAT=$(date --date='2 day' +'%A')
 DATE_TOMORROW_DAY_FORMAT=$(date --date='1 day' +'%A')
 
+TERM=xterm
 OSD_CMD="/usr/bin/jambulatv-osd"
 OSD_CMD_OPTS="-m"
 
