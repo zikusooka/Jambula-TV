@@ -6,8 +6,12 @@ SERIAL=$(grep -i Serial $RELEASE_FILE | cut -d : -f2)
 HEADER=$(figlet $PRODUCT $VERSION)
 YEAR=$(date +%Y)
 KERNEL=$(uname -r)
-b=`tput bold`
-n=`tput sgr0`
+# TTY
+if tty -s
+then
+b=$(tput bold)
+n=$(tput sgr0)
+fi
 # IP Settings
 # ***********
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
@@ -97,7 +101,6 @@ MEMORY_SIZE_B1=$(/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:1 | grep size
 MEMORY_AVAIL=$(free -m | grep Mem: | awk {'print $4'})
 
 
-reset
 # Top Border
 #echo -e "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #"
