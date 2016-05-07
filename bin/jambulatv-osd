@@ -10,29 +10,51 @@ import argparse
 import os
 import commands
 import warnings
+import time
 import xml.etree.ElementTree as ET
 
-
 # Variables
-JAMBULATV_VIRTUAL_TERMINAL = 'tty2'
+JAMBULATV_VIRTUAL_TERMINAL = 'tty7'
 KODI_GUI_SETTINGS = '/JambulaTV/.kodi/userdata/guisettings.xml'
-TIME = 15000  # ms
+TIME = 20000  # ms
 ICON = '/usr/share/kodi/addons/Aeon-Nox/media/DefaultIconInfo.png'
+OSDRUNFILE = '/tmp/osd_process_running' 
 
 # Copyright
-__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2015-2016 All rights reserved'
+__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2016-2017 All rights reserved'
 
 
+# Functions
+# ---------
+#
 # Quit if active screen console is not running kodi
-status, active_virtual_terminal = commands.getstatusoutput("cat /sys/class/tty/tty0/active")
-if active_virtual_terminal != (JAMBULATV_VIRTUAL_TERMINAL):
-  sys.exit("Error: JambulaTV is not running on active terminal");
+def quit_if_screen_not_running ():
+	status, active_virtual_terminal = commands.getstatusoutput("cat /sys/class/tty/tty0/active")
+	if active_virtual_terminal != (JAMBULATV_VIRTUAL_TERMINAL):
+  	   sys.exit("Error: JambulaTV is not running on active terminal")
+
+# Wait to run this script if already running
+def wait_if_already_running ():
+	while os.path.exists(OSDRUNFILE):
+	   print "Another OSD process is running, please wait ..."
+	   time.sleep(3)
+
+# Open, write, close a temporary file to prevent others from calling this script until done
+def create_run_file ():
+	processfile = open(OSDRUNFILE, 'w')
+	processfile.write('')
+	processfile.close()
 
 
 #################
 #  MAIN SCRIPT  #
 #################
 #
+# Pre process tasks
+quit_if_screen_not_running();
+wait_if_already_running();
+create_run_file();
+
 # Get Kodi web server variables
 tree = ET.parse(KODI_GUI_SETTINGS)
 root = tree.getroot()
@@ -94,3 +116,7 @@ xbmc_poke_screen(xbmc_host)
 
 # Display message on screen
 xbmc_osd_message(xbmc_host)
+
+# Remove run file created earlier to prevent others from using me
+os.remove(OSDRUNFILE);
+sys.exit(0);
