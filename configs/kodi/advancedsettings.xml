@@ -8,9 +8,30 @@
   <remove>.ex3|.ex4</remove>
 </videoextensions>
 
+<gui>
+  <algorithmdirtyregions>1</algorithmdirtyregions>
+  <nofliptimeout>0</nofliptimeout>
+</gui>
 
-  <gui>
-    <algorithmdirtyregions>1</algorithmdirtyregions>
-    <nofliptimeout>0</nofliptimeout>
-  </gui>
+<videodatabase>
+  <type>mysql</type>
+  <host>127.0.0.1</host>
+  <port>3306</port>
+  <user>KODI_DB_USER</user>
+  <pass>KODI_DB_PASS</pass>
+</videodatabase> 
+
+<musicdatabase>
+  <type>mysql</type>
+  <host>127.0.0.1</host>
+  <port>3306</port>
+  <user>KODI_DB_USER</user>
+  <pass>KODI_DB_PASS</pass>
+</musicdatabase>
+
+<videolibrary>
+  <importwatchedstate>true</importwatchedstate>
+  <importresumepoint>true</importresumepoint>
+</videolibrary>
+
 </advancedsettings>

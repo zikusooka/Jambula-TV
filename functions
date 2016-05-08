@@ -137,8 +137,8 @@ FREEVO_VERSION=svn
 
 TVHEADEND_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.hts/tvheadend
 
-KODI_VERSION=15.2 #15.1
-
+KODI_VERSION=15.2 
+#
 KODI_BRANCH=Isengard
 KODI_TAG=$KODI_VERSION-$KODI_BRANCH
 KODI_DEFAULT_SKIN=confluence
@@ -150,6 +150,11 @@ KODI_USER_ADDONS=$KODI_CONFIG_DIR/addons
 KODI_SYSTEM_DATA=$KODI_SHARE_DIR/userdata
 KODI_SYSTEM_ADDONS=$KODI_SHARE_DIR/addons
 KODI_SYSTEM_SYS=$KODI_SHARE_DIR/system
+#
+KODI_DB_NAME=kodi
+KODI_DB_USER=jambulatv
+KODI_DB_PASS=jambulatv4
+
 # Kodi Addons
 # -----------
 # Repositories
@@ -2307,6 +2312,20 @@ done
 }
 
 kodi_configure () {
+#
+# MySQL DB for Kodi
+# -----------------
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+# Create kodi database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $KODI_DB_NAME
+# Generate database tables using schema .... 
+# Set privileges on kodi database
+echo "GRANT ALL PRIVILEGES ON $KODI_DB_NAME.* to '$KODI_DB_USER'@'%' IDENTIFIED by '$KODI_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+#
 # Reconfigure PolicyKit to enable poweroff, suspend and similiar functions 
 cat > /etc/polkit-1/localauthority/50-local.d/kodi_shutdown.pkla <<EOF
 [Actions for jambula user]
@@ -2321,7 +2340,6 @@ EOF
 [ -d $KODI_USER_DATA ] || mkdir -p $KODI_USER_DATA
 # Copy Optimized Advanced & GUI settings plus other configs
 for KODI_CONFIG in \
-	advancedsettings.xml \
 	guisettings.xml \
 	sources.xml \
 	RssFeeds.xml \
@@ -2329,6 +2347,11 @@ for KODI_CONFIG in \
 do
 cp -v $PROJECT_CONFIGS_DIR/kodi/$KODI_CONFIG $KODI_USER_DATA/
 done
+# Add Jambula customized advancedsettings file
+cat $PROJECT_CONFIGS_DIR/kodi/advancedsettings.xml | \
+	sed "s:KODI_DB_USER:$KODI_DB_USER:g" | \
+	sed "s:KODI_DB_PASS:$KODI_DB_PASS:g" \
+	> $KODI_USER_DATA/advancedsettings.xml
 # Give permissions to multimedia user for config directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_CONFIG_DIR
 # Make startup script executable
