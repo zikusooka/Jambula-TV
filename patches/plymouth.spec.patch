@@ -14,9 +14,9 @@
 -           --with-background-end-color-stop=0x00457E             \
 -           --with-background-color=0x3391cd                      \
 +           --with-logo=%{_datadir}/pixmaps/jambula-labs.png      \
-+           --with-background-start-color-stop=0x000000           \
-+           --with-background-end-color-stop=0x000000             \
-+           --with-background-color=0x000000                      \
++           --with-background-start-color-stop=0xffffff           \
++           --with-background-end-color-stop=0xffffff             \
++           --with-background-color=0xffffff                      \
             --disable-gdm-transition                              \
             --enable-systemd-integration                          \
             --without-system-root-install                         \

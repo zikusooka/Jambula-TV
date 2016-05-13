@@ -152,7 +152,7 @@ KODI_SYSTEM_ADDONS=$KODI_SHARE_DIR/addons
 KODI_SYSTEM_SYS=$KODI_SHARE_DIR/system
 #
 KODI_DB_NAME=kodi
-KODI_DB_USER=jambulatv
+KODI_DB_USER=$MULTIMEDIA_USER
 KODI_DB_PASS=jambulatv4
 
 # Kodi Addons
@@ -2320,11 +2320,14 @@ systemctl -q is-active mysqld.service || systemctl enable mysqld.service
 systemctl -q is-active mysqld.service || systemctl start mysqld.service
 # Change MySQL password if default is empty
 mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
-# Create kodi database
-mysqladmin -p$MYSQL_ROOT_PASSWORD create $KODI_DB_NAME
-# Generate database tables using schema .... 
-# Set privileges on kodi database
-echo "GRANT ALL PRIVILEGES ON $KODI_DB_NAME.* to '$KODI_DB_USER'@'%' IDENTIFIED by '$KODI_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+# Set Kodi MySQL Privileges
+# Create kodi user - drop existing user first
+echo "DROP USER '$KODI_DB_USER'@'%';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+echo "CREATE USER '$KODI_DB_USER'@'%' IDENTIFIED BY '$KODI_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+# Videos DB
+echo "GRANT ALL PRIVILEGES ON \`MyVideos%\`.* TO '$KODI_DB_USER'@'%';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+# Music DB
+echo "GRANT ALL PRIVILEGES ON \`MyMusic%\`.* TO '$KODI_DB_USER'@'%';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
 #
 # Reconfigure PolicyKit to enable poweroff, suspend and similiar functions 
 cat > /etc/polkit-1/localauthority/50-local.d/kodi_shutdown.pkla <<EOF

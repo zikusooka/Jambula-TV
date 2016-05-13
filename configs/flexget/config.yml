@@ -34,18 +34,18 @@ templates:
         - \bVOSTFR\b: {from: title}
         - \bSubtitulado\b: {from: title}
         - '{C_P}': {from: title}   # Poor quality releases
-        - /\b(ita|ger|fra|spa|swe|nor|nordic|fr|kor|esp|nl|pl)\b/i: {from: title}
-        - /\bDual\b/i: {from: title}
-        - /\bJAPANESE\b/i: {from: title}
-        - /\bFRENCH\b/i: {from: title}
-        - /\bSWEDISH\b/i: {from: title}
-        - /\bGERMAN\b/i: {from: title}
-        - /\bHINDI\b/i: {from: title}
-        - /\bSPANISH\b/i: {from: title}
-        - /\bDUTCH\b/i: {from: title}
-        - /\bITALIAN\b/i: {from: title}
-        - /\bLATIN\b/i: {from: title}
-        - /\bHDCAM\b/i: {from: title}
+        - \b(ita|ger|fra|spa|swe|nor|nordic|fr|kor|esp|nl|pl)\b: {from: title}
+        - \bDual\b: {from: title}
+        - \bJAPANESE\b: {from: title}
+        - \bFRENCH\b: {from: title}
+        - \bSWEDISH\b: {from: title}
+        - \bGERMAN\b: {from: title}
+        - \bHINDI\b: {from: title}
+        - \bSPANISH\b: {from: title}
+        - \bDUTCH\b: {from: title}
+        - \bITALIAN\b: {from: title}
+        - \bLATIN\b: {from: title}
+        - \bHDCAM\b: {from: title}
 
     content_filter:
       require:
@@ -255,9 +255,10 @@ tasks:
   # Move TV Shows to Kodi directory
   # -------------------------------
   move_tv_shows:
-    priority: 20
+    priority: 99 # Make top priority over move_movies
     disable:
       - retry_failed
+      - seen
       - email
       - send_telegram # Will send using jambulatv-telegram below
     metainfo_series: yes
@@ -300,9 +301,10 @@ tasks:
   # Move Movies to Kodi directory
   # -------------------------------
   move_movies:
-    priority: 25
+    priority: 97
     disable:
       - retry_failed
+      - seen
       - email
       - send_telegram # Will send using jambulatv-telegram below
     accept_all: yes
@@ -357,7 +359,7 @@ schedules:
       month: '*'
       year: '*'
 
-  - tasks: [movies, move_tv_shows]
+  - tasks: [movies, move_movies]
     schedule:
       day_of_week: '{{secrets.movies.day_of_week}}'
       hour: '{{secrets.movies.hour}}'
