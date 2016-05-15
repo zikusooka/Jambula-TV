@@ -386,6 +386,9 @@ NETWORK_DNS_2=$CURRENT_DNS2
 # Public DNS Servers: Google, OpenDNS, Comodo, OpenNIC, Yandex
 PUBLIC_DNS_SERVERS="8.8.8.8 208.67.222.222 8.26.56.26 107.170.95.180 77.88.8.8"
 
+# Netdata
+NETDATA_PORT=$(grep -i netdata $PORTS_ASSIGNED_FILE | awk {'print $1'})
+
 
 # Dynamic variables
 # -----------------
@@ -6227,6 +6230,40 @@ cp -v $PROJECT_CONFIGS_DIR/webserver/icinga.conf $NGINX_CONFD_DIR/
 systemctl restart nginx.service
 # Create account for logging into classic web interface
 htpasswd -b -c $CONFDIR/icinga/htpasswd.users icingaadmin $ICINGA_ADMIN_PASS
+}
+
+netdata_install () {
+# Copy sources to install directory
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/netdata/ $INSTALL_SRC_DIR/netdata/
+# Install
+cd $INSTALL_SRC_DIR/netdata && \
+./netdata-installer.sh --dont-start-it --dont-wait
+}
+
+netdata_configure () {
+# Add Jambula customized config file
+cat $PROJECT_CONFIGS_DIR/netdata.conf.template | \
+	sed "s:NETDATA_PORT:$NETDATA_PORT:g" | \
+	sed "s:NETDATA_HOSTNAME:$PROJECT_NAME:g" \
+	> $CONFDIR/netdata/netdata.conf
+# Copy systemd start file
+cp -v $INSTALL_SRC_DIR/netdata/system/netdata.service \
+	$SYSTEMD_UNITS_DIR_USER/netdata.service
+# Enable and start netdata systemd service
+systemctl enable netdata.service
+systemctl start netdata.service
+#
+# Display Netdata's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+Netdata
+========
+% To access netdata, open the URL below:
+  http://$NETWORK_IP_ADDRESS:$NETDATA_PORT
+
+#
+EOF
 }
 
 gdata_install () {

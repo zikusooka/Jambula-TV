@@ -1,0 +1,34 @@
+# NetData Configuration
+
+# global netdata configuration
+
+[global]
+        port = NETDATA_PORT
+        # config directory = /etc/netdata
+        # plugins directory = /usr/libexec/netdata/plugins.d
+        # web files directory = /usr/share/netdata/web
+        # cache directory = /var/cache/netdata
+        # lib directory = /var/lib/netdata
+        # log directory = /var/log/netdata
+        # host access prefix =
+        # home directory = /var/cache/netdata
+        # debug flags = 0x00000000
+        # memory deduplication (ksm) = yes
+        # debug log = /var/log/netdata/debug.log
+        # error log = /var/log/netdata/error.log
+        # errors flood protection period = 1200
+        # errors to trigger flood protection = 200
+        # access log = /var/log/netdata/access.log
+        # memory mode = save
+        hostname = NETDATA_HOSTNAME
+        # history = 3600
+        # update every = 1
+        # pthread stack size = 8388608
+        # run as user = netdata
+        # web files owner = netdata
+        # web files group = netdata
+        # http port listen backlog = 100
+        # ip version = any
+        # bind socket to IP = *
+        # disconnect idle web clients after seconds = 60
+        # enable web responses gzip compression = yes

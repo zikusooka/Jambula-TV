@@ -184,6 +184,9 @@ icinga2_ido_mysql
 icinga2_configure
 icingaweb2_install
 icingaweb2_configure
+# Netdata: realtime system monitoring
+netdata_install
+netdata_configure
 
 # --------
 # Content
