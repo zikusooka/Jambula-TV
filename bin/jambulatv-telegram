@@ -2,6 +2,7 @@
 TELEGRAM_METHOD_NAME=$1
 TELEGRAM_API_BOT=$2
 TELEGRAM_MESSAGE="$3"
+CHAT_ID=$4
 TELEGRAM_API_URL="https://api.telegram.org"
 
 
@@ -12,19 +13,19 @@ usage () {
 clear
 if [ "x$TELEGRAM_METHOD_NAME" = "x" ];
 then
-echo "Usage:  ./`basename $0` [METHOD] [TELEGRAM_API_BOT] [TELEGRAM_MESSAGE]
+echo "Usage:  ./`basename $0` [METHOD] [TELEGRAM_API_BOT] [TELEGRAM_MESSAGE] [CHAT_ID (Optional)]
 "
 exit 1
 
 elif [ "x$TELEGRAM_API_BOT" = "x" ];
 then
-echo "Usage:  ./`basename $0` [METHOD] [TELEGRAM_API_BOT] [TELEGRAM_MESSAGE]
+echo "Usage:  ./`basename $0` [METHOD] [TELEGRAM_API_BOT] [TELEGRAM_MESSAGE] [CHAT_ID (Optional)]
 "
 exit 1
 
 elif [ "x$TELEGRAM_MESSAGE" = "x" ];
 then
-echo "Usage:  ./`basename $0` [METHOD] [TELEGRAM_API_BOT] [TELEGRAM_MESSAGE]
+echo "Usage:  ./`basename $0` [METHOD] [TELEGRAM_API_BOT] [TELEGRAM_MESSAGE] [CHAT_ID (Optional)]
 "
 exit 1
 
@@ -34,6 +35,10 @@ fi
 # Chat ID
 get_chat_id () {
 TELEGRAM_CHAT_ID=$(curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/getUpdates | jq . | grep \"id\": | sort -u | head -1 | awk {'print $2'})
+if [ "x$TELEGRAM_CHAT_ID" = "x" ];
+then
+TELEGRAM_CHAT_ID=$CHAT_ID
+fi
 }
 
 # Send

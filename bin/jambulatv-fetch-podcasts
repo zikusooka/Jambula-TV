@@ -30,10 +30,10 @@ cat > $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT << EOF
 $EMAIL_NOTIFICATION_SCRIPT $EMAIL_NOTIFICATION_ADDRESS "Podcasts - Download of \$(basename \$3) Completed" "Your podcast is located at \$3"
 
 # Telegram if API Bot exists
-TELEGRAM_API_BOT=$TELEGRAM_API_BOT
+TELEGRAM_API_BOT="$TELEGRAM_API_BOT"
 if [ "x\$TELEGRAM_API_BOT" != "x" ];
 then
-/usr/bin/jambulatv-telegram sendmessage \$TELEGRAM_API_BOT "[JambulaTV] The Podcast \$(basename \$3) was successfully downloaded. You may find it under 'Videos >> Files >> Podcats' on your JambulaTV or \$3. Enjoy!"
+/usr/bin/jambulatv-telegram sendmessage \$TELEGRAM_API_BOT "[JambulaTV] The Podcast \$(basename \$3) was successfully downloaded. You may find it under 'Videos >> Files >> Podcasts' on your JambulaTV or \$3. Enjoy!"
 else
 echo "WARNING: No telegram message sent as it was not configured"
 fi

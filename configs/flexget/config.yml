@@ -1,4 +1,12 @@
 secrets: variables.yml
+
+web_server:
+  bind: 0.0.0.0
+  port: 8532 # '{{secrets.webui.port}}'
+
+api: yes
+webui: yes
+
 templates:
 
 ##########
@@ -7,46 +15,53 @@ templates:
   global:
     regexp:
       reject:
-        - \b(s|d)ub(s|bed)?\b: {from: title}   # subbed/dubbed/etc videos
-        - \b(duo|tri|quadri|tetra|penta)logy\b: {from: title}   # Series
-        - \b3-?D\b: {from: title}   # 3D displays
-        - \btrailer\b: {from: title}   # Trailers
-        - \bR5\b: {from: title}   
-        - \bWEBSCR\b: {from: title}   
-        - \bWEB-DL\b: {from: title}   
-        - \bWEB\b: {from: title}   
-        - \bscreener\b: {from: title}
-        - \bTS\b: {from: title}
-        - \bCam\b: {from: title}
-        - \bTrTd TeaM\b: {from: title}
-        - \b\[TNTVillage\]\b: {from: title}
-        - \b\[facepalm\]\b: {from: title}
-        - \bASAP\b: {from: title}
-        - \bNL.Subs.DutchReleaseTeam\b: {from: title}
-        - \bITA\b: {from: title}
-        - \bR6\b: {from: title}
-        - \bTemporada\b: {from: title}
-        - \bNORDiC\b: {from: title}
-        - \biPad\b: {from: title}
-        - \bSCR\b: {from: title}
-        - \bMULTi\b: {from: title}
-        - \bFASTSUB\b: {from: title}
-        - \bVOSTFR\b: {from: title}
-        - \bSubtitulado\b: {from: title}
-        - '{C_P}': {from: title}   # Poor quality releases
+        - \b(s|d)ub(s|bed)?\b: {from: title}  
+        - \b(duo|tri|quadri|tetra|penta)logy\b: {from: title}  
+        - \b3-?D\b: {from: title}
         - \b(ita|ger|fra|spa|swe|nor|nordic|fr|kor|esp|nl|pl)\b: {from: title}
-        - \bDual\b: {from: title}
-        - \bJAPANESE\b: {from: title}
-        - \bFRENCH\b: {from: title}
-        - \bSWEDISH\b: {from: title}
-        - \bGERMAN\b: {from: title}
-        - \bHINDI\b: {from: title}
-        - \bSPANISH\b: {from: title}
-        - \bDUTCH\b: {from: title}
-        - \bITALIAN\b: {from: title}
-        - \bLATIN\b: {from: title}
-        - \bHDCAM\b: {from: title}
-
+        - (?i)[ .]asap[ .]: {from: title}
+        - (?i)[ .]avc[ .]: {from: title}
+        - (?i)[ .]bdscr[ .]: {from: title}
+        - (?i)[ .]br5[ .]: {from: title}
+        - (?i)[ .]btrtd[ .]: {from: title}
+        - (?i)[ .]bts[ .]: {from: title}
+        - (?i)[ .]cam[ .]: {from: title}
+        - (?i)[ .]dual[ .]: {from: title}
+        - (?i)[ .]dutch[ .]: {from: title}
+        - (?i)[ .]dvdscr[ .]: {from: title}
+        - (?i)[ .]ecc[ .]: {from: title}
+        - (?i)[ .]facepalm[ .]: {from: title}
+        - (?i)[ .]fastsub[ .]: {from: title}
+        - (?i)[ .]french[ .]: {from: title}
+        - (?i)[ .]german[ .]: {from: title}
+        - (?i)[ .]hdcam[ .]: {from: title}
+        - (?i)[ .]hdtc[ .]: {from: title}
+        - (?i)[ .]hindi[ .]: {from: title}
+        - (?i)[ .]ipad[ .]: {from: title}
+        - (?i)[ .]italian[ .]: {from: title}
+        - (?i)[ .]japanese[ .]: {from: title}
+        - (?i)[ .]latin[ .]: {from: title}
+        - (?i)[ .]multi[ .]: {from: title}
+        - (?i)[ .]nordic[ .]: {from: title}
+        - (?i)[ .]preair[ .]: {from: title}
+        - (?i)[ .]ppvrip[ .]: {from: title}
+        - (?i)[ .]qebs[ .]: {from: title}
+        - (?i)[ .]r5[ .]: {from: title}
+        - (?i)[ .]r6[ .]: {from: title}
+        - (?i)[ .]scr[ .]: {from: title}
+        - (?i)[ .]screener[ .]: {from: title}
+        - (?i)[ .]spanish[ .]: {from: title}
+        - (?i)[ .]subtitulado[ .]: {from: title}
+        - (?i)[ .]swedish[ .]: {from: title}
+        - (?i)[ .]tc[ .]: {from: title}
+        - (?i)[ .]temporada[ .]: {from: title}
+        - (?i)[ .]tntvillage[ .]: {from: title}
+        - (?i)[ .]trailer[ .]: {from: title}
+        - (?i)[ .]ts[ .]: {from: title}
+        - (?i)[ .]vostfr[ .]: {from: title}
+        - (?i)[ .]web-dl[ .]: {from: title}
+        - (?i)[ .]webrip[ .]: {from: title}
+        - (?i)[ .]webscr[ .]: {from: title}
     content_filter:
       require:
         - '*.avi'
@@ -84,9 +99,39 @@ templates:
             #first: '{{secrets.telegram.first_name}}'
             #sur: '{{secrets.telegram.sur_name}}'
       template: |+
-        *[JambulaTV] The following {{task|replace("s", "(s)")}} have been queued for download:
-        
-        *{{title}}
+        {% if task == "tv_shows" %}*[JambulaTV] The following TV Episode(s) have been queued for download:*
+
+        {% elif task == "movies" %}*[JambulaTV] The following Movie(s) has been queued for download:*
+
+        {% elif task == "internet_tv" %}*[JambulaTV] The following Podcast(s) has been queued for download:*
+
+        {% elif task == "move_tv_shows" %}
+        *[JambulaTV] New TV Episode(s) Added:*
+
+        The following TV Series Episode was successfully downloaded. You may find it under 'TV Shows' on your JambulaTV. Enjoy!
+        {% elif task == "move_movies" %}*[JambulaTV] New Movie(s) Added:*
+
+        The following movie was successfully downloaded. You may find it under 'Movies' on your JambulaTV. Enjoy!
+        {% else %}*[JambulaTV] Other Item(s) Added from task:*
+
+        {{task|replace("_", "-")}}
+        {% endif %}
+        {% if series_name is defined %}
+        *{{series_name}}* - {{series_id}} - {{quality|d('')}}
+        *{{tvmaze_episode_name|d(tvdb_ep_name)|d('')}}*
+        [Image]({{tvmaze_series_original_image|replace("_", "%5F")}})
+        [Show page]({{tvmaze_series_url|replace("_", "%5F")}})
+        {% elif imdb_name is defined %}
+        *{{imdb_name}}* - ({{imdb_year}})
+        {{quality|d('')}}
+        {{imdb_score}}/10 - {{imdb_votes}} votes
+        {{imdb_genres|join(', ')|title}}  
+        *Plot:* {{imdb_plot_outline}}
+        [Image]({{tmdb_posters[0]|replace("_", "%5F")}})
+        [Movie Page]({{imdb_url|d('')}})     
+        {% else %}
+        *{{title}}*
+        {% endif %}
 
 
 ##############
@@ -132,7 +177,6 @@ templates:
     limit_new: 1
     seen_movies:
       matching: strict
-    # Filter based on IMDB score, rating, etc
     imdb_required: yes
     imdb:
       min_score: 8.0
@@ -178,6 +222,8 @@ templates:
 # Podcasts 
 # --------
   podcasts:
+    disable:
+      - regexp
     free_space:
       path: '{{secrets.podcasts.path}}'
       space: 1000
@@ -260,15 +306,15 @@ tasks:
       - retry_failed
       - seen
       - email
-      - send_telegram # Will send using jambulatv-telegram below
+      - regexp
+    thetvdb_lookup: yes
+    tvmaze_lookup: yes
     metainfo_series: yes
     require_field: [series_name, series_id, series_season]
     accept_all: yes
     seen: local
     all_series:
       parse_only: yes
-    parsing:
-      series: guessit
     filesystem:
       path: 
         - "/{{secrets.tv.series_completed_dir}}"
@@ -290,11 +336,7 @@ tasks:
       on_start:
     # Create dummy 6M file
         phase: truncate -s 6M '/{{secrets.tv.series_completed_dir}}/DO.NOT.REMOVE.ME'
-      on_output:
-        # Send telegram message
-        for_accepted: 
-          - jambulatv-telegram sendmessage '{{secrets.telegram.bot_token}}' "[JambulaTV] The Series {{title}} was successfully downloaded. You may find it under 'TV Shows' on your JambulaTV. Enjoy!"
-    # 
+    # Scan video library
     template:
       - kodi_library_scan
 
@@ -306,12 +348,12 @@ tasks:
       - retry_failed
       - seen
       - email
-      - send_telegram # Will send using jambulatv-telegram below
+      - regexp
     accept_all: yes
     seen: local
-    parsing:
-      movie: guessit
     imdb_lookup: yes
+    imdb_required: yes
+    tmdb_lookup: yes
     proper_movies: yes
     require_field: [movie_name, movie_year]
     filesystem:
@@ -335,21 +377,16 @@ tasks:
       on_start:
     # Create dummy 3M file
         phase: truncate -s 3M '/{{secrets.tv.series_completed_dir}}/DO.NOT.REMOVE.ME'
-      on_output:
-        # Send telegram message
-        for_accepted: 
-          - jambulatv-telegram sendmessage '{{secrets.telegram.bot_token}}' "[JambulaTV] The Movie {{title}} was successfully downloaded. You may find it under 'Movies' on your JambulaTV. Enjoy!"
-    # 
+    # Scan video library
     template:
       - kodi_library_scan
-
 
 
 ##############
 #  Scheduler #
 ##############
 schedules:
-  - tasks: [tv_shows, move_tv_shows]
+  - tasks: [tv_shows]
     schedule:
       day_of_week: '{{secrets.tv.day_of_week}}'
       hour: '{{secrets.tv.hour}}'      
@@ -359,7 +396,7 @@ schedules:
       month: '*'
       year: '*'
 
-  - tasks: [movies, move_movies]
+  - tasks: [movies]
     schedule:
       day_of_week: '{{secrets.movies.day_of_week}}'
       hour: '{{secrets.movies.hour}}'
