@@ -376,7 +376,7 @@ tasks:
       auto_escape: yes
       on_start:
     # Create dummy 3M file
-        phase: truncate -s 3M '/{{secrets.tv.series_completed_dir}}/DO.NOT.REMOVE.ME'
+        phase: truncate -s 3M '/{{secrets.movies.movies_completed_dir}}/DO.NOT.REMOVE.ME'
     # Scan video library
     template:
       - kodi_library_scan

@@ -18,21 +18,25 @@ directory = TORRENTS_PENDING_DIRECTORY
 # relative path?
 #session = RTORRENT_SESSIONS_DIR/.sessions_rtorrent
 
-# Watch a directory for new torrents, and stop those that have been
-# deleted.
+# Watch Directories
+# -----------------
+# TV shows
+schedule = watch_directory_1,5,60,"load.start=TORRENTS_WATCH_DIRECTORY/TORRENTS_LABEL_TVSHOWS/*.torrent,d.custom1.set=TORRENTS_LABEL_TVSHOWS"
+#
+# Movies
+schedule = watch_directory_2,5,60,"load.start=TORRENTS_WATCH_DIRECTORY/TORRENTS_LABEL_MOVIES/*.torrent,d.custom1.set=TORRENTS_LABEL_MOVIES"
+#
+# Music
+schedule = watch_directory_3,5,60,"load.start=TORRENTS_WATCH_DIRECTORY/TORRENTS_LABEL_MUSIC/*.torrent,d.custom1.set=TORRENTS_LABEL_MUSIC"
 
-schedule = watch_directory,5,5,"load.start=TORRENTS_WATCH_DIRECTORY/*.torrent"
-
-schedule = untied_directory,10,10,remove_untied=
-schedule = tied_directory,55,5,start_tied=
-schedule = untied_directory,5,5,stop_untied=
-schedule = untied_directory,5,5,close_untied=
-
+# Add new method to get completed directory
+# ------------------------------------------
+method.insert = d.get_finished_dir,simple,"cat=TORRENTS_COMPLETED_DIRECTORY/,$d.custom1="
 
 # Move to completed_torrents directory on finish
 # -----------------------------------------------
-method.set_key = event.download.finished,move_complete,"d.directory.set=TORRENTS_COMPLETED_DIRECTORY;execute=mv,-u,$d.base_path=,TORRENTS_COMPLETED_DIRECTORY"
-#
+method.set_key = event.download.finished,move_complete,"d.directory.set=$d.get_finished_dir=;execute=mkdir,-p,$d.get_finished_dir=;execute=mv,-u,$d.base_path=,$d.get_finished_dir="
+
 # Remove .torrent file in watch folder
 # -------------------------------------
 method.set_key = event.download.finished,remove_torrent,"execute=rm,$d.tied_to_file="
