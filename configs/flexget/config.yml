@@ -99,22 +99,24 @@ templates:
             #first: '{{secrets.telegram.first_name}}'
             #sur: '{{secrets.telegram.sur_name}}'
       template: |+
-        {% if task == "tv_shows" %}*[JambulaTV] The following TV Episode(s) have been queued for download:*
+        {% if task == "tv_shows" %}*[JambulaTV] TV Show(s) Queued
 
-        {% elif task == "movies" %}*[JambulaTV] The following Movie(s) has been queued for download:*
+        The following TV Episode has been queued for download:
+        {% elif task == "movies" %}*[JambulaTV] Movie(s) Queued*
 
-        {% elif task == "internet_tv" %}*[JambulaTV] The following Podcast(s) has been queued for download:*
+        The following Movie has been queued for download:
+        {% elif task == "internet_tv" %}*[JambulaTV] Podcast(s) Queued*
 
-        {% elif task == "move_tv_shows" %}
-        *[JambulaTV] New TV Episode(s) Added:*
+        The following Podcast has been queued for download:
+        {% elif task == "move_tv_shows" %}*[JambulaTV] New TV Episode(s) Added*
 
         The following TV Series Episode was successfully downloaded. You may find it under 'TV Shows' on your JambulaTV. Enjoy!
-        {% elif task == "move_movies" %}*[JambulaTV] New Movie(s) Added:*
+        {% elif task == "move_movies" %}*[JambulaTV] New Movie(s) Added*
 
         The following movie was successfully downloaded. You may find it under 'Movies' on your JambulaTV. Enjoy!
-        {% else %}*[JambulaTV] Other Item(s) Added from task:*
+        {% else %}*[JambulaTV] Other Item(s) Added*
 
-        {{task|replace("_", "-")}}
+        An item has been added from task: {{task|replace("_", "-")}}
         {% endif %}
         {% if series_name is defined %}
         *{{series_name}}* - {{series_id}} - {{quality|d('')}}
