@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Set to y if DVB-T is enabled 
+[ -d /dev/dvb ] && DVBT2_ENABLED=y
+# Query channel list
+wget -q -O - localhost:9981/api/channel/list | jq . | grep \"val\" | awk {'print $2'} | sed 's:[{|}|"|,]::g' | grep 'name-not-set' > /dev/null 2>&1
+VALUE=$?
+
+if [ "$VALUE" = "0" ] && [ "$DVBT2_ENABLED" = "y" ];
+then
+echo "CRITICAL - Channels list is corrupted, possibly due to a bad shutdown.  Please setup network and scan channels" 
+exit 2
+
+else
+echo "OK - Channels list is fine"
+exit 0
+
+fi
