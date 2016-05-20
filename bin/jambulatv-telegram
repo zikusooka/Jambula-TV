@@ -1,8 +1,8 @@
 #!/bin/sh
 TELEGRAM_METHOD_NAME=$1
 TELEGRAM_API_BOT=$2
-TELEGRAM_MESSAGE="$3"
-CHAT_ID=$4
+CHAT_ID=$3
+TELEGRAM_ARGUMENTS="$4"
 TELEGRAM_API_URL="https://api.telegram.org"
 
 
@@ -13,22 +13,38 @@ usage () {
 clear
 if [ "x$TELEGRAM_METHOD_NAME" = "x" ];
 then
-echo "Usage:  ./`basename $0` [METHOD] [TELEGRAM_API_BOT] [TELEGRAM_MESSAGE] [CHAT_ID (Optional)]
+echo "Usage:  ./`basename $0` [METHOD]
 "
 exit 1
+fi
 
-elif [ "x$TELEGRAM_API_BOT" = "x" ];
+if [ "x$TELEGRAM_API_BOT" = "x" ];
 then
-echo "Usage:  ./`basename $0` [METHOD] [TELEGRAM_API_BOT] [TELEGRAM_MESSAGE] [CHAT_ID (Optional)]
+echo "Usage:  ./`basename $0` $TELEGRAM_METHOD_NAME [TELEGRAM_API_BOT] 
 "
 exit 1
+fi
 
-elif [ "x$TELEGRAM_MESSAGE" = "x" ];
+if [ "x$CHAT_ID" = "x" ];
 then
-echo "Usage:  ./`basename $0` [METHOD] [TELEGRAM_API_BOT] [TELEGRAM_MESSAGE] [CHAT_ID (Optional)]
+echo "Usage:  ./`basename $0` $TELEGRAM_METHOD_NAME $TELEGRAM_API_BOT [CHAT_ID]
 "
 exit 1
+fi
 
+if [ "x$TELEGRAM_ARGUMENTS" = "x" ];
+then
+case $TELEGRAM_METHOD_NAME in
+[Ss][Ee][Nn][Dd][Mm][Ee][Ss][Ss][Aa][Gg][Ee])
+ARGUMENTS=TELEGRAM_MESSAGE
+;;
+[Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee][Dd][Ii][Ss][Kk])
+ARGUMENTS=IMAGE_PATH_eg_/tmp/bell.png
+;;
+esac
+echo "Usage:  ./`basename $0` $TELEGRAM_METHOD_NAME $TELEGRAM_API_BOT $CHAT_ID [$ARGUMENTS]
+"
+exit 1
 fi
 }
 
@@ -44,19 +60,33 @@ fi
 # Send
 send_message () {
 curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/sendMessage \
-	-d text="$TELEGRAM_MESSAGE" -d chat_id=$TELEGRAM_CHAT_ID > /dev/null 2>&1
+	-d chat_id=$TELEGRAM_CHAT_ID \
+	-d text="$TELEGRAM_ARGUMENTS" \
+	-d parse_mode="markdown" > /dev/null 2>&1
 }
+
+send_image_disk () {
+curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/sendPhoto \
+	-F chat_id=$TELEGRAM_CHAT_ID \
+	-F photo=@$TELEGRAM_ARGUMENTS > /dev/null 2>&1
+}
+
 
 
 # Main Script
 # -----------
 #
+usage
+
 case $TELEGRAM_METHOD_NAME in
 [Ss][Ee][Nn][Dd][Mm][Ee][Ss][Ss][Aa][Gg][Ee])
 get_chat_id 
 send_message
 ;;
-*)
-usage
+
+[Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee][Dd][Ii][Ss][Kk])
+get_chat_id 
+send_image_disk
 ;;
+
 esac
