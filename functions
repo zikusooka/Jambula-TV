@@ -3454,8 +3454,14 @@ then
 cat > $FLEXGET_CONFIG_DIR/tvseries.yml << EOF
 series:
   group 1:
-    - How I Met Your Mother
-    - Lost
+    - Arrow
+    - Blindspot
+    - Devious Maids
+    - Game of Thrones
+    - Person of Interest: { begin: S05E01 }
+    - Scandal: { alternate_name: Scandal US }
+    - Silicon Valley
+    - Suits: { begin: S06E01 }
 EOF
 fi
 #

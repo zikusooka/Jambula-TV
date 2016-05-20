@@ -59,6 +59,7 @@ templates:
         - (?i)[ .]trailer[ .]: {from: title}
         - (?i)[ .]ts[ .]: {from: title}
         - (?i)[ .]vostfr[ .]: {from: title}
+        - (?i)[ .]web dl[ .]: {from: title}
         - (?i)[ .]web-dl[ .]: {from: title}
         - (?i)[ .]webrip[ .]: {from: title}
         - (?i)[ .]webscr[ .]: {from: title}
@@ -99,7 +100,7 @@ templates:
             #first: '{{secrets.telegram.first_name}}'
             #sur: '{{secrets.telegram.sur_name}}'
       template: |+
-        {% if task == "tv_shows" %}*[JambulaTV] TV Show(s) Queued
+        {% if task == "tv_shows" %}*[JambulaTV] TV Show(s) Queued*
 
         The following TV Episode has been queued for download:
         {% elif task == "movies" %}*[JambulaTV] Movie(s) Queued*
@@ -119,6 +120,7 @@ templates:
         An item has been added from task: {{task|replace("_", "-")}}
         {% endif %}
         {% if series_name is defined %}
+        Task 1 is {{task}}
         *{{series_name}}* - {{series_id}} - {{quality|d('')}}
         *{{tvmaze_episode_name|d(tvdb_ep_name)|d('')}}*
         [Image]({{tvmaze_series_original_image|replace("_", "%5F")}})
@@ -133,6 +135,7 @@ templates:
         [Movie Page]({{imdb_url|d('')}})     
         {% else %}
         *{{title}}*
+        Task 2 is {{task}}
         {% endif %}
 
 
@@ -156,10 +159,13 @@ templates:
           propers: no 
           identified_by: ep
           tracking: backfill
-    priority: 10
+          timeframe: 12 hours
+          target: "h264"
+          upgrade: yes
     include: [ '{{secrets.tv.include}}' ]
     download: '{{secrets.tv.download}}'
     verify_ssl_certificates: no
+    priority: 10
 
     # Pull TV shows from trakt.tv watchlist
     discover:
@@ -303,6 +309,7 @@ tasks:
   # Move TV Shows to Kodi directory
   # -------------------------------
   move_tv_shows:
+    manual: yes
     priority: 99 # Make top priority over move_movies
     disable:
       - retry_failed
@@ -312,7 +319,8 @@ tasks:
     thetvdb_lookup: yes
     tvmaze_lookup: yes
     metainfo_series: yes
-    require_field: [series_name, series_id, series_season]
+    #require_field: [series_name, series_id, series_season]
+    require_field: [tvdb_series_name, tvdb_season, tvdb_episode, tvdb_ep_id]
     accept_all: yes
     seen: local
     all_series:
@@ -326,8 +334,10 @@ tasks:
         - dirs
       regexp: '.*\.(avi|mkv|mp4|m4v|iso)$' 
     move:
-      to: "/{{secrets.tv.series_jambulatv_dir}}/{{series_name|replace(' ', '_')}}/Season_{{'%02d'|format(series_season)}}"
-      filename: "{{series_name}}.{{series_id}}.{{quality|upper}}"
+      #to: "/{{secrets.tv.series_jambulatv_dir}}/{{series_name|replace(' ', '_')}}/Season_{{'%02d'|format(series_season)}}"
+      to: "/{{secrets.tv.series_jambulatv_dir}}/{{tvdb_series_name|replace(' ', '_')|replace('(', '')|replace(')', '')}}/Season_{{'%02d'|format(tvdb_season)}}"
+      #filename: "{{series_name}}.{{series_id}}.{{quality|upper}}"
+      filename: "{{tvdb_series_name|replace(' ', '.')|replace('(', '')|replace(')', '')}}.{{tvdb_ep_id}}.{{tvdb_ep_name|replace(' ', '.')}}.{{quality|upper|replace(' ', '.')}}"
       clean_source: 5
       along:
         - sub
@@ -345,6 +355,7 @@ tasks:
   # Move Movies to Kodi directory
   # -------------------------------
   move_movies:
+    manual: yes
     priority: 97
     disable:
       - retry_failed
@@ -357,7 +368,8 @@ tasks:
     imdb_required: yes
     tmdb_lookup: yes
     proper_movies: yes
-    require_field: [movie_name, movie_year]
+    #require_field: [movie_name, movie_year]
+    require_field: [tmdb_name, movie_year]
     filesystem:
       path: 
         - "/{{secrets.movies.movies_completed_dir}}"
@@ -368,7 +380,8 @@ tasks:
       regexp: '.*\.(avi|mkv|mp4|m4v|iso)$' 
     move:
       to: "/{{secrets.movies.movies_jambulatv_dir}}"
-      filename: "{{movie_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')}}.({{movie_year}}){% if quality|default(False) %}: - {{quality}}{% endif %}"
+      #filename: "{{movie_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')}}.({{movie_year}}){% if quality|default(False) %}: - {{quality}}{% endif %}"
+      filename: "{{tmdb_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')|replace('(', '')|replace(')', '')}}.({{tmdb_year|replace('(', '')|replace(')', '')}})"
       clean_source: 2
       along:
         - sub
