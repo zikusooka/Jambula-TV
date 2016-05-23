@@ -959,6 +959,11 @@ sed -i "s:group = $ASTERISK_FILES_GROUP:group = nginx:g" $CONFDIR/php-fpm.d/www.
 systemctl restart nginx.service
 # Restart php-fpm
 systemctl restart php-fpm.service
+# make spawn-cgi run under 'default' group
+sed -i "s:FCGI_USER=$ASTERISK_FILES_USER:FCGI_USER=nginx:g" $SYSCONFIG_DIR/spawn-fcgi 
+sed -i "s:FCGI_GROUP=$ASTERISK_FILES_GROUP:FCGI_GROUP=nginx:g" $SYSCONFIG_DIR/spawn-fcgi 
+# Restart fcgiwrap service now 
+systemctl restart spawn-fcgi.service
 #
 # Remove asterisk user/group
 groupdel asterisk
@@ -5123,6 +5128,11 @@ sed -i "s:user = nginx:user = $ASTERISK_FILES_USER:g" $CONFDIR/php-fpm.d/www.con
 sed -i "s:group = nginx:group = $ASTERISK_FILES_GROUP:g" $CONFDIR/php-fpm.d/www.conf
 # Restart php-fpm
 systemctl restart php-fpm.service
+# make spawn-cgi run under 'asterisk' group
+sed -i "s:FCGI_USER=nginx:FCGI_USER=$ASTERISK_FILES_USER:g" $SYSCONFIG_DIR/spawn-fcgi 
+sed -i "s:FCGI_GROUP=nginx:FCGI_GROUP=$ASTERISK_FILES_GROUP:g" $SYSCONFIG_DIR/spawn-fcgi 
+# Restart fcgiwrap service now 
+systemctl restart spawn-fcgi.service
 #
 # Change to base
 cd $INSTALL_SRC_DIR/freepbx
