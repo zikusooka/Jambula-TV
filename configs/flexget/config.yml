@@ -97,45 +97,36 @@ templates:
       recipients:
         - username: '{{secrets.telegram.username}}'
         #- fullname: 
-            #first: '{{secrets.telegram.first_name}}'
-            #sur: '{{secrets.telegram.sur_name}}'
+        #    first: '{{secrets.telegram.first_name}}'
+        #    sur: '{{secrets.telegram.sur_name}}'
       template: |+
         {% if task == "tv_shows" %}*[JambulaTV] TV Show(s) Queued*
-
         The following TV Episode has been queued for download:
         {% elif task == "movies" %}*[JambulaTV] Movie(s) Queued*
-
         The following Movie has been queued for download:
         {% elif task == "internet_tv" %}*[JambulaTV] Podcast(s) Queued*
-
         The following Podcast has been queued for download:
         {% elif task == "move_tv_shows" %}*[JambulaTV] New TV Episode(s) Added*
-
         The following TV Series Episode was successfully downloaded. You may find it under 'TV Shows' on your JambulaTV. Enjoy!
         {% elif task == "move_movies" %}*[JambulaTV] New Movie(s) Added*
-
         The following movie was successfully downloaded. You may find it under 'Movies' on your JambulaTV. Enjoy!
         {% else %}*[JambulaTV] Other Item(s) Added*
-
         An item has been added from task: {{task|replace("_", "-")}}
         {% endif %}
-        {% if series_name is defined %}
-        Task 1 is {{task}}
-        *{{series_name}}* - {{series_id}} - {{quality|d('')}}
-        *{{tvmaze_episode_name|d(tvdb_ep_name)|d('')}}*
-        [Image]({{tvmaze_series_original_image|replace("_", "%5F")}})
-        [Show page]({{tvmaze_series_url|replace("_", "%5F")}})
-        {% elif imdb_name is defined %}
-        *{{imdb_name}}* - ({{imdb_year}})
-        {{quality|d('')}}
-        {{imdb_score}}/10 - {{imdb_votes}} votes
-        {{imdb_genres|join(', ')|title}}  
-        *Plot:* {{imdb_plot_outline}}
+        {% if series_name is defined %}Series: *{{tvdb_series_name}}* | Airs: *{{tvdb_airs_day_of_week}}*
+        Episode: *{{tvdb_ep_id}}* | Title: *{{tvdb_ep_name|d('')}}*
+        Rated: *{{tvdb_ep_rating}}/10* | Aired: *{{tvdb_ep_air_date|replace("00", "")|replace(":", "")}}*
+        Time: *{{tvdb_runtime}} Mins* | Format: *{{quality|d('')}}*
+        [Image]({{tvmaze_series_medium_image|replace("_", "%5F")}})
+        {{tvdb_ep_overview}}
+        {% elif imdb_name is defined %}Movie: *{{imdb_name}}* | Year: *{{imdb_year}}* 
+        Rating: *{{imdb_score}}/10* | Votes: *{{imdb_votes}} votes*
+        Genres: *{{imdb_genres|join(', ')|title}}* 
+        Time: *{{tmdb_runtime}} Mins* | Format: *{{quality|d('')}}*
         [Image]({{tmdb_posters[0]|replace("_", "%5F")}})
-        [Movie Page]({{imdb_url|d('')}})     
+        {{imdb_plot_outline}}
         {% else %}
         *{{title}}*
-        Task 2 is {{task}}
         {% endif %}
 
 
@@ -145,6 +136,10 @@ templates:
   # TV
   # --
   tv:
+    thetvdb_lookup: yes
+    tvmaze_lookup: yes
+    verify_ssl_certificates: no
+    priority: 10
     content_size:
       max: 490
     free_space:
@@ -164,9 +159,7 @@ templates:
           upgrade: yes
     include: [ '{{secrets.tv.include}}' ]
     download: '{{secrets.tv.download}}'
-    verify_ssl_certificates: no
-    priority: 10
-
+    
     # Pull TV shows from trakt.tv watchlist
     discover:
       what: 
@@ -185,6 +178,8 @@ templates:
     limit_new: 1
     seen_movies:
       matching: strict
+    tmdb_lookup: yes
+    imdb_lookup: yes
     imdb_required: yes
     imdb:
       min_score: 8.0
