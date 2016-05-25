@@ -136,10 +136,10 @@ templates:
   # TV
   # --
   tv:
+    priority: 10
     thetvdb_lookup: yes
     tvmaze_lookup: yes
     verify_ssl_certificates: no
-    priority: 10
     content_size:
       max: 490
     free_space:
@@ -178,6 +178,7 @@ templates:
   # Movies 
   #--------
   movies:
+    priority: 30
     limit_new: 1
     seen_movies:
       matching: strict
@@ -308,7 +309,7 @@ tasks:
   # -------------------------------
   move_tv_shows:
     manual: yes
-    priority: 99 # Make top priority over move_movies
+    priority: 97 # Make top priority over move_movies
     disable:
       - retry_failed
       - seen
@@ -357,7 +358,7 @@ tasks:
   # -------------------------------
   move_movies:
     manual: yes
-    priority: 97
+    priority: 99
     disable:
       - retry_failed
       - seen

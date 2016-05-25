@@ -47,7 +47,7 @@ method.set_key = event.download.finished, notify_via_email, "execute = /usr/bin/
 #
 # Move tasks on complete and Notify via Telegram
 # ----------------------------------------------
-method.set_key = event.download.finished, run_flexget_move_tasks, "execute = /usr/bin/flexget, -c, PROJECT_SYSTEM_CONF_DIR/flexget/config.yml, execute, '--logfile', PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log, '--task', 'move_tv_shows', 'move_movies'"
+method.set_key = event.download.finished, run_flexget_move_tasks, "execute = /usr/bin/flexget, -c, PROJECT_SYSTEM_CONF_DIR/flexget/config.yml, execute, --logfile, PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log, --tasks, move_tv_shows, move_movies"
 
 # The ip address reported to the tracker.
 #ip = rakshasa
@@ -133,3 +133,11 @@ network.scgi.open_port = localhost:5000
 #done_bg_color = 3
 #active_fg_color = 1
 #active_bg_color = 5
+
+# Logging
+##########
+#   Levels = critical error warn notice info debug
+#   Groups = connection_* dht_* peer_* rpc_* storage_* thread_* tracker_* torrent_* 
+log.open_file = "rtorrent.log", "RTORRENT_LOG_DIR/rtorrent.log"
+# Log external script output and results
+log.execute = "RTORRENT_LOG_DIR/execute.log"
