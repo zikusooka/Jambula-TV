@@ -40,6 +40,7 @@ esac
 INCDIR=$PREFIX/include
 CRONTABS_DIR=$SPOOLDIR/cron
 MANDIR1=$PREFIX/share/man/man1
+MANDIR3=$PREFIX/share/man/man3
 MANDIR8=$PREFIX/share/man/man8
 SYSCTL_DIR=$CONFDIR/sysctl.d
 UDEV_RULES_DIR=/etc/udev/rules.d
@@ -68,7 +69,7 @@ PROJECT_ZIPS_DIR=$PROJECT_SRC_DIR/zips
 PROJECT_SYSTEM_ARCH=`uname -m`
 PROJECT_SYSTEM_CONF_DIR=$CONFDIR/$PROJECT_NAME
 PROJECT_SYSTEM_SHARE_DIR=$PREFIX/share/$PROJECT_NAME
-PROJECT_SYSTEM_LOG_DIR=$STATEDIR/log/$PROJECT_NAME
+PROJECT_SYSTEM_LOG_DIR=$LOGDIR/$PROJECT_NAME
 PROJECT_SYSTEM_LIB_DIR=$STATEDIR/lib/$PROJECT_NAME
 PROJECT_SYSTEM_CACHE_DIR=$STATEDIR/cache/$PROJECT_NAME
 
@@ -902,21 +903,30 @@ rm -rf $WWW_HTML_DIR/icingaweb2/
 }
 
 uninstall_zoneminder () {
-uninstall_src_pkgs zoneminder
 # Stop processes
 systemctl stop zoneminder.service
 kill $(ps auxw | grep zm | awk {'print $2'})
+# Drop database data for tests/new installs
+echo "
+CAUTION: Take care here - ZoneMinder data is about to be dropped !!!
+====================================================================
+"
+mysqladmin -p$MYSQL_ROOT_PASSWORD drop $ZONEMINDER_DB_NAME
 # Uninstall
 cd $INSTALL_SRC_DIR/ZoneMinder && make uninstall
+# Uninstall ZoneMinder
+#uninstall_src_pkgs zoneminder
 rm -rf $INSTALL_SRC_DIR/ZoneMinder
 rm -rf $PREFIX/share/zoneminder
-rmdir $PROJECT_SYSTEM_CONF_DIR/zoneminder/
+rm -rf $PROJECT_SYSTEM_CONF_DIR/zoneminder/
 rm -rf /usr/share/perl5/vendor_perl/ZoneMinder
 rm -rf /usr/lib/perl5/vendor_perl/auto/ZoneMinder
+rm -f $MANDIR3/ZoneMinder.3pm
 rm -rf $RUNDIR/zm
-#rm -rf $WWW_HTML_DIR/zm
-#rm -rf $WWW_CGI_DIR/zm
-#rm -rf $STATEDIR/lib/mysql/zm
+rm -rf $WWW_HTML_DIR/zm
+rm -rf $WWW_CGI_DIR/zm
+rm -rf $STATEDIR/lib/mysql/zm
+rm -rf $PROJECT_SYSTEM_LOG_DIR/zoneminder
 }
 
 uninstall_flexget () {
@@ -3482,6 +3492,8 @@ EOF
 fi
 # Copy jambulatv-fetch-podcasts script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-fetch-podcasts ] || cp -v $PROJECT_BIN_DIR/jambulatv-fetch-podcasts $BINARY_PREFIX/
+# Copy jambulatv-rename-tvshows used to rename TV Shows into SXXEYY series format, if none exists in bin directory
+[ -e $BINARY_PREFIX/jambulatv-rename-tvshows ] || cp -v $PROJECT_BIN_DIR/jambulatv-rename-tvshows $BINARY_PREFIX/
 #
 # Directory permissions
 # Change flexget config directory to multimedia user

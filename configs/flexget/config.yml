@@ -153,6 +153,9 @@ templates:
           quality: "h264 xvid !720p"
           propers: no 
           identified_by: ep
+          ep_regexp:
+            - s(\d+)e(\d+)
+            - s(\d+)ep(\d+)
           tracking: backfill
           timeframe: 12 hours
           target: "h264"
@@ -320,6 +323,14 @@ tasks:
     seen: local
     all_series:
       parse_only: yes
+    exec:
+      auto_escape: yes
+      on_start:
+        phase:
+          # Rename completed torrent files into TV Series format SXXEYY
+          - /bin/sh '/{{secrets.tv.series_rename_script}}'
+          # Create dummy 6M file
+          - truncate -s 6M '/{{secrets.tv.series_completed_dir}}/DO.NOT.REMOVE.ME'
     filesystem:
       path: 
         - "/{{secrets.tv.series_completed_dir}}"
@@ -338,11 +349,6 @@ tasks:
         - sub
         - srt
         - extrafanart
-    exec:
-      auto_escape: yes
-      on_start:
-    # Create dummy 6M file
-        phase: truncate -s 6M '/{{secrets.tv.series_completed_dir}}/DO.NOT.REMOVE.ME'
     # Scan video library
     template:
       - kodi_library_scan
