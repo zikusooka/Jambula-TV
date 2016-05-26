@@ -1102,6 +1102,16 @@ systemctl --system daemon-reload
 rm -rf $INSTALL_SRC_DIR/hostap*
 }
 
+# Uninstall pocketsphinx
+uninstall_pocketsphinx () {
+uninstall_src_pkgs pocketsphinx
+}
+
+# Uninstall sphinxbase
+uninstall_sphinxbase () {
+uninstall_src_pkgs sphinxbase
+}
+
 
 
 #######################

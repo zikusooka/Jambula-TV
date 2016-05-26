@@ -95,6 +95,14 @@ asterisk_configure
 upgrade_freepbx
 }
 
+upgrade_sphinx () {
+uninstall_pocketsphinx
+uninstall_sphinxbase
+sphinxbase_install
+pocketsphinx_install
+}
+
+
 
 #################
 #  MAIN SCRIPT  #
@@ -121,3 +129,5 @@ upgrade_freepbx
 #upgrade_freepbx
 
 #upgrade_asterisk
+
+#upgrade_sphinx
