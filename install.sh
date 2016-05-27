@@ -280,6 +280,7 @@ fi
 # ASR - Speech Recognition
 sphinxbase_install
 pocketsphinx_install
+SpeechRecognition_install
 
 # ----------------
 # Administration 

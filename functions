@@ -6480,6 +6480,21 @@ make
 make install
 }
 
+SpeechRecognition_install () {
+# PyAudio - Needed for Mic
+tar zxvf $PROJECT_TARBALLS_DIR/PyAudio-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v PyAudio-* PyAudio
+# Compile
+cd $INSTALL_SRC_DIR/PyAudio 
+python setup.py install --install-lib=$PYTHON_SITEDIR
+# Speech Recognition
+tar zxvf $PROJECT_TARBALLS_DIR/SpeechRecognition-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v SpeechRecognition-* SpeechRecognition
+# Compile
+cd $INSTALL_SRC_DIR/SpeechRecognition 
+python setup.py install --install-lib=$PYTHON_SITEDIR
+}
+
 remind_configure () {
 # Create reminder directory
 [ -d $REMINDERS_DIRECTORY ] || mkdir -p $REMINDERS_DIRECTORY
