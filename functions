@@ -189,7 +189,7 @@ PYALSAAUDIO_VERSION=0.7
 BLUEZ_VERSION=4.101 # Keep here, V5.X has no HSP/HFP
 SBC_VERSION=1.2
 PULSEAUDIO_VERSION=5.0
-PORTAUDIO_VERSION=stable_v19_20140130
+PORTAUDIO_VERSION=snapshot
 X264_VERSION=snapshot-20130904-2245
 SOX_VERSION=14.4.1
 TVTIME_VERSION=1.0.2
@@ -1637,6 +1637,8 @@ EOF
 }
 
 portaudio_install () {
+# Remove existing rpm package if any
+rpm -q portaudio > /dev/null 2>&1 && rpm -e --nodeps portaudio
 # Unpack
 tar xvf $PROJECT_TARBALLS_DIR/pa_$PORTAUDIO_VERSION.tgz -C $INSTALL_SRC_DIR
 # Compile
