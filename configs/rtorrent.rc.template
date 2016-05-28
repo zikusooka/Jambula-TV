@@ -47,7 +47,7 @@ method.set_key = event.download.finished, notify_via_email, "execute = /usr/bin/
 #
 # Move tasks on complete and Notify via Telegram
 # ----------------------------------------------
-method.set_key = event.download.finished, run_flexget_move_tasks, "execute = /usr/bin/flexget, -c, PROJECT_SYSTEM_CONF_DIR/flexget/config.yml, execute, --logfile, PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log, --tasks, move_tv_shows, move_movies"
+method.set_key = event.download.finished, run_flexget_move_tasks, "execute = /usr/bin/flexget, -c, PROJECT_SYSTEM_CONF_DIR/flexget/config.yml, --logfile, PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log, execute, --now, --tasks, move_tv_shows, move_movies"
 
 # The ip address reported to the tracker.
 #ip = rakshasa
