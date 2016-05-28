@@ -330,8 +330,8 @@ tasks:
         phase:
           # Rename completed torrent files into TV Series format SXXEYY
           - /bin/sh '/{{secrets.tv.series_rename_script}}'
-          # Create dummy 6M file
-          - truncate -s 6M '/{{secrets.tv.series_completed_dir}}/DO.NOT.REMOVE.ME'
+          # Create dummy 19M file
+          - truncate -s 19M '/{{secrets.tv.series_completed_dir}}/DO.NOT.REMOVE.ME'
     filesystem:
       path: 
         - "/{{secrets.tv.series_completed_dir}}"
@@ -345,7 +345,7 @@ tasks:
       to: "/{{secrets.tv.series_jambulatv_dir}}/{{tvdb_series_name|replace(' ', '_')|replace('(', '')|replace(')', '')}}/Season_{{'%02d'|format(tvdb_season)}}"
       #filename: "{{series_name}}.{{series_id}}.{{quality|upper}}"
       filename: "{{tvdb_series_name|replace(' ', '.')|replace('(', '')|replace(')', '')}}.{{tvdb_ep_id}}.{{tvdb_ep_name|replace(' ', '.')}}.{{quality|upper|replace(' ', '.')}}"
-      clean_source: 5
+      clean_source: 18
       along:
         - sub
         - srt
@@ -384,7 +384,7 @@ tasks:
       to: "/{{secrets.movies.movies_jambulatv_dir}}"
       #filename: "{{movie_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')}}.({{movie_year}}){% if quality|default(False) %}: - {{quality}}{% endif %}"
       filename: "{{tmdb_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')|replace('(', '')|replace(')', '')}}.({{tmdb_year|replace('(', '')|replace(')', '')}})"
-      clean_source: 2
+      clean_source: 18
       along:
         - sub
         - srt
@@ -392,8 +392,8 @@ tasks:
     exec:
       auto_escape: yes
       on_start:
-    # Create dummy 3M file
-        phase: truncate -s 3M '/{{secrets.movies.movies_completed_dir}}/DO.NOT.REMOVE.ME'
+    # Create dummy 19M file
+        phase: truncate -s 19M '/{{secrets.movies.movies_completed_dir}}/DO.NOT.REMOVE.ME'
     # Scan video library
     template:
       - kodi_library_scan
