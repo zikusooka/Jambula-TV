@@ -101,7 +101,6 @@ TORRENTS_PENDING_DIRECTORY=$TORRENTS_DIRECTORY/pending
 TORRENTS_WATCH_DIRECTORY=$TORRENTS_DIRECTORY/watch
 RTORRENT_SESSIONS_DIR=$TORRENTS_WATCH_DIRECTORY/.sessions_rtorrent
 RTORRENT_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/rtorrent
-RTORRENT_NOTIFICATION_EMAIL="username@youremaildomain.com"
 
 # aria2
 ARIA2_CONFIG_FILE=$PROJECT_SYSTEM_CONF_DIR/aria2.conf
@@ -599,6 +598,17 @@ OWNCLOUD_CONFIG_DIR=$WWW_HTML_DIR/owncloud/config
 OWNCLOUD_CONFIG_FILE=$OWNCLOUD_CONFIG_DIR/config.php
 OWNCLOUD_DATA_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Cloud
 OWNCLOUD_WWW_SERVER_NAME=$(grep server_name $PROJECT_CONFIGS_DIR/nginx/sites-enabled/owncloud | awk {'print $2'} | sed 's/;//')
+
+# Enter User's Telegram bot credentials here
+TELEGRAM_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-telegram.cfg
+TELEGRAM_API_BOT="123456789:asdfghjklpoitrr-45ghyujkk"
+TELEGRAM_CHAT_ID="987654321"
+TELEGRAM_USERNAME="username"
+
+# Enter User's personal email credentials here
+EMAIL_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-email.cfg
+EMAIL_TO_ADDRESS="username@userdomain"
+EMAIL_CC_ADDRESS=""
 
 
 
@@ -3269,6 +3279,13 @@ make && make install
 cp -rv $PROJECT_CONTRIB_DIR/sounds/beep2 $PROJECT_SYSTEM_SHARE_DIR/sounds/
 }
 
+email_messaging_configure () {
+cat > $EMAIL_CREDENTIALS_CONFIG << EOF
+EMAIL_TO_ADDRESS="$EMAIL_TO_ADDRESS"
+EMAIL_CC_ADDRESS="$EMAIL_CC_ADDRESS"
+EOF
+}
+
 ziproxy_install () {
 tar xvf $PROJECT_TARBALLS_DIR/ziproxy-*.tar.xz -C $INSTALL_SRC_DIR
 # Change to ziproxy directory
@@ -3591,7 +3608,7 @@ cat $PROJECT_CONFIGS_DIR/rtorrent.rc.template | \
    sed -e "s:TORRENTS_PENDING_DIRECTORY:$TORRENTS_PENDING_DIRECTORY:g" | \
    sed -e "s:TORRENTS_COMPLETED_DIRECTORY:$TORRENTS_COMPLETED_DIRECTORY:g" | \
    sed -e "s:RTORRENT_SESSIONS_DIR:$RTORRENT_SESSIONS_DIR:g" | \
-   sed -e "s:RTORRENT_NOTIFICATION_EMAIL:$RTORRENT_NOTIFICATION_EMAIL:g" | \
+   sed -e "s:RTORRENT_NOTIFICATION_EMAIL:$EMAIL_TO_ADDRESS:g" | \
    sed -e "s:PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" | \
    sed -e "s:PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
    sed -e "s:RTORRENT_LOG_DIR:$RTORRENT_LOG_DIR:g" \
@@ -3721,6 +3738,14 @@ cd $INSTALL_SRC_DIR && mv -v python-telegram-bot-* python-telegram-bot
 # Compile
 cd $INSTALL_SRC_DIR/python-telegram-bot 
 python setup.py install --install-lib=$PYTHON_SITEDIR
+}
+
+telegram_messaging_configure () {
+cat > $TELEGRAM_CREDENTIALS_CONFIG << EOF
+TELEGRAM_API_BOT="$TELEGRAM_API_BOT"
+TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
+TELEGRAM_USERNAME="$TELEGRAM_USERNAME"
+EOF
 }
 
 sleekxmpp_install () {
@@ -5647,6 +5672,8 @@ chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_LOG_DIR/zoneminder
 }
 
 zoneminder_configure () {
+# Copy alarmed alert script 
+
 # Copy systemd script- this defers from source file to kill errors during start
 cp -v $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service $SYSTEMD_UNITS_DIR_USER/
 # Enable zoneminder

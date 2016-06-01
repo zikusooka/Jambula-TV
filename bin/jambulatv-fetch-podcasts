@@ -8,14 +8,17 @@ ARIA2_DIRECTORY=$1
 ARIA2_INPUT_FILE=$2 
 EMAIL_NOTIFICATION_ADDRESS=$3
 EMAIL_NOTIFICATION_SCRIPT=/usr/bin/jambulatv-email
+EMAIL_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-email.cfg
 # Default variables if no args 
 [ "x$ARIA2_DIRECTORY" = "x" ] && ARIA2_DIRECTORY=/JambulaTV/Podcasts
 [ "x$ARIA2_INPUT_FILE" = "x" ] && ARIA2_INPUT_FILE=/JambulaTV/Podcasts/inputfile.DO.NOT.REMOVE
-[ "x$EMAIL_NOTIFICATION_ADDRESS" = "x" ] && EMAIL_NOTIFICATION_ADDRESS="user@domain.com"
+[ "x$EMAIL_NOTIFICATION_ADDRESS" = "x" ] && EMAIL_NOTIFICATION_ADDRESS=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+# Telegram
 TELEGRAM_SCRIPT=/usr/bin/jambulatv-telegram
-TELEGRAM_API_BOT=""
-TELEGRAM_CHAT_ID=""
-
+TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
+TELEGRAM_API_BOT=$(grep -i API_BOT $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+TELEGRAM_CHAT_ID=$(grep -i CHAT_ID $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+USERNAME=$(grep -i USERNAME $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 
 # Generate 'On-Download-X' Scripts
 # ---------------------------------

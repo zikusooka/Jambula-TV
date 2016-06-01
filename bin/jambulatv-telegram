@@ -1,8 +1,10 @@
 #!/bin/sh
+TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
 TELEGRAM_METHOD_NAME=$1
-TELEGRAM_API_BOT=$2
-CHAT_ID=$3
-TELEGRAM_ARGUMENTS="$4"
+TELEGRAM_API_BOT=$(grep -i API_BOT $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+CHAT_ID=$(grep -i CHAT_ID $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+USERNAME=$(grep -i USERNAME $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+TELEGRAM_ARGUMENTS="$2"
 TELEGRAM_API_URL="https://api.telegram.org"
 
 
