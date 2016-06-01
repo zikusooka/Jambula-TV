@@ -439,13 +439,6 @@ COOVA_PRIVILEGED_MAC="00:21:5c:25:32:5b,00:02:2D:53:66:21,00:0E:9B:15:98:8E"
 JABBERD_PASSWD=`grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //'`
 JABBERD_RESOURCE=Home
 
-# VOIP/SIP Settings 
-SIP_PROVIDER_HOSTNAME=sip.flowroute.com
-
-# Google services
-GOOGLE_SERVICES_USERNAME=CHANGEME@gmail.com
-GOOGLE_SERVICES_PASSWORD=CHANGEME
-
 # SMS via Google Calendar
 SMS_VIA_GOOGLE_CALENDAR_SCRIPT=$BINARY_PREFIX/jambulatv-sms-using-google-calendar 
 GOOGLE_CALENDAR="JambulaTV-Services"
@@ -598,6 +591,13 @@ OWNCLOUD_CONFIG_DIR=$WWW_HTML_DIR/owncloud/config
 OWNCLOUD_CONFIG_FILE=$OWNCLOUD_CONFIG_DIR/config.php
 OWNCLOUD_DATA_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Cloud
 OWNCLOUD_WWW_SERVER_NAME=$(grep server_name $PROJECT_CONFIGS_DIR/nginx/sites-enabled/owncloud | awk {'print $2'} | sed 's/;//')
+
+# VOIP/SIP Settings 
+SIP_PROVIDER_HOSTNAME=sip.flowroute.com
+
+# Enter Google services credentials
+GOOGLE_SERVICES_USERNAME=CHANGEME@gmail.com
+GOOGLE_SERVICES_PASSWORD=CHANGEME
 
 # Enter User's Telegram bot credentials here
 TELEGRAM_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-telegram.cfg
@@ -4602,8 +4602,6 @@ email_via_gmail_setup () {
 cat > $EMAIL_GMAIL_CONFIG << EOF
 MACHINE_HOST=$(hostname -s)
 
-EMAIL_CMD=/usr/bin/email
-EMAIL_OPTIONS="-V --tls"
 EMAIL_FROM_FULLNAME=$(hostname -s)
 EMAIL_FROM_ADDRESS=$(hostname -s)@$(hostname -d)
 
