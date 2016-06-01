@@ -6,19 +6,20 @@ ARIA2_LOG_FILE=/var/log/JambulaTV/aria2.log
 ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT=/tmp/aria2-on-download-complete.sh
 ARIA2_DIRECTORY=$1 
 ARIA2_INPUT_FILE=$2 
-EMAIL_NOTIFICATION_ADDRESS=$3
+EMAIL_TO_ADDRESS=$3
 EMAIL_NOTIFICATION_SCRIPT=/usr/bin/jambulatv-email
 EMAIL_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-email.cfg
 # Default variables if no args 
 [ "x$ARIA2_DIRECTORY" = "x" ] && ARIA2_DIRECTORY=/JambulaTV/Podcasts
 [ "x$ARIA2_INPUT_FILE" = "x" ] && ARIA2_INPUT_FILE=/JambulaTV/Podcasts/inputfile.DO.NOT.REMOVE
-[ "x$EMAIL_NOTIFICATION_ADDRESS" = "x" ] && EMAIL_NOTIFICATION_ADDRESS=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 # Telegram
-TELEGRAM_SCRIPT=/usr/bin/jambulatv-telegram
+EMAIL_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-email.cfg
 TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
-TELEGRAM_API_BOT=$(grep -i API_BOT $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
-TELEGRAM_CHAT_ID=$(grep -i CHAT_ID $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
-USERNAME=$(grep -i USERNAME $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+
+
+# Source Telegram credentials if non specified
+[ "x$EMAIL_TO_ADDRESS" = "x" ] && \
+. $EMAIL_CREDENTIALS_CONFIG
 
 # Generate 'On-Download-X' Scripts
 # ---------------------------------
@@ -31,14 +32,15 @@ cat > $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT << EOF
 # Perform the following after aria2 download is completed
 #
 # Email notifying completion
-$EMAIL_NOTIFICATION_SCRIPT $EMAIL_NOTIFICATION_ADDRESS "Podcasts - Download of \$(basename \$3) Completed" "Your podcast is located at \$3"
+$EMAIL_NOTIFICATION_SCRIPT $EMAIL_TO_ADDRESS "Podcasts - Download of \$(basename \$3) Completed" "Your podcast is located at \$3"
+
+# Source Telegram credentials
+. $TELEGRAM_CREDENTIALS_CONFIG
 
 # Telegram if API Bot and Chat ID exist
-TELEGRAM_API_BOT="$TELEGRAM_API_BOT"
-TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
 if [ "x\$TELEGRAM_API_BOT" != "x" ] && [ "x\$TELEGRAM_CHAT_ID" != "x" ];
 then
-/usr/bin/jambulatv-telegram sendmessage \$TELEGRAM_API_BOT \$TELEGRAM_CHAT_ID "*[JambulaTV] New Podcast(s) Added*
+/usr/bin/jambulatv-telegram sendmessage "*[JambulaTV] New Podcast(s) Added*
 
 The Podcast *\$(basename \$3)* was successfully downloaded. You may find it under 'Videos >> Files >> Podcasts' on your JambulaTV or \$3. Enjoy!"
 else

@@ -1,12 +1,11 @@
 #!/bin/sh
 TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
 TELEGRAM_METHOD_NAME=$1
-TELEGRAM_API_BOT=$(grep -i API_BOT $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
-CHAT_ID=$(grep -i CHAT_ID $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
-USERNAME=$(grep -i USERNAME $TELEGRAM_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 TELEGRAM_ARGUMENTS="$2"
 TELEGRAM_API_URL="https://api.telegram.org"
 
+# Source Telegram credentials
+. $TELEGRAM_CREDENTIALS_CONFIG
 
 # Functions
 # ---------
@@ -16,20 +15,6 @@ clear
 if [ "x$TELEGRAM_METHOD_NAME" = "x" ];
 then
 echo "Usage:  ./`basename $0` [METHOD]
-"
-exit 1
-fi
-
-if [ "x$TELEGRAM_API_BOT" = "x" ];
-then
-echo "Usage:  ./`basename $0` $TELEGRAM_METHOD_NAME [TELEGRAM_API_BOT] 
-"
-exit 1
-fi
-
-if [ "x$CHAT_ID" = "x" ];
-then
-echo "Usage:  ./`basename $0` $TELEGRAM_METHOD_NAME $TELEGRAM_API_BOT [CHAT_ID]
 "
 exit 1
 fi
@@ -52,10 +37,10 @@ fi
 
 # Chat ID
 get_chat_id () {
-TELEGRAM_CHAT_ID=$(curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/getUpdates | jq . | grep \"id\": | sort -u | head -1 | awk {'print $2'})
-if [ "x$TELEGRAM_CHAT_ID" = "x" ];
+CHAT_ID=$(curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/getUpdates | jq . | grep \"id\": | sort -u | head -1 | awk {'print $2'})
+if [ "x$CHAT_ID" = "x" ];
 then
-TELEGRAM_CHAT_ID=$CHAT_ID
+CHAT_ID=$TELEGRAM_CHAT_ID
 fi
 }
 

@@ -601,6 +601,7 @@ GOOGLE_SERVICES_PASSWORD=CHANGEME
 
 # Enter User's Telegram bot credentials here
 TELEGRAM_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-telegram.cfg
+TELEGRAM_SCRIPT=/usr/bin/jambulatv-telegram
 TELEGRAM_API_BOT="123456789:asdfghjklpoitrr-45ghyujkk"
 TELEGRAM_CHAT_ID="987654321"
 TELEGRAM_USERNAME="username"
@@ -3742,6 +3743,7 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 
 telegram_messaging_configure () {
 cat > $TELEGRAM_CREDENTIALS_CONFIG << EOF
+TELEGRAM_SCRIPT="$TELEGRAM_SCRIPT"
 TELEGRAM_API_BOT="$TELEGRAM_API_BOT"
 TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
 TELEGRAM_USERNAME="$TELEGRAM_USERNAME"
@@ -4600,8 +4602,9 @@ email_via_gmail_setup () {
 [ -e $BINARY_PREFIX/jambulatv-email ] || cp -v $PROJECT_BIN_DIR/jambulatv-email $BINARY_PREFIX/
 # Add usernames, passwords credentials to Gmail config
 cat > $EMAIL_GMAIL_CONFIG << EOF
+EMAIL_CMD=/usr/bin/email
+EMAIL_OPTIONS="-V --tls"
 MACHINE_HOST=$(hostname -s)
-
 EMAIL_FROM_FULLNAME=$(hostname -s)
 EMAIL_FROM_ADDRESS=$(hostname -s)@$(hostname -d)
 
