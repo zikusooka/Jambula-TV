@@ -218,14 +218,6 @@ aria2_configure
 # File server
 samba_configure
 
-# ---------------------
-# Security Monitoring
-# ---------------------
-zoneminder_pre_install
-zoneminder_install
-zoneminder_configure 
-zoneminder_zms_inetd
-
 # -----------------
 # Utilities/tools
 # -----------------
@@ -281,6 +273,15 @@ fi
 sphinxbase_install
 pocketsphinx_install
 SpeechRecognition_install
+
+# ---------------------
+# Security Monitoring 
+# IMPORTANT Install After FreePBX/Asterisk
+# ---------------------
+zoneminder_pre_install
+zoneminder_install
+zoneminder_configure 
+zoneminder_zms_inetd
 
 # ----------------
 # Administration 

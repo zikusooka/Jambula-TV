@@ -1,0 +1,9 @@
+ZoneMinder
+==========
+Problem: Camera view not showing.
+
+Solution: Ensure that the user running webserver is in charge of all zoneminder processes, files.  For testing, see included test.cgi test.php in document root folder
+- check user in /etc/xinetd.d/zms 
+- check user:group in php-fpm.d/www.conf
+- check user:group ownership for ./html/zm | ./log/zm | ./etc/zm.conf
+- check permissons (644) zm.conf

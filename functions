@@ -3887,8 +3887,12 @@ make install
 nginx_spawn_fcgi_configure () {
 # Backup orig spawn-fcgi file
 cp -v $SYSCONFIG_DIR/spawn-fcgi $SYSCONFIG_DIR/spawn-fcgi.orig
-# Patch up spawn-fcgi file
-patch -p1 $SYSCONFIG_DIR/spawn-fcgi < $PROJECT_PATCHES_DIR/spawn.fcgi.patch
+# Modify patch 
+cat $PROJECT_PATCHES_DIR/spawn.fcgi.patch \
+| sed -e "s:WWW_USER:$WWW_USER:g" \
+| sed -e "s:WWW_GROUP:$WWW_GROUP:g" > $TMPDIR/spawn.fcgi.patch
+# Apply patch to spawn-fcgi file
+patch -p1 $SYSCONFIG_DIR/spawn-fcgi < $TMPDIR/spawn.fcgi.patch
 # Enable systemd startup
 systemctl enable spawn-fcgi.service
 # Start fcgiwrap service now 
@@ -5673,8 +5677,14 @@ chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_LOG_DIR/zoneminder
 }
 
 zoneminder_configure () {
-# Copy alarmed alert script 
-
+# Modify perl-based daemon script that watches for ZoneMinder alarms and copy to bin/
+cat $PROJECT_CONTRIB_DIR/scripts/zoneminder_alarm_daemon.pl | \
+	sed "s:ZONEMINDER_DB_HOST:$ZONEMINDER_DB_HOST:g" | \
+	sed "s:ZONEMINDER_DB_NAME:$ZONEMINDER_DB_NAME:g"| \
+	sed "s:ZONEMINDER_DB_USER:$ZONEMINDER_DB_USER:g" | \
+	sed "s:ZONEMINDER_DB_PASS:$ZONEMINDER_DB_PASS:g" > $BINARY_PREFIX/zmalarm_daemon.pl
+# Copy ZoneMinder script to send  out notifications/alerts upon ZM alarms
+[ -e $BINARY_PREFIX/jambulatv-zm-alarm-notifications ] || cp -v $PROJECT_BIN_DIR/jambulatv-zm-alarm-notifications $BINARY_PREFIX/
 # Copy systemd script- this defers from source file to kill errors during start
 cp -v $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service $SYSTEMD_UNITS_DIR_USER/
 # Enable zoneminder
@@ -5770,7 +5780,7 @@ service zms-inetd
         socket_type     = stream
         protocol        = tcp
         wait            = no
-        user            = nginx
+        user            = $WWW_USER
         port            = $ZONEMINDER_ZMS_INETD_PORT
         server          = $ZONEMINDER_ZMS_INETD_SCRIPT 
 }
