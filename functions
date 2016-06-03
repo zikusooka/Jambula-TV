@@ -5683,8 +5683,12 @@ cat $PROJECT_CONTRIB_DIR/scripts/zoneminder_alarm_daemon.pl | \
 	sed "s:ZONEMINDER_DB_NAME:$ZONEMINDER_DB_NAME:g"| \
 	sed "s:ZONEMINDER_DB_USER:$ZONEMINDER_DB_USER:g" | \
 	sed "s:ZONEMINDER_DB_PASS:$ZONEMINDER_DB_PASS:g" > $BINARY_PREFIX/zmalarm_daemon.pl
+# Make script executable
+chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
+#
 # Copy ZoneMinder script to send  out notifications/alerts upon ZM alarms
 [ -e $BINARY_PREFIX/jambulatv-zm-alarm-notifications ] || cp -v $PROJECT_BIN_DIR/jambulatv-zm-alarm-notifications $BINARY_PREFIX/
+#
 # Copy systemd script- this defers from source file to kill errors during start
 cp -v $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service $SYSTEMD_UNITS_DIR_USER/
 # Enable zoneminder

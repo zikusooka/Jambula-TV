@@ -6,9 +6,9 @@ After=mysqld.service
 Type=forking
 ExecStartPre=/usr/bin/zmupdate.pl -f
 ExecStart=/usr/bin/zmpkg.pl start
+ExecStartPost=/bin/sh -c "echo '/usr/bin/perl /usr/bin/zmalarm_daemon.pl' | /usr/bin/at now" 
 ExecReload=/usr/bin/zmpkg.pl reload
 PIDFile=/run/zm/zm.pid
 
 [Install]
 WantedBy=multi-user.target
-
