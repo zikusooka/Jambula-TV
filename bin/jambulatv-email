@@ -1,6 +1,4 @@
 #!/bin/sh
-EMAIL_CMD=/usr/bin/email
-EMAIL_OPTIONS="-V --tls"
 EMAIL_TO_ADDRESS_REMOTE=$1
 EMAIL_SUBJECT="$2"
 EMAIL_BODY="$3"
