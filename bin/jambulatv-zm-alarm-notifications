@@ -58,8 +58,7 @@ fi
 #################
 
 # Capture current camera view
-curl -s -O $ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg $ZM_WATCH_URL
-
+curl -G -s -o $ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg $ZM_WATCH_URL
 
 # Telegram
 # ---------
