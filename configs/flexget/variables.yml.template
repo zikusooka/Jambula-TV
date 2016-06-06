@@ -1,31 +1,31 @@
 webui:
-  port: 8532
+  port: FLEXGET_PORT
 
 trakt:
   username: TRAKT_USERNAME
-  watchlist: JambulaTV
+  watchlist: TRAKT_WATCHLIST
 
 global:
   rtorrent_magnet: TORRENTS_WATCH_DIRECTORY
 
 email:
-  from: torrents@DOMAIN_NAME
-  to: EMAIL_ADDRESS
+  from: torrents@TORRENTS_DOMAIN_NAME
+  to: EMAIL_TO_ADDRESS
   subject: "[JambulaTV] - A new flexget entry has been added"
-  smtp_username: GMAIL_ADDRESS
-  smtp_password: GMAIL_PASSWORD
+  smtp_username: GOOGLE_SERVICES_USERNAME
+  smtp_password: GOOGLE_SERVICES_PASSWORD
 
 telegram:
-  bot_token: "123456789:dhdhsagupromcjs-9dgsfxrkd"
-  username: jkalyango
+  bot_token: "TELEGRAM_API_BOT"
+  username: TELEGRAM_USERNAME
   first_name: 
   sur_name:
 
 kodi:
   url: "http://127.0.0.1"
-  port: 8510
-  username: jambulatv
-  password: jambulatv
+  port: KODI_HTTP_PORT
+  username: KODI_HTTP_USER
+  password: KODI_HTTP_PASS
 
 tv:
   path: PROJECT_PARTITION # TV path for free space calculations
@@ -36,8 +36,8 @@ tv:
   series_jambulatv_dir: JambulaTV/Videos/TV_Shows
   series_rename_script: usr/bin/jambulatv-rename-tvshows
   day_of_week: sun,mon,tue,wed,thu,fri,sat
-  hour: 2
-  minute: 1
+  hour: FLEXGET_SCHEDULE_TVSHOWS_HR
+  minute: FLEXGET_SCHEDULE_TVSHOWS_MIN
 
 movies:
   path: PROJECT_PARTITION # Movies path for free space calculations
@@ -46,20 +46,20 @@ movies:
   movies_completed_dir: JambulaTV/Torrents/completed/TORRENTS_LABEL_MOVIES
   movies_jambulatv_dir: JambulaTV/Videos/Movies
   day_of_week: sun,mon,tue,wed,thu,fri,sat
-  hour: 3
-  minute: 5
+  hour: FLEXGET_SCHEDULE_MOVIES_HR
+  minute: FLEXGET_SCHEDULE_MOVIES_MIN
 
 podcasts:
   path: PROJECT_PARTITION # Podcasts path for free space calculations
   exists: PROJECT_PARTITION
   include: FLEXGET_CONFIG_DIR/podcasts.yml
   download_dir: PODCASTS_DIRECTORY
-  download_file: PODCASTS_DIRECTORY/inputfile.DO.NOT.REMOVE
+  spool_dir: PODCASTS_DIRECTORY/spool
   download_log: PROJECT_SYSTEM_LOG_DIR/flexget/podcasts.log
   download_script: /usr/bin/jambulatv-fetch-podcasts
   day_of_week: sun,mon,tue,wed,thu,fri,sat
-  hour: 5
-  minute: 15
+  hour: FLEXGET_SCHEDULE_PODCASTS_HR
+  minute: FLEXGET_SCHEDULE_PODCASTS_MIN
 
 wget:
   wget_log: PROJECT_SYSTEM_LOG_DIR/flexget/wget.log
