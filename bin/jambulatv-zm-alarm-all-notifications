@@ -3,13 +3,13 @@
 ZM_CAMERA_ID=$1
 ZM_CAMERA_NAME=$2
 ZM_CAMERA_EVENT_ID=$3
-ZM_TIME=$(date)
+ZM_TIME=$(date '+%r')
 ZM_EVENTS_DIR=/tmp
 ZM_HOST_LOCAL=127.0.0.1
 ZM_HOST_WIFI=172.16.0.1
 ZM_PORT=8520
-ZM_ROOT_URL_LOCAL=http://$ZM_HOST_LOCAL:$ZM_PORT
-ZM_ROOT_URL_WIFI=http://$ZM_HOST_WIFI:$ZM_PORT
+ZM_ROOT_URL_LOCAL="http://$ZM_HOST_LOCAL:$ZM_PORT"
+ZM_ROOT_URL_WIFI="http://$ZM_HOST_WIFI:$ZM_PORT"
 ZM_WATCH_URL="$ZM_ROOT_URL_LOCAL/jpeg.cgi?mode=single&monitor=${ZM_CAMERA_ID}&scale=100"
 
 # Edit Notification message templates here
@@ -25,6 +25,7 @@ EMAIL_NOTIFICATION_ADDRESS=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG 
 EMAIL_SCRIPT="/usr/bin/jambulatv-email"
 
 # OSD
+KODI_OSD_SCRIPT=/usr/bin/jambulatv-zm-alarm-kodi-notifications
 OSD_SCRIPT=/usr/bin/jambulatv-osd
 
 
@@ -60,6 +61,7 @@ fi
 # Capture current camera view
 curl -G -s -o $ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg $ZM_WATCH_URL
 
+
 # Telegram
 # ---------
 # Source Telegram credentials
@@ -75,6 +77,10 @@ $TELEGRAM_SCRIPT SendImageDisk  $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg
 $EMAIL_SCRIPT $EMAIL_NOTIFICATION_ADDRESS "$NOTIFICATION_SUBJECT" "$NOTIFICATION_MESSAGE" "$ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg"
 
 
-# OSD
-# ---
-$OSD_SCRIPT -m "$NOTIFICATION_MESSAGE"
+# OSD Message using Doorbell plugin
+# ---------------------------------
+$KODI_OSD_SCRIPT -i $ZM_CAMERA_ID -n $ZM_CAMERA_NAME -e $ZM_CAMERA_EVENT_ID -t "$ZM_TIME" -m "$NOTIFICATION_MESSAGE"
+
+# OSD Message using jambulatv-osd script
+# --------------------------------------
+#$OSD_SCRIPT -m "$NOTIFICATION_MESSAGE"

@@ -1,0 +1,105 @@
+#!/usr/bin/python
+# This script is called by the ZoneMinder Alarm daemon/script and notifies
+# all XBMC installations to overlay pictures on the screen
+# It requires the doorbell xbmc plugin
+# http://homeawesomation.wordpress.com/2013/02/18/doorbell-ipcam-xbmc-update/
+# Credit for send_json_command to u/sffjunkie
+# http://forum.xbmc.org/showthread.php?tid=92196
+#
+# Modified for use with JambulaTV - Jambula Labs
+# --
+# Import modules
+import json
+import httplib
+import base64
+import sys
+import argparse
+import os
+import commands
+import warnings
+import time
+import xml.etree.ElementTree as ET
+
+# Variables
+KODI_GUI_SETTINGS = '/JambulaTV/.kodi/userdata/guisettings.xml'
+
+# Get Kodi web server variables
+tree = ET.parse(KODI_GUI_SETTINGS)
+root = tree.getroot()
+for services in root.findall('services'):
+   username = services.find('webserverusername').text
+   password = services.find('webserverpassword').text
+   xbmc_title = services.find('devicename').text
+   xbmc_port = services.find('webserverport').text
+   xbmc_host=['127.0.0.1']
+
+# Parse arguments/ message
+parser = argparse.ArgumentParser(description='Camera Motion detected OSD Alert')
+parser.add_argument('-i', '--cameraid', help='Camera ID Number',required=True)
+parser.add_argument('-n', '--cameraname', help='Camera Name',required=True)
+parser.add_argument('-e', '--cameraevent', help='Camera Event ID',required=False)
+parser.add_argument('-t', '--time', help='Camera TimeStamp',required=False)
+parser.add_argument('-m', '--message', help='Camera Notification Message',required=True)
+args = parser.parse_args()
+# Set Zoneminder Variables
+ZM_CAMERA_ID = args.cameraid
+ZM_CAMERA_NAME = args.cameraname
+ZM_CAMERA_EVENT_ID = args.cameraevent
+ZM_TIME = args.time
+NOTIFICATION_MESSAGE = args.message
+
+# Script arguments 
+# ----------------
+dbvar = {
+    'CamID': ZM_CAMERA_ID,
+    'CamName': ZM_CAMERA_NAME,
+    'CamEvent': ZM_CAMERA_EVENT_ID,
+    'CamTime': ZM_TIME,
+    'CamMessage': NOTIFICATION_MESSAGE
+  }
+
+# Functions
+# ---------
+# Send jsonrpc command
+def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=username, password=password):
+    command = {'jsonrpc': '2.0', 'id': id, 'method': method}
+    if params is not None: command['params'] = params
+    payload = json.dumps(command, ensure_ascii=False, sort_keys=True)
+    payload.encode('utf-8')
+    headers = {'Content-Type': 'application/json'}
+    if password != '':
+        userpass = base64.encodestring('%s:%s' % (username, password))[:-1]
+        headers['Authorization'] = 'Basic %s' % userpass
+    conn = httplib.HTTPConnection(xbmc_host, xbmc_port)
+    data = None
+    try:
+        conn.request('POST', '/jsonrpc', payload, headers)
+        response = conn.getresponse()
+        if response.status == 200: data = json.loads(response.read())['result']
+        else: data = 'Response Error'
+    except:
+        data = 'Connection Error'
+    conn.close()
+    return data
+
+# De-activate screensaver
+def xbmc_poke_screen(xbmc_host, xbmc_port=xbmc_port):
+    for x in range(0, len(xbmc_host)):                                                  
+	screenSaverStatus = send_json_command(xbmc_host[x], xbmc_port, 'XBMC.GetInfoBooleans', params={'booleans':['System.ScreenSaverActive']})
+        if screenSaverStatus == {u'System.ScreenSaverActive': True}:
+	  send_json_command(xbmc_host[x], xbmc_port, "Input.Select")
+
+# Doorbell plugin
+def xbmc_doorbell(xbmc_host, xbmc_port=xbmc_port):
+    for x in range(0, len(xbmc_host)):
+        result = send_json_command(xbmc_host[x], xbmc_port, 'Addons.ExecuteAddon',{'addonid':'script.doorbell','params':{'CamID':str(dbvar['CamID']),'CamName':str(dbvar['CamName']),'CamEvent':str(dbvar['CamEvent']),'CamTime':str(dbvar['CamTime']),'CamMessage':str(dbvar['CamMessage'])}})
+
+
+# -------------
+#  MAIN SCRIPT
+# -------------
+# Poke screen if screensaver is active
+xbmc_poke_screen(xbmc_host)
+
+# Display Camera where motion was detected
+xbmc_doorbell(xbmc_host)

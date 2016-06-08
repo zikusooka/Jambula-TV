@@ -5724,7 +5724,9 @@ cat $PROJECT_CONTRIB_DIR/scripts/zoneminder_alarm_daemon.pl | \
 chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 #
 # Copy ZoneMinder script to send  out notifications/alerts upon ZM alarms
-[ -e $BINARY_PREFIX/jambulatv-zm-alarm-notifications ] || cp -v $PROJECT_BIN_DIR/jambulatv-zm-alarm-notifications $BINARY_PREFIX/
+[ -e $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications ] || cp -v $PROJECT_BIN_DIR/jambulatv-zm-alarm-all-notifications $BINARY_PREFIX/
+# Copy ZoneMinder script to activate kodi doorbell plugin upon ZM alarms
+[ -e $BINARY_PREFIX/jambulatv-zm-alarm-kodi-notifications ] || cp -v $PROJECT_BIN_DIR/jambulatv-zm-alarm-kodi-notifications $BINARY_PREFIX/
 #
 # Copy systemd script- this defers from source file to kill errors during start
 cp -v $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service $SYSTEMD_UNITS_DIR_USER/
