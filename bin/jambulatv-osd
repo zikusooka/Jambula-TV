@@ -16,7 +16,7 @@ import xml.etree.ElementTree as ET
 # Variables
 JAMBULATV_VIRTUAL_TERMINAL = 'tty7'
 KODI_GUI_SETTINGS = '/JambulaTV/.kodi/userdata/guisettings.xml'
-TIME = 20000  # ms
+TIME = 30000  # ms
 ICON = '/usr/share/kodi/addons/Aeon-Nox/media/DefaultIconInfo.png'
 OSDRUNFILE = '/tmp/osd_process_running' 
 
@@ -37,7 +37,7 @@ def quit_if_screen_not_running ():
 def wait_if_already_running ():
 	while os.path.exists(OSDRUNFILE):
 	   print "Another OSD process is running, please wait ..."
-	   time.sleep(3)
+	   time.sleep(60)
 
 # Open, write, close a temporary file to prevent others from calling this script until done
 def create_run_file ():
