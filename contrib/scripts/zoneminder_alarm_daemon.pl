@@ -18,7 +18,6 @@ my $ALARM_NOTIFICATION_SCRIPT = '/usr/bin/jambulatv-zm-alarm-all-notifications';
 # Write PID to ZM alarm file - Used during ExecStop in systemd service file
 open(my $fh, '>>', $ZM_ALARM_PID_FILE) or die "Could not open file '$ZM_ALARM_PID_FILE' $!";
 print $fh "$ZM_ALARM_PID";
-close $fh;
 
 
 my $last_event_id = '0';
