@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
+use warnings;
 use ZoneMinder;
 
 $| = 1;
@@ -10,11 +11,17 @@ my $ZM_DB_NAME = 'ZONEMINDER_DB_NAME';
 my $ZM_DB_HOST = 'ZONEMINDER_DB_HOST';
 my $ZM_DB_USER = 'ZONEMINDER_DB_USER';
 my $ZM_DB_PASS = 'ZONEMINDER_DB_PASS';
-my $ALARM_NOTIFICATION_SCRIPT = '/usr/bin/jambulatv-zm-alarm-notifications';
+my $ZM_ALARM_PID = $$;
+my $ZM_ALARM_PID_FILE = '/run/zm/zm_alarm.pid';
+my $ALARM_NOTIFICATION_SCRIPT = '/usr/bin/jambulatv-zm-alarm-all-notifications';
+
+# Write PID to ZM alarm file - Used during ExecStop in systemd service file
+open(my $fh, '>>', $ZM_ALARM_PID_FILE) or die "Could not open file '$ZM_ALARM_PID_FILE' $!";
+print $fh "$ZM_ALARM_PID";
+close $fh;
 
 
 my $last_event_id = '0';
-
 
 my $dbh = DBI->connect( "DBI:mysql:database=".$ZM_DB_NAME.";host=".$ZM_DB_HOST, $ZM_DB_USER, $ZM_DB_PASS );
 my $sql = "select M.*, max(E.Id) as LastEventId from Monitors as M left join Events as E on M.Id = E.MonitorId where M.Function != 'None' group by (M.Id)";

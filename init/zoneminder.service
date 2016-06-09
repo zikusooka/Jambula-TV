@@ -4,9 +4,10 @@ After=mysqld.service
 
 [Service]
 Type=forking
-ExecStartPre=/usr/bin/zmupdate.pl -f
+ExecStartPre=/usr/bin/rm -rf /run/zm/*
 ExecStart=/usr/bin/zmpkg.pl start
-ExecStartPost=/bin/sh -c "echo '/usr/bin/perl /usr/bin/zmalarm_daemon.pl' | /usr/bin/at now" 
+ExecStartPost=/bin/sh -c "echo '/usr/bin/perl /usr/bin/zmalarm_daemon.pl' | /usr/bin/at now" ExecStartPre=/usr/bin/zmupdate.pl -f
+ExecStopPost=/bin/sh -c "/usr/bin/kill $(/usr/bin/cat /run/zm/zm_alarm.pid)"
 ExecReload=/usr/bin/zmpkg.pl reload
 PIDFile=/run/zm/zm.pid
 
