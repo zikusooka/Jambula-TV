@@ -106,6 +106,7 @@ kodi_jambulatv_service_configure
 # -----------------
 # System Settings
 # -----------------
+bash_configure
 release_info_configure
 motd_configure
 boot_optimization

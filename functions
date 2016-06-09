@@ -2921,6 +2921,42 @@ EOF
 /usr/sbin/udevadm control --reload
 }
 
+bash_configure () {
+cat >> $CONFDIR/bashrc << EOF
+# JambulaTV Bash Settings
+# -----------------------
+#
+# Prompt
+PS1="[\u@\h]\nAt \@ in (\w) # "
+#
+# Aliases
+alias ls='ls -lhrt --color=always'
+alias df='df -h'
+alias vi='vim'
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+#
+# Git
+alias gc="git add -A . && git commit -a -m \$@"   
+alias ga="git add -A . && git commit --amend"   
+alias gs="clear && git status"   
+alias gl="clear && git log"   
+alias gb="clear && git branch"
+
+# JambulaTV History
+[[ -d /var/log/JambulaTV/bash ]] || mkdir -p /var/log/JambulaTV/bash
+export HISTTIMEFORMAT="%d-%m-%Y - %T \$USER "
+export HISTCONTROL=ignoreboth
+export HISTSIZE=5000
+shopt -s histappend
+export PROMPT_COMMAND='echo "\$(history 1)" >> /var/log/JambulaTV/bash/history-\$(date "+%Y%m%d").log'
+
+# CLI Calculator
+calc(){ awk "BEGIN{ print \$* }" ;}
+EOF
+}
+
 release_info_configure () {
 # Add release info
 cat > $PROJECT_RELEASE_FILE <<EOF
