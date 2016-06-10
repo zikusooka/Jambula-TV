@@ -413,7 +413,7 @@ NETDATA_PORT=$(grep -i netdata $PORTS_ASSIGNED_FILE | awk {'print $1'})
 # -----------------
 IR_REMOTE=pctv-290e #intex #streamzap #samsung
 IR_DAEMON=inputlirc #lircd
-IR_PROTOCOL=NEC
+IR_PROTOCOL=NEC #RC-5
 
 WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
