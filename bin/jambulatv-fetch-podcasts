@@ -1,72 +1,129 @@
 #!/bin/sh
 # Variables
 ARIA2_CMD=/usr/bin/aria2c 
-ARIA2_OPTIONS="-c -D -q --no-conf true --disable-ipv6 true"
+ARIA2_OPTIONS="-c -D -q --log-level=notice"
 ARIA2_LOG_FILE=/var/log/JambulaTV/aria2.log
-ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT=/tmp/aria2-on-download-complete.sh
-ARIA2_DIRECTORY=$1 
-ARIA2_INPUT_FILE=$2 
-EMAIL_TO_ADDRESS=$3
+# Email
 EMAIL_NOTIFICATION_SCRIPT=/usr/bin/jambulatv-email
 EMAIL_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-email.cfg
-# Default variables if no args 
-[ "x$ARIA2_DIRECTORY" = "x" ] && ARIA2_DIRECTORY=/JambulaTV/Podcasts
-[ "x$ARIA2_INPUT_FILE" = "x" ] && ARIA2_INPUT_FILE=/JambulaTV/Podcasts/inputfile.DO.NOT.REMOVE
 # Telegram
-EMAIL_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-email.cfg
 TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
 
+SCRIPT_ARGUMENT_1=$1
+PODCASTS_COMPLETED_DIRECTORY=$2
+PODCASTS_SPOOL_DIRECTORY=$3
+EMAIL_TO_ADDRESS=$4
 
-# Source Telegram credentials if non specified
+# Default variables if no args 
+[ "x$PODCASTS_COMPLETED_DIRECTORY" = "x" ] && PODCASTS_COMPLETED_DIRECTORY=/JambulaTV/Podcasts
+[ "x$PODCASTS_SPOOL_DIRECTORY" = "x" ] && PODCASTS_SPOOL_DIRECTORY=$PODCASTS_COMPLETED_DIRECTORY/spool
+
+# Quit if no arguments specified i.e. help
+if [ "x$SCRIPT_ARGUMENT_1" = "x" ];
+then
+clear
+echo "Usage: $(basename $0) [PODCAST_INFO_FILE(required)|all] [COMPLETED_DIRECTORY] [SPOOL_DIRECTORY] [EMAIL_TO_ADDRESS]"
+exit 1
+fi
+
+# If selected podcast info file is 'all', choose all
+if [ "$SCRIPT_ARGUMENT_1" = "all" ] || [ "$SCRIPT_ARGUMENT_1" = "ALL" ];
+then
+SELECTED_PODCAST_INFO_FILES=$(for FILE in `ls -x $PODCASTS_SPOOL_DIRECTORY/.*info`; do echo -n "$(basename $FILE) "; done)
+else
+SELECTED_PODCAST_INFO_FILES=$SCRIPT_ARGUMENT_1
+fi
+
+# Source Email credentials if non specified
 [ "x$EMAIL_TO_ADDRESS" = "x" ] && \
 . $EMAIL_CREDENTIALS_CONFIG
 
-# Generate 'On-Download-X' Scripts
-# ---------------------------------
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+for PODCAST_INFO_FILE in $SELECTED_PODCAST_INFO_FILES
+do 
+
+# Set path to podcast info file
+PODCAST_INFO_FILE_PATH=$PODCASTS_SPOOL_DIRECTORY/$PODCAST_INFO_FILE
+
+# Quit if no Podcast info file not found
+if [ ! -e "$PODCAST_INFO_FILE_PATH" ];
+then
+clear
+echo "Error: The file [$PODCAST_INFO_FILE_PATH] was not found."
+exit 1
+fi
+
+# Set on download completed script
+ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT=/tmp/${PODCAST_INFO_FILE}_send_notification.sh
+
+# Get info about podcast
+URL=$(grep '\[URL\]' $PODCAST_INFO_FILE_PATH | sed 's:\[URL\]|*::')
+TITLE=$(grep '\[TITLE\]' $PODCAST_INFO_FILE_PATH | sed 's:\[TITLE\]|*::')
+DESCRIPTION=$(grep '\[DESCRIPTION\]' $PODCAST_INFO_FILE_PATH | sed 's:\[DESCRIPTION\]|*::')
+DURATION=$(grep '\[DURATION\]' $PODCAST_INFO_FILE_PATH | sed 's:\[DURATION\]|*::')
+IMAGE=$(grep '\[IMAGE\]' $PODCAST_INFO_FILE_PATH | sed 's:\[IMAGE\]|*::')
+#
+PODCAST_FILE=$(basename $URL)
+
 # Remove existing Aria2c download script
 [ -f $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT ] && sudo rm -f $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT
-#
-# Generate On-Download-Complete Script
+
+# Generate 'On-Download-completed' Scripts
+# ----------------------------------------
 cat > $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT << EOF
 #!/bin/sh
 # Perform the following after aria2 download is completed
 #
-# Email notifying completion
-$EMAIL_NOTIFICATION_SCRIPT $EMAIL_TO_ADDRESS "Podcasts - Download of \$(basename \$3) Completed" "Your podcast is located at \$3"
-
 # Source Telegram credentials
 . $TELEGRAM_CREDENTIALS_CONFIG
+
+
+# Email
+$EMAIL_NOTIFICATION_SCRIPT $EMAIL_TO_ADDRESS "*[JambulaTV] New Podcast(s) Added*" "The following podcast was successfully downloaded. You may find it under 'Videos >> Files >> Podcasts' on your JambulaTV or in the folder $PODCASTS_COMPLETED_DIRECTORY. Enjoy!
+
+*$TITLE*
+$DESCRIPTION
+$DURATION
+$IMAGE"
+
 
 # Telegram if API Bot and Chat ID exist
 if [ "x\$TELEGRAM_API_BOT" != "x" ] && [ "x\$TELEGRAM_CHAT_ID" != "x" ];
 then
 /usr/bin/jambulatv-telegram sendmessage "*[JambulaTV] New Podcast(s) Added*
+The following podcast was successfully downloaded. You may find it under 'Videos >> Files >> Podcasts' on your JambulaTV or in the folder ${PODCASTS_COMPLETED_DIRECTORY}. Enjoy!
 
-The Podcast *\$(basename \$3)* was successfully downloaded. You may find it under 'Videos >> Files >> Podcasts' on your JambulaTV or \$3. Enjoy!"
+*$TITLE*
+$DESCRIPTION
+$DURATION
+$IMAGE"
+
 else
 echo "WARNING: No telegram message sent as it was not configured"
 fi
 
+
 # Check for unfinished downloads
-ls $ARIA2_DIRECTORY/*.aria2 > /dev/null 2>&1
+ls $PODCASTS_COMPLETED_DIRECTORY/$PODCAST_FILE.aria2 > /dev/null 2>&1
 UNFINISH_EXISTS=\$?
-# Remove Input file if download completed successfully
-[ \$UNFINISH_EXISTS != 0 ] && rm -f $ARIA2_INPUT_FILE
+# Remove podcast info file if download completed successfully
+[ \$UNFINISH_EXISTS != 0 ] && rm -f $PODCAST_INFO_FILE_PATH
+
+
+# Self Destruct this script
+rm -- \$0
+
 EOF
 #
 # Make script executable
 chmod 755 $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT
 
-
-# Add empty input file if non-exists
-# ----------------------------------
-if [ ! -e $ARIA2_INPUT_FILE ];
-then
-touch $ARIA2_INPUT_FILE
-chmod 666 $ARIA2_INPUT_FILE
-fi
-
-
 # Start/Resume Downloads
 # ----------------------
-$ARIA2_CMD $ARIA2_OPTIONS -d $ARIA2_DIRECTORY -i $ARIA2_INPUT_FILE -l $ARIA2_LOG_FILE --on-download-complete=$ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT
+$ARIA2_CMD $ARIA2_OPTIONS -d $PODCASTS_COMPLETED_DIRECTORY -l $ARIA2_LOG_FILE --on-download-complete=$ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT $URL
+
+done
