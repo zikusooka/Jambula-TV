@@ -106,6 +106,9 @@ templates:
         The following Movie has been queued for download:
         {% elif task == "internet_tv" %}*[JambulaTV] Podcast(s) Queued*
         The following Podcast has been queued for download:
+ 
+        *{{title}}*
+        {{description|striptags}}
         {% elif task == "move_tv_shows" %}*[JambulaTV] New TV Episode(s) Added*
         The following TV Series Episode was successfully downloaded. You may find it under 'TV Shows' on your JambulaTV. Enjoy!
         {% elif task == "move_movies" %}*[JambulaTV] New Movie(s) Added*
@@ -118,15 +121,14 @@ templates:
         Rated: *{{tvdb_ep_rating}}/10* | Aired: *{{tvdb_ep_air_date|replace("00", "")|replace(":", "")}}*
         Time: *{{tvdb_runtime}} Mins* | Format: *{{quality|d('')}}*
         [Image]({{tvmaze_series_medium_image|replace("_", "%5F")}})
-        {{tvdb_ep_overview}}
+        {{tvdb_ep_overview|striptags}}
         {% elif imdb_name is defined %}Movie: *{{imdb_name}}* | Year: *{{imdb_year}}* 
         Rating: *{{imdb_score}}/10* | Votes: *{{imdb_votes}} votes*
         Genres: *{{imdb_genres|join(', ')|title}}* 
         Time: *{{tmdb_runtime}} Mins* | Format: *{{quality|d('')}}*
         [Image]({{tmdb_posters[0]|replace("_", "%5F")}})
-        {{imdb_plot_outline}}
+        {{imdb_plot_outline|striptags}}
         {% else %}
-        *{{title}}*
         {% endif %}
 
 
@@ -150,7 +152,7 @@ templates:
     series:
       settings:
         group 1:
-          quality: "h264 xvid !720p"
+          quality: "h264 xvid !720p !h265"
           propers: no 
           identified_by: ep
           ep_regexp:
@@ -211,7 +213,7 @@ templates:
         - torrentz: verified
     # 
     quality: 
-      - "h264 xvid"
+      - "h264 xvid !h265 !720p"
       - "!dts !cam !10bit"
     content_size:
       max: 49900
@@ -229,31 +231,35 @@ templates:
 # Podcasts 
 # --------
   podcasts:
-    disable:
-      - regexp
+    #disable:
+    #  - email
+    #  - exists
     free_space:
       path: '{{secrets.podcasts.path}}'
       space: 1000
     exists:
       - '{{secrets.podcasts.exists}}'
     limit_new: 5
-    priority: 5
+    priority: 5    
     include: [ '{{secrets.podcasts.include}}' ]
     exec:
       auto_escape: no
       on_start:
-        # Add timestamp to log file
-        phase: echo "# $(date '+%F %H:%M'):" >> '{{secrets.podcasts.download_log}}'
+        phase:
+          # Add timestamp to log file
+          - echo "----------------------" >> '{{secrets.podcasts.download_log}}'
+          - echo "# $(date '+%F %H:%M'):" >> '{{secrets.podcasts.download_log}}'
+          - echo "----------------------" >> '{{secrets.podcasts.download_log}}'
       on_output:
-        # Copy podcasts URLS to input-file for aria2c
-        for_accepted: echo "%(url)s" >> '{{secrets.podcasts.download_file}}'
+        for_accepted:
+          # Copy podcast info to spool file 
+          - echo -e "[URL]|{{url}}\n\n[TITLE]|{{title}}\n\n[DESCRIPTION]|{{description|striptags}}\n\n[DURATION]|\n\n[IMAGE]|" > "{{secrets.podcasts.spool_dir}}"/."{{title|striptags|replace(' ', '_')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}".info
+          # Fetch accepted entry
+          - /bin/sh "{{secrets.podcasts.download_script}}" ."{{title|striptags|replace(' ', '_')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}".info "{{secrets.podcasts.download_dir}}" "{{secrets.podcasts.spool_dir}}" "{{secrets.email.to}}"
       on_exit:
-        # Add URL to log file
-        for_accepted: echo "%(url)s" >> '{{secrets.podcasts.download_log}}'
-
-        # Start aria2
-        phase: /bin/sh '{{secrets.podcasts.download_script}}' '{{secrets.podcasts.download_dir}}' '{{secrets.podcasts.download_file}}' '{{secrets.email.to}}'
-
+        # Add accepted entry to log file
+        for_accepted: 
+          - echo "{{title}} - {{url}}" >> '{{secrets.podcasts.download_log}}'
     accept_all: yes
 
 # Kodi Library 
@@ -282,7 +288,7 @@ tasks:
       - rss: { url: '{{secrets.tv_feeds.kat}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.ezrss}}', silent: yes }
-      - rss: { url: '{{secrets.tv_feeds.torlock}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.demonoid}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.mininova}}', silent: yes }
     template: 
       - tv
@@ -294,7 +300,7 @@ tasks:
       - rss: { url: '{{secrets.movie_feeds.kat}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.torrentz}}', silent: yes }
-      - rss: { url: '{{secrets.movie_feeds.torlock}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.demonoid}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.mininova}}', silent: yes }
     template: 
       - movies
