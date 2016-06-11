@@ -135,6 +135,7 @@ templates:
 ##############
 #  Templates #
 ##############
+
   # TV
   # --
   tv:
@@ -177,11 +178,26 @@ templates:
       from:
         - torrentz: verified
 
+
   # Movies 
   #--------
   movies:
     priority: 30
     limit_new: 1
+    quality: 
+      - "h264 xvid !h265 !720p"
+      - "!dts !cam !10bit"
+    content_size:
+      max: 1400
+      min: 100
+    free_space:
+      path: '{{secrets.movies.path}}'
+      space: 1500
+    exists_movie:
+      - '{{secrets.movies.exists_movie}}'
+    only_new: no
+    download: '{{secrets.movies.download}}'
+#    accept_all: yes # Uncomment if IMDB is not used
     seen_movies:
       matching: strict
     tmdb_lookup: yes
@@ -190,7 +206,7 @@ templates:
     imdb:
       min_score: 8.0
       min_votes: 60000
-      min_year: 2015
+      min_year: 2001
       accept_languages:
         - english
       #reject_genres:
@@ -200,33 +216,40 @@ templates:
         #- musical
         
     # Lists
+    list_add:
+      # trakt requested
+      - trakt_list:
+          username: '{{secrets.trakt.username}}'
+          list: '{{secrets.trakt.watchlist}}'
+          type: movies
+      # locally requested
+      - movie_list: locally_added
+
     discover:
       what:
-    # List of wanted movies
-        - movie_list: wanted_movies
-    # Pull movies from trakt.tv watchlist and add to the movie queue
+        # imdb requested
+        #- imdb_list:
+        #    list: watchlist
+        # trakt requested
         - trakt_list:
             username: '{{secrets.trakt.username}}'
             list: '{{secrets.trakt.watchlist}}'
             type: movies
+        # locally requested
+        - movie_list: locally_added
+
       from:
         - torrentz: verified
-    # 
-    quality: 
-      - "h264 xvid !h265 !720p"
-      - "!dts !cam !10bit"
-    content_size:
-      max: 49900
-      min: 600
-    free_space:
-      path: '{{secrets.movies.path}}'
-      space: 1000
-    exists_movie:
-      - '{{secrets.movies.exists_movie}}'
-    only_new: no
-    priority: 15
-    download: '{{secrets.movies.download}}'
-#    accept_all: yes # Uncomment if IMDB is not used
+        - kat:
+            category: movies
+            verified: yes
+        - piratebay:
+            # category: "highres movies"
+            sort_by: seeds
+        - newtorrents:
+
+      interval: 1 day
+
 
 # Podcasts 
 # --------
@@ -262,6 +285,7 @@ templates:
           - echo "{{title}} - {{url}}" >> '{{secrets.podcasts.download_log}}'
     accept_all: yes
 
+
 # Kodi Library 
 # ------------
   kodi_library_scan:
@@ -275,10 +299,12 @@ templates:
       password: '{{secrets.kodi.password}}'
 
 
+
 ###########
 #  TASKS  #
 ###########
 tasks:
+
 
   # TV Shows
   # --------
@@ -288,10 +314,11 @@ tasks:
       - rss: { url: '{{secrets.tv_feeds.kat}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.ezrss}}', silent: yes }
-      - rss: { url: '{{secrets.tv_feeds.demonoid}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.mininova}}', silent: yes }
     template: 
       - tv
+
 
   # Movies
   # ------
@@ -300,16 +327,18 @@ tasks:
       - rss: { url: '{{secrets.movie_feeds.kat}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.torrentz}}', silent: yes }
-      - rss: { url: '{{secrets.movie_feeds.demonoid}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.mininova}}', silent: yes }
     template: 
       - movies
+
 
   # Podcasts
   # --------
   internet_tv:
     template: 
       - podcasts
+
 
   # Move TV Shows to Kodi directory
   # -------------------------------
@@ -360,6 +389,7 @@ tasks:
     template:
       - kodi_library_scan
 
+
   # Move Movies to Kodi directory
   # -------------------------------
   move_movies:
@@ -403,6 +433,7 @@ tasks:
     # Scan video library
     template:
       - kodi_library_scan
+
 
 
 ##############
