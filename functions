@@ -601,6 +601,9 @@ FREEPBX_EXTENSION_WEBRTC_001_NAME="Jambula WebRTC"
 FREEPBX_EXTENSION_WEBRTC_001_PASS="ellis2012"
 FREEPBX_DIALPLAN_NAME=office04
 
+# Samba
+SMB_WORKGROUP=$PROJECT_NAME
+
 # OwnCloud
 OWNCLOUD_ADMIN_USER=jambulatv
 OWNCLOUD_ADMIN_PASS=3jambulatv
@@ -2417,9 +2420,8 @@ EOF
 # **********
 # Create userdata directory
 [ -d $KODI_USER_DATA ] || mkdir -p $KODI_USER_DATA
-# Copy Optimized Advanced & GUI settings plus other configs
+# Copy sources, rss xml file, autostart script
 for KODI_CONFIG in \
-	guisettings.xml \
 	sources.xml \
 	RssFeeds.xml \
 	autoexec.py
@@ -2433,6 +2435,13 @@ cat $PROJECT_CONFIGS_DIR/kodi/advancedsettings.xml | \
 	sed "s:KODI_DB_USER:$KODI_DB_USER:g" | \
 	sed "s:KODI_DB_PASS:$KODI_DB_PASS:g" \
 	> $KODI_USER_DATA/advancedsettings.xml
+# Add Jambula customized guisettings file
+cat $PROJECT_CONFIGS_DIR/kodi/guisettings.xml | \
+	sed -e "s:KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
+   	sed -e "s:KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
+	sed -e "s:KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
+   	sed -e "s:SMB_WORKGROUP:$SMB_WORKGROUP:g" \
+	> $KODI_USER_DATA/guisettings.xml
 # Give permissions to multimedia user for config directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_CONFIG_DIR
 # Make startup script executable
