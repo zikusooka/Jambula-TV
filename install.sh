@@ -110,6 +110,7 @@ bash_configure
 release_info_configure
 motd_configure
 boot_optimization
+nfs_server_configure
 wired_interfaces_configure
 wireless_interfaces_configure
 openssl_configure

@@ -2874,8 +2874,6 @@ done
 # Disable services that take a lot longer
 for NOT_NEEDED_SERVICE in \
 systemd-udev-settle.service \
-proc-fs-nfsd.mount \
-var-lib-nfs-rpc_pipefs.mount \
 dmraid-activation.service \
 lvm2-monitor.service \
 dev-hugepages.mount \
@@ -2898,6 +2896,23 @@ done
 sed -i "s:After=rc-local.service:After=mysqld.service rc-local.service:" $SYSTEMD_UNITS_DIR_SYSTEM/plymouth-quit.service
 # Reload 
 systemctl --system daemon-reload
+}
+
+nfs_server_configure () {
+echo "# JambulaTV
+$PROJECT_PARTITION *(rw,async,insecure,no_subtree_check,nohide)" > $CONFDIR/exports
+# Re-export all filesystems
+exportfs -v -a -r
+# Enable and start NFS services
+for NEEDED_SERVICE in \
+rpcbind.service \
+nfs-server.service \
+nfs-lock.service \
+nfs-idmap.service
+do
+systemctl start $NEEDED_SERVICE
+systemctl enable $NEEDED_SERVICE
+done
 }
 
 wired_interfaces_configure () {
