@@ -276,9 +276,9 @@ templates:
       on_output:
         for_accepted:
           # Copy podcast info to spool file 
-          - echo -e "[URL]|{{url}}\n\n[TITLE]|{{title}}\n\n[DESCRIPTION]|{{description|striptags}}\n\n[DURATION]|\n\n[IMAGE]|" > "{{secrets.podcasts.spool_dir}}"/."{{title|striptags|replace(' ', '_')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}".info
+          - echo -e "[URL]|{{url}}\n\n[TITLE]|{{title}}\n\n[DESCRIPTION]|{{description|striptags|replace('\"', '')}}\n\n[DURATION]|\n\n[IMAGE]|" > "{{secrets.podcasts.spool_dir}}"/."{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}".info
           # Fetch accepted entry
-          - /bin/sh "{{secrets.podcasts.download_script}}" ."{{title|striptags|replace(' ', '_')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}".info "{{secrets.podcasts.download_dir}}" "{{secrets.podcasts.spool_dir}}" "{{secrets.email.to}}"
+          - /bin/sh "{{secrets.podcasts.download_script}}" ."{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}".info "{{secrets.podcasts.download_dir}}" "{{secrets.podcasts.spool_dir}}" "{{secrets.email.to}}"
       on_exit:
         # Add accepted entry to log file
         for_accepted: 
