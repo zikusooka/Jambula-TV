@@ -21,18 +21,5 @@ TELEGRAM_USERNAME="jlabs"
 #################
 #  MAIN SCRIPT  #
 #################
-# Add Jambula customized advancedsettings file
-cat $PROJECT_CONFIGS_DIR/kodi/advancedsettings.xml | \
-	sed "s:KODI_DB_VIDEO:$KODI_DB_VIDEO:g" | \
-	sed "s:KODI_DB_MUSIC:$KODI_DB_MUSIC:g" | \
-	sed "s:KODI_DB_USER:$KODI_DB_USER:g" | \
-	sed "s:KODI_DB_PASS:$KODI_DB_PASS:g" \
-	> /tmp/advancedsettings.xml
-# Add Jambula customized guisettings file
-cat $PROJECT_CONFIGS_DIR/kodi/guisettings.xml | \
-	sed -e "s:KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
-   	sed -e "s:KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
-	sed -e "s:KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
-   	sed -e "s:SMB_WORKGROUP:$SMB_WORKGROUP:g" \
-	> /tmp/guisettings.xml
-#
+
+

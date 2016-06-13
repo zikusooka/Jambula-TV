@@ -636,6 +636,9 @@ TORRENTS_DOMAIN_NAME="mydomain"
 TRAKT_USERNAME=""
 TRAKT_WATCHLIST=""
 
+# TV Market
+TV_MARKET=UG-Kampala
+
 
 
 ######################
@@ -2060,6 +2063,9 @@ systemctl start tvheadend.service
 #
 # Copy jambulatv-dvbt-scan used to scan 4 DVB-T services, if none exists in bin directory
 [ -e $BINARY_PREFIX/jambulatv-dvbt-scan ] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/
+#
+# Copy TV picons e.g. logos to JambulaTV share directory
+rsync -av $PROJECT_CONTRIB_DIR/tv/picons $PROJECT_SYSTEM_SHARE_DIR/
 }
 
 fmtools_install () {
@@ -2203,8 +2209,6 @@ cp -rv $PROJECT_CONTRIB_DIR/remotes/$IR_REMOTE/lircrc $FREEVO_SYSTEM_CONFIG_DIR
 cp -rv $PROJECT_CONTRIB_DIR/tv $PROJECT_SYSTEM_SHARE_DIR
 # Copy static db files e.g. weather to lib directory
 cp -rv $PROJECT_CONTRIB_DIR/db $PROJECT_SYSTEM_LIB_DIR
-# Copy TV files e.g. logos to share directory
-cp -rv $PROJECT_CONTRIB_DIR/tv/logos $PROJECT_SYSTEM_SHARE_DIR/tv
 # Populate commands directory
 cp -rv $PROJECT_CONTRIB_DIR/commands/*fxd $FREEVO_SYSTEM_CONFIG_DIR/commands
 # Add cron entry to cache freevo daily
