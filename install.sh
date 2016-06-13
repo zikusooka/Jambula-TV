@@ -18,6 +18,9 @@ kernel_install
 # Create installation directory
 install_dir_create
 
+# Install images
+images_add
+
 # pick desired X11 video driver
 case $X11_DRIVER in
 intel)

@@ -1210,10 +1210,19 @@ fi
 install_dir_create () {
 # create install directory
 [ -d $INSTALL_SRC_DIR ] || mkdir -p $INSTALL_SRC_DIR
-# create project configuration directory
+# create configuration directory
 [ -d $PROJECT_SYSTEM_CONF_DIR ] || mkdir -p $PROJECT_SYSTEM_CONF_DIR
+# create share directory
+[ -d $PROJECT_SYSTEM_SHARE_DIR ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR
 # create backups directory
 [ -d $BACKUPS_DIR ] || mkdir -p $BACKUPS_DIR
+}
+
+images_add () {
+# Copy project images directory
+rsync -av $PROJECT_IMAGES_DIR $PROJECT_SYSTEM_SHARE_DIR/
+# Give permissons
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/images
 }
 
 ssl_cert_key_generate () {
@@ -2468,6 +2477,7 @@ done
 }
 
 kodi_customization () {
+# Start preferred skin configuration
 case $KODI_PREFERRED_SKIN in
 Aeon-Nox)
 # Copy preferred skin files to addons directory
