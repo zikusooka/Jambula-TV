@@ -16,9 +16,9 @@ EMAIL_TO_ADDRESS="joseph@zikusooka.com"
 TELEGRAM_API_BOT="189563360:AAFFiDHQXgBTLSPsdVbXDbMkG-khkIGlqa8"
 TELEGRAM_USERNAME="jlabs"
 
+NETWORK_WIRELESS_PASSPHRASE=1gbofdatanow
 
 
 #################
 #  MAIN SCRIPT  #
 #################
-
