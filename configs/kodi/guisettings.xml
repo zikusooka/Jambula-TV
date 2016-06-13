@@ -52,7 +52,7 @@
         <lan default="true">2048</lan>
     </cachevideo>
     <debug>
-        <extralogging default="true">false</extralogging>
+        <extralogging>false</extralogging>
         <screenshotpath default="true"></screenshotpath>
         <setextraloglevel default="true">32768</setextraloglevel>
         <showloginfo default="true">false</showloginfo>
@@ -70,7 +70,7 @@
         <epgupdate default="true">120</epgupdate>
         <hidenoinfoavailable default="true">true</hidenoinfoavailable>
         <ignoredbforclient default="true">false</ignoredbforclient>
-        <preventupdateswhileplayingtv default="true">false</preventupdateswhileplayingtv>
+        <preventupdateswhileplayingtv>true</preventupdateswhileplayingtv>
         <selectaction default="true">2</selectaction>
     </epg>
     <filelists>
@@ -85,7 +85,7 @@
         <addonbrokenfilter default="true">true</addonbrokenfilter>
         <addonforeignfilter default="true">false</addonforeignfilter>
         <addonnotifications default="true">true</addonnotifications>
-        <addonupdates default="true">2</addonupdates>
+        <addonupdates>2</addonupdates>
         <settinglevel>2</settinglevel>
         <systemtotaluptime>885</systemtotaluptime>
     </general>
@@ -145,7 +145,7 @@
     <musiclibrary>
         <albumsscraper default="true">metadata.album.universal</albumsscraper>
         <artistsscraper default="true">metadata.artists.universal</artistsscraper>
-        <backgroundupdate default="true">false</backgroundupdate>
+        <backgroundupdate>false</backgroundupdate>
         <downloadinfo default="true">false</downloadinfo>
         <overridetags default="true">false</overridetags>
         <showallitems default="true">true</showallitems>
@@ -235,7 +235,7 @@
         <channelentrytimeout default="true">0</channelentrytimeout>
         <confirmchannelswitch default="true">false</confirmchannelswitch>
         <fps default="true">0</fps>
-        <playminimized default="true">true</playminimized>
+        <playminimized>false</playminimized>
         <scantime default="true">10</scantime>
         <signalquality default="true">true</signalquality>
         <startlast default="true">0</startlast>
