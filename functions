@@ -5617,6 +5617,20 @@ make
 make install
 }
 
+open_zwave_install () {
+rsync -avz $PROJECT_GITHUB_DIR/open-zwave/ $INSTALL_SRC_DIR/open-zwave/
+# Change to source dir
+cd $INSTALL_SRC_DIR/open-zwave
+# Change SYSCONFDIR to /etc before uilding
+sed -i "s:\$(PREFIX)/etc:$CONFDIR:g" cpp/build/support.mk
+# Build
+BUILD=release PREFIX=$PREFIX LIB=$LIBDIR SYSCONFDIR=$CONFDIR/openzwave make install
+}
+
+domoticz_install () {
+
+}
+
 openhab_install () {
 # Create install directory
 mkdir -p $INSTALL_SRC_DIR/openhab
@@ -5764,7 +5778,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/Net-SFTP-Foreign-*.tar.gz -C $INSTALL_SRC_DIR
 # Change to Net-SFTP-Foreign directory
 cd $INSTALL_SRC_DIR && mv Net-SFTP-Foreign* perl_Net-SFTP-Foreign
 cd $INSTALL_SRC_DIR/perl_Net-SFTP-Foreign
-perl Makefile.PL
+perl Makefile.PL PREFIX="$PREFIX" LIBS="-L$LIBDIR"
 make
 make install
 }

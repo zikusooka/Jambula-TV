@@ -298,6 +298,9 @@ owncloud_configure
 # ----------------
 # Home Automation 
 # ----------------
+# Domoticz
+open_zwave_install
+
 # OpenHAB
 #openhab_install
 #openhab_configure
