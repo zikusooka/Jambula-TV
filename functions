@@ -5627,8 +5627,34 @@ sed -i "s:\$(PREFIX)/etc:$CONFDIR:g" cpp/build/support.mk
 BUILD=release PREFIX=$PREFIX LIB=$LIBDIR SYSCONFDIR=$CONFDIR/openzwave make install
 }
 
-domoticz_install () {
+boost_install () {
+# Remove existing boost rpm packages
+yum -y remove boost*
+# Build from source
+tar jxvf $PROJECT_TARBALLS_DIR/boost_*.tar.bz2 -C $INSTALL_SRC_DIR
+#tar zxvf $PROJECT_TARBALLS_DIR/boost_*.tar.gz -C $INSTALL_SRC_DIR
+# Change to boost directory
+cd $INSTALL_SRC_DIR && mv -v boost* boost
+cd $INSTALL_SRC_DIR/boost
+# Bootstrap
+./bootstrap.sh --prefix=$PREFIX --libdir=$LIBDIR
+# Stage
+./b2 -j$SYSTEM_CPU_CORES variant=release threading=multi toolset=gcc --prefix=$PREFIX --libdir=$LIBDIR --with-atomic --with-chrono --with-context --with-date_time --with-filesystem --with-graph --with-iostreams --with-locale --with-log --with-math --with-program_options --with-random --with-regex --with-serialization --with-signals --with-system --with-test --with-thread --with-timer --with-wave stage
+# Install
+./b2 -j$SYSTEM_CPU_CORES variant=release threading=multi toolset=gcc --prefix=$PREFIX --libdir=$LIBDIR --with-atomic --with-chrono --with-context --with-date_time --with-filesystem --with-graph --with-iostreams --with-locale --with-log --with-math --with-program_options --with-random --with-regex --with-serialization --with-signals --with-system --with-test --with-thread --with-timer --with-wave install
+# Remove install sources
+cd ../ && rm -rf boost
+}
 
+domoticz_install () {
+#rsync -avz $PROJECT_GITHUB_DIR/domoticz/ $INSTALL_SRC_DIR/domoticz/
+# Change to source dir
+cd $INSTALL_SRC_DIR/domoticz
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX -DLIB_SUFFIX=64
+exit
+make
+exit
+make install
 }
 
 openhab_install () {
