@@ -150,7 +150,7 @@ FLEXGET_SCHEDULE_PODCASTS_MIN=15
 FLEXGET_SCHEDULE_MOVIES_HR=3
 FLEXGET_SCHEDULE_MOVIES_MIN=5
 # 
-FLEXGET_PORT=$(grep -i 'flexget' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+FLEXGET_PORT=$(grep -i 'flexget$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 TVHEADEND_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.hts/tvheadend
 
@@ -176,7 +176,7 @@ KODI_DB_PASS=jambulatv4
 
 KODI_HTTP_USER=jambulatv
 KODI_HTTP_PASS=jambulatv
-KODI_HTTP_PORT=$(grep -i 'kodi web' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+KODI_HTTP_PORT=$(grep -i 'kodi web$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # Kodi Addons
 # -----------
@@ -364,6 +364,17 @@ JABBERD_DB_CREATE=/usr/share/jabberd/db-setup.mysql
 
 JABBERD_PASSWORD=`grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //'`
 
+# OpenHAB
+OPENHAB_HTTP_PORT=$(grep -i 'openhab$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+OPENHAB_HTTPS_PORT=$(grep -i 'openhab ssl$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+
+# Domoticz Home Automation
+DOMOTICZ_USER=$MULTIMEDIA_USER
+DOMOTICZ_GROUP=$MULTIMEDIA_USER
+DOMOTICZ_HOME_DIR=$MULTIMEDIA_USER_HOME_DIR/.domoticz
+DOMOTICZ_HTML_DIR=$WWW_HTML_DIR/domoticz
+DOMOTICZ_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/domoticz.log
+DOMOTICZ_WWW_PORT=$(grep -i 'domoticz$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # ZM Database Variables
 ZONEMINDER_DB_HOST=localhost
@@ -408,7 +419,7 @@ NETWORK_DNS_2=$CURRENT_DNS2
 PUBLIC_DNS_SERVERS="8.8.8.8 208.67.222.222 8.26.56.26 107.170.95.180 77.88.8.8"
 
 # Netdata
-NETDATA_PORT=$(grep -i netdata $PORTS_ASSIGNED_FILE | awk {'print $1'})
+NETDATA_PORT=$(grep -i 'netdata$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 
 # Dynamic variables
@@ -3795,7 +3806,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 RTGUI (rTorrent) Access
 =======================
 % To access your torrents, use a client PC to open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i rtgui $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$NETWORK_IP_ADDRESS:$(grep -i 'rtgui$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 #
 EOF
 }
@@ -4190,7 +4201,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 Daloradius Access
 =================
 % To finish setup, use a client PC to open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i daloradius $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$NETWORK_IP_ADDRESS:$(grep -i 'daloradius$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
   password = radius
 #
 EOF
@@ -4804,7 +4815,7 @@ chmod -R 777 $WWW_HTML_DIR/owncloud
 systemctl restart nginx.service
 #
 # Generate owncloud instance ID
-/usr/bin/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$(grep -i owncloud $PORTS_ASSIGNED_FILE | awk {'print $1'})
+/usr/bin/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$(grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 # Get instance ID
 OWNCLOUD_INSTANCE_ID=$(grep 'instanceid' $WWW_HTML_DIR/owncloud/config/config.php | awk {'print $3'} | sed "s:'::g" | cut -d , -f1)
 # Generate initial owncloud config
@@ -4817,7 +4828,7 @@ cat > $OWNCLOUD_CONFIG_FILE << EOF
     0 => '$NETWORK_IP_ADDRESS', '$COOVA_SERVER_IP', '$OWNCLOUD_WWW_SERVER_NAME'
   ),
   'datadirectory' => '$OWNCLOUD_DATA_DIRECTORY',
-  'overwrite.cli.url' => 'http://$NETWORK_IP_ADDRESS:$(grep -i owncloud $PORTS_ASSIGNED_FILE | awk {'print $1'})',
+  'overwrite.cli.url' => 'http://$NETWORK_IP_ADDRESS:$(grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})',
   'dbtype' => 'sqlite3',
   'logfile' => '$PROJECT_SYSTEM_LOG_DIR/owncloud.log',
   'logtimezone' => '$TIMEZONE',
@@ -4846,7 +4857,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 OwnCloud
 ========
 % To finish setup, and add an administrative user, open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i owncloud $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$NETWORK_IP_ADDRESS:$(grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
   Suggested Admin credentials:
 
@@ -5476,7 +5487,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 FreePBX Access
 ==============
 % To access FreePBX, use a client PC to open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i freepbx $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$NETWORK_IP_ADDRESS:$(grep -i 'freepbx$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 username            = "$FREEPBX_ADMIN_USER"
 password            = "$FREEPBX_ADMIN_PASS"
@@ -5617,19 +5628,9 @@ make
 make install
 }
 
-open_zwave_install () {
-rsync -avz $PROJECT_GITHUB_DIR/open-zwave/ $INSTALL_SRC_DIR/open-zwave/
-# Change to source dir
-cd $INSTALL_SRC_DIR/open-zwave
-# Change SYSCONFDIR to /etc before uilding
-sed -i "s:\$(PREFIX)/etc:$CONFDIR:g" cpp/build/support.mk
-# Build
-BUILD=release PREFIX=$PREFIX LIB=$LIBDIR SYSCONFDIR=$CONFDIR/openzwave make install
-}
-
 boost_install () {
 # Remove existing boost rpm packages
-yum -y remove boost*
+rpm -e --nodeps boost-chrono boost-filesystem boost-regex boost-system boost-iostreams boost-signals boost-python boost-thread boost-program-options boost-date-time boost-locale
 # Build from source
 tar jxvf $PROJECT_TARBALLS_DIR/boost_*.tar.bz2 -C $INSTALL_SRC_DIR
 #tar zxvf $PROJECT_TARBALLS_DIR/boost_*.tar.gz -C $INSTALL_SRC_DIR
@@ -5646,15 +5647,58 @@ cd $INSTALL_SRC_DIR/boost
 cd ../ && rm -rf boost
 }
 
+open_zwave_install () {
+rsync -avz $PROJECT_GITHUB_DIR/open-zwave/ $INSTALL_SRC_DIR/open-zwave/
+# Change to source dir
+cd $INSTALL_SRC_DIR/open-zwave
+# Change SYSCONFDIR to /etc before uilding
+sed -i "s:\$(PREFIX)/etc:$CONFDIR:g" cpp/build/support.mk
+# Build
+BUILD=release PREFIX=$PREFIX LIB=$LIBDIR SYSCONFDIR=$CONFDIR/openzwave
+make
+make install
+}
+
 domoticz_install () {
-#rsync -avz $PROJECT_GITHUB_DIR/domoticz/ $INSTALL_SRC_DIR/domoticz/
+rsync -avz $PROJECT_GITHUB_DIR/domoticz/ $INSTALL_SRC_DIR/domoticz/
+# Create link to openzwave - I think this needs some type of install time option
+ln -s $INSTALL_SRC_DIR/open-zwave $INSTALL_SRC_DIR/open-zwave-read-only
 # Change to source dir
 cd $INSTALL_SRC_DIR/domoticz
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX -DLIB_SUFFIX=64
-exit
-make
-exit
-make install
+make -j$SYSTEM_CPU_CORES
+#
+# Post-install actions - Not done by compile
+# ------------------------------------------
+# Move binary to bindir
+mv -v $INSTALL_SRC_DIR/domoticz/domoticz $BINARY_PREFIX
+# Move web files to JambulaTV location
+mv -v $INSTALL_SRC_DIR/domoticz/www $DOMOTICZ_HTML_DIR
+# Give access and permisions to WWW owner
+chown -R $WWW_USER:$DOMOTICZ_GROUP $DOMOTICZ_HTML_DIR
+# Create home directory if it does not exist
+[ -d $DOMOTICZ_HOME_DIR ] || mkdir -p $DOMOTICZ_HOME_DIR
+# Move scripts to home directory
+mv -v $INSTALL_SRC_DIR/domoticz/scripts $DOMOTICZ_HOME_DIR/
+# Give access and permisions to domoticz
+chown -R $DOMOTICZ_USER:$DOMOTICZ_GROUP $DOMOTICZ_HOME_DIR
+}
+
+domoticz_configure () {
+# Allow domoticz user to access USB ports
+usermod -a -G dialout $DOMOTICZ_USER
+# Configure Systemd service file
+cat $PROJECT_INIT_SCRIPTS_DIR/domoticz.service | \
+	sed "s:DOMOTICZ_USER:$DOMOTICZ_USER:g" | \
+	sed "s:DOMOTICZ_WWW_PORT:$DOMOTICZ_WWW_PORT:g" | \
+	sed "s:DOMOTICZ_HTML_DIR:$DOMOTICZ_HTML_DIR:g" | \
+	sed "s:DOMOTICZ_HOME_DIR:$DOMOTICZ_HOME_DIR:g" | \
+	sed "s:DOMOTICZ_LOG_FILE:$DOMOTICZ_LOG_FILE:g" \
+		> $SYSTEMD_UNITS_DIR_USER/domoticz.service
+# Enable domoticz if needed
+systemctl enable domoticz.service
+# Start domoticz if needed
+systemctl start domoticz.service
 }
 
 openhab_install () {
@@ -5667,9 +5711,6 @@ unzip -d $INSTALL_SRC_DIR/openhab/addons $PROJECT_ZIPS_DIR/distribution-*-addons
 }
 
 openhab_configure () {
-# Set port
-OPENHAB_HTTP_PORT=$(grep -i openhab $PORTS_ASSIGNED_FILE | awk {'print $1'})
-OPENHAB_HTTPS_PORT=8536
 # Change default server parameters
 cp -v $INSTALL_SRC_DIR/openhab/server/eclipse.ini $INSTALL_SRC_DIR/openhab/server/eclipse.ini.orig
 cat $INSTALL_SRC_DIR/openhab/server/eclipse.ini.orig | \
@@ -5704,7 +5745,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 OpenHAB Access
 ==============
 % To access openHAB, use a client PC to open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i openhab $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$NETWORK_IP_ADDRESS:$OPENHAB_HTTP_PORT
 #
 EOF
 }
@@ -5972,7 +6013,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 ZONEMINDER (CCTV) Access
 =========================
 % To access your Webcams & IP Cameras, use a client PC to open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep ZoneMinder $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$NETWORK_IP_ADDRESS:$(grep -i 'ZoneMinder$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 #
 EOF
 }
@@ -6478,7 +6519,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 IcingaWeb2
 ==========
 % I have automagically setup icingaweb2 for you. To access, open the URL below:
-  http://$PROJECT_NAME:$(grep -i icingaweb2 $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$PROJECT_NAME:$(grep -i 'icingaweb2$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 username            = "$ICINGAWEB2_ADMIN_USER"
 password            = "$ICINGAWEB2_ADMIN_PASS"

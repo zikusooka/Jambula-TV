@@ -40,6 +40,9 @@ echo "Using default X11 driver ..."
 ;;
 esac
 
+# Boost - using sources
+boost_install
+
 # Sound libraries
 alsa_lib_install
 alsa_utils_install
@@ -298,9 +301,13 @@ owncloud_configure
 # ----------------
 # Home Automation 
 # ----------------
-# Domoticz
+# Open-ZWave
 open_zwave_install
-
+#
+# Domoticz
+domoticz_install
+domoticz_configure
+#
 # OpenHAB
 #openhab_install
 #openhab_configure
