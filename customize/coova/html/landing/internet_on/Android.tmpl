@@ -17,6 +17,14 @@ var chilliController = { interval:30 , host:"chilli" , port:false , ident:'00' ,
 <!-- Jambula Labs: Timer of 600 secs, then redirect -->
   <script language="javascript" type="text/javascript" src="landing/scripts/timer_30.js">
   </script>
+
+<script language="javascript" type="text/javascript">
+function windowClose() {
+window.open('','_parent','');
+window.close();
+}
+</script>
+
 </head>
 
 <body>
@@ -37,6 +45,15 @@ var chilliController = { interval:30 , host:"chilli" , port:false , ident:'00' ,
        You will be redirected to
       <a href="${FORM_redirurl:-$FORM_userurl}">${FORM_redirurl:-$FORM_userurl}</a>
       <br> in <span id="countdown">30</span> seconds ...
+
+<br>
+<b> 
+
+<input type="button" value="You may close this window, and Open your Browser Now" onclick="windowClose();">
+
+</b>
+
+
 </div>
 
 <!-- Available resources -->

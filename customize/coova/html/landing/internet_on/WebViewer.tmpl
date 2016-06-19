@@ -1,4 +1,12 @@
 <head>
+
+<script language="javascript" type="text/javascript">
+function windowClose() {
+window.open('','_parent','');
+window.close();
+}
+</script>
+
 </head>
 
 
@@ -12,8 +20,11 @@
 </header>
 <br>
 
+<br>
 <b> 
-<input type="button" value="Please close this window, and Open your Browser!" />
+
+<input type="button" value="Please close this window, and Open your Browser!" onclick="windowClose();">
+
 </b>
 
 </body>
