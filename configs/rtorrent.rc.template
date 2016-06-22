@@ -28,6 +28,9 @@ schedule = watch_directory_2,5,60,"load.start=TORRENTS_WATCH_DIRECTORY/TORRENTS_
 #
 # Music
 schedule = watch_directory_3,5,60,"load.start=TORRENTS_WATCH_DIRECTORY/TORRENTS_LABEL_MUSIC/*.torrent,d.custom1.set=TORRENTS_LABEL_MUSIC"
+#
+# Software
+schedule = watch_directory_3,5,60,"load.start=TORRENTS_WATCH_DIRECTORY/TORRENTS_LABEL_SOFTWARE/*.torrent,d.custom1.set=TORRENTS_LABEL_SOFTWARE"
 
 # Add new method to get completed directory
 # ------------------------------------------
