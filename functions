@@ -1163,6 +1163,23 @@ uninstall_sphinxbase () {
 uninstall_src_pkgs sphinxbase
 }
 
+uninstall_domoticz () {
+# Stop domoticz and remove service file
+systemctl stop domoticz.service && systemctl disable domoticz.service
+rm -f $SYSTEMD_UNITS_DIR_USER/domoticz.service
+# Remove binary from bindir
+rm -f $BINARY_PREFIX/domoticz
+# Remove log file
+rm -f $DOMOTICZ_LOG_FILE
+# Remove web files from JambulaTV location
+rm -rf $DOMOTICZ_HTML_DIR
+# Backup home directory if it exists
+[ -d $DOMOTICZ_HOME_DIR ] && \
+	mv -v $DOMOTICZ_HOME_DIR $DOMOTICZ_HOME_DIR.$(date '+%Y%m%d')
+# Remove source directory
+rm -rf $INSTALL_SRC_DIR/domoticz
+}
+
 
 
 #######################

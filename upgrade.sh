@@ -102,6 +102,12 @@ sphinxbase_install
 pocketsphinx_install
 }
 
+upgrade_domoticz () {
+uninstall_domoticz
+domoticz_install
+domoticz_configure
+}
+
 
 
 #################
@@ -131,3 +137,5 @@ pocketsphinx_install
 #upgrade_asterisk
 
 #upgrade_sphinx
+
+#upgrade_domoticz
