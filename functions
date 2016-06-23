@@ -5689,7 +5689,7 @@ rsync -avz $PROJECT_GITHUB_DIR/domoticz/ $INSTALL_SRC_DIR/domoticz/
 ln -s $INSTALL_SRC_DIR/open-zwave $INSTALL_SRC_DIR/open-zwave-read-only
 # Change to source dir
 cd $INSTALL_SRC_DIR/domoticz
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX -DLIB_SUFFIX=64
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX
 make -j$SYSTEM_CPU_CORES
 #
 # Post-install actions - Not done by compile
