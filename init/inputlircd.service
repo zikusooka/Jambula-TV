@@ -6,7 +6,7 @@ After=tvheadend.service
 [Service]
 Type=forking
 EnvironmentFile=/etc/sysconfig/inputlirc
-ExecStartPre=/bin/sh -c "/usr/bin/ir-keytable -p ${IR_PROTOCOL} -c -w ${IR_KEYTABLE}"
+ExecStartPre=/bin/sh -c "/usr/bin/ir-keytable -p ${IR_PROTOCOLS} -c -D ${IR_REPEAT_DELAY} -P ${IR_REPEAT_PERIOD} -w ${IR_KEYTABLE}"
 ExecStart=/bin/sh -c "/usr/sbin/inputlircd ${LIRC_OPTIONS} ${LIRC_DEVICE}"
 
 [Install]
