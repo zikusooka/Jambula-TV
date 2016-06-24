@@ -1,4 +1,5 @@
 #!/bin/sh
+IR_REPEAT_PERIOD=
 PROJECT_NAME=JambulaTV
 PROJECT_URL="http://www.jambulatv.com"
 COMPANY_NAME="Jambula Labs"
@@ -427,7 +428,9 @@ NETDATA_PORT=$(grep -i 'netdata$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 # -----------------
 IR_REMOTE=pctv-290e #intex #streamzap #samsung
 IR_DAEMON=inputlirc #lircd
-IR_PROTOCOL=NEC #RC-5
+IR_PROTOCOLS="NEC,RC-5,RC-6"
+IR_REPEAT_DELAY=1200
+IR_REPEAT_PERIOD=400
 
 WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
@@ -2629,7 +2632,9 @@ cat > $SYSCONFIG_DIR/inputlirc <<EOF
 LIRC_OPTIONS="-g -m 0 -c"
 LIRC_DEVICE="/dev/input/jambulatv-remote"
 IR_KEYTABLE="$CONFDIR/lirc/ir-keytable.cfg"
-IR_PROTOCOL="$IR_PROTOCOL"
+IR_PROTOCOLS="$IR_PROTOCOLS"
+IR_REPEAT_DELAY=$IR_REPEAT_DELAY
+IR_REPEAT_PERIOD=$IR_REPEAT_PERIOD
 EOF
 # Copy inputlircd systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/inputlircd.service $SYSTEMD_UNITS_DIR_USER/
