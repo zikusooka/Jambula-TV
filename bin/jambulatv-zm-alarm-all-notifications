@@ -12,6 +12,15 @@ ZM_ROOT_URL_LOCAL="http://$ZM_HOST_LOCAL:$ZM_PORT"
 ZM_ROOT_URL_WIFI="http://$ZM_HOST_WIFI:$ZM_PORT"
 ZM_WATCH_URL="$ZM_ROOT_URL_LOCAL/jpeg.cgi?mode=single&monitor=${ZM_CAMERA_ID}&scale=100"
 
+# Domoticz stuff
+DOMOTICZ_HOST_IP=jambulatv
+DOMOTICZ_WWW_PORT=8540
+DOMOTICZ_SECURITY_LAMP_IDX=1
+DOMOTICZ_SECURITY_LAMP_DURATION=60
+
+# Time of Day
+HOUR=`date +%H`
+
 # Edit Notification message templates here
 NOTIFICATION_SUBJECT="*[JambulaTV] CCTV Security Alert: Motion Detected on $ZM_CAMERA_NAME Camera*"
 NOTIFICATION_MESSAGE="Motion Was Detected by Camera No.$ZM_CAMERA_ID ($ZM_CAMERA_NAME) at $ZM_TIME.  The Video of this Event has been logged and is viewable at: $ZM_ROOT_URL_WIFI/index.php?view=event%26eid=${ZM_CAMERA_EVENT_ID}"
@@ -54,9 +63,58 @@ exit 1
 fi
 
 
+###############
+#  FUNCTIONS  #
+###############
+darkness_or_light () {
+# Determine weather it is dark or not
+if [ "$HOUR" -ge "19" ] || [ "$HOUR" -le "6" ];
+then
+ITS_DARK=yes
+else
+ITS_DARK=no
+fi
+}
+
+status_of_lamp () {
+# Check status of security light
+DOMOTICZ_SECURITY_LAMP_STATE=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=devices&rid=$DOMOTICZ_SECURITY_LAMP_IDX" | jq '.result' | grep -i status | awk {'print $2'} | sed 's:["|,]::g')
+}
+
+turn_on_lamp () {
+# Dimmable
+curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$DOMOTICZ_SECURITY_LAMP_IDX&switchcmd=Set%20Level&level=100" > /dev/null 2>&1
+# Non-Dimmable
+#curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$DOMOTICZ_SECURITY_LAMP_IDX&switchcmd=On" > /dev/null 2>&1
+}
+
+turn_off_lamp () {
+# Dimmable
+curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$DOMOTICZ_SECURITY_LAMP_IDX&switchcmd=Set%20Level&level=0" > /dev/null 2>&1
+# Non-Dimmable
+curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$DOMOTICZ_SECURITY_LAMP_IDX&switchcmd=Off" > /dev/null 2>&1
+}
+
+log_event () {
+curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=addlogmessage&message=$@" > /dev/null 2>&1
+}
+
+
+
 #################
 #  MAIN SCRIPT  #
 #################
+# LAMP
+# -----
+darkness_or_light 
+status_of_lamp
+# Turn on security Light if it is not on and its dark 
+if [ "$DOMOTICZ_SECURITY_LAMP_STATE" = "Off" ] && [ "$ITS_DARK" = "yes" ];
+then
+turn_on_lamp
+log_event $NOTIFICATION_MESSAGE
+fi
+
 
 # Capture current camera view
 curl -G -s -o $ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg $ZM_WATCH_URL
@@ -84,3 +142,12 @@ $KODI_OSD_SCRIPT -i $ZM_CAMERA_ID -n $ZM_CAMERA_NAME -e $ZM_CAMERA_EVENT_ID -t "
 # OSD Message using jambulatv-osd script
 # --------------------------------------
 #$OSD_SCRIPT -m "$NOTIFICATION_MESSAGE"
+
+# LAMP
+# -----
+# Switch off security Light if it was turned on after desired period e.g. 60 minutes
+if [ "$DOMOTICZ_SECURITY_LAMP_STATE" = "On" ] && [ "$ITS_DARK" = "yes" ];
+then
+sleep $DOMOTICZ_SECURITY_LAMP_DURATION
+turn_off_lamp
+fi
