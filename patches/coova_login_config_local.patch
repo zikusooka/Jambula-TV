@@ -1,17 +1,23 @@
 --- /usr/src/jambulatv/coova-chilli/miniportal/config-local.sh	2015-11-22 08:57:46.247269748 +0300
-+++ /usr/share/JambulaTV/html/coova/www/config-local.sh	2016-05-05 14:05:03.217810869 +0300
-@@ -23,8 +23,8 @@
++++ config-local.sh	2016-06-26 20:39:02.158449736 +0300
+@@ -23,8 +23,14 @@
  COOVA_SESSIONID=$CHI_SESSION_ID
  COOVA_CHALLENGE=$CHI_CHALLENGE
  PORTAL_SESSIONID=${COOKIE_PORTAL_SESSIONID:-$SESSIONID}
 -FORM_userurl=${FORM_userurl:-http://coova.github.io/}
 -    
 +FORM_userurl=${FORM_userurl:-$HS_PROVIDER_LINK}
-+   
++ 
++FREERADIUS_DB_NAME=COOVACHILLI_DB_NAME
++FREERADIUS_DB_USER=COOVACHILLI_DB_USER
++FREERADIUS_DB_PASS=COOVACHILLI_DB_PASS
++MY_WIFI_DEVICES_FILE=PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg
++
++
  http_redirect2() {
  cat <<EOF
  HTTP/1.1 302 Redirect
-@@ -96,7 +96,73 @@
+@@ -96,7 +102,73 @@
  
      echo "<table style=\"clear:both;margin:auto;padding-top:10px;\" height=\"30\">
  <tr><td valign=\"center\" align=\"center\" style=\"color:#666;font-size:60%;\">Powered by</td>
@@ -86,7 +92,7 @@
  </td></tr></table></body></html>"
  }
  
-@@ -212,11 +278,18 @@
+@@ -212,11 +284,36 @@
      (uamfile "$file" 0
  	echo
  	echo "-------------------------------------------------"
@@ -102,6 +108,24 @@
 +host -W 1 $REMOTE_DOMAIN_NAME $SYSTEM_DNS_SERVER > /dev/null 2>&1
 +DNS_STATUS=$?
 +}
++
++jambula_add_legal_device () {
++# Check if remote MAC address is in My-WiFi devices file
++grep -iw $REMOTE_MAC $MY_WIFI_DEVICES_FILE > /dev/null 2>&1
++MAC_EXISTS_FILE=$?
++#
++# Check if remote MAC Address already exists in radius MySQL database
++MAC_EXISTS_DB=$(echo "SELECT COUNT(*) FROM radcheck WHERE username = '$REMOTE_MAC';" | mysql -s -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME)
++#
++if [ "$MAC_EXISTS_DB" = 0 ] && [ "$MAC_EXISTS_FILE" = 0 ];
++then
++# Add MAC Address of device that will ByPass Authentication 
++echo "Adding $REMOTE_MAC to home and authenticated user database  ..."
++#
++echo "INSERT INTO radcheck (UserName, Attribute, Op, Value) VALUES ('$REMOTE_MAC', 'Auth-Type', ':=', 'Accept');" | mysql -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME
++fi
++}
++
 +
  FORM_username="${FORM_username:-$FORM_UserName}"
  FORM_username="${FORM_username:-$FORM_Username}"

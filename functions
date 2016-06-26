@@ -4359,8 +4359,11 @@ ip link set \$TUNTAP multicast on" > $COOVA_CONFIG_DIR/ipup.sh
 chmod 755 $COOVA_CONFIG_DIR/ipup.sh
 
 # Create Chilli User in radius MySql database
-# ********************************************
 echo "INSERT INTO radcheck (UserName, Attribute, Value, Op) VALUES ('$COOVA_NORMAL_USER_LOGIN', 'Cleartext-Password', '$COOVA_NORMAL_USER_PASSWORD', ':=');" | mysql -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME
+# Add My-Wifi-Devices config file
+cat > $PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg << EOF
+# Enter MAC address of your wifi phones, tablets, PCs here.  One device per line
+EOF
 }
 
 coova_chilli_customization () {
@@ -4391,8 +4394,15 @@ echo "--- uam.sh.orig	2014-03-12 12:23:46.875850707 +0300
 # Apply uam file patch
 patch -p1 $COOVA_HTML_DIR/www/uam.sh < $TMPDIR/coova_uamroot.patch
 #
-# Patch logn-config.sh
-patch -p1 $COOVA_HTML_DIR/www/config-local.sh < $PROJECT_PATCHES_DIR/coova_login_config_local.patch  
+# Modify patch file config-local.sh -> to reflect free radius DB details - add user devices to db
+cat $PROJECT_PATCHES_DIR/coova_login_config_local.patch | \
+	sed "s:COOVACHILLI_DB_NAME:$FREERADIUS_DB_NAME:g" | \
+	sed "s:COOVACHILLI_DB_USER:$FREERADIUS_DB_USER:g" | \
+	sed "s:COOVACHILLI_DB_PASS:$FREERADIUS_DB_PASS:g" | \
+	sed "s:PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" \
+		> /tmp/coova_config_local.patch
+# Apply patch
+patch -p1 $COOVA_HTML_DIR/www/config-local.sh < /tmp/coova_config_local.patch
 #
 # patch login.chi: Redirect to customized Jambula Splash Web Pages
 patch -p1 $COOVA_HTML_DIR/www/login.chi < $PROJECT_PATCHES_DIR/coova_login_chi.patch

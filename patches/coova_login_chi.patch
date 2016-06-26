@@ -1,6 +1,6 @@
 --- /usr/src/jambulatv/coova-chilli/miniportal/login.chi	2015-11-22 08:57:46.119261735 +0300
-+++ /usr/share/JambulaTV/html/coova/www/login.chi	2016-05-05 14:15:38.508962795 +0300
-@@ -14,35 +14,50 @@
++++ login.chi	2016-06-26 20:33:08.421927319 +0300
+@@ -14,35 +14,52 @@
  # You should have received a copy of the GNU General Public License
  # along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
@@ -46,6 +46,8 @@
 +	    jambula_header "<meta http-equiv=\"refresh\" content=\"30;url=${url}\"/>"
 +	    uamfile "landing/internet_on/${DETECTED_DEVICE}" 1
 +	    jambula_footer
++            # Add legal device to radius database i.e. bypass authentication in future
++            jambula_add_legal_device
  	    exit
 +
 +		else
@@ -65,7 +67,7 @@
      
      if [ "$FORM_res" =  "failed" ]
      then
-@@ -53,15 +68,10 @@
+@@ -53,15 +70,10 @@
  	    error "Username and/or passowrd was not valid"
  	fi
      fi
