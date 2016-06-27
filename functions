@@ -640,6 +640,9 @@ TELEGRAM_API_BOT="123456789:asdfghjklpoitrr-45ghyujkk"
 TELEGRAM_CHAT_ID="987654321"
 TELEGRAM_USERNAME="username"
 
+# WhatsApp Info
+WHATSAPP_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-whatsapp.cfg
+
 # Enter User's personal email credentials here
 EMAIL_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-email.cfg
 EMAIL_TO_ADDRESS="username@userdomain"
@@ -3968,8 +3971,10 @@ cd $INSTALL_SRC_DIR/yowsup2
 python setup.py install --install-lib=$PYTHON_SITEDIR
 }
 
-whatapp_messaging_configure () {
-
+whatsapp_messaging_configure () {
+cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
+# Run the script /usr/bin/jambulatv-whatsapp to generate these settings
+EOF
 }
 
 sleekxmpp_install () {

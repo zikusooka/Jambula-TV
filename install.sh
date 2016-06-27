@@ -321,7 +321,7 @@ python_telegram_bot_install
 telegram_messaging_configure
 yowsup2_deps_install
 yowsup2_install
-whatapp_messaging_configure
+whatsapp_messaging_configure
 
 # ---------
 # Notices
