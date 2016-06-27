@@ -22,3 +22,7 @@ NETWORK_WIRELESS_PASSPHRASE=1gbofdatanow
 #################
 #  MAIN SCRIPT  #
 #################
+
+
+whatapp_messaging_configure
+

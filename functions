@@ -3913,6 +3913,65 @@ TELEGRAM_USERNAME="$TELEGRAM_USERNAME"
 EOF
 }
 
+yowsup2_deps_install () {
+for PYTHON_MODULE in \
+protobuf \
+python-axolotl-curve25519 \
+pycrypto \
+python-axolotl
+do
+# Set module's package filename & strip version from it
+MODULE_PKG=$(basename $(ls $PROJECT_TARBALLS_DIR/$PYTHON_MODULE* | head -1))
+MODULE_VERS=$(echo $MODULE_PKG|sed "s:$PYTHON_MODULE-::g"|sed "s:.tar.gz::g"|sed "s:.tar.bz2::g"|sed "s:.zip::g")
+# Remove any existing modules
+[ ! -d $INSTALL_SRC_DIR/$PYTHON_MODULE ] || rm -rf $INSTALL_SRC_DIR/$PYTHON_MODULE
+rm -rf $PYTHON_SITEDIR/$PYTHON_MODULE*
+# Install python module
+echo "Installing $PYTHON_MODULE ..."
+# Unpack using the appropriate tool for archive file format
+# gzip
+[ -e $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*gz ] && \
+   tar zxvf $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*gz -C $INSTALL_SRC_DIR
+# bz2
+[ -e $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*bz2 ] && \
+   tar jxvf $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*bz2 -C $INSTALL_SRC_DIR
+# zip
+[ -e $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*zip ] && \
+   unzip -d $INSTALL_SRC_DIR $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*zip
+# Rename sources dir
+cd $INSTALL_SRC_DIR && mv -v *$PYTHON_MODULE-$MODULE_VERS* $PYTHON_MODULE
+# Install
+cd $INSTALL_SRC_DIR/$PYTHON_MODULE
+python setup.py install --install-lib=$PYTHON_SITEDIR
+#
+#
+echo
+echo
+echo 
+echo "Did python module [$PYTHON_MODULE] install correctly?"
+echo 
+echo "Enter to proceed...."
+echo
+echo
+#read
+clear
+#
+#
+done
+}
+
+yowsup2_install () {
+tar zxvf $PROJECT_TARBALLS_DIR/yowsup2-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v yowsup2-* yowsup2
+# Compile
+cd $INSTALL_SRC_DIR/yowsup2 
+python setup.py install --install-lib=$PYTHON_SITEDIR
+}
+
+whatapp_messaging_configure () {
+
+}
+
 sleekxmpp_install () {
 # dnspython - dependency for sleekxmpp
 unzip -d $INSTALL_SRC_DIR $PROJECT_TARBALLS_DIR/dnspython-*.zip
