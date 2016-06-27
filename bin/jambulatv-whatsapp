@@ -1,0 +1,182 @@
+#!/bin/sh
+# Use this script to register for whatsapp; and then to send and receive messages
+# Fixed Variables
+WHATSAPP_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-whatsapp.cfg
+WHATSAPP_METHOD_NAME=$1
+WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
+WHATSAPP_TEXT_MESSAGE="$3"
+WHATSAPP_REGISTRATION_METHOD=sms
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage () {
+clear
+if [ "x$WHATSAPP_METHOD_NAME" = "x" ];
+then
+echo "Usage:  ./`basename $0` [register]|[sendmessage]
+"
+exit 1
+fi
+
+case $WHATSAPP_METHOD_NAME in
+[Ss][Ee][Nn][Dd][Mm][Ee][Ss][Ss][Aa][Gg][Ee])
+if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_TEXT_MESSAGE" = "x" ];
+then
+echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_PHONE_NUMBER_RECIPIENT] [WHATSAPP_TEXT_MESSAGE]
+"
+exit 1
+fi
+;;
+esac
+}
+
+registration_status () {
+# Source settings file
+. $WHATSAPP_CREDENTIALS_CONFIG
+# Check if already registered
+if [ "x$WHATSAPP_ENCRYPTED_PASSWORD" != "x" ] && [ "x$WHATSAPP_REGISTRATION_CODE" != "x" ];
+then
+clear
+echo "
+Hey there! It looks like you already registered.  If you want to re-register, please remove the following file and run this script again.
+
+[$WHATSAPP_CREDENTIALS_CONFIG]
+
+"
+exit 0
+fi
+}
+
+registration_request_code () {
+# Check if registered before
+registration_status 
+clear
+read -p "Please enter your whatsapp phone number (Include country code e.g. 256)
+" WHATSAPP_PHONE_NUMBER_SENDER
+#
+# Telephone Country Code
+clear
+DEFAULT_TELEPHONE_COUNTRY_CODE=256
+read -p "Please enter your country's telephone code below [$DEFAULT_TELEPHONE_COUNTRY_CODE]
+" TELEPHONE_COUNTRY_CODE
+# If empty set to default
+if [ "x$TELEPHONE_COUNTRY_CODE" = "x" ];
+then
+TELEPHONE_COUNTRY_CODE=$DEFAULT_TELEPHONE_COUNTRY_CODE
+fi
+#
+# MCC
+clear
+DEFAULT_MOBILE_COUNTRY_CODE=641
+read -p "Please enter your country's Mobile Country Code (MCC) below [$DEFAULT_MOBILE_COUNTRY_CODE]
+" MOBILE_COUNTRY_CODE
+# If empty set to default
+if [ "x$MOBILE_COUNTRY_CODE" = "x" ];
+then
+MOBILE_COUNTRY_CODE=$DEFAULT_MOBILE_COUNTRY_CODE
+fi
+#
+# MNC
+clear
+DEFAULT_MOBILE_NETWORK_CODE=18
+read -p "Please enter your Mobile Network Code (MNC)  below [$DEFAULT_MOBILE_NETWORK_CODE]
+" MOBILE_NETWORK_CODE
+# If empty set to default
+if [ "x$MOBILE_NETWORK_CODE" = "x" ];
+then
+MOBILE_NETWORK_CODE=$DEFAULT_MOBILE_NETWORK_CODE
+fi
+
+# Copy variables to whatsapp settings file
+cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
+# Generated using jambulatv-whatsapp on $(date)
+WHATSAPP_PHONE_NUMBER_SENDER=$WHATSAPP_PHONE_NUMBER_SENDER
+TELEPHONE_COUNTRY_CODE=$TELEPHONE_COUNTRY_CODE
+MOBILE_COUNTRY_CODE=$MOBILE_COUNTRY_CODE
+MOBILE_NETWORK_CODE=$MOBILE_NETWORK_CODE
+EOF
+# Request for PIN code using SMS
+yowsup-cli registration -d -E android -m $MOBILE_COUNTRY_CODE -n $MOBILE_NETWORK_CODE -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -r $WHATSAPP_REGISTRATION_METHOD
+}
+
+registration_confirm () {
+# Source settings file
+. $WHATSAPP_CREDENTIALS_CONFIG
+#
+# Check if request for PIN Code was made
+if [ "x$WHATSAPP_REGISTRATION_CODE" = "x" ];
+then
+clear;
+echo "Error:  Please register this device for whatsapp first before you can confirm"
+exit 1
+fi
+# Confirm using sent PIN code
+yowsup-cli registration -d -E android -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -R $WHATSAPP_REGISTRATION_CODE
+}
+
+send_message () {
+# Source settings file
+. $WHATSAPP_CREDENTIALS_CONFIG
+#
+# Check if registration was done
+if [ "x$WHATSAPP_ENCRYPTED_PASSWORD" = "x" ];
+then
+clear;
+echo "Error:  Please register this device for whatsapp first before you can send"
+exit 1
+fi
+yowsup-cli demos -d -l "$WHATSAPP_PHONE_NUMBER_SENDER:$WHATSAPP_ENCRYPTED_PASSWORD" -s $WHATSAPP_PHONE_NUMBER_RECIPIENT "$WHATSAPP_TEXT_MESSAGE"
+}
+
+register_4_whatsapp  () {
+registration_request_code
+# Ask for PIN Code
+clear
+read -p "An SMS message with a PIN Code has been sent to your phone number $WHATSAPP_PHONE_NUMBER_SENDER.  Please Enter it here now:
+" PIN_CODE
+# Copy PIN code to settings file
+cat >> $WHATSAPP_CREDENTIALS_CONFIG << EOF
+WHATSAPP_REGISTRATION_CODE=$PIN_CODE
+EOF
+#
+registration_confirm
+#
+# Ask for Password received
+echo
+echo ----------------------------------------------------------------
+echo
+read -p "Your password is shown above (the part that starts with 'pw:'), please Copy/Enter it here now:
+
+" PASSWORD
+# Copy password to settings file
+cat >> $WHATSAPP_CREDENTIALS_CONFIG << EOF
+WHATSAPP_ENCRYPTED_PASSWORD="$PASSWORD"
+EOF
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+usage
+
+case $WHATSAPP_METHOD_NAME in
+[Rr][Ee][Gg][Ii][Ss][Tt][Ee][Rr])
+register_4_whatsapp 
+;;
+
+[Ss][Ee][Nn][Dd][Mm][Ee][Ss][Ss][Aa][Gg][Ee])
+send_message
+;;
+
+*)
+echo "Usage:  ./`basename $0` [register]|[sendmessage]
+"
+exit 1
+;;
+esac
