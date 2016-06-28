@@ -3947,6 +3947,9 @@ cd $INSTALL_SRC_DIR && mv -v *$PYTHON_MODULE-$MODULE_VERS* $PYTHON_MODULE
 cd $INSTALL_SRC_DIR/$PYTHON_MODULE
 python setup.py install --install-lib=$PYTHON_SITEDIR
 #
+# BUG: Change permissions on protobuf namespace_packages.txt file
+chmod 644 $PYTHON_SITEDIR/protobuf-*.egg/EGG-INFO/namespace_packages.txt
+# 
 #
 echo
 echo
