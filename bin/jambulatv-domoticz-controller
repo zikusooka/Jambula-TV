@@ -1,0 +1,137 @@
+#!/bin/sh
+
+# Domoticz Settings
+DOMOTICZ_HOST_IP=jambulatv
+DOMOTICZ_WWW_PORT=8540
+
+# Time of Day
+HOUR=`date +%H`
+
+HA_DEVICE_NAME=$1
+HA_DEVICE_ID=$2
+HA_DEVICE_ACTION=$3
+HA_LOG_NOTICE="[$(basename $0)]%20$HA_DEVICE_NAME%20was%20turned"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage () {
+# Device Name
+if [ "x$HA_DEVICE_NAME" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` [HA_DEVICE_NAME (lamp)] [HA_DEVICE_ID] [HA_DEVICE_ACTION (on|off)]
+"
+exit 1
+fi
+# Device ID
+if [ "x$HA_DEVICE_ID" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` $HA_DEVICE_NAME [HA_DEVICE_ID] [HA_DEVICE_ACTION] (on|off)
+"
+exit 1
+fi
+# Device Action
+if [ "x$HA_DEVICE_ACTION" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` $HA_DEVICE_NAME $HA_DEVICE_ID [HA_DEVICE_ACTION] (on|off)
+"
+exit 1
+fi
+}
+
+darkness_or_light () {
+# Determine weather it is dark or not
+if [ "$HOUR" -ge "19" ] || [ "$HOUR" -le "6" ];
+then
+ITS_DARK=yes
+else
+ITS_DARK=no
+fi
+}
+
+type_of_lamp () {
+DOMOTICZ_LAMP_TYPE=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=devices&rid=$HA_DEVICE_ID" | jq '.result' | grep -iw 'SwitchType' | awk {'print $2'} | sed 's:["|,]::g')
+}
+
+status_of_lamp () {
+# Check status of security light
+DOMOTICZ_LAMP_STATE=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=devices&rid=$HA_DEVICE_ID" | jq '.result' | grep -i status | awk {'print $2'} | sed 's:["|,]::g')
+}
+
+turn_on_lamp () {
+type_of_lamp
+if [ "$DOMOTICZ_LAMP_TYPE" = "Dimmer" ];
+then
+# Dimmable
+# ---------
+# Turn On
+curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$HA_DEVICE_ID&switchcmd=Set%20Level&level=100" > /dev/null 2>&1
+# Update DB
+curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=udevice&idx=$HA_DEVICE_ID&nvalue=1&svalue=0" > /dev/null 2>&1
+else
+# Non-Dimmable
+# ------------
+curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$HA_DEVICE_ID&switchcmd=On" > /dev/null 2>&1
+fi
+}
+
+turn_off_lamp () {
+type_of_lamp
+if [ "$DOMOTICZ_LAMP_TYPE" = "Dimmer" ];
+then
+# Dimmable
+# --------
+# Turn Off
+curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$HA_DEVICE_ID&switchcmd=Set%20Level&level=0" > /dev/null 2>&1
+# Update DB
+curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=udevice&idx=$HA_DEVICE_ID&nvalue=0&svalue=0" > /dev/null 2>&1
+else
+# Non-Dimmable
+# ------------
+curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$HA_DEVICE_ID&switchcmd=Off" > /dev/null 2>&1
+fi
+}
+
+log_event () {
+curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=addlogmessage&message=$@" > /dev/null 2>&1
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+usage
+# Time of day
+darkness_or_light 
+# Get status of device
+status_of_lamp
+case $HA_DEVICE_ACTION in
+[Oo][Nn])
+# Turn on security Light if it is not on and its dark 
+#if [ "$DOMOTICZ_LAMP_STATE" = "Off" ] && [ "$ITS_DARK" = "yes" ];
+if [ "$ITS_DARK" = "yes" ];
+then
+turn_on_lamp
+log_event $HA_LOG_NOTICE:%20On
+fi
+;;
+
+[Oo][Ff][Ff])
+# Switch off security Light if it was turned on after desired period e.g. 60 minutes
+#if [ "$DOMOTICZ_LAMP_STATE" = "On" ] && [ "$ITS_DARK" = "yes" ];
+if [ "$ITS_DARK" = "yes" ];
+then
+turn_off_lamp
+log_event $HA_LOG_NOTICE:%20Off
+fi
+;;
+*)
+clear
+echo "Usage:  ./`basename $0` [HA_DEVICE_NAME (lamp)] [HA_DEVICE_ID] [HA_DEVICE_ACTION (on|off)]"
+esac
