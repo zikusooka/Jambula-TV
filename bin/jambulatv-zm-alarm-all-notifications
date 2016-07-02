@@ -15,7 +15,7 @@ ZM_WATCH_URL="$ZM_ROOT_URL_LOCAL/jpeg.cgi?mode=single&monitor=${ZM_CAMERA_ID}&sc
 # Domoticz stuff
 DOMOTICZ_HOST_IP=jambulatv
 DOMOTICZ_WWW_PORT=8540
-DOMOTICZ_SECURITY_LAMP_IDX=1
+DOMOTICZ_SECURITY_LAMP_NAME="Living Room"
 DOMOTICZ_SECURITY_LAMP_DURATION=60
 
 # Time of Day
@@ -38,8 +38,11 @@ KODI_OSD_SCRIPT=/usr/bin/jambulatv-zm-alarm-kodi-notifications
 OSD_SCRIPT=/usr/bin/jambulatv-osd
 
 
-# Usage 
-# ------
+
+###############
+#  FUNCTIONS  #
+###############
+usage () {
 # Camera ID
 if [ "x$ZM_CAMERA_ID" = "x" ];
 then
@@ -61,11 +64,8 @@ echo "Usage:  ./`basename $0` $ZM_CAMERA_ID $ZM_CAMERA_NAME [ZM_CAMERA_EVENT_ID]
 "
 exit 1
 fi
+}
 
-
-###############
-#  FUNCTIONS  #
-###############
 darkness_or_light () {
 # Determine weather it is dark or not
 if [ "$HOUR" -ge "19" ] || [ "$HOUR" -le "6" ];
@@ -76,12 +76,19 @@ ITS_DARK=no
 fi
 }
 
+get_id_of_lamp () {
+DOMOTICZ_SECURITY_LAMP_IDX=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=getlightswitches" | jq -c ".result[] | select(.Type == \"Light/Switch\") | select(.Name == \"$DOMOTICZ_LAMP_NAME\") | .idx" | sed "s:\"::g")
+export DOMOTICZ_SECURITY_LAMP_IDX
+}
+
 status_of_lamp () {
+get_id_of_lamp
 # Check status of security light
 DOMOTICZ_SECURITY_LAMP_STATE=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=devices&rid=$DOMOTICZ_SECURITY_LAMP_IDX" | jq '.result' | grep -i status | awk {'print $2'} | sed 's:["|,]::g')
 }
 
 turn_on_lamp () {
+get_id_of_lamp
 # Dimmable
 curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$DOMOTICZ_SECURITY_LAMP_IDX&switchcmd=Set%20Level&level=100" > /dev/null 2>&1
 # Non-Dimmable
@@ -89,6 +96,7 @@ curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param
 }
 
 turn_off_lamp () {
+get_id_of_lamp
 # Dimmable
 curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$DOMOTICZ_SECURITY_LAMP_IDX&switchcmd=Set%20Level&level=0" > /dev/null 2>&1
 # Non-Dimmable
@@ -104,8 +112,10 @@ curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param
 #################
 #  MAIN SCRIPT  #
 #################
+usage
+#
 # LAMP
-# -----
+# ----
 darkness_or_light 
 status_of_lamp
 # Turn on security Light if it is not on and its dark 
