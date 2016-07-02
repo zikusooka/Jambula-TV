@@ -17,7 +17,7 @@ WIFI_DEVICE_USER="$(echo $LINE | cut -d '|' -f2 | sed 's:^ ::')"
 WIFI_MONITORED="$(echo $LINE | cut -d '|' -f3 | sed 's:^ ::')"
 #
 # Scan for WiFi device
-/usr/sbin/hostapd_cli sta $WIFI_DEVICE_ADDRESS | grep -i connected_time > /dev/null 2>&1
+sudo /usr/sbin/hostapd_cli sta $WIFI_DEVICE_ADDRESS | grep -i connected_time > /dev/null 2>&1
 SCAN_RESULT=$?
 #
 # Test for availabilty of monitored users
@@ -28,7 +28,7 @@ exit 0
 #
 else
 echo "CRITICAL - $WIFI_DEVICE_USER is Away"
-exit 1
+exit 2
 fi
 
 done
