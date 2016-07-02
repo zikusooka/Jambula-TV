@@ -1,0 +1,15 @@
+#!/bin/sh
+# Perform actions based on whether a user is at or away from home 
+
+# Turn Lights On/Off depending on presence
+case $@ in
+OK)
+/usr/bin/jambulatv-lights "Living Room" on
+;;
+CRITICAL)
+/usr/bin/jambulatv-lights "Living Room" off
+;;
+*)
+echo "$(basename $0) [OK|CRITICAL]"
+;;
+esac
