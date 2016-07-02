@@ -1,0 +1,42 @@
+#!/bin/sh
+# Available in functions file
+MY_WIFI_DEVICES_FILE=/etc/JambulaTV/my-wifi-devices.cfg
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+
+scan_4_wifi_device () {
+cat $MY_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' | while read LINE
+do
+
+WIFI_DEVICE_ADDRESS="$(echo $LINE | cut -d '|' -f1 | sed 's:^ ::'| sed 's/-/:/g')"
+WIFI_DEVICE_USER="$(echo $LINE | cut -d '|' -f2 | sed 's:^ ::')"
+WIFI_MONITORED="$(echo $LINE | cut -d '|' -f3 | sed 's:^ ::')"
+#
+# Scan for WiFi device
+/usr/sbin/hostapd_cli sta $WIFI_DEVICE_ADDRESS | grep -i connected_time > /dev/null 2>&1
+SCAN_RESULT=$?
+#
+# Test for availabilty of monitored users
+if [ "$SCAN_RESULT" -eq "0" ] && [ "$WIFI_MONITORED" = "yes" ];
+then
+echo "OK - $WIFI_DEVICE_USER is Home!"
+exit 0
+#
+else
+echo "CRITICAL - $WIFI_DEVICE_USER is Away"
+exit 1
+fi
+
+done
+}
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+scan_4_wifi_device 
