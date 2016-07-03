@@ -6744,6 +6744,35 @@ VNC Access
 EOF
 }
 
+desktop_configure () {
+# Copy jambulatv-computer-mode script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-computer-mode ] || cp -v $PROJECT_BIN_DIR/jambulatv-computer-mode $BINARY_PREFIX/
+#
+# Add desktop entry for JambulaTV
+cat > /usr/share/applications/JambulaTV.desktop << EOF
+[Desktop Entry]
+Version=1.0
+Name=JambulaTV
+GenericName=JambulaTV
+Comment=Return back to JambulaTV
+Exec=$BINARY_PREFIX/jambulatv-computer-mode
+Icon=$PROJECT_SYSTEM_SHARE_DIR/images/jambulatv-stream.png
+Terminal=false
+Type=Application
+Encoding=UTF-8
+Categories=AudioVideo;Player;Recorder;
+MimeType=x-scheme-handler/jambulatv;
+X-KDE-Protocols=jambulatv
+StartupNotify=true
+Keywords=JambulaTV;TV;Multimedia;
+X-Desktop-File-Install-Version=0.21
+EOF
+# Copy to Desktop directory
+cp -v /usr/share/applications/JambulaTV.desktop $AUTOLOGIN_USER_HOME_DIR/Desktop/
+# Change permissions
+chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/Desktop
+}
+
 firefox_install () {
 # Unpack firefox tarball with correct architecture
 case $PROJECT_SYSTEM_ARCH in

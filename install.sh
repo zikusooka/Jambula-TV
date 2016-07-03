@@ -149,6 +149,7 @@ ziproxy_wan_accel_configure
 # Desktop Access
 # ----------------
 vncserver_configure
+desktop_configure
 firefox_install
 
 # --------------------
