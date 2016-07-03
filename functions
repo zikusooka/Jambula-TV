@@ -2305,24 +2305,25 @@ make
 make install
 }
 
-libcec_install () {
-# Unpack
-tar zxvf $PROJECT_TARBALLS_DIR/libcec-*.tar.gz -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v libcec-* libcec
-# Compile
-cd $INSTALL_SRC_DIR/libcec 
-./bootstrap
-./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make
-make install
-}
-
 platform_install () {
 rsync -av $PROJECT_GITHUB_DIR/platform/ $INSTALL_SRC_DIR/platform/
 cd $INSTALL_SRC_DIR/platform
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR
 make
 make install
+}
+
+libcec_install () {
+rsync -av $PROJECT_GITHUB_DIR/libcec/ $INSTALL_SRC_DIR/libcec/
+# Patch files to support exynos
+sed -i "s:set(HAVE_EXYNOS_API 0):set(HAVE_EXYNOS_API 1):g" $INSTALL_SRC_DIR/libcec/src/libcec/cmake/CheckPlatformSupport.cmake 
+# Create build dir and go there
+mkdir $INSTALL_SRC_DIR/libcec/build
+cd $INSTALL_SRC_DIR/libcec/build
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR -DHAVE_EXYNOS_API=1 ..
+make -j$SYSTEM_CPU_CORES
+make install
+ldconfig
 }
 
 kodi_platform_install () {
@@ -2336,9 +2337,9 @@ make install
 kodi_deps_install () {
 libnfs_install
 libusb_install
-libcec_install
 # Needed for Addons like PVR.HTS
 platform_install 
+libcec_install
 kodi_platform_install
 }
 
