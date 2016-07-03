@@ -313,6 +313,8 @@ domoticz_configure
 #openhab_install
 #openhab_configure
 
+home_automation_scripts
+
 # ------------------------
 # Notifications/ Messaging
 # ------------------------

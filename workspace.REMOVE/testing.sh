@@ -35,4 +35,3 @@ NETWORK_WIRELESS_PASSPHRASE=3gbofdatanow
 #################
 #  MAIN SCRIPT  #
 #################
-

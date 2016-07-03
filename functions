@@ -3975,6 +3975,9 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 }
 
 whatsapp_messaging_configure () {
+# Copy jambulatv-whatsapp script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-whatsapp ] || cp -v $PROJECT_BIN_DIR/jambulatv-whatsapp $BINARY_PREFIX/
+#
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
 # Run the script /usr/bin/jambulatv-whatsapp to generate these settings
 EOF
@@ -5806,6 +5809,16 @@ systemctl enable domoticz.service
 # Start domoticz if needed
 systemctl start domoticz.service
 }
+
+home_automation_scripts () {
+for SCRIPT in \
+jambulatv-lights \
+jambulatv-presence-detection
+do
+# Copy script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX/
+done
+} 
 
 openhab_install () {
 # Create install directory
