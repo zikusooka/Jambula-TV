@@ -642,6 +642,7 @@ TELEGRAM_USERNAME="username"
 
 # WhatsApp Info
 WHATSAPP_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-whatsapp.cfg
+WHATSAPP_PHONE_NUMBER_4_RECEIVING=""
 
 # Enter User's personal email credentials here
 EMAIL_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-email.cfg
@@ -3977,8 +3978,13 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 
 whatsapp_messaging_configure () {
 # Copy jambulatv-whatsapp script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-whatsapp ] || cp -v $PROJECT_BIN_DIR/jambulatv-whatsapp $BINARY_PREFIX/
+[ -e $BINARY_PREFIX/jambulatv-whatsapp ] || cat $PROJECT_BIN_DIR/jambulatv-whatsapp | \
+	sed "s:WHATSAPP_PHONE_NUMBER_4_RECEIVING:$WHATSAPP_PHONE_NUMBER_4_RECEIVING:g" \
+		> $BINARY_PREFIX/jambulatv-whatsapp
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-whatsapp
 #
+# Add whatsapp settings file
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
 # Run the script /usr/bin/jambulatv-whatsapp to generate these settings
 EOF
