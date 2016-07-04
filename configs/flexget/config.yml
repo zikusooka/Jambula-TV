@@ -61,7 +61,6 @@ templates:
         - (?i)[ .]vostfr[ .]: {from: title}
         - (?i)[ .]web dl[ .]: {from: title}
         - (?i)[ .]web-dl[ .]: {from: title}
-        - (?i)[ .]webrip[ .]: {from: title}
         - (?i)[ .]webscr[ .]: {from: title}
     content_filter:
       require:
@@ -135,7 +134,6 @@ templates:
 ##############
 #  Templates #
 ##############
-
   # TV
   # --
   tv:
@@ -160,7 +158,7 @@ templates:
             - s(\d+)e(\d+)
             - s(\d+)ep(\d+)
           tracking: backfill
-          timeframe: 12 hours
+          timeframe: 6 hours
           target: "h264"
           upgrade: yes
     include: [ '{{secrets.tv.include}}' ]
