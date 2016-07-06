@@ -21,6 +21,10 @@ telegram:
   first_name: 
   sur_name:
 
+whatsapp:
+  recipient: WHATSAPP_PHONE_NUMBER_4_RECEIVING
+  send_script: /usr/bin/jambulatv-whatsapp
+
 kodi:
   url: "http://127.0.0.1"
   port: KODI_HTTP_PORT
