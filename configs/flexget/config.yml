@@ -134,9 +134,77 @@ templates:
 ##############
 #  Templates #
 ##############
-  # TV
-  # --
+
+# WhatsApp
+# --------
+  # TV Series
+  send_whatsapp_tv_series_info_and_details:
+    set:
+      tv_series_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}.info
+      tv_series_details: Series *{{tvdb_series_name}}* | Airs *{{tvdb_airs_day_of_week}}*\nEpisode *{{tvdb_ep_id}}* | Title *{{tvdb_ep_name|d('')}}*\nRated *{{tvdb_ep_rating}}/10* | Aired *{{tvdb_ep_air_date|replace('00', '')|replace(':', '')|replace(' ', '')}}*\nTime *{{tvdb_runtime}} Mins* | Format *{{quality|d('')}}*\n![Image]({{tvmaze_series_medium_image|replace('_', '%5F')}})\n{{tvdb_ep_overview|striptags}}
+
+  send_whatsapp_tv_series_queued_notification:
+    exec:
+      auto_escape: yes
+      on_output:
+        for_accepted:
+          # Generate tv series info file and save it in tmp directory
+          - echo -e "*[JambulaTV] TV Show(s) Queued*\nThe following TV Episode has been queued for download\n" > "/tmp/{{tv_series_info_file}}"
+          - echo -e "{{tv_series_details}}" >> "/tmp/{{tv_series_info_file}}"
+          # Send queued notice via WhatsApp
+          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage "{{secrets.whatsapp.recipient}}" "$(cat "/tmp/{{tv_series_info_file}}")" &
+
+  send_whatsapp_tv_series_downloaded_notification:
+    exec:
+      auto_escape: yes
+      on_output:
+        for_accepted:
+          # Generate tv series info file and save it in tmp directory
+          - echo -e "*[JambulaTV] New TV Episode(s) Added*\nThe following TV Series Episode was successfully downloaded. You may find it under 'TV Shows' on your JambulaTV. Enjoy!\n" > "/tmp/{{tv_series_info_file}}"
+          - echo -e "{{tv_series_details}}" >> "/tmp/{{tv_series_info_file}}"
+          # Send queued notice via WhatsApp
+          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage "{{secrets.whatsapp.recipient}}" "$(cat "/tmp/{{tv_series_info_file}}")" &
+          # Remove tv series info file
+          - /usr/bin/rm "/tmp/{{tv_series_info_file}}"
+
+  # Movies
+  send_whatsapp_movie_info_and_details:
+    set:
+      movie_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}.info
+      movie_details: Movie *{{imdb_name}}* | Year *{{imdb_year}}*\nRating *{{imdb_score}}/10* | Votes *{{imdb_votes}} votes*\nGenres *{{imdb_genres|join(', ')|title}}*\nTime *{{tmdb_runtime}} Mins* | Format *{{quality|d('')}}*\n![Image]({{tmdb_posters[0]|replace('_', '%5F')}})\n{{imdb_plot_outline|striptags}}
+
+  send_whatsapp_movie_queued_notification:
+    exec:
+      auto_escape: yes
+      on_output:
+        for_accepted:
+          # Generate movie info file and save it in tmp directory
+          - echo -e "*[JambulaTV] Movie(s) Queued*\nThe following Movie has been queued for download\n" > "/tmp/{{movie_info_file}}"
+          - echo -e "{{movie_details}}" >> "/tmp/{{movie_info_file}}"
+          # Send queued notice via WhatsApp
+          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage "{{secrets.whatsapp.recipient}}" "$(cat "/tmp/{{movie_info_file}}")" &
+
+  send_whatsapp_movie_downloaded_notification:
+    exec:
+      auto_escape: yes
+      on_output:
+        for_accepted:
+          # Generate movie info file and save it in tmp directory
+          - echo -e "*[JambulaTV] New Movie(s) Added*\nThe following movie was successfully downloaded. You may find it under 'Movies' on your JambulaTV. Enjoy!\n" > "/tmp/{{movie_info_file}}"
+          - echo -e "{{movie_details}}" >> "/tmp/{{movie_info_file}}"
+          # Send queued notice via WhatsApp
+          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage "{{secrets.whatsapp.recipient}}" "$(cat "/tmp/{{movie_info_file}}")" &
+          # Remove movie info file
+          - /usr/bin/rm "/tmp/{{movie_info_file}}"
+
+
+
+# TV Series
+# ---------
   tv:
+    template:
+      - send_whatsapp_tv_series_info_and_details
+      - send_whatsapp_tv_series_queued_notification
     priority: 10
     thetvdb_lookup: yes
     tvmaze_lookup: yes
@@ -173,13 +241,17 @@ templates:
             username: '{{secrets.trakt.username}}'
             list: '{{secrets.trakt.watchlist}}'
             type: shows
+            strip_dates: yes
       from:
         - torrentz: verified
 
 
-  # Movies 
-  #--------
+# Movies 
+#--------
   movies:
+    template:
+      - send_whatsapp_movie_info_and_details
+      - send_whatsapp_movie_queued_notification
     priority: 30
     limit_new: 1
     quality: 
@@ -233,6 +305,7 @@ templates:
             username: '{{secrets.trakt.username}}'
             list: '{{secrets.trakt.watchlist}}'
             type: movies
+            strip_dates: yes
         # locally requested
         - movie_list: locally_added
 
@@ -252,9 +325,8 @@ templates:
 # Podcasts 
 # --------
   podcasts:
-    #disable:
-    #  - email
-    #  - exists
+    disable:
+      - send_telegram
     free_space:
       path: '{{secrets.podcasts.path}}'
       space: 1000
@@ -263,6 +335,11 @@ templates:
     limit_new: 5
     priority: 5    
     include: [ '{{secrets.podcasts.include}}' ]
+    # Set podcast meta and info spool files 
+    set:
+      podcast_meta_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}.meta
+      podcast_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}.info
+    # execute
     exec:
       auto_escape: no
       on_start:
@@ -273,10 +350,12 @@ templates:
           - echo "----------------------" >> '{{secrets.podcasts.download_log}}'
       on_output:
         for_accepted:
-          # Copy podcast info to spool file 
-          - echo -e "[URL]|{{url}}\n\n[TITLE]|{{title}}\n\n[DESCRIPTION]|{{description|striptags|replace('\"', '')}}\n\n[DURATION]|\n\n[IMAGE]|" > "{{secrets.podcasts.spool_dir}}"/."{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}".info
+          # Extract podcast meta data and save to file in spool dir 
+          - echo -e "[URL]|{{url}}\n\n[TITLE]|{{title}}\n\n[DESCRIPTION]|{{description|striptags|replace('\"', '')}}\n\n[DURATION]|\n\n[IMAGE]|" > "{{secrets.podcasts.spool_dir}}/{{podcast_meta_file}}"
+          # Extract podcast info and save to file in spool dir 
+          - echo -e "*[JambulaTV] Podcast(s) Queued*\nThe following Podcast has been queued for download:\n\n*{{title}}*\n{{description|striptags|replace('\"', '')}}\n\n[DURATION]|\n\n[IMAGE]" > "{{secrets.podcasts.spool_dir}}/{{podcast_info_file}}"
           # Fetch accepted entry
-          - /bin/sh "{{secrets.podcasts.download_script}}" ."{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}".info "{{secrets.podcasts.download_dir}}" "{{secrets.podcasts.spool_dir}}" "{{secrets.email.to}}"
+          - /bin/sh "{{secrets.podcasts.download_script}}" "{{podcast_meta_file}}" "{{secrets.podcasts.download_dir}}" "{{secrets.podcasts.spool_dir}}" "{{secrets.email.to}}"
       on_exit:
         # Add accepted entry to log file
         for_accepted: 
@@ -334,7 +413,7 @@ tasks:
   # Podcasts
   # --------
   internet_tv:
-    template: 
+    template:
       - podcasts
 
 
@@ -385,6 +464,8 @@ tasks:
         - extrafanart
     # Scan video library
     template:
+      - send_whatsapp_tv_series_info_and_details
+      - send_whatsapp_tv_series_downloaded_notification
       - kodi_library_scan
 
 
@@ -430,6 +511,8 @@ tasks:
         phase: truncate -s 19M '/{{secrets.movies.movies_completed_dir}}/DO.NOT.REMOVE.ME'
     # Scan video library
     template:
+      - send_whatsapp_movie_info_and_details
+      - send_whatsapp_movie_downloaded_notification
       - kodi_library_scan
 
 
