@@ -1,0 +1,124 @@
+#!/bin/sh
+
+KODI_HTTP_USER=MY_KODI_HTTP_USER
+KODI_HTTP_PASS=MY_KODI_HTTP_PASS
+KODI_LOG=MY_KODI_LOG
+
+TV_ACTION=$1
+TV_CHANNEL="$2"
+PVR_GROUP=1
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage () {
+# Device Name
+if [ "x$TV_ACTION" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` [TV_ACTION (play|mute|stop|record_start|record_stop)] [TV_CHANNEL] [DURATION)]
+"
+exit 1
+fi
+# Device ID
+if [ "$TV_ACTION" = "record" ] && [ "x$TV_CHANNEL" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` $TV_ACTION [TV_CHANNEL] [DURATION] (on|off)
+"
+exit 1
+fi
+#
+# Duration
+#if [ "x$DURATION" = "x" ];
+#then
+#clear
+#echo "Usage:  ./`basename $0` $TV_ACTION $TV_CHANNEL [DURATION] (on|off)
+#"
+#exit 1
+#fi
+}
+
+stop_player () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Stop", "params": {"playerid":1}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+start_player () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Open", "params":{"item":{"file":"/JambulaTV/Videos/TV_Recordings/tnss0054_h264b_640x368_256.mp4"}}}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+mute_player () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Application.SetMute", "params": {"mute":"toggle"}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+get_tv_channel_id () {
+CHANNELID=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannels", "params": {"channelgroupid":'$PVR_GROUP'}, "id": 1}' "http://127.0.0.1:8510/jsonrpc" | jq . | grep -A1 -i "$TV_CHANNEL"  | grep channelid | awk {'print $2'}| head -1)
+}
+
+play_tv_channel () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Open", "params":{"item":{"channelid":'$CHANNELID'}}}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+record_tv_channel_start () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle", "channel":'$CHANNELID'}}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+get_last_recorded_tv_channel () {
+CURRENT_CHANNELID=$(grep -ai "state:recording" $KODI_LOG | tail -1 | cut -d , -f3 | cut -d : -f2)
+}
+
+record_tv_channel_stop () {
+get_last_recorded_tv_channel
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle", "channel":'$CURRENT_CHANNELID'}}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+
+# Kodi Addons
+# -----------
+kodi_screensaver_poke () {
+# Poke screen if screensaver is active
+if [ "$KODI_SCREENSAVER_STATUS" = "true" ];
+then
+# Input.Select
+curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Input.Select","id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+fi
+}
+
+kodi_addon_script_doorbell () {
+curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Addons.ExecuteAddon","params":{"addonid":"script.doorbell","params":{"CamID":"'"$ZM_CAMERA_ID"'","CamName":"'"$ZM_CAMERA_NAME"'","CamEvent":"'"$ZM_CAMERA_EVENT_ID"'","CamTime":"'"$ZM_TIME"'","CamMessage":"'"$NOTIFICATION_MESSAGE"'"}},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+usage 
+get_tv_channel_id
+
+case $TV_ACTION in
+
+tv_play_start)
+play_tv_channel
+;;
+
+mute)
+mute_player
+;;
+
+tv_play_stop)
+stop_player
+;;
+
+tv_record_start) 
+record_tv_channel_start
+;;
+
+tv_record_stop) 
+record_tv_channel_stop
+;;
+
+esac

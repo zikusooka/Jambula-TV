@@ -168,6 +168,7 @@ KODI_USER_ADDONS=$KODI_CONFIG_DIR/addons
 KODI_SYSTEM_DATA=$KODI_SHARE_DIR/userdata
 KODI_SYSTEM_ADDONS=$KODI_SHARE_DIR/addons
 KODI_SYSTEM_SYS=$KODI_SHARE_DIR/system
+KODI_LOG_FILE=$KODI_CONFIG_DIR/temp/kodi.log
 #
 KODI_DB_PREFIX=kodi
 KODI_DB_VIDEO=${KODI_DB_PREFIX}_video
@@ -2569,6 +2570,15 @@ kodi_scripts () {
 [ -d $KODI_SHARE_DIR/scripts ] || mkdir -p $KODI_SHARE_DIR/scripts
 # Copy pip.py script for picture in picture
 cp -v $PROJECT_UTILS_DIR/pip.py $KODI_SHARE_DIR/scripts
+#
+# kodi-api-controller
+cat $PROJECT_BIN_DIR/jambulatv-kodi-controller | \
+		sed -e "s:MY_KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
+		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
+		sed -e "s:MY_KODI_LOG:$KODI_LOG_FILE:g" \
+			> $BINARY_PREFIX/jambulatv-kodi-controller
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-kodi-controller
 }
 
 kodi_jambulatv_service_configure () {
