@@ -138,7 +138,7 @@ FREEVO_CMD=$FREEVO_INSTALL_DIR/freevo
 FREEVO_USER=$MULTIMEDIA_USER
 FREEVO_USER_HOME_DIR=`cat /etc/passwd | grep "$FREEVO_USER" | cut -d ':' -f6 | head -1`/.freevo 
 
-GENERATE_LOCAL_CONF_SCRIPT=/usr/bin/jambulatv-generate-local-conf
+GENERATE_LOCAL_CONF_SCRIPT=$BINARY_PREFIX/jambulatv-generate-local-conf
 
 #FREEVO_VERSION=git
 FREEVO_VERSION=svn
@@ -244,7 +244,7 @@ DEPTH1=32
 DEPTH2=24
 DEPTH3=16
 PREFERRED_TV_RESOLUTION=$RES1
-XORG_CMD=/usr/bin/Xorg
+XORG_CMD=$BINARY_PREFIX/Xorg
 XORG_DIR=/etc/X11
 XORG_CONF=$XORG_DIR/xorg.conf
 XORG_CONF_DIR=$XORG_DIR/xorg.conf.d
@@ -252,7 +252,7 @@ XORG_CONF_NEW=/root/xorg.conf.new
 XORG_CONF_DISPLAY=1
 
 
-XSET_CMD=/usr/bin/xset 
+XSET_CMD=$BINARY_PREFIX/xset 
 
 LXDE_DM_DIR=/etc/lxdm
 LXDM_CONFIG=$LXDE_DM_DIR/lxdm.conf
@@ -276,7 +276,7 @@ PULSE_DEFAULT_CONFIG=$CONFDIR/pulse/default.pa
 PULSE_ROOT_CONFIG_DIR=/root/.config/pulse
 
 CHRONY_KEYS_FILE=/etc/chrony.keys
-CHRONYC_CMD=/usr/bin/chronyc
+CHRONYC_CMD=$BINARY_PREFIX/chronyc
 
 PLYMOUTH_THEME=spinfinity 
 PLYMOUTH_SET_CMD=/usr/sbin/plymouth-set-default-theme
@@ -383,6 +383,7 @@ ZONEMINDER_DB_NAME=zm
 ZONEMINDER_DB_SCHEMA=$INSTALL_SRC_DIR/ZoneMinder/db/zm_create.sql
 ZONEMINDER_DB_USER=jambulatv
 ZONEMINDER_DB_PASS=jambulatvzm3
+ZONEMINDER_WWW_PORT=$(grep -i 'ZoneMinder$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 ZONEMINDER_ZMS_INETD_SCRIPT=$BINARY_PREFIX/jambulatv-zms-inetd
 ZONEMINDER_ZMS_INETD_PORT=8521
@@ -543,7 +544,7 @@ REMOTE_SSH_SERVER=remote1.jambulatv.com
 REMOTE_SSH_SERVER_PORT=222
 REMOTE_SSH_SERVER_RANDOM_PORT=$[ ( $RANDOM % 10000 )  + 10000 ]
 # AutoSSH
-AUTOSSH_CMD=/usr/bin/autossh
+AUTOSSH_CMD=$BINARY_PREFIX/autossh
 AUTOSSH_PORT=$[ ( $RANDOM % 10000 )  + 20000 ]
 AUTOSSH_GATETIME=0
 
@@ -635,12 +636,13 @@ GOOGLE_SERVICES_PASSWORD=CHANGEME
 
 # Enter User's Telegram bot credentials here
 TELEGRAM_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-telegram.cfg
-TELEGRAM_SCRIPT=/usr/bin/jambulatv-telegram
+TELEGRAM_SCRIPT=$BINARY_PREFIX/jambulatv-telegram
 TELEGRAM_API_BOT="123456789:asdfghjklpoitrr-45ghyujkk"
 TELEGRAM_CHAT_ID="987654321"
 TELEGRAM_USERNAME="username"
 
 # WhatsApp Info
+WHATSAPP_SCRIPT=$BINARY_PREFIX/jambulatv-whatsapp
 WHATSAPP_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-whatsapp.cfg
 WHATSAPP_PHONE_NUMBER_4_RECEIVING=""
 
@@ -653,6 +655,9 @@ TORRENTS_DOMAIN_NAME="mydomain"
 # Enter Trakt Credentials, Watchlist
 TRAKT_USERNAME=""
 TRAKT_WATCHLIST=""
+
+# OSD
+OSD_SCRIPT=$BINARY_PREFIX/jambulatv-osd
 
 # TV Market
 TV_MARKET=UG-Kampala
@@ -1560,7 +1565,7 @@ pulseaudio_query () {
 # Start pulseaudio temporarily in system mode if not running
 ps auxw | grep pulseaudio > /dev/null 2>&1
 PULSEAUDIO_STATE=$?
-[ "$PULSEAUDIO_STATE" = "0" ] || /usr/bin/pulseaudio --system --disallow-module-loading --disallow-exit -D > /dev/null 2>&1
+[ "$PULSEAUDIO_STATE" = "0" ] || $BINARY_PREFIX/pulseaudio --system --disallow-module-loading --disallow-exit -D > /dev/null 2>&1
 #
 # Default sink
 PULSE_DEFAULT_SINK=$(su -l $MULTIMEDIA_USER -c "pactl list sinks short" | awk {'print $2'} | grep analog | head -1)
@@ -1592,7 +1597,7 @@ pulseaudio_query
 # Create customized default.pa file
 # **********************************
 cat > $PULSE_DEFAULT_CONFIG << EOF
-#!/usr/bin/pulseaudio -nF
+#!$BINARY_PREFIX/pulseaudio -nF
 
 ### Automatically restore the volume of streams and devices
 load-module module-device-restore
@@ -1753,7 +1758,7 @@ tar jxvf $PROJECT_TARBALLS_DIR/OpenCV-*.tar.bz2 -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v OpenCV-* OpenCV
 # Compile
 cd $INSTALL_SRC_DIR/OpenCV 
-cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_INSTALL_PREFIX=$PREFIX ../OpenCV
+cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=$BINARY_PREFIX/g++ -DCMAKE_C_COMPILER=$BINARY_PREFIX/gcc -DCMAKE_INSTALL_PREFIX=$PREFIX ../OpenCV
 make && make install
 # Fix the following using CMake --libdir type option?
 #---------------------------------------------------
@@ -1783,7 +1788,7 @@ ln -s $INCDIR/GL/glfw3.h $INCDIR/GL/glfw.h
 cd $INSTALL_SRC_DIR/vsxu
 mkdir BUILD
 cd BUILD
-cmake -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_INSTALL_PREFIX=$PREFIX -DGLFW_INCLUDE_PATH=$INCDIR/GL ../../vsxu
+cmake -DCMAKE_CXX_COMPILER=$BINARY_PREFIX/g++ -DCMAKE_C_COMPILER=$BINARY_PREFIX/gcc -DCMAKE_INSTALL_PREFIX=$PREFIX -DGLFW_INCLUDE_PATH=$INCDIR/GL ../../vsxu
 
 echo
 echo "Did configure work? - Enter to proceed"
@@ -2748,7 +2753,7 @@ echo "# Allow passwordless login user
 autologin=$AUTOLOGIN_USER
 
 [server]
-arg=/usr/bin/X -background none vt1 -nocursor -dpms -quiet
+arg=$BINARY_PREFIX/X -background none vt1 -nocursor -dpms -quiet
 " > $LXDM_CONFIG
 # Add LXDE sysconfig desktop file
 echo "DISPLAYMANAGER=/usr/sbin/lxdm" > $SYSCONFIG_DESKTOP_FILE
@@ -3407,7 +3412,7 @@ beep_spkr_configure () {
 # Enable speaker beeps
 echo "alias platform:pcspkr pcspkr" > $MODPROBE_DIR/beep.conf
 # Set suid bit for beep in order to allow use by non-root users
-chmod 4755 /usr/bin/beep
+chmod 4755 $BINARY_PREFIX/beep
 # Copy jambulatv-sounds script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-sounds ] || cp -v $PROJECT_BIN_DIR/jambulatv-sounds $BINARY_PREFIX/
 }
@@ -3988,7 +3993,7 @@ chmod 755 $BINARY_PREFIX/jambulatv-whatsapp
 # Add whatsapp settings file
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
 # TIP: Run the script $WHATSAPP_SCRIPT to generate the rest of whatsapp settings
-WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
+WHATSAPP_SCRIPT=$WHATSAPP_SCRIPT
 EOF
 }
 
@@ -4771,7 +4776,7 @@ XUPNPD
 ========
 % Please setup a TV playlist for use by xupnpd.  For example:
 
-  /usr/bin/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' http://$NETWORK_IP_ADDRESS:9981/playlist/channels
+  $BINARY_PREFIX/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' http://$NETWORK_IP_ADDRESS:9981/playlist/channels
 
 #
 EOF
@@ -4814,8 +4819,8 @@ cp -rv $PROJECT_CONTRIB_DIR/iptv $WWW_HTML_DIR
 # Change MPlayer and Xine binaries to use jambulatv wrappers
 cp -v $FREEVO_USER_HOME_DIR/freevo.conf $FREEVO_USER_HOME_DIR/freevo.conf.orig
 cat $FREEVO_USER_HOME_DIR/freevo.conf.orig | \
-  sed -e "s:mplayer = /bin/mplayer:mplayer = /usr/bin/jambulatv-mplayer:g" | \
-  sed -e "s:xine = /bin/xine:xine = /usr/bin/jambulatv-xine:g" \
+  sed -e "s:mplayer = /bin/mplayer:mplayer = $BINARY_PREFIX/jambulatv-mplayer:g" | \
+  sed -e "s:xine = /bin/xine:xine = $BINARY_PREFIX/jambulatv-xine:g" \
     > $FREEVO_USER_HOME_DIR/freevo.conf
 }
 
@@ -4859,7 +4864,7 @@ email_via_gmail_setup () {
 [ -e $BINARY_PREFIX/jambulatv-email ] || cp -v $PROJECT_BIN_DIR/jambulatv-email $BINARY_PREFIX/
 # Add usernames, passwords credentials to Gmail config
 cat > $EMAIL_GMAIL_CONFIG << EOF
-EMAIL_CMD=/usr/bin/email
+EMAIL_CMD=$BINARY_PREFIX/email
 EMAIL_OPTIONS="-V --tls"
 MACHINE_HOST=$(hostname -s)
 EMAIL_FROM_FULLNAME=$(hostname -s)
@@ -4933,7 +4938,7 @@ chmod -R 777 $WWW_HTML_DIR/owncloud
 systemctl restart nginx.service
 #
 # Generate owncloud instance ID
-/usr/bin/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$(grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+$BINARY_PREFIX/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$(grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 # Get instance ID
 OWNCLOUD_INSTANCE_ID=$(grep 'instanceid' $WWW_HTML_DIR/owncloud/config/config.php | awk {'print $3'} | sed "s:'::g" | cut -d , -f1)
 # Generate initial owncloud config
@@ -6019,8 +6024,22 @@ cat $PROJECT_CONTRIB_DIR/scripts/zoneminder_alarm_daemon.pl | \
 # Make script executable
 chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 #
-# Copy ZoneMinder script to send  out notifications/alerts upon ZM alarms
-[ -e $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications ] || cp -v $PROJECT_BIN_DIR/jambulatv-zm-alarm-all-notifications $BINARY_PREFIX/
+# Copy ZoneMinder script to send out all types of notifications/alerts upon ZM alarms
+[ -e $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-zm-alarm-all-notifications | \
+		sed -e "s:ZONEMINDER_DB_HOST:$ZONEMINDER_DB_HOST:g" | \
+		sed -e "s:ZONEMINDER_WWW_PORT:$ZONEMINDER_WWW_PORT:g" | \
+		sed -e "s:MY_DOMOTICZ_WWW_PORT:$DOMOTICZ_WWW_PORT:g" | \
+		sed -e "s:MY_TELEGRAM_CREDENTIALS_CONFIG:$TELEGRAM_CREDENTIALS_CONFIG:g" | \
+		sed -e "s:MY_WHATSAPP_CREDENTIALS_CONFIG:$WHATSAPP_CREDENTIALS_CONFIG:g" | \
+		sed -e "s:MY_WHATSAPP_SCRIPT:$WHATSAPP_SCRIPT:g" | \
+		sed -e "s:MY_EMAIL_CREDENTIALS_CONFIG:$EMAIL_CREDENTIALS_CONFIG:g" | \
+		sed -e "s:EMAIL_VIA_GMAIL_CMD:$EMAIL_VIA_GMAIL_CMD:g" | \
+		sed -e "s:MY_OSD_SCRIPT:$OSD_SCRIPT:g" | \
+		sed -e "s:MY_KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
+		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
+		sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" \
+			> $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
 #
 # Copy systemd script- this defers from source file to kill errors during start
 cp -v $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service $SYSTEMD_UNITS_DIR_USER/
@@ -6139,7 +6158,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 ZONEMINDER (CCTV) Access
 =========================
 % To access your Webcams & IP Cameras, use a client PC to open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i 'ZoneMinder$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$NETWORK_IP_ADDRESS:$ZONEMINDER_WWW_PORT
 #
 EOF
 }
@@ -6728,10 +6747,10 @@ echo "$VNC_PASSWORD" | vncpasswd -f > $AUTOLOGIN_USER_HOME_DIR/.vnc/passwd
 # Create VNC X startup file
 cat > $AUTOLOGIN_USER_HOME_DIR/.vnc/xstartup << EOF
 #!/bin/sh
-if [ -e /usr/bin/startlxde ];
+if [ -e $BINARY_PREFIX/startlxde ];
 then
 # Start LXDE
-/usr/bin/startlxde
+$BINARY_PREFIX/startlxde
 else
 # Start other DM
 [ ! -e /etc/X11/xinit/xinitrc ] || /etc/X11/xinit/xinitrc

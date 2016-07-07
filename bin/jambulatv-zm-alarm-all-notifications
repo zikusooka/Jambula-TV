@@ -6,16 +6,16 @@ ZM_CAMERA_EVENT_ID=$3
 ZM_TIME=$(date '+%r')
 ZM_EVENTS_DIR=/tmp
 ZM_MESSAGE_FILE=$ZM_EVENTS_DIR/cctv_message
-ZM_HOST_LOCAL=127.0.0.1
+ZM_HOST_LOCAL=ZONEMINDER_DB_HOST
 ZM_HOST_WIFI=172.16.0.1
-ZM_PORT=8520
+ZM_PORT=ZONEMINDER_WWW_PORT
 ZM_ROOT_URL_LOCAL="http://$ZM_HOST_LOCAL:$ZM_PORT"
 ZM_ROOT_URL_WIFI="http://$ZM_HOST_WIFI:$ZM_PORT"
 ZM_WATCH_URL="$ZM_ROOT_URL_LOCAL/jpeg.cgi?mode=single&monitor=${ZM_CAMERA_ID}&scale=100"
 
 # Domoticz stuff
 DOMOTICZ_HOST_IP=jambulatv
-DOMOTICZ_WWW_PORT=8540
+DOMOTICZ_WWW_PORT=MY_DOMOTICZ_WWW_PORT
 DOMOTICZ_SECURITY_LAMP_NAME="Living Room"
 DOMOTICZ_SECURITY_LAMP_DURATION=60
 
@@ -27,17 +27,22 @@ NOTIFICATION_SUBJECT="*[JambulaTV] CCTV Security Alert: Motion Detected on $ZM_C
 NOTIFICATION_MESSAGE="Motion Was Detected by Camera No.$ZM_CAMERA_ID ($ZM_CAMERA_NAME) at $ZM_TIME.  The Video of this Event has been logged and is viewable at: $ZM_ROOT_URL_WIFI/index.php?view=event%26eid=${ZM_CAMERA_EVENT_ID}"
 
 # Telegram
-TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
-WHATSAPP_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-whatsapp.cfg
+TELEGRAM_CREDENTIALS_CONFIG=MY_TELEGRAM_CREDENTIALS_CONFIG
+WHATSAPP_CREDENTIALS_CONFIG=MY_WHATSAPP_CREDENTIALS_CONFIG
 
 # Email
-EMAIL_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-email.cfg
+EMAIL_CREDENTIALS_CONFIG=MY_EMAIL_CREDENTIALS_CONFIG
 EMAIL_NOTIFICATION_ADDRESS=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
-EMAIL_SCRIPT="/usr/bin/jambulatv-email"
+EMAIL_SCRIPT="EMAIL_VIA_GMAIL_CMD"
+
+# Kodi
+KODI_HTTP_USER=MY_KODI_HTTP_USER
+KODI_HTTP_PASS=MY_KODI_HTTP_PASS
+KODI_HTTP_IP=$ZM_HOST_LOCAL
+KODI_HTTP_PORT=MY_KODI_HTTP_PORT
 
 # OSD
-KODI_OSD_SCRIPT=/usr/bin/jambulatv-zm-alarm-kodi-notifications
-OSD_SCRIPT=/usr/bin/jambulatv-osd
+OSD_SCRIPT=MY_OSD_SCRIPT
 
 
 
@@ -109,13 +114,31 @@ log_event () {
 curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=addlogmessage&message=$@" > /dev/null 2>&1
 }
 
+kodi_screensaver_status () {
+KODI_SCREENSAVER_STATUS=$(curl -s -X POST -H "Content-Type: application/json" -u $KODI_HTTP_USER:$KODI_HTTP_PASS -d '{"jsonrpc": "2.0", "method": "XBMC.GetInfoBooleans", "params":{"booleans":["System.ScreenSaverActive"]},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc | jq .result[])
+}
+
+kodi_screensaver_poke () {
+# Poke screen if screensaver is active
+if [ "$KODI_SCREENSAVER_STATUS" = "true" ];
+then
+# Input.Select
+curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Input.Select","id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+fi
+}
+
+kodi_addon_script_doorbell () {
+curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Addons.ExecuteAddon","params":{"addonid":"script.doorbell","params":{"CamID":"'"$ZM_CAMERA_ID"'","CamName":"'"$ZM_CAMERA_NAME"'","CamEvent":"'"$ZM_CAMERA_EVENT_ID"'","CamTime":"'"$ZM_TIME"'","CamMessage":"'"$NOTIFICATION_MESSAGE"'"}},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+}
+
 
 
 #################
 #  MAIN SCRIPT  #
 #################
+# Usage
 usage
-#
+
 # LAMP
 # ----
 darkness_or_light 
@@ -157,7 +180,7 @@ $TELEGRAM_SCRIPT SendImageDisk  $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg
 # Check existence of command
 if [ "x$WHATSAPP_SCRIPT" = "x" ]; 
 then 
-WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
+WHATSAPP_SCRIPT=MY_WHATSAPP_SCRIPT
 fi
 # SendMesage
 $WHATSAPP_SCRIPT sendmessage $WHATSAPP_PHONE_NUMBER_RECIPIENT "$(cat $ZM_MESSAGE_FILE)."
@@ -172,11 +195,15 @@ $EMAIL_SCRIPT $EMAIL_NOTIFICATION_ADDRESS "$NOTIFICATION_SUBJECT" "$NOTIFICATION
 
 # OSD Message using Doorbell plugin
 # ---------------------------------
-$KODI_OSD_SCRIPT -i $ZM_CAMERA_ID -n $ZM_CAMERA_NAME -e $ZM_CAMERA_EVENT_ID -t "$ZM_TIME" -m "$NOTIFICATION_MESSAGE"
+kodi_screensaver_status
+kodi_screensaver_poke 
+kodi_addon_script_doorbell 
+
 
 # OSD Message using jambulatv-osd script
 # --------------------------------------
 #$OSD_SCRIPT -m "$NOTIFICATION_MESSAGE"
+
 
 # LAMP
 # -----
