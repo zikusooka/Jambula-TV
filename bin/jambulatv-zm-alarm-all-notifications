@@ -5,6 +5,7 @@ ZM_CAMERA_NAME=$2
 ZM_CAMERA_EVENT_ID=$3
 ZM_TIME=$(date '+%r')
 ZM_EVENTS_DIR=/tmp
+ZM_MESSAGE_FILE=$ZM_EVENTS_DIR/cctv_message
 ZM_HOST_LOCAL=127.0.0.1
 ZM_HOST_WIFI=172.16.0.1
 ZM_PORT=8520
@@ -131,13 +132,20 @@ fi
 # Capture current camera view
 curl -G -s -o $ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg $ZM_WATCH_URL
 
+# Generate message for Telegram and/or WhatsApp
+cat > $ZM_MESSAGE_FILE << EOF
+*$NOTIFICATION_SUBJECT*
+
+$NOTIFICATION_MESSAGE
+EOF
+
 
 # Telegram
 # ---------
 # Source Telegram credentials
 . $TELEGRAM_CREDENTIALS_CONFIG
 # SendMesage
-$TELEGRAM_SCRIPT SendMessage "$NOTIFICATION_SUBJECT $NOTIFICATION_MESSAGE. Attached is a snapshot ..."
+$TELEGRAM_SCRIPT SendMessage "$(cat $ZM_MESSAGE_FILE). Also attached is a snapshot ..."
 # SendPhoto
 $TELEGRAM_SCRIPT SendImageDisk  $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg
 
@@ -152,7 +160,7 @@ then
 WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
 fi
 # SendMesage
-$WHATSAPP_SCRIPT sendmessage $WHATSAPP_PHONE_NUMBER_RECIPIENT "$NOTIFICATION_SUBJECT $NOTIFICATION_MESSAGE. Attached is a snapshot ..."
+$WHATSAPP_SCRIPT sendmessage $WHATSAPP_PHONE_NUMBER_RECIPIENT "$(cat $ZM_MESSAGE_FILE)."
 # SendPhoto
 #$WHATSAPP_SCRIPT sendmessage $WHATSAPP_PHONE_NUMBER_RECIPIENT $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg
 
