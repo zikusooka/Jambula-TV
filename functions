@@ -3987,7 +3987,8 @@ chmod 755 $BINARY_PREFIX/jambulatv-whatsapp
 #
 # Add whatsapp settings file
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
-# Run the script /usr/bin/jambulatv-whatsapp to generate these settings
+# TIP: Run the script $WHATSAPP_SCRIPT to generate the rest of whatsapp settings
+WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
 EOF
 }
 

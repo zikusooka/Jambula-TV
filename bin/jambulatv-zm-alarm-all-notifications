@@ -27,6 +27,7 @@ NOTIFICATION_MESSAGE="Motion Was Detected by Camera No.$ZM_CAMERA_ID ($ZM_CAMERA
 
 # Telegram
 TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
+WHATSAPP_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-whatsapp.cfg
 
 # Email
 EMAIL_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-email.cfg
@@ -139,6 +140,21 @@ curl -G -s -o $ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg $ZM_WATCH_URL
 $TELEGRAM_SCRIPT SendMessage "$NOTIFICATION_SUBJECT $NOTIFICATION_MESSAGE. Attached is a snapshot ..."
 # SendPhoto
 $TELEGRAM_SCRIPT SendImageDisk  $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg
+
+
+# WhatsApp
+# --------
+# Source WhatsApp credentials
+. $WHATSAPP_CREDENTIALS_CONFIG
+# Check existence of command
+if [ "x$WHATSAPP_SCRIPT" = "x" ]; 
+then 
+WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
+fi
+# SendMesage
+$WHATSAPP_SCRIPT sendmessage $WHATSAPP_PHONE_NUMBER_RECIPIENT "$NOTIFICATION_SUBJECT $NOTIFICATION_MESSAGE. Attached is a snapshot ..."
+# SendPhoto
+#$WHATSAPP_SCRIPT sendmessage $WHATSAPP_PHONE_NUMBER_RECIPIENT $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg
 
 
 # Send Email
