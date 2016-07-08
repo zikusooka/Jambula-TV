@@ -1,12 +1,19 @@
 #!/bin/sh
 
+KODI_HTTP_IP=MY_KODI_HTTP_IP
+KODI_HTTP_PORT=MY_KODI_HTTP_PORT
 KODI_HTTP_USER=MY_KODI_HTTP_USER
 KODI_HTTP_PASS=MY_KODI_HTTP_PASS
 KODI_LOG=MY_KODI_LOG
 
+TVHEADEND_HTTP_IP=MY_TVHEADEND_HTTP_IP
+TVHEADEND_HTTP_PORT=MY_TVHEADEND_HTTP_PORT
+
 TV_ACTION=$1
 TV_CHANNEL="$2"
+TV_DURATION="$3"
 PVR_GROUP=1
+PVR_STOP_REC_SCRIPT=/tmp/.stop_recording_tv_channel.sh
 
 
 
@@ -18,7 +25,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (play|mute|stop|record_start|record_stop)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (tv_play_start|mute|tv_play_stop|tv_record_start|tv_record_stop)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -63,6 +70,28 @@ curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: applicatio
 
 record_tv_channel_start () {
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle", "channel":'$CHANNELID'}}' "http://127.0.0.1:8510/jsonrpc"
+
+# Create timer script to stop recording after duration has elapsed
+cat > $PVR_STOP_REC_SCRIPT << EOF
+#!/bin/sh
+# Stop Recording of $CHANNELID after $TV_DURATION seconds have elapsed
+
+# Get UUID of the just scheduled recording
+UUID=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/dvr/entry/grid_upcoming | jq .entries[] | grep -iw 'uuid' | awk {'print $2'} | sed 's:["|,]::g')
+
+# Wait until requested duration lapses
+sleep $TV_DURATION
+
+# Stop recording
+curl -X POST -H "text/x-json" -d uuid="%5B%22\$UUID%22%5D" http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/dvr/entry/stop
+
+# Self Destruct this script
+rm -- \$0
+EOF
+# Make script executable
+chmod 755 $PVR_STOP_REC_SCRIPT
+# Run script now
+echo "/bin/sh $PVR_STOP_REC_SCRIPT" | /usr/bin/at now
 }
 
 get_last_recorded_tv_channel () {
@@ -70,8 +99,11 @@ CURRENT_CHANNELID=$(grep -ai "state:recording" $KODI_LOG | tail -1 | cut -d , -f
 }
 
 record_tv_channel_stop () {
-get_last_recorded_tv_channel
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle", "channel":'$CURRENT_CHANNELID'}}' "http://127.0.0.1:8510/jsonrpc"
+# Get UUID of current recording
+UUID=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/dvr/entry/grid_upcoming | jq .entries[] | grep -iw 'uuid' | awk {'print $2'} | sed 's:["|,]::g')
+#
+# Stop recording
+curl -X POST -H "text/x-json" -d uuid="%5B%22$UUID%22%5D" http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/dvr/entry/stop
 }
 
 

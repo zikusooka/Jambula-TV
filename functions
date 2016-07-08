@@ -154,6 +154,8 @@ FLEXGET_SCHEDULE_MOVIES_MIN=5
 FLEXGET_PORT=$(grep -i 'flexget$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 TVHEADEND_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.hts/tvheadend
+TVHEADEND_HTTP_IP=127.0.0.1
+TVHEADEND_HTTP_PORT=9981  # Please change to conform with our lineup
 
 KODI_VERSION=15.2 
 #
@@ -175,10 +177,10 @@ KODI_DB_VIDEO=${KODI_DB_PREFIX}_video
 KODI_DB_MUSIC=${KODI_DB_PREFIX}_music
 KODI_DB_USER=$MULTIMEDIA_USER
 KODI_DB_PASS=jambulatv4
-
+KODI_HTTP_IP=127.0.0.1
+KODI_HTTP_PORT=$(grep -i 'kodi web$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 KODI_HTTP_USER=jambulatv
 KODI_HTTP_PASS=jambulatv
-KODI_HTTP_PORT=$(grep -i 'kodi web$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # Kodi Addons
 # -----------
@@ -2573,9 +2575,13 @@ cp -v $PROJECT_UTILS_DIR/pip.py $KODI_SHARE_DIR/scripts
 #
 # kodi-api-controller
 cat $PROJECT_BIN_DIR/jambulatv-kodi-controller | \
+		sed -e "s:MY_KODI_HTTP_IP:$KODI_HTTP_IP:g" | \
+		sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
 		sed -e "s:MY_KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
 		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
-		sed -e "s:MY_KODI_LOG:$KODI_LOG_FILE:g" \
+		sed -e "s:MY_KODI_LOG:$KODI_LOG_FILE:g" | \
+		sed -e "s:MY_TVHEADEND_HTTP_IP:$TVHEADEND_HTTP_IP:g" | \
+		sed -e "s:MY_TVHEADEND_HTTP_PORT:$TVHEADEND_HTTP_PORT:g" \
 			> $BINARY_PREFIX/jambulatv-kodi-controller
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-kodi-controller
