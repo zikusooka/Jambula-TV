@@ -5767,6 +5767,12 @@ make
 make install
 }
 
+google_tts_configure () {
+
+# Copy googletts* agi to asterisk agi-bin directory
+cp -v $PROJECT_GITHUB_DIR/asterisk-googletts/googletts*.agi $ASTERISK_AGI_BIN_DIR/
+}
+
 boost_install () {
 # Remove existing boost rpm packages
 rpm -e --nodeps boost-chrono boost-filesystem boost-regex boost-system boost-iostreams boost-signals boost-python boost-thread boost-program-options boost-date-time boost-locale

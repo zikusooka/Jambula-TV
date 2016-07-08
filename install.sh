@@ -269,6 +269,7 @@ chan_mobile_configure
 chan_dongle_install 
 chan_dongle_configure
 
+# TTS
 # Cepstral Support # Not Free!
 if [ "$CEPSTRAL_EULA" = "agree" ];
 then
@@ -277,6 +278,8 @@ cepstral_register
 app_swift_install
 app_swift_configure
 fi
+# Google TTS # Requires Internet connection
+google_tts_configure
 
 # ASR - Speech Recognition
 sphinxbase_install
