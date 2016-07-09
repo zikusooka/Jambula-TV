@@ -36,4 +36,3 @@ WHATSAPP_PHONE_NUMBER_4_RECEIVING="256704233014"
 #################
 #  MAIN SCRIPT  #
 #################
-

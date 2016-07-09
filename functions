@@ -192,6 +192,8 @@ KODI_ADDONS_REQUIRED="metadata.album.universal metadata.common.theaudiodb.com me
 KODI_ADDONS_LIVETV="plugin.video.livemix plugin.video.uktvnow plugin.video.ukturk plugin.video.ustvnow.tva plugin.video.phstreams plugin.video.ccloudtv plugin.video.channelpear plugin.video.F.T.V plugin.video.f4mTester plugin.video.srtv plugin.video.ustvnow-1 plugin.video.cartoons8"
 # Sports
 KODI_ADDONS_SPORTS="plugin.video.castaway plugin.video.prosport plugin.video.sportsmix plugin.video.SportsDevil"
+# Games
+KODI_ADDONS_GAMES="script.game.connect4 script.game.2048 plugin.game.blackjack plugin.game.match.cards plugin.game.tankshot"
 # Jambula Custom
 KODI_ADDONS_JAMBULA="script.doorbell script.service.kodi.callbacks"
 # Miscellaneous
@@ -2431,6 +2433,7 @@ $KODI_ADDONS_REPOSITORIES \
 $KODI_ADDONS_REQUIRED \
 $KODI_ADDONS_LIVETV \
 $KODI_ADDONS_SPORTS \
+$KODI_ADDONS_GAMES \
 $KODI_ADDONS_JAMBULA \
 $KODI_ADDONS_MISC;
 do
