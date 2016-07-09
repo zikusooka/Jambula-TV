@@ -2557,6 +2557,22 @@ cp -fv $PROJECT_IMAGES_DIR/kodi/background.jpg $KODI_SYSTEM_ADDONS/skin.$KODI_PR
 ;;
 esac
 #
+# Replace some background images like tvshows, movies, and extras
+# Backup tvshows.jpg
+mv -v $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/tvshows.jpg /tmp/
+#
+# TV Shows
+mv -v $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/movies.jpg \
+	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/tvshows.jpg
+# Movies
+mv -v $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/extras.jpg \
+	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/movies.jpg
+# Music
+mv -v $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/concerts.jpg \
+	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/music.jpg
+# Extras
+mv -v /tmp/tvshows.jpg $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/extras.jpg
+#
 # Copy custom top left logo icon
 cp -fv $PROJECT_IMAGES_DIR/kodi/top-left.png \
 	$KODI_SYSTEM_ADDONS/skin.$KODI_DEFAULT_SKIN/media/jambulatv-logo.png
