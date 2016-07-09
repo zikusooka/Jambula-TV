@@ -23,11 +23,11 @@ SCAN_RESULT=$?
 # Test for availabilty of monitored users
 if [ "$SCAN_RESULT" -eq "0" ] && [ "$WIFI_MONITORED" = "yes" ];
 then
-echo "OK - $WIFI_DEVICE_USER is Home!"
+echo "$WIFI_DEVICE_USER is in the house!"
 exit 0
 #
 else
-echo "CRITICAL - $WIFI_DEVICE_USER is Away"
+echo "$WIFI_DEVICE_USER has left the building"
 exit 2
 fi
 
