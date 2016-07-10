@@ -302,6 +302,11 @@ zoneminder_zms_inetd
 owncloud_install
 owncloud_configure
 
+# NextCloud, a fork of OwnCloud
+nextcloud_install
+nextcloud_configure
+nextcloud_permissions
+
 # ----------------
 # Home Automation 
 # ----------------

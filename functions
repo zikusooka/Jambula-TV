@@ -632,6 +632,18 @@ OWNCLOUD_CONFIG_FILE=$OWNCLOUD_CONFIG_DIR/config.php
 OWNCLOUD_DATA_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Cloud
 OWNCLOUD_WWW_SERVER_NAME=$(grep server_name $PROJECT_CONFIGS_DIR/nginx/sites-enabled/owncloud | awk {'print $2'} | sed 's/;//')
 
+# Nextcloud
+NEXTCLOUD_DB_NAME=nextcloud
+NEXTCLOUD_DB_USER=nextcloud
+NEXTCLOUD_DB_PASS=jambulatv45
+NEXTCLOUD_ADMIN_USER=jambulatv
+NEXTCLOUD_ADMIN_PASS=jambulatv45
+NEXTCLOUD_CONFIG_DIR=$WWW_HTML_DIR/nextcloud/config
+NEXTCLOUD_CONFIG_FILE=$NEXTCLOUD_CONFIG_DIR/config.php
+NEXTCLOUD_DATA_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Cloud
+NEXTCLOUD_WWW_SERVER_NAME=$(grep server_name $PROJECT_CONFIGS_DIR/nginx/sites-enabled/nextcloud | awk {'print $2'} | sed 's/;//')
+NEXTCLOUD_HTTP_PORT=$(grep -i 'nextcloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+
 # VOIP/SIP Settings 
 SIP_PROVIDER_HOSTNAME=sip.flowroute.com
 
@@ -5029,6 +5041,143 @@ OwnCloud
  
   $OWNCLOUD_DATA_DIRECTORY
  
+#
+EOF
+}
+
+nextcloud_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/nextcloud-*tar.bz2 -C $WWW_HTML_DIR
+# Change permissions on data directory
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/nextcloud
+# Copy nextcloud nginx config file or run the command:
+[ -e $NGINX_CONF_DIR/sites-enabled/nextcloud ] || cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/nextcloud $NGINX_CONF_DIR/sites-enabled/
+# Restart nginx
+systemctl restart nginx.service
+#
+# MySQL DB for Nextcloud
+# -----------------------
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+# Create zoneminder database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $NEXTCLOUD_DB_NAME
+
+# Generate database tables using schema
+#mysql -u root -p$MYSQL_ROOT_PASSWORD $NEXTCLOUD_DB_NAME < $NEXTCLOUD_DB_SCHEMA
+# Set privileges on zoneminder database
+echo "GRANT ALL PRIVILEGES ON $NEXTCLOUD_DB_NAME.* to $NEXTCLOUD_DB_USER@localhost IDENTIFIED by '$NEXTCLOUD_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+#
+# Switch to nextcloud directory and run occ
+cd $WWW_HTML_DIR/nextcloud && sudo -u $WWW_USER php occ maintenance:install \
+	--database "mysql" --database-name "$NEXTCLOUD_DB_NAME" \
+	--database-user "$NEXTCLOUD_DB_USER" --database-pass "$NEXTCLOUD_DB_PASS" \
+	--admin-user "$NEXTCLOUD_ADMIN_USER" --admin-pass "$NEXTCLOUD_ADMIN_PASS"
+}
+
+nextcloud_permissions () {
+printf "Creating possible missing Directories\n"
+mkdir -p $WWW_HTML_DIR/nextcloud/data
+mkdir -p $WWW_HTML_DIR/nextcloud/assets
+mkdir -p $WWW_HTML_DIR/nextcloud/updater
+
+printf "chmod Files and Directories\n"
+find $WWW_HTML_DIR/nextcloud -type f -print0 | xargs -0 chmod 0640
+find $WWW_HTML_DIR/nextcloud -type d -print0 | xargs -0 chmod 0750
+
+printf "chown Directories\n"
+chown -R root:$WWW_GROUP $WWW_HTML_DIR/nextcloud
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/nextcloud/apps/
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/nextcloud/assets/
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/nextcloud/config/
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/nextcloud/data/
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/nextcloud/themes/
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/nextcloud/updater/
+
+chmod +x $WWW_HTML_DIR/nextcloud/occ
+
+printf "chmod/chown .htaccess\n"
+if [ -f $WWW_HTML_DIR/nextcloud/.htaccess ]
+ then
+  chmod 0644 $WWW_HTML_DIR/nextcloud/.htaccess
+  chown root:$WWW_GROUP $WWW_HTML_DIR/nextcloud/.htaccess
+fi
+if [ -f $WWW_HTML_DIR/nextcloud/data/.htaccess ]
+ then
+  chmod 0644 $WWW_HTML_DIR/nextcloud/data/.htaccess
+  chown root:$WWW_GROUP $WWW_HTML_DIR/nextcloud/data/.htaccess
+fi
+}
+
+nextcloud_configure () {
+# Generate nextcloud instance ID
+$BINARY_PREFIX/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$NEXTCLOUD_HTTP_PORT
+# Get instance ID
+NEXTCLOUD_INSTANCE_ID=$(grep 'instanceid' $WWW_HTML_DIR/nextcloud/config/config.php | awk {'print $3'} | sed "s:'::g" | cut -d , -f1)
+# Generate initial nextcloud config
+cat > $NEXTCLOUD_CONFIG_FILE << EOF
+<?php
+\$CONFIG = array (
+  'instanceid' => '$NEXTCLOUD_INSTANCE_ID',
+  'trusted_domains' => 
+  array (
+    0 => '$NETWORK_IP_ADDRESS', '$COOVA_SERVER_IP', '$NEXTCLOUD_WWW_SERVER_NAME'
+  ),
+  'datadirectory' => '$NEXTCLOUD_DATA_DIRECTORY',
+  'overwrite.cli.url' => 'http://$NETWORK_IP_ADDRESS:$NEXTCLOUD_HTTP_PORT',
+  'dbtype' => 'mysql',
+  'dbname' => '$NEXTCLOUD_DB_NAME',
+  'dbhost' => 'localhost',
+  'dbtableprefix' => 'oc_',
+  'dbuser' => '$NEXTCLOUD_DB_USER',
+  'dbpassword' => '$NEXTCLOUD_DB_PASS',
+  'logfile' => '$PROJECT_SYSTEM_LOG_DIR/nextcloud.log',
+  'logtimezone' => '$TIMEZONE',
+  'mail_domain' => '$NETWORK_DOMAIN',
+  'mail_from_address' => '$PROJECT_NAME',
+);
+EOF
+
+# Create data directory for nextcloud
+[ -d $NEXTCLOUD_DATA_DIRECTORY ] || mkdir -p $NEXTCLOUD_DATA_DIRECTORY
+# Make custom cache directory if not existent
+[ -d $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/cache ] || mkdir -p $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/cache
+# Make custom files directory if not existent
+[ -d $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/files ] || mkdir -p $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/files
+# Add link to /JambulaTV folder - Find a better way to access these files
+ln -s $PROJECT_PARTITION $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/files/$PROJECT_NAME
+# Change permissions on data directory
+chown -R $WWW_USER:$WWW_GROUP $NEXTCLOUD_DATA_DIRECTORY
+#
+# Display NextCloud's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+NextCloud
+==========
+% To finish setup, and add an administrative user, open the URL below:
+  http://$NETWORK_IP_ADDRESS:$NEXTCLOUD_HTTP_PORT
+
+  Suggested Admin credentials:
+
+  username = $NEXTCLOUD_ADMIN_USER
+  password = $NEXTCLOUD_ADMIN_PASS
+
+
+  IMPORTANT:
+
+* At the login page, make sure the Data Folder is set to:
+ 
+  $NEXTCLOUD_DATA_DIRECTORY
+ 
+* Choose "MySQL/MariaDB" Database
+
+  Database Username: $NEXTCLOUD_DB_USER
+  Database Password: $NEXTCLOUD_DB_PASS
+  Database Name:     $NEXTCLOUD_DB_NAME
+
 #
 EOF
 }
