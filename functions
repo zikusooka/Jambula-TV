@@ -5137,6 +5137,7 @@ cat > $NEXTCLOUD_CONFIG_FILE << EOF
   'logtimezone' => '$TIMEZONE',
   'mail_domain' => '$NETWORK_DOMAIN',
   'mail_from_address' => '$PROJECT_NAME',
+  'installed' => true,
 );
 EOF
 
@@ -5160,15 +5161,13 @@ NextCloud
 % To finish setup, and add an administrative user, open the URL below:
   http://$NETWORK_IP_ADDRESS:$NEXTCLOUD_HTTP_PORT
 
-  Suggested Admin credentials:
+  Login credentials are as follows:
 
   username = $NEXTCLOUD_ADMIN_USER
   password = $NEXTCLOUD_ADMIN_PASS
 
-
-  IMPORTANT:
-
-* At the login page, make sure the Data Folder is set to:
+* In case, you need to Finish setup manually, then:
+  At the login page, make sure the Data Folder is set to:
  
   $NEXTCLOUD_DATA_DIRECTORY
  
