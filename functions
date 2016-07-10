@@ -5123,7 +5123,9 @@ cat > $NEXTCLOUD_CONFIG_FILE << EOF
   'instanceid' => '$NEXTCLOUD_INSTANCE_ID',
   'trusted_domains' => 
   array (
-    0 => '$NETWORK_IP_ADDRESS', '$COOVA_SERVER_IP', '$NEXTCLOUD_WWW_SERVER_NAME'
+    0 => '$NETWORK_IP_ADDRESS', 
+    1 => '$COOVA_SERVER_IP', 
+    2 => '$NEXTCLOUD_WWW_SERVER_NAME'
   ),
   'datadirectory' => '$NEXTCLOUD_DATA_DIRECTORY',
   'overwrite.cli.url' => 'http://$NETWORK_IP_ADDRESS:$NEXTCLOUD_HTTP_PORT',
@@ -5137,7 +5139,7 @@ cat > $NEXTCLOUD_CONFIG_FILE << EOF
   'logtimezone' => '$TIMEZONE',
   'mail_domain' => '$NETWORK_DOMAIN',
   'mail_from_address' => '$PROJECT_NAME',
-  'installed' => true,
+  'installed' => 'true',
 );
 EOF
 
