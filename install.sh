@@ -291,7 +291,8 @@ SpeechRecognition_install
 # IMPORTANT Install After FreePBX/Asterisk
 # ---------------------
 zoneminder_pre_install
-zoneminder_install
+#zoneminder_128_install
+zoneminder_130_install
 zoneminder_configure 
 zoneminder_zms_inetd
 

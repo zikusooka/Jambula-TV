@@ -108,6 +108,13 @@ domoticz_install
 domoticz_configure
 }
 
+upgrade_zoneminder () {
+uninstall_zoneminder
+#zoneminder_128_install
+zoneminder_130_install
+zoneminder_configure 
+}
+
 
 
 #################
@@ -139,3 +146,5 @@ domoticz_configure
 #upgrade_sphinx
 
 #upgrade_domoticz
+
+#upgrade_zoneminder

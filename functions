@@ -6177,7 +6177,7 @@ make
 make install
 }
 
-zoneminder_install () {
+zoneminder_128_install () {
 rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
 # Patches
 # Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
@@ -6201,14 +6201,51 @@ ZM_LOGDIR=$PROJECT_SYSTEM_LOG_DIR/zoneminder \
 ZM_SSL_LIB=openssl CPPFLAGS="-D__STDC_CONSTANT_MACROS ${CPPFLAGS}"
 make
 make install
+}
+
+zoneminder_130_install () {
+rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
+# Patches
+# Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
+sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > $TMPDIR/zmdc.pl.patch
+# Patch
+patch -p1 $INSTALL_SRC_DIR/ZoneMinder/scripts/zmdc.pl.in < $TMPDIR/zmdc.pl.patch
 #
+cd $INSTALL_SRC_DIR/ZoneMinder
+# Compile using cmake
+cmake -DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=$PREFIX \
+	-DCMAKE_INSTALL_LIBDIR=$LIBDIR \
+	-DZM_RUNDIR=$RUNDIR/zm \
+	-DZM_SOCKDIR=$RUNDIR/zm \
+	-DZM_TMPDIR=$TMPDIR/zm \
+	-DZM_LOGDIR=$PROJECT_SYSTEM_LOG_DIR/zoneminder \
+	-DZM_WEBDIR=$WWW_HTML_DIR/zm \
+	-DZM_CGIDIR=$WWW_HTML_DIR/zm \
+	-DZM_CONTENTDIR=$ZONEMINDER_EVENTS_DIRECTORY \
+	-DZM_DB_HOST=$ZONEMINDER_DB_HOST \
+	-DZM_DB_NAME=$ZONEMINDER_DB_NAME \
+	-DZM_DB_USER=$ZONEMINDER_DB_USER \
+	-DZM_DB_PASS=$ZONEMINDER_DB_PASS \
+	-DZM_WEB_USER=$WWW_USER \
+	-DZM_WEB_GROUP=$WWW_GROUP \
+	-DZM_EXTRA_LIBS=ssl \
+	-DZM_MYSQL_ENGINE=InnoDB \
+	-DZM_NO_MMAP=OFF \
+	-DZM_NO_FFMPEG=OFF \
+	-DZM_NO_X10=OFF \
+.
+# Make and install
+make
+make install
+}
+
+zoneminder_configure () {
 # Create logs directory for Zoneminder
 [ -d $PROJECT_SYSTEM_LOG_DIR/zoneminder ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/zoneminder
 # Change permissions on logging directory
 chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_LOG_DIR/zoneminder
-}
 
-zoneminder_configure () {
 # Modify perl-based daemon script that watches for ZoneMinder alarms and copy to bin/
 cat $PROJECT_CONTRIB_DIR/scripts/zoneminder_alarm_daemon.pl | \
 	sed "s:ZONEMINDER_DB_HOST:$ZONEMINDER_DB_HOST:g" | \
@@ -6234,6 +6271,8 @@ chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
 		sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" \
 			> $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
 #
 # Copy systemd script- this defers from source file to kill errors during start
 cp -v $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service $SYSTEMD_UNITS_DIR_USER/
@@ -6353,6 +6392,12 @@ ZONEMINDER (CCTV) Access
 =========================
 % To access your Webcams & IP Cameras, use a client PC to open the URL below:
   http://$NETWORK_IP_ADDRESS:$ZONEMINDER_WWW_PORT
+
+
+IMPORTANT:  You may need to update the database by running the following command:
+
+zmupdate.pl
+
 #
 EOF
 }
