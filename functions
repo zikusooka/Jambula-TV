@@ -167,6 +167,7 @@ KODI_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.kodi
 KODI_SHARE_DIR=$PREFIX/share/kodi
 KODI_USER_DATA=$KODI_CONFIG_DIR/userdata
 KODI_USER_ADDONS=$KODI_CONFIG_DIR/addons
+KODI_ADDON_DATA_DIR=$KODI_USER_DATA/addon_data
 KODI_SYSTEM_DATA=$KODI_SHARE_DIR/userdata
 KODI_SYSTEM_ADDONS=$KODI_SHARE_DIR/addons
 KODI_SYSTEM_SYS=$KODI_SHARE_DIR/system
@@ -2454,6 +2455,18 @@ $KODI_ADDONS_MISC;
 do
 unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
 done
+}
+
+kodi_addons_configure() {
+#
+[ -d $KODI_ADDON_DATA_DIR ] || mkdir -p $KODI_ADDON_DATA_DIR
+#
+# script.service.kodi.callbacks 
+# ---
+tar zxvf $PROJECT_CONFIGS_DIR/kodi/addon_data/script.service.kodi.callbacks.tgz -C $KODI_ADDON_DATA_DIR 
+#
+# Give permissions to multimedia user for addon_data directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_ADDON_DATA_DIR
 }
 
 kodi_configure () {

@@ -88,6 +88,7 @@ kodi_deps_install
 kodi_install # Takes ~160 minutes
 kodi_pvr_hts_install
 kodi_addons_install
+kodi_addons_configure
 kodi_configure
 kodi_customization
 kodi_scripts
