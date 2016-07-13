@@ -3108,6 +3108,8 @@ export HISTCONTROL=ignoreboth
 export HISTSIZE=5000
 shopt -s histappend
 export PROMPT_COMMAND='echo "\$(history 1)" >> /var/log/JambulaTV/bash/history-\$(date "+%Y%m%d").log'
+# Allow all users access to log file
+chmod 766 /var/log/JambulaTV/bash/history-\$(date "+%Y%m%d").log
 
 # CLI Calculator
 calc(){ awk "BEGIN{ print \$* }" ;}
