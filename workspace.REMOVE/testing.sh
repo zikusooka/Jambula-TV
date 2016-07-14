@@ -38,4 +38,3 @@ ASTERISK_DIAL_OUT_NUMBER_1="0777161657"
 #################
 #  MAIN SCRIPT  #
 #################
-
