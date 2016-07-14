@@ -172,6 +172,7 @@ KODI_SYSTEM_DATA=$KODI_SHARE_DIR/userdata
 KODI_SYSTEM_ADDONS=$KODI_SHARE_DIR/addons
 KODI_SYSTEM_SYS=$KODI_SHARE_DIR/system
 KODI_LOG_FILE=$KODI_CONFIG_DIR/temp/kodi.log
+KODI_STANDALONE_SCRIPT=$BINARY_PREFIX/kodi-standalone
 #
 KODI_DB_PREFIX=kodi
 KODI_DB_VIDEO=${KODI_DB_PREFIX}_video
@@ -2434,7 +2435,15 @@ cd $INSTALL_SRC_DIR/kodi
 make -j$SYSTEM_CPU_CORES
 make install
 # Clean up - saves upto 1.5GB
-make clean
+#make clean
+#
+#
+# JambulaTV: Start Linux Desktop i.e. PC Mode after quiting Kodi
+cp -v ${KODI_STANDALONE_SCRIPT} ${KODI_STANDALONE_SCRIPT}.orig
+cat >> ${KODI_STANDALONE_SCRIPT} <<EOF
+# JambulaTV: Start Linux Desktop i.e. PC Mode after quiting Kodi
+$BINARY_PREFIX/startx
+EOF
 }
 
 kodi_pvr_hts_install () {
@@ -2563,7 +2572,7 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/$KODI_PREFERRED_SKIN/ 
 	$KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/
 # Copy original default_bg image
 cp -v $KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg \
-	$KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.original.jpg
+	$KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.orig.jpg
 # Change default background for preferred skin
 cp -fv $PROJECT_IMAGES_DIR/kodi/background.jpg $KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg
 ;;
