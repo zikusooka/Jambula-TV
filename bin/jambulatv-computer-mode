@@ -1,19 +1,25 @@
 #!/bin/sh
 
-# Check to see if kodi is running
-ps acxw | grep kodi > /dev/null
-KODI_RUNNING=$?
+case $1 in
 
-
-if [ "$KODI_RUNNING" = "0" ];
-then
 # Switch to PC Mode
-/usr/bin/systemctl stop jambulatv-display-manager.service
-su -l jambula -c "/usr/bin/startlxde"
+[Oo][Nn])
+/usr/bin/beep
+sudo /usr/bin/systemctl stop jambulatv-display-manager.service
+/usr/bin/startx
+;;
 
-else
 # Switch to Kodi
-su -l jambula -c "killall lxsession" || su -l jambula -c "killall X"
-sleep 3
-sudo /usr/bin/systemctl start jambulatv-display-manager.service
-fi
+[Oo][Ff][Ff])
+echo "sudo /usr/bin/systemctl restart jambulatv-display-manager.service" | /usr/bin/at now + 1 min
+#sleep 30
+/usr/bin/beep
+pkill -9 -f lxsession || killall X
+;;
+
+*)
+clear
+echo "Usage: $(basename $0) [ON|OFF]"
+;;
+
+esac
