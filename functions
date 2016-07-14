@@ -676,6 +676,9 @@ TORRENTS_DOMAIN_NAME="mydomain"
 TRAKT_USERNAME=""
 TRAKT_WATCHLIST=""
 
+# Asterisk Credentials - Copy these to globals file
+ASTERISK_DIAL_OUT_NUMBER_1=""
+
 # OSD
 OSD_SCRIPT=$BINARY_PREFIX/jambulatv-osd
 
@@ -6287,7 +6290,10 @@ chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 		sed -e "s:MY_OSD_SCRIPT:$OSD_SCRIPT:g" | \
 		sed -e "s:MY_KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
 		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
-		sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" \
+		sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
+		sed -e "s:MY_ASTERISK_USER:$ASTERISK_FILES_USER:g" | \
+		sed -e "s:MY_ASTERISK_GROUP:$ASTERISK_FILES_GROUP:g" | \
+		sed -e "s:MY_ASTERISK_DIAL_OUT_NUMBER:$ASTERISK_DIAL_OUT_NUMBER_1:g" \
 			> $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
