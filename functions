@@ -2822,6 +2822,9 @@ chmod 0440 $SUDOERS_DIR/$AUTOLOGIN_USER
 }
 
 x11_user_autologin_lxde_configure () {
+# Copy customized LXDE panels and config
+rsync -avz $PROJECT_CONFIGS_DIR/LXDE/ $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/LXDE
+
 # Backup original conf file
 cp -v $LXDM_CONFIG $LXDM_CONFIG.orig
 # Add auto user plus x server start options
