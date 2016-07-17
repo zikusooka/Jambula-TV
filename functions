@@ -3,7 +3,7 @@ PROJECT_NAME=JambulaTV
 PROJECT_URL="http://www.jambulatv.com"
 COMPANY_NAME="Jambula Labs"
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.1.28"
+KERNEL_VERSION="4.1.27"
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
@@ -788,8 +788,8 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 KERNEL_VERSION=$NEW_KERNEL
 # See how much space is left
 AVAILABLE_DISK_SPACE_ROOT=$(df /|grep -v block | awk {'print $4'})
-DISK_THRESHOLD_ROOT=140 #15GB
-if [ "$AVAILABLE_DISK_SPACE_ROOT" -gt "$DISK_THRESHOLD_ROOT" ];
+DISK_THRESHOLD_ROOT=15728640 #15GB
+if [ "$AVAILABLE_DISK_SPACE_ROOT" -lt "$DISK_THRESHOLD_ROOT" ];
 then
 # quit
 clear
@@ -848,7 +848,7 @@ fi
 
 kernel_upgrade_2 () {
 # Source functions file
-. /JambulaTV/TV/functions
+#
 KERNEL_VERSION=$NEW_KERNEL
 echo "
 You are about to install the latest Linux kernel version [$KERNEL_VERSION], 
