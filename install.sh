@@ -11,6 +11,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #################
 #  MAIN SCRIPT  #
 #################
+kernel_install 
 cat > /dev/null << EOF
 # Install custom kernel
 kernel_install 

@@ -322,13 +322,18 @@ FLEXGET_DEPENDENCIES="itsdangerous setuptools MarkupSafe Paver feedparser SQLAlc
 TIMEZONE="Africa/Kampala"
 TIMEZONE_FILE=/etc/timezone
 
+RPMBUILD_DIR=$TMPDIR/rpmbuild
+
 NGINX_CONF_DIR=/etc/nginx
 NGINX_CONFD_DIR=$NGINX_CONF_DIR/conf.d
 
-RPMBUILD_DIR=$TMPDIR/rpmbuild
-
+# Set WWW user and group for re-installs/upgrades i.e. Non-first time installs
+if [ -d "$NGINX_CONF_DIR" ] ;
+then
 WWW_USER=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $2'})
 WWW_GROUP=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $3'} | sed 's:;::')
+fi
+
 WWW_HTML_DIR=$PROJECT_SYSTEM_SHARE_DIR/html
 WWW_CGI_DIR=$PROJECT_SYSTEM_SHARE_DIR/cgi-bin
 
@@ -523,7 +528,6 @@ ICINGAWEB2_ADMIN_USER=jambulatv
 ICINGAWEB2_ADMIN_PASS=jambulatv2
 ICINGAWEB2_ADMIN_PASS_HASH=$(openssl passwd -1 $ICINGAWEB2_ADMIN_PASS)
 #
-ICINGA2_WEB_USER=$WWW_USER
 ICINGA2_WEB_GROUP=icingaweb2
 ICINGA2_WEB_TOKEN_FILE=$TMPDIR/icingaweb2_setup_token
 ICINGA2_WEB_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/icingaweb2
@@ -600,7 +604,6 @@ ASTERISK_CDR_DB_USER=$ASTERISK_DB_USER
 ASTERISK_CDR_DB_PASS=$ASTERISK_DB_PASS
 # User/Group
 ASTERISK_FILES_USER=asterisk
-ASTERISK_FILES_GROUP=$WWW_USER
 # XMPP
 ASTERISK_XMPP_HOST=jambulatv
 ASTERISK_XMPP_USERNAME=asterisk
@@ -1048,17 +1051,17 @@ make uninstall-all
 rm -rf $INSTALL_SRC_DIR/asterisk $LIBDIR/asterisk $INCDIR/asterisk.h
 # See if other process like www i.e. nginx are running under user asterisk - remove and restart
 # nginx
-sed -i "s:user  $ASTERISK_FILES_USER $ASTERISK_FILES_GROUP;:user  nginx;:g" $NGINX_CONF_DIR/nginx.conf
+sed -i "s:user  $ASTERISK_FILES_USER $WWW_USER;:user  nginx;:g" $NGINX_CONF_DIR/nginx.conf
 # php-fpm
 sed -i "s:user = $ASTERISK_FILES_USER:user = nginx:g" $CONFDIR/php-fpm.d/www.conf
-sed -i "s:group = $ASTERISK_FILES_GROUP:group = nginx:g" $CONFDIR/php-fpm.d/www.conf
+sed -i "s:group = $WWW_USER:group = nginx:g" $CONFDIR/php-fpm.d/www.conf
 # Restart nginx
 systemctl restart nginx.service
 # Restart php-fpm
 systemctl restart php-fpm.service
 # make spawn-cgi run under 'default' group
 sed -i "s:FCGI_USER=$ASTERISK_FILES_USER:FCGI_USER=nginx:g" $SYSCONFIG_DIR/spawn-fcgi 
-sed -i "s:FCGI_GROUP=$ASTERISK_FILES_GROUP:FCGI_GROUP=nginx:g" $SYSCONFIG_DIR/spawn-fcgi 
+sed -i "s:FCGI_GROUP=$WWW_USER:FCGI_GROUP=nginx:g" $SYSCONFIG_DIR/spawn-fcgi 
 # Restart fcgiwrap service now 
 systemctl restart spawn-fcgi.service
 #
@@ -4153,6 +4156,11 @@ make install
 # Add nginx user and group
 useradd -M -r -c "Nginx Web Server" -s /sbin/nologin -d $SPOOLDIR/nginx nginx
 #
+# Set user and group variables
+WWW_USER=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $2'})
+WWW_GROUP=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $3'} | sed 's:;::')
+export WWW_USER WWW_GROUP
+#
 # Change log directory permissions
 chown -R $WWW_USER:$WWW_GROUP $STATEDIR/log/nginx
 #
@@ -5373,11 +5381,11 @@ useradd -r -M -c "Asterisk PBX User" -g asterisk asterisk -s /sbin/nologin
 
 asterisk_configure () {
 # Set ownership/permissions on asterisk directories
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $VARLIBDIR/asterisk
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/run/asterisk
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/spool/asterisk/
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/log/asterisk
+chown -R $ASTERISK_FILES_USER:$WWW_USER $CONFDIR/asterisk
+chown -R $ASTERISK_FILES_USER:$WWW_USER $VARLIBDIR/asterisk
+chown -R $ASTERISK_FILES_USER:$WWW_USER $STATEDIR/run/asterisk
+chown -R $ASTERISK_FILES_USER:$WWW_USER $STATEDIR/spool/asterisk/
+chown -R $ASTERISK_FILES_USER:$WWW_USER $STATEDIR/log/asterisk
 # Set permissions on asterisk directories
 chmod -R 764 $CONFDIR/asterisk
 chmod -R 764 $VARLIBDIR/asterisk
@@ -5483,7 +5491,7 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/jssip/ $WWW_HTML_DIR/jssip/
 chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/jssip
 #
 # Set ownership/permissions on asterisk custom directory
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $ASTERISK_CONF_DIR
+chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_CONF_DIR
 chmod -R 764 $ASTERISK_CONF_DIR
 }
 
@@ -5549,7 +5557,7 @@ cp -v $PROJECT_CONFIGS_DIR/asterisk/dongle.conf $ASTERISK_CONF_DIR/dongle.conf
 # Include dongle.conf file
 echo "#include /etc/JambulaTV/asterisk/dongle.conf" > $CONFDIR/asterisk/dongle.conf
 # Set ownership/permissions on asterisk custom directory
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $ASTERISK_CONF_DIR
+chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_CONF_DIR
 chmod -R 764 $ASTERISK_CONF_DIR
 }
 
@@ -5603,7 +5611,7 @@ freepbx_preinstall () {
 # Regenerate asterisk sample files
 cd $INSTALL_SRC_DIR/asterisk && make samples
 # Change permissions
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk
+chown -R $ASTERISK_FILES_USER:$WWW_USER $CONFDIR/asterisk
 # Unpack freepbx
 tar zxvf $PROJECT_TARBALLS_DIR/freepbx-*.tgz -C $INSTALL_SRC_DIR
 #
@@ -5642,10 +5650,10 @@ sed -i "s:;rungroup:rungroup:g" $CONFDIR/asterisk/asterisk.conf
 # Copy customized manager.conf for JambulaTV
 cp -v -f $PROJECT_CONFIGS_DIR/asterisk/manager.conf $CONFDIR/asterisk
 # Make manager.conf accessible - retrieve_conf needs this
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $CONFDIR/asterisk/manager.conf
+chown -R $ASTERISK_FILES_USER:$WWW_USER $CONFDIR/asterisk/manager.conf
 #
 # Set ownership/permissions on asterisk /var/lib directories - AST Start fails if not set
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $VARLIBDIR/asterisk
+chown -R $ASTERISK_FILES_USER:$WWW_USER $VARLIBDIR/asterisk
 chmod -R 764 $VARLIBDIR/asterisk
 # Restart asterisk service
 systemctl restart asterisk.service
@@ -5655,37 +5663,37 @@ echo "Waiting for Asterisk to start fully ..."
 sleep 15
 #
 # make nginx run under 'asterisk' group
-sed -i "s:user  nginx;:user  $ASTERISK_FILES_USER $ASTERISK_FILES_GROUP;:g" $NGINX_CONF_DIR/nginx.conf
+sed -i "s:user  nginx;:user  $ASTERISK_FILES_USER $WWW_USER;:g" $NGINX_CONF_DIR/nginx.conf
 # Restart nginx
 systemctl restart nginx.service
 #
 # make php-fpm run under 'asterisk' group
 sed -i "s:user = nginx:user = $ASTERISK_FILES_USER:g" $CONFDIR/php-fpm.d/www.conf
-sed -i "s:group = nginx:group = $ASTERISK_FILES_GROUP:g" $CONFDIR/php-fpm.d/www.conf
+sed -i "s:group = nginx:group = $WWW_USER:g" $CONFDIR/php-fpm.d/www.conf
 # Restart php-fpm
 systemctl restart php-fpm.service
 # make spawn-cgi run under 'asterisk' group
 sed -i "s:FCGI_USER=nginx:FCGI_USER=$ASTERISK_FILES_USER:g" $SYSCONFIG_DIR/spawn-fcgi 
-sed -i "s:FCGI_GROUP=nginx:FCGI_GROUP=$ASTERISK_FILES_GROUP:g" $SYSCONFIG_DIR/spawn-fcgi 
+sed -i "s:FCGI_GROUP=nginx:FCGI_GROUP=$WWW_USER:g" $SYSCONFIG_DIR/spawn-fcgi 
 # Restart fcgiwrap service now 
 systemctl restart spawn-fcgi.service
 #
 # Change to base
 cd $INSTALL_SRC_DIR/freepbx
 # Install
-./install -f --dbengine="mysql" --dbname="$ASTERISK_DB_NAME" --cdrdbname="$ASTERISK_CDR_DB_NAME" --dbuser="$ASTERISK_DB_USER" --dbpass="$ASTERISK_DB_PASS" --user="$ASTERISK_FILES_USER" --group="$ASTERISK_FILES_GROUP" --webroot="$WWW_HTML_DIR/freepbx" --ampcgibin="$WWW_CGI_DIR" --astetcdir="$FREEPBX_CONF_DIR" --no-interaction
+./install -f --dbengine="mysql" --dbname="$ASTERISK_DB_NAME" --cdrdbname="$ASTERISK_CDR_DB_NAME" --dbuser="$ASTERISK_DB_USER" --dbpass="$ASTERISK_DB_PASS" --user="$ASTERISK_FILES_USER" --group="$WWW_USER" --webroot="$WWW_HTML_DIR/freepbx" --ampcgibin="$WWW_CGI_DIR" --astetcdir="$FREEPBX_CONF_DIR" --no-interaction
 #
 # Run retrieve_conf again
 $VARLIBDIR/asterisk/bin/retrieve_conf
 #
 # Set ownership on FreePBX config directory
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $FREEPBX_CONF_DIR
+chown -R $ASTERISK_FILES_USER:$WWW_USER $FREEPBX_CONF_DIR
 # Set ownership/permissions on nginx folders
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $PROJECT_SYSTEM_SHARE_DIR/fastcgi_temp
+chown -R $ASTERISK_FILES_USER:$WWW_USER $PROJECT_SYSTEM_SHARE_DIR/fastcgi_temp
 chmod -R 764 $PROJECT_SYSTEM_SHARE_DIR/fastcgi_temp
 #
 # Set ownership/permissions on php session directories
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $STATEDIR/lib/php/session
+chown -R $ASTERISK_FILES_USER:$WWW_USER $STATEDIR/lib/php/session
 chmod -R 764 $STATEDIR/lib/php/session
 #
 # Add FreePBX Admin User
@@ -5810,7 +5818,7 @@ cp -v $FREEPBX_CONF_DIR/xmpp.conf $FREEPBX_CONF_DIR/xmpp.conf.orig
 cat $FREEPBX_CONF_DIR/xmpp.conf.orig | sed -e "s:JAMBULA_ASTERISK_XMPP_USERNAME:$ASTERISK_XMPP_USERNAME:g" | sed -e "s:JAMBULA_ASTERISK_XMPP_PASSWORD:$ASTERISK_XMPP_PASSWORD:g" | sed -e "s:JAMBULA_USER_001_XMPP_USERNAME:$USER_001_XMPP_USERNAME:g" | sed -e "s:JAMBULA_ASTERISK_XMPP_HOST:$ASTERISK_XMPP_HOST:g" > $FREEPBX_CONF_DIR/xmpp.conf 
 #
 # Set ownership on FreePBX config directory
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP $FREEPBX_CONF_DIR
+chown -R $ASTERISK_FILES_USER:$WWW_USER $FREEPBX_CONF_DIR
 }
 
 freepbx_modules () {
@@ -5818,7 +5826,7 @@ freepbx_modules () {
 tar zxvf $PROJECT_TARBALLS_DIR/freepbx_modules/phonebook*tar.gz -C $WWW_HTML_DIR/freepbx/admin/modules
 cd $WWW_HTML_DIR/freepbx/admin/modules 
 mv -v phonebook* phonebook
-chown -R $ASTERISK_FILES_USER:$ASTERISK_FILES_GROUP phonebook
+chown -R $ASTERISK_FILES_USER:$WWW_USER phonebook
 $SBINARY_PREFIX/fwconsole ma installlocal phonebook
 #
 #
@@ -6304,7 +6312,7 @@ chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
 		sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
 		sed -e "s:MY_ASTERISK_USER:$ASTERISK_FILES_USER:g" | \
-		sed -e "s:MY_ASTERISK_GROUP:$ASTERISK_FILES_GROUP:g" | \
+		sed -e "s:MY_ASTERISK_GROUP:$WWW_USER:g" | \
 		sed -e "s:MY_ASTERISK_DIAL_OUT_NUMBER:$ASTERISK_DIAL_OUT_NUMBER_1:g" \
 			> $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
 # Make script executable
@@ -6784,11 +6792,11 @@ esac
 # Add icingaweb2 group
 groupadd -r $ICINGA2_WEB_GROUP
 # Make web user a member of the system group "icingaweb2" group
-usermod -a -G $ICINGA2_WEB_GROUP $ICINGA2_WEB_USER
+usermod -a -G $ICINGA2_WEB_GROUP $WWW_USER
 # Add icinga wwww user to icingacmd group
-usermod -a -G $ICINGA_CMD_GROUP $ICINGA2_WEB_USER
+usermod -a -G $ICINGA_CMD_GROUP $WWW_USER
 # Change permissions to WWW user
-chown -R $ICINGA2_WEB_USER:$ICINGA2_WEB_GROUP $WWW_HTML_DIR/icingaweb2
+chown -R $WWW_USER:$ICINGA2_WEB_GROUP $WWW_HTML_DIR/icingaweb2
 # Setup config directory
 $WWW_HTML_DIR/icingaweb2/bin/icingacli setup config directory --group $ICINGA2_WEB_GROUP --config $PROJECT_SYSTEM_CONF_DIR/icingaweb2
 # Copy icingaweb2 nginx config file or run the command:
@@ -6921,7 +6929,7 @@ EOF
 rsync -av $PROJECT_GITHUB_DIR/icinga2/doc $WWW_HTML_DIR/icingaweb2/doc/icinga2/doc/
 #
 # Change directory owner/group to allow web user
-chown -R $ICINGA2_WEB_USER:$ICINGA2_WEB_GROUP $ICINGA2_WEB_CONFIG_DIR
+chown -R $WWW_USER:$ICINGA2_WEB_GROUP $ICINGA2_WEB_CONFIG_DIR
 # Make symlinks to modules accessible
 chmod -R 777 $ICINGA2_WEB_CONFIG_DIR/enabledModules
 #
