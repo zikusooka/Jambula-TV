@@ -71,12 +71,12 @@ libdvbpsi_install
 #uninstall_src_pkgs ffmpeg && ffmpeg_install
 #
 ffmpeg_install
-EOF
 x264_install
-exit
 vlc_install
+EOF
 xine_lib_install
 xine_ui_install
+exit
 mplayer_install
 sox_install
 v4l_utils_install
