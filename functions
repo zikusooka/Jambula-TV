@@ -2072,6 +2072,13 @@ mv -v ffmpeg* ffmpeg
 ./configure --prefix=$PREFIX --confdir=$CONFDIR --libdir=$LIBDIR --enable-xv \
   --enable-sdl --enable-radio --enable-radio-capture --enable-radio-v4l2 \
   --enable-tv-v4l2 --enable-pvr --enable-dvb --enable-pulse
+
+echo
+echo
+echo "Proceed ..."
+read
+echo
+
 make
 make install
 # Clean up - saves upto 90MB

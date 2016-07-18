@@ -73,11 +73,11 @@ libdvbpsi_install
 ffmpeg_install
 x264_install
 vlc_install
+#xine_lib_install
+#xine_ui_install
 EOF
-xine_lib_install
-xine_ui_install
-exit
 mplayer_install
+exit
 sox_install
 v4l_utils_install
 tvheadend_install
