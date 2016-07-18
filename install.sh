@@ -11,7 +11,6 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #################
 #  MAIN SCRIPT  #
 #################
-kernel_install 
 cat > /dev/null << EOF
 # Install custom kernel
 kernel_install 
@@ -40,10 +39,10 @@ openchrome_x11_driver_install
 echo "Using default X11 driver ..."
 ;;
 esac
-EOF
+
 # Boost - using sources
 boost_install
-exit
+
 # Sound libraries
 alsa_lib_install
 alsa_utils_install
@@ -62,7 +61,9 @@ portaudio_install
 oss_devices_configure
 SDL_install
 openal_soft_install
+EOF
 ffmpeg_deps_install
+exit
 live555_install
 libdvbpsi_install 
 #

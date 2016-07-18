@@ -216,7 +216,6 @@ ALSA_PLUGINS_VERSION=1.0.28
 PYALSAAUDIO_VERSION=0.7
 BLUEZ_VERSION=4.101 # Keep here, V5.X has no HSP/HFP
 SBC_VERSION=1.2
-PULSEAUDIO_VERSION=5.0
 PORTAUDIO_VERSION=snapshot
 X264_VERSION=snapshot-20130904-2245
 SOX_VERSION=14.4.1
@@ -1546,7 +1545,7 @@ make && make install
 
 pulseaudio_install () {
 # Unpack
-tar xvf $PROJECT_TARBALLS_DIR/pulseaudio-$PULSEAUDIO_VERSION.tar.xz -C $INSTALL_SRC_DIR
+tar xvf $PROJECT_TARBALLS_DIR/pulseaudio-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v pulseaudio-* pulseaudio
 # Compile
 cd $INSTALL_SRC_DIR/pulseaudio && ./configure --prefix=$PREFIX \
@@ -5991,7 +5990,6 @@ boost_install () {
 rpm -e --nodeps boost-chrono boost-filesystem boost-regex boost-system boost-iostreams boost-signals boost-python boost-thread boost-program-options boost-date-time boost-locale
 # Build from source
 tar jxvf $PROJECT_TARBALLS_DIR/boost_*.tar.bz2 -C $INSTALL_SRC_DIR
-#tar zxvf $PROJECT_TARBALLS_DIR/boost_*.tar.gz -C $INSTALL_SRC_DIR
 # Change to boost directory
 cd $INSTALL_SRC_DIR && mv -v boost* boost
 cd $INSTALL_SRC_DIR/boost
