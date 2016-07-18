@@ -61,11 +61,11 @@ portaudio_install
 oss_devices_configure
 SDL_install
 openal_soft_install
-EOF
 ffmpeg_deps_install
-exit
 live555_install
-libdvbpsi_install 
+EOF
+libdvbpsi_install
+exit
 #
 # Install ffmpeg first without x264 - will be removed and re-installed shortly
 #ffmpeg_install && x264_install 

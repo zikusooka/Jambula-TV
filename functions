@@ -218,6 +218,7 @@ BLUEZ_VERSION=4.101 # Keep here, V5.X has no HSP/HFP
 SBC_VERSION=1.2
 PORTAUDIO_VERSION=snapshot
 X264_VERSION=snapshot-20130904-2245
+LIBDVBPSI_TAG=1.3.0
 SOX_VERSION=14.4.1
 TVTIME_VERSION=1.0.2
 DVBSTREAMER_VERSION=svn-20130829 #2.1.0
@@ -1949,8 +1950,10 @@ make install
 libdvbpsi_install () {
 # Remove old libdvbpsi
 yum -y remove libdvbpsi-*
-# unpack
-rsync -avz $PROJECT_GITHUB_DIR/libdvbpsi/ $INSTALL_SRC_DIR/libdvbpsi/
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/libdvbpsi
+# Unpack desired git branch/tag
+git archive --format tar.gz --prefix=libdvbpsi/ $LIBDVBPSI_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 # configure
 cd $INSTALL_SRC_DIR/libdvbpsi 
 ./bootstrap
@@ -1988,8 +1991,32 @@ else
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-shared --enable-pic --enable-gpl --enable-nonfree --enable-x11grab --enable-libcdio --enable-libdc1394 --enable-libfaac --enable-libfreetype --enable-libmodplug --enable-libmp3lame --enable-libpulse --enable-librtmp --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libxvid --enable-postproc --enable-runtime-cpudetect --enable-avfilter --enable-swscale --enable-pthreads --enable-vdpau --enable-bzlib --enable-gnutls --enable-libass --enable-libgsm --enable-version3 --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libvo-aacenc --enable-libvo-amrwbenc --enable-libvpx --enable-zlib --enable-libnut --enable-libv4l2 --enable-libaacplus --enable-openssl --enable-bzlib --enable-libxavs --enable-openal --enable-libcelt --disable-static --disable-podpages
 fi
 #
+
+echo
+echo
+echo "Enter to proceed ..."
+echo
+read
+
 make
+
+echo
+echo
+echo "Enter to proceed ..."
+echo
+read
+
+
 make install
+
+echo
+echo
+echo "Enter to proceed ..."
+echo
+read
+
+
+
 # Clean up - saves upto 300MB
 make clean
 }
