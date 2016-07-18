@@ -63,9 +63,8 @@ SDL_install
 openal_soft_install
 ffmpeg_deps_install
 live555_install
-EOF
 libdvbpsi_install
-exit
+EOF
 #
 # Install ffmpeg first without x264 - will be removed and re-installed shortly
 #ffmpeg_install && x264_install 
@@ -73,6 +72,7 @@ exit
 #uninstall_src_pkgs ffmpeg && ffmpeg_install
 #
 ffmpeg_install
+exit
 x264_install
 vlc_install
 xine_lib_install

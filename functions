@@ -1985,38 +1985,14 @@ LIBX264_EXISTS=$?
 if [ "$LIBX264_EXISTS" = "0" ];
 then
 # compile with x264 libraries
-./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-shared --enable-pic --enable-gpl --enable-nonfree --enable-x11grab --enable-libcdio --enable-libdc1394 --enable-libfaac --enable-libfreetype --enable-libmodplug --enable-libmp3lame --enable-libpulse --enable-librtmp --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libxvid --enable-postproc --enable-runtime-cpudetect --enable-avfilter --enable-swscale --enable-pthreads --enable-vdpau --enable-bzlib --enable-gnutls --enable-libass --enable-libgsm --enable-version3 --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libvo-aacenc --enable-libvo-amrwbenc --enable-libvpx --enable-zlib --enable-libnut --enable-libv4l2 --enable-libaacplus --enable-openssl --enable-bzlib --enable-libxavs --enable-libx264 --enable-openal --enable-libcelt --disable-static --disable-podpages
+./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-shared --enable-pic --enable-gpl --enable-nonfree --enable-x11grab --enable-libcdio --enable-libdc1394 --enable-libfaac --enable-libfreetype --enable-libmodplug --enable-libmp3lame --enable-libpulse --enable-librtmp --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libxvid --enable-postproc --enable-runtime-cpudetect --enable-avfilter --enable-swscale --enable-pthreads --enable-vdpau --enable-bzlib --enable-gnutls --enable-libass --enable-libgsm --enable-version3 --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libvo-amrwbenc --enable-libvpx --enable-zlib --enable-libnut --enable-libv4l2 --enable-openssl --enable-bzlib --enable-libxavs --enable-libx264 --enable-openal --enable-libcelt --disable-static --disable-podpages
 else
 # compile withOUT x264 libraries
-./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-shared --enable-pic --enable-gpl --enable-nonfree --enable-x11grab --enable-libcdio --enable-libdc1394 --enable-libfaac --enable-libfreetype --enable-libmodplug --enable-libmp3lame --enable-libpulse --enable-librtmp --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libxvid --enable-postproc --enable-runtime-cpudetect --enable-avfilter --enable-swscale --enable-pthreads --enable-vdpau --enable-bzlib --enable-gnutls --enable-libass --enable-libgsm --enable-version3 --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libvo-aacenc --enable-libvo-amrwbenc --enable-libvpx --enable-zlib --enable-libnut --enable-libv4l2 --enable-libaacplus --enable-openssl --enable-bzlib --enable-libxavs --enable-openal --enable-libcelt --disable-static --disable-podpages
+./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-shared --enable-pic --enable-gpl --enable-nonfree --enable-x11grab --enable-libcdio --enable-libdc1394 --enable-libfaac --enable-libfreetype --enable-libmodplug --enable-libmp3lame --enable-libpulse --enable-librtmp --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libxvid --enable-postproc --enable-runtime-cpudetect --enable-avfilter --enable-swscale --enable-pthreads --enable-vdpau --enable-bzlib --enable-gnutls --enable-libass --enable-libgsm --enable-version3 --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libvo-amrwbenc --enable-libvpx --enable-zlib --enable-libnut --enable-libv4l2 --enable-openssl --enable-bzlib --enable-libxavs --enable-openal --enable-libcelt --disable-static --disable-podpages
 fi
 #
-
-echo
-echo
-echo "Enter to proceed ..."
-echo
-read
-
 make
-
-echo
-echo
-echo "Enter to proceed ..."
-echo
-read
-
-
 make install
-
-echo
-echo
-echo "Enter to proceed ..."
-echo
-read
-
-
-
 # Clean up - saves upto 300MB
 make clean
 }
