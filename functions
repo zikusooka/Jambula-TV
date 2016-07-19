@@ -2464,6 +2464,11 @@ $KODI_ADDONS_JAMBULA \
 $KODI_ADDONS_MISC;
 do
 unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
+echo
+echo
+echo "$KODI_ADDON Installed.  Enter to proceed"
+echo
+#read
 done
 }
 
@@ -2496,7 +2501,7 @@ systemctl -q is-active mysqld.service || systemctl start mysqld.service
 mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
 #
 # Drop existing kodi user first
-echo "DROP USER '$KODI_DB_USER'@'%';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+#echo "DROP USER '$KODI_DB_USER'@'%';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
 # Create Kodi User
 echo "CREATE USER '$KODI_DB_USER'@'%' IDENTIFIED BY '$KODI_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
 #
@@ -2826,8 +2831,13 @@ chmod 0440 $SUDOERS_DIR/$AUTOLOGIN_USER
 }
 
 x11_user_autologin_lxde_configure () {
+# Create LXDE config directory
+[ -d $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/LXDE ] || \
+	mkdir -p $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/LXDE
 # Copy customized LXDE panels and config
 rsync -avz $PROJECT_CONFIGS_DIR/LXDE/ $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/LXDE
+# Change permissions on ../lxpanel/LXDE
+chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel
 
 # Backup original conf file
 cp -v $LXDM_CONFIG $LXDM_CONFIG.orig

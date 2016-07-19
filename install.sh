@@ -87,14 +87,7 @@ kodi_deps_install
 kodi_install # Takes ~160 minutes (107m on SSD)
 kodi_platform_install
 kodi_pvr_hts_install
-
-
-EOF
-
 kodi_addons_install
-
-exit
-
 kodi_addons_configure
 kodi_configure
 kodi_customization
@@ -129,7 +122,7 @@ wired_interfaces_configure
 wireless_interfaces_configure
 openssl_configure
 wol_configure 
-beep_spkr_configure # Alert sounds - beep2_install no longer needed
+beep_spkr_configure
 # Run these before icinga configure
 chrony_configure
 dnsmasq_configure
@@ -147,9 +140,11 @@ internet_usb_3g_configure # USB (3G)
 # Proxy server support
 ziproxy_install
 ziproxy_configure
+EOF
 
 # WAN Accelerator support
-squid_install # Takes a very long time ~ 50 mins
+squid_install # Takes a very long time ~ 65 mins
+exit
 squid_configure # configured for use by ziproxy WAN accelerator
 ziproxy_wan_accel_configure
 
