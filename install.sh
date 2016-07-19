@@ -78,18 +78,23 @@ vlc_install
 mplayer_install
 sox_install
 v4l_utils_install
-EOF
 tvheadend_install
 tvheadend_configure
-exit
 fmtools_install
 
-# Kodi Dependencies 
+# Kodi
 kodi_deps_install
-# Kodi (formerly XBMC)
-kodi_install # Takes ~160 minutes
+kodi_install # Takes ~160 minutes (107m on SSD)
+kodi_platform_install
 kodi_pvr_hts_install
+
+
+EOF
+
 kodi_addons_install
+
+exit
+
 kodi_addons_configure
 kodi_configure
 kodi_customization

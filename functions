@@ -157,6 +157,9 @@ TVHEADEND_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.hts/tvheadend
 TVHEADEND_HTTP_IP=127.0.0.1
 TVHEADEND_HTTP_PORT=9981  # Please change to conform with our lineup
 
+PLATFORM_TAG=1.0.10
+LIBCEC_TAG=libcec-2.2.0
+
 KODI_VERSION=15.2 
 #
 KODI_BRANCH=Isengard
@@ -898,6 +901,22 @@ PKG_LEFTOVERS_EXIST=$?
 [ "$PKG_LEFTOVERS_EXIST" != "0" ] || rm -rf `whereis $1`
 }
 
+uninstall_cmake_pkgs () {
+echo "Uninstalling the package: $1 ..."
+# Check for manifest in root path
+if [ -f $INSTALL_SRC_DIR/$1/install_manifest.txt ];
+then
+xargs rm < $INSTALL_SRC_DIR/$1/install_manifest.txt
+#
+# Check for manifest in build path
+elif [ -f $INSTALL_SRC_DIR/$1/build/install_manifest.txt ];
+then
+xargs rm < $INSTALL_SRC_DIR/$1/build/install_manifest.txt 
+fi
+#
+# Remove sources
+[ -d $INSTALL_SRC_DIR/$1 ] && rm -rf $INSTALL_SRC_DIR/$1
+}
 
 # Uninstall kodi
 uninstall_kodi () {
@@ -1814,17 +1833,7 @@ cd $INSTALL_SRC_DIR/vsxu
 mkdir BUILD
 cd BUILD
 cmake -DCMAKE_CXX_COMPILER=$BINARY_PREFIX/g++ -DCMAKE_C_COMPILER=$BINARY_PREFIX/gcc -DCMAKE_INSTALL_PREFIX=$PREFIX -DGLFW_INCLUDE_PATH=$INCDIR/GL ../../vsxu
-
-echo
-echo "Did configure work? - Enter to proceed"
-read
-make
-echo
-echo "Did make work? - Enter to proceed"
-read
-make install
-
-#make && make install 
+make && make install 
 }
 
 ffmpeg_deps_install () {
@@ -2087,7 +2096,6 @@ cd $INSTALL_SRC_DIR/mpv
 mv -v ffmpeg* ffmpeg
 # Compile
 ./old-configure --prefix=$PREFIX
-exit 
 make
 make install
 }
@@ -2339,32 +2347,21 @@ make install
 }
 
 platform_install () {
-rsync -av $PROJECT_GITHUB_DIR/platform/ $INSTALL_SRC_DIR/platform/
+cd $PROJECT_GITHUB_DIR/platform
+git archive --format tar.gz --prefix=platform/ $PLATFORM_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 cd $INSTALL_SRC_DIR/platform
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR
-make
-make install
+make && make install
 }
 
 libcec_install () {
-rsync -av $PROJECT_GITHUB_DIR/libcec/ $INSTALL_SRC_DIR/libcec/
-# Patch files to support exynos
-sed -i "s:set(HAVE_EXYNOS_API 0):set(HAVE_EXYNOS_API 1):g" $INSTALL_SRC_DIR/libcec/src/libcec/cmake/CheckPlatformSupport.cmake 
-# Create build dir and go there
-mkdir $INSTALL_SRC_DIR/libcec/build
-cd $INSTALL_SRC_DIR/libcec/build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR -DHAVE_EXYNOS_API=1 ..
-make -j$SYSTEM_CPU_CORES
-make install
+cd $PROJECT_GITHUB_DIR/libcec
+git archive --format tar.gz --prefix=libcec/ $LIBCEC_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+cd $INSTALL_SRC_DIR/libcec
+./bootstrap
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+make && make install
 ldconfig
-}
-
-kodi_platform_install () {
-rsync -av $PROJECT_GITHUB_DIR/kodi-platform/ $INSTALL_SRC_DIR/kodi-platform/
-cd $INSTALL_SRC_DIR/kodi-platform
-cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR
-make
-make install
 }
 
 kodi_deps_install () {
@@ -2373,7 +2370,6 @@ libusb_install
 # Needed for Addons like PVR.HTS
 platform_install 
 libcec_install
-kodi_platform_install
 }
 
 kodi_install () {
@@ -2438,23 +2434,22 @@ cd $INSTALL_SRC_DIR/kodi
 make -j$SYSTEM_CPU_CORES
 make install
 # Clean up - saves upto 1.5GB
-#make clean
-#
-#
-# JambulaTV: Start Linux Desktop i.e. PC Mode after quiting Kodi
-cp -v ${KODI_STANDALONE_SCRIPT} ${KODI_STANDALONE_SCRIPT}.orig
-cat >> ${KODI_STANDALONE_SCRIPT} <<EOF
-# JambulaTV: Start Linux Desktop i.e. PC Mode after quiting Kodi
-$BINARY_PREFIX/startx
-EOF
+make clean
+}
+
+kodi_platform_install () {
+rsync -av $PROJECT_GITHUB_DIR/kodi-platform/ $INSTALL_SRC_DIR/kodi-platform/
+cd $INSTALL_SRC_DIR/kodi-platform
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
+make
+make install
 }
 
 kodi_pvr_hts_install () {
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts-$KODI_BRANCH/ $INSTALL_SRC_DIR/kodi-pvr.hts/
 cd $INSTALL_SRC_DIR/kodi-pvr.hts
-cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi
-make
-make install
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
+make && make install
 }
 
 kodi_addons_install() {
@@ -2485,6 +2480,12 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_ADDON_DATA_DIR
 }
 
 kodi_configure () {
+# JambulaTV: Start Linux Desktop i.e. PC Mode after quiting Kodi
+cp -v ${KODI_STANDALONE_SCRIPT} ${KODI_STANDALONE_SCRIPT}.orig
+cat >> ${KODI_STANDALONE_SCRIPT} <<EOF
+# JambulaTV: Start Linux Desktop i.e. PC Mode after quiting Kodi
+$BINARY_PREFIX/startx
+EOF
 #
 # MySQL DB for Kodi
 # -----------------
@@ -3664,7 +3665,7 @@ echo
 echo "Enter to proceed...."
 echo
 echo
-read
+#read
 clear
 #
 #
@@ -7288,7 +7289,7 @@ cd $INSTALL_SRC_DIR/cockpit
 ./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
 --localstatedir=$STATEDIR
-exit
+
 make
 make install
 }
