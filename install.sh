@@ -75,10 +75,10 @@ x264_install
 vlc_install
 #xine_lib_install
 #xine_ui_install
-EOF
 mplayer_install
-exit
+EOF
 sox_install
+exit
 v4l_utils_install
 tvheadend_install
 tvheadend_configure
