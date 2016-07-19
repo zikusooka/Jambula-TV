@@ -223,7 +223,6 @@ TVTIME_VERSION=1.0.2
 DVBSTREAMER_VERSION=svn-20130829 #2.1.0
 PYDVBSTREAMER_VERSION=0.1
 LIVEPAUSE_VERSION=1.1.1
-V4L_UTILS_VERSION=1.3.90
 PYOSD_VERSION=0.2.14
 NODM_VERSION=0.7
 GSTREAMER_VERSION=1.1.3
@@ -2889,7 +2888,7 @@ load-module module-loopback source=$TV_AUDIO_SOURCE latency_msec=26" >> $PULSE_D
 
 v4l_utils_install () {
 # Unpack
-tar jxvf $PROJECT_TARBALLS_DIR/v4l-utils-$V4L_UTILS_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
+tar jxvf $PROJECT_TARBALLS_DIR/v4l-utils-*.tar.bz2 -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v v4l-utils-* v4l-utils
 # Compile
 cd $INSTALL_SRC_DIR/v4l-utils && ./configure --prefix=$PREFIX \

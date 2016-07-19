@@ -76,12 +76,12 @@ vlc_install
 #xine_lib_install
 #xine_ui_install
 mplayer_install
-EOF
 sox_install
-exit
 v4l_utils_install
+EOF
 tvheadend_install
 tvheadend_configure
+exit
 fmtools_install
 
 # Kodi Dependencies 
