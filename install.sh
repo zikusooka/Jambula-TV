@@ -220,13 +220,13 @@ flexget_configure
 xmlrpc_install
 libtorrent_install
 rtorrent_install
-EOF
 rtorrent_configure
-exit
 rtgui_configure
+EOF
 
 # Downloads
 aria2_install # Takes ~ 40 mins
+exit
 aria2_configure
 
 # File server
