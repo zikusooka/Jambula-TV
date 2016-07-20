@@ -184,16 +184,16 @@ coova_chilli_configure
 coova_chilli_customization
 coova_chilli_icinga2_dns_monitor
 hostapd_install
-EOF
 hostapd_configure
-exit
 
 #------------
 # Monitoring
 # -----------
-icinga2_install # Takes a very long time ~ 1 hour
+icinga2_install # Takes ~ 33mins
+EOF
 monitoring_plugins_install
 check_logfiles_install
+exit
 icinga2_ido_mysql
 icinga2_configure
 icingaweb2_install
@@ -235,7 +235,9 @@ samba_configure
 # -----------------
 # Utilities/tools
 # -----------------
-w_scan_install 
+
+w_scan_install # Move to after tvheadend_install
+
 youtube_dl_install
 cutter_install 
 rtmpdump_install
