@@ -150,15 +150,15 @@ ziproxy_wan_accel_configure
 # Desktop Access
 # ----------------
 vncserver_configure
-EOF
 desktop_configure
-exit
 firefox_install
+EOF
 
 # --------------------
 # Web/GUI Interfaces
 # --------------------
 nginx_install
+exit
 nginx_configure
 nginx_customization
 php_configure
