@@ -190,10 +190,8 @@ hostapd_configure
 # Monitoring
 # -----------
 icinga2_install # Takes ~ 33mins
-EOF
 monitoring_plugins_install
 check_logfiles_install
-exit
 icinga2_ido_mysql
 icinga2_configure
 icingaweb2_install
@@ -220,7 +218,15 @@ flexget_configure
 
 # Torrents
 xmlrpc_install
+EOF
+
+
+FLEXGET_DEPENDENCIES=""
+flexget_deps_install
+exit
+
 libtorrent_install
+exit
 rtorrent_install
 rtorrent_configure
 rtgui_configure
