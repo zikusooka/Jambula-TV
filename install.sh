@@ -81,6 +81,7 @@ sox_install
 v4l_utils_install
 tvheadend_install
 tvheadend_configure
+w_scan_install
 fmtools_install
 
 # Kodi
@@ -222,22 +223,19 @@ libtorrent_install
 rtorrent_install
 rtorrent_configure
 rtgui_configure
-EOF
 
 # Downloads
-aria2_install # Takes ~ 40 mins
-exit
+aria2_install # ~ 40 mins
 aria2_configure
 
 # File server
 samba_configure
 
+EOF
+exit
 # -----------------
 # Utilities/tools
 # -----------------
-
-w_scan_install # Move to after tvheadend_install
-
 youtube_dl_install
 cutter_install 
 rtmpdump_install
