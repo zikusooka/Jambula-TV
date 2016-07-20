@@ -4158,12 +4158,18 @@ make install
 #
 # Add nginx user and group
 useradd -M -r -c "Nginx Web Server" -s /sbin/nologin -d $SPOOLDIR/nginx nginx
-#
+}
+
+set_www_user_group () {
 # Set user and group variables
-WWW_USER=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $2'})
+WWW_USER=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $2'} | sed 's:;::')
 WWW_GROUP=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $3'} | sed 's:;::')
+[ "x$WWW_GROUP" = "x" ] && WWW_GROUP=$WWW_USER
 export WWW_USER WWW_GROUP
 #
+}
+
+nginx_configure () {
 # Change log directory permissions
 chown -R $WWW_USER:$WWW_GROUP $STATEDIR/log/nginx
 #
@@ -4174,9 +4180,7 @@ chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR
 cp -v $PROJECT_INIT_SCRIPTS_DIR/nginx.service $SYSTEMD_UNITS_DIR_USER/
 # Enable nginx if needed
 systemctl enable nginx.service
-}
 
-nginx_configure () {
 # Create conf.d, includes, and sites-enabled directories
 mkdir /etc/nginx/{conf.d,includes,sites-enabled}
 # Make backup of default config file
@@ -4211,6 +4215,9 @@ chown -R $WWW_USER:$WWW_GROUP $STATEDIR/lib/php
 # Enable php-fpm
 systemctl enable php-fpm.service
 systemctl start php-fpm.service
+# Disable cherokee server
+systemctl disable cherokee.service
+systemctl stop cherokee.service
 # Enable nginx service
 systemctl enable nginx.service
 systemctl start nginx.service

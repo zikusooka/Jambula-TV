@@ -8,6 +8,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 
 
 
+set_www_user_group
 #################
 #  MAIN SCRIPT  #
 #################
@@ -152,13 +153,12 @@ ziproxy_wan_accel_configure
 vncserver_configure
 desktop_configure
 firefox_install
-EOF
 
 # --------------------
 # Web/GUI Interfaces
 # --------------------
 nginx_install
-exit
+set_www_user_group  # Keep this Active from here-on!!!
 nginx_configure
 nginx_customization
 php_configure
@@ -169,11 +169,13 @@ nginx_spawn_fcgi_configure
 # Databases
 # ----------
 mysqld_configure
+EOF
 
 # --------------------------------
 # Wireless Access Point (HotSpot)
 # --------------------------------
 freeradius_install
+exit
 freeradius_configure
 freeradius_attributes_configure
 freeradius_test
