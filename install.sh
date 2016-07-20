@@ -218,17 +218,11 @@ flexget_configure
 
 # Torrents
 xmlrpc_install
-EOF
-
-
-FLEXGET_DEPENDENCIES=""
-flexget_deps_install
-exit
-
 libtorrent_install
-exit
 rtorrent_install
+EOF
 rtorrent_configure
+exit
 rtgui_configure
 
 # Downloads
