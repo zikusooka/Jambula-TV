@@ -140,11 +140,9 @@ internet_usb_3g_configure # USB (3G)
 # Proxy server support
 ziproxy_install
 ziproxy_configure
-EOF
 
 # WAN Accelerator support
 squid_install # Takes a very long time ~ 65 mins
-exit
 squid_configure # configured for use by ziproxy WAN accelerator
 ziproxy_wan_accel_configure
 
@@ -152,7 +150,9 @@ ziproxy_wan_accel_configure
 # Desktop Access
 # ----------------
 vncserver_configure
+EOF
 desktop_configure
+exit
 firefox_install
 
 # --------------------

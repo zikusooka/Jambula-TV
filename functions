@@ -2831,14 +2831,6 @@ chmod 0440 $SUDOERS_DIR/$AUTOLOGIN_USER
 }
 
 x11_user_autologin_lxde_configure () {
-# Create LXDE config directory
-[ -d $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/LXDE ] || \
-	mkdir -p $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/LXDE
-# Copy customized LXDE panels and config
-rsync -avz $PROJECT_CONFIGS_DIR/LXDE/ $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/LXDE
-# Change permissions on ../lxpanel/LXDE
-chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel
-
 # Backup original conf file
 cp -v $LXDM_CONFIG $LXDM_CONFIG.orig
 # Add auto user plus x server start options
@@ -7077,9 +7069,13 @@ EOF
 }
 
 desktop_configure () {
-# Copy jambulatv-computer-mode script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-computer-mode ] || cp -v $PROJECT_BIN_DIR/jambulatv-computer-mode $BINARY_PREFIX/
-#
+# Create LXDE config directory
+[ -d $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/LXDE ] || \
+	mkdir -p $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/LXDE
+# Copy customized LXDE panels and config
+rsync -avz $PROJECT_CONFIGS_DIR/LXDE/ $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/LXDE
+# Change permissions on ../lxpanel/LXDE
+chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel
 # Add desktop entry for JambulaTV
 cat > /usr/share/applications/JambulaTV.desktop << EOF
 [Desktop Entry]
@@ -7087,22 +7083,27 @@ Version=1.0
 Name=JambulaTV
 GenericName=JambulaTV
 Comment=Return back to JambulaTV
-Exec=$BINARY_PREFIX/jambulatv-computer-mode
+Exec=$BINARY_PREFIX/jambulatv-computer-mode off
 Icon=$PROJECT_SYSTEM_SHARE_DIR/images/jambulatv-stream.png
-Terminal=false
+Terminal=true
 Type=Application
 Encoding=UTF-8
-Categories=AudioVideo;Player;Recorder;
+Categories=AudioVideo;Player;Recorder;Video;TV;
 MimeType=x-scheme-handler/jambulatv;
 X-KDE-Protocols=jambulatv
 StartupNotify=true
 Keywords=JambulaTV;TV;Multimedia;
 X-Desktop-File-Install-Version=0.21
+X-KeepTerminal=true
 EOF
+# Create Desktop Directory
+[ -d $AUTOLOGIN_USER_HOME_DIR/Desktop ] || mkdir -p $AUTOLOGIN_USER_HOME_DIR/Desktop
 # Copy to Desktop directory
 cp -v /usr/share/applications/JambulaTV.desktop $AUTOLOGIN_USER_HOME_DIR/Desktop/
 # Change permissions
 chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/Desktop
+# Copy jambulatv-computer-mode script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-computer-mode ] || cp -v $PROJECT_BIN_DIR/jambulatv-computer-mode $BINARY_PREFIX/
 }
 
 firefox_install () {
