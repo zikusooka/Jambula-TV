@@ -4394,7 +4394,7 @@ ATTRIBUTE      Max-All-Session         3000    integer" >> $FREERADIUS_DB_CONF_D
 
 daloradius_configure () {
 # Unpack daloradius - Web frontend for radius
-tar zxvf $PROJECT_TARBALLS_DIR/daloradius-$DALORADIUS_VERS.tar.gz -C $WWW_HTML_DIR
+tar zxvf $PROJECT_TARBALLS_DIR/daloradius-*.tar.gz -C $WWW_HTML_DIR
 cd $WWW_HTML_DIR
 mv -v daloradius-* daloradius
 # Change permissions to www

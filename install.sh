@@ -169,13 +169,11 @@ nginx_spawn_fcgi_configure
 # Databases
 # ----------
 mysqld_configure
-EOF
 
 # --------------------------------
 # Wireless Access Point (HotSpot)
 # --------------------------------
 freeradius_install
-exit
 freeradius_configure
 freeradius_attributes_configure
 freeradius_test
@@ -186,7 +184,9 @@ coova_chilli_configure
 coova_chilli_customization
 coova_chilli_icinga2_dns_monitor
 hostapd_install
+EOF
 hostapd_configure
+exit
 
 #------------
 # Monitoring
