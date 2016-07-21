@@ -42,19 +42,18 @@ Plugin {
         }
         separator {
         }
+	# Return to JambulaTV item
         item {
-            name=Run...
-            image=gnome-run
-            command=run
+           name=Log Out (JambulaTV)
+           image=/usr/share/JambulaTV/images/jambulatv-stream.png
+           action=/usr/bin/jambulatv-computer-mode off
         }
         separator {
         }
-        item {
-            name=Shutdown
-            image=gnome-logout
-            command=logout
+	#
+	#
+	#
         }
-    }
 }
 
 Plugin {
@@ -78,9 +77,6 @@ Plugin {
         }
         Button {
             id=/usr/share/applications/firefox.desktop
-        }
-        Button {
-            id=/usr/share/applications/JambulaTV.desktop
         }
     }
 }

@@ -7082,6 +7082,9 @@ desktop_configure () {
 rsync -avz $PROJECT_CONFIGS_DIR/LXDE/ $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/LXDE
 # Change permissions on ../lxpanel/LXDE
 chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel
+# Remove lingering lxpanel cache
+find $AUTOLOGIN_USER_HOME_DIR/.cache/menus -name '*' -type f -print0 | xargs -0 rm
+#
 # Add desktop entry for JambulaTV
 cat > /usr/share/applications/JambulaTV.desktop << EOF
 [Desktop Entry]
