@@ -8,6 +8,27 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 
 
 
+
+
+
+# My credentials - Remove before shipping!!!
+TRAKT_USERNAME=dc8982
+TRAKT_WATCHLIST=JambulaTV
+TORRENTS_DOMAIN_NAME=JambulaTV
+GOOGLE_SERVICES_USERNAME="smtprelayug@gmail.com"
+GOOGLE_SERVICES_PASSWORD="256smtprelayug"
+EMAIL_TO_ADDRESS="joseph@zikusooka.com"
+TELEGRAM_API_BOT="189563360:AAFFiDHQXgBTLSPsdVbXDbMkG-khkIGlqa8"
+TELEGRAM_USERNAME="jlabs"
+
+NETWORK_WIRELESS_PASSPHRASE=3gbofdatanow
+WHATSAPP_PHONE_NUMBER_4_RECEIVING="256704233014"
+
+ASTERISK_DIAL_OUT_NUMBER_1="0777161657"
+
+
+
+
 set_www_user_group
 #################
 #  MAIN SCRIPT  #
@@ -231,10 +252,6 @@ aria2_configure
 # File server
 samba_configure
 
-EOF
-
-
-exit
 # -----------------
 # Utilities/tools
 # -----------------
@@ -267,10 +284,8 @@ freepbx_preinstall
 freepbx_install
 freepbx_configure
 freepbx_modules
-
 # XMPP
 chan_motif_configure
-
 # GSM Trunks/ Mobile Gateways
 chan_mobile_configure
 chan_dongle_install 
@@ -285,13 +300,28 @@ cepstral_register
 app_swift_install
 app_swift_configure
 fi
+
+EOF
+
+
+
 # Google TTS # Requires Internet connection
 google_tts_configure
 
+_install_pause_check_4_errors_
+
 # ASR - Speech Recognition
 sphinxbase_install
+
+_install_pause_check_4_errors_
+
 pocketsphinx_install
+
+_install_pause_check_4_errors_
+
 SpeechRecognition_install
+
+exit
 
 # ---------------------
 # Security Monitoring 

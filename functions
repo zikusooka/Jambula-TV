@@ -493,7 +493,7 @@ GOOGLE_CALENDAR="JambulaTV-Services"
 # Cepstral
 CEPSTRAL_VERSION=6.0.1
 CEPSTRAL_VOICE=Allison-8kHz
-CEPSTRAL_EULA=agree
+CEPSTRAL_EULA=no # agree # 
 CEPSTRAL_PREFIX=/opt/swift
 # License info/key you obtained from Cepstral
 CEPSTRAL_CUSTOMER_NAME="$PROJECT_NAME"
@@ -818,12 +818,7 @@ cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 # Apply patches
 patch -p1 ./drivers/net/wireless/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
 #
-echo
-echo
-echo "Did Patch install correctly? Enter to proceed"
-echo
-echo
-read
+_install_pause_check_4_errors_
 #
 # Remove stale .o files and dependencies lying around
 make mrproper
@@ -841,11 +836,9 @@ However, do the following before proceeding:
 
 Create more space - a whole lot like 10GB e.g.  Move project /opt/JambulaTV into Storage area.  
 
-Press Enter when you are done...
-
 EOF
 #
-read
+_install_pause_check_4_errors_
 #
 fi
 }
@@ -859,9 +852,10 @@ You are about to install the latest Linux kernel version [$KERNEL_VERSION],
 
 CAUTION:  This will take up to 6 hours! 
 
-If you are sure and want to proceed, press enter ...
 "
-read
+#
+_install_pause_check_4_errors_
+#
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 make bzImage
 make modules
@@ -1240,6 +1234,15 @@ rm -rf $INSTALL_SRC_DIR/domoticz
 #######################
 #  INSTALL FUNCTIONS  #
 #######################
+_install_pause_check_4_errors_ () {
+echo
+echo
+echo "Please enter to proceed ..."
+echo
+read
+clear
+}
+
 kernel_install () {
 # See how much space is left
 AVAILABLE_DISK_SPACE_ROOT=$(df /|grep -v block | awk {'print $4'})
@@ -1279,9 +1282,10 @@ make oldconfig
 clear
 cat <<EOF
 Am going to compile & install the Linux kernel $KERNEL_VERSION, This will take up to 6 hours! 
-Press Enter to continue ...
 EOF
-read
+#
+_install_pause_check_4_errors_
+#
 make bzImage
 make modules
 make modules_install
@@ -2466,9 +2470,10 @@ do
 unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
 echo
 echo
-echo "$KODI_ADDON Installed.  Enter to proceed"
+echo "$KODI_ADDON Installed"
 echo
-#read
+#_install_pause_check_4_errors_
+#
 done
 }
 
@@ -3664,10 +3669,7 @@ echo
 echo 
 echo "Did python module [$PYTHON_MODULE] install correctly?"
 echo 
-echo "Enter to proceed...."
-echo
-echo
-#read
+_install_pause_check_4_errors_
 clear
 #
 #
@@ -4052,12 +4054,8 @@ echo
 echo 
 echo "Did python module [$PYTHON_MODULE] install correctly?"
 echo 
-echo "Enter to proceed...."
+_install_pause_check_4_errors_
 echo
-echo
-#read
-clear
-#
 #
 done
 }
@@ -5561,13 +5559,28 @@ chmod 755 $ASTERISK_AGI_BIN_DIR/available_mobile_group.sh
 }
 
 chan_dongle_configure () {
-# copy dongle.conf file
+# If Asterisk installed
+if [ -d $ASTERISK_CONF_DIR ];
+then
+# copy dongle.conf file to asterisk configs directory
 cp -v $PROJECT_CONFIGS_DIR/asterisk/dongle.conf $ASTERISK_CONF_DIR/dongle.conf
 # Include dongle.conf file
-echo "#include /etc/JambulaTV/asterisk/dongle.conf" > $CONFDIR/asterisk/dongle.conf
+echo "#include $ASTERISK_CONF_DIR/dongle.conf" > $ASTERISK_CONF_DIR/dongle.conf
 # Set ownership/permissions on asterisk custom directory
 chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_CONF_DIR
 chmod -R 764 $ASTERISK_CONF_DIR
+#
+# If FreePBX installed
+elif [ -d $FREEPBX_CONF_DIR ];
+then
+# copy dongle.conf file to freepbx configs directory
+cp -v $PROJECT_CONFIGS_DIR/freepbx/dongle.conf $FREEPBX_CONF_DIR/dongle.conf
+# Include dongle.conf file
+echo "#include $FREEPBX_CONF_DIR/dongle.conf" > $FREEPBX_CONF_DIR/dongle.conf
+# Set ownership/permissions on freepbx custom directory
+chown -R $ASTERISK_FILES_USER:$WWW_USER $FREEPBX_CONF_DIR
+chmod -R 764 $FREEPBX_CONF_DIR
+fi
 }
 
 chan_motif_configure () {
