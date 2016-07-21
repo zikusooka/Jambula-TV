@@ -1,6 +1,19 @@
---- sqlcounter.orig	2015-05-25 17:10:37.208048048 +0300
-+++ sqlcounter	2015-08-27 21:04:22.465147679 +0300
-@@ -93,3 +93,6 @@
+--- /etc/raddb/mods-available/sqlcounter.orig	2016-07-20 13:33:46.936806883 +0300
++++ /etc/raddb/mods-available/sqlcounter	2016-07-21 13:18:35.736055431 +0300
+@@ -37,7 +37,11 @@
+ #
+ #  DEFAULT  Max-Daily-Session > 3600, Auth-Type = Reject
+ #      Reply-Message = "You've used up more than one hour today"
+-#
++
++
++# BUG: Added to prevent radiusd start error: Reference "${modules.sql.dialect}" not found
++sql.dialect = mysql
++
+ sqlcounter dailycounter {
+ 	sql_module_instance = sql
+ 	dialect = ${modules.sql.dialect}
+@@ -93,3 +97,6 @@
  
  	$INCLUDE ${modconfdir}/sql/counter/${dialect}/${.:instance}.conf
  }
