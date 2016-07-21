@@ -309,31 +309,18 @@ sphinxbase_install
 pocketsphinx_install
 SpeechRecognition_install
 
-EOF
-
-
 # ---------------------
 # Security Monitoring 
 # IMPORTANT Install After FreePBX/Asterisk
 # ---------------------
 zoneminder_pre_install
-
-_install_pause_check_4_errors_
-
-#zoneminder_128_install
-
-
 zoneminder_130_install
-
-_install_pause_check_4_errors_
-
 zoneminder_configure 
-
-_install_pause_check_4_errors_
-
 zoneminder_zms_inetd
 
+EOF
 
+zoneminder_configure  #REMOVE
 exit
 # ----------------
 # Administration 
