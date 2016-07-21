@@ -301,38 +301,40 @@ app_swift_install
 app_swift_configure
 fi
 
-EOF
-
-
-
 # Google TTS # Requires Internet connection
 google_tts_configure
 
-_install_pause_check_4_errors_
-
 # ASR - Speech Recognition
 sphinxbase_install
-
-_install_pause_check_4_errors_
-
 pocketsphinx_install
-
-_install_pause_check_4_errors_
-
 SpeechRecognition_install
 
-exit
+EOF
+
 
 # ---------------------
 # Security Monitoring 
 # IMPORTANT Install After FreePBX/Asterisk
 # ---------------------
 zoneminder_pre_install
+
+_install_pause_check_4_errors_
+
 #zoneminder_128_install
+
+
 zoneminder_130_install
+
+_install_pause_check_4_errors_
+
 zoneminder_configure 
+
+_install_pause_check_4_errors_
+
 zoneminder_zms_inetd
 
+
+exit
 # ----------------
 # Administration 
 # ----------------
