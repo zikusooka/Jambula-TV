@@ -306,11 +306,7 @@ zoneminder_zms_inetd
 # ----------------
 # Administration 
 # ----------------
-# Cloud and Backup support
-owncloud_install
-owncloud_configure
-
-# NextCloud, a fork of OwnCloud
+# Cloud and Backup support: NextCloud
 nextcloud_install
 nextcloud_configure
 nextcloud_permissions
