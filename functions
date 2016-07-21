@@ -3126,15 +3126,15 @@ alias gl="clear && git log"
 alias gb="clear && git branch"
 
 # JambulaTV History
-[[ -d /var/log/JambulaTV/bash ]] || mkdir -p /var/log/JambulaTV/bash
+[[ -d $PROJECT_SYSTEM_LOG_DIR/bash ]] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/bash
 export HISTTIMEFORMAT="%d-%m-%Y - %T \$USER "
 export HISTCONTROL=ignoreboth
 export HISTSIZE=5000
 shopt -s histappend
-export PROMPT_COMMAND='echo "\$(history 1)" >> /var/log/JambulaTV/bash/history-\$(date "+%Y%m%d").log'
+export PROMPT_COMMAND='echo "\$(history 1)" >> $PROJECT_SYSTEM_LOG_DIR/bash/history-\$(date "+%Y%m%d").log'
 # Allow all users access to log file
-chmod 766 /var/log/JambulaTV/bash/history-\$(date "+%Y%m%d").log
-
+[ -e $PROJECT_SYSTEM_LOG_DIR/bash/history-\$(date "+%Y%m%d").log ] && \
+	chmod 766 $PROJECT_SYSTEM_LOG_DIR/bash/history-\$(date "+%Y%m%d").log
 # CLI Calculator
 calc(){ awk "BEGIN{ print \$* }" ;}
 EOF
