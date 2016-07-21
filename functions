@@ -6303,6 +6303,10 @@ make install
 }
 
 zoneminder_configure () {
+# Copy ZoneMinder config file
+cp -v $INSTALL_SRC_DIR/ZoneMinder/zm.conf $PROJECT_SYSTEM_CONF_DIR/zm.conf
+# Change permissions on zoneminder.conf - or web interface wont display
+chmod 644 $PROJECT_SYSTEM_CONF_DIR/zm.conf
 # Create logs directory for Zoneminder
 [ -d $PROJECT_SYSTEM_LOG_DIR/zoneminder ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/zoneminder
 # Change permissions on logging directory
@@ -6350,8 +6354,6 @@ cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/zoneminder $NGINX_CONF_DIR/sites-
 # Add nginx user to video group
 usermod -G video $WWW_USER
 #
-# Change permissions on zoneminder.conf - or web interface wont display
-chmod 644 $PROJECT_SYSTEM_CONF_DIR/zm.conf
 # Copy test index.html, *.php and *.cgi files to zm
 cp -rv $PROJECT_CUSTOMIZATION_DIR/nginx/html/test* $WWW_HTML_DIR/zm/
 # Make nph-zms behave like cgi script since we are on nginx i.e. We want jpeg image
@@ -6410,6 +6412,9 @@ done
 # Load Zones table
 mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $TMPDIR/zm-zones.sql
 #
+# Upgrade ZM database tables to current version
+/usr/bin/zmupdate.pl -nointeractive
+
 # USB Webcams
 #------------
 # Copy udev rules file for USB webcams - Naming scheme instead of /dev/videoX

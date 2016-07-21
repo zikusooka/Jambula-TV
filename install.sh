@@ -318,10 +318,6 @@ zoneminder_130_install
 zoneminder_configure 
 zoneminder_zms_inetd
 
-EOF
-
-zoneminder_configure  #REMOVE
-exit
 # ----------------
 # Administration 
 # ----------------
@@ -337,26 +333,47 @@ nextcloud_permissions
 open_zwave_install
 #
 # Domoticz
-domoticz_install
+domoticz_install # ~70mins
 domoticz_configure
 #
 # OpenHAB
 #openhab_install
 #openhab_configure
-
 home_automation_scripts
+
+EOF
 
 # ------------------------
 # Notifications/ Messaging
 # ------------------------
 email_messaging_configure
+
+_install_pause_check_4_errors_
+
 sleekxmpp_install 
+
+_install_pause_check_4_errors_
+
 python_telegram_bot_install
+
+_install_pause_check_4_errors_
+
 telegram_messaging_configure
+
+_install_pause_check_4_errors_
+
 yowsup2_deps_install
+
+_install_pause_check_4_errors_
+
 yowsup2_install
+
+
+_install_pause_check_4_errors_
+
 whatsapp_messaging_configure
 
+_install_pause_check_4_errors_
 # ---------
 # Notices
 # ---------
