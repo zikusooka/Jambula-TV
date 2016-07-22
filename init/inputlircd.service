@@ -1,7 +1,7 @@
 [Unit]
 Description=Inputlirc, a lirc daemon using input event devices
 Before=jambulatv-display-manager.service
-After=plymouth-quit.service tvheadend.service
+After=network-online.target
 
 [Service]
 Type=forking
