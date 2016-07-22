@@ -1,6 +1,6 @@
---- /tmp/defconfig	2015-03-02 00:06:54.035083108 +0300
-+++ /usr/src/jambulatv/hostap/hostapd/defconfig	2015-03-02 00:41:56.400672626 +0300
-@@ -111,9 +111,9 @@
+--- /usr/src/jambulatv/hostap/hostapd/defconfig.orig	2016-04-20 13:55:20.062636099 +0300
++++ /usr/src/jambulatv/hostap/hostapd/.config	2016-07-22 13:33:56.714026656 +0300
+@@ -114,9 +114,9 @@
  #CONFIG_EAP_FAST=y
  
  # Wi-Fi Protected Setup (WPS)
@@ -12,7 +12,7 @@
  # Enable WPS support with NFC config method
  #CONFIG_WPS_NFC=y
  
-@@ -135,7 +135,7 @@
+@@ -138,7 +138,7 @@
  #CONFIG_RADIUS_SERVER=y
  
  # Build IPv6 support for RADIUS operations
@@ -21,7 +21,7 @@
  
  # IEEE Std 802.11r-2008 (Fast BSS Transition)
  #CONFIG_IEEE80211R=y
-@@ -145,14 +145,14 @@
+@@ -148,14 +148,14 @@
  #CONFIG_DRIVER_RADIUS_ACL=y
  
  # IEEE 802.11n (High Throughput) support
@@ -39,7 +39,7 @@
  
  # Remove debugging code that is printing out debug messages to stdout.
  # This can be used to reduce the size of the hostapd considerably if debugging
-@@ -161,7 +161,7 @@
+@@ -164,7 +164,7 @@
  
  # Add support for writing debug log to a file: -f /tmp/hostapd.log
  # Disabled by default.
@@ -48,7 +48,7 @@
  
  # Add support for sending all debug messages (regardless of debug verbosity)
  # to the Linux kernel tracing facility. This helps debug the entire stack by
-@@ -278,7 +278,7 @@
+@@ -290,7 +290,7 @@
  #CONFIG_INTERWORKING=y
  
  # Hotspot 2.0
@@ -57,9 +57,15 @@
  
  # Enable SQLite database support in hlr_auc_gw, EAP-SIM DB, and eap_user_file
  #CONFIG_SQLITE=y
-@@ -313,4 +313,4 @@
+@@ -331,9 +331,9 @@
  # For more details refer to:
  # http://wireless.kernel.org/en/users/Documentation/acs
  #
 -#CONFIG_ACS=y
 +CONFIG_ACS=y
+ 
+ # Multiband Operation support
+ # These extentions facilitate efficient use of multiple frequency bands
+ # available to the AP and the devices that may associate with it.
+-#CONFIG_MBO=y
++CONFIG_MBO=y
