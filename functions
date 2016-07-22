@@ -3093,6 +3093,27 @@ HOSTNAME=$HOSTNAME" > $SYSCONFIG_NETWORK_FILE
 # Add IP Address to hosts file
 echo "# JambulaTV IP-Hostname
 $NETWORK_IP_ADDRESS	$HOSTNAME" >> /etc/hosts
+# 
+# Do post install notes if network not completely configured
+if [ "x$NETWORK_GATEWAY_ADDRESS" = "x" ] || [ "$NETWORK_DNS_1" = "127.0.0.1" ];
+then
+# Post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+Network Configuration
+=====================
+% In order to access the Internet using a wired connection, you will need to 
+add the following to $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE as
+follows:
+
+  GATEWAY="$NETWORK_GATEWAY_ADDRESS"
+  DNS1="$NETWORK_DNS_1"
+  DNS2="$NETWORK_DNS_2"
+
+#
+EOF
+fi
 }
 
 wireless_interfaces_configure () {
