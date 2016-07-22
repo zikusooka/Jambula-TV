@@ -451,12 +451,14 @@ WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
 WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
 WIFI_INTERFACES_AVAILABLE=$(iw dev |grep Interface |wc -l)
-
+# Set AP/Station device names
 WIFI_AP_INTERFACE=jwlan0
-WIFI_AP_MACADDRESS="74:da:38:1e:85:42" # Mandatory: needed to setup AP udev rules
 WIFI_STATION_INTERFACE=jwlan1
-WIFI_STATION_MACADDRESS="48:02:2a:9c:f1:d6" # Optional: needed to setup Station udev rules
-
+WIFI_OLD_INTERFACE=$(dmesg | grep 'renamed network interface wlan0' | cut -d : -f2- | sed 's: renamed network interface wlan0 to ::')
+# Set Random AP/Station MAC Addresses based on OEM/UUID
+WIFI_AP_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):01"
+WIFI_STATION_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):02"
+#
 WIFI_PHY_DEV=0
 WIFI_WAIT_TIME=40
 
@@ -7281,63 +7283,35 @@ systemctl enable reminders.timer
 # Virtual WiFi Dual Interfaces Support i.e. Connectify
 # -----------------------------------------------------
 virtual_wifi_interfaces_supported () {
-lsmod | grep mac80211 | grep 'ath9k' || exit 1
+lsmod | grep mac80211 | grep 'ath9k' > /dev/null 2>&1 || exit 1 
 }
 
-stop_hotspot () {
-# stop coova-chilli if active
-systemctl -q is-active coova-chilli && systemctl stop coova-chilli.service
-# stop hostapd if active
-systemctl -q is-active hostapd.service && systemctl stop hostapd.service
-}
-
-stop_wifi_client () {
-# Stop wpa_supplicant
-killall wpa_supplicant
-}
-
-start_hotspot () {
-# start hostapd if not active
-systemctl -q is-active hostapd.service || systemctl start hostapd.service
-# start coova-chilli if not active
-systemctl -q is-active coova-chilli || systemctl start coova-chilli.service
-}
-
-delete_virtual_interfaces () {
-# Remove current Wifi and other existing virtual interfaces
-for DEV in $WIFI_AP_INTERFACE $WIFI_STATION_INTERFACE;
-do
-echo "Removing $DEV:"
-iw dev $DEV del > /dev/null 2>&1
-done
-}
-
-create_virtual_interfaces () {
-# Create station interface
-iw phy phy$WIFI_PHY_DEV interface add $WIFI_STATION_INTERFACE type station
-# Set MAC address
-#ip link set dev $WIFI_STATION_INTERFACE address 6c:be:e9:2b:42:eb
-
-# Take station UP
-ip link set $WIFI_STATION_INTERFACE up
-# Create AP interface
-iw phy phy$WIFI_PHY_DEV interface add $WIFI_AP_INTERFACE type __ap
-# Set MAC Address
-#ip link set dev $WIFI_AP_INTERFACE address b4:75:0e:2f:7e:14
-}
-
-# Create dual virtual interfaces using one single wifi
 virtual_wifi_interfaces_configure () {
+# Copy jambulatv-connectify script and add appropraite device parameters
+cat $PROJECT_BIN_DIR/jambulatv-connectify | \
+		sed -e "s:MY_WIFI_AP_INTERFACE:$WIFI_AP_INTERFACE:g" | \
+		sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" | \
+		sed -e "s:MY_WIFI_OLD_INTERFACE:$WIFI_OLD_INTERFACE:g" | \
+		sed -e "s:MY_WIFI_PHY_DEV:$WIFI_PHY_DEV:g" | \
+		sed -e "s/MY_WIFI_AP_MACADDRESS/$WIFI_AP_MACADDRESS/g" | \
+		sed -e "s/MY_WIFI_STATION_MACADDRESS/$WIFI_STATION_MACADDRESS/g" \
+			> $BINARY_PREFIX/jambulatv-connectify
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-connectify
+
+# Copy connectify systemd file, and modify some variables
+cat $PROJECT_INIT_SCRIPTS_DIR/connectify.service | \
+		sed -e "s:MY_WIFI_OLD_INTERFACE:$WIFI_OLD_INTERFACE:g" \
+			> $SYSTEMD_UNITS_DIR_USER/connectify.service
+# Enable and start connectify if needed
+systemctl enable connectify.service
+systemctl start connectify.service
+}
+
+# Connectify Support: Configure dual virtual interfaces using one single wifi 
+connectify_configure () {
 virtual_wifi_interfaces_supported 
-stop_hotspot
-delete_virtual_interfaces 
-create_virtual_interfaces
-#
-# If script is being run manually, do the following
-#start_hotspot
-# Allow SSID to show up
-#echo "Sleeping for $WIFI_WAIT_TIME seconds ..."
-#sleep $WIFI_WAIT_TIME
+virtual_wifi_interfaces_configure
 }
 
 cockpit_install () {

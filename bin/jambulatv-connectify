@@ -1,0 +1,83 @@
+#!/bin/sh
+WIFI_AP_INTERFACE=MY_WIFI_AP_INTERFACE
+WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
+WIFI_OLD_INTERFACE=MY_WIFI_OLD_INTERFACE
+WIFI_PHY_DEV=MY_WIFI_PHY_DEV
+WIFI_AP_MACADDRESS="MY_WIFI_AP_MACADDRESS"
+WIFI_STATION_MACADDRESS="MY_WIFI_STATION_MACADDRESS"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+virtual_wifi_interfaces_supported () {
+lsmod | grep mac80211 | grep 'ath9k' > /dev/null 2>&1 || exit 1 
+}
+
+stop_hotspot () {
+# stop coova-chilli if active
+systemctl -q is-active coova-chilli && systemctl stop coova-chilli.service
+# stop hostapd if active
+systemctl -q is-active hostapd.service && systemctl stop hostapd.service
+}
+
+stop_wifi_client () {
+# Stop wpa_supplicant
+killall wpa_supplicant
+}
+
+start_hotspot () {
+# start hostapd if not active
+systemctl -q is-active hostapd.service || systemctl start hostapd.service
+# start coova-chilli if not active
+systemctl -q is-active coova-chilli || systemctl start coova-chilli.service
+}
+
+delete_virtual_interfaces () {
+# Remove current Wifi and other existing virtual interfaces
+for DEV in $WIFI_AP_INTERFACE $WIFI_STATION_INTERFACE;
+do
+echo "Removing $DEV:"
+iw dev $DEV del > /dev/null 2>&1
+done
+}
+
+create_virtual_interfaces () {
+# Create station interface
+iw phy phy$WIFI_PHY_DEV interface add $WIFI_STATION_INTERFACE type station
+# Set MAC address
+ip link set dev $WIFI_STATION_INTERFACE address $WIFI_AP_MACADDRESS
+
+# Take station UP
+ip link set $WIFI_STATION_INTERFACE up
+# Create AP interface
+iw phy phy$WIFI_PHY_DEV interface add $WIFI_AP_INTERFACE type __ap
+# Set MAC Address
+ip link set dev $WIFI_AP_INTERFACE address $WIFI_STATION_MACADDRESS
+
+# Take old interface DOWN
+ip link set $WIFI_OLD_INTERFACE down
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+virtual_wifi_interfaces_supported 
+
+stop_hotspot
+
+delete_virtual_interfaces 
+
+create_virtual_interfaces
+
+# If script is being run manually, do the following
+#start_hotspot
+# Allow SSID to show up
+#echo "Sleeping for $WIFI_WAIT_TIME seconds ..."
+#sleep $WIFI_WAIT_TIME
+

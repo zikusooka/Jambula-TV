@@ -1,0 +1,12 @@
+[Unit]
+Description=Connectify: Dual WiFi Interfaces using a single wireless adaptor
+Wants=MY_WIFI_OLD_INTERFACE.device
+After=MY_WIFI_OLD_INTERFACE.device
+Before=hostapd.service
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/jambulatv-connectify
+
+[Install]
+WantedBy=multi-user.target

@@ -132,8 +132,7 @@ openresolv_configure
 # -----------------
 # Internet Access 
 # -----------------
-# Dual virtual interfaces
-virtual_wifi_interfaces_configure
+connectify_configure # Dual WiFi Interfaces
 internet_mifi_configure # Wifi (mifi)
 internet_usb_3g_configure # USB (3G)
 
