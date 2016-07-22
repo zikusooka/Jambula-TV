@@ -451,13 +451,32 @@ WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
 WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
 WIFI_INTERFACES_AVAILABLE=$(iw dev |grep Interface |wc -l)
-# Set AP/Station device names
+WIFI_OLD_INTERFACE=$(dmesg | grep 'renamed network interface wlan0' | cut -d : -f2- | sed 's: renamed network interface wlan0 to ::')
+WIFI_OLD_INTERFACE_2=$(dmesg | grep 'renamed network interface wlan1' | cut -d : -f2- | sed 's: renamed network interface wlan1 to ::')
+# Virtual wifi interfaces support
+lsmod | grep mac80211 | grep 'ath9k' > /dev/null 2>&1
+VIRT_WIFI_SUPPORT=$?
+# Set MAC Addresses depending on virtual wifi support
+if [ "$VIRT_WIFI_SUPPORT" = "0" ] ;
+then
+# Set virtual wiFi AP/Station device names
 WIFI_AP_INTERFACE=jwlan0
 WIFI_STATION_INTERFACE=jwlan1
-WIFI_OLD_INTERFACE=$(dmesg | grep 'renamed network interface wlan0' | cut -d : -f2- | sed 's: renamed network interface wlan0 to ::')
+#
 # Set Random AP/Station MAC Addresses based on OEM/UUID
 WIFI_AP_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):01"
 WIFI_STATION_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):02"
+else
+# Set actual wiFi AP/Station device names
+WIFI_AP_INTERFACE=$WIFI_OLD_INTERFACE
+WIFI_STATION_INTERFACE=$WIFI_OLD_INTERFACE_2
+#
+# Set actual AP/Station MAC Addresses
+WIFI_AP_MACADDRESS=$(iw dev ${WIFI_AP_INTERFACE} info | grep addr | awk {'print $2'})
+#
+[ "x${WIFI_STATION_INTERFACE}" = "x" ] || \
+WIFI_STATION_MACADDRESS=$(iw dev ${WIFI_STATION_INTERFACE} info | grep addr | awk {'print $2'})
+fi
 #
 WIFI_PHY_DEV=0
 WIFI_WAIT_TIME=40
@@ -3119,15 +3138,25 @@ fi
 }
 
 wireless_interfaces_configure () {
+# If no Virtual Interfaces
+if [ "$VIRT_WIFI_SUPPORT" != "0" ];
+then
 # Create udev rules file for wlan* - Naming scheme instead of biosdev names
 cat > $UDEV_RULES_DIR/60-jambulatv.wifi-net.rules <<EOF
 # $WIFI_AP_INTERFACE
 SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_AP_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_AP_INTERFACE", TAG+="systemd", ENV{SYSTEMD_WANTS}+="coova-chilli.service"
+EOF
+#
+elif [ "$VIRT_WIFI_SUPPORT" != "0" ] && [ "x$WIFI_STATION_MACADDRESS" != "x" ];
+then
+# Create udev rules file for wlan* - Naming scheme instead of biosdev names
+cat >> $UDEV_RULES_DIR/60-jambulatv.wifi-net.rules <<EOF
 # $WIFI_STATION_INTERFACE
 SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_STATION_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_STATION_INTERFACE"
 EOF
-# Reload udev
-/usr/sbin/udevadm control --reload
+fi
+# Reload Udev
+[ "$VIRT_WIFI_SUPPORT" = "0" ] || /usr/sbin/udevadm control --reload
 }
 
 bash_configure () {
@@ -7282,10 +7311,6 @@ systemctl enable reminders.timer
 # -----------------------------------------------------
 # Virtual WiFi Dual Interfaces Support i.e. Connectify
 # -----------------------------------------------------
-virtual_wifi_interfaces_supported () {
-lsmod | grep mac80211 | grep 'ath9k' > /dev/null 2>&1 || exit 1 
-}
-
 virtual_wifi_interfaces_configure () {
 # Copy jambulatv-connectify script and add appropraite device parameters
 cat $PROJECT_BIN_DIR/jambulatv-connectify | \
@@ -7310,8 +7335,7 @@ systemctl start connectify.service
 
 # Connectify Support: Configure dual virtual interfaces using one single wifi 
 connectify_configure () {
-virtual_wifi_interfaces_supported 
-virtual_wifi_interfaces_configure
+[ "$VIRT_WIFI_SUPPORT" = "0" ] && virtual_wifi_interfaces_configure
 }
 
 cockpit_install () {
