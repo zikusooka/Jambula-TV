@@ -8,32 +8,9 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 
 
 
-
-
-
-# My credentials - Remove before shipping!!!
-TRAKT_USERNAME=dc8982
-TRAKT_WATCHLIST=JambulaTV
-TORRENTS_DOMAIN_NAME=JambulaTV
-GOOGLE_SERVICES_USERNAME="smtprelayug@gmail.com"
-GOOGLE_SERVICES_PASSWORD="256smtprelayug"
-EMAIL_TO_ADDRESS="joseph@zikusooka.com"
-TELEGRAM_API_BOT="189563360:AAFFiDHQXgBTLSPsdVbXDbMkG-khkIGlqa8"
-TELEGRAM_USERNAME="jlabs"
-
-NETWORK_WIRELESS_PASSPHRASE=3gbofdatanow
-WHATSAPP_PHONE_NUMBER_4_RECEIVING="256704233014"
-
-ASTERISK_DIAL_OUT_NUMBER_1="0777161657"
-
-
-
-
-set_www_user_group
 #################
 #  MAIN SCRIPT  #
 #################
-cat > /dev/null << EOF
 # Install custom kernel
 kernel_install 
 
@@ -107,7 +84,7 @@ fmtools_install
 
 # Kodi
 kodi_deps_install
-kodi_install # Takes ~160 minutes (107m on SSD)
+kodi_install # ~160 mins (107m on SSD)
 kodi_platform_install
 kodi_pvr_hts_install
 kodi_addons_install
@@ -165,7 +142,7 @@ ziproxy_install
 ziproxy_configure
 
 # WAN Accelerator support
-squid_install # Takes a very long time ~ 65 mins
+squid_install # ~ 65 mins
 squid_configure # configured for use by ziproxy WAN accelerator
 ziproxy_wan_accel_configure
 
@@ -211,7 +188,7 @@ hostapd_configure
 #------------
 # Monitoring
 # -----------
-icinga2_install # Takes ~ 33mins
+icinga2_install # ~ 33mins
 monitoring_plugins_install
 check_logfiles_install
 icinga2_ido_mysql
@@ -225,7 +202,6 @@ netdata_configure
 # --------
 # Content
 # --------
-
 # DLNA/UPnP
 minidlna_install
 minidlna_configure
@@ -333,7 +309,7 @@ nextcloud_permissions
 open_zwave_install
 #
 # Domoticz
-domoticz_install # ~70mins
+domoticz_install # ~ 70mins
 domoticz_configure
 #
 # OpenHAB
@@ -341,39 +317,17 @@ domoticz_configure
 #openhab_configure
 home_automation_scripts
 
-EOF
-
 # ------------------------
 # Notifications/ Messaging
 # ------------------------
 email_messaging_configure
-
-_install_pause_check_4_errors_
-
 sleekxmpp_install 
-
-_install_pause_check_4_errors_
-
 python_telegram_bot_install
-
-_install_pause_check_4_errors_
-
 telegram_messaging_configure
-
-_install_pause_check_4_errors_
-
 yowsup2_deps_install
-
-_install_pause_check_4_errors_
-
 yowsup2_install
-
-
-_install_pause_check_4_errors_
-
 whatsapp_messaging_configure
 
-_install_pause_check_4_errors_
 # ---------
 # Notices
 # ---------
