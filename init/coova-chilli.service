@@ -1,7 +1,6 @@
 [Unit]
 Description=CoovaChilli WiFi Access and Captive Portal Server.
-Requires=hostapd.service
-BindTo=hostapd.service
+After=hostapd.service
 
 [Service]
 Type=forking
