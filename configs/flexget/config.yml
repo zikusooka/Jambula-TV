@@ -90,7 +90,7 @@ templates:
       smtp_password: '{{secrets.email.smtp_password}}'
       smtp_tls: yes
  
-    send_telegram:
+    telegram:
       bot_token: '{{secrets.telegram.bot_token}}'
       parse_mode: markdown
       recipients:
@@ -235,7 +235,7 @@ templates:
     # Pull TV shows from trakt.tv watchlist
     discover:
       what: 
-        - emit_series:
+        - next_series_episodes:
             from_start: yes
         - trakt_list:
             username: '{{secrets.trakt.username}}'
@@ -311,13 +311,9 @@ templates:
 
       from:
         - torrentz: verified
-        - kat:
-            category: movies
-            verified: yes
         - piratebay:
             # category: "highres movies"
             sort_by: seeds
-        - newtorrents:
 
       interval: 1 day
 
@@ -326,7 +322,7 @@ templates:
 # --------
   podcasts:
     disable:
-      - send_telegram
+      - telegram
     free_space:
       path: '{{secrets.podcasts.path}}'
       space: 1000
@@ -388,11 +384,12 @@ tasks:
   tv_shows:
     inputs:
       - rss: { url: '{{secrets.tv_feeds.torrentz}}', silent: yes }
-      - rss: { url: '{{secrets.tv_feeds.kat}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.ezrss}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.mininova}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.limetorrents}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.torrentdownloads}}', silent: yes }
     template: 
       - tv
 
@@ -401,11 +398,12 @@ tasks:
   # ------
   movies:
     inputs:
-      - rss: { url: '{{secrets.movie_feeds.kat}}', silent: yes }
-      - rss: { url: '{{secrets.movie_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.torrentz}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.mininova}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.limetorrents}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.torrentdownloads}}', silent: yes }
     template: 
       - movies
 
