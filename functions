@@ -7325,12 +7325,10 @@ cat $PROJECT_BIN_DIR/jambulatv-connectify | \
 chmod 755 $BINARY_PREFIX/jambulatv-connectify
 
 # Copy connectify systemd file, and modify some variables
+# Note: This is a static service needed by hostapd/coova-chilli
 cat $PROJECT_INIT_SCRIPTS_DIR/connectify.service | \
 		sed -e "s:MY_WIFI_OLD_INTERFACE:$WIFI_OLD_INTERFACE:g" \
 			> $SYSTEMD_UNITS_DIR_USER/connectify.service
-# Enable and start connectify if needed
-systemctl enable connectify.service
-systemctl start connectify.service
 }
 
 # Connectify Support: Configure dual virtual interfaces using one single wifi 

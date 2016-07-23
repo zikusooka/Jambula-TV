@@ -5,8 +5,5 @@ After=MY_WIFI_OLD_INTERFACE.device
 Before=hostapd.service
 
 [Service]
-Type=forking
+Type=oneshot
 ExecStart=/usr/bin/jambulatv-connectify
-
-[Install]
-WantedBy=multi-user.target
