@@ -3114,6 +3114,9 @@ HOSTNAME=$HOSTNAME" > $SYSCONFIG_NETWORK_FILE
 # Add IP Address to hosts file
 echo "# JambulaTV IP-Hostname
 $NETWORK_IP_ADDRESS	$HOSTNAME" >> /etc/hosts
+#
+# BUG: Patch network rc.d init file i.e. delay start with something
+patch -p1 $CONFDIR/rc.d/init.d/network  < $PROJECT_PATCHES_DIR/network.rc.init.patch
 # 
 # Do post install notes if network not completely configured
 if [ "x$NETWORK_GATEWAY_ADDRESS" = "x" ] || [ "$NETWORK_DNS_1" = "127.0.0.1" ];

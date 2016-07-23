@@ -1,0 +1,25 @@
+--- /tmp/network	2016-07-23 14:14:44.770598291 +0300
++++ /etc/rc.d/init.d/network	2016-07-23 14:17:20.320239493 +0300
+@@ -54,6 +54,22 @@
+ # See how we were called.
+ case "$1" in
+   start)
++
++      
++      # JambulaTV Fix: Wait for Interface to become active
++#      NETWORK_ETHERNET_DEVICE=p18p1
++
++      ip link show $NETWORK_ETHERNET_DEVICE > /tmp/network.link
++
++#      ip link show $NETWORK_ETHERNET_DEVICE > /dev/null 2>&1
++#      NIC_DEVICE_ACTIVATED=$?
++#      while [ "$NIC_DEVICE_ACTIVATED" != "0" ];
++#      do
++#      sleep 1
++#      ip link show $NETWORK_ETHERNET_DEVICE > /dev/null 2>&1
++#      done
++
++
+ 	[ "$EUID" != "0" ] && exit 4
+ 	rc=0
+ 	# IPv6 hook (pre IPv4 start)
