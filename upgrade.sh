@@ -28,7 +28,6 @@ kodi_lircmap_configure
 }
 
 upgrade_kodi_addons () {
-#KODI_ADDONS_4_UPGRADE="plugin.video.castaway plugin.video.SportsDevil plugin.video.ZemTV-shani"
 KODI_ADDONS_4_UPGRADE=$@
 # Uninstall Old
 uninstall_kodi_addons $KODI_ADDONS_4_UPGRADE
