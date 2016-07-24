@@ -27,6 +27,15 @@ kodi_scripts
 kodi_lircmap_configure 
 }
 
+upgrade_kodi_addons () {
+#KODI_ADDONS_4_UPGRADE="plugin.video.castaway plugin.video.SportsDevil plugin.video.ZemTV-shani"
+KODI_ADDONS_4_UPGRADE=$@
+# Uninstall Old
+uninstall_kodi_addons $KODI_ADDONS_4_UPGRADE
+# Install New
+for KODI_ADDON in $KODI_ADDONS_4_UPGRADE; do kodi_addons_unpack $KODI_ADDON; done
+}
+ 
 upgrade_flexget_deps () {
 #download_flexget_deps
 uninstall_flexget_deps 
@@ -124,6 +133,7 @@ zoneminder_configure
 #upgrade_kernel
 
 #upgrade_kodi
+#upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
 
 #upgrade_flexget_deps 
 #upgrade_flexget
