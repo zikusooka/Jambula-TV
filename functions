@@ -2505,7 +2505,16 @@ kodi_addons_configure() {
 # script.service.kodi.callbacks 
 # ---
 tar zxvf $PROJECT_CONFIGS_DIR/kodi/addon_data/script.service.kodi.callbacks.tgz -C $KODI_ADDON_DATA_DIR 
-#
+
+# Disable version check
+[ -d $KODI_ADDON_DATA_DIR/service.xbmc.versioncheck ] || mkdir -p $KODI_ADDON_DATA_DIR/service.xbmc.versioncheck
+# Change from true to false
+cat > $KODI_ADDON_DATA_DIR/service.xbmc.versioncheck/settings.xml << EOF
+<settings>
+    <setting id="versioncheck_enable" value="false" />
+</settings>
+EOF
+
 # Give permissions to multimedia user for addon_data directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_ADDON_DATA_DIR
 }
