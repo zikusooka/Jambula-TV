@@ -15,7 +15,7 @@
     <audiooutput>
         <ac3passthrough default="true">true</ac3passthrough>
         <ac3transcode default="true">false</ac3transcode>
-        <audiodevice>PULSE:alsa_output.pci-0000_00_01.1.hdmi-stereo</audiodevice>
+        <audiodevice default="true">PULSE:Default</audiodevice>
         <channels default="true">1</channels>
         <config>1</config>
         <dtshdpassthrough default="true">false</dtshdpassthrough>
