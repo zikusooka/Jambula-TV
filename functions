@@ -1022,7 +1022,7 @@ rm -f $CONFDIR/sysconfig/icinga2
 rm -rf $STATEDIR/cache/icinga2 \
 rm -rf $STATEDIR/lib/icinga2 \
 rm -rf $STATEDIR/log/icinga2 \
-rm -rf $STATEDIR/spool/icinga2
+rm -rf $SPOOLDIR/icinga2
 # /usr
 rm -f $SYSTEMD_UNITS_DIR_SYSTEM/icinga2.service
 systemctl --system daemon-reload
@@ -5494,7 +5494,7 @@ ldconfig
 #
 # Add asterisk group and user 
 groupadd -r asterisk
-useradd -r -M -c "Asterisk PBX User" -g asterisk asterisk -s /sbin/nologin
+useradd -r -M -c "Asterisk PBX User" -d $SPOOLDIR/asterisk -g asterisk asterisk -s /sbin/nologin
 }
 
 asterisk_configure () {
@@ -5502,13 +5502,13 @@ asterisk_configure () {
 chown -R $ASTERISK_FILES_USER:$WWW_USER $CONFDIR/asterisk
 chown -R $ASTERISK_FILES_USER:$WWW_USER $VARLIBDIR/asterisk
 chown -R $ASTERISK_FILES_USER:$WWW_USER $STATEDIR/run/asterisk
-chown -R $ASTERISK_FILES_USER:$WWW_USER $STATEDIR/spool/asterisk/
+chown -R $ASTERISK_FILES_USER:$WWW_USER $SPOOLDIR/asterisk/
 chown -R $ASTERISK_FILES_USER:$WWW_USER $STATEDIR/log/asterisk
 # Set permissions on asterisk directories
 chmod -R 764 $CONFDIR/asterisk
 chmod -R 764 $VARLIBDIR/asterisk
 chmod -R 764 $STATEDIR/run/asterisk
-chmod -R 764 $STATEDIR/spool/asterisk/
+chmod -R 764 $SPOOLDIR/asterisk/
 chmod -R 764 $STATEDIR/log/asterisk
 #
 # Systemctl start script
