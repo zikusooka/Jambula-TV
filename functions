@@ -4118,6 +4118,11 @@ TELEGRAM_API_BOT="$TELEGRAM_API_BOT"
 TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
 TELEGRAM_USERNAME="$TELEGRAM_USERNAME"
 EOF
+# Copy Telegram Script if it does not exists
+[ -e $TELEGRAM_SCRIPT ] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-telegram $TELEGRAM_SCRIPT
+# Make script executable
+[ -x $TELEGRAM_SCRIPT ] || chmod 755 $TELEGRAM_SCRIPT
 }
 
 yowsup2_deps_install () {
