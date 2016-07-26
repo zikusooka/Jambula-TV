@@ -195,8 +195,8 @@ done
 #  MAIN SCRIPT  #
 #################
 
-# Queued: Send podcast queued notices if this script was called automatically by flexget  
-send_podcast_queued_notices 
+# Queued: Send podcast queued notices if this script was called automatically by flexget 
+[ "$PARENT_COMMAND" = "flexget" ] && send_podcast_queued_notices 
 
 # Create Aria2 complete script and fetch fodcasts
 create_complete_script_and_fetch_podcast
