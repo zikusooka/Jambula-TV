@@ -7070,6 +7070,9 @@ chown -R $WWW_USER:$ICINGA2_WEB_GROUP $ICINGA2_WEB_CONFIG_DIR
 # Make symlinks to modules accessible
 chmod -R 777 $ICINGA2_WEB_CONFIG_DIR/enabledModules
 #
+# Change ownership of icingaweb2 config directory
+chown -R $ASTERISK_FILES_USER:$WWW_USER $ICINGA2_WEB_CONFIG_DIR
+#
 # Create Icingaweb2 Admin User in MySQL database
 echo "INSERT INTO icingaweb_user (name, active, password_hash, ctime) VALUES ('$ICINGAWEB2_ADMIN_USER', '1', '$ICINGAWEB2_ADMIN_PASS_HASH', NOW());" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
 # Create Icingaweb2 Admin Group in MySQL database
