@@ -13,6 +13,8 @@ WIFI_SECURITY_KEY=$(grep -i SECURITY_KEY $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d'
 OSD_SCRIPT=/usr/bin/jambulatv-osd
 AP_FOUND_MSG="Found your WiFi Access Point ($WIFI_SSID). Please wait while I connect to it"
 CONNECTED_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID), Assigning IP Address ..."
+# Set WiFi station Interface
+WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 
 
 
@@ -25,9 +27,6 @@ if [ "$WIFI_INTERFACES_AVAILABLE" -lt "2" ];
 then
 echo "CRITICAL: Sorry, WiFi dual Interface mode is not supported"
 exit 2
-else
-# Set WiFi station Interface
-WIFI_STATION_INTERFACE=$(sudo iw dev |grep -B 4 'type managed' |grep Interface | tail -1 | awk {'print $2'})
 fi
 }
 

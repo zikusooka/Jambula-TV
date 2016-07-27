@@ -3067,7 +3067,10 @@ SSID="$WIFI_SSID"
 SECURITY_KEY="$WIFI_SECURITY_KEY"
 EOF
 # Copy jambulatv-connect-2-wifi-ap script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-connect-2-wifi-ap ] || cp -v $PROJECT_BIN_DIR/jambulatv-connect-2-wifi-ap $BINARY_PREFIX/
+[ -e $BINARY_PREFIX/jambulatv-connect-2-wifi-ap ] || \
+cat $PROJECT_BIN_DIR/jambulatv-connect-2-wifi-ap | \
+	sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" \
+		> $BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 }
 
 boot_optimization () {
@@ -6846,6 +6849,11 @@ cp -v $PROJECT_CONFIGS_DIR/icinga2/conf.d/*.conf $ICINGA2_CUSTOM_CONFIG_DIR/
 cp -v $PROJECT_CONFIGS_DIR/icinga2/scripts/* $ICINGA2_SCRIPTS_DIR/
 # Copy contributed plugins - See https://github.com/zikusooka/icinga-nagios-plugins 
 rsync -av $PROJECT_CONTRIB_DIR/icinga2/plugins/ $MONITORING_PLUGINS_DIR/
+#
+# Change Wirfeless Interface(s) in check_wifi_ap plugin
+sed -i "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" \
+	$MONITORING_PLUGINS_DIR/check_wifi_ap
+#
 # Remove generic icinga2 conf files
 for ICINGA_FILE in hosts.conf;
 do
