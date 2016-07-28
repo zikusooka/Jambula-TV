@@ -882,16 +882,25 @@ make bzImage
 make modules
 make modules_install
 make install
-# Clean up - saves upto 8GB
-#make clean
-echo 
-echo
-echo "
-Done: Remember to:
-1. Copy .config file to project configs directory
-2. Run make clean
-3. Change Kernel Version in functions file
-"
+#
+# Done - Banner
+clear
+cat << EOF
+###############################################################################
+                                                                             
+    Done installing the kernel: $KERNEL_VERSION.$KERNEL_NAME                  
+                                                                             
+    Please perform the following tasks:
+
+    1. Copy .config file to project configs directory
+
+    2. Run make clean
+
+    3. Change Kernel Version in functions file
+                                                                             
+###############################################################################
+EOF
+exit
 }
 
 uninstall_src_pkgs () {
@@ -1338,6 +1347,18 @@ make modules_install
 make install
 # Clean up - saves upto 8GB
 make clean
+# Done - Banner
+clear
+cat << EOF
+###############################################################################
+                                                                             
+    Done installing the kernel: $KERNEL_VERSION.$KERNEL_NAME                  
+                                                                             
+    Please reboot and re-run install.sh. Install will continue to next stage  
+                                                                             
+###############################################################################
+EOF
+exit
 fi
 }
 
