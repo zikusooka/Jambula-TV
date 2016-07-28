@@ -206,7 +206,7 @@ KODI_ADDONS_JAMBULA="script.doorbell script.service.kodi.callbacks script.servic
 # Miscellaneous
 KODI_ADDONS_MISC="weather.openweathermap.extended script.xbmc.unpausejumpback"
 #
-X11_DRIVER="" # intel|nouveau|mga|openchrome
+X11_DRIVER="intel" # intel|nouveau|mga|openchrome
 INTEL_X11_DRIVER_VERSION=git
 NOUVEAU_X11_DRIVER_VERSION=git
 OPENCHROME_X11_DRIVER_VERSION=0.3.3 #git
@@ -1402,7 +1402,7 @@ fi
 #
 # Compile all
 cd $INSTALL_SRC_DIR/xf86-video-intel
-./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-xvmc \
+./configure --prefix=$PREFIX --libdir=$LIBDIR \
 	--enable-$VIDEO_ACCELERATION --with-default-accel=$VIDEO_ACCELERATION \
 	--with-xorg-module-dir=$LIBDIR/xorg/modules
 make && make install
