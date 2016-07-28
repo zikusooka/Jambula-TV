@@ -3092,6 +3092,8 @@ EOF
 cat $PROJECT_BIN_DIR/jambulatv-connect-2-wifi-ap | \
 	sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" \
 		> $BINARY_PREFIX/jambulatv-connect-2-wifi-ap
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 }
 
 boot_optimization () {
