@@ -3908,6 +3908,7 @@ FLEXGET_CMD="$(which flexget)"
 CONFIG_FILE="$FLEXGET_CONFIG_DIR/config.yml"
 LOG_FILE="$PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log"
 LOCK_FILE="$FLEXGET_CONFIG_DIR/.config-lock"
+PYTHON_SITEDIR="$PYTHON_SITEDIR"
 EOF
 # Copy flexget systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/flexget.service $SYSTEMD_UNITS_DIR_USER/
