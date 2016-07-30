@@ -12,6 +12,9 @@ TVHEADEND_HTTP_PORT=MY_TVHEADEND_HTTP_PORT
 TV_ACTION=$1
 TV_CHANNEL="$2"
 TV_DURATION="$3"
+
+OSD_MESSAGE="$2"
+
 PVR_GROUP=1
 PVR_STOP_REC_SCRIPT=/tmp/.stop_recording_tv_channel.sh
 
@@ -25,7 +28,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (tv_play_start|mute|tv_play_stop|tv_record_start|tv_record_stop)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|tv_play_start|mute|tv_play_stop|tv_record_start|tv_record_stop)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -38,14 +41,31 @@ echo "Usage:  ./`basename $0` $TV_ACTION [TV_CHANNEL] [DURATION] (on|off)
 exit 1
 fi
 #
-# Duration
-#if [ "x$DURATION" = "x" ];
-#then
-#clear
-#echo "Usage:  ./`basename $0` $TV_ACTION $TV_CHANNEL [DURATION] (on|off)
-#"
-#exit 1
-#fi
+# Notices
+# short
+if [ "$TV_ACTION" = "osd_short" ] && [ "x$OSD_MESSAGE" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` $TV_ACTION [OSD_MESSAGE] [DURATION]
+"
+exit 1
+fi
+# long
+if [ "$TV_ACTION" = "osd_long" ] && [ "x$OSD_MESSAGE" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` $TV_ACTION [OSD_MESSAGE] [DURATION]
+"
+exit 1
+fi
+}
+
+osd_notification_short () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "GUI.ShowNotification", "params": {"message":"'"$1"'", "title":"'"$2"'", "displaytime":2000}}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+osd_notification_long () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "GUI.ShowNotification", "params": {"message":"'"$1"'", "title":"'"$2"'", "displaytime":30000}}' "http://127.0.0.1:8510/jsonrpc"
 }
 
 stop_player () {
@@ -132,6 +152,14 @@ usage
 get_tv_channel_id
 
 case $TV_ACTION in
+
+osd_short)
+osd_notification_short "$2" "$3"
+;;
+
+osd_long)
+osd_notification_long "$2" "$3"
+;;
 
 tv_play_start)
 play_tv_channel
