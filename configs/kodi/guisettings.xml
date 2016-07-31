@@ -22,7 +22,7 @@
         <dtspassthrough default="true">false</dtspassthrough>
         <eac3passthrough default="true">false</eac3passthrough>
         <guisoundmode default="true">1</guisoundmode>
-        <maintainoriginalvolume>true</maintainoriginalvolume>
+        <maintainoriginalvolume default="true">true</maintainoriginalvolume>
         <passthrough default="true">false</passthrough>
         <passthroughdevice default="true">default</passthroughdevice>
         <processquality default="true">30</processquality>
@@ -87,7 +87,7 @@
         <addonnotifications>false</addonnotifications>
         <addonupdates>2</addonupdates>
         <settinglevel>3</settinglevel>
-        <systemtotaluptime>3302</systemtotaluptime>
+        <systemtotaluptime>3585</systemtotaluptime>
     </general>
     <input>
         <enablejoystick>false</enablejoystick>
@@ -109,7 +109,7 @@
         <language default="true">resource.language.en_gb</language>
         <longdateformat default="true">regional</longdateformat>
         <shortdateformat default="true">regional</shortdateformat>
-        <speedunit default="true">regional</speedunit>
+        <speedunit>kmh</speedunit>
         <subtitlelanguage default="true">original</subtitlelanguage>
         <temperatureunit default="true">regional</temperatureunit>
         <timeformat default="true">regional</timeformat>
@@ -451,7 +451,7 @@
         <setting type="bool" name="skin.aeonmq6.nooverlays">false</setting>
         <setting type="bool" name="skin.aeonmq6.randomthemes">false</setting>
         <setting type="bool" name="skin.aeonmq6.highertotals">false</setting>
-        <setting type="bool" name="skin.aeonmq6.nohometotals">false</setting>
+        <setting type="bool" name="skin.aeonmq6.nohometotals">true</setting>
         <setting type="bool" name="skin.aeonmq6.highertime">false</setting>
         <setting type="bool" name="skin.aeonmq6.nohometime">false</setting>
         <setting type="bool" name="skin.aeonmq6.weathericons">false</setting>
@@ -781,7 +781,7 @@
         <setting type="string" name="skin.aeonmq6.theme">colors</setting>
         <setting type="string" name="skin.aeonmq6.extrapack">special://userdata/addon_data/skin.aeonmq6.extrapack/</setting>
         <setting type="string" name="skin.aeonmq6.CustomMyTheme"></setting>
-        <setting type="string" name="skin.aeonmq6.animationwindow">zoom</setting>
+        <setting type="string" name="skin.aeonmq6.animationwindow">fade</setting>
         <setting type="string" name="skin.aeonmq6.defaultsettings">1</setting>
         <setting type="string" name="skin.aeonmq6.font">font1</setting>
         <setting type="string" name="skin.aeonmq6.idcolortexture">105</setting>
@@ -1286,7 +1286,7 @@
         <setting type="string" name="skin.aeonmq6.menu20.widgets"></setting>
         <setting type="string" name="skin.aeonmq6.menu20.target"></setting>
         <setting type="string" name="skin.aeonmq6.menu20.action"></setting>
-        <setting type="string" name="skin.aeonmq6.windowbg">special://skin/backgrounds/livetv.jpg</setting>
+        <setting type="string" name="skin.aeonmq6.windowbg"></setting>
         <setting type="string" name="skin.aeonmq6.codestep"></setting>
         <setting type="string" name="skin.aeonmq6.tempfont"></setting>
         <setting type="string" name="skin.aeonmq6.colorcasepreview"></setting>
@@ -1386,7 +1386,7 @@
         <setting type="string" name="skin.aeonmq6.menu0520.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu0520.path"></setting>
         <setting type="string" name="skin.aeonmq6.menu0520.visible"></setting>
-        <setting type="string" name="skin.aeonmq6.submenu_action">ActivateWindow(skinsettings)</setting>
+        <setting type="string" name="skin.aeonmq6.submenu_action">ActivateWindow(videos,files)</setting>
         <setting type="string" name="skin.aeonmq6.CustomFallbackMoviesBG"></setting>
         <setting type="string" name="skin.aeonmq6.CustomFallbackMusicVideosBG"></setting>
         <setting type="string" name="skin.aeonmq6.CustomFallbackTVShowsBG"></setting>

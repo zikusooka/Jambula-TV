@@ -166,8 +166,17 @@
   <fullscreen>true</fullscreen> <!-- Start FullScreen -->
   <splash>true</splash> <!-- Splash screen-->
   <cputempcommand>sed -e 's/\([0-9]*\)[0-9]\{3\}.*/\1 C/' /sys/class/thermal/thermal_zone0/temp</cputempcommand> <!-- CPU command -->
-  <loglevel>1</loglevel> <!-- Logging -->
+
+<!-- PVR (Live TV) -->
   <hideconnectionlostwarning>true</hideconnectionlostwarning> <!-- PVR Connections lost -->
+
+<!-- LOGGING -->
+  <loglevel>1</loglevel> <!-- Change this to "1" to hide the on-screen debug log text -->
+    <debug>
+        <extralogging>true</extralogging>
+        <setextraloglevel>32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536</setextraloglevel>
+        <showloginfo>false</showloginfo>
+    </debug>
 
 
 </advancedsettings>
