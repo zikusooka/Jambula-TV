@@ -10,7 +10,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 
 # Upgrade Linux Kernel
 upgrade_kernel () {
-NEW_KERNEL=4.1.27
+NEW_KERNEL=4.1.29
 #
 kernel_upgrade_1
 kernel_upgrade_2
