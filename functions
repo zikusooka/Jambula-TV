@@ -804,6 +804,23 @@ echo "Update completed. All flexget dependencies are located in [$PROJECT_TARBAL
 #########################
 #  UNINSTALL FUNCTIONS  #
 #########################
+# Pause and check for Errors
+_install_pause_check_4_errors_ () {
+# Notify at Remote workstation - gxmessage needed there
+if [ "x$1" != "x" ] && [ "x$1" != "x" ];
+then
+# Run only if remote station is up
+ping -c 3 -W 3 $2 > /dev/null 2>&1
+[ "$?" = "0" ] && ssh $1@$2 /usr/bin/gxmessage -center -ontop -timeout 60 -title "$PROJECT_NAME" "Hi $1! Your attention is required at JambulaTV"
+fi
+#
+echo
+echo
+echo "Please enter to proceed ..."
+echo
+read
+clear
+}
 
 kernel_upgrade_1 () {
 SOURCESDIR=/opt
@@ -884,7 +901,8 @@ make modules_install
 make install
 #
 # Done - Banner
-clear
+echo
+echo
 cat << EOF
 ###############################################################################
                                                                              
@@ -1289,15 +1307,6 @@ rm -rf $INSTALL_SRC_DIR/domoticz
 #######################
 #  INSTALL FUNCTIONS  #
 #######################
-_install_pause_check_4_errors_ () {
-echo
-echo
-echo "Please enter to proceed ..."
-echo
-read
-clear
-}
-
 kernel_install () {
 # See how much space is left
 AVAILABLE_DISK_SPACE_ROOT=$(df /|grep -v block | awk {'print $4'})
@@ -7247,7 +7256,7 @@ rsync -avz $PROJECT_CONFIGS_DIR/LXDE/ $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel/L
 # Change permissions on ../lxpanel/LXDE
 chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/.config/lxpanel
 # Remove lingering lxpanel cache
-find $AUTOLOGIN_USER_HOME_DIR/.cache/menus -name '*' -type f -print0 | xargs -0 rm
+[ -d $AUTOLOGIN_USER_HOME_DIR/.cache/menus ] && find $AUTOLOGIN_USER_HOME_DIR/.cache/menus -name '*' -type f -print0 | xargs -0 rm
 #
 # Add desktop entry for JambulaTV
 cat > /usr/share/applications/JambulaTV.desktop << EOF
