@@ -4050,38 +4050,6 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/rtorrent.service $SYSTEMD_UNITS_DIR_USER/
 systemctl enable rtorrent.service
 }
 
-rtgui_configure () {
-# Unpack rtgui - Graphical frontend for rtorrent
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/rtgui/ $WWW_HTML_DIR/rtgui
-# Create config.php file using template and copy to WWW location
-if [ ! -e $WWW_HTML_DIR/rtgui/config.php ];
-then
-cat $PROJECT_CONFIGS_DIR/rtgui.config.php.template | \
-   sed -e "s:TORRENTS_WATCH_DIRECTORY:$TORRENTS_WATCH_DIRECTORY:g" | \
-   sed -e "s:TORRENTS_PENDING_DIRECTORY:$TORRENTS_PENDING_DIRECTORY:g" | \
-   sed -e "s:NETWORK_IP_ADDRESS:$NETWORK_IP_ADDRESS:g" \
-> $WWW_HTML_DIR/rtgui/config.php
-fi
-# Give permissions to web user to acces rtgui
-chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/rtgui
-# Add nginx config file if it does not exist
-if [ ! -e $NGINX_CONF_DIR/sites-enabled/rtgui ];
-then
-cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/rtgui $NGINX_CONF_DIR/sites-enabled/
-systemctl restart nginx.service
-fi
-# Display rtgui usage information, and output to final notice
-echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
-#
-#
-RTGUI (rTorrent) Access
-=======================
-% To access your torrents, use a client PC to open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i 'rtgui$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-#
-EOF
-}
-
 aria2_install () {
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/aria2/ $INSTALL_SRC_DIR/aria2/
 cd $INSTALL_SRC_DIR/aria2
@@ -4314,6 +4282,8 @@ export WWW_USER WWW_GROUP
 }
 
 nginx_configure () {
+# Get WWW User and Group
+set_www_user_group
 # Change log directory permissions
 chown -R $WWW_USER:$WWW_GROUP $STATEDIR/log/nginx
 #
@@ -4347,6 +4317,8 @@ rsync -av $PROJECT_CUSTOMIZATION_DIR/nginx/html/ $WWW_HTML_DIR/
 }
 
 php_configure () {
+# Get WWW User and Group
+set_www_user_group
 # Copy www.conf php-fpm config file
 cp -v $PROJECT_CONFIGS_DIR/php-fpm/www.conf $CONFDIR/php-fpm.d/
 # Patch php.ini
@@ -4377,6 +4349,8 @@ make install
 }
 
 nginx_spawn_fcgi_configure () {
+# Get WWW User and Group
+set_www_user_group
 # Backup orig spawn-fcgi file
 cp -v $SYSCONFIG_DIR/spawn-fcgi $SYSCONFIG_DIR/spawn-fcgi.orig
 # Modify patch 
@@ -4389,6 +4363,40 @@ patch -p1 $SYSCONFIG_DIR/spawn-fcgi < $TMPDIR/spawn.fcgi.patch
 systemctl enable spawn-fcgi.service
 # Start fcgiwrap service now 
 systemctl start spawn-fcgi.service
+}
+
+rtgui_configure () {
+# Get WWW User and Group
+set_www_user_group
+# Unpack rtgui - Graphical frontend for rtorrent
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/rtgui/ $WWW_HTML_DIR/rtgui
+# Create config.php file using template and copy to WWW location
+if [ ! -e $WWW_HTML_DIR/rtgui/config.php ];
+then
+cat $PROJECT_CONFIGS_DIR/rtgui.config.php.template | \
+   sed -e "s:TORRENTS_WATCH_DIRECTORY:$TORRENTS_WATCH_DIRECTORY:g" | \
+   sed -e "s:TORRENTS_PENDING_DIRECTORY:$TORRENTS_PENDING_DIRECTORY:g" | \
+   sed -e "s:NETWORK_IP_ADDRESS:$NETWORK_IP_ADDRESS:g" \
+> $WWW_HTML_DIR/rtgui/config.php
+fi
+# Give permissions to web user to acces rtgui
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/rtgui
+# Add nginx config file if it does not exist
+if [ ! -e $NGINX_CONF_DIR/sites-enabled/rtgui ];
+then
+cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/rtgui $NGINX_CONF_DIR/sites-enabled/
+systemctl restart nginx.service
+fi
+# Display rtgui usage information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+RTGUI (rTorrent) Access
+=======================
+% To access your torrents, use a client PC to open the URL below:
+  http://$NETWORK_IP_ADDRESS:$(grep -i 'rtgui$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+#
+EOF
 }
 
 mysqld_configure () {
@@ -4537,6 +4545,8 @@ ATTRIBUTE      Max-All-Session         3000    integer" >> $FREERADIUS_DB_CONF_D
 }
 
 daloradius_configure () {
+# Get WWW User and Group
+set_www_user_group
 # Unpack daloradius - Web frontend for radius
 tar zxvf $PROJECT_TARBALLS_DIR/daloradius-*.tar.gz -C $WWW_HTML_DIR
 cd $WWW_HTML_DIR
@@ -4697,6 +4707,8 @@ EOF
 }
 
 coova_chilli_customization () {
+# Get WWW User and Group
+set_www_user_group
 # Web files
 # *********
 # Create WWW directory if non-existent
@@ -5207,6 +5219,8 @@ EOF
 }
 
 owncloud_configure () {
+# Get WWW User and Group
+set_www_user_group
 # Create data directory for owncloud
 [ -d $OWNCLOUD_DATA_DIRECTORY ] || mkdir -p $OWNCLOUD_DATA_DIRECTORY
 # Make custom cache directory if not existent
@@ -5244,6 +5258,8 @@ EOF
 }
 
 nextcloud_install () {
+# Get WWW User and Group
+set_www_user_group
 # Unpack
 tar jxvf $PROJECT_TARBALLS_DIR/nextcloud-*tar.bz2 -C $WWW_HTML_DIR
 # Change permissions on data directory
@@ -5276,6 +5292,8 @@ cd $WWW_HTML_DIR/nextcloud && sudo -u $WWW_USER php occ maintenance:install \
 }
 
 nextcloud_permissions () {
+# Get WWW User and Group
+set_www_user_group
 printf "Creating possible missing Directories\n"
 mkdir -p $WWW_HTML_DIR/nextcloud/data
 mkdir -p $WWW_HTML_DIR/nextcloud/assets
@@ -5310,6 +5328,8 @@ fi
 }
 
 nextcloud_configure () {
+# Get WWW User and Group
+set_www_user_group
 # Generate nextcloud instance ID
 $BINARY_PREFIX/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$NEXTCLOUD_HTTP_PORT
 # Get instance ID
@@ -5534,6 +5554,8 @@ useradd -r -M -c "Asterisk PBX User" -d $SPOOLDIR/asterisk -g asterisk asterisk 
 }
 
 asterisk_configure () {
+# Get WWW User and Group
+set_www_user_group
 # Set ownership/permissions on asterisk directories
 chown -R $ASTERISK_FILES_USER:$WWW_USER $CONFDIR/asterisk
 chown -R $ASTERISK_FILES_USER:$WWW_USER $VARLIBDIR/asterisk
@@ -5709,6 +5731,8 @@ chan_dongle_configure () {
 # If Asterisk installed
 if [ -d $ASTERISK_CONF_DIR ];
 then
+# Get WWW User and Group
+set_www_user_group
 # copy dongle.conf file to asterisk configs directory
 cp -v $PROJECT_CONFIGS_DIR/asterisk/dongle.conf $ASTERISK_CONF_DIR/dongle.conf
 # Include dongle.conf file
@@ -5720,6 +5744,8 @@ chmod -R 764 $ASTERISK_CONF_DIR
 # If FreePBX installed
 elif [ -d $FREEPBX_CONF_DIR ];
 then
+# Get WWW User and Group
+set_www_user_group
 # copy dongle.conf file to freepbx configs directory
 cp -v $PROJECT_CONFIGS_DIR/freepbx/dongle.conf $FREEPBX_CONF_DIR/dongle.conf
 # Include dongle.conf file
@@ -5772,6 +5798,8 @@ chmod 755 $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 }
 
 freepbx_preinstall () {
+# Get WWW User and Group
+set_www_user_group
 # Remove/backup old asterisk config files
 [ -d $CONFDIR/asterisk ] && mv -v $CONFDIR/asterisk $CONFDIR/asterisk.nofreepbx.$(date +%I%M)
 [ -d $FREEPBX_CONF_DIR ] && mv -v $FREEPBX_CONF_DIR $FREEPBX_CONF_DIR.nofreepbx
@@ -5811,6 +5839,8 @@ systemctl -q is-active asterisk.service || systemctl start asterisk.service
 }
 
 freepbx_install () {
+# Get WWW User and Group
+set_www_user_group
 # Check/fix errors in asterisk.conf file
 sed -i "s:\[directories\](!):\[directories\]:g" $CONFDIR/asterisk/asterisk.conf 
 sed -i "s:;runuser:runuser:g" $CONFDIR/asterisk/asterisk.conf 
@@ -5871,6 +5901,8 @@ echo "INSERT INTO ampusers (username, password_sha1, sections) VALUES ('$FREEPBX
 }
 
 freepbx_configure () {
+# Get WWW User and Group
+set_www_user_group
 # -----------------
 # SIP Configuration
 # ------------------
@@ -5991,6 +6023,8 @@ chown -R $ASTERISK_FILES_USER:$WWW_USER $FREEPBX_CONF_DIR
 }
 
 freepbx_modules () {
+# Get WWW User and Group
+set_www_user_group
 # Asterisk PhoneBook Module
 tar zxvf $PROJECT_TARBALLS_DIR/freepbx_modules/phonebook*tar.gz -C $WWW_HTML_DIR/freepbx/admin/modules
 cd $WWW_HTML_DIR/freepbx/admin/modules 
@@ -6186,6 +6220,8 @@ make install
 }
 
 domoticz_install () {
+# Get WWW User and Group
+set_www_user_group
 rsync -avz $PROJECT_GITHUB_DIR/domoticz/ $INSTALL_SRC_DIR/domoticz/
 # Create link to openzwave - I think this needs some type of install time option
 ln -s $INSTALL_SRC_DIR/open-zwave $INSTALL_SRC_DIR/open-zwave-read-only
@@ -6387,6 +6423,8 @@ make install
 }
 
 zoneminder_128_install () {
+# Get WWW User and Group
+set_www_user_group
 rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
 # Patches
 # Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
@@ -6413,6 +6451,8 @@ make install
 }
 
 zoneminder_130_install () {
+# Get WWW User and Group
+set_www_user_group
 rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
 # Patches
 # Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
@@ -6450,6 +6490,8 @@ make install
 }
 
 zoneminder_configure () {
+# Get WWW User and Group
+set_www_user_group
 # Copy ZoneMinder config file
 cp -v $INSTALL_SRC_DIR/ZoneMinder/zm.conf $PROJECT_SYSTEM_CONF_DIR/zm.conf
 # Change permissions on zoneminder.conf - or web interface wont display
@@ -6571,6 +6613,9 @@ cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-webcams.rules $UDEV_RULES_DIR
 }
 
 zoneminder_zms_inetd () {
+# Get WWW User and Group
+set_www_user_group
+#
 # Add port to services
 echo "
 zms-inetd	$ZONEMINDER_ZMS_INETD_PORT/tcp		# Zoneminder ZMS inetd-wrapper" >> $CONFDIR/services
@@ -6674,6 +6719,9 @@ make && make install
 }
 
 icinga1_install () {
+# Get WWW User and Group
+set_www_user_group
+#
 # Create icinga user account
 useradd -m $ICINGA_USER
 # Give password to icinga user
@@ -6753,6 +6801,9 @@ htpasswd -b -c $CONFDIR/icinga/htpasswd.users icingaadmin $ICINGA_ADMIN_PASS
 }
 
 icinga2_install () {
+# Get WWW User and Group
+set_www_user_group
+#
 # Archive and Unpack specified icinga2 Tag
 # ----------------------------------------
 # Change to Github sources
@@ -6931,6 +6982,9 @@ EOF
 }
 
 icingaweb2_install () {
+# Get WWW User and Group
+set_www_user_group
+#
 # Archive and unpack specified icingaweb2 Tag
 # -------------------------------------------
 # Change to Github sources
@@ -7002,6 +7056,9 @@ mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME < $WWW_HT
 }
 
 icingaweb2_configure () {
+# Get WWW User and Group
+set_www_user_group
+#
 # Generate setup token
 $WWW_HTML_DIR/icingaweb2/bin/icingacli setup token create --config $PROJECT_SYSTEM_CONF_DIR/icingaweb2 > $ICINGA2_WEB_TOKEN_FILE
 #
