@@ -99,7 +99,6 @@ kodi_osd_configure
 remind_configure 
 
 # X11 setup
-x11_server_configure
 x11_superuser_permissions_configure
 x11_user_autologin_lxde_configure
 

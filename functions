@@ -318,7 +318,7 @@ ISP_USERNAME_DEFAULT=none
 ISP_PASSWORD_DEFAULT=none
 
 FLEXGET_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/flexget
-FLEXGET_DEPENDENCIES="itsdangerous setuptools MarkupSafe Paver feedparser SQLAlchemy PyYAML beautifulsoup4 html5lib PyRSS2Gen pynzb progressbar Jinja2 Werkzeug Flask CherryPy certifi chardet requests six jsonschema python-dateutil python-tvrage functools32 plumbum rpyc tmdb3 path.py pbr argparse stevedore babelfish setuptools_scm pytest-runner rebulk guessit future pytz tzlocal funcsigs futures APScheduler aniso8601 Flask-RESTful ordereddict flask-restplus webassets Flask-Assets cssmin Flask-Compress Flask-Login pycparser cffi ipaddress enum34 pyasn1 idna cryptography pyOpenSSL ndg_httpsclient pathlib pyScss pytvmaze Safe Flask-Cors"
+FLEXGET_DEPENDENCIES="itsdangerous setuptools MarkupSafe Paver feedparser SQLAlchemy PyYAML beautifulsoup4 html5lib PyRSS2Gen pynzb progressbar Jinja2 Werkzeug Flask CherryPy certifi chardet requests six jsonschema python-dateutil python-tvrage functools32 plumbum rpyc tmdb3 pbr argparse stevedore babelfish setuptools_scm path.py pytest-runner rebulk guessit future pytz tzlocal funcsigs futures APScheduler aniso8601 Flask-RESTful ordereddict flask-restplus webassets Flask-Assets cssmin Flask-Compress Flask-Login pycparser cffi ipaddress enum34 pyasn1 idna cryptography pyOpenSSL ndg_httpsclient pathlib pyScss pytvmaze Safe Flask-Cors"
 
 TIMEZONE="Africa/Kampala"
 TIMEZONE_FILE=/etc/timezone
@@ -3810,7 +3810,7 @@ echo
 echo 
 echo "Did python module [$PYTHON_MODULE] install correctly?"
 echo 
-_install_pause_check_4_errors_
+#_install_pause_check_4_errors_
 clear
 #
 #
