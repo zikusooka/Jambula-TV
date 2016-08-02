@@ -2761,6 +2761,14 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv@.service $SYSTEMD_UNITS_DIR_USER
 systemctl disable lxdm.service
 # Copy jambulatv-display-manager.service file
 cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-display-manager.service $SYSTEMD_UNITS_DIR_SYSTEM
+#
+# Fix font and video problems with intel drivers
+if [ "$X11_DRIVER" = "intel" ];
+then
+# Start kodi with Environment variable MESA_GL_VERSION_OVERRIDE=
+sed -i "/\[Service\]/a Environment=MESA_GL_VERSION_OVERRIDE=3.0" $SYSTEMD_UNITS_DIR_SYSTEM/jambulatv-display-manager.service
+fi
+#
 systemctl --system daemon-reload
 # Enable display-manager.service 
 systemctl enable jambulatv-display-manager.service
@@ -2900,6 +2908,7 @@ kodi_osd_configure () {
 x11_server_configure () {
 # Create a new xorg.conf file
 $XORG_CMD -configure :$XORG_CONF_DISPLAY 
+# IMPORTANT: This disables XV video driver output - please investigate
 # Insert Modes line after Display subsection - Insert line after - using sed
 sed "
 /SubSection \"Display\"/ a\
