@@ -7,7 +7,7 @@ KERNEL_VERSION="4.1.29"
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
-AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown"
+AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir"
 MULTIMEDIA_USER=$AUTOLOGIN_USER
 MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
 BACKUPS_DIR=$ROOT_DIR/Backups
@@ -3236,6 +3236,7 @@ fi
 
 bash_configure () {
 cat >> $CONFDIR/bashrc << EOF
+
 # JambulaTV Bash Settings
 # -----------------------
 #
@@ -3258,15 +3259,17 @@ alias gl="clear && git log"
 alias gb="clear && git branch"
 
 # JambulaTV History
-[[ -d $PROJECT_SYSTEM_LOG_DIR/bash ]] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/bash
+# Create user's logging directories and assign appropriate permissions
+[[ -d $PROJECT_SYSTEM_LOG_DIR/bash/\$USER  ]] || sudo mkdir -p $PROJECT_SYSTEM_LOG_DIR/bash/\$USER
+sudo chown -R \$USER $PROJECT_SYSTEM_LOG_DIR/bash/\$USER
+#
+# History file settings
 export HISTTIMEFORMAT="%d-%m-%Y - %T \$USER "
 export HISTCONTROL=ignoreboth
 export HISTSIZE=5000
 shopt -s histappend
-export PROMPT_COMMAND='echo "\$(history 1)" >> $PROJECT_SYSTEM_LOG_DIR/bash/history-\$(date "+%Y%m%d").log'
-# Allow all users access to log file
-[ -e $PROJECT_SYSTEM_LOG_DIR/bash/history-\$(date "+%Y%m%d").log ] && \
-	chmod 766 $PROJECT_SYSTEM_LOG_DIR/bash/history-\$(date "+%Y%m%d").log
+export PROMPT_COMMAND='echo "\$(history 1)" >> $PROJECT_SYSTEM_LOG_DIR/bash/\$USER/history-\$(date "+%Y%m%d").log'
+#
 # CLI Calculator
 calc(){ awk "BEGIN{ print \$* }" ;}
 EOF
