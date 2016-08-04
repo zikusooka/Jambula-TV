@@ -6,9 +6,9 @@
 wget -q -O - localhost:9981/api/channel/list | jq . | grep \"val\" | awk {'print $2'} | sed 's:[{|}|"|,]::g' | grep 'name-not-set' > /dev/null 2>&1
 VALUE=$?
 
-if [ "$VALUE" = "0" ] && [ "$DVBT2_ENABLED" = "y" ];
+if [ "$VALUE" = "0" ] || [ "$DVBT2_ENABLED" != "y" ];
 then
-echo "CRITICAL - Channels list is corrupted, possibly due to a bad shutdown.  Please setup network and scan channels" 
+echo "CRITICAL - Channels list is corrupted, possibly due to a bad shutdown.  Please setup network and scan channels. You may also need to power off and on" 
 exit 2
 
 else
