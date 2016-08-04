@@ -6895,7 +6895,7 @@ cd $INSTALL_SRC_DIR/check_logfiles
 # autoconf
 aclocal && autoconf && automake -a
 # configure
-./configure --prefix=$MONITORING_PLUGINS_DIR --libexecdir=$MONITORING_PLUGINS_DIR --with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP --with-seekfiles-dir=$TMPDIR
+./configure --prefix=$MONITORING_PLUGINS_DIR --libexecdir=$MONITORING_PLUGINS_DIR --with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP --with-seekfiles-dir=$TMPDIR/icinga2
 make
 make install
 }
