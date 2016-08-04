@@ -26,7 +26,7 @@ scan_4_wifi () {
 sudo ip link set $WIFI_STATION_INTERFACE up
 #
 # Scan for AP, and get scanned SSID
-sudo iw dev $WIFI_STATION_INTERFACE scan | grep -i SSID | cut -d : -f2 | sed 's/ //' | grep $WIFI_SSID > /dev/null 2>&1
+sudo iw dev $WIFI_STATION_INTERFACE scan | grep -i SSID | cut -d : -f2 | sed 's/ //' | grep ${WIFI_SSID}$ > /dev/null 2>&1
 SCAN_RESULT=$?
 }
 
