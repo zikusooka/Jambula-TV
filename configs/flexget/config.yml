@@ -77,7 +77,6 @@ templates:
         - '*.wmv'
     domain_delay:
       bt-chat.com: 5 seconds
-      torrentz.eu: 5 seconds
     rtorrent_magnet: '{{secrets.global.rtorrent_magnet}}'
     email:
       from: '{{secrets.email.from}}'
@@ -383,13 +382,13 @@ tasks:
   # --------
   tv_shows:
     inputs:
-      - rss: { url: '{{secrets.tv_feeds.torrentz}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.ezrss}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.mininova}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.limetorrents}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.torrentdownloads}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.demonoid}}', silent: yes }
     template: 
       - tv
 
@@ -398,12 +397,12 @@ tasks:
   # ------
   movies:
     inputs:
-      - rss: { url: '{{secrets.movie_feeds.torrentz}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.mininova}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.limetorrents}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.torrentdownloads}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.demonoid}}', silent: yes }
     template: 
       - movies
 
