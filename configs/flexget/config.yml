@@ -242,7 +242,10 @@ templates:
             type: shows
             strip_dates: yes
       from:
-        - torrentz: verified
+        - piratebay:
+            sort_by: seeds
+
+
 
 
 # Movies 
@@ -309,9 +312,7 @@ templates:
         - movie_list: locally_added
 
       from:
-        - torrentz: verified
         - piratebay:
-            # category: "highres movies"
             sort_by: seeds
 
       interval: 1 day
@@ -382,6 +383,7 @@ tasks:
   # --------
   tv_shows:
     inputs:
+      - rss: { url: '{{secrets.tv_feeds.rarbg}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.ezrss}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.torlock}}', silent: yes }
@@ -389,6 +391,8 @@ tasks:
       - rss: { url: '{{secrets.tv_feeds.limetorrents}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.torrentdownloads}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.demonoid}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.extratorrent}}', silent: yes }
+      - rss: { url: '{{secrets.tv_feeds.seedpeer}}', silent: yes }
     template: 
       - tv
 
@@ -397,12 +401,15 @@ tasks:
   # ------
   movies:
     inputs:
+      - rss: { url: '{{secrets.movie_feeds.rarbg}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.mininova}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.limetorrents}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.torrentdownloads}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.demonoid}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.extratorrent}}', silent: yes }
+      - rss: { url: '{{secrets.movie_feeds.btscene}}', silent: yes }
     template: 
       - movies
 
