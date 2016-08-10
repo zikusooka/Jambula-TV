@@ -2034,6 +2034,18 @@ make
 make install
 }
 
+libdvdcss_install () {
+# Remove old libdvdcss
+yum -y remove libdvdcss-*
+# Unpack
+rsync -av --delete-after $PROJECT_GITHUB_DIR/libdvdcss/ $INSTALL_SRC_DIR/libdvdcss/
+# configure
+cd $INSTALL_SRC_DIR/libdvdcss
+autoreconf -i 
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+make && make install
+}
+
 libdvbpsi_install () {
 # Remove old libdvbpsi
 yum -y remove libdvbpsi-*
