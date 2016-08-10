@@ -5,9 +5,6 @@ trakt:
   username: TRAKT_USERNAME
   watchlist: TRAKT_WATCHLIST
 
-global:
-  rtorrent_magnet: TORRENTS_WATCH_DIRECTORY
-
 email:
   from: torrents@TORRENTS_DOMAIN_NAME
   to: EMAIL_TO_ADDRESS
@@ -71,7 +68,6 @@ wget:
 
 tv_feeds:
   rarbg: "https://rarbg.to/rssdd.php?category=18"
-  kickass: "http://kickasstorrentsas.com/tv/?rss=1"
   ezrss: "https://eztv.ag/ezrss.xml"
   torlock: "http://www.torlock.com/television/rss.xml"
   mininova: "http://www.mininova.org/rss.xml?cat=8"
@@ -83,7 +79,6 @@ tv_feeds:
 
 movie_feeds:
   rarbg: "https://rarbg.to/rssdd.php?category=movies"
-  kickass: "http://kickasstorrentsas.com/movies/?rss=1"
   torlock: "http://www.torlock.com/movies/rss.xml"
   mininova: "http://www.mininova.org/rss.xml?cat=4"
   limetorrents: "https://www.limetorrents.cc/rss/16"

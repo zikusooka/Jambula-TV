@@ -77,7 +77,7 @@ templates:
         - '*.wmv'
     domain_delay:
       bt-chat.com: 5 seconds
-    rtorrent_magnet: '{{secrets.global.rtorrent_magnet}}'
+    magnets: no
     email:
       from: '{{secrets.email.from}}'
       to: '{{secrets.email.to}}'
@@ -218,7 +218,7 @@ templates:
     series:
       settings:
         group 1:
-          quality: "h264 xvid !720p !h265"
+          quality: "h264 xvid !480p !720p !h265"
           propers: no 
           identified_by: ep
           ep_regexp:
@@ -384,9 +384,7 @@ tasks:
   tv_shows:
     inputs:
       - rss: { url: '{{secrets.tv_feeds.rarbg}}', silent: yes }
-      - rss: { url: '{{secrets.tv_feeds.kickass}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.ezrss}}', silent: yes }
-      - rss: { url: '{{secrets.tv_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.mininova}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.limetorrents}}', silent: yes }
       - rss: { url: '{{secrets.tv_feeds.torrentdownloads}}', silent: yes }
@@ -402,8 +400,6 @@ tasks:
   movies:
     inputs:
       - rss: { url: '{{secrets.movie_feeds.rarbg}}', silent: yes }
-      - rss: { url: '{{secrets.movie_feeds.kickass}}', silent: yes }
-      - rss: { url: '{{secrets.movie_feeds.torlock}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.mininova}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.limetorrents}}', silent: yes }
       - rss: { url: '{{secrets.movie_feeds.torrentdownloads}}', silent: yes }
@@ -463,9 +459,12 @@ tasks:
       filename: "{{tvdb_series_name|replace(' ', '.')|replace('(', '')|replace(')', '')}}.{{tvdb_ep_id}}.{{tvdb_ep_name|replace(' ', '.')}}.{{quality|upper|replace(' ', '.')}}"
       clean_source: 18
       along:
-        - sub
-        - srt
-        - extrafanart
+        files:
+          - sub
+          - srt
+        subdirs:
+          - extrafanart
+          - Subs
     # Scan video library
     template:
       - send_whatsapp_tv_series_info_and_details
@@ -505,9 +504,12 @@ tasks:
       filename: "{{tmdb_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')|replace('(', '')|replace(')', '')}}.({{tmdb_year|replace('(', '')|replace(')', '')}})"
       clean_source: 18
       along:
-        - sub
-        - srt
-        - extrafanart
+        files:
+          - sub
+          - srt
+        subdirs:
+          - extrafanart
+          - Subs
     exec:
       auto_escape: yes
       on_start:
