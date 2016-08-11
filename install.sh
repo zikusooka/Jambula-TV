@@ -11,6 +11,9 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #################
 #  MAIN SCRIPT  #
 #################
+# Add logging
+#2> $BUILD_LOG
+
 # Install custom kernel
 kernel_install 
 

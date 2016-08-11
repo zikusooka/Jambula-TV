@@ -244,6 +244,8 @@ OPENRESOLV_VERSION=3.5.7
 BEEP2_VERSION=1.2a
 GDATA_VERSION=2.0.17
 
+BUILD_LOG=$HOME/$PROJECT_NAME-build.log
+
 EMAIL_CONFIG_DIR=/etc/email
 EMAIL_VIA_GMAIL_CMD=$BINARY_PREFIX/jambulatv-email
 EMAIL_GMAIL_CONFIG=$PROJECT_SYSTEM_CONF_DIR/email-gmail.cfg
@@ -2446,7 +2448,7 @@ platform_install () {
 cd $PROJECT_GITHUB_DIR/platform
 git archive --format tar.gz --prefix=platform/ $PLATFORM_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 cd $INSTALL_SRC_DIR/platform
-cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
 make && make install
 }
 
@@ -2523,7 +2525,9 @@ fi
 # -------
 cd $INSTALL_SRC_DIR/kodi
 ./bootstrap
-./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-libcec=no
+#./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-libcec=no
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-pulse --enable-dvdcss --enable-udev --enable-libcec --enable-libusb --enable-libbluray --enable-player=mplayer,ffplay,cvlc,jambulatv-dvbplayer
+#
 cd $INSTALL_SRC_DIR/kodi
 [ ! -d $INCDIR/afpfs-ng ] || ln -s -f $INCDIR/afpfs-ng/* $INCDIR/
 # Make Install
