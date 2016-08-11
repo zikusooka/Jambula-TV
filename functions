@@ -81,6 +81,10 @@ LOCAL_SETTINGS_DIR=$PROJECT_PARTITION/local_settings
 # Ports file
 PORTS_ASSIGNED_FILE=$PROJECT_DOCS_DIR/ports_assigned
 
+# Optical Disc Drive
+ODD_DEV_NODE=/dev/sr0
+ODD_MOUNT_POINT=/media/odd
+
 # User's media folders
 USER_MUSIC_DIR=$PROJECT_PARTITION/Music
 USER_PICTURES_DIR=$PROJECT_PARTITION/Pictures
@@ -1659,9 +1663,9 @@ done
 # Add pulse system user - put them in pulse, audio groups
 useradd -r -c "PulseAudio System" -d $PULSE_HOME_DIR -g pulse -s /sbin/nologin pulse
 # Add pulse user to audio group
-usermod -G audio pulse
+usermod -a -G audio pulse
 # Add multimedia users to pulse-access group
-usermod -G pulse-access $MULTIMEDIA_USER
+usermod -a -G pulse-access $MULTIMEDIA_USER
 # Cache recently shared libraries 
 ldconfig
 }
@@ -1713,7 +1717,7 @@ chown -R pulse $PULSE_HOME_DIR
 # Backup system and default pulse files
 cp -v $PULSE_DEFAULT_CONFIG $PULSE_DEFAULT_CONFIG.orig
 # Add multimedia user to video,audio and pulse groups
-usermod -G video,audio,pulse,pulse-access $MULTIMEDIA_USER
+usermod -a -G video,audio,pulse,pulse-access $MULTIMEDIA_USER
 
 # Get needed pulseaudio variables
 pulseaudio_query
@@ -3253,6 +3257,35 @@ EOF
 fi
 # Reload Udev
 [ "$VIRT_WIFI_SUPPORT" = "0" ] || /usr/sbin/udevadm control --reload
+}
+
+optical_disc_drive_configure () {
+if [ -b "$ODD_DEV_NODE" ];
+#
+then
+# Create symlinks to actual Optical disc drive node i.e. /dev/sr0
+for NODE_NAME in cdrom dvd cdrw
+do
+[ -e /dev/$NODE_NAME ] || ln -s $ODD_DEV_NODE /dev/$NODE_NAME
+done
+#
+# Create optical disc drive mount point
+[ -d $ODD_MOUNT_POINT ] || mkdir -p $ODD_MOUNT_POINT
+#
+# Create fstab_entry for optical disk drive
+cp -v $CONFDIR/fstab $CONFDIR/fstab.orig
+cat >> $CONFDIR/fstab << EOF
+#
+# JambulaTV: Optical Disk Drive
+#$ODD_DEV_NODE	$ODD_MOUNT_POINT	auto		rw,exec,noauto,managed	0 0
+EOF
+# Mount
+mount -a
+#
+# Add jambula user to cdrom group
+usermod -a -G cdrom $MULTIMEDIA_USER
+#
+fi
 }
 
 bash_configure () {
@@ -6565,7 +6598,7 @@ systemctl enable zoneminder.service
 [ -f $NGINX_CONF_DIR/sites-enabled/zoneminder ] || \
 cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/zoneminder $NGINX_CONF_DIR/sites-enabled/
 # Add nginx user to video group
-usermod -G video $WWW_USER
+usermod -a -G video $WWW_USER
 #
 # Copy test index.html, *.php and *.cgi files to zm
 cp -rv $PROJECT_CUSTOMIZATION_DIR/nginx/html/test* $WWW_HTML_DIR/zm/
