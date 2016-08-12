@@ -3,7 +3,7 @@ PROJECT_NAME=JambulaTV
 PROJECT_URL="http://www.jambulatv.com"
 COMPANY_NAME="Jambula Labs"
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.1.29"
+KERNEL_VERSION="4.1.30"
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
@@ -2522,8 +2522,8 @@ fi
 # -------
 cd $INSTALL_SRC_DIR/kodi
 ./bootstrap
-#./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-libcec=no
-./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-pulse --enable-dvdcss --enable-udev --enable-libcec --enable-libusb --enable-libbluray --enable-player=mplayer,ffplay,cvlc,jambulatv-dvbplayer
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-pulse --enable-dvdcss --enable-udev --enable-libcec --enable-libusb --enable-libbluray 
+#--enable-player=mplayer,ffplay,cvlc,jambulatv-dvbplayer
 #
 cd $INSTALL_SRC_DIR/kodi
 [ ! -d $INCDIR/afpfs-ng ] || ln -s -f $INCDIR/afpfs-ng/* $INCDIR/
