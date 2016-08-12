@@ -7,10 +7,14 @@ After=plymouth-quit.service
 [Service]
 Environment=CRASHLOG_DIR=/var/log/JambulaTV 
 User=jambula
-ExecStartPre=/usr/bin/pulseaudio -D
-ExecStartPre=/usr/bin/amixer -q sset Master 100% unmute
+
+ExecStartPre=/bin/sh -c "/usr/bin/pulseaudio --check || /usr/bin/pulseaudio -D"
+ExecStartPre=/bin/sh -c "/usr/bin/amixer -q sset Master 100% unmute && sudo /usr/sbin/alsactl store"
+
 ExecStart=/usr/bin/xinit /usr/bin/dbus-launch --exit-with-session /usr/bin/kodi-standalone -- -nocursor :0 -nolisten tcp vt7
+
 ExecStop=/usr/bin/killall kodi ; /usr/bin/killall X
+
 Restart=on-abort
 IgnoreSIGPIPE=no
 
