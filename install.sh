@@ -26,7 +26,7 @@ images_add
 # pick desired X11 video driver
 case $X11_DRIVER in
 intel)
-intel_x11_driver_install uxa # Add Video Acceleration as argument
+intel_x11_driver_install
 ;;
 nouveau)
 nouveau_x11_driver_install

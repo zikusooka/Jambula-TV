@@ -1401,7 +1401,6 @@ openssl req -new -x509 -nodes -out $1 -keyout $2 -days $3 -subj "/CN=$PROJECT_NA
 }
 
 intel_x11_driver_install () {
-VIDEO_ACCELERATION=$1
 # Remove any existing intel drivers
 yum -y remove xorg-x11-drv-intel-*
 # check version
@@ -1417,9 +1416,7 @@ fi
 #
 # Compile all
 cd $INSTALL_SRC_DIR/xf86-video-intel
-./configure --prefix=$PREFIX --libdir=$LIBDIR \
-	--enable-$VIDEO_ACCELERATION --with-default-accel=$VIDEO_ACCELERATION \
-	--with-xorg-module-dir=$LIBDIR/xorg/modules
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-xorg-module-dir=$LIBDIR/xorg/modules
 make && make install
 }
 
