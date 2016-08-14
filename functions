@@ -805,6 +805,30 @@ done
 echo "Update completed. All flexget dependencies are located in [$PROJECT_TARBALLS_DIR/flexget_deps]"
 }
 
+make_install_jambulatv () {
+PACKAGE=$(basename $(pwd))
+echo "
+Building $PACKAGE, this may take some time.  Please be patient ...
+"
+# Run make silently
+make -j$SYSTEM_CPU_CORES > /dev/null 2>&1
+MAKE_EXIT_STATUS=$?
+if [ "$MAKE_EXIT_STATUS" = "0" ];
+then
+# Complete build
+make install
+else
+# Send error to logfile
+cat >> $BUILD_LOG << EOF
+
+-------------------------------------------------------------------------------
+ERROR: Installation of package [$PACKAGE] failed.  Please fix!
+-------------------------------------------------------------------------------
+
+EOF
+fi
+}
+
 
 
 #########################
@@ -1418,7 +1442,7 @@ fi
 # Compile all
 cd $INSTALL_SRC_DIR/xf86-video-intel
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --with-xorg-module-dir=$LIBDIR/xorg/modules
-make && make install
+make_install_jambulatv
 }
 
 nouveau_x11_driver_install () {
@@ -1439,7 +1463,7 @@ fi
 cd $INSTALL_SRC_DIR/xf86-video-nouveau
 ./configure --prefix=$PREFIX --libdir=$LIBDIR \
 	--with-xorg-module-dir=$LIBDIR/xorg/modules
-make && make install
+make_install_jambulatv
 }
 
 mga_x11_driver_install () {
@@ -1460,7 +1484,7 @@ fi
 cd $INSTALL_SRC_DIR/xf86-video-mga
 ./configure --prefix=$PREFIX --libdir=$LIBDIR \
 	--disable-exa --enable-xaa --with-xorg-module-dir=$LIBDIR/xorg/modules
-make && make install
+make_install_jambulatv
 }
 
 openchrome_x11_driver_install () {
@@ -1481,7 +1505,7 @@ fi
 cd $INSTALL_SRC_DIR/xf86-video-openchrome
 ./configure --prefix=$PREFIX --libdir=$LIBDIR \
 	--with-xorg-module-dir=$LIBDIR/xorg/modules
-make && make install
+make_install_jambulatv
 }
 
 rt8192cu_install () {
@@ -1489,8 +1513,7 @@ unzip -d $INSTALL_SRC_DIR/ $PROJECT_ZIPS_DIR/rt8192cu*.zip
 cd $INSTALL_SRC_DIR
 mv -v rt8192cu* rt8192cu
 cd $INSTALL_SRC_DIR/rt8192cu
-make
-make install
+make_install_jambulatv
 }
 
 alsa_lib_install () {
@@ -1500,7 +1523,7 @@ cd $INSTALL_SRC_DIR && mv -v alsa-lib-* alsa-lib
 # Compile
 cd $INSTALL_SRC_DIR/alsa-lib && ./configure --prefix=$PREFIX \
 --libdir=$LIBDIR
-make && make install
+make_install_jambulatv
 }
 
 alsa_utils_install () {
@@ -1510,7 +1533,7 @@ cd $INSTALL_SRC_DIR && mv -v alsa-utils-* alsa-utils
 # Compile
 cd $INSTALL_SRC_DIR/alsa-utils && ./configure --prefix=$PREFIX \
 --disable-xmlto --libdir=$LIBDIR
-make && make install
+make_install_jambulatv
 }
 
 oss_install () {
@@ -1523,7 +1546,7 @@ mkdir $INSTALL_SRC_DIR/oss
 # Compile
 cd $INSTALL_SRC_DIR/oss && \
 $INSTALL_SRC_DIR/oss-*-src-gpl/configure
-make build
+make -s build
 make install
 }
 
@@ -1533,7 +1556,7 @@ tar jxvf $PROJECT_TARBALLS_DIR/alsa-oss-$ALSA_OSS_VERSION.tar.bz2 -C $INSTALL_SR
 cd $INSTALL_SRC_DIR && mv -v alsa-oss-* alsa-oss
 # Compile
 cd $INSTALL_SRC_DIR/alsa-oss && ./configure --prefix=$PREFIX --libdir=$LIBDIR
-make && make install
+make_install_jambulatv
 }
 
 ofono_install () {
@@ -1543,8 +1566,7 @@ cd $INSTALL_SRC_DIR && mv -v ofono-* ofono
 # Compile
 cd $INSTALL_SRC_DIR/ofono && ./configure --prefix=$PREFIX --libdir=$LIBDIR \
 	--sysconfdir=$CONFDIR --localstatedir=$STATEDIR --mandir=$MANDIR1
-make
-make install
+make_install_jambulatv
 }
 
 bluez4_install () {
@@ -1554,8 +1576,7 @@ cd $INSTALL_SRC_DIR && mv -v bluez-4* bluez
 # Compile
 cd $INSTALL_SRC_DIR/bluez && ./configure --prefix=$PREFIX --libdir=$LIBDIR \
 --localstatedir=$STATEDIR --enable-test
-make 
-make install
+make_install_jambulatv
 }
 
 bluez4_configure () {
@@ -1617,8 +1638,7 @@ cd $INSTALL_SRC_DIR && mv -v bluez-5* bluez
 # Compile
 cd $INSTALL_SRC_DIR/bluez && ./configure --prefix=$PREFIX --libdir=$LIBDIR \
 --localstatedir=$STATEDIR --enable-android=no
-make 
-make install
+make_install_jambulatv
 }
 
 bluez5_configure () {
@@ -1642,7 +1662,7 @@ tar xvf $PROJECT_TARBALLS_DIR/sbc-$SBC_VERSION.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v sbc-* sbc
 # Compile
 cd $INSTALL_SRC_DIR/sbc && ./configure --prefix=$PREFIX --libdir=$LIBDIR
-make && make install
+make_install_jambulatv
 }
 
 pulseaudio_install () {
@@ -1653,7 +1673,7 @@ cd $INSTALL_SRC_DIR && mv -v pulseaudio-* pulseaudio
 cd $INSTALL_SRC_DIR/pulseaudio && ./configure --prefix=$PREFIX \
 --libdir=$LIBDIR --sysconfdir=$CONFDIR --localstatedir=$STATEDIR \
 --enable-alsa PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
-make && make install
+make_install_jambulatv
 # Add pulse groups
 for PULSE_GROUP in pulse pulse-access
 do
@@ -1678,7 +1698,7 @@ cd $INSTALL_SRC_DIR && mv -v alsa-plugins-* alsa-plugins
 # Compile
 cd $INSTALL_SRC_DIR/alsa-plugins && ./configure --prefix=/usr \
 --libdir=$LIBDIR PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
-make && make install
+make_install_jambulatv
 }
 
 pyalsaaudio_install () {
@@ -1860,7 +1880,7 @@ tar xvf $PROJECT_TARBALLS_DIR/pa_$PORTAUDIO_VERSION.tgz -C $INSTALL_SRC_DIR
 # Compile
 cd $INSTALL_SRC_DIR/portaudio
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
-make && make install
+make_install_jambulatv
 ldconfig
 }
 
@@ -1876,8 +1896,7 @@ cd $INSTALL_SRC_DIR && mv -v SDL* SDL
 # Compile
 cd $INSTALL_SRC_DIR/SDL
 ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make 
-make install
+make_install_jambulatv
 }
 
 OpenCV_install () {
@@ -1887,7 +1906,7 @@ cd $INSTALL_SRC_DIR && mv -v OpenCV-* OpenCV
 # Compile
 cd $INSTALL_SRC_DIR/OpenCV 
 cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=$BINARY_PREFIX/g++ -DCMAKE_C_COMPILER=$BINARY_PREFIX/gcc -DCMAKE_INSTALL_PREFIX=$PREFIX ../OpenCV
-make && make install
+make_install_jambulatv
 # Fix the following using CMake --libdir type option?
 #---------------------------------------------------
 # Create links to lib directory
@@ -1906,7 +1925,7 @@ cd $INSTALL_SRC_DIR && mv -v openal-soft-* openal-soft
 # Compile
 cd $INSTALL_SRC_DIR/openal-soft 
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DLIB_SUFFIX=64 
-make && make install
+make_install_jambulatv
 }
 
 vsxu_install () {
@@ -1917,7 +1936,7 @@ cd $INSTALL_SRC_DIR/vsxu
 mkdir BUILD
 cd BUILD
 cmake -DCMAKE_CXX_COMPILER=$BINARY_PREFIX/g++ -DCMAKE_C_COMPILER=$BINARY_PREFIX/gcc -DCMAKE_INSTALL_PREFIX=$PREFIX -DGLFW_INCLUDE_PATH=$INCDIR/GL ../../vsxu
-make && make install 
+make_install_jambulatv 
 }
 
 ffmpeg_deps_install () {
@@ -1927,7 +1946,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/vo-aacenc-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v vo-aacenc-* vo-aacenc
 # Compile
 cd $INSTALL_SRC_DIR/vo-aacenc && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make && make install
+make_install_jambulatv
 #
 # vo-amrwbenc
 # Unpack
@@ -1935,7 +1954,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/vo-amrwbenc-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v vo-amrwbenc-* vo-amrwbenc
 # Compile
 cd $INSTALL_SRC_DIR/vo-amrwbenc && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make && make install
+make_install_jambulatv
 #
 # fdk-aac
 # Unpack
@@ -1943,7 +1962,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/fdk-aac-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v fdk-aac-* fdk-aac
 # Compile
 cd $INSTALL_SRC_DIR/fdk-aac && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make && make install
+make_install_jambulatv
 #
 # libaacplus
 # Unpack
@@ -1955,14 +1974,14 @@ cd $INSTALL_SRC_DIR/libaacplus
 ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
 # Add 3gpp sources
 cp -v $PROJECT_ZIPS_DIR/26410-800.zip src/
-make && make install
+make_install_jambulatv
 #
 # gpac
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/gpac-*.tar.gz -C $INSTALL_SRC_DIR
 # Compile
 cd $INSTALL_SRC_DIR/gpac && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make && make install
+make_install_jambulatv
 #
 # libvdpau
 # Unpack
@@ -1972,7 +1991,7 @@ cd $INSTALL_SRC_DIR && mv -v libvdpau-* libvdpau
 cd $INSTALL_SRC_DIR/libvdpau
 ./autogen.sh
 ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make && make install
+make_install_jambulatv
 #
 # nut
 # Unpack
@@ -1988,7 +2007,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/xavs-*.tar.gz -C $INSTALL_SRC_DIR
 # Compile
 cd $INSTALL_SRC_DIR/xavs
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-pic
-make && make install
+make_install_jambulatv
 #
 # fluidsynth
 # Unpack
@@ -1996,7 +2015,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/fluidsynth-*.tar.gz -C $INSTALL_SRC_DIR
 # Compile
 cd $INSTALL_SRC_DIR && mv -v fluidsynth-* fluidsynth
 cd $INSTALL_SRC_DIR/fluidsynth && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make && make install
+make_install_jambulatv
 #
 # libgoom2-devel
 # Unpack in temporary directory
@@ -2034,8 +2053,7 @@ done
 patch -p1 $INSTALL_SRC_DIR/live/config.linux < $PROJECT_PATCHES_DIR/live555.config.linux.patch
 # Compile
 ./genMakefiles linux
-make
-make install
+make_install_jambulatv
 }
 
 libdvdcss_install () {
@@ -2047,7 +2065,7 @@ rsync -av --delete-after $PROJECT_GITHUB_DIR/libdvdcss/ $INSTALL_SRC_DIR/libdvdc
 cd $INSTALL_SRC_DIR/libdvdcss
 autoreconf -i 
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
-make && make install
+make_install_jambulatv
 }
 
 libdvbpsi_install () {
@@ -2061,7 +2079,7 @@ git archive --format tar.gz --prefix=libdvbpsi/ $LIBDVBPSI_TAG | (cd $INSTALL_SR
 cd $INSTALL_SRC_DIR/libdvbpsi 
 ./bootstrap
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-debug
-make && make install
+make_install_jambulatv
 }
 
 x264_install () {
@@ -2072,8 +2090,7 @@ rsync -avz $PROJECT_GITHUB_DIR/x264/ $INSTALL_SRC_DIR/x264/
 # Configure
 cd $INSTALL_SRC_DIR/x264
 ./configure --prefix=$PREFIX --enable-shared --enable-pic --system-libx264 --enable-debug --libdir=$LIBDIR 
-make
-make install
+make_install_jambulatv
 }
 
 ffmpeg_install () {
@@ -2094,8 +2111,7 @@ else
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-shared --enable-pic --enable-gpl --enable-nonfree --enable-x11grab --enable-libcdio --enable-libdc1394 --enable-libfaac --enable-libfreetype --enable-libmodplug --enable-libmp3lame --enable-libpulse --enable-librtmp --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libxvid --enable-postproc --enable-runtime-cpudetect --enable-avfilter --enable-swscale --enable-pthreads --enable-vdpau --enable-bzlib --enable-gnutls --enable-libass --enable-libgsm --enable-version3 --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libvo-amrwbenc --enable-libvpx --enable-zlib --enable-libnut --enable-libv4l2 --enable-openssl --enable-bzlib --enable-libxavs --enable-openal --enable-libcelt --disable-static --disable-podpages
 fi
 #
-make
-make install
+make_install_jambulatv
 # Clean up - saves upto 300MB
 make clean
 }
@@ -2107,8 +2123,7 @@ rsync -avz $PROJECT_GITHUB_DIR/vlc/ $INSTALL_SRC_DIR/vlc/
 cd $INSTALL_SRC_DIR/vlc && ./bootstrap
 ./configure --libdir=$LIBDIR --prefix=$PREFIX \
 --with-contrib=$PREFIX GOOM_CFLAGS="-I$INCDIR" GOOM_LIBS="-L$LIBDIR" PKG_CONFIG_PATH=$LIBDIR/pkgconfig --enable-debug --enable-run-as-root --enable-realrtsp --enable-wma-fixed --enable-shine --enable-omxil --enable-omxil-vout --enable-rpi-omxil --enable-merge-ffmpeg --enable-fdkaac --enable-tremor --enable-aa --enable-opensles --enable-lirc --disable-skins2 --enable-shine=no
-make
-make install
+make_install_jambulatv
 # Cache recently shared libraries 
 ldconfig
 # Clean up - saves upto 100MB
@@ -2137,8 +2152,7 @@ PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig --libdir=$LIBDIR \
 --disable-vcd \
 --disable-dxr3 \
 --disable-vaapi
-make
-make install
+make_install_jambulatv
 }
 
 xine_ui_install () {
@@ -2147,7 +2161,7 @@ tar xvf $PROJECT_TARBALLS_DIR/xine-ui-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v xine-ui-* xine-ui
 # Compile
 cd $INSTALL_SRC_DIR/xine-ui && ./configure --prefix=$PREFIX PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig --libdir=$LIBDIR
-make && make install
+make_install_jambulatv
 }
 
 mplayer_install () {
@@ -2175,8 +2189,7 @@ mv -v ffmpeg* ffmpeg
 ./configure --prefix=$PREFIX --confdir=$CONFDIR --libdir=$LIBDIR --enable-xv \
   --enable-sdl --enable-radio --enable-radio-capture --enable-radio-v4l2 \
   --enable-tv-v4l2 --enable-pvr --enable-dvb --enable-pulse
-make
-make install
+make_install_jambulatv
 # Clean up - saves upto 90MB
 make clean
 }
@@ -2192,8 +2205,7 @@ cd $INSTALL_SRC_DIR/mpv
 mv -v ffmpeg* ffmpeg
 # Compile
 ./old-configure --prefix=$PREFIX
-make
-make install
+make_install_jambulatv
 }
 
 sox_install () {
@@ -2203,7 +2215,7 @@ cd $INSTALL_SRC_DIR && mv -v sox-* sox
 # Compile
 cd $INSTALL_SRC_DIR/sox && ./configure --prefix=/usr \
 --libdir=$LIBDIR 
-make -s && make install
+make_install_jambulatv
 }
 
 tvtime_install () {
@@ -2212,7 +2224,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/tvtime-$TVTIME_VERSION.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v tvtime-* tvtime
 # Compile
 cd $INSTALL_SRC_DIR/tvtime && ./configure --disable-dependency-tracking --disable-rpath --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make && make install
+make_install_jambulatv
 }
 
 tvheadend_install () {
@@ -2225,7 +2237,7 @@ cd $INSTALL_SRC_DIR/tvheadend
 # configure tvheadend
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --mandir=$MANDIR1 --disable-ffmpeg_static \
 	--disable-libav --disable-dvbscan --disable-hdhomerun_static
-make && make install
+make_install_jambulatv
 }
 
 tvheadend_configure () {
@@ -2255,7 +2267,7 @@ cd $INSTALL_SRC_DIR && mv -v fmtools-* fmtools
 # Compile
 cd $INSTALL_SRC_DIR/fmtools && ./configure --prefix=$PREFIX \
 	--libdir=$LIBDIR
-make && make install
+make_install_jambulatv
 }
 
 dvbstreamer_install () {
@@ -2271,7 +2283,7 @@ fgrep -rlZ pkginclude_DATA --include Makefile.am . | xargs -0 sed -i 's/pkginclu
 # Compile
 ./autogen.sh
 ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR --disable-atsc --enable-file-streamer
-make && make install
+make_install_jambulatv
 }
 
 pydvbstreamer_install () {
@@ -2289,7 +2301,7 @@ tar jxvf $PROJECT_TARBALLS_DIR/livepause-$LIVEPAUSE_VERSION.tar.bz2 -C $INSTALL_
 cd $INSTALL_SRC_DIR && mv -v livepause-* livepause
 # Compile
 cd $INSTALL_SRC_DIR/livepause && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR
-make && make install
+make_install_jambulatv
 }
 
 avplayers_install () {
@@ -2427,8 +2439,7 @@ cd $INSTALL_SRC_DIR && mv -v libnfs-* libnfs
 # Compile
 cd $INSTALL_SRC_DIR/libnfs && ./bootstrap
 ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make
-make install
+make_install_jambulatv
 }
 
 libusb_install () {
@@ -2438,8 +2449,7 @@ cd $INSTALL_SRC_DIR && mv -v libusb-* libusb
 # Compile all
 cd $INSTALL_SRC_DIR/libusb
 ./configure --prefix=$PREFIX --libdir=$LIBDIR 
-make
-make install
+make_install_jambulatv
 }
 
 platform_install () {
@@ -2447,7 +2457,7 @@ cd $PROJECT_GITHUB_DIR/platform
 git archive --format tar.gz --prefix=platform/ $PLATFORM_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 cd $INSTALL_SRC_DIR/platform
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
-make && make install
+make_install_jambulatv
 }
 
 libcec_install () {
@@ -2456,7 +2466,7 @@ git archive --format tar.gz --prefix=libcec/ $LIBCEC_TAG | (cd $INSTALL_SRC_DIR/
 cd $INSTALL_SRC_DIR/libcec
 ./bootstrap
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
-make && make install
+make_install_jambulatv
 ldconfig
 }
 
@@ -2529,8 +2539,7 @@ cd $INSTALL_SRC_DIR/kodi
 cd $INSTALL_SRC_DIR/kodi
 [ ! -d $INCDIR/afpfs-ng ] || ln -s -f $INCDIR/afpfs-ng/* $INCDIR/
 # Make Install
-make -j$SYSTEM_CPU_CORES
-make install
+make_install_jambulatv
 # Clean up - saves upto 1.5GB
 make clean
 }
@@ -2539,15 +2548,14 @@ kodi_platform_install () {
 rsync -av $PROJECT_GITHUB_DIR/kodi-platform/ $INSTALL_SRC_DIR/kodi-platform/
 cd $INSTALL_SRC_DIR/kodi-platform
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
-make
-make install
+make_install_jambulatv
 }
 
 kodi_pvr_hts_install () {
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts-$KODI_BRANCH/ $INSTALL_SRC_DIR/kodi-pvr.hts/
 cd $INSTALL_SRC_DIR/kodi-pvr.hts
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
-make && make install
+make_install_jambulatv
 }
 
 kodi_addons_unpack () {
@@ -2829,8 +2837,7 @@ cd $INSTALL_SRC_DIR/inputlirc
 # Change prefix in Makefile
 sed -i "s:PREFIX ?= /usr/local:PREFIX ?= /usr:g" Makefile
 # Compile
-make
-make install
+make_install_jambulatv
 }
 
 inputlirc_configure () {
@@ -2972,7 +2979,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/nodm-$NODM_VERSION.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v nodm-* nodm
 # Compile
 cd $INSTALL_SRC_DIR/nodm && ./configure --prefix=$PREFIX 
-make && make install
+make_install_jambulatv
 }
 
 autostart_freevo_nodm () {
@@ -3016,7 +3023,7 @@ cd $INSTALL_SRC_DIR && mv -v v4l-utils-* v4l-utils
 # Compile
 cd $INSTALL_SRC_DIR/v4l-utils && ./configure --prefix=$PREFIX \
 	--libdir=$LIBDIR
-make && make install
+make_install_jambulatv
 }
 
 plymouth_customization () {
@@ -3480,8 +3487,7 @@ cd $INSTALL_SRC_DIR && mv -v openresolv-* openresolv
 cd $INSTALL_SRC_DIR/openresolv && ./configure --prefix=$PREFIX  \
 	--libexecdir=$LIBDIR/resolvconf --sysconfdir=$CONFDIR
 # Compile
-make
-make install
+make_install_jambulatv
 }
 
 openresolv_configure () {
@@ -3573,7 +3579,7 @@ cd $INSTALL_SRC_DIR
 mv -v dns2tcp-$DNS2TCP_VERSION dns2tcp 
 cd $INSTALL_SRC_DIR/dns2tcp 
 ./configure --prefix=/usr --mandir=/usr/share/man
-make && make install
+make_install_jambulatv
 }
 
 dns2tcpc_configure () {
@@ -3660,8 +3666,7 @@ cd $INSTALL_SRC_DIR/proxychains
 # Fix sysconfig path
 sed -i "s:sysconfdir:confdir:g" config.mak
 # compile
-make 
-make install
+make_install_jambulatv
 make install-config
 }
 
@@ -3717,7 +3722,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/beep2-$BEEP2_VERSION*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR
 mv -v beep2-$BEEP2_VERSION beep2
 cd $INSTALL_SRC_DIR/beep2
-make && make install
+make_install_jambulatv
 # Create sounds directory if no-existent
 [ -d $PROJECT_SYSTEM_SHARE_DIR/sounds ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/sounds
 # Copy beep2 sound files
@@ -3739,8 +3744,7 @@ cd $INSTALL_SRC_DIR/ziproxy
 # configure ziproxy
 ./configure --prefix=$PREFIX \
   --with-cfgfile=$PROJECT_SYSTEM_CONF_DIR/ziproxy/ziproxy.conf
-make
-make install
+make_install_jambulatv
 #
 # Add Ziproxy user and group 
 groupadd -r ziproxy
@@ -3772,8 +3776,7 @@ cd $INSTALL_SRC_DIR/squid && ./configure --prefix=$PREFIX \
    --with-pidfile=$RUNDIR/squid.pid --with-default-user=squid \
    --with-swapdir=$STATEDIR/cache/squid \
    --enable-build-info="$PROJECT_NAME"
-make
-make install
+make_install_jambulatv
 #
 # Add Squid user and group 
 groupadd -r squid
@@ -4026,8 +4029,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/xmlrpc-c-*gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v xmlrpc* xmlrpc-c
 cd $INSTALL_SRC_DIR/xmlrpc-c
 ./configure --prefix=/usr --libdir=$LIBDIR --disable-wininet-client --disable-libwww-client
-make
-make install
+make_install_jambulatv
 }
 
 libtorrent_install () {
@@ -4035,8 +4037,7 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/libtorrent/ $INSTALL_SRC_DIR/libto
 cd $INSTALL_SRC_DIR/libtorrent
 ./autogen.sh
 ./configure --prefix=/usr --libdir=$LIBDIR
-make
-make install
+make_install_jambulatv
 # Clean up - saves upto 150MB
 make clean
 }
@@ -4050,8 +4051,7 @@ cd $INSTALL_SRC_DIR/rtorrent
 ./autogen.sh
 ./configure --prefix=/usr --libdir=$LIBDIR --with-xmlrpc-c \
 	PKG_CONFIG_PATH=/usr/lib/pkgconfig
-make
-make install
+make_install_jambulatv
 # Clean up - saves upto 260MB
 make clean
 #
@@ -4114,8 +4114,7 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/aria2/ $INSTALL_SRC_DIR/aria2/
 cd $INSTALL_SRC_DIR/aria2
 autoreconf -i
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-libaria2
-make
-make install
+make_install_jambulatv
 # Cache recently shared libraries 
 ldconfig
 }
@@ -4324,8 +4323,7 @@ cd $INSTALL_SRC_DIR/nginx
 	--with-mail \
 	--with-mail_ssl_module \
 	--with-debug
-make
-make install
+make_install_jambulatv
 #
 # Add nginx user and group
 useradd -M -r -c "Nginx Web Server" -s /sbin/nologin -d $SPOOLDIR/nginx nginx
@@ -4403,8 +4401,7 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/fcgiwrap/ $INSTALL_SRC_DIR/fcgiwra
 cd $INSTALL_SRC_DIR/fcgiwrap
 autoreconf -i
 ./configure --prefix=/usr --libdir=$LIBDIR 
-make
-make install
+make_install_jambulatv
 }
 
 nginx_spawn_fcgi_configure () {
@@ -4470,8 +4467,7 @@ cd $INSTALL_SRC_DIR && mv -v freeradius-server-* freeradius-server
 cd $INSTALL_SRC_DIR/freeradius-server
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
 --localstatedir=$STATEDIR --enable-fast-install=no
-make 
-make install
+make_install_jambulatv
 #
 # Add radiusd group and user
 # ***************************
@@ -4647,8 +4643,7 @@ cd $INSTALL_SRC_DIR/coova-chilli
 sh bootstrap
 # Configure and Compile coova
 ./configure --prefix=/usr --libdir=$LIBDIR --localstatedir=$STATEDIR --sysconfdir=$CONFDIR --with-openssl --with-poll --disable-static --enable-shared --enable-libjson --enable-miniportal --enable-chilliredir --enable-useragent --enable-sessionstate --enable-sessionid --enable-binstatusfile --enable-statusfile --enable-largelimits --enable-proxyvsa --enable-chilliproxy --enable-chilliradsec --enable-ssdp --enable-mdns --enable-redirinject
-make
-make install
+make_install_jambulatv
 # Cache recently shared libraries 
 ldconfig
 # Copy coovachilli systemd file 
@@ -4663,8 +4658,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/haserl-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v haserl-* haserl
 cd $INSTALL_SRC_DIR/haserl
 ./configure --prefix=/usr --libdir=$LIBDIR 
-make
-make install
+make_install_jambulatv
 }
 
 coova_chilli_configure () {
@@ -4859,8 +4853,7 @@ patch -p1 Makefile < $PROJECT_PATCHES_DIR/hostapd.makefile.patch
 cp -v defconfig defconfig.orig
 patch -p1 defconfig < $PROJECT_PATCHES_DIR/hostapd.defconfig.patch
 cp -v defconfig .config
-make
-make install
+make_install_jambulatv
 # Copy hostapd systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/hostapd.service $SYSTEMD_UNITS_DIR_USER/
 # Enable hostapd if needed
@@ -4898,7 +4891,7 @@ cd $INSTALL_SRC_DIR && mv -v gstreamer-* gstreamer
 # Compile
 cd $INSTALL_SRC_DIR/gstreamer && ./configure --prefix=$PREFIX --libdir=$LIBDIR \
    --localstatedir=$STATEDIR
-make && make install
+make_install_jambulatv
 }
 
 gstreamer_plugins_install () {
@@ -4915,7 +4908,7 @@ cd $INSTALL_SRC_DIR && mv -v gst-plugins-$GST_PLUGIN-* gst-plugins-$GST_PLUGIN
 cd $INSTALL_SRC_DIR/gst-plugins-$GST_PLUGIN && ./configure --prefix=$PREFIX \
    --libdir=$LIBDIR --localstatedir=$STATEDIR
 # compile
-make && make install
+make_install_jambulatv
 done
 }
 
@@ -4926,7 +4919,7 @@ cd $INSTALL_SRC_DIR && mv -v tumbler-* tumbler
 # Compile
 cd $INSTALL_SRC_DIR/tumbler && ./configure --prefix=$PREFIX \
 --libdir=$LIBDIR
-make && make install
+make_install_jambulatv
 }
 
 rygel_deps_install () {
@@ -4953,7 +4946,7 @@ else
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --localstatedir=$STATEDIR
 fi
 # compile
-make && make install
+make_install_jambulatv
 done
 }
 
@@ -4964,7 +4957,7 @@ cd $INSTALL_SRC_DIR && mv -v rygel-* rygel
 cd $INSTALL_SRC_DIR/rygel && ./configure --prefix=$PREFIX --libdir=$LIBDIR \
    --sysconfdir=$PROJECT_SYSTEM_CONF_DIR/rygel --localstatedir=$STATEDIR \
    --with-media-engine=gstreamer --without-ui
-make && make install
+make_install_jambulatv
 #
 # Add rygel group and user
 groupadd -r rygel
@@ -5001,8 +4994,7 @@ cd $INSTALL_SRC_DIR/minidlna
    --sysconfdir=$PROJECT_SYSTEM_CONF_DIR --enable-tivo \
    --enable-netgear --enable-readynas --with-os-name=$PROJECT_NAME \
    --with-os-version=$PROJECT_VERSION --with-os-url=$PROJECT_URL
-make 
-make install
+make_install_jambulatv
 #
 # Add minidlna group and user
 groupadd -r minidlna
@@ -5125,7 +5117,7 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/rtmpdump/ $INSTALL_SRC_DIR/rtmpdum
 cd $INSTALL_SRC_DIR/rtmpdump
 # Change prefix in Makefile
 sed -i "s:prefix=/usr/local:prefix=/usr:g" Makefile
-make SYS=posix
+make -s SYS=posix
 make install
 }
 
@@ -5154,8 +5146,7 @@ cd $INSTALL_SRC_DIR && mv -v w_scan-* w_scan
 # Compile
 cd $INSTALL_SRC_DIR/w_scan && ./configure --prefix=$PREFIX \
 --libdir=$LIBDIR
-make
-make install
+make_install_jambulatv
 }
 
 email_smtp_install () {
@@ -5163,8 +5154,7 @@ email_smtp_install () {
 rsync -av --delete-after $PROJECT_GITHUB_DIR/eMail/ $INSTALL_SRC_DIR/eMail/
 cd $INSTALL_SRC_DIR/eMail
 ./configure --prefix=$PREFIX --with-ssl --mandir $MANDIR1 --sysconfdir $CONFDIR
-make
-make install
+make_install_jambulatv
 }
 
 email_smtp_configure () {
@@ -5222,8 +5212,7 @@ gsmopen_install () {
 # gsm_open pre-requisite - gsmlib
 cd $INSTALL_SRC_DIR/freeswitch/src/mod/endpoints/mod_gsmopen/gsmlib/gsmlib-1.10-patched-13ubuntu
 ./configure prefix=/usr
-make
-make install
+make_install_jambulatv
 ldconfig
 # gsm_open pre-requisite - libctb
 cd $INSTALL_SRC_DIR/freeswitch/src/mod/endpoints/mod_gsmopen/libctb-*/build
@@ -5233,8 +5222,7 @@ make DEBUG=0 GPIB=0 install
 ldconfig
 # Make and install gsm_open
 cd $INSTALL_SRC_DIR/freeswitch/src/mod/endpoints/mod_gsmopen
-make
-make install
+make_install_jambulatv
 }
 
 gsmopen_configure () {
@@ -5467,7 +5455,7 @@ cd $INSTALL_SRC_DIR && mv -v dahdi-linux-complete-* dahdi-linux-complete
 cd $INSTALL_SRC_DIR/dahdi-linux-complete 
 # Copy dahdi firmware files
 #cp -v $PROJECT_FIRMWARE_DIR/dahdi/* linux/drivers/dahdi/firmware/
-make all
+make -s all
 make install
 make config 
 }
@@ -5477,8 +5465,7 @@ libpri_install () {
 tar zxvf $PROJECT_TARBALLS_DIR/libpri-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v libpri-* libpri
 cd $INSTALL_SRC_DIR/libpri
-make
-make install
+make_install_jambulatv
 }
 
 asterisk_install () {
@@ -5599,9 +5586,7 @@ done
 #
 cd $INSTALL_SRC_DIR/asterisk
 # make
-make
-# Install
-make install
+make_install_jambulatv
 # Generate sample configs
 make samples
 # Cache recently shared libraries 
@@ -5738,8 +5723,7 @@ cd $INSTALL_SRC_DIR/asterisk-chan-dongle-asterisk11
 aclocal && autoconf && automake -a
 # configure 
 DESTDIR="$LIBDIR/asterisk/modules" ./configure --prefix=$PREFIX
-make
-make install
+make_install_jambulatv
 }
 
 chan_mobile_configure () {
@@ -6163,8 +6147,7 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/app_swift/ $INSTALL_SRC_DIR/app_sw
 # Install 
 cd $INSTALL_SRC_DIR/app_swift
 ./configure
-make
-make install
+make_install_jambulatv
 }
 
 app_swift_configure () {
@@ -6219,8 +6202,7 @@ CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 ./configure
 ;;
 esac
 # Compile and install
-make
-make install
+make_install_jambulatv
 # Install the default configuration
 cd $INSTALL_SRC_DIR/unimrcp/conf
 make def-conf
@@ -6238,8 +6220,7 @@ cd $INSTALL_SRC_DIR && mv asterisk-unimrcp* asterisk-unimrcp
 cd $INSTALL_SRC_DIR/asterisk-unimrcp
 # configure asterisk-unimrcp
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
-make
-make install
+make_install_jambulatv
 }
 
 google_tts_configure () {
@@ -6274,8 +6255,7 @@ cd $INSTALL_SRC_DIR/open-zwave
 sed -i "s:\$(PREFIX)/etc:$CONFDIR:g" cpp/build/support.mk
 # Build
 BUILD=release PREFIX=$PREFIX LIB=$LIBDIR SYSCONFDIR=$CONFDIR/openzwave
-make
-make install
+make_install_jambulatv
 }
 
 domoticz_install () {
@@ -6389,8 +6369,7 @@ cd $INSTALL_SRC_DIR/heyu
 # configure heyu
 ./configure --prefix=$PREFIX --libdir=$LIBDIR \
 	--sysconfdir=$PROJECT_SYSTEM_CONF_DIR --localstatedir=$STATEDIR
-make
-make install
+make_install_jambulatv
 }
 
 heyu_configure () {
@@ -6468,8 +6447,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/X10-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv X10* perl_X10
 cd $INSTALL_SRC_DIR/perl_X10
 perl Makefile.PL
-make
-make install
+make_install_jambulatv
 #
 # Net-SFTP-Foreign module
 tar zxvf $PROJECT_TARBALLS_DIR/Net-SFTP-Foreign-*.tar.gz -C $INSTALL_SRC_DIR
@@ -6477,8 +6455,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/Net-SFTP-Foreign-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv Net-SFTP-Foreign* perl_Net-SFTP-Foreign
 cd $INSTALL_SRC_DIR/perl_Net-SFTP-Foreign
 perl Makefile.PL PREFIX="$PREFIX" LIBS="-L$LIBDIR"
-make
-make install
+make_install_jambulatv
 }
 
 zoneminder_128_install () {
@@ -6505,8 +6482,7 @@ ZM_DB_USER=$ZONEMINDER_DB_USER ZM_DB_PASS=$ZONEMINDER_DB_PASS \
 ZM_RUNDIR=$RUNDIR/zm ZM_TMPDIR=$TMPDIR/zm \
 ZM_LOGDIR=$PROJECT_SYSTEM_LOG_DIR/zoneminder \
 ZM_SSL_LIB=openssl CPPFLAGS="-D__STDC_CONSTANT_MACROS ${CPPFLAGS}"
-make
-make install
+make_install_jambulatv
 }
 
 zoneminder_130_install () {
@@ -6544,8 +6520,7 @@ cmake -DCMAKE_BUILD_TYPE=Release \
 	-DZM_NO_X10=OFF \
 .
 # Make and install
-make
-make install
+make_install_jambulatv
 }
 
 zoneminder_configure () {
@@ -6728,8 +6703,7 @@ rsync -avz $PROJECT_GITHUB_DIR/motion/ $INSTALL_SRC_DIR/motion/
 # configure
 cd $INSTALL_SRC_DIR/motion
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$PROJECT_SYSTEM_CONF_DIR/motion
-make
-make install
+make_install_jambulatv
 }
 
 motion_configure () {
@@ -6774,7 +6748,7 @@ cd $INSTALL_SRC_DIR && mv -v libdbi-* libdbi
 # Configure
 cd $INSTALL_SRC_DIR/libdbi && ./configure --prefix=$PREFIX --libdir=$LIBDIR
 # Compile
-make && make install
+make_install_jambulatv
 }
 
 icinga1_install () {
@@ -6816,7 +6790,7 @@ cd $INSTALL_SRC_DIR/icinga && ./configure --prefix=$PREFIX \
 --with-icinga-chkfile=$STATEDIR/rw/icinga.check \
 --with-ext-cmd-file-dir=$STATEDIR/rw
 # Compile
-make all
+make -s all
 make install
 make install-init
 make install-config
@@ -6832,7 +6806,7 @@ cd $INSTALL_SRC_DIR/nagios-plugins
 # Compile
 ./configure --prefix=$PREFIX --with-cgiurl=$WWW_CGI_DIR/icinga \
 --with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP
-make && make install
+make_install_jambulatv
 }
 
 icinga1_configure () {
@@ -6904,8 +6878,7 @@ mkdir $INSTALL_SRC_DIR/icinga2/build
 cd $INSTALL_SRC_DIR/icinga2/build
 # Make
 cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_SYSCONFDIR=$CONFDIR -DCMAKE_INSTALL_LOCALSTATEDIR=$STATEDIR -DICINGA2_USER=$ICINGA_USER -DICINGA2_GROUP=$ICINGA_GROUP -DICINGA2_GIT_VERSION_INFO=OFF -DICINGA2_COMMAND_GROUP=$ICINGA_CMD_GROUP -DICINGA2_PLUGINDIR=$MONITORING_PLUGINS_DIR -DICINGA2_RUNDIR=$RUNDIR -DICINGA2_SYSCONFIGFILE=$SYSCONFIG_DIR/icinga2 -DICINGA2_WITH_MYSQL=ON -DICINGA2_WITH_PGSQL=OFF -DICINGA2_WITH_TESTS=OFF -DUSE_SYSTEMD=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=FALSE
-make 
-make install
+make_install_jambulatv
 #
 # BUG?
 # Move /usr/etc/icinga2 /etc/icinga2
@@ -6931,8 +6904,7 @@ cd $INSTALL_SRC_DIR/monitoring-plugins
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --libexecdir=$MONITORING_PLUGINS_DIR \
 	--with-cgiurl=$WWW_CGI_DIR/icinga --with-fping-command=$FPING_CMD \
 	--with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP
-make
-make install
+make_install_jambulatv
 }
 
 check_logfiles_install () {
@@ -6943,8 +6915,7 @@ cd $INSTALL_SRC_DIR/check_logfiles
 aclocal && autoconf && automake -a
 # configure
 ./configure --prefix=$MONITORING_PLUGINS_DIR --libexecdir=$MONITORING_PLUGINS_DIR --with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP --with-seekfiles-dir=$TMPDIR/icinga2
-make
-make install
+make_install_jambulatv
 }
 
 icinga2_ido_mysql () {
@@ -7445,7 +7416,7 @@ cd $INSTALL_SRC_DIR && mv -v minisapserver-* minisapserver
 # Compile
 cd $INSTALL_SRC_DIR/minisapserver && ./configure --prefix=$PREFIX \
 --libdir=$LIBDIR --sysconfdir=$PROJECT_SYSTEM_CONF_DIR/minisapserver --localstatedir=$STATEDIR
-make && make install
+make_install_jambulatv
 }
 
 gnokii_install () {
@@ -7455,8 +7426,7 @@ cd $INSTALL_SRC_DIR && mv -v gnokii-* gnokii
 # Compile all
 cd $INSTALL_SRC_DIR/gnokii
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
-make
-make install
+make_install_jambulatv
 # Cache recently shared libraries 
 ldconfig
 }
@@ -7468,8 +7438,7 @@ cd $INSTALL_SRC_DIR && mv -v gammu-* gammu
 # Compile all
 cd $INSTALL_SRC_DIR/gammu
 ./configure --prefix=$PREFIX --enable-backup
-make
-make install
+make_install_jambulatv
 }
 
 sphinxbase_install () {
@@ -7480,8 +7449,7 @@ cd $INSTALL_SRC_DIR/sphinxbase
 ./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
 --localstatedir=$STATEDIR
-make
-make install
+make_install_jambulatv
 }
 
 pocketsphinx_install () {
@@ -7493,8 +7461,7 @@ cd $INSTALL_SRC_DIR/pocketsphinx
 ./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
 --localstatedir=$STATEDIR
-make
-make install
+make_install_jambulatv
 }
 
 SpeechRecognition_install () {
@@ -7563,9 +7530,7 @@ cd $INSTALL_SRC_DIR/cockpit
 ./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
 --localstatedir=$STATEDIR
-
-make
-make install
+make_install_jambulatv
 }
 
 
