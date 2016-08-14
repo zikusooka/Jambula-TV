@@ -2522,7 +2522,7 @@ fi
 # -------
 cd $INSTALL_SRC_DIR/kodi
 ./bootstrap
-./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-pulse --enable-dvdcss --enable-udev --enable-libcec --enable-libusb --enable-libbluray 
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-pulse --enable-dvdcss --enable-udev --enable-libusb --enable-libbluray 
 #--enable-player=mplayer,ffplay,cvlc,jambulatv-dvbplayer
 #
 cd $INSTALL_SRC_DIR/kodi
