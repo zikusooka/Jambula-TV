@@ -1407,7 +1407,8 @@ yum -y remove xorg-x11-drv-intel-*
 if [ "$INTEL_X11_DRIVER_VERSION" = "git" ];
 then
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/xf86-video-intel/ $INSTALL_SRC_DIR/xf86-video-intel/
-$INSTALL_SRC_DIR/xf86-video-intel/autogen.sh
+cd $INSTALL_SRC_DIR/xf86-video-intel
+./autogen.sh
 else
 # Unpack
 tar jxvf $PROJECT_TARBALLS_DIR/xf86-video-intel-$INTEL_X11_DRIVER_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
