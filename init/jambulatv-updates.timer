@@ -1,8 +1,8 @@
 [Unit]
-Description = Check for Auto Updates Every Monday Night
+Description = Check for JambulaTV Updates Every Monday or Tuesday Night at 11:15 pm
 
 [Timer]
-OnCalendar=Mon *-*-* 22:40:00
+OnCalendar=Mon,Tue *-*-* 23:15:00
 Unit=jambulatv-updates.service
 
 
