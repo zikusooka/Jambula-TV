@@ -1,0 +1,11 @@
+[Unit]
+Description = Check for Auto Updates Every Monday Night
+
+[Timer]
+OnCalendar=Mon *-*-* 22:40:00
+Unit=jambulatv-updates.service
+
+
+
+[Install]
+WantedBy = multi-user.target

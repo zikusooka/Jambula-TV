@@ -1,0 +1,158 @@
+#!/bin/sh
+# This script will check for new updates on line; download and install them
+# Jambula Labs @copyright 2016-2017 All rights reserved'
+
+JAMBULATV_FTP_SERVER=sftp.jambulatv.com
+JAMBULATV_FTP_SERVER_UPDATES_DIR=JambulaTV/updates
+JAMBULATV_FTP_SERVER_VERSION_FILE=$JAMBULATV_FTP_SERVER_UPDATES_DIR/VERSION
+JAMBULATV_FTP_USER=jambulaftp1
+JAMBULATV_FTP_PASS=nahZic4k
+
+JAMBULATV_UPDATES_DOWNLOAD_DIR=/var/updates/JambulaTV
+JAMBULATV_UPDATES_TEMP_DIR=/tmp/JambulaTV-updates
+JAMBULATV_UPDATES_LOG_DIR=/var/log/JambulaTV/updates
+JAMBULATV_RELEASE_FILE=/etc/JambulaTV/release
+
+JAMBULATV_UPDATE_CURRENT_VERSION_FILE=$(basename $JAMBULATV_FTP_SERVER_VERSION_FILE)
+
+WGET_CMD=wget
+WGET_TIMEOUT=20
+WGET_OPTIONS="-q --no-check-certificate --retr-symlinks -T $WGET_TIMEOUT --ftp-user=$JAMBULATV_FTP_USER --ftp-password=$JAMBULATV_FTP_PASS"
+PING_COUNT=1 #9
+
+OSD_SCRIPT=/usr/bin/jambulatv-osd
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+calc(){ 
+awk "BEGIN{ print $* }" ;
+}
+
+check_ftp_server_access () {
+# Check for internet connectivity and access to the ftp server
+ping -c $PING_COUNT $JAMBULATV_FTP_SERVER > /dev/null 2>&1
+EXITVAL=$?
+if [ "$EXITVAL" != "0" ];
+then
+# Quit script, since there's no internet
+exit 1
+fi
+}
+
+create_updates_directories () {
+# Create JambulaTV updates directory if it does not exist
+for DIRECTORY in $JAMBULATV_UPDATES_DOWNLOAD_DIR $JAMBULATV_UPDATES_TEMP_DIR $JAMBULATV_UPDATES_LOG_DIR
+do
+[ -d $DIRECTORY ] || mkdir -p $DIRECTORY
+done
+}
+
+query_and_set_versions () {
+# Download latest update version info file
+$WGET_CMD $WGET_OPTIONS -O $JAMBULATV_UPDATES_TEMP_DIR/$JAMBULATV_UPDATE_CURRENT_VERSION_FILE ftp://$JAMBULATV_FTP_SERVER/$JAMBULATV_FTP_SERVER_VERSION_FILE
+#
+# Exit updater if ftp login fails; and log error
+if [ "$?" = "0" ];
+then
+# Set latest update revision
+JAMBULATV_LATEST_UPDATE_VERSION=$(cat $JAMBULATV_UPDATES_TEMP_DIR/$JAMBULATV_UPDATE_CURRENT_VERSION_FILE)
+# Lookup current version
+JAMBULATV_INSTALLED_VERSION=$(grep -i Version $JAMBULATV_RELEASE_FILE | cut -d : -f2 | sed 's:v::g')
+# See if some update versions were skipped
+VERSION_DIFF=$(calc $JAMBULATV_LATEST_UPDATE_VERSION-$JAMBULATV_INSTALLED_VERSION)
+
+else
+
+echo "`date +%Y-%m-%d`: Failed to update JambulaTV because connection to FTP server failed" >> $JAMBULATV_UPDATES_LOG_DIR/errors 2>&1
+exit 1
+fi
+}
+
+download_updates () {
+# Download tar.gz package
+$WGET_CMD $WGET_OPTIONS -O $JAMBULATV_UPDATES_TEMP_DIR/update-$JAMBULATV_LATEST_UPDATE_VERSION.tar.gz ftp://$JAMBULATV_FTP_SERVER/$JAMBULATV_FTP_SERVER_UPDATES_DIR/update-$JAMBULATV_LATEST_UPDATE_VERSION.tar.gz  
+
+# Download Checksum file 
+$WGET_CMD $WGET_OPTIONS -O $JAMBULATV_UPDATES_TEMP_DIR/update-$JAMBULATV_LATEST_UPDATE_VERSION.checksum.txt ftp://$JAMBULATV_FTP_SERVER/$JAMBULATV_FTP_SERVER_UPDATES_DIR/update-$JAMBULATV_LATEST_UPDATE_VERSION.checksum.txt
+}
+
+checksum_compare () {
+# Check sum of downloaded package file i.e. update-$VERSION.tar.gz
+UPDATE_PACKAGE_CHECKSUM_NOW=`openssl dgst -md5 $JAMBULATV_UPDATES_TEMP_DIR/update-$JAMBULATV_LATEST_UPDATE_VERSION.tar.gz | cut -d "=" -f2 | sed -e 's/ //'`
+UPDATE_PACKAGE_CHECKSUM_ORIG=$(cat $JAMBULATV_UPDATES_TEMP_DIR/update-$JAMBULATV_LATEST_UPDATE_VERSION.checksum.txt)
+# Check checksums
+if [ "$UPDATE_PACKAGE_CHECKSUM_NOW" != "$UPDATE_PACKAGE_CHECKSUM_ORIG" ];
+then
+echo "`date +%Y-%m-%d`: Failed to update JambulaTV because the package 'update-$JAMBULATV_LATEST_UPDATE_VERSION.tar.gz' was tampared with" >> $JAMBULATV_UPDATES_LOG_DIR/errors
+exit 1
+fi
+}
+
+update_install () {
+# untar package
+tar zxvf $JAMBULATV_UPDATES_TEMP_DIR/update-$JAMBULATV_LATEST_UPDATE_VERSION.tar.gz -C $JAMBULATV_UPDATES_DOWNLOAD_DIR
+# Run update install file
+. $JAMBULATV_UPDATES_DOWNLOAD_DIR/update-$JAMBULATV_LATEST_UPDATE_VERSION/install.sh
+
+# Update version based after last install
+sed -i "s/Version:v${JAMBULATV_INSTALLED_VERSION}/Version:v${JAMBULATV_LATEST_UPDATE_VERSION}/" $JAMBULATV_RELEASE_FILE
+}
+
+logging_osd_notice_started () {
+$OSD_SCRIPT -m "IMPORTANT: System update in progress.  Please do not power off.  You will be notified when all updates have been completed"
+}
+
+logging_osd_notice_completed () {
+$OSD_SCRIPT -m "System updates have completed.  You may now power off if desired"
+}
+
+logging_success  () {
+# Add success info to log file
+echo "$(date +%Y-%m-%d) $(date +%T) > JambulaTV update-$JAMBULATV_LATEST_UPDATE_VERSION.tar.gz was successfully installed" >> $JAMBULATV_UPDATES_LOG_DIR/messages
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+check_ftp_server_access
+create_updates_directories
+query_and_set_versions
+
+# UPDATE
+# ------
+# Quit if JambulaTV is upto update.  
+if [ $(echo "$JAMBULATV_LATEST_UPDATE_VERSION < $JAMBULATV_INSTALLED_VERSION" | bc -l) = 1 ] || [ "x$JAMBULATV_LATEST_UPDATE_VERSION" = "x" ];
+then
+exit 1
+
+# Continue, check difference in versions
+elif [ $(echo "$VERSION_DIFF > 0" | bc -l) = 1 ];
+then
+
+# Log on OSD
+logging_osd_notice_started
+
+# Cycle through all available updates
+while [ $(echo "$JAMBULATV_INSTALLED_VERSION < $JAMBULATV_LATEST_UPDATE_VERSION" | bc -l) = 1 ];
+do
+
+download_updates
+checksum_compare
+update_install
+
+# Query current version
+JAMBULATV_INSTALLED_VERSION=$(grep -i Version $JAMBULATV_RELEASE_FILE | cut -d : -f2 | sed 's:v::g')
+
+done
+fi
+
+# Log completion
+logging_success 
+logging_osd_notice_completed

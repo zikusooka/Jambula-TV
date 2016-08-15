@@ -332,6 +332,11 @@ yowsup2_deps_install
 yowsup2_install
 whatsapp_messaging_configure
 
+# -------
+# Updates
+# -------
+auto_updates_configure
+
 # ---------
 # Notices
 # ---------
