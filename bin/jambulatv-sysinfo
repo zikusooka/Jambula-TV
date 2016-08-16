@@ -52,10 +52,11 @@ INTERNET_STATE=UP↑
 PUBLIC_IP_ADDRESS=$(wget -O - -q ipchicken.com | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | uniq)
 # Source weather functions
 . /usr/bin/jambulatv-weather-api
-# Updates
-# Get latest version from Internet
-LATEST_VERSION=v3.8
-	if [ "$LATEST_VERSION" = "$VERSION" ];
+
+# See if update is available
+/usr/lib64/nagios/plugins/check_updates > /dev/null 2>&1
+UPDATE_STATUS=$?
+	if [ "$UPDATE_STATUS" = "0" ];
 	then
 	UPDATES_AVAILABLE="${n}<Good, You're Up to Date>"
 	else
@@ -77,7 +78,7 @@ MOBO_VENDOR=$(/usr/sbin/lshw -quiet -c system | grep vendor | cut -d : -f2 | sed
 )
 MOBO_MODEL=$(/usr/sbin/lshw -quiet -c system | grep product | cut -d : -f2 | sed 's:^ ::' | sed 's: (None)::')
 MOTHERBOARD_MAKE="$MOBO_VENDOR $MOBO_MODEL"
-CPU_MODEL=$(/usr/sbin/lshw -quiet -c processor | grep product | cut -d : -f2 | sed 's:^ ::'| awk {'print $1FS$2FS$3'})
+CPU_MODEL=$(/usr/sbin/lshw -quiet -c processor | grep product | cut -d : -f2 | sed 's:^ ::'| awk {'print $1FS$2FS$3'} | sed 's:(::')
 CPU_SPEED=$(/usr/sbin/lshw -quiet -c processor | grep capacity | cut -d : -f2 | sed 's:^ ::')
 CPUTIME=$(ps -eo pcpu | awk 'NR>1' | awk '{tot=tot+$1} END {print tot}')
 CPUCORES=$(cat /proc/cpuinfo | grep -c processor)
@@ -85,19 +86,29 @@ CPU_USED=$(echo $CPUTIME / $CPUCORES | bc)%
 CPU_LOAD=$(cat /proc/loadavg | cut -d' ' -f1-3)
 CPU_VAMPIRE=$()
 CPU_VAMPIRE_USAGE=$(ps --no-header -e -o pcpu,args --sort -pcpu | sed '/^ 0.0 /d' | head -1 | awk {'print $1'} | cut -d . -f1)%
-DISK_MODEL=$(/usr/sbin/lshw -quiet -c disk | grep product | cut -d : -f2 | sed 's:^ ::')
-DISK_SIZE=$(/usr/sbin/lshw -quiet -c disk | grep size: | cut -d : -f2 | sed 's:^ ::')
+GPU_NAME=$(/usr/sbin/lshw -quiet -c video | grep product | awk {'print $2'})
+GPU_DRIVER=$(/usr/sbin/lshw -quiet -c video | grep configuration | awk {'print $2'} | cut -d = -f2)
+DISK_MODEL=$(/usr/sbin/lshw -quiet -c disk | grep product | cut -d : -f2 | sed 's:^ ::' | head -1)
+DISK_SIZE=$(/usr/sbin/lshw -quiet -c disk | grep size: | cut -d : -f2 | sed 's:^ ::' | head -1)
 DISK_AVAIL_ROOT=$(df -h / | awk '{ a = $4 } END { print a }')
 DISK_AVAIL_JAMBULA=$(df -h /JambulaTV | awk '{ a = $4 } END { print a }')
-DISK_LOGICAL_NAME=$(/usr/sbin/lshw -quiet -c disk | grep 'logical name' | cut -d : -f2 | sed 's:^ ::')
-DISK_TEMP=$(/usr/sbin/hddtemp | cut -d : -f3 | sed 's: ::g')
+DISK_LOGICAL_NAME=$(/usr/sbin/lshw -quiet -c disk | grep 'logical name' | cut -d : -f2 | sed 's:^ ::' |head -1)
+DISK_TEMP=$(/usr/sbin/hddtemp | cut -d : -f3 | sed 's: ::g' | head -1)
 
 MEMORY_SIZE_TOTAL=$(/usr/sbin/lshw -quiet -c memory | grep -A4 *-memory | grep size: | head -1 | cut -d : -f2 | sed 's:^ ::')
+# Memory Model
 MEMORY_MODEL_B0=$(/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:0 | grep product: | cut -d : -f2 | sed 's:^ ::')
-MEMORY_MODEL_B1=$(/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:1 | grep product: | cut -d : -f2 | sed 's:^ ::')
+MEMORY_MODEL_B1=$(/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:1 | grep product: | cut -d : -f2 | sed 's:^ ::' | sed 's:Array1_PartNumber1:Not Installed:')
+# Memory Size
 MEMORY_SIZE_B0=$(/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:0 | grep size: | cut -d : -f2 | sed 's:^ ::')
-
+# Test for existence of memory stick in second bank
+/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:1 | grep 'size' && FILL=$?
+if [ "$FILL" = "0" ];
+then
 MEMORY_SIZE_B1=$(/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:1 | grep size: | cut -d : -f2 | sed 's:^ ::')
+else
+MEMORY_SIZE_B1=0
+fi
 MEMORY_AVAIL=$(free -m | grep Mem: | awk {'print $4'})
 
 
@@ -127,6 +138,9 @@ echo -e "${n}Private IP Gateway:${b} $NETWORK_GATEWAY_ADDRESS \t ${n}DNS Address
 echo -e "${n}CPU Model:${b} $CPU_MODEL \t\t ${n}CPU Speed:${b} $CPU_SPEED"
 #echo -e "${n}CPU Usage:${b} $CPU_USED \t\t\t ${n}CPU Load:${b} $CPU_LOAD"
 echo -e "${n}CPU Usage:${b} $CPU_USED \t\t\t\t ${n}CPU used by JambulaTV:${b} $CPU_VAMPIRE_USAGE"
+
+# Graphics
+echo -e "${n}GPU Name:${b} $GPU_NAME \t\t\t ${n}GPU Driver:${b} $GPU_DRIVER"
 
 # Disks
 echo -e "${n}Disk Size:${b} $DISK_SIZE \t\t ${n}Disk Model:${b} $DISK_MODEL"
