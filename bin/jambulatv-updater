@@ -128,7 +128,7 @@ query_and_set_versions
 # UPDATE
 # ------
 # Quit if JambulaTV is upto update.  
-if [ $(echo "$JAMBULATV_LATEST_UPDATE_VERSION < $JAMBULATV_INSTALLED_VERSION" | bc -l) = 1 ] || [ "x$JAMBULATV_LATEST_UPDATE_VERSION" = "x" ];
+if [ $(echo "$JAMBULATV_LATEST_UPDATE_VERSION <= $JAMBULATV_INSTALLED_VERSION" | bc -l) = 1 ] || [ "x$JAMBULATV_LATEST_UPDATE_VERSION" = "x" ];
 then
 exit 1
 
