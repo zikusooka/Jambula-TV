@@ -22,27 +22,70 @@
 
 
 
-GIT_SERVER_URL="ssh://root@git.jambulatv.com:222/home/jambula/JambulaTV.git"
-RELEASE_FILE=/etc/JambulaTV/release
-REMOTE_VERSION=$(git ls-remote -t $GIT_SERVER_URL | grep -v '\^{}$' | awk {'print $2'} | cut -d / -f3 | sort -u | tail -1)
-LOCAL_VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
+PROJECT_SYSTEM_CONF_DIR=/etc/JambulaTV
+JAMBULATV_UPDATES_FTP_SERVER_INFO_FILE=$PROJECT_SYSTEM_CONF_DIR/updates-ftp-server-cfg
+JAMBULATV_RELEASE_FILE=$PROJECT_SYSTEM_CONF_DIR/release
+
+# Source Updates FTP server information i.e. variables
+. $JAMBULATV_UPDATES_FTP_SERVER_INFO_FILE
+
+JAMBULATV_UPDATE_CURRENT_VERSION_FILE=$(basename $JAMBULATV_FTP_SERVER_VERSION_FILE)
+
+WGET_CMD=wget
+WGET_TIMEOUT=20
+WGET_OPTIONS="-q --no-check-certificate --retr-symlinks -T $WGET_TIMEOUT --ftp-user=$JAMBULATV_FTP_USER --ftp-password=$JAMBULATV_FTP_PASS"
+PING_COUNT=1 #9
 
 
-# Check if Internet connection is up
-host -W 1 google.com 8.8.8.8 > /dev/null 2>&1
-INTERNET_ALIVE=$?
-# Quit if No connection
-[ "$INTERNET_ALIVE" = "0" ] || exit 1
 
-# Compare local with remote version 
-if [ $LOCAL_VERSION = $REMOTE_VERSION ] || [ "x$REMOTE_VERSION" = "x" ];
+###############
+#  FUNCTIONS  #
+###############
+check_ftp_server_access () {
+# Check for internet connectivity and access to the ftp server
+ping -c $PING_COUNT $JAMBULATV_FTP_SERVER > /dev/null 2>&1
+EXITVAL=$?
+if [ "$EXITVAL" != "0" ];
 then
+# Quit script, since there's no internet
+exit 1
+fi
+}
+
+query_and_set_versions () {
+# Download latest update version info file
+$WGET_CMD $WGET_OPTIONS -O $JAMBULATV_UPDATES_TEMP_DIR/$JAMBULATV_UPDATE_CURRENT_VERSION_FILE ftp://$JAMBULATV_FTP_SERVER/$JAMBULATV_FTP_SERVER_VERSION_FILE
+#
+# Exit updater if ftp login fails; and log error
+if [ "$?" = "0" ];
+then
+# Set latest update revision
+JAMBULATV_LATEST_UPDATE_VERSION=$(cat $JAMBULATV_UPDATES_TEMP_DIR/$JAMBULATV_UPDATE_CURRENT_VERSION_FILE)
+# Lookup current version
+JAMBULATV_INSTALLED_VERSION=$(grep -i Version $JAMBULATV_RELEASE_FILE | cut -d : -f2 | sed 's:v::g')
+fi
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+check_ftp_server_access 
+
+query_and_set_versions 
+
+# Quit if JambulaTV is upto update.  
+if [ $(echo "$JAMBULATV_LATEST_UPDATE_VERSION <= $JAMBULATV_INSTALLED_VERSION" | bc -l) = 1 ] || [ "x$JAMBULATV_LATEST_UPDATE_VERSION" = "x" ];
+then
+
 # No Updates Available
 echo "Up to Date"
 exit 0
 
 else
-echo "Update Available: $REMOTE_VERSION"
+echo "Update Available: $JAMBULATV_LATEST_UPDATE_VERSION"
 exit 2
 
 fi
