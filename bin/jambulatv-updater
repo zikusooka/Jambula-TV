@@ -2,16 +2,16 @@
 # This script will check for new updates on line; download and install them
 # Jambula Labs @copyright 2016-2017 All rights reserved'
 
-JAMBULATV_FTP_SERVER=sftp.jambulatv.com
-JAMBULATV_FTP_SERVER_UPDATES_DIR=JambulaTV/updates
-JAMBULATV_FTP_SERVER_VERSION_FILE=$JAMBULATV_FTP_SERVER_UPDATES_DIR/VERSION
-JAMBULATV_FTP_USER=jambulaftp1
-JAMBULATV_FTP_PASS=nahZic4k
+PROJECT_SYSTEM_CONF_DIR=/etc/JambulaTV
+JAMBULATV_UPDATES_FTP_SERVER_INFO_FILE=$PROJECT_SYSTEM_CONF_DIR/updates-ftp-server-cfg
 
 JAMBULATV_UPDATES_DOWNLOAD_DIR=/var/updates/JambulaTV
 JAMBULATV_UPDATES_TEMP_DIR=/tmp/JambulaTV-updates
 JAMBULATV_UPDATES_LOG_DIR=/var/log/JambulaTV/updates
 JAMBULATV_RELEASE_FILE=/etc/JambulaTV/release
+
+# Source Updates FTP server information i.e. variables
+. $JAMBULATV_UPDATES_FTP_SERVER_INFO_FILE
 
 JAMBULATV_UPDATE_CURRENT_VERSION_FILE=$(basename $JAMBULATV_FTP_SERVER_VERSION_FILE)
 
