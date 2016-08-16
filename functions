@@ -2608,12 +2608,19 @@ make_install_jambulatv
 }
 
 kodi_addons_unpack () {
+# script.module.beautifulsoup
+if [ "$KODI_ADDON" = "script.module.beautifulsoup" ];
+then
+unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/script.module.beautifulsoup-*.zip
+# script.module.beautifulsoup4
+elif [ "$KODI_ADDON" = "script.module.beautifulsoup4" ];
+then
+unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/script.module.beautifulsoup4-*.zip
+else
+# All others
 unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
-echo
-echo
-echo "$KODI_ADDON Installed"
-echo
 #_install_pause_check_4_errors_
+fi
 }
 
 kodi_addons_install() {
