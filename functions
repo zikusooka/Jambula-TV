@@ -3269,7 +3269,10 @@ done
 }
 
 wired_interfaces_configure () {
-# Configure IP Address & DNS settings for wired interface
+# Configure IP & DNS settings for wired interface depending on existence of gateway
+if [ "x$NETWORK_GATEWAY_ADDRESS" != "x" ];
+then
+# Network gateway exists - configure static boot protocol
 cat > $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE <<EOF
 # IP/DNS settings for $NETWORK_ETHERNET_DEVICE
 HWADDR="$NETWORK_MAC_ADDRESS"
@@ -3287,6 +3290,20 @@ DNS2="$NETWORK_DNS_2"
 #DNS4=208.67.222.222
 #DNS5=8.8.8.8
 EOF
+#
+else
+# Network gateway DOES NOT exist - configure dhcp boot protocol
+cat > $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE <<EOF
+# IP/DNS settings for $NETWORK_ETHERNET_DEVICE
+HWADDR="$NETWORK_MAC_ADDRESS"
+DEVICE="$NETWORK_ETHERNET_DEVICE"
+TYPE="Ethernet"
+BOOTPROTO="dhcp"
+ONBOOT="yes"
+NM_CONTROLLED="no"
+EOF
+#
+fi
 #
 # Configure hostname
 HOSTNAME=$PROJECT_NAME.$SYSTEM_IDENTIFIER.local
