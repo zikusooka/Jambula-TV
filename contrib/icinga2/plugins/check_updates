@@ -64,6 +64,8 @@ then
 JAMBULATV_LATEST_UPDATE_VERSION=$(cat $JAMBULATV_UPDATES_TEMP_DIR/$JAMBULATV_UPDATE_CURRENT_VERSION_FILE.$USER)
 # Lookup current version
 JAMBULATV_INSTALLED_VERSION=$(grep -i Version $JAMBULATV_RELEASE_FILE | cut -d : -f2 | sed 's:v::g')
+else
+exit 1
 fi
 }
 
