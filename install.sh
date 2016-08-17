@@ -174,21 +174,14 @@ nginx_spawn_fcgi_configure
 # ----------
 mysqld_configure
 
-# --------------------------------
-# Wireless Access Point (HotSpot)
-# --------------------------------
+# ------------------------
+# Authentication - Radius
+# ------------------------
 freeradius_install
 freeradius_configure
 freeradius_attributes_configure
 freeradius_test
 daloradius_configure
-coova_chilli_install
-haserl_install
-coova_chilli_configure
-coova_chilli_customization
-coova_chilli_icinga2_dns_monitor
-hostapd_install
-hostapd_configure
 
 # --------
 # Content
@@ -275,6 +268,18 @@ google_tts_configure
 sphinxbase_install
 pocketsphinx_install
 SpeechRecognition_install
+
+# -----------------------------------------
+# Wireless Access Point (HotSpot)
+# IMPORTANT Install After FreePBX/Asterisk
+# -----------------------------------------
+coova_chilli_install
+haserl_install
+coova_chilli_configure
+coova_chilli_customization
+coova_chilli_icinga2_dns_monitor
+hostapd_install
+hostapd_configure
 
 #------------------
 # System Monitoring
