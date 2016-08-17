@@ -13,6 +13,7 @@ WIFI_SECURITY_KEY=$(grep -i SECURITY_KEY $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d'
 OSD_SCRIPT=/usr/bin/jambulatv-osd
 AP_FOUND_MSG="Found your WiFi Access Point ($WIFI_SSID). Please wait while I connect to it"
 CONNECTED_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID), Assigning IP Address ..."
+INSERT_WIFI_DONGLE_MSG="Please insert your USB Wireless (WiFi) Network Adapter. I will retry connecting to $WIFI_SSID shortly ..."
 # Set WiFi station Interface
 WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 
@@ -21,6 +22,22 @@ WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 ###############
 #  FUNCTIONS  #
 ###############
+check_4_wifi_dongle () {
+# Test to see if WiFi stick is now present
+iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
+WIFI_STICK_PRESENT=$?
+until [ "$WIFI_STICK_PRESENT" = "0" ];
+do
+# Display success message on Screen
+$OSD_SCRIPT -m "$INSERT_WIFI_DONGLE_MSG"
+# Pause while waiting for insertion
+sleep 60
+# Test if WiFi stick is now present
+iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
+WIFI_STICK_PRESENT=$?
+done
+}
+
 number_of_interfaces () { 
 # Quit if less than 2 WiFi devices are detected
 if [ "$WIFI_INTERFACES_AVAILABLE" -lt "2" ];
@@ -118,6 +135,9 @@ fi
 #################
 #  MAIN SCRIPT  #
 #################
+# Check to see if USB WiFi dongle is inserted
+check_4_wifi_dongle
+
 # Find WiFi interface to be used as station
 number_of_interfaces
 
