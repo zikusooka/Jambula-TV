@@ -13,7 +13,7 @@ WIFI_SECURITY_KEY=$(grep -i SECURITY_KEY $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d'
 OSD_SCRIPT=/usr/bin/jambulatv-osd
 AP_FOUND_MSG="Found your WiFi Access Point ($WIFI_SSID). Please wait while I connect to it"
 CONNECTED_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID), Assigning IP Address ..."
-INSERT_WIFI_DONGLE_MSG="Please insert your USB Wireless (WiFi) Network Adapter. I will retry connecting to $WIFI_SSID shortly ..."
+INSERT_WIFI_DONGLE_MSG="Please insert your USB Wireless (WiFi) Network Adapter. I will try connecting to $WIFI_SSID shortly ..."
 # Set WiFi station Interface
 WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 
@@ -135,8 +135,6 @@ fi
 #################
 #  MAIN SCRIPT  #
 #################
-# Check to see if USB WiFi dongle is inserted
-check_4_wifi_dongle
 
 # Find WiFi interface to be used as station
 number_of_interfaces
@@ -159,6 +157,9 @@ scan_4_wifi
 quit_not_found
 ;;
 esac
+
+# Check to see if USB WiFi dongle is inserted
+check_4_wifi_dongle
 
 # Go futher if there's available AP
 generate_wpa_config
