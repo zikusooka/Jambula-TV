@@ -190,20 +190,6 @@ coova_chilli_icinga2_dns_monitor
 hostapd_install
 hostapd_configure
 
-#------------
-# Monitoring
-# -----------
-icinga2_install # ~ 33mins
-monitoring_plugins_install
-check_logfiles_install
-icinga2_ido_mysql
-icinga2_configure
-icingaweb2_install
-icingaweb2_configure
-# Netdata: realtime system monitoring
-netdata_install
-netdata_configure
-
 # --------
 # Content
 # --------
@@ -289,6 +275,21 @@ google_tts_configure
 sphinxbase_install
 pocketsphinx_install
 SpeechRecognition_install
+
+#------------------
+# System Monitoring
+# IMPORTANT Install After FreePBX/Asterisk
+# -----------------
+icinga2_install # ~ 33mins
+monitoring_plugins_install
+check_logfiles_install
+icinga2_ido_mysql
+icinga2_configure
+icingaweb2_install
+icingaweb2_configure
+# Netdata: realtime system monitoring
+netdata_install
+netdata_configure
 
 # ---------------------
 # Security Monitoring 
