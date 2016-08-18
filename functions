@@ -494,7 +494,7 @@ NETWORK_MASK_PREFIX=24
 NETWORK_DOMAIN=jambulatv.com
 NETWORK_WIRELESS_SSID="$PROJECT_NAME-$(echo $SYSTEM_IDENTIFIER | cut -c 1-5)"
 NETWORK_WIRELESS_CHANNEL_NO=11
-NETWORK_WIRELESS_PASSPHRASE=2014august24
+NETWORK_WIRELESS_PASSPHRASE=$(pwgen -A -v -N1 12)
 NETWORK_DHCP_RANGE="192.168.0.100,192.168.0.199"
 
 CHRONYC_PASSWD=jul1214
@@ -580,7 +580,7 @@ LOCAL_SSH_SERVER=localhost
 LOCAL_SSH_SERVER_PORT=22
 # Remote SSH server
 REMOTE_SSH_SERVER_USER=$PROJECT_NAME.$SYSTEM_IDENTIFIER
-REMOTE_SSH_SERVER_PASS=$(pwgen -s)
+REMOTE_SSH_SERVER_PASS=$(pwgen -v -N1 8)
 REMOTE_SSH_SERVER=remote1.jambulatv.com
 REMOTE_SSH_SERVER_PORT=222
 REMOTE_SSH_SERVER_RANDOM_PORT=$[ ( $RANDOM % 10000 )  + 10000 ]
@@ -4988,6 +4988,22 @@ cat $PROJECT_CONFIGS_DIR/hostapd-conf.template | sed -e "s/WIFIDEVICE0/$WIFI_AP_
 [ ! -f $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service ] || \
       mv -v $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service \
       $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service.disabled
+#
+# Display WiFi SSID and Passphrase post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+WiFi HotSpot
+============
+% To access the Wireless Access Point, please use the following credentials
+
+	SSID:  $NETWORK_WIRELESS_SSID
+
+	Passphrase:  $NETWORK_WIRELESS_PASSPHRASE
+
+#
+EOF
+
 }
 
 youtube_dl_install () {
