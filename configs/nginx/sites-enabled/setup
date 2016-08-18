@@ -1,0 +1,20 @@
+    server {
+        listen 8502;
+
+        server_name  jambulatv_setup;
+        root html/setup/;
+        index  index.html index.htm index.php;
+	autoindex on;
+
+        location / {
+        }
+
+        location ~ \.php$ {
+            include  includes/php_params;
+        }
+ 
+    	location ~* \.(cgi|chi)$ {
+            include  includes/cgi_params;
+    	}  
+
+    }
