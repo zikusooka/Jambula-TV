@@ -83,7 +83,7 @@ grep "ssid=\"$WIFI_SSID\"" $WIFI_WPA_CONFIG_FILE > /dev/null 2>&1
 WPA_EXISTS=$?
 # Generate a wpa/wpa2 configuration file if not yet set
 [ "$WPA_EXISTS" = "0" ] || \
-sudo wpa_passphrase $WIFI_SSID $WIFI_SECURITY_KEY >> $WIFI_WPA_CONFIG_FILE
+sudo wpa_passphrase $WIFI_SSID $WIFI_SECURITY_KEY > $WIFI_WPA_CONFIG_FILE
 }
 
 connect_2_access_point () {
@@ -117,6 +117,9 @@ ps acx | grep dhclient > /dev/null 2>&1
 # Get IP Address using dhclient
 if [ "$?" != "0" ];
 then
+# Clear default route
+ip route del default
+# Get IP Address/Gateway/DNS
 echo "Acquiring IP address information ..."
 sudo dhclient $WIFI_STATION_INTERFACE
 fi
