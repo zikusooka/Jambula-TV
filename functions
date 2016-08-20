@@ -2828,7 +2828,7 @@ cp -fv $PROJECT_IMAGES_DIR/kodi/top-left.png \
 cp -fv $PROJECT_IMAGES_DIR/kodi/splash.png $KODI_SHARE_DIR/media/Splash.png
 
 # Fix Shutdown Main Menu Button
-sed -i "s:XBMC.ShutDown():System.Exec(poweroff):g" $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/720p/DialogButtonMenu.xml
+sed -i "s:XBMC.ShutDown():System.Exec(systemctl poweroff):g" $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/720p/DialogButtonMenu.xml
 }
 
 kodi_scripts () {
