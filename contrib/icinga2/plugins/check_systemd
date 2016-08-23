@@ -22,7 +22,12 @@
 
 
 
+# Wait until all systemd services have run i.e. Wait until boot up is complete
+systemd-analyze | grep finished > /dev/null 2>&1
+STARTUP_FINISHED=$?
+[ "$STARTUP_FINISHED" = "0" ] || exit 1
 
+# Get failed units
 FAILED_UNITS=$(systemctl --failed --no-legend | awk {'print $5'})
 
 if [ "x$FAILED_UNITS" = "x" ];
