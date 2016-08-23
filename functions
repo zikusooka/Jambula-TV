@@ -6731,11 +6731,14 @@ cd $WWW_HTML_DIR/zm && chmod 755 *.php *.cgi
 #
 # Create Events directory for ZoneMinder under user's home directory
 [ -d $ZONEMINDER_EVENTS_DIRECTORY ] || mkdir -p $ZONEMINDER_EVENTS_DIRECTORY
-# Change permissions
-chown -R $WWW_USER:$WWW_GROUP $ZONEMINDER_EVENTS_DIRECTORY
 # Remove default events directory and link to specified home direcory
 [ ! -d $WWW_HTML_DIR/zm ] || rm -rf $WWW_HTML_DIR/zm/events
 ln -s $ZONEMINDER_EVENTS_DIRECTORY $WWW_HTML_DIR/zm/events
+# Create ZM Images directory if non-existent
+[ -d $WWW_HTML_DIR/zm/images ] || mkdir -p $WWW_HTML_DIR/zm/images
+# Change permissions
+chown -R $WWW_USER:$WWW_GROUP $ZONEMINDER_EVENTS_DIRECTORY
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/zm/images
 #
 # MySQL DB for ZoneMinder
 # ------------------------
