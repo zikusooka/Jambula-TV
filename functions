@@ -7688,8 +7688,14 @@ make_install_jambulatv
 }
 
 initial_setup_configure () {
+# Copy jambulatv-initial-setup, if none exists in bin directory
+[ -e $BINARY_PREFIX/jambulatv-initial-setup ] || cp -v $PROJECT_BIN_DIR/jambulatv-initial-setup $BINARY_PREFIX/
+# Get WWW User and Group
+set_www_user_group
 # Add Setup Web files
 rsync -av $PROJECT_CUSTOMIZATION_DIR/setup/ $WWW_HTML_DIR/setup/
+# Change log directory permissions
+chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/setup
 }
 
 auto_updates_configure () {
