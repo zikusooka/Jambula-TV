@@ -5,6 +5,7 @@
         root html/setup/;
         index  index.html index.htm index.php;
 	autoindex on;
+        access_log   /var/log/JambulaTV/.setup-nginx-DO-NOT-REMOVE.log;
 
         location / {
         }
