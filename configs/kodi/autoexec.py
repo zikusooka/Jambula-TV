@@ -11,3 +11,6 @@ import time
 
 # Reminders: Birthdays, Anniversaries, Holidays, etc
 # subprocess.check_call(['/usr/bin/jambulatv-remind']) # Not needed:- see reminders.timer
+
+
+subprocess.check_call(['/usr/bin/jambulatv-initial-setup'])
