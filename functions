@@ -7687,6 +7687,11 @@ cd $INSTALL_SRC_DIR/cockpit
 make_install_jambulatv
 }
 
+initial_setup_configure () {
+# Add Setup Web files
+rsync -av $PROJECT_CUSTOMIZATION_DIR/setup/ $WWW_HTML_DIR/setup/
+}
+
 auto_updates_configure () {
 # Copy jambulatv-updater script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-updater ] || cp -v $PROJECT_BIN_DIR/jambulatv-updater $BINARY_PREFIX/
