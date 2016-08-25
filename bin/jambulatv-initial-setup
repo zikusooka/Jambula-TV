@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# Variables
+QRCODE_ACTION=$@
+QRCODE_WIDTH=320
+QRCODE_HEIGHT=240
+QRCODE_PLAYER_CMD="/usr/bin/cvlc"
+QRCODE_PLAYER_OPTIONS="--daemon -I dummy --quiet --no-audio --width $QRCODE_WIDTH --height $QRCODE_HEIGHT --loop --no-video-title-show"
+
+JAMBULTAV_SHARE_DIR=/usr/share/JambulaTV
+JAMBULTAV_LOG_DIR=/var/log/JambulaTV
+
+QRCODE_DIR=$JAMBULTAV_SHARE_DIR/images/qrcodes
+QRCODE_FILE=setup_url.png
+
+SETUP_COMPLETED_FILE=$JAMBULTAV_SHARE_DIR/html/setup/.intial-setup-completed
+
+QRCODE_OSD_MSG="Please use a Barcode scanner app on your phone to scan this code.  This QR code will only be removed once setup has been completed."
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Quit if setup completed
+[ -e $SETUP_COMPLETED_FILE ] && exit 0
+
+# Display QR Code since setup not yet done
+$QRCODE_PLAYER_CMD $QRCODE_PLAYER_OPTIONS $QRCODE_DIR/$QRCODE_FILE 
+
+# Wait for user to complete setup
+while [ ! -e $SETUP_COMPLETED_FILE ];
+do
+
+# Display OSD Message
+jambulatv-osd -m "$QRCODE_OSD_MSG" 
+
+# Pause a bit
+sleep 45
+
+done
+
+# Remove QR Code since setup completed
+QRCODE_PID=$(ps auxw | grep $QRCODE_FILE | awk {'print $2'})
+kill -15 $QRCODE_PID || kill -9 $QRCODE_PID
