@@ -113,7 +113,7 @@ fi
 
 get_ip_address () {
 # Start dhclient if it is not running
-ps acx | grep dhclient > /dev/null 2>&1
+ps auxw | grep dhclient | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
 # Get IP Address using dhclient
 if [ "$?" != "0" ];
 then
@@ -121,7 +121,7 @@ then
 ip route del default
 # Get IP Address/Gateway/DNS
 echo "Acquiring IP address information ..."
-sudo dhclient $WIFI_STATION_INTERFACE
+sudo /sbin/dhclient -H $(hostname -s) -q -lf /var/lib/dhclient/dhclient--${WIFI_STATION_INTERFACE}.lease -pf /var/run/dhclient-${WIFI_STATION_INTERFACE}.pid ${WIFI_STATION_INTERFACE}
 fi
 }
 
