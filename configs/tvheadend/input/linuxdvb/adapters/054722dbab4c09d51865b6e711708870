@@ -2,27 +2,50 @@
 	"rootpath": "/dev/dvb/adapter0",
 	"frontends": {
 		"DVB-C #0": {
+			"pids_max": 32,
 			"powersave": false,
+			"tune_repeats": 0,
+			"skip_bytes": 0,
+			"ibuf_size": 188000,
+			"status_period": 1000,
+			"old_status": false,
 			"enabled": false,
 			"priority": 0,
 			"spriority": 0,
 			"displayname": "Sony CXD2820R : DVB-C #0",
 			"ota_epg": true,
+			"initscan": true,
+			"idlescan": true,
+			"free_weight": 0,
 			"networks": [
 			],
-			"type": "DVB-C"
+			"linked": "",
+			"type": "DVB-C",
+			"uuid": "ddddd6c44834c0fa0c01a54057e59d0a"
 		},
 		"DVB-T #0": {
+			"lna": false,
+			"pids_max": 32,
 			"powersave": true,
+			"tune_repeats": 0,
+			"skip_bytes": 0,
+			"ibuf_size": 188000,
+			"status_period": 1000,
+			"old_status": false,
 			"enabled": true,
 			"priority": 0,
 			"spriority": 0,
 			"displayname": "DVB-T2-0",
 			"ota_epg": true,
+			"initscan": true,
+			"idlescan": true,
+			"free_weight": 0,
 			"networks": [
-				"b85cbd56c02eeceab34fa07d1884a78e"
+				"031e48dabe2fdccff0ee417b3bc7af49"
 			],
-			"type": "DVB-T"
+			"linked": "",
+			"type": "DVB-T",
+			"uuid": "e80a8b6a1b7a2373a643d16c05ccb8e8"
 		}
 	}
 }
