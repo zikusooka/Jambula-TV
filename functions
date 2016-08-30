@@ -417,6 +417,11 @@ MOTION_DB_NAME=motion
 MOTION_DB_USER=jambulatv
 MOTION_DB_PASS=jambulatvmotion3
 
+JAMBULATV_SETUP_DB_NAME=jambulatv
+JAMBULATV_SETUP_DB_USER=jambula_setup
+JAMBULATV_SETUP_DB_PASS=eng8Na
+JAMBULATV_SETUP_DB_SCHEMA=$WWW_HTML_DIR/setup/jambulatv.sql
+
 # DNS Settings
 # *************
 # Current DNS 1
@@ -7696,6 +7701,27 @@ set_www_user_group
 rsync -av $PROJECT_CUSTOMIZATION_DIR/setup/ $WWW_HTML_DIR/setup/
 # Change log directory permissions
 chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/setup
+
+# MySQL DB for JambulaTV Setup
+# ----------------------------
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+#
+# Create setup database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $JAMBULATV_SETUP_DB_NAME
+# Generate database tables using schema
+mysql -u root -p$MYSQL_ROOT_PASSWORD $JAMBULATV_SETUP_DB_NAME < $JAMBULATV_SETUP_DB_SCHEMA
+# Set privileges on zoneminder database
+echo "GRANT ALL PRIVILEGES ON $JAMBULATV_SETUP_DB_NAME.* to $JAMBULATV_SETUP_DB_USER@localhost IDENTIFIED by '$JAMBULATV_SETUP_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+#
+# Change related DB name, username and password credentials in final form submitted
+cat $PROJECT_CUSTOMIZATION_DIR/setup/form_50.php | \
+	sed -e "s:JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
+	sed -e "s:JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
+	sed -e "s:JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" > $WWW_HTML_DIR/setup/form_50.php
 }
 
 auto_updates_configure () {
