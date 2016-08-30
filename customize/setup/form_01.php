@@ -1,34 +1,53 @@
+<?php
+session_start();
+?>
+
 <!DOCTYPE HTML>
 <html>
  <head>
  <title>JambulaTV Setup</title>
  <meta name="viewport" content="width=device-width, initial-scale=0.84">
- <link rel="stylesheet" href="style.css" />
+ <link rel="stylesheet" href="css/style.css" />
  </head>
+
  <body>
  <div class="container">
  <div class="main">
- <h2>Setup completed</h2>
+ <h2>1. Register your JambulaTV!</h2>
+ <span id="error">
+ <!---- Initializing Session for errors --->
  <?php
-
- session_start();
- foreach ($_POST as $key => $value) {
- $_SESSION['post'][$key] = $value;
- } 
-
- $fname=".initial-setup-completed";
- $file=fopen($fname,"w");
- fwrite($file,"Setup Done");
- fclose($file);
-
- echo '<p><span id="success">Thank you for completing setup.  Enjoy!</span></p>';
- echo '<p></p>';
- echo '<p>Please download the Remote App as follows:</p>';
- echo '<h2><a href="https://play.google.com/store/apps/details?id=org.leetzone.android.yatsewidgetfree">Android</a></h2>';
- echo '<h2><a href="https://itunes.apple.com/en/app/official-kodi-remote/id520480364?mt=8">iOS</a></h2>';
-
+ if (!empty($_SESSION['error'])) {
+ echo $_SESSION['error'];
+ unset($_SESSION['error']);
+ }
  ?>
+ </span>
+
+ <form action="form_02.php" method="post">
+ <label>Full Names :<span>*</span></label>
+ <input name="contact_name" type="text" placeholder="e.g James Waliggo" required>
+ <label>Email Address :<span>*</span></label>
+ <input name="contact_email" type="email" placeholder="e.g. jwaliggo@gmail.com" required>
+ <label>Phone Number :<span>*</span></label>
+ <input name="contact_phone" type="text" placeholder="e.g. 256772234567" required>
+ <label>Birthday :</label>
+ <input name="contact_birthday" type="text" placeholder="e.g. 26 May" >
+ <label>Address Line1 :<span>*</span></label>
+ <input name="contact_address1" id="address1" type="text" size="30" required>
+ <label>Address Line2 :</label>
+ <input name="contact_address2" id="address2" type="text" size="50">
+ <label>City :<span>*</span></label>
+ <input name="contact_city" id="city" type="text" size="25" required>
+ <label>Country :<span>*</span></label>
+ <input name="contact_country" id="country" type="text" size="25" required>
+
+ <p>
+
+ <input type="submit" value="Next" />
+ </form>
  </div>
  </div>
+
  </body>
 </html>
