@@ -2297,7 +2297,7 @@ make_install_jambulatv
 tvheadend_configure () {
 # Create tvheadend directory if it does not exist
 [ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
-# Copy Uganda DVB-T2 Network setup
+# Copy TVHeadEnd customized config files for Kampala, Uganda - FIX & include other markets
 rsync -avz $PROJECT_CONFIGS_DIR/tvheadend/ $TVHEADEND_CONFIG_DIR/
 # Give multimedia user permission to access tvheadend directories
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
