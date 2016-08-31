@@ -642,6 +642,7 @@ ASTERISK_XMPP_HOST=jambulatv
 ASTERISK_XMPP_USERNAME=asterisk
 ASTERISK_XMPP_PASSWORD=jazzy1
 ASTERISK_XMPP_RESOURCE=jambulatv
+USER_001_XMPP_HOST=jambulatv
 USER_001_XMPP_USERNAME=jambula
 USER_001_XMPP_PASSWORD=jambulatv
 USER_001_XMPP_RESOURCE=jambulatv
@@ -3006,10 +3007,15 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 }
 
 kodi_osd_configure () {
-# Install python-xbmc -helper
-#python_xbmc_install # No longer needed since we are using HTTP JSON RPC Calls
-# Copy jambulatv-osd wrapper for startup services, if none exists in bin directory
-[ -e $BINARY_PREFIX/jambulatv-osd ] || cp -v $PROJECT_BIN_DIR/jambulatv-osd $BINARY_PREFIX/
+# Copy jambulatv-osd script, if none exists in bin directory
+[ -e $OSD_SCRIPT ] || cat $PROJECT_BIN_DIR/jambulatv-osd | \
+	sed -e "s:USER_001_XMPP_HOST:$USER_001_XMPP_HOST:g" | \
+	sed -e "s:USER_001_XMPP_USERNAME:$USER_001_XMPP_USERNAME:g" | \
+	sed -e "s:USER_001_XMPP_PASSWORD:$USER_001_XMPP_PASSWORD:g" | \
+	sed -e "s:USER_001_XMPP_RESOURCE:$USER_001_XMPP_RESOURCE:g" \
+		> $OSD_SCRIPT
+# Make script executable
+chmod 755 $OSD_SCRIPT
 }
 
 x11_server_configure () {
@@ -3310,7 +3316,7 @@ echo "NETWORKING=yes
 HOSTNAME=$HOSTNAME" > $SYSCONFIG_NETWORK_FILE
 # Add IP Address to hosts file
 echo "# JambulaTV IP-Hostname
-$NETWORK_IP_ADDRESS	$HOSTNAME" >> /etc/hosts
+$NETWORK_IP_ADDRESS	$HOSTNAME $PROJECT_NAME" >> /etc/hosts
 #
 # BUG: Patch network rc.d init file i.e. delay start with something
 patch -p1 $CONFDIR/rc.d/init.d/network  < $PROJECT_PATCHES_DIR/network.rc.init.patch

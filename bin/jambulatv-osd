@@ -12,6 +12,7 @@ import commands
 import warnings
 import time
 import xml.etree.ElementTree as ET
+import xmpp
 
 # Variables
 JAMBULATV_VIRTUAL_TERMINAL = 'tty7'
@@ -22,6 +23,16 @@ OSDRUNFILE = '/tmp/osd_process_running'
 
 # Copyright
 __author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2016-2017 All rights reserved'
+
+# Parse arguments/ message
+parser = argparse.ArgumentParser(description='Display Announcements on JambulaTV Screen')
+parser.add_argument('-m','--message', help='The message you want displayed.  Wrap it in quotes',required=True)
+args = parser.parse_args()
+
+MESSAGE = args.message
+XMPP_USERNAME = 'USER_001_XMPP_USERNAME'
+XMPP_PASSWORD   = 'USER_001_XMPP_PASSWORD'
+
 
 
 # Functions
@@ -45,6 +56,14 @@ def create_run_file ():
 	processfile.write('')
 	processfile.close()
 
+# Send xmpp message with notice
+def send_xmpp_message ():
+	chat = xmpp.Client('USER_001_XMPP_RESOURCE')
+	chat.connect( server=('USER_001_XMPP_HOST',5222) )
+	chat.auth(XMPP_USERNAME,XMPP_PASSWORD,'')
+	chat.send( xmpp.Message( "USER_001_XMPP_USERNAME@USER_001_XMPP_HOST" , "[JambulaTV] OSD Notice: " +MESSAGE ) )
+
+
 
 #################
 #  MAIN SCRIPT  #
@@ -64,13 +83,6 @@ for services in root.findall('services'):
    xbmc_title = services.find('devicename').text
    xbmc_port = services.find('webserverport').text
    xbmc_host=['127.0.0.1']
-
-# Parse arguments/ message
-parser = argparse.ArgumentParser(description='Display Announcements on JambulaTV Screen')
-parser.add_argument('-m','--message', help='The message you want displayed.  Wrap it in quotes',required=True)
-args = parser.parse_args()
-
-MESSAGE = args.message
 
 
 
@@ -116,6 +128,9 @@ xbmc_poke_screen(xbmc_host)
 
 # Display message on screen
 xbmc_osd_message(xbmc_host)
+
+# Send XMPP message
+send_xmpp_message()
 
 # Remove run file created earlier to prevent others from using me
 os.remove(OSDRUNFILE);
