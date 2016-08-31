@@ -22,7 +22,7 @@ session_start();
     // MiFi Router
     case "mifi_router":
     $file=fopen($internet_settings_file,"w");
-    fwrite($file,"TYPE='$internet_device'\nISP_NAME='$isp_name'\nSSID='$mifi_ssid'\nSECURITY_KEY='$mifi_pass'");
+    fwrite($file,"TYPE='$internet_device'\nISP_NAME='$isp_name'\nWIFI_SSID='$mifi_ssid'\nWIFI_SECURITY_KEY='$mifi_pass'");
     fclose($file);
      header("location: form_05.php");
         break;
@@ -35,10 +35,10 @@ session_start();
     header("location: form_05.php");
         break;
 
-    // LAN (DHCP)
+    // LAN (STATIC)
     case "lan_static":
     $file=fopen($internet_settings_file,"w");
-    fwrite($file,"TYPE='$internet_device'\nISP_NAME='$isp_name'");
+    fwrite($file,"TYPE='$internet_device'\nISP_NAME='$isp_name'\nNETWORK_IP_ADDRESS='$lan_ip_addr'\nNETWORK_GATEWAY_ADDRESS='$lan_ip_gate'\nNETWORK_DNS_1='$lan_dns_1'\nNETWORK_DNS_2='$lan_dns_2'");
     fclose($file);
     header("location: form_05.php");
         break;

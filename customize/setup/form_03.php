@@ -11,7 +11,7 @@ session_start();
  // Create WiFi devices file 
  $wifi_devices_file='.wifi_devices.txt';
  $file=fopen($wifi_devices_file,"w");
- fwrite($file,"$mac_addresses");
+ fwrite($file,"$wifi_nickname_1,$wifi_mac_1\n$wifi_nickname_2,$wifi_mac_2\n$wifi_nickname_3,$wifi_mac_3\n$wifi_nickname_4,$wifi_mac_4\n$wifi_nickname_5,$wifi_mac_5\n");
  fclose($file);
 
  // Redirect to Internet connection configuration page based on device selected
