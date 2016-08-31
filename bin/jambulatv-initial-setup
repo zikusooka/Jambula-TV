@@ -1,46 +1,202 @@
 #!/bin/sh
 #
 # Variables
-QRCODE_ACTION=$@
+QRCODE_PLAYER_CMD="/usr/bin/cvlc"
 QRCODE_WIDTH=320
 QRCODE_HEIGHT=240
-QRCODE_PLAYER_CMD="/usr/bin/cvlc"
 QRCODE_PLAYER_OPTIONS="--daemon -I dummy --quiet --no-audio --width $QRCODE_WIDTH --height $QRCODE_HEIGHT --loop --no-video-title-show"
 
+JAMBULATV_USER=jambula
+JAMBULTAV_CONFIG_DIR=/etc/JambulaTV
 JAMBULTAV_SHARE_DIR=/usr/share/JambulaTV
 JAMBULTAV_LOG_DIR=/var/log/JambulaTV
+
+OSDRUNFILE=/tmp/osd_process_running
 
 QRCODE_DIR=$JAMBULTAV_SHARE_DIR/images/qrcodes
 QRCODE_FILE=setup_url.png
 
+SETUP_INTERNET_CONFIG_FILE=$JAMBULTAV_SHARE_DIR/html/setup/.internet-settings.txt
+SETUP_MAC_ADDRESSES_FILE=$JAMBULTAV_SHARE_DIR/html/setup/.wifi_devices.txt
 SETUP_COMPLETED_FILE=$JAMBULTAV_SHARE_DIR/html/setup/.initial-setup-completed
 
+SETUP_LAN_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
+SETUP_3_4G_DONGLE_FILE=$JAMBULTAV_CONFIG_DIR/internet-mobile-usb.cfg
+SETUP_MIFI_ROUTER_FILE=$JAMBULTAV_CONFIG_DIR/internet-mobile-wifi.cfg
+SETUP_WIFI_DEVICES_FILE=$JAMBULTAV_CONFIG_DIR/my-wifi-devices.cfg
+SETUP_LAN_SYSCONFIG_FILE=/etc/sysconfig/network-scripts/ifcfg-${SETUP_LAN_DEVICE}
+
 QRCODE_OSD_MSG="Please use a Barcode scanner app on your phone to scan this code.  This QR code will only be removed once setup has been completed."
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+check_if_setup_completed () {
+# Quit if setup completed
+[ -e $SETUP_COMPLETED_FILE ] && exit 0
+}
+
+clear_logfile () {
+# Remove nginx setup log file
+sudo rm -f $JAMBULTAV_LOG_DIR/setup-nginx.log
+# Restart nginx
+sudo systemctl restart nginx.service
+}
+
+remove_previous_qrcode () {
+# Kill existing QR Code/VLC process
+QRCODE_VLC_PID=$(ps auxw | grep vlc | grep qrcodes/setup_url.png | awk {'print $2'})
+[ "x$QRCODE_VLC_PID" != "x" ] && kill $QRCODE_VLC_PID
+}
+
+display_qrcode () {
+# Display QR Code since setup not yet done
+$QRCODE_PLAYER_CMD $QRCODE_PLAYER_OPTIONS $QRCODE_DIR/$QRCODE_FILE 
+}
+
+display_osd_message () {
+# Check to see if setup web server has been accessed, so we can display OSD
+grep form_01.php $JAMBULTAV_LOG_DIR/setup-nginx.log > /dev/null 2>&1
+SERVER_ACCESSED=$?
+while [ "$SERVER_ACCESSED" != "0" ];
+do
+# Remove OSD Message
+[ -e $OSDRUNFILE ] && rm -f $OSDRUNFILE
+# Display OSD Message
+jambulatv-osd -m "$QRCODE_OSD_MSG"
+# Wait
+sleep 15
+# Check again
+grep form_01.php $JAMBULTAV_LOG_DIR/setup-nginx.log > /dev/null 2>&1
+SERVER_ACCESSED=$?
+done
+# Remove OSD Message
+rm -f $OSDRUNFILE
+}
+
+configure_internet_connection () {
+# Check for Internet settings file
+while [ ! -e $SETUP_INTERNET_CONFIG_FILE ];
+do
+# Wait
+sleep 1
+done
+# Source variables file
+. $SETUP_INTERNET_CONFIG_FILE
+# Configure internet based on device type selected
+case $TYPE in
+3_4g_dongle)
+sudo chown $JAMBULATV_USER $SETUP_3_4G_DONGLE_FILE
+cat > $SETUP_3_4G_DONGLE_FILE <<EOF
+TYPE='3_4g_dongle'
+ISP_NAME=$ISP_NAME
+USERNAME=$USERNAME
+PASSWORD=$PASSWORD
+APN=$APN
+EOF
+# Trigger 3/4G Internet connect
+sudo jambulatv-ppp-dialer $ISP_NAME $USERNAME $PASSWORD 1 &
+;;
+mifi_router)
+sudo chown $JAMBULATV_USER $SETUP_MIFI_ROUTER_FILE
+cat > $SETUP_MIFI_ROUTER_FILE <<EOF
+ISP_NAME=$ISP_NAME
+SSID="$WIFI_SSID"
+SECURITY_KEY="$WIFI_SECURITY_KEY"
+EOF
+# Trigger MiFi Internet connect
+sudo jambulatv-connect-2-wifi-ap UP &
+;;
+lan_dhcp)
+sudo chown $JAMBULATV_USER $SETUP_LAN_SYSCONFIG_FILE
+cat > $SETUP_LAN_SYSCONFIG_FILE <<EOF
+# IP/DNS settings for ${SETUP_LAN_DEVICE}
+DEVICE="${SETUP_LAN_DEVICE}"
+TYPE="Ethernet"
+BOOTPROTO="dhcp"
+ONBOOT="yes"
+NM_CONTROLLED="no"
+EOF
+# Restart network
+sudo systemctl restart network.service
+;;
+lan_static)
+sudo chown $JAMBULATV_USER $SETUP_LAN_SYSCONFIG_FILE
+cat > $SETUP_LAN_SYSCONFIG_FILE <<EOF
+# IP/DNS settings for ${SETUP_LAN_DEVICE}
+DEVICE="${SETUP_LAN_DEVICE}"
+TYPE="Ethernet"
+BOOTPROTO="static"
+ONBOOT="yes"
+NM_CONTROLLED="no"
+IPADDR0="$NETWORK_IP_ADDRESS"
+PREFIX0="24"
+GATEWAY="$NETWORK_GATEWAY_ADDRESS"
+DNS1="$NETWORK_DNS_1"
+DNS2="$NETWORK_DNS_2"
+DNS3=8.8.4.4
+DNS4=208.67.222.222
+EOF
+# Restart network
+sudo systemctl restart network.service
+;;
+esac
+# Remove Internet configure file
+sudo rm -f $SETUP_INTERNET_CONFIG_FILE
+}
+
+configure_wifi_mac_addresses () {
+# MAC Addresses
+while [ ! -e $SETUP_MAC_ADDRESSES_FILE ];
+do
+# Wait
+sleep 1
+done
+# Change permissions so we can write to My WiFi devices file
+sudo chown $JAMBULATV_USER $SETUP_WIFI_DEVICES_FILE
+# Copy MAC Addresses to JambulaTV WiFi devices file
+cat $SETUP_MAC_ADDRESSES_FILE | while read LINE 
+do
+NICKNAME=$(echo $LINE | cut -d ',' -f1)
+MAC=$(echo $LINE | cut -d ',' -f2 | sed 's/:/-/g')
+if [ "x$MAC" != "x" ];
+then
+# Add to My-WiFi devices file
+echo "$MAC | $NICKNAME | no" >> $SETUP_WIFI_DEVICES_FILE
+else
+break
+fi
+done
+# Remove MAC set up file
+sudo rm -f $SETUP_MAC_ADDRESSES_FILE
+}
+
+remove_current_qrcode () {
+# Wait for setup to complete successfully
+while [ ! -e $SETUP_COMPLETED_FILE ];
+do
+sleep 1
+echo "Waiting for Setup to complete"
+done
+# Remove QR Code since setup completed
+QRCODE_PID=$(ps auxw | grep $QRCODE_FILE | awk {'print $2'})
+kill -15 $QRCODE_PID || kill -9 $QRCODE_PID
+}
 
 
 
 #################
 #  MAIN SCRIPT  #
 #################
+check_if_setup_completed
+clear_logfile
+remove_previous_qrcode
+display_qrcode
+display_osd_message
 
-# Quit if setup completed
-[ -e $SETUP_COMPLETED_FILE ] && exit 0
-
-# Display QR Code since setup not yet done
-$QRCODE_PLAYER_CMD $QRCODE_PLAYER_OPTIONS $QRCODE_DIR/$QRCODE_FILE 
-
-# Wait for user to complete setup
-while [ ! -e $SETUP_COMPLETED_FILE ];
-do
-
-# Display OSD Message
-jambulatv-osd -m "$QRCODE_OSD_MSG" 
-
-# Pause a bit
-sleep 45
-
-done
-
-# Remove QR Code since setup completed
-QRCODE_PID=$(ps auxw | grep $QRCODE_FILE | awk {'print $2'})
-kill -15 $QRCODE_PID || kill -9 $QRCODE_PID
+configure_internet_connection
+configure_wifi_mac_addresses
+remove_current_qrcode
