@@ -3237,12 +3237,13 @@ systemctl enable $NEEDED_SERVICE
 done
 # Disable services that take a lot longer
 for NOT_NEEDED_SERVICE in \
-sendmail.service \
-sm-client.service \
+dnf-makecache.service \
 firewalld.service \
 NetworkManager-dispatcher.service \
 NetworkManager-wait-online.service \
-NetworkManager.service
+NetworkManager.service \
+sendmail.service \
+sm-client.service
 do
 systemctl stop $NOT_NEEDED_SERVICE
 systemctl mask $NOT_NEEDED_SERVICE
