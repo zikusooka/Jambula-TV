@@ -95,6 +95,9 @@ USER_TV_RECORDINGS_DIR=$USER_VIDEOS_DIR/TV_Recordings
 USER_MOVIES_DIR=$USER_VIDEOS_DIR/Movies
 
 PLAYLISTS_DIRECTORY=$PROJECT_PARTITION/Playlists
+PLAYLISTS_PORT=$(grep -i 'playlists' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+PLAYLISTS_IPTV_WORLD_M3U_FILE=iptv-world.m3u8
+PLAYLISTS_IPTV_ICONS_DIR=$PROJECT_SYSTEM_SHARE_DIR/picons/IPTV
 
 # Remind
 REMINDERS_DIRECTORY=$PROJECT_PARTITION/Reminders
@@ -2684,8 +2687,44 @@ cat > $KODI_ADDON_DATA_DIR/service.xbmc.versioncheck/settings.xml << EOF
 </settings>
 EOF
 
+# pvr.iptvsimple 
+[ -d $KODI_ADDON_DATA_DIR/pvr.iptvsimple ] || mkdir -p $KODI_ADDON_DATA_DIR/pvr.iptvsimple
+# Change from true to false
+cat > $KODI_ADDON_DATA_DIR/pvr.iptvsimple/settings.xml << EOF
+<settings>
+    <setting id="epgCache" value="true" />
+    <setting id="epgPath" value="" />
+    <setting id="epgPathType" value="1" />
+    <setting id="epgTSOverride" value="false" />
+    <setting id="epgTimeShift" value="0.000000" />
+    <setting id="epgUrl" value="" />
+    <setting id="logoBaseUrl" value="" />
+    <setting id="logoFromEpg" value="0" />
+    <setting id="logoPath" value="$PLAYLISTS_IPTV_ICONS_DIR/" />
+    <setting id="logoPathType" value="0" />
+    <setting id="m3uCache" value="true" />
+    <setting id="m3uPath" value="" />
+    <setting id="m3uPathType" value="1" />
+    <setting id="m3uUrl" value="http://127.0.0.1:$PLAYLISTS_PORT/$PLAYLISTS_IPTV_WORLD_M3U_FILE" />
+    <setting id="sep1" value="" />
+    <setting id="sep2" value="" />
+    <setting id="sep3" value="" />
+    <setting id="startNum" value="30" />
+</settings>
+EOF
 # Give permissions to multimedia user for addon_data directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_ADDON_DATA_DIR
+}
+
+iptv_icons_add () {
+# Get WWW User and Group
+set_www_user_group
+# Clean picons directory if it does not exist
+[ -d $PROJECT_SYSTEM_SHARE_DIR/picons ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/picons
+# Copy IP TV picons e.g. logos to JambulaTV share directory
+rsync -av $PROJECT_CONTRIB_DIR/tv/picons/IPTV/ $PROJECT_SYSTEM_SHARE_DIR/picons/IPTV/
+# Give permissons to TV Icons
+chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_SHARE_DIR/picons/IPTV
 }
 
 kodi_configure () {

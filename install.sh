@@ -197,6 +197,9 @@ video_on_demand_configure
 # Playlists
 playlists_configure
 
+# IPTV
+iptv_icons_add 
+
 # Auto download of TV Shows, Movies, and Podcasts
 flexget_deps_install
 flexget_install
