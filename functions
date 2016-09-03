@@ -2621,6 +2621,16 @@ cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
 make_install_jambulatv
 }
 
+kodi_pvr_iptvsimple_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.iptvsimple-$KODI_BRANCH/ $INSTALL_SRC_DIR/kodi-pvr.iptvsimple/
+cd $INSTALL_SRC_DIR/kodi-pvr.iptvsimple
+# Log to build file
+cmake_build_log
+# CMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
+make_install_jambulatv
+}
+
 kodi_addons_unpack () {
 # script.module.beautifulsoup
 if [ "$KODI_ADDON" = "script.module.beautifulsoup" ];

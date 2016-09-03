@@ -92,6 +92,7 @@ kodi_deps_install
 kodi_install # ~160 mins (107m on SSD)
 kodi_platform_install
 kodi_pvr_hts_install
+kodi_pvr_iptvsimple_install
 kodi_addons_install
 kodi_addons_configure
 kodi_configure
