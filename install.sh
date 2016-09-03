@@ -21,7 +21,7 @@ kernel_install
 # Create installation directory
 install_dir_create
 
-# Install images
+# Install images and icons
 images_add
 
 # pick desired X11 video driver
@@ -193,6 +193,9 @@ minidlna_configure
 
 # VoD Streaming
 video_on_demand_configure
+
+# Playlists
+playlists_configure
 
 # Auto download of TV Shows, Movies, and Podcasts
 flexget_deps_install

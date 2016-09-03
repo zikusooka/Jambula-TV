@@ -2301,6 +2301,14 @@ tvheadend_configure () {
 rsync -avz $PROJECT_CONFIGS_DIR/tvheadend/ $TVHEADEND_CONFIG_DIR/
 # Give multimedia user permission to access tvheadend directories
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+#
+# Clean picons directory if it does not exist
+[ -d $PROJECT_SYSTEM_SHARE_DIR/picons ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/picons
+# Copy Live TV picons e.g. logos to JambulaTV share directory
+rsync -av $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET/ $PROJECT_SYSTEM_SHARE_DIR/picons/$TV_MARKET/
+# Give permissons to TV Icons
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/picons/$TV_MARKET
+#
 # Copy tvheadend systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service $SYSTEMD_UNITS_DIR_USER/
 # Enable and start tvheadend if needed
@@ -2309,9 +2317,6 @@ systemctl start tvheadend.service
 #
 # Copy jambulatv-dvbt-scan used to scan 4 DVB-T services, if none exists in bin directory
 [ -e $BINARY_PREFIX/jambulatv-dvbt-scan ] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/
-#
-# Copy TV picons e.g. logos to JambulaTV share directory
-rsync -av $PROJECT_CONTRIB_DIR/tv/picons $PROJECT_SYSTEM_SHARE_DIR/
 }
 
 fmtools_install () {
@@ -5207,15 +5212,6 @@ cat $PROJECT_CONFIGS_DIR/xupnpd.lua.sample | \
 	sed -e "s:PLAYLISTS_DIRECTORY:$PLAYLISTS_DIRECTORY:g" | \
 	sed -e "s:DEVICE_UUID:$SYSTEM_UUID:g" > $PROJECT_SYSTEM_CONF_DIR/xupnpd/xupnpd.lua
 #
-# Add playlists directory
-[ -d $PLAYLISTS_DIRECTORY ] || mkdir -p $PLAYLISTS_DIRECTORY
-# Add Live TV playlists if any
-ls $PROJECT_CONTRIB_DIR/tv/digital/*.m3u > /dev/null 2>&1 && \
-	cp -v $PROJECT_CONTRIB_DIR/tv/digital/*.m3u $PLAYLISTS_DIRECTORY
-# Change playlist directory permissions: Give owner and Web user
-chown -R $MULTIMEDIA_USER:$WWW_GROUP $PLAYLISTS_DIRECTORY
-chmod -R 775 $PLAYLISTS_DIRECTORY
-#
 # Copy xupnpd systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/xupnpd.service $SYSTEMD_UNITS_DIR_USER/
 # Enable xupnpd 
@@ -5233,6 +5229,21 @@ XUPNPD
 
 #
 EOF
+}
+
+playlists_configure () {
+set_www_user_group
+# Add playlists directory
+[ -d $PLAYLISTS_DIRECTORY ] || mkdir -p $PLAYLISTS_DIRECTORY
+# Add DVB-T Live TV playlists if any
+ls $PROJECT_CONTRIB_DIR/tv/digital/*.m3u* > /dev/null 2>&1 && \
+	cp -v $PROJECT_CONTRIB_DIR/tv/digital/*.m3u* $PLAYLISTS_DIRECTORY
+# Add World IP TV playlists if any
+ls $PROJECT_CONTRIB_DIR/tv/iptv/*.m3u* > /dev/null 2>&1 && \
+	cp -v $PROJECT_CONTRIB_DIR/tv/iptv/*.m3u* $PLAYLISTS_DIRECTORY
+# Change playlist directory permissions: Give owner and Web user
+chown -R $WWW_USER:$WWW_GROUP $PLAYLISTS_DIRECTORY
+chmod -R 775 $PLAYLISTS_DIRECTORY
 }
 
 video_on_demand_configure () {
