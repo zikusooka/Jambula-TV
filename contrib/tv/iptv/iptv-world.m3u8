@@ -1,38 +1,28 @@
 #EXTM3U
 
-#EXTINF:0,CityTV
-http://nodeb.gocaster.net:1935/CGL/_definst_/mp4:TODAYFM_TEST2/live.m3u8
-
-#EXTINF:0 channel-id="1" epg-id="1" tvg-name="CNN" pay="1" channel-id="CNN Stream" tvg-logo="cnn.png" groups="News" url-epg="" tvg-shift="+1",CNN 
+#EXTINF:0 tvg-id="id1" tvg-name="CNN HD" tvg-logo="cnn.png" group-title="News",[COLOR blue] CNN [/COLOR]
 http://167.114.157.40:1935/flu555/_definst_/jcnn/playlist.m3u8?token=
 
-#EXTINF:0,FX HD
+#EXTINF:0 tvg-id="id2" tvg-name="Nat Geo Wild" tvg-logo="natgeo.png" group-title="Nature",[COLOR blue] Nat Geo Wild [/COLOR]
+http://167.114.101.188:1935/flu555/_definst_/natgeowild/playlist.m3u8?token=
+
+#EXTINF:0 tvg-id="id3" tvg-name="FX HD" tvg-logo="fx.png" group-title="Movies",FX
 http://167.114.157.40:1935/flu555/_definst_/fx/playlist.m3u8?token=
 
-
-#EXTINF:0,Nickelodeon
+#EXTINF:0 tvg-id="id4" tvg-name="Nickelodeon" tvg-logo="nickelodeon.png" group-title="Cartoons",Nickelodeon
 http://167.114.101.188:1935/flu555/_definst_/nick/playlist.m3u8?token=
-
 
 #EXTINF:0,NBCSN
 http://167.114.119.209:1935/flu555/_definst_/nbcsports/playlist.m3u8?token=
 
-
 #EXTINF:0,Trace Urban
 http://stream-ak-2.vty.dailymotion.com/17/dm/1/x1ahjk1/live.isml/events(live-1437253920)/live-audio=128000-video=1891000.bootstrap/playlist.m3u8
-
 
 #EXTINF:0,HB East
 http://167.114.119.209:1935/flu555/_definst_/hboeast/playlist.m3u8?token=
 
-
-#EXTINF:0,Nat Geo Wild
-http://167.114.101.188:1935/flu555/_definst_/natgeowild/playlist.m3u8?token=
-
-
-#EXTINF:0,Food Network
+#EXTINF:0 tvg-id="id5" tvg-name="Food Network" tvg-logo="nickelodeon.png" group-title="Lifestyle",Food Network
 http://167.114.156.30:1935/flu555/_definst_/food/playlist.m3u8?token=
-
 
 #EXTINF:0,CBSN
 http://cbsnews-linear.mdialog.com/video_assets/cbsnews.m3u8?api_key=563b80c1ae4ce359830f572d2496a947&iu=/8264/vaw-can/mobile_web/cbsnews_mobile
