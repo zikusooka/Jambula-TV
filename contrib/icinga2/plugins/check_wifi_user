@@ -1,38 +1,38 @@
 #!/bin/sh
-# Available in functions file
 MY_WIFI_DEVICES_FILE=/etc/JambulaTV/my-wifi-devices.cfg
+
+WIFI_DEVICE_ADDRESS=$(echo $2 | sed "s/:/-/g")
+WIFI_DEVICE_USER="$(cat $MY_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' | grep -i $WIFI_DEVICE_ADDRESS | cut -d '|' -f2 | sed 's:^ ::' | sed 's: *$::g')"
+WIFI_MONITORED="$(cat $MY_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' | grep -i $WIFI_DEVICE_ADDRESS | cut -d '|' -f3 | sed 's:^ ::')"
+
 
 
 ###############
 #  FUNCTIONS  #
 ###############
 
-
 scan_4_wifi_device () {
-cat $MY_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' | while read LINE
-do
 
-WIFI_DEVICE_ADDRESS="$(echo $LINE | cut -d '|' -f1 | sed 's:^ ::'| sed 's/-/:/g')"
-WIFI_DEVICE_USER="$(echo $LINE | cut -d '|' -f2 | sed 's:^ ::')"
-WIFI_MONITORED="$(echo $LINE | cut -d '|' -f3 | sed 's:^ ::')"
-#
 # Scan for WiFi device
-sudo /usr/sbin/hostapd_cli sta $WIFI_DEVICE_ADDRESS | grep -i connected_time > /dev/null 2>&1
+sudo /usr/sbin/hostapd_cli sta $(echo $WIFI_DEVICE_ADDRESS | sed "s/-/:/g") | grep -i connected_time > /dev/null 2>&1
 SCAN_RESULT=$?
+#
 #
 # Test for availabilty of monitored users
 if [ "$SCAN_RESULT" -eq "0" ] && [ "$WIFI_MONITORED" = "yes" ];
 then
-echo "$WIFI_DEVICE_USER is in the house!"
+
+echo "$WIFI_DEVICE_USER is Present"
 exit 0
-#
+
 else
-echo "$WIFI_DEVICE_USER has left the building"
+echo "$WIFI_DEVICE_USER is Absent"
+
 exit 2
 fi
 
-done
 }
+
 
 
 #################

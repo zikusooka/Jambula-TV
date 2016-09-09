@@ -1,29 +1,78 @@
 #!/bin/sh
 # Perform actions based on whether a user is at or away from home 
+# This is a very customized script that was useful for our home, 
+# Several modifications will be required for your own scenario
 
-case $@ in
-OK)
-# TASK 1: Turn On Lights
+HOSTSTATE=$1
+HOSTDISPLAYNAME=$2
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+# Zik
+zik_tasks_present () {
+# OSD Notice
+jambulatv-osd -m "Looks like $HOSTDISPLAYNAME is around!"
+# Turn Off Lights
 /usr/bin/jambulatv-lights "Living Room" on
+}
 
-# TASK 2: 
-
-
-# TASK 3:
-
-;;
-
-CRITICAL)
-# TASK 1: Turn Off Lights
+zik_tasks_absent () {
+# OSD Notice
+jambulatv-osd -m "Looks like $HOSTDISPLAYNAME is away ..."
+# Turn Off Lights
 /usr/bin/jambulatv-lights "Living Room" off
+}
 
-# TASK 2:
+# Others
+other_tasks_present () {
+# OSD Notice
+jambulatv-osd -m "Looks like $HOSTDISPLAYNAME is around!"
+}
+
+other_tasks_absent () {
+# OSD Notice
+jambulatv-osd -m "Looks like $HOSTDISPLAYNAME is away ..."
+}
 
 
-# TASK 3:
 
+#################
+#  MAIN SCRIPT  #
+#################
+
+# When user is Present
+# --------------------
+if [ "$HOSTSTATE" = "UP" ];
+then
+
+case $HOSTDISPLAYNAME in
+Zik)
+zik_tasks_present
 ;;
 *)
-echo "$(basename $0) [OK|CRITICAL]"
+other_tasks_present
 ;;
 esac
+
+fi
+
+
+
+# When user is Absent
+# -------------------
+if [ "$HOSTSTATE" = "DOWN" ];
+then
+
+case $HOSTDISPLAYNAME in
+Zik)
+zik_tasks_absent
+;;
+*)
+other_tasks_absent
+;;
+esac
+
+fi
