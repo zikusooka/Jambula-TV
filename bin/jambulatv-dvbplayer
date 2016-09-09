@@ -1,0 +1,57 @@
+#!/bin/sh
+# This is a wrapper to MPlayer specifically written to allow playing streams from 
+# TVHeadend PVR using MPlayer - Don't know why kodi can not support this
+
+# MPlayer Command
+MPLAYER_CMD=/usr/bin/mplayer
+MPLAYER_INPUT_FILE=/etc/JambulaTV/mplayer.conf
+#
+# MPlayer Options
+VIDEO_DRIVER=xv
+AUDIO_DRIVER=pulse
+VOLUME="10.1:0"
+TSPROBE_TIME=77000
+#
+MPLAYER_ARGS_VIDEO="-slave -quiet -vo $VIDEO_DRIVER -ao $AUDIO_DRIVER -af volume=$VOLUME -fs -zoom -ontop -cache 1200 -prefer-ipv4 -nolirc"
+#MPLAYER_ARGS_TV="-slave -quiet -vo $VIDEO_DRIVER -ao $AUDIO_DRIVER -af volume=$VOLUME -fs -zoom -ontop -nocache -prefer-ipv4 -nolirc -tsprobe $TSPROBE_TIME"  
+MPLAYER_ARGS_TV="-input conf=$MPLAYER_INPUT_FILE -slave -quiet -vo $VIDEO_DRIVER -ao $AUDIO_DRIVER -af volume=$VOLUME -fs -zoom -ontop -nocache -prefer-ipv4 -nolirc -tsprobe $TSPROBE_TIME"  
+
+INPUT_FILE="$1"
+
+TVHEADEND_HTTP_IP=127.0.0.1
+TVHEADEND_HTTP_PORT=9981
+
+PVR_HTS_CHAN_ID=$(echo $INPUT_FILE | awk {'print $2'} | cut -d '_' -f2 | cut -d '.' -f1)
+
+
+
+case $PVR_HTS_CHAN_ID in
+76859568)
+# NBS
+CHANNEL_UUID="b0c894840f57085f778c3a3bb40f159f"
+CHANNEL_TITLE="NBS TV"
+;;
+
+1086410876)
+# NTV
+CHANNEL_UUID="7c50c1c06521ee4c5e2a853478ef4d2d"
+CHANNEL_TITLE="N TV"
+;;
+1847198078)
+# WBS
+CHANNEL_UUID="7e011aee461352d24cea071573e59724"
+CHANNEL_TITLE="WBS TV"
+;;
+*)
+$MPLAYER_CMD $MPLAYER_ARGS_VIDEO "$INPUT_FILE"
+exit
+;;
+esac
+
+
+
+# Display short notice
+/usr/bin/jambulatv-kodi-controller osd_short "Starting  $CHANNEL_TITLE" &
+
+# Play TVHeadend Channel
+$MPLAYER_CMD $MPLAYER_ARGS_TV http://$TVHEADEND_HTTP_IP:$TVHEADEND_HTTP_PORT/play/stream/channel/$CHANNEL_UUID?title="$CHANNEL_TITLE"
