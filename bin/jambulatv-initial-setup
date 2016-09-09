@@ -28,6 +28,8 @@ SETUP_LAN_SYSCONFIG_FILE=/etc/sysconfig/network-scripts/ifcfg-${SETUP_LAN_DEVICE
 
 QRCODE_OSD_MSG="Please use a Barcode scanner app on your phone to scan this code.  This QR code will only be removed once setup has been completed."
 
+ICINGA2_JAMBULATV_HOSTS_FILE=/etc/icinga2/conf.d/JambulaTV/hosts.conf
+
 
 
 ###############
@@ -161,11 +163,29 @@ sudo chown $JAMBULATV_USER $SETUP_WIFI_DEVICES_FILE
 cat $SETUP_MAC_ADDRESSES_FILE | while read LINE 
 do
 NICKNAME=$(echo $LINE | cut -d ',' -f1)
-MAC=$(echo $LINE | cut -d ',' -f2 | sed 's/:/-/g')
-if [ "x$MAC" != "x" ];
+MAC_DASHED=$(echo $LINE | cut -d ',' -f2 | sed 's/:/-/g')
+MAC_DOTTED=$(echo $LINE | cut -d ',' -f2 )
+if [ "x$MAC_DASHED" != "x" ];
 then
 # Add to My-WiFi devices file
-echo "$MAC | $NICKNAME | no" >> $SETUP_WIFI_DEVICES_FILE
+echo "$MAC_DASHED | $NICKNAME | no" >> $SETUP_WIFI_DEVICES_FILE
+#
+# Change permissions so we can write to icinga2 hosts file
+sudo chown $JAMBULATV_USER $ICINGA2_JAMBULATV_HOSTS_FILE
+# Add to icinga2 hosts file
+cat >> $ICINGA2_JAMBULATV_HOSTS_FILE <<EOF
+
+/** 
+* Detect presence of $NICKNAME
+*/
+object Host "$NICKNAME" {
+  import "jambula-01-wifi-device"
+  vars.macaddress="$MAC_DOTTED"
+}
+EOF
+# Restart icinga2 service
+sudo systemctl restart icinga2.service
+# 
 else
 break
 fi
