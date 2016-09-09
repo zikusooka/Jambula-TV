@@ -44,7 +44,7 @@ PING_COUNT=1 #9
 ###############
 check_ftp_server_access () {
 # Check for internet connectivity and access to the ftp server
-ping -c $PING_COUNT $JAMBULATV_FTP_SERVER > /dev/null 2>&1
+host -W 1 $JAMBULATV_FTP_SERVER 8.8.8.8 > /dev/null 2>&1
 EXITVAL=$?
 if [ "$EXITVAL" != "0" ];
 then
