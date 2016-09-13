@@ -26,7 +26,9 @@ SETUP_MIFI_ROUTER_FILE=$JAMBULTAV_CONFIG_DIR/internet-mobile-wifi.cfg
 SETUP_WIFI_DEVICES_FILE=$JAMBULTAV_CONFIG_DIR/my-wifi-devices.cfg
 SETUP_LAN_SYSCONFIG_FILE=/etc/sysconfig/network-scripts/ifcfg-${SETUP_LAN_DEVICE}
 
-QRCODE_OSD_MSG="Please use a Barcode scanner app on your phone to scan this code.  This QR code will only be removed once setup has been completed."
+JAMBULATV_SSID=$(grep ^ssid= /etc/hostapd/hostapd.conf | cut -d '=' -f2)
+
+QRCODE_OSD_MSG="Please connect to this ($JAMBULATV_SSID) Hotspot using the credentials you received at time of purchase.  Then, use a Barcode scanner app on your phone to scan this code.  This QR code will only be removed once setup has been completed."
 
 ICINGA2_JAMBULATV_HOSTS_FILE=/etc/icinga2/conf.d/JambulaTV/hosts.conf
 
