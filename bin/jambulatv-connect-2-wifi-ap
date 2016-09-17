@@ -14,6 +14,9 @@ OSD_SCRIPT=/usr/bin/jambulatv-osd
 AP_FOUND_MSG="Found your WiFi Access Point ($WIFI_SSID). Please wait while I connect to it"
 CONNECTED_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID), Assigning IP Address ..."
 INSERT_WIFI_DONGLE_MSG="Please insert your USB Wireless (WiFi) Network Adapter. I will try connecting to $WIFI_SSID shortly ..."
+
+HOSTAPD_CONFIG_FILE=/etc/hostapd/hostapd.conf
+
 # Set WiFi station Interface
 WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 
@@ -52,16 +55,26 @@ scan_4_wifi () {
 sudo ip link set $WIFI_STATION_INTERFACE up
 #
 # Scan for AP, and get scanned SSID
-sudo iw dev $WIFI_STATION_INTERFACE scan | grep -i SSID | cut -d : -f2 | sed 's/ //' | grep $WIFI_SSID
+sudo iw dev $WIFI_STATION_INTERFACE scan | grep "SSID: $WIFI_SSID" | cut -d : -f2 | awk {'print $1'}
 # See if there's a match
 if [[ $? = 0 ]];
 then
 WIFI_FOUND=yes
+# Notify
 echo "$AP_FOUND_MSG"
 else
 WIFI_FOUND=no
 fi
 export WIFI_FOUND
+}
+
+reset_hostapd_channel () {
+# Get channel number
+WIFI_CHANNEL=$(sudo iw dev $WIFI_STATION_INTERFACE scan  | grep -A2 "SSID: $WIFI_SSID" | grep 'DS Parameter set' | cut -d : -f2 | awk {'print $2'})
+# Replace existing channel number
+sed -i "/^channel=/d" $HOSTAPD_CONFIG_FILE
+echo "channel=$WIFI_CHANNEL" >> $HOSTAPD_CONFIG_FILE
+sudo systemctl restart hostapd.service
 }
 
 disconnect_4rm_access_point () {
@@ -125,6 +138,12 @@ sudo /sbin/dhclient -H $(hostname -s) -q -lf /var/lib/dhclient/dhclient--${WIFI_
 fi
 }
 
+make_this_internet_gateway () {
+# Allow IP masquerading through this box
+/bin/echo 1 > /proc/sys/net/ipv4/ip_forward
+/usr/sbin/iptables -t nat -A POSTROUTING -o ${WIFI_STATION_INTERFACE} -j MASQUERADE
+}
+
 quit_not_found () {
 if [[ $WIFI_FOUND != yes ]];
 then
@@ -161,6 +180,10 @@ quit_not_found
 ;;
 esac
 
+
+# Reset channel in hostapd.conf to match AP
+#reset_hostapd_channel # Restarts hostAPD - Not desirable!!!
+
 # Check to see if USB WiFi dongle is inserted
 check_4_wifi_dongle
 
@@ -170,6 +193,7 @@ connect_2_access_point
 sleep 5
 check_link_status
 get_ip_address
+make_this_internet_gateway
 
 # Reload coova-chilli in order to change default gateway device and DNS settings
 #/usr/bin/jambulatv-chilli restart
