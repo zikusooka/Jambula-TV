@@ -6,13 +6,12 @@ After=plymouth-quit.service
 
 [Service]
 Environment=CRASHLOG_DIR=/var/log/JambulaTV 
+Environment=JAMBULATV_LOG=/var/log/JambulaTV/messages
+Environment=KODI_GUI_SETTINGS=/JambulaTV/.kodi/userdata/guisettings.xml
+Environment=MESA_GL_VERSION_OVERRIDE=3.0
+
 User=jambula
-
-ExecStartPre=/bin/sh -c "/usr/bin/pulseaudio --check || /usr/bin/pulseaudio -D"
-ExecStartPre=/bin/sh -c "/usr/bin/amixer -q sset Master 100% unmute && sudo /usr/sbin/alsactl store"
-
-ExecStart=/usr/bin/xinit /usr/bin/dbus-launch --exit-with-session /usr/bin/kodi-standalone -- -nocursor :0 -nolisten tcp vt7
-
+ExecStart=/usr/bin/JambulaTV kodi
 ExecStop=/usr/bin/killall kodi ; /usr/bin/killall X
 
 Restart=on-abort

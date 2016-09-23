@@ -2920,21 +2920,17 @@ kodi_jambulatv_service_configure () {
 # Copy jambulatv@.service file
 cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv@.service $SYSTEMD_UNITS_DIR_USER
 #
+# Enable jambulatv@.service 
+systemctl enable jambulatv@.service
+#
 # Disable lxdm
 systemctl disable lxdm.service
 # Copy jambulatv-display-manager.service file
-cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-display-manager.service $SYSTEMD_UNITS_DIR_SYSTEM
+#cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-display-manager.service $SYSTEMD_UNITS_DIR_SYSTEM
 #
-# Fix font and video problems with intel drivers
-if [ "$X11_DRIVER" = "intel" ];
-then
-# Start kodi with Environment variable MESA_GL_VERSION_OVERRIDE=
-sed -i "/\[Service\]/a Environment=MESA_GL_VERSION_OVERRIDE=3.0" $SYSTEMD_UNITS_DIR_SYSTEM/jambulatv-display-manager.service
-fi
-#
-systemctl --system daemon-reload
+#systemctl --system daemon-reload
 # Enable display-manager.service 
-systemctl enable jambulatv-display-manager.service
+#systemctl enable jambulatv-display-manager.service
 }
 
 kodi_input_configure () {
