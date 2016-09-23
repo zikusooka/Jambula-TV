@@ -1,14 +1,22 @@
 [Unit]
 Description=JambulaTV Entertainment and Multimedia System powered by Jambula Labs
 Documentation=man:jambulatv(8)
+Conflicts=getty@tty1.service
 After=plymouth-quit.service
 
 [Service]
+Environment=CRASHLOG_DIR=/var/log/JambulaTV 
+Environment=JAMBULATV_LOG=/var/log/JambulaTV/messages
+Environment=KODI_GUI_SETTINGS=/JambulaTV/.kodi/userdata/guisettings.xml
+Environment=MESA_GL_VERSION_OVERRIDE=3.0
+
 User=jambula
-Type=forking
 ExecStartPre=/bin/sh -c '/usr/bin/JambulaTV -kill %i > /dev/null 2>&1 || :'
 ExecStart=/bin/sh -c '/usr/bin/JambulaTV %i'
 ExecStop=/bin/sh -c '/usr/bin/JambulaTV -kill %i > /dev/null 2>&1 || :'
+
+Restart=on-abort
+IgnoreSIGPIPE=no
 
 [Install]
 WantedBy=multi-user.target
