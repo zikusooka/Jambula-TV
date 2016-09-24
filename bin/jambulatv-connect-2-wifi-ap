@@ -27,7 +27,7 @@ WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 ###############
 # Check if script is already running
 quit_if_already_running () {
-ps auxw | grep $(basename $0) > /dev/null 2>&1
+pgrep $(basename $0) > /dev/null 2>&1
 RUNNING_STATUS=$?
 [ "$RUNNING_STATUS" = "0" ] && exit 1
 }
