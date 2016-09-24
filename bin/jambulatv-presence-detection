@@ -5,6 +5,7 @@
 
 HOSTSTATE=$1
 HOSTDISPLAYNAME=$2
+OSD_SCRIPT="sudo /usr/bin/jambulatv-osd"
 
 
 
@@ -14,14 +15,14 @@ HOSTDISPLAYNAME=$2
 # Zik
 zik_tasks_present () {
 # OSD Notice
-jambulatv-osd -m "Looks like $HOSTDISPLAYNAME is around!"
+$OSD_SCRIPT -m "Looks like $HOSTDISPLAYNAME is around!"
 # Turn Off Lights
 /usr/bin/jambulatv-lights "Living Room" on
 }
 
 zik_tasks_absent () {
 # OSD Notice
-jambulatv-osd -m "Looks like $HOSTDISPLAYNAME is away ..."
+$OSD_SCRIPT -m "Looks like $HOSTDISPLAYNAME is away ..."
 # Turn Off Lights
 /usr/bin/jambulatv-lights "Living Room" off
 }
@@ -29,12 +30,12 @@ jambulatv-osd -m "Looks like $HOSTDISPLAYNAME is away ..."
 # Others
 other_tasks_present () {
 # OSD Notice
-jambulatv-osd -m "Looks like $HOSTDISPLAYNAME is around!"
+$OSD_SCRIPT -m "Looks like $HOSTDISPLAYNAME is around!"
 }
 
 other_tasks_absent () {
 # OSD Notice
-jambulatv-osd -m "Looks like $HOSTDISPLAYNAME is away ..."
+$OSD_SCRIPT -m "Looks like $HOSTDISPLAYNAME is away ..."
 }
 
 

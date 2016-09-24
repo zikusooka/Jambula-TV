@@ -33,7 +33,7 @@ then
 OSD_MESSAGE="TV Tuner was not detected.  Please shutdown and power on again."
 #
 # Run OSD Message
-/usr/bin/jambulatv-osd -m "$OSD_MESSAGE"
+sudo /usr/bin/jambulatv-osd -m "$OSD_MESSAGE"
 fi
 
 
@@ -43,7 +43,7 @@ then
 OSD_MESSAGE="TV Channels list was corrupted possibly due to a bad shutdown previously.  I will attempt to correct it now, please try again shortly"
 #
 # Run OSD Message
-/usr/bin/jambulatv-osd -m "$OSD_MESSAGE"
+sudo /usr/bin/jambulatv-osd -m "$OSD_MESSAGE"
 #
 # Restore network
 sudo /usr/bin/rsync -aqv --delete /JambulaTV/.hts.bak/ /JambulaTV/.hts/

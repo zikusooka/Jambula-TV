@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-/usr/bin/jambulatv-osd -m "$OSDMESSAGE"
+sudo /usr/bin/jambulatv-osd -m "$OSDMESSAGE"
 
 # DEBUG:
 #echo "$(date): $SERVICEDISPLAYNAME
