@@ -17,6 +17,3 @@ ExecStop=/bin/sh -c '/usr/bin/JambulaTV -kill %i > /dev/null 2>&1 || :'
 
 Restart=on-abort
 IgnoreSIGPIPE=no
-
-[Install]
-WantedBy=multi-user.target

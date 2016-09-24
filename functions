@@ -2915,22 +2915,16 @@ chmod 755 $BINARY_PREFIX/jambulatv-kodi-controller
 }
 
 kodi_jambulatv_service_configure () {
+# Disable lxdm - We dont need as default
+systemctl disable lxdm.service
 # Copy JambulaTV wrapper for startup services, if none exists in bin directory
 [ -e $BINARY_PREFIX/JambulaTV ] || cp -v $PROJECT_BIN_DIR/JambulaTV $BINARY_PREFIX/
 # Copy jambulatv@.service file
-cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv@.service $SYSTEMD_UNITS_DIR_USER
-#
-# Enable jambulatv@.service 
-systemctl enable jambulatv@.service
-#
-# Disable lxdm
-systemctl disable lxdm.service
-# Copy jambulatv-display-manager.service file
-#cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-display-manager.service $SYSTEMD_UNITS_DIR_SYSTEM
-#
-#systemctl --system daemon-reload
-# Enable display-manager.service 
-#systemctl enable jambulatv-display-manager.service
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv@.service $SYSTEMD_UNITS_DIR_SYSTEM/
+# Start kodi instance at boot time
+ln -s $SYSTEMD_UNITS_DIR_SYSTEM/jambulatv@.service $SYSTEMD_UNITS_DIR_USER/multi-user.target.wants/jambulatv@kodi.service
+# Reload services daemon
+systemctl --system daemon-reload
 }
 
 kodi_input_configure () {
