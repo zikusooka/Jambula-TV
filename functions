@@ -469,8 +469,8 @@ WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
 WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
 WIFI_INTERFACES_AVAILABLE=$(iw dev |grep Interface |wc -l)
-WIFI_OLD_INTERFACE=$(dmesg | grep 'renamed network interface wlan0' | cut -d : -f2- | sed 's: renamed network interface wlan0 to ::')
-WIFI_OLD_INTERFACE_2=$(dmesg | grep 'renamed network interface wlan1' | cut -d : -f2- | sed 's: renamed network interface wlan1 to ::')
+WIFI_OLD_INTERFACE=$(dmesg | grep 'renamed network interface wlan0' | cut -d : -f2- | sed 's: renamed network interface wlan0 to ::' | uniq)
+WIFI_OLD_INTERFACE_2=$(dmesg | grep 'renamed network interface wlan1' | cut -d : -f2- | sed 's: renamed network interface wlan1 to ::' |uniq)
 # Virtual wifi interfaces support
 lsmod | grep mac80211 | grep 'ath9k' > /dev/null 2>&1
 VIRT_WIFI_SUPPORT=$?
@@ -7788,7 +7788,6 @@ cat $PROJECT_BIN_DIR/jambulatv-connectify | \
 		sed -e "s:MY_WIFI_AP_INTERFACE:$WIFI_AP_INTERFACE:g" | \
 		sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" | \
 		sed -e "s:MY_WIFI_OLD_INTERFACE:$WIFI_OLD_INTERFACE:g" | \
-		sed -e "s:MY_WIFI_PHY_DEV:$WIFI_PHY_DEV:g" | \
 		sed -e "s/MY_WIFI_AP_MACADDRESS/$WIFI_AP_MACADDRESS/g" | \
 		sed -e "s/MY_WIFI_STATION_MACADDRESS/$WIFI_STATION_MACADDRESS/g" \
 			> $BINARY_PREFIX/jambulatv-connectify
