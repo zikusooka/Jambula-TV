@@ -128,6 +128,11 @@ uninstall_src_pkgs x264
 x264_install
 }
 
+upgrade_ffmpeg () {
+uninstall_src_pkgs ffmpeg
+ffmpeg_install
+}
+
 
 
 #################
@@ -165,3 +170,4 @@ x264_install
 
 #upgrade_x264
 
+#upgrade_ffmpeg
