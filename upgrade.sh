@@ -123,6 +123,11 @@ zoneminder_130_install
 zoneminder_configure 
 }
 
+upgrade_x264 () {
+uninstall_src_pkgs x264
+x264_install
+}
+
 
 
 #################
@@ -157,3 +162,6 @@ zoneminder_configure
 #upgrade_domoticz
 
 #upgrade_zoneminder
+
+#upgrade_x264
+
