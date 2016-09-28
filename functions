@@ -7787,7 +7787,6 @@ virtual_wifi_interfaces_configure () {
 cat $PROJECT_BIN_DIR/jambulatv-connectify | \
 		sed -e "s:MY_WIFI_AP_INTERFACE:$WIFI_AP_INTERFACE:g" | \
 		sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" | \
-		sed -e "s:MY_WIFI_OLD_INTERFACE:$WIFI_OLD_INTERFACE:g" | \
 		sed -e "s/MY_WIFI_AP_MACADDRESS/$WIFI_AP_MACADDRESS/g" | \
 		sed -e "s/MY_WIFI_STATION_MACADDRESS/$WIFI_STATION_MACADDRESS/g" \
 			> $BINARY_PREFIX/jambulatv-connectify
