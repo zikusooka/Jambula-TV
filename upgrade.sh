@@ -133,6 +133,11 @@ uninstall_src_pkgs ffmpeg
 ffmpeg_install
 }
 
+upgrade_vlc () {
+uninstall_src_pkgs vlc
+vlc_install
+}
+
 
 
 #################
@@ -171,3 +176,5 @@ ffmpeg_install
 #upgrade_x264
 
 #upgrade_ffmpeg
+
+#upgrade_vlc

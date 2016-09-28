@@ -2183,7 +2183,7 @@ rsync -avz $PROJECT_GITHUB_DIR/vlc/ $INSTALL_SRC_DIR/vlc/
 # Compile
 cd $INSTALL_SRC_DIR/vlc && ./bootstrap
 ./configure --libdir=$LIBDIR --prefix=$PREFIX \
---with-contrib=$PREFIX GOOM_CFLAGS="-I$INCDIR" GOOM_LIBS="-L$LIBDIR" PKG_CONFIG_PATH=$LIBDIR/pkgconfig --enable-debug --enable-run-as-root --enable-realrtsp --enable-wma-fixed --enable-shine --enable-omxil --enable-omxil-vout --enable-rpi-omxil --enable-merge-ffmpeg --enable-fdkaac --enable-tremor --enable-aa --enable-opensles --enable-lirc --disable-skins2 --enable-shine=no
+--with-contrib=$PREFIX GOOM_CFLAGS="-I$INCDIR" GOOM_LIBS="-L$LIBDIR" PKG_CONFIG_PATH=$LIBDIR/pkgconfig --enable-debug --enable-run-as-root --enable-realrtsp --enable-wma-fixed --enable-shine --enable-omxil --enable-omxil-vout --enable-rpi-omxil --enable-merge-ffmpeg --enable-fdkaac --enable-tremor --enable-aa --enable-opensles --enable-lirc --disable-skins2 --enable-shine=no --enable-goom=no
 make_install_jambulatv
 # Cache recently shared libraries 
 ldconfig
