@@ -87,7 +87,7 @@
         <addonnotifications>false</addonnotifications>
         <addonupdates>2</addonupdates>
         <settinglevel>3</settinglevel>
-        <systemtotaluptime>6496</systemtotaluptime>
+        <systemtotaluptime>10992</systemtotaluptime>
     </general>
     <input>
         <enablejoystick>false</enablejoystick>
@@ -287,9 +287,9 @@
         <upnpserver>true</upnpserver>
         <useairplaypassword default="true">false</useairplaypassword>
         <webserver>true</webserver>
-        <webserverpassword>jambulatv</webserverpassword>
-        <webserverport>8510</webserverport>
-        <webserverusername>jambulatv</webserverusername>
+        <webserverpassword>KODI_HTTP_PASS</webserverpassword>
+        <webserverport>KODI_HTTP_PORT</webserverport>
+        <webserverusername>KODI_HTTP_USER</webserverusername>
         <webskin default="true">webinterface.default</webskin>
         <zeroconf default="true">true</zeroconf>
     </services>
@@ -300,7 +300,7 @@
     </slideshow>
     <smb>
         <winsserver default="true">0.0.0.0</winsserver>
-        <workgroup>JAMBULATV</workgroup>
+        <workgroup>SMB_WORKGROUP</workgroup>
     </smb>
     <subtitles>
         <align default="true">0</align>
@@ -1119,15 +1119,15 @@
         <setting type="string" name="skin.aeonmq6.menu4.label"></setting>
         <setting type="string" name="skin.aeonmq6.menu4.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu4.path"></setting>
-        <setting type="string" name="skin.aeonmq6.menu5.label">TELEVISION</setting>
+        <setting type="string" name="skin.aeonmq6.menu5.label">LOCAL TV</setting>
         <setting type="string" name="skin.aeonmq6.menu5.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu5.path"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.label"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.path"></setting>
-        <setting type="string" name="skin.aeonmq6.menu7.label">SPORTS</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.label">INTERNET TV</setting>
         <setting type="string" name="skin.aeonmq6.menu7.defaultlabel"></setting>
-        <setting type="string" name="skin.aeonmq6.menu7.path">plugin.video.SportsDevil</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.path">plugin.video.jambulaIPTV</setting>
         <setting type="string" name="skin.aeonmq6.menu8.label"></setting>
         <setting type="string" name="skin.aeonmq6.menu8.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu8.path"></setting>
@@ -1286,7 +1286,7 @@
         <setting type="string" name="skin.aeonmq6.menu20.widgets"></setting>
         <setting type="string" name="skin.aeonmq6.menu20.target"></setting>
         <setting type="string" name="skin.aeonmq6.menu20.action"></setting>
-        <setting type="string" name="skin.aeonmq6.windowbg">special://skin/backgrounds/livetv.jpg</setting>
+        <setting type="string" name="skin.aeonmq6.windowbg"></setting>
         <setting type="string" name="skin.aeonmq6.codestep"></setting>
         <setting type="string" name="skin.aeonmq6.tempfont"></setting>
         <setting type="string" name="skin.aeonmq6.colorcasepreview"></setting>
@@ -1386,7 +1386,7 @@
         <setting type="string" name="skin.aeonmq6.menu0520.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu0520.path"></setting>
         <setting type="string" name="skin.aeonmq6.menu0520.visible"></setting>
-        <setting type="string" name="skin.aeonmq6.submenu_action">ActivateWindow(videos,files)</setting>
+        <setting type="string" name="skin.aeonmq6.submenu_action"></setting>
         <setting type="string" name="skin.aeonmq6.CustomFallbackMoviesBG"></setting>
         <setting type="string" name="skin.aeonmq6.CustomFallbackMusicVideosBG"></setting>
         <setting type="string" name="skin.aeonmq6.CustomFallbackTVShowsBG"></setting>
@@ -2641,10 +2641,10 @@
         <setting type="string" name="skin.aeonmq6.menu20preset1.target"></setting>
         <setting type="string" name="skin.aeonmq6.menu20preset1.action"></setting>
         <setting type="string" name="skin.aeonmq6.menu20preset1.condition"></setting>
-        <setting type="string" name="skin.aeonmq6.menu51701.label">SPORTS</setting>
+        <setting type="string" name="skin.aeonmq6.menu51701.label">INTERNET TV</setting>
         <setting type="string" name="skin.aeonmq6.menu51701.master">addons</setting>
         <setting type="string" name="skin.aeonmq6.menu51701.defaultlabel"></setting>
-        <setting type="string" name="skin.aeonmq6.menu51701.path">plugin.video.SportsDevil</setting>
+        <setting type="string" name="skin.aeonmq6.menu51701.path">plugin.video.jambulaIPTV</setting>
         <setting type="string" name="skin.aeonmq6.menu51701.visible"></setting>
         <setting type="string" name="skin.aeonmq6.menu51702.label"></setting>
         <setting type="string" name="skin.aeonmq6.menu51702.master">addons</setting>
