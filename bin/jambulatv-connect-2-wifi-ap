@@ -2,6 +2,8 @@
 # Argument from icinga2 script
 ICINGA2_AP_STATUS=$@
 
+SCRIPT_RUNNING_FILE=/tmp/connect_2_ap_running
+
 # Available in functions file
 INTERNET_WIFI_ISP_CONFIG=/etc/JambulaTV/internet-mobile-wifi.cfg
 WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
@@ -27,9 +29,15 @@ WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 ###############
 # Check if script is already running
 quit_if_already_running () {
-pgrep $(basename $0) > /dev/null 2>&1
-RUNNING_STATUS=$?
-[ "$RUNNING_STATUS" = "0" ] && exit 1
+[ -e "$SCRIPT_RUNNING_FILE" ] && exit 1
+}
+
+add_script_running_file () {
+touch $SCRIPT_RUNNING_FILE
+}
+
+remove_script_running_file () {
+rm -f $SCRIPT_RUNNING_FILE
 }
 
 check_4_wifi_dongle () {
@@ -95,7 +103,6 @@ WPA_SUPPLICANT_PID=$(sudo ps auxw | grep wpa_supplicant | grep $WIFI_STATION_INT
 [ "x$WPA_SUPPLICANT_PID" = "x" ] || sudo kill $WPA_SUPPLICANT_PID >> /dev/null
 # Flush Wifi station interface
 sudo ip addr flush dev $WIFI_STATION_INTERFACE 
-#sudo ip link set $WIFI_STATION_INTERFACE down
 }
 
 generate_wpa_config () {
@@ -173,6 +180,8 @@ number_of_interfaces
 # Act according to who called this script
 case $ICINGA2_AP_STATUS in
 OK)
+# Add script running file
+add_script_running_file
 # Started by icinga2
 echo "Wireless Access Point ($WIFI_SSID) Available"
 ;;
@@ -206,3 +215,5 @@ make_this_internet_gateway
 
 # Reload coova-chilli in order to change default gateway device and DNS settings
 #/usr/bin/jambulatv-chilli restart
+
+remove_script_running_file
