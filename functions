@@ -2958,6 +2958,9 @@ cp -fv $PROJECT_IMAGES_DIR/kodi/splash.png $KODI_SHARE_DIR/media/Splash.png
 
 # Fix Shutdown Main Menu Button
 sed -i "s:XBMC.ShutDown():System.Exec(systemctl poweroff):g" $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/720p/DialogButtonMenu.xml
+#
+# Customize strings.po for JambulaTV
+patch -p1 $KODI_SYSTEM_ADDONS/resource.language.en_gb/resources/strings.po < $PROJECT_PATCHES_DIR/kodi.strings_po.patch
 }
 
 kodi_scripts () {
