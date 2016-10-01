@@ -13,6 +13,7 @@ import warnings
 import time
 import xml.etree.ElementTree as ET
 import xmpp
+import threading
 
 # Variables
 JAMBULATV_VIRTUAL_TERMINAL = 'tty7'
@@ -129,9 +130,13 @@ xbmc_poke_screen(xbmc_host)
 # Display message on screen
 xbmc_osd_message(xbmc_host)
 
-# Send XMPP message
-send_xmpp_message()
+# Send XMPP message in background mode
+t1 = threading.Thread(target=send_xmpp_message)
+t1.start()
+t1.join()
 
 # Remove run file created earlier to prevent others from using me
 os.remove(OSDRUNFILE);
+
+# Exit
 sys.exit(0);
