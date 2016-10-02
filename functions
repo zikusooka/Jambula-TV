@@ -3537,20 +3537,19 @@ alias gb="clear && git branch"
 
 # JambulaTV History
 # Create user's logging directories and assign appropriate permissions
-[[ -d $PROJECT_SYSTEM_LOG_DIR/bash/\$USER  ]] || sudo mkdir -p $PROJECT_SYSTEM_LOG_DIR/bash/\$USER
-sudo chown -R \$USER $PROJECT_SYSTEM_LOG_DIR/bash/\$USER
+[[ -d $PROJECT_SYSTEM_LOG_DIR/bash/\$(whoami)  ]] || sudo mkdir -p $PROJECT_SYSTEM_LOG_DIR/bash/\$(whoami)
+sudo chown -R \$(whoami) $PROJECT_SYSTEM_LOG_DIR/bash/\$(whoami)
 #
 # History file settings
-export HISTTIMEFORMAT="%d-%m-%Y - %T \$USER "
+export HISTTIMEFORMAT="%d-%m-%Y - %T \$(whoami) "
 export HISTCONTROL=ignoreboth
 export HISTSIZE=5000
 shopt -s histappend
-export PROMPT_COMMAND='echo "\$(history 1)" >> $PROJECT_SYSTEM_LOG_DIR/bash/\$USER/history-\$(date "+%Y%m%d").log'
+export PROMPT_COMMAND='echo "\$(history 1)" >> $PROJECT_SYSTEM_LOG_DIR/bash/\$(whoami)/history-\$(date "+%Y%m%d").log'
 #
 # CLI Calculator
 calc(){ awk "BEGIN{ print \$* }" ;}
 EOF
-
 # Add .bashrc to autologin user's home directory
 cat > $AUTOLOGIN_USER_HOME_DIR/.profile << EOF
 # Source global definitions
