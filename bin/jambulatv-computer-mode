@@ -7,14 +7,14 @@ case $1 in
 # Switch to PC Mode
 [Oo][Nn])
 /usr/bin/beep
-#nohup sudo /usr/bin/systemctl stop jambulatv-display-manager.service > /dev/null 2>&1
+#nohup sudo /usr/bin/systemctl stop jambulatv@kodi.service > /dev/null 2>&1
 nohup /usr/bin/killall kodi > /dev/null 2>&1
 $PCMODE_XSTART_CMD > $PCMODE_LOG_FILE 2>&1 &
 ;;
 
 # Switch to Kodi
 [Oo][Ff][Ff])
-nohup sudo /usr/bin/systemctl restart jambulatv-display-manager.service > /dev/null 2>&1
+nohup sudo /usr/bin/systemctl restart jambulatv@kodi.service > /dev/null 2>&1
 /usr/bin/beep
 pkill -9 -f lxsession
 ;;
