@@ -3,7 +3,7 @@ PROJECT_NAME=JambulaTV
 PROJECT_URL="http://www.jambulatv.com"
 COMPANY_NAME="Jambula Labs"
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.4.19"
+KERNEL_VERSION="4.4.23"
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
@@ -908,7 +908,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 . $PROJECT_BASE_DIR/functions
 KERNEL_VERSION=$NEW_KERNEL
 # See how much space is left
-AVAILABLE_DISK_SPACE_ROOT=$(df /|grep -v block | awk {'print $4'})
+AVAILABLE_DISK_SPACE_ROOT=$(df -k / |grep -v block | awk {'print $4'})
 DISK_THRESHOLD_ROOT=15728640 #15GB
 if [ "$AVAILABLE_DISK_SPACE_ROOT" -lt "$DISK_THRESHOLD_ROOT" ];
 then
@@ -943,20 +943,18 @@ make mrproper
 cp -v $PROJECT_CONFIGS_DIR/kernel.config .config
 # Compile
 make oldconfig
-# Notice
+
+# Notices
 clear
+
+_install_pause_check_4_errors_
+
 cat <<EOF
 
 Next run kernel_2 to compile & install the Linux kernel $KERNEL_VERSION 
 
-However, do the following before proceeding:
-
-Create more space - a whole lot like 10GB e.g.  Move project /opt/JambulaTV into Storage area.  
-
 EOF
-#
-_install_pause_check_4_errors_
-#
+
 fi
 }
 
@@ -967,7 +965,7 @@ KERNEL_VERSION=$NEW_KERNEL
 echo "
 You are about to install the latest Linux kernel version [$KERNEL_VERSION], 
 
-CAUTION:  This will take up to 6 hours! 
+CAUTION:  This may take anywhere from 4 to 7 hours to complete! 
 
 "
 #

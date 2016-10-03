@@ -10,8 +10,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 
 # Upgrade Linux Kernel
 upgrade_kernel () {
-NEW_KERNEL=4.4.23
-#
+NEW_KERNEL=$1
 kernel_upgrade_1
 kernel_upgrade_2
 }
@@ -144,7 +143,7 @@ vlc_install
 #  MAIN SCRIPT  #
 #################
 
-#upgrade_kernel
+#upgrade_kernel 4.4.23
 
 #upgrade_kodi
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
