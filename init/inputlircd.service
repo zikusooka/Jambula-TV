@@ -1,6 +1,6 @@
 [Unit]
 Description=Inputlirc, a lirc daemon using input event devices
-Before=jambulatv-display-manager.service
+Before=jambulatv@kodi.service
 After=network-online.target
 
 [Service]

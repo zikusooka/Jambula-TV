@@ -1039,7 +1039,7 @@ fi
 # Uninstall kodi
 uninstall_kodi () {
 # Stop kodi
-systemctl stop jambulatv-display-manager.service
+systemctl stop jambulatv@kodi.service
 # Uninstall kodi
 uninstall_src_pkgs kodi
 }
