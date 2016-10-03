@@ -84,6 +84,7 @@ sox_install
 v4l_utils_install
 tvheadend_install
 tvheadend_configure
+dvb_drivers_support
 w_scan_install
 fmtools_install
 

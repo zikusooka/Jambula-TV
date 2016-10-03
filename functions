@@ -57,7 +57,6 @@ PROJECT_UTILS_DIR=$PROJECT_BASE_DIR/utils
 PROJECT_IMAGES_DIR=$PROJECT_BASE_DIR/images
 PROJECT_CONTRIB_DIR=$PROJECT_BASE_DIR/contrib
 PROJECT_INIT_SCRIPTS_DIR=$PROJECT_BASE_DIR/init
-PROJECT_FIRMWARE_DIR=$PROJECT_BASE_DIR/firmware
 PROJECT_CUSTOMIZATION_DIR=$PROJECT_BASE_DIR/customize
 PROJECT_DOCS_DIR=$PROJECT_BASE_DIR/docs
 # Package directories
@@ -5390,8 +5389,8 @@ cat $FREEVO_USER_HOME_DIR/freevo.conf.orig | \
 }
 
 dvb_drivers_support () {
-# Hauppauge WinTV MiniStick
-cp -v $PROJECT_FIRMWARE_DIR/sms1xxx-hcw-55xxx-dvbt-02.fw $FIRMWARE_DIR
+# Copy DVB Drivers into firmware directory
+rsync -av $PROJECT_GITHUB_DIR/dvb-firmware/firmware/ $FIRMWARE_DIR/
 }
 
 w_scan_install () {
@@ -5714,7 +5713,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/dahdi-linux-complete-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v dahdi-linux-complete-* dahdi-linux-complete
 cd $INSTALL_SRC_DIR/dahdi-linux-complete 
 # Copy dahdi firmware files
-#cp -v $PROJECT_FIRMWARE_DIR/dahdi/* linux/drivers/dahdi/firmware/
+#cp -v ../dahdi/* linux/drivers/dahdi/firmware/
 # Log to build file
 make_build_log
 # Make
