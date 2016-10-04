@@ -2986,6 +2986,14 @@ chmod 755 $BINARY_PREFIX/jambulatv-kodi-controller
 kodi_jambulatv_service_configure () {
 # Disable lxdm - We dont need as default
 systemctl disable lxdm.service
+# Disable display-manager.service - We dont need as default
+for UNIT in display-manager.service
+do
+# Remove UNIT file
+[ -f $SYSTEMD_UNITS_DIR_USER/$UNIT ] && rm -f $SYSTEMD_UNITS_DIR_USER/$UNIT
+[ -f $SYSTEMD_UNITS_DIR_SYSTEM/$UNIT ] && rm -f $SYSTEMD_UNITS_DIR_SYSTEM/$UNIT
+done
+#
 # Copy JambulaTV wrapper for startup services, if none exists in bin directory
 [ -e $BINARY_PREFIX/JambulaTV ] || cp -v $PROJECT_BIN_DIR/JambulaTV $BINARY_PREFIX/
 # Copy jambulatv@.service file
