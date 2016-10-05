@@ -1409,8 +1409,10 @@ cd $KERNELS_SRC_DIR/
 mv -v linux-$KERNEL_VERSION $KERNEL_VERSION.$KERNEL_NAME
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 #
-# Apply patches
+# Realtek WiFi
 patch -p1 ./drivers/net/wireless/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
+# USB TV Tuner - Gadmei
+patch -p1 ./drivers/media/usb/usbtv/usbtv-core.c < $PROJECT_PATCHES_DIR/kernel.usbtv_core.patch
 #
 # Remove stale .o files and dependencies lying around
 make mrproper
