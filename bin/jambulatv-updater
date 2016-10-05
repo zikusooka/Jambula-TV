@@ -19,8 +19,9 @@ WGET_CMD=wget
 WGET_TIMEOUT=20
 WGET_OPTIONS="-q --no-check-certificate --retr-symlinks -T $WGET_TIMEOUT --ftp-user=$JAMBULATV_FTP_USER --ftp-password=$JAMBULATV_FTP_PASS"
 PING_COUNT=1 #9
+PING_IP_ADDRESS=8.8.8.8
 
-OSD_SCRIPT=/usr/bin/jambulatv-osd
+OSD_SCRIPT="sudo /usr/bin/jambulatv-osd"
 
 
 
@@ -33,13 +34,13 @@ awk "BEGIN{ print $* }" ;
 }
 
 check_ftp_server_access () {
-# Check for internet connectivity and access to the ftp server
-ping -c $PING_COUNT $JAMBULATV_FTP_SERVER > /dev/null 2>&1
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+ping -c $PING_COUNT $PING_IP_ADDRESS > /dev/null 2>&1
 EXITVAL=$?
 if [ "$EXITVAL" != "0" ];
 then
-# Quit script, since there's no internet
-exit 1
+# Quit script, since there's no internet.  Leave exit status at 0 so systemd service works
+exit 0
 fi
 }
 
@@ -68,7 +69,7 @@ VERSION_DIFF=$(calc $JAMBULATV_LATEST_UPDATE_VERSION-$JAMBULATV_INSTALLED_VERSIO
 else
 
 echo "`date +%Y-%m-%d`: Failed to update JambulaTV because connection to FTP server failed" >> $JAMBULATV_UPDATES_LOG_DIR/errors 2>&1
-exit 1
+exit 0
 fi
 }
 
@@ -88,7 +89,7 @@ UPDATE_PACKAGE_CHECKSUM_ORIG=$(cat $JAMBULATV_UPDATES_TEMP_DIR/update-$JAMBULATV
 if [ "$UPDATE_PACKAGE_CHECKSUM_NOW" != "$UPDATE_PACKAGE_CHECKSUM_ORIG" ];
 then
 echo "`date +%Y-%m-%d`: Failed to update JambulaTV because the package 'update-$JAMBULATV_LATEST_UPDATE_VERSION.tar.gz' was tampared with" >> $JAMBULATV_UPDATES_LOG_DIR/errors
-exit 1
+exit 0
 fi
 }
 
@@ -120,17 +121,16 @@ echo "$(date +%Y-%m-%d) $(date +%T) > JambulaTV update-$JAMBULATV_LATEST_UPDATE_
 #################
 #  MAIN SCRIPT  #
 #################
-
 check_ftp_server_access
 create_updates_directories
 query_and_set_versions
 
 # UPDATE
 # ------
-# Quit if JambulaTV is upto update.  
+# Quit if JambulaTV is upto update. Leave exit status at 0 so systemd service works
 if [ $(echo "$JAMBULATV_LATEST_UPDATE_VERSION <= $JAMBULATV_INSTALLED_VERSION" | bc -l) = 1 ] || [ "x$JAMBULATV_LATEST_UPDATE_VERSION" = "x" ];
 then
-exit 1
+exit 0
 
 # Continue, check difference in versions
 elif [ $(echo "$VERSION_DIFF > 0" | bc -l) = 1 ];
