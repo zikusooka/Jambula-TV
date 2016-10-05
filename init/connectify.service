@@ -1,8 +1,8 @@
 [Unit]
 Description=Connectify: Dual WiFi Interfaces using a single wireless adaptor
-#Wants=MY_WIFI_OLD_INTERFACE.device
-#After=MY_WIFI_OLD_INTERFACE.device
-#Before=hostapd.service
+Wants=MY_WIFI_OLD_INTERFACE.device
+After=MY_WIFI_OLD_INTERFACE.device
+Before=hostapd.service
 
 [Service]
 Type=oneshot
