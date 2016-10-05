@@ -12,12 +12,15 @@ WIFI_INTERFACES_AVAILABLE=$(sudo iw dev |grep Interface |wc -l)
 WIFI_DRIVER=nl80211
 WIFI_SSID=$(grep -i SSID $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 WIFI_SECURITY_KEY=$(grep -i SECURITY_KEY $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
-OSD_SCRIPT="sudo /usr/bin/jambulatv-osd"
+OSD_SCRIPT="sudo /usr/bin/jambulatv-osd -m"
 AP_FOUND_MSG="Found your WiFi Access Point ($WIFI_SSID). Please wait while I connect to it"
 CONNECTED_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID), Assigning IP Address ..."
 INSERT_WIFI_DONGLE_MSG="Please insert your USB Wireless (WiFi) Network Adapter. I will try connecting to $WIFI_SSID shortly ..."
+UPDATE_AVAIL_MSG="Software Updates: A new version of JambulaTV software is available. Please update as soon as possible"
 
 HOSTAPD_CONFIG_FILE=/etc/hostapd/hostapd.conf
+
+MONITORING_PLUGINS_DIR=/usr/lib64/nagios/plugins
 
 # Set WiFi station Interface
 WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
@@ -47,7 +50,7 @@ WIFI_STICK_PRESENT=$?
 until [ "$WIFI_STICK_PRESENT" = "0" ];
 do
 # Display success message on Screen
-$OSD_SCRIPT -m "$INSERT_WIFI_DONGLE_MSG"
+$OSD_SCRIPT "$INSERT_WIFI_DONGLE_MSG"
 # Pause while waiting for insertion
 sleep 60
 # Test if WiFi stick is now present
@@ -134,7 +137,7 @@ else
 # Beep to alert: Connected WiFi AP
 /usr/bin/beep
 # Display success message on Screen
-$OSD_SCRIPT -m "$CONNECTED_MSG"
+$OSD_SCRIPT "$CONNECTED_MSG"
 fi
 }
 
@@ -164,6 +167,13 @@ then
 echo "WARNING - Wireless Access Point ($WIFI_SSID) Not Available"
 exit 1
 fi
+}
+
+check_4_updates () {
+$MONITORING_PLUGINS_DIR/check_updates > /dev/null 2>&1
+UPDATES_STATUS=$?
+# Notify if updates are available
+[ "$UPDATES_STATUS" = "2" ] && $OSD_SCRIPT "$UPDATE_AVAIL_MSG"
 }
 
 
@@ -215,5 +225,7 @@ make_this_internet_gateway
 
 # Reload coova-chilli in order to change default gateway device and DNS settings
 #/usr/bin/jambulatv-chilli restart
+
+check_4_updates
 
 remove_script_running_file
