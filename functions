@@ -1410,7 +1410,7 @@ mv -v linux-$KERNEL_VERSION $KERNEL_VERSION.$KERNEL_NAME
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 #
 # Realtek WiFi
-patch -p1 ./drivers/net/wireless/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
+patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
 # USB TV Tuner - Gadmei
 patch -p1 ./drivers/media/usb/usbtv/usbtv-core.c < $PROJECT_PATCHES_DIR/kernel.usbtv_core.patch
 #
