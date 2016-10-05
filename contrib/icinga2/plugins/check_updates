@@ -36,6 +36,7 @@ WGET_CMD=wget
 WGET_TIMEOUT=20
 WGET_OPTIONS="-q --no-check-certificate --retr-symlinks -T $WGET_TIMEOUT --ftp-user=$JAMBULATV_FTP_USER --ftp-password=$JAMBULATV_FTP_PASS"
 PING_COUNT=1 #9
+PING_IP_ADDRESS=8.8.8.8
 
 
 
@@ -43,13 +44,13 @@ PING_COUNT=1 #9
 #  FUNCTIONS  #
 ###############
 check_ftp_server_access () {
-# Check for internet connectivity and access to the ftp server
-host -W 1 $JAMBULATV_FTP_SERVER 8.8.8.8 > /dev/null 2>&1
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+ping -c $PING_COUNT $PING_IP_ADDRESS > /dev/null 2>&1
 EXITVAL=$?
 if [ "$EXITVAL" != "0" ];
 then
 # Quit script, since there's no internet
-exit 1
+exit 0
 fi
 }
 
@@ -65,7 +66,7 @@ JAMBULATV_LATEST_UPDATE_VERSION=$(cat $JAMBULATV_UPDATES_TEMP_DIR/$JAMBULATV_UPD
 # Lookup current version
 JAMBULATV_INSTALLED_VERSION=$(grep -i Version $JAMBULATV_RELEASE_FILE | cut -d : -f2 | sed 's:v::g')
 else
-exit 1
+exit 0
 fi
 }
 
