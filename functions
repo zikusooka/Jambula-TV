@@ -2301,14 +2301,19 @@ make_install_jambulatv
 }
 
 tvheadend_configure () {
-# Create tvheadend directory if it does not exist
-[ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
-
-
+# Copy tvheadend systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service $SYSTEMD_UNITS_DIR_USER/
+# Enable and start tvheadend if needed
+systemctl enable tvheadend.service
+systemctl start tvheadend.service
+#
 # Copy TVHeadEnd customized config files for Kampala, Uganda - FIX & include other markets
-rsync -avz $PROJECT_CONFIGS_DIR/tvheadend/ $TVHEADEND_CONFIG_DIR/
-
-
+#rsync -avz $PROJECT_CONFIGS_DIR/tvheadend/ $TVHEADEND_CONFIG_DIR/
+#
+# Create tvheadend directories if it does not exist
+[ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
+[ -d $TVHEADEND_TIMESHIFT_CONFIG_DIR ] || mkdir -p $TVHEADEND_TIMESHIFT_CONFIG_DIR
+#
 # Configure Timeshift i.e. Pausing of Live TV
 cat > $TVHEADEND_TIMESHIFT_CONFIG_DIR/config << EOF
 {
@@ -2325,13 +2330,16 @@ cat > $TVHEADEND_TIMESHIFT_CONFIG_DIR/config << EOF
 }
 EOF
 #
-# Configure recording profile for JambulaTV 
-cat > $TVHEADEND_DVR_CONFIG_DIR/3fdc6b4a1ed4b08da5c1e83717d7b803 << EOF
+# Configure recording profile for JambulaTV i.e. Make sure tvheadend is running
+TVHEADEND_PROFILE_PASS=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/profile/list | jq -c ".entries[]" | grep -i pass | cut -d : -f3 | sed 's:["|}]::g')
+TVHEADEND_DVR_UUID=$(uuidgen -t | sed 's:-::g')
+#
+cat > $TVHEADEND_DVR_CONFIG_DIR/$TVHEADEND_DVR_UUID << EOF
 {
 	"enabled": true,
 	"name": "",
-	"comment": "JambulaTV",
-	"profile": "35e29524b2e666cf4cbc9a91121e0d9e",
+	"comment": "JambulaTV TV Recording (Pass)",
+	"profile": "$TVHEADEND_PROFILE_PASS",
 	"cache": 2,
 	"retention-days": 2147483646,
 	"removal-days": 92,
@@ -2380,11 +2388,6 @@ rsync -av $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET/ $PROJECT_SYSTEM_SHARE_DIR/p
 # Give permissons to TV Icons
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/picons/$TV_MARKET
 #
-# Copy tvheadend systemd file 
-cp -v $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service $SYSTEMD_UNITS_DIR_USER/
-# Enable and start tvheadend if needed
-systemctl enable tvheadend.service
-systemctl start tvheadend.service
 #
 # Copy jambulatv-dvbt-scan used to scan 4 DVB-T services, if none exists in bin directory
 [ -e $BINARY_PREFIX/jambulatv-dvbt-scan ] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/
