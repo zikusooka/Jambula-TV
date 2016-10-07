@@ -1412,6 +1412,9 @@ cd $KERNELS_SRC_DIR/
 mv -v linux-$KERNEL_VERSION $KERNEL_VERSION.$KERNEL_NAME
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 #
+# USB Core messages
+patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel.usb_core.message.patch
+
 # Realtek WiFi
 patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
 # USB TV Tuner - Gadmei
