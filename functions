@@ -1414,6 +1414,8 @@ cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 #
 # USB Core messages
 patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel.usb_core.message.patch
+# DVB Core Frontend - Set dvb_powerdown_on_sleep = 0
+patch -p1 ./drivers/media/dvb-core/dvb_frontend.c < $PROJECT_PATCHES_DIR/kernel.dvb_core.frontend.patch
 
 # Realtek WiFi
 patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
