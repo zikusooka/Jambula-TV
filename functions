@@ -2306,9 +2306,8 @@ make_install_jambulatv
 tvheadend_configure () {
 # Copy tvheadend systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service $SYSTEMD_UNITS_DIR_USER/
-# Enable and start tvheadend if needed
+# Enable tvheadend
 systemctl enable tvheadend.service
-systemctl start tvheadend.service
 #
 # Copy TVHeadEnd customized config files for Kampala, Uganda - FIX & include other markets
 #rsync -avz $PROJECT_CONFIGS_DIR/tvheadend/ $TVHEADEND_CONFIG_DIR/
@@ -2317,6 +2316,61 @@ systemctl start tvheadend.service
 [ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
 [ -d $TVHEADEND_TIMESHIFT_CONFIG_DIR ] || mkdir -p $TVHEADEND_TIMESHIFT_CONFIG_DIR
 #
+# Setup tvheadend main config file
+cat > $TVHEADEND_CONFIG_DIR/config << EOF
+{
+	"version": 23,
+	"full_version": "$(tvheadend --version | awk {'print $3'})",
+	"server_name": "$PROJECT_NAME",
+	"uilevel": 2,
+	"uilevel_nochange": false,
+	"ui_quicktips": true,
+	"digest": true,
+	"cookie_expires": 7,
+	"dscp": -1,
+	"caclient_ui": false,
+	"descrambler_buffer": 9000,
+	"parser_backlog": false,
+	"language": [
+	],
+	"epg_compress": true,
+	"info_area": [
+		"login",
+		"storage",
+		"time"
+	],
+	"language_ui": "eng_GB",
+	"theme_ui": "blue",
+	"tvhtime_update_enabled": false,
+	"tvhtime_ntp_enabled": false,
+	"tvhtime_tolerance": 5000,
+	"prefer_picon": false,
+        "chiconpath": "file://$PROJECT_SYSTEM_SHARE_DIR/picons/$TV_MARKET/%C.png",
+	"chiconscheme": 0,
+	"piconpath": "",
+	"piconscheme": 0,
+	"satip_rtsp": 0,
+	"satip_weight": 100,
+	"satip_remote_weight": true,
+	"satip_descramble": 1,
+	"satip_rewrite_pmt": false,
+	"satip_muxcnf": 0,
+	"satip_dvbs": 0,
+	"satip_dvbs2": 0,
+	"satip_dvbt": 0,
+	"satip_dvbt2": 0,
+	"satip_dvbc": 0,
+	"satip_dvbc2": 0,
+	"satip_atsct": 0,
+	"satip_atscc": 0
+}
+EOF
+
+# Give multimedia user permission to access tvheadend main config file
+chown $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR/config
+# Start tvheadend
+systemctl start tvheadend.service
+
 # Configure Timeshift i.e. Pausing of Live TV
 cat > $TVHEADEND_TIMESHIFT_CONFIG_DIR/config << EOF
 {
