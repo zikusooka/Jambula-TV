@@ -285,6 +285,8 @@ LXDE_SESSION_DIR=/etc/xdg/lxsession
 LXDE_AUTOSTART_DIR=$LXDE_SESSION_DIR/LXDE
 LXDE_AUTOSTART_FILE=$LXDE_AUTOSTART_DIR/autostart
 
+XDG_AUTOSTART_DIR=$CONFDIR/xdg/autostart
+
 UUID_ROOT_PARTITION=`cat /etc/fstab | sed /^#/d | grep '1 1' | awk {'print $1'} | cut -d '=' -f2`
 GRUB2_BOOT_DIR=/boot/grub2
 GRUB2_BOOT_FILE=$GRUB2_BOOT_DIR/grub.cfg
@@ -3265,6 +3267,9 @@ arg=$BINARY_PREFIX/X -background none vt1 -nocursor -dpms -quiet
 " > $LXDM_CONFIG
 # Add LXDE sysconfig desktop file
 echo "DISPLAYMANAGER=/usr/sbin/lxdm" > $SYSCONFIG_DESKTOP_FILE
+# 
+# Disable polkit from showing at autostart in LXDE desktop
+sed -i "s|NotShowIn=GNOME;KDE;XFCE;|NotShowIn=GNOME;KDE;XFCE;LXDE;|g" $XDG_AUTOSTART_DIR/lxpolkit.desktop
 }
 
 nodm_install () {
