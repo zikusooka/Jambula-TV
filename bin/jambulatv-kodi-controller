@@ -30,7 +30,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|pvr_hts_status|tv_play_start|mute|tv_play_stop|tv_record_start|tv_record_stop)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|pvr_hts_status|tv_play_start|mute|tv_play_stop|tv_record_start|tv_record_stop|scan_video|scan_audio)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -165,6 +165,13 @@ PVR_HTS_STATUS=$PVR_HTS_STATUS
 EOF
 }
 
+scan_video_library () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"VideoLibrary.Scan","id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+}
+
+scan_audio_library () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"AudioLibrary.Scan","id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+}
 
 
 
@@ -212,6 +219,14 @@ record_tv_channel_start
 
 tv_record_stop) 
 record_tv_channel_stop
+;;
+
+scan_video)
+scan_video_library
+;;
+
+scan_audio)
+scan_audio_library
 ;;
 
 esac
