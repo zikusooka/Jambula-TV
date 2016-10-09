@@ -1,21 +1,47 @@
 #!/bin/sh
-PCMODE_XSTART_CMD=/usr/bin/startx
+AUTOLOGIN_USER=jambula
+AUTOLOGIN_USER_XDG_RUNTIME_DIR=/run/user/$(id -u $AUTOLOGIN_USER)
 PCMODE_LOG_FILE=/var/log/JambulaTV/pc-mode.log
+
+
 
 case $1 in
 
 # Switch to PC Mode
 [Oo][Nn])
-/usr/bin/beep
-#nohup sudo /usr/bin/systemctl stop jambulatv@kodi.service > /dev/null 2>&1
-nohup /usr/bin/killall kodi > /dev/null 2>&1
-$PCMODE_XSTART_CMD > $PCMODE_LOG_FILE 2>&1 &
+# Kill kodi
+nohup sudo /usr/bin/killall kodi > /dev/null 2>&1
+nohup sudo /usr/bin/killall X > /dev/null 2>&1
+
+# Create XDG runtime directory if it does not exist
+if [ ! -d $AUTOLOGIN_USER_XDG_RUNTIME_DIR ];
+then
+sudo mkdir -p $AUTOLOGIN_USER_XDG_RUNTIME_DIR
+sudo chmod -R 700 $AUTOLOGIN_USER_XDG_RUNTIME_DIR
+sudo chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_XDG_RUNTIME_DIR
+fi
+
+# Waiting for previous X session to end
+ps auxw | grep X | grep -v grep > /dev/null 2>&1
+X_STATUS=$?
+while [ "$X_STATUS" = "0" ];
+do
+echo "Waiting for previous X session to end ...."
+sleep 1
+ps auxw | grep X | grep -v grep > /dev/null 2>&1
+X_STATUS=$?
+done
+
+# Start X for PC Mode
+XDG_RUNTIME_DIR=$AUTOLOGIN_USER_XDG_RUNTIME_DIR /usr/bin/startx > $PCMODE_LOG_FILE 2>&1 &
 ;;
 
 # Switch to Kodi
 [Oo][Ff][Ff])
+# Start kodi
 nohup sudo /usr/bin/systemctl restart jambulatv@kodi.service > /dev/null 2>&1
-/usr/bin/beep
+
+# Kill lxsession
 pkill -9 -f lxsession
 ;;
 

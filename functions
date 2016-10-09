@@ -2883,10 +2883,13 @@ chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_SHARE_DIR/picons/IPTV
 kodi_configure () {
 # JambulaTV: Start Linux Desktop i.e. PC Mode after quiting Kodi
 cp -v ${KODI_STANDALONE_SCRIPT} ${KODI_STANDALONE_SCRIPT}.orig
-cat >> ${KODI_STANDALONE_SCRIPT} <<EOF
-# JambulaTV: Start Linux Desktop i.e. PC Mode after quiting Kodi
-$BINARY_PREFIX/startx
+#
+cat >> ${KODI_STANDALONE_SCRIPT} <<EOF2
+# JambulaTV: Go to PC Mode after quiting Kodi i.e. Start Linux Desktop
+at now <<EOF
+$BINARY_PREFIX/jambulatv-computer-mode on
 EOF
+EOF2
 #
 # MySQL DB for Kodi
 # -----------------
