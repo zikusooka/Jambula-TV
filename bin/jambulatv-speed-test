@@ -1,0 +1,127 @@
+#!/bin/sh
+
+SPEED_TEST_SERVER="LON1" # AMS1 AMS2 NYC1 NYC2 SF1 SGP1 DALS1
+
+STATS_DIR=/tmp
+WGET_CMD=/usr/bin/wget
+WGET_TIMEOUT=20
+WGET_OPTIONS="--no-check-certificate --retr-symlinks -T $WGET_TIMEOUT -O /dev/null"
+PING_COUNT=1 #9
+PING_IP_ADDRESS=8.8.8.8
+
+OSD_SCRIPT="sudo /usr/bin/jambulatv-osd -m"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+# Jambula CLI Calculator
+calc(){ awk "BEGIN{ print $* }" ;}
+
+check_internet_access () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+ping -c $PING_COUNT $PING_IP_ADDRESS > /dev/null 2>&1
+EXITVAL=$?
+if [ "$EXITVAL" != "0" ];
+then
+# Quit script, since there's no internet.  Leave exit status at 0 so systemd service works
+exit 0
+fi
+}
+
+select_speed_test_server () {
+# Speed Tests
+for SELECTED_SPEED_TEST_SERVER in $SPEED_TEST_SERVER
+do
+# Set Speed test server variables
+case $SELECTED_SPEED_TEST_SERVER in
+LON1)
+SPEED_TEST_SERVER_NAME="London-1"
+SPEED_TEST_SERVER_LINK="http://speedtest-lon1.digitalocean.com/10mb.test"
+;;
+AMS1)
+SPEED_TEST_SERVER_NAME="Amsterdam-1"
+SPEED_TEST_SERVER_LINK="http://speedtest-ams1.digitalocean.com/10mb.test"
+;;
+AMS2)
+SPEED_TEST_SERVER_NAME="Amsterdam-2"
+SPEED_TEST_SERVER_LINK="http://speedtest-ams2.digitalocean.com/10mb.test"
+;;
+NYC1)
+SPEED_TEST_SERVER_NAME="NewYork-City-1"
+SPEED_TEST_SERVER_LINK="http://speedtest-nyc1.digitalocean.com/10mb.test"
+;;
+NYC2)
+SPEED_TEST_SERVER_NAME="NewYork-City-2"
+SPEED_TEST_SERVER_LINK="http://speedtest-nyc2.digitalocean.com/10mb.test"
+;;
+SF1)
+SPEED_TEST_SERVER_NAME="SanFrancisco-1"
+SPEED_TEST_SERVER_LINK="http://speedtest-sfo1.digitalocean.com/10mb.test"
+;;
+SGP1)
+SPEED_TEST_SERVER_NAME="Singapore-1"
+SPEED_TEST_SERVER_LINK="http://speedtest-sgp1.digitalocean.com/10mb.test"
+;;
+DALS1)
+SPEED_TEST_SERVER_NAME="Dallas-1"
+SPEED_TEST_SERVER_LINK="http://speedtest-nyc2.digitalocean.com/10mb.test"
+;;
+*)
+SPEED_TEST_SERVER_NAME="NewYork-City-1"
+SPEED_TEST_SERVER_LINK="http://speedtest-nyc1.digitalocean.com/10mb.test"
+;;
+esac
+
+done
+}
+
+fetch_dummy_file () {
+# Run Speed Tests for requested test server routes
+$WGET_CMD $WGET_OPTIONS $SPEED_TEST_SERVER_LINK > $STATS_DIR/$SPEED_TEST_SERVER_NAME.${USER}.log 2>&1
+}
+
+extract_internet_speed () {
+# Extract Speed
+RAW_SPEED=$(grep saved $STATS_DIR/$SPEED_TEST_SERVER_NAME.${USER}.log | awk {'print $3FS$4'} | sed 's/[()]//g')
+
+echo $RAW_SPEED | grep -i 'KB/s' > /dev/null 2>&1
+UNITS_VAL=$?
+#
+if [ "$UNITS_VAL" = "0" ];
+then
+WITHOUT_UNITS=$(echo $RAW_SPEED | sed 's:KB/s::' | sed 's: ::')
+SPEED="$(calc $WITHOUT_UNITS*8/1000) MB/s"
+
+else
+SPEED=$RAW_SPEED
+
+fi
+}
+
+notify_internet_speed () {
+RUNNING_USER=$(whoami)
+if [ "$RUNNING_USER" = "icinga" ] || [ "$SUDO_USER" = "icinga" ];
+then
+$OSD_SCRIPT "Your current Internet speed is $SPEED ($SPEED_TEST_SERVER_NAME)"
+else
+clear; echo "Your current Internet speed is $SPEED ($SPEED_TEST_SERVER_NAME)"
+fi
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+check_internet_access
+
+select_speed_test_server
+
+fetch_dummy_file
+
+extract_internet_speed
+
+notify_internet_speed

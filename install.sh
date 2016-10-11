@@ -285,7 +285,6 @@ coova_chilli_install
 haserl_install
 coova_chilli_configure
 coova_chilli_customization
-coova_chilli_icinga2_dns_monitor
 hostapd_install
 hostapd_configure
 
@@ -300,6 +299,9 @@ icinga2_ido_mysql
 icinga2_configure
 icingaweb2_install
 icingaweb2_configure
+#
+internet_connectivity_monitoring
+#
 # Netdata: realtime system monitoring
 netdata_install
 netdata_configure

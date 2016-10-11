@@ -5169,9 +5169,13 @@ Coova-Chilli
 EOF
 }
 
-coova_chilli_icinga2_dns_monitor () {
+internet_connectivity_monitoring () {
 [ -e $BINARY_PREFIX/jambulatv-dns-status-triggers ] || \
 	cp -v $PROJECT_BIN_DIR/jambulatv-dns-status-triggers $BINARY_PREFIX/
+#
+# Copy jambulatv-speed-test helper script
+[ -e $BINARY_PREFIX/jambulatv-speed-test ] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-speed-test $BINARY_PREFIX/
 }
 
 hostapd_install () {
