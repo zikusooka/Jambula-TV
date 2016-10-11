@@ -16,11 +16,8 @@ OSD_SCRIPT="sudo /usr/bin/jambulatv-osd -m"
 AP_FOUND_MSG="Found your WiFi Access Point ($WIFI_SSID). Please wait while I connect to it"
 CONNECTED_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID), Assigning IP Address ..."
 INSERT_WIFI_DONGLE_MSG="Please insert your USB Wireless (WiFi) Network Adapter. I will try connecting to $WIFI_SSID shortly ..."
-UPDATE_AVAIL_MSG="Software Updates: A new version of JambulaTV software is available. Please update as soon as possible"
 
 HOSTAPD_CONFIG_FILE=/etc/hostapd/hostapd.conf
-
-MONITORING_PLUGINS_DIR=/usr/lib64/nagios/plugins
 
 # Set WiFi station Interface
 WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
@@ -225,7 +222,5 @@ make_this_internet_gateway
 
 # Reload coova-chilli in order to change default gateway device and DNS settings
 #/usr/bin/jambulatv-chilli restart
-
-check_4_updates
 
 remove_script_running_file
