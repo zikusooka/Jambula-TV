@@ -1,7 +1,7 @@
 #!/bin/sh
 WIFI_AP_INTERFACE=MY_WIFI_AP_INTERFACE
 WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
-WIFI_OLD_INTERFACE=$(dmesg | grep 'renamed network interface wlan0' | cut -d : -f2- | sed 's: renamed network interface wlan0 to ::' | uniq)
+WIFI_OLD_INTERFACE=$(dmesg | grep 'renamed network interface wlan0' | cut -d : -f2- | sed 's: renamed network interface wlan0 to ::' | head -1)
 WIFI_PHY_DEV=$(iw dev $WIFI_OLD_INTERFACE info | grep wiphy | awk {'print $2'})
 WIFI_AP_MACADDRESS="MY_WIFI_AP_MACADDRESS"
 WIFI_STATION_MACADDRESS="MY_WIFI_STATION_MACADDRESS"

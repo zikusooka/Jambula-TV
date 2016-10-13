@@ -473,8 +473,8 @@ WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
 WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
 WIFI_INTERFACES_AVAILABLE=$(iw dev |grep Interface |wc -l)
-WIFI_OLD_INTERFACE=$(dmesg | grep 'renamed network interface wlan0' | cut -d : -f2- | sed 's: renamed network interface wlan0 to ::' | uniq)
-WIFI_OLD_INTERFACE_2=$(dmesg | grep 'renamed network interface wlan1' | cut -d : -f2- | sed 's: renamed network interface wlan1 to ::' |uniq)
+WIFI_OLD_INTERFACE=$(dmesg | grep 'renamed network interface wlan0' | cut -d : -f2- | sed 's: renamed network interface wlan0 to ::' | head -1)
+WIFI_OLD_INTERFACE_2=$(dmesg | grep 'renamed network interface wlan1' | cut -d : -f2- | sed 's: renamed network interface wlan1 to ::' | head -1)
 # Virtual wifi interfaces support
 lsmod | grep mac80211 | grep 'ath9k' > /dev/null 2>&1
 VIRT_WIFI_SUPPORT=$?
