@@ -12,6 +12,7 @@ CHRONY_KEYS_FILE=/etc/chrony.keys
 CHRONYC_PASSWD=`awk {'print $2'} $CHRONY_KEYS_FILE`
 
 BEEP_SOUNDS_SCRIPT=/usr/bin/jambulatv-sounds
+SPEED_TEST_SCRIPT=/usr/bin/jambulatv-speed-test
 
 DEBUG_FILE=/tmp/internet_status.log
 DNS_STATUS=$1
@@ -65,12 +66,10 @@ UPDATES_STATUS=$?
 
 
 
-###################################################################
-# Run commands/processes depending on availability of DNS servers #
-###################################################################
+##########################
+#  Internet status:  UP  #
+##########################
 
-# DNS on: Internet is UP
-# -----------------------
 if [ "$DNS_STATUS" = "UP" ] && [ "$LAST_DNS_STATUS" = "DOWN" ];
 then
 # Debug
@@ -92,9 +91,8 @@ PREVIOUS_HS_DOMAINDNSLOCAL=`grep 'HS_DOMAINDNSLOCAL=' $COOVA_CONFIG_FILE | awk {
 sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=off:g" $COOVA_CONFIG_FILE 
 
 
-##########################################################################
-# Since Internet is now UP -  Do other stuff that requires connectivity  #
-##########################################################################
+# Since Internet is now UP -  Do other stuff that requires connectivity
+#######################################################################
 
 #  Take chrony on-line: Update clock time
 # ---------------------------------------
@@ -107,20 +105,28 @@ EOF
 # ----------------
 [ -x $BEEP_SOUNDS_SCRIPT ] && $BEEP_SOUNDS_SCRIPT online
 
+# Test Internet speed
+# -------------------
+[ -x $SPEED_TEST_SCRIPT ] && $SPEED_TEST_SCRIPT
+
 # JambulaTV: Check for available updates
 # --------------------------------------
+sleep 60
 check_4_updates
 
+
+
+############################
+#  Internet status:  DOWN  #
+############################
 
 elif [ "$DNS_STATUS" = "DOWN" ] && [ "$LAST_DNS_STATUS" = "UP" ];
 then
 # Debug
 echo "$(date): New State = Down | Old State = Up" >> $DEBUG_FILE
 #
-# DNS off: Internet is DOWN
-# --------------------------
-#
 # Add entries to dnsmasq for local resolution
+# --------------------------------------------
 echo "address=/#/$COOVA_SERVER_IP
 address=/#/$NETWORK_IP_ADDRESS" > /etc/dnsmasq.d/dns_off.conf
 # Restart dnsmasq.service
@@ -133,10 +139,8 @@ PREVIOUS_HS_DOMAINDNSLOCAL=`grep 'HS_DOMAINDNSLOCAL=' $COOVA_CONFIG_FILE | awk {
 # Set chilli domain DNS locals to 'on' since internet off
 sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=on:g" $COOVA_CONFIG_FILE 
 
-
-########################################################################
-#  Since Internet is now down - Stop stuff that requires connectivity  #
-########################################################################
+#  Since Internet is now down - Stop stuff that requires connectivity 
+######################################################################
 
 # Take chrony off-line
 # --------------------
