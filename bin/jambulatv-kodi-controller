@@ -20,6 +20,9 @@ PVR_GROUP=1
 PVR_STOP_REC_SCRIPT=/tmp/.stop_recording_tv_channel.sh
 PVR_STATUS_FILE=/tmp/pvr_status
 
+SCAN_VIDEOS_DIR=MY_USER_VIDEOS_DIR
+SCAN_AUDIO_DIR=MY_USER_MUSIC_DIR
+
 
 
 ###############
@@ -166,11 +169,11 @@ EOF
 }
 
 scan_video_library () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"VideoLibrary.Scan","id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"VideoLibrary.Scan","id":"1","params":{"directory":"'"$1"'"}}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
 }
 
 scan_audio_library () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"AudioLibrary.Scan","id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"AudioLibrary.Scan","id":"1","params":{"directory":"'"$1"'"}}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
 }
 
 clean_video_library () {
@@ -230,11 +233,11 @@ record_tv_channel_stop
 ;;
 
 scan_video)
-scan_video_library
+scan_video_library "$SCAN_VIDEOS_DIR"
 ;;
 
 scan_audio)
-scan_audio_library
+scan_audio_library "$SCAN_AUDIO_DIR"
 ;;
 
 clean_video)
