@@ -169,6 +169,14 @@ TVHEADEND_HTTP_PASS=""
 TVHEADEND_TIMESHIFT_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/timeshift
 TVHEADEND_TIMESHIFT_BUFFER_FILE=$TMPDIR/timeshift_buffer
 TVHEADEND_DVR_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/dvr/config
+TVHEADEND_DVR_UUID=$(uuidgen -t | sed 's:-::g')
+
+TVHEADEND_ADAPTERS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/linuxdvb/adapters
+TVHEADEND_ADAPTER_UUID=$(uuidgen -t | sed 's:-::g')
+
+TVHEADEND_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/dvb/networks
+TVHEADEND_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
+TVHEADEND_NETWORK_CONFIG_FILE=$TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/config
 
 PLATFORM_TAG=1.0.10
 LIBCEC_TAG=libcec-2.2.0
@@ -741,6 +749,11 @@ OSD_SCRIPT=$BINARY_PREFIX/jambulatv-osd
 
 # TV Market
 TV_MARKET=UG-Kampala
+
+DVBT_NETWORK_NAME=$(basename $(find $PREFIX/share/dvb/dvb-t -iname "$TV_MARKET"))
+DVBT_PNETWORK_NAME="UBC TX2"
+DVBT_TUNER_NAME="Silicon Labs Si2168"
+DVBT_TUNER_NO=0
 
 
 
@@ -2311,20 +2324,18 @@ make_install_jambulatv
 }
 
 tvheadend_configure () {
-# Copy tvheadend systemd file 
-cp -v $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service $SYSTEMD_UNITS_DIR_USER/
-# Enable tvheadend
-systemctl enable tvheadend.service
-#
-# Copy TVHeadEnd customized config files for Kampala, Uganda - FIX & include other markets
-#rsync -avz $PROJECT_CONFIGS_DIR/tvheadend/ $TVHEADEND_CONFIG_DIR/
 #
 # Create tvheadend directories if it does not exist
+# -------------------------------------------------
 [ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
 [ -d $TVHEADEND_TIMESHIFT_CONFIG_DIR ] || mkdir -p $TVHEADEND_TIMESHIFT_CONFIG_DIR
 [ -d $TVHEADEND_DVR_CONFIG_DIR ] || mkdir -p $TVHEADEND_DVR_CONFIG_DIR
-#
+[ -d $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID ] || \
+	mkdir -p $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID
+[ -d $TVHEADEND_ADAPTERS_CONFIG_DIR ] || mkdir -p $TVHEADEND_ADAPTERS_CONFIG_DIR
+
 # Setup tvheadend main config file
+# --------------------------------
 cat > $TVHEADEND_CONFIG_DIR/config << EOF
 {
 	"version": 23,
@@ -2374,12 +2385,92 @@ cat > $TVHEADEND_CONFIG_DIR/config << EOF
 }
 EOF
 
+# Copy muxes for Kampala, Uganda - TODO: Include other markets
+# ------------------------------------------------------------
+rsync -av $PROJECT_CONFIGS_DIR/tvheadend/muxes/ $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes/
+
 # Give multimedia user permission to access tvheadend main config file
-chown $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR/config
+# --------------------------------------------------------------------
+chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+
+# Tvheadend systemd unit
+# ----------------------
+# Copy tvheadend systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service $SYSTEMD_UNITS_DIR_USER/
+# Enable tvheadend
+systemctl enable tvheadend.service
 # Start tvheadend
 systemctl start tvheadend.service
+#
+# Wait until adapters directory has been populated
+while true
+do
+  if [ "$(ls -A "$TVHEADEND_ADAPTERS_CONFIG_DIR")" ]; 
+    then
+    break
+  else 
+    echo "Waiting for tvheadend.service to settle. Please be patient ..."
+    sleep 7
+  fi
+
+done
+
+# Configure DVBT-2 adapter settings
+# ---------------------------------
+TVHEADEND_ADAPTERS_CONFIG_FILE=$(grep -rli "$DVBT_TUNER_NAME" $TVHEADEND_ADAPTERS_CONFIG_DIR | xargs grep -l adapter${DVBT_TUNER_NO})
+
+cat > $TVHEADEND_ADAPTERS_CONFIG_FILE << EOF
+{
+	"rootpath": "/dev/dvb/adapter${DVBT_TUNER_NO}",
+	"frontends": {		
+		"DVB-T #0": {
+			"lna": false,
+			"pids_max": 32,
+			"powersave": false,
+			"tune_repeats": 0,
+			"skip_bytes": 0,
+			"ibuf_size": 188000,
+			"status_period": 1000,
+			"old_status": false,
+			"enabled": true,
+			"priority": 0,
+			"spriority": 0,
+			"displayname": "$DVBT_TUNER_NAME : DVB-T #0",
+			"ota_epg": true,
+			"initscan": true,
+			"idlescan": true,
+			"free_weight": 0,
+			"networks": [
+				"$TVHEADEND_NETWORK_UUID"
+			],
+			"linked": "",
+			"type": "DVB-T",
+			"uuid": "$TVHEADEND_ADAPTER_UUID"
+		}
+	}
+}
+EOF
+
+# Configure network that will be used and type
+# --------------------------------------------
+cat > $TVHEADEND_NETWORK_CONFIG_FILE <<EOF
+{
+	"networkname": "$DVBT_NETWORK_NAME",
+	"pnetworkname": "$DVBT_PNETWORK_NAME",
+	"nid": 0,
+	"autodiscovery": false,
+	"skipinitscan": false,
+	"idlescan": false,
+	"sid_chnum": false,
+	"ignore_chnum": false,
+	"satip_source": 0,
+	"localtime": false,
+	"class": "dvb_network_dvbt"
+}
+EOF
 
 # Configure Timeshift i.e. Pausing of Live TV
+# -------------------------------------------
 cat > $TVHEADEND_TIMESHIFT_CONFIG_DIR/config << EOF
 {
 	"enabled": true,
@@ -2395,9 +2486,13 @@ cat > $TVHEADEND_TIMESHIFT_CONFIG_DIR/config << EOF
 }
 EOF
 #
+
 # Configure recording profile for JambulaTV i.e. Make sure tvheadend is running
+# -----------------------------------------------------------------------------
 TVHEADEND_PROFILE_PASS=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/profile/list | jq -c ".entries[]" | grep -i pass | cut -d : -f3 | sed 's:["|}]::g')
-TVHEADEND_DVR_UUID=$(uuidgen -t | sed 's:-::g')
+#
+# Remove created default passthrough DVR entry, only one needs to exist for recordings
+rm -f $TVHEADEND_DVR_CONFIG_DIR/*
 #
 cat > $TVHEADEND_DVR_CONFIG_DIR/$TVHEADEND_DVR_UUID << EOF
 {
@@ -2442,13 +2537,18 @@ cat > $TVHEADEND_DVR_CONFIG_DIR/$TVHEADEND_DVR_UUID << EOF
 	"windows-compatible-filenames": false
 }
 EOF
-#
+
+# Configure Channels
+# -------------------
+
+
+
 # Give multimedia user permission to access tvheadend directories
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
-
-
-
 #
+# Restart tvheadend
+systemctl restart tvheadend.service
+
 # Clean picons directory if it does not exist
 [ -d $PROJECT_SYSTEM_SHARE_DIR/picons ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/picons
 # Copy Live TV picons e.g. logos to JambulaTV share directory
