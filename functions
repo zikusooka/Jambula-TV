@@ -2322,6 +2322,7 @@ systemctl enable tvheadend.service
 # Create tvheadend directories if it does not exist
 [ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
 [ -d $TVHEADEND_TIMESHIFT_CONFIG_DIR ] || mkdir -p $TVHEADEND_TIMESHIFT_CONFIG_DIR
+[ -d $TVHEADEND_DVR_CONFIG_DIR ] || mkdir -p $TVHEADEND_DVR_CONFIG_DIR
 #
 # Setup tvheadend main config file
 cat > $TVHEADEND_CONFIG_DIR/config << EOF
@@ -2444,6 +2445,9 @@ EOF
 #
 # Give multimedia user permission to access tvheadend directories
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+
+
+
 #
 # Clean picons directory if it does not exist
 [ -d $PROJECT_SYSTEM_SHARE_DIR/picons ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/picons
