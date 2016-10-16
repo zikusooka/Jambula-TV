@@ -3,7 +3,8 @@ PROJECT_NAME=JambulaTV
 PROJECT_URL="http://www.jambulatv.com"
 COMPANY_NAME="Jambula Labs"
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.4.23"
+KERNEL_VERSION="4.4.24"
+
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
@@ -137,6 +138,10 @@ FREEVO_RUNTIME_SHARE_DIR=$FREEVO_INSTALL_DIR/share
 FREEVO_RUNTIME_SKINS_DIR=$FREEVO_RUNTIME_SHARE_DIR/skins
 
 KERNELS_SRC_DIR=/usr/src/kernels
+
+AVAILABLE_DISK_SPACE_ROOT=$(df / |grep -v block | awk {'print $4'})
+#DISK_THRESHOLD_ROOT=15728640 #15GB
+DISK_THRESHOLD_ROOT=12582912 #12GB
 
 FREEVO_LOCAL_CONFIG_DIR=$HOME/.freevo
 FREEVO_SYSTEM_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/freevo
@@ -896,6 +901,33 @@ fi
 }
 
 
+# Kernel functions for install & upgrades
+# ---------------------------------------
+kernel_check_4_space () {
+if [ "$AVAILABLE_DISK_SPACE_ROOT" -lt "$DISK_THRESHOLD_ROOT" ];
+then
+clear
+cat <<EOF
+You do not have enough space to compile the kernel.  Please free up some space before 
+proceeding.  Available disk space = $AVAILABLE_DISK_SPACE_ROOT
+EOF
+exit 1
+fi
+}
+
+kernel_patches () {
+# USB Core messages
+patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel.usb_core.message.patch
+# DVB Core Frontend - Set dvb_powerdown_on_sleep = 0
+patch -p1 ./drivers/media/dvb-core/dvb_frontend.c < $PROJECT_PATCHES_DIR/kernel.dvb_core.frontend.patch
+
+# Realtek WiFi
+patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
+# USB TV Tuner - Gadmei
+patch -p1 ./drivers/media/usb/usbtv/usbtv-core.c < $PROJECT_PATCHES_DIR/kernel.usbtv_core.patch
+}
+
+
 
 #########################
 #  UNINSTALL FUNCTIONS  #
@@ -924,19 +956,9 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 # Source functions file
 . $PROJECT_BASE_DIR/functions
 KERNEL_VERSION=$NEW_KERNEL
+
 # See how much space is left
-AVAILABLE_DISK_SPACE_ROOT=$(df -k / |grep -v block | awk {'print $4'})
-DISK_THRESHOLD_ROOT=15728640 #15GB
-if [ "$AVAILABLE_DISK_SPACE_ROOT" -lt "$DISK_THRESHOLD_ROOT" ];
-then
-# quit
-clear
-cat <<EOF
-You do not have enough space to compile the kernel.  Please free up some space before 
-proceeding ...
-EOF
-exit 1
-fi
+kernel_check_4_space
 #
 # Check if desired kernel exists
 uname -r | grep -i $KERNEL_VERSION > /dev/null 2>&1
@@ -950,9 +972,9 @@ mv -v linux-$KERNEL_VERSION $KERNEL_VERSION.$KERNEL_NAME
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 #
 # Apply patches
-patch -p1 ./drivers/net/wireless/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
+kernel_patches
 #
-_install_pause_check_4_errors_
+#_install_pause_check_4_errors_
 #
 # Remove stale .o files and dependencies lying around
 make mrproper
@@ -1403,18 +1425,7 @@ rm -rf $INSTALL_SRC_DIR/domoticz
 #######################
 kernel_install () {
 # See how much space is left
-AVAILABLE_DISK_SPACE_ROOT=$(df /|grep -v block | awk {'print $4'})
-DISK_THRESHOLD_ROOT=15728640 #15GB
-if [ "$AVAILABLE_DISK_SPACE_ROOT" -lt "$DISK_THRESHOLD_ROOT" ];
-then
-# quit
-clear
-cat <<EOF
-You do not have enough space to compile the kernel.  Please free up some space before 
-proceeding ...
-EOF
-exit 1
-fi
+kernel_check_4_space
 #
 # Check if desired kernel exists
 uname -r | grep -i $KERNEL_VERSION > /dev/null 2>&1
@@ -1427,15 +1438,8 @@ cd $KERNELS_SRC_DIR/
 mv -v linux-$KERNEL_VERSION $KERNEL_VERSION.$KERNEL_NAME
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 #
-# USB Core messages
-patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel.usb_core.message.patch
-# DVB Core Frontend - Set dvb_powerdown_on_sleep = 0
-patch -p1 ./drivers/media/dvb-core/dvb_frontend.c < $PROJECT_PATCHES_DIR/kernel.dvb_core.frontend.patch
-
-# Realtek WiFi
-patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
-# USB TV Tuner - Gadmei
-patch -p1 ./drivers/media/usb/usbtv/usbtv-core.c < $PROJECT_PATCHES_DIR/kernel.usbtv_core.patch
+# Apply patches
+kernel_patches
 #
 # Remove stale .o files and dependencies lying around
 make mrproper
