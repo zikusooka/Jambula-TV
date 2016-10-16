@@ -1,19 +1,20 @@
 --- message.c.orig	2016-10-07 19:42:45.525011213 +0300
-+++ message.c	2016-10-07 19:45:03.047874676 +0300
-@@ -765,14 +765,14 @@
- 	err = usb_string_sub(dev, 0, 0, tbuf);
- 
- 	/* If the string was reported but is malformed, default to english
--	 * (0x0409) */
-+	 * (0x0409)
++++ message.c	2016-10-16 17:35:26.315847082 +0300
+@@ -769,8 +769,6 @@
  	if (err == -ENODATA || (err > 0 && err < 4)) {
  		dev->string_langid = 0x0409;
  		dev->have_langid = 1;
- 		dev_err(&dev->dev,
- 			"language id specifier not provided by device, defaulting to English\n");
+-		dev_err(&dev->dev,
+-			"language id specifier not provided by device, defaulting to English\n");
  		return 0;
--	}
-+	} */
+ 	}
  
- 	/* In case of all other errors, we assume the device is not able to
+@@ -778,8 +776,6 @@
  	 * deal with strings at all. Set string_langid to -1 in order to
+ 	 * prevent any string to be retrieved from the device */
+ 	if (err < 0) {
+-		dev_err(&dev->dev, "string descriptor 0 read error: %d\n",
+-					err);
+ 		dev->string_langid = -1;
+ 		return -EPIPE;
+ 	}
