@@ -183,6 +183,8 @@ TVHEADEND_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/dvb/networks
 TVHEADEND_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
 TVHEADEND_NETWORK_CONFIG_FILE=$TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/config
 
+TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
+
 PLATFORM_TAG=1.0.10
 LIBCEC_TAG=libcec-2.2.0
 
@@ -2337,6 +2339,7 @@ tvheadend_configure () {
 [ -d $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID ] || \
 	mkdir -p $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID
 [ -d $TVHEADEND_ADAPTERS_CONFIG_DIR ] || mkdir -p $TVHEADEND_ADAPTERS_CONFIG_DIR
+[ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
 
 # Setup tvheadend main config file
 # --------------------------------
@@ -2543,9 +2546,54 @@ cat > $TVHEADEND_DVR_CONFIG_DIR/$TVHEADEND_DVR_UUID << EOF
 EOF
 
 # Configure Channels
-# -------------------
-
-
+# ------------------
+# Give multimedia user permission to access tvheadend directories
+chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+#
+# Restart tvheadend
+systemctl restart tvheadend.service
+#
+echo
+echo -------------------------------------------------------------------------
+echo "Mapping TV Channels.  This will take 2 minutes.  Please be patient ..."
+echo -------------------------------------------------------------------------
+echo
+sleep 120
+#
+DIGIT=1
+curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/service/list | jq .entries[] | grep "text\": \"$DVBT_NETWORK_NAME" | cut -d '/' -f3 | sed 's:["|,]::g' | grep -wEv TEST | grep -wEv '{PMT:0}' | while read LINE 
+do
+CHANNEL_NUMBER=$DIGIT
+CHANNEL_NAME=$LINE
+#CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:upper:] [:lower:]| sed 's: :_:g').png
+CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:lower:] [:upper:]| sed 's: :_:g').png
+CHANNEL_UUID=$(uuidgen -t | sed 's:-::g')
+#
+SERVICE_UUID=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/service/list | jq .entries[] | grep -A2 "text\": \"$DVBT_NETWORK_NAME" | grep -A2 "$CHANNEL_NAME" | grep uuid | awk {'print $2'} | head -1 | sed 's:"::g')
+#
+# Create channel config file
+cat > $TVHEADEND_CHANNELS_CONFIG_DIR/$CHANNEL_UUID <<EOF
+{
+	"enabled": true,
+	"number": 0,
+	"icon": "file://$PROJECT_SYSTEM_SHARE_DIR/picons/$TV_MARKET/$CHANNEL_LOGO",
+	"epgauto": true,
+	"dvr_pre_time": 0,
+	"dvr_pst_time": 0,
+	"epg_running": -1,
+	"services": [
+		"$SERVICE_UUID"
+	],
+	"tags": [
+		"",
+		""
+	],
+	"bouquet": ""
+}
+EOF
+#
+let "DIGIT = $CHANNEL_NUMBER + 1"
+done
 
 # Give multimedia user permission to access tvheadend directories
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
