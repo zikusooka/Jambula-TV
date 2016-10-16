@@ -3673,7 +3673,7 @@ wireless_interfaces_configure () {
 if [ "$VIRT_WIFI_SUPPORT" != "0" ];
 then
 # Create udev rules file for wlan* - Naming scheme instead of biosdev names
-cat > $UDEV_RULES_DIR/60-jambulatv.wifi-net.rules <<EOF
+cat > $UDEV_RULES_DIR/96-jambulatv.wifi-net.rules <<EOF
 # $WIFI_AP_INTERFACE
 SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_AP_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_AP_INTERFACE", TAG+="systemd", ENV{SYSTEMD_WANTS}+="coova-chilli.service"
 EOF
@@ -3681,7 +3681,7 @@ EOF
 elif [ "$VIRT_WIFI_SUPPORT" != "0" ] && [ "x$WIFI_STATION_MACADDRESS" != "x" ];
 then
 # Create udev rules file for wlan* - Naming scheme instead of biosdev names
-cat >> $UDEV_RULES_DIR/60-jambulatv.wifi-net.rules <<EOF
+cat >> $UDEV_RULES_DIR/96-jambulatv.wifi-net.rules <<EOF
 # $WIFI_STATION_INTERFACE
 SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_STATION_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_STATION_INTERFACE"
 EOF
