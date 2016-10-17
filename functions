@@ -929,6 +929,15 @@ patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/k
 patch -p1 ./drivers/media/usb/usbtv/usbtv-core.c < $PROJECT_PATCHES_DIR/kernel.usbtv_core.patch
 }
 
+kernel_install_notice () {
+cat <<EOF
+You are about to install the latest Linux kernel version [$KERNEL_VERSION], 
+
+CAUTION:  This may take anywhere from 4 to 7 hours to complete! 
+
+EOF
+}
+
 
 
 #########################
@@ -976,7 +985,7 @@ cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 # Apply patches
 kernel_patches
 #
-#_install_pause_check_4_errors_
+_install_pause_check_4_errors_
 #
 # Remove stale .o files and dependencies lying around
 make mrproper
@@ -984,18 +993,6 @@ make mrproper
 cp -v $PROJECT_CONFIGS_DIR/kernel.config .config
 # Compile
 make oldconfig
-
-# Notices
-clear
-
-_install_pause_check_4_errors_
-
-cat <<EOF
-
-Next run kernel_2 to compile & install the Linux kernel $KERNEL_VERSION 
-
-EOF
-
 fi
 }
 
@@ -1003,14 +1000,9 @@ kernel_upgrade_2 () {
 # Source functions file
 #
 KERNEL_VERSION=$NEW_KERNEL
-echo "
-You are about to install the latest Linux kernel version [$KERNEL_VERSION], 
-
-CAUTION:  This may take anywhere from 4 to 7 hours to complete! 
-
-"
 #
-_install_pause_check_4_errors_
+# Notice - Going to install
+kernel_install_notice
 #
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 make bzImage
@@ -1443,19 +1435,17 @@ cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 # Apply patches
 kernel_patches
 #
+_install_pause_check_4_errors_
+#
 # Remove stale .o files and dependencies lying around
 make mrproper
 # Add our .config file
 cp -v $PROJECT_CONFIGS_DIR/kernel.config .config
 # Compile
 make oldconfig
-# Notice
-clear
-cat <<EOF
-Am going to compile & install the Linux kernel $KERNEL_VERSION, This will take up to 6 hours! 
-EOF
 #
-_install_pause_check_4_errors_
+# Notice - Going to install
+kernel_install_notice
 #
 make bzImage
 make modules
@@ -2575,7 +2565,7 @@ SERVICE_UUID=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/se
 cat > $TVHEADEND_CHANNELS_CONFIG_DIR/$CHANNEL_UUID <<EOF
 {
 	"enabled": true,
-	"number": 0,
+	"number": $CHANNEL_NUMBER,
 	"icon": "file://$PROJECT_SYSTEM_SHARE_DIR/picons/$TV_MARKET/$CHANNEL_LOGO",
 	"epgauto": true,
 	"dvr_pre_time": 0,

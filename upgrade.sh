@@ -143,7 +143,7 @@ vlc_install
 #  MAIN SCRIPT  #
 #################
 
-#upgrade_kernel 4.4.24
+#upgrade_kernel 4.4.25
 
 #upgrade_kodi
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
