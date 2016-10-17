@@ -1,0 +1,163 @@
+#!/bin/sh
+#
+# This script populates the videos and music MySQL databases for kodi
+# It also, can be used to remove and recreate those databases
+#
+# @copyright 2016-2017 Jambula Labs. All rights reserved
+#
+
+# Variables
+MYSQL_ROOT_PASSWORD=MY_MYSQL_ROOT_PASSWORD
+
+KODI_DB_PREFIX=MY_KODI_DB_PREFIX
+KODI_DB_VIDEO=${KODI_DB_PREFIX}_video
+KODI_DB_MUSIC=${KODI_DB_PREFIX}_music
+KODI_DB_USER=jambula
+KODI_DB_PASS=jambulatv4
+KODI_DB_VIDEO_SCHEMA=/tmp/${KODI_DB_VIDEO}.sql
+KODI_DB_MUSIC_SCHEMA=/tmp/${KODI_DB_MUSIC}.sql
+KODI_CONFIG_DIR=MY_KODI_CONFIG_DIR
+KODI_USER_DATA=${KODI_CONFIG_DIR}/userdata
+
+USER_TV_SHOWS_DIR=MY_USER_TV_SHOWS_DIR
+USER_MOVIES_DIR=MY_USER_MOVIES_DIR
+USER_MUSIC_DIR=MY_USER_MUSIC_DIR
+
+LIBRARY_TASK=$1
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage () {
+# Device Name
+if [ "x$LIBRARY_TASK" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` [create|scan|wipe|reset] 
+"
+exit 2
+fi
+}
+
+query_kodi_db_names () {
+# Query Kodi databases
+USER_KODI_VIDEO_DB=$(mysql -s -u $KODI_DB_USER -p$KODI_DB_PASS <<EOF
+SHOW DATABASES LIKE '$KODI_DB_VIDEO%';
+EOF
+)
+USER_KODI_MUSIC_DB=$(mysql -s -u $KODI_DB_USER -p$KODI_DB_PASS <<EOF
+SHOW DATABASES LIKE '$KODI_DB_MUSIC%';
+EOF
+)
+}
+
+set_kodi_db_variables () { 
+query_kodi_db_names
+#
+# If Databases were not found, restart kodi to initialize videos & music databases
+if [ "x$USER_KODI_VIDEO_DB" = "x" ] || [ "x$USER_KODI_MUSIC_DB" = "x" ];
+then
+systemctl restart jambulatv@kodi.service
+echo "JambulaTV is Restarting, please be patient ... "
+sleep 30
+query_kodi_db_names
+fi
+#
+export USER_KODI_VIDEO_DB USER_KODI_MUSIC_DB
+}
+
+wipe_kodi_databases () {
+set_kodi_db_variables
+#
+mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $USER_KODI_VIDEO_DB
+mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $USER_KODI_MUSIC_DB
+#
+# Drop existing kodi user first
+echo "DROP USER '$KODI_DB_USER'@'%';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+# Create Kodi User
+echo "CREATE USER '$KODI_DB_USER'@'%' IDENTIFIED BY '$KODI_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+#
+# Create Kodi Databases
+for KODI_DB in $KODI_DB_VIDEO $KODI_DB_MUSIC;
+do
+# Grant Usage privileges and access from all hosts i.e. anywhere, 127.0.0.1, and localhost
+echo "GRANT USAGE ON $KODI_DB.* TO '$KODI_DB_USER'@'%' IDENTIFIED BY '$KODI_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+echo "GRANT USAGE ON $KODI_DB.* TO '$KODI_DB_USER'@'127.0.0.1' IDENTIFIED BY '$KODI_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+echo "GRANT USAGE ON $KODI_DB.* TO '$KODI_DB_USER'@'localhost' IDENTIFIED BY '$KODI_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+done
+#
+# Grant ALL privileges on kodi databases i.e. MyVideo%.db MyMusic%db
+echo "GRANT ALL PRIVILEGES ON \`kodi_%\`.* TO '$KODI_DB_USER'@'%';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+
+# Remove $KODI_USER_DATA/Database/Textures13.db
+rm -f $KODI_USER_DATA/Database/Textures*.db
+rm -f $KODI_USER_DATA/Database/MyVideos*.db
+rm -f $KODI_USER_DATA/Database/MyMusic*.db
+
+# Restart Kodi
+systemctl restart jambulatv@kodi.service
+echo "JambulaTV is Restarting, please be patient ... "
+}
+
+kodi_sources_configure () {
+set_kodi_db_variables
+#
+# Videos DB
+cat > $KODI_DB_VIDEO_SCHEMA <<EOF
+INSERT INTO path VALUES (1,"$USER_TV_SHOWS_DIR/",'tvshows','metadata.tvdb.com',NULL,0,0,'<settings><setting id=\"RatingS\" value=\"TheTVDB\" /><setting id=\"absolutenumber\" value=\"false\" /><setting id=\"dvdorder\" value=\"false\" /><setting id=\"fallback\" value=\"true\" /><setting id=\"fanart\" value=\"true\" /><setting id=\"language\" value=\"en\" /></settings>',0,0,NULL,NULL); 
+
+INSERT INTO path VALUES (2,"$USER_MOVIES_DIR/",'movies','metadata.themoviedb.org',NULL,2147483647,0,'<settings><setting id=\"RatingS\" value=\"TMDb\" /><setting id=\"certprefix\" value=\"Rated \" /><setting id=\"fanart\" value=\"true\" /><setting id=\"keeporiginaltitle\" value=\"false\" /><setting id=\"language\" value=\"en\" /><setting id=\"tmdbcertcountry\" value=\"us\" /><setting id=\"trailer\" value=\"true\" /></settings>',0,0,NULL,NULL);
+EOF
+#
+mysql -u root -p$MYSQL_ROOT_PASSWORD $USER_KODI_VIDEO_DB < $KODI_DB_VIDEO_SCHEMA
+#
+# Music DB
+cat > $KODI_DB_MUSIC_SCHEMA <<EOF
+INSERT INTO path VALUES (1,"$USER_MUSIC_DIR/",NULL);
+EOF
+#
+mysql -u root -p$MYSQL_ROOT_PASSWORD $USER_KODI_MUSIC_DB < $KODI_DB_MUSIC_SCHEMA
+#
+#
+systemctl restart jambulatv@kodi.service
+echo "JambulaTV is Restarting, please be patient ... "
+}
+
+kodi_scan_update_libraries () {
+jambulatv-kodi-controller clean_video
+jambulatv-kodi-controller clean_audio
+jambulatv-kodi-controller scan_video
+jambulatv-kodi-controller scan_audio
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+case $LIBRARY_TASK in
+
+wipe)
+wipe_kodi_databases
+;;
+
+create)
+kodi_sources_configure
+;;
+
+scan)
+kodi_scan_update_libraries
+;;
+
+reset)
+$0 wipe
+$0 create
+;;
+
+*)
+usage
+;;
+esac

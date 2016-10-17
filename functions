@@ -760,7 +760,14 @@ TV_MARKET=UG-Kampala
 DVBT_NETWORK_NAME=$(basename $(find $PREFIX/share/dvb/dvb-t -iname "$TV_MARKET"))
 DVBT_PNETWORK_NAME="UBC TX2"
 DVBT_TUNER_NAME="Silicon Labs Si2168"
+#
+DVB_TUNER_ADAPTER=$(dmesg | grep "Silicon Labs Si2168" | grep 'DVB: registering adapter' | cut -d : -f3 | awk {'print $3'})
+if [ "x$DVB_TUNER_ADAPTER" = "x" ];
+then
 DVBT_TUNER_NO=0
+else
+DVBT_TUNER_NO=$DVB_TUNER_ADAPTER
+fi
 
 
 
@@ -2551,7 +2558,8 @@ echo
 sleep 120
 #
 DIGIT=1
-curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/service/list | jq .entries[] | grep "text\": \"$DVBT_NETWORK_NAME" | cut -d '/' -f3 | sed 's:["|,]::g' | grep -wEv TEST | grep -wEv '{PMT:0}' | while read LINE 
+
+curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/service/list | jq .entries[] | grep "text\": \"$DVBT_NETWORK_NAME" | cut -d '/' -f3 | sed 's:["|,]::g' | sed 's:---::g' | grep -wEv TEST | grep -wEv '{PMT:0}' | sort -u | while read LINE
 do
 CHANNEL_NUMBER=$DIGIT
 CHANNEL_NAME=$LINE
@@ -2559,7 +2567,7 @@ CHANNEL_NAME=$LINE
 CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:lower:] [:upper:]| sed 's: :_:g').png
 CHANNEL_UUID=$(uuidgen -t | sed 's:-::g')
 #
-SERVICE_UUID=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/service/list | jq .entries[] | grep -A2 "text\": \"$DVBT_NETWORK_NAME" | grep -A2 "$CHANNEL_NAME" | grep uuid | awk {'print $2'} | head -1 | sed 's:"::g')
+SERVICE_UUID=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/service/list | jq .entries[] | grep -A2 "text\": \"$DVBT_NETWORK_NAME" | grep -w -A2 "$CHANNEL_NAME" | grep uuid | awk {'print $2'} | head -1 | sed 's:"::g')
 #
 # Create channel config file
 cat > $TVHEADEND_CHANNELS_CONFIG_DIR/$CHANNEL_UUID <<EOF
@@ -3069,19 +3077,35 @@ Identity=unix-user:$AUTOLOGIN_USER
 Action=org.freedesktop.devicekit.power.*;org.freedesktop.upower.*;org.freedesktop.consolekit.system.*;org.freedesktop.login1.*
 ResultAny=yes
 EOF
-#
-# User Data
-# **********
+
 # Create userdata directory
+# -------------------------
 [ -d $KODI_USER_DATA ] || mkdir -p $KODI_USER_DATA
+
+# Generate sources.xml file
+# -------------------------
+cat $PROJECT_CONFIGS_DIR/kodi/sources.xml | \
+	sed -e "s:USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" | \
+	sed -e "s:USER_MOVIES_DIR:$USER_MOVIES_DIR:g" | \
+	sed -e "s:USER_TV_RECORDINGS_DIR:$USER_TV_RECORDINGS_DIR:g" | \
+	sed -e "s:PODCASTS_DIRECTORY:$PODCASTS_DIRECTORY:g" | \
+	sed -e "s:USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
+	sed -e "s:USER_PICTURES_DIR:$USER_PICTURES_DIR:g" | \
+   	sed -e "s:TORRENTS_COMPLETED_DIRECTORY:$TORRENTS_COMPLETED_DIRECTORY:g" | \
+	sed -e "s:VLM_VOD_DIRECTORY:$VLM_VOD_DIRECTORY:g" | \
+	sed -e "s:ZONEMINDER_EVENTS_DIRECTORY:$ZONEMINDER_EVENTS_DIRECTORY:g" | \
+	sed -e "s:BACKUPS_DIR:$BACKUPS_DIR:g" | \
+	sed -e "s:NEXTCLOUD_DATA_DIRECTORY:$NEXTCLOUD_DATA_DIRECTORY:g" | \
+	sed -e "s:AUTOLOGIN_USER_HOME_DIR:$AUTOLOGIN_USER_HOME_DIR:g" > $KODI_USER_DATA/sources.xml
+#
 # Copy sources, rss xml file, autostart script
 for KODI_CONFIG in \
-	sources.xml \
 	RssFeeds.xml \
 	autoexec.py
 do
 cp -v $PROJECT_CONFIGS_DIR/kodi/$KODI_CONFIG $KODI_USER_DATA/
 done
+#
 # Add Jambula customized advancedsettings file
 cat $PROJECT_CONFIGS_DIR/kodi/advancedsettings.xml | \
 	sed "s:KODI_DB_VIDEO:$KODI_DB_VIDEO:g" | \
@@ -3197,6 +3221,17 @@ patch -p1 $KODI_SYSTEM_ADDONS/resource.language.en_gb/resources/strings.po < $PR
 }
 
 kodi_scripts () {
+# JambulaTV Library clean, updates, scan script
+cat $PROJECT_BIN_DIR/jambulatv-library | \
+	sed -e "s:MY_MYSQL_ROOT_PASSWORD:$MYSQL_ROOT_PASSWORD:g" | \
+	sed -e "s:MY_KODI_DB_PREFIX:$KODI_DB_PREFIX:g" | \
+	sed -e "s:MY_KODI_CONFIG_DIR:$KODI_CONFIG_DIR:g" | \
+	sed -e "s:MY_USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" | \
+	sed -e "s:MY_USER_MOVIES_DIR:$USER_MOVIES_DIR:g" | \
+	sed -e "s:MY_USER_MUSIC_DIR:$USER_MUSIC_DIR:g" > $BINARY_PREFIX/jambulatv-library
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-library
+
 # Picture-In-Picture
 # Copy jambulatv-pip script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-pip ] || cp -v $PROJECT_BIN_DIR/jambulatv-pip $BINARY_PREFIX/

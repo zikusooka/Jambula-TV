@@ -1,43 +1,138 @@
 <sources>
 
+
+<!-- PROGRAMS -->
     <programs>
         <default pathversion="1"></default>
     </programs>
 
+
+<!-- VIDEOS -->
     <video>
-<!-- Movies -->
+
         <default pathversion="1"></default>
-        <source>
-            <name>Movies</name>
-            <path pathversion="1">/JambulaTV/Videos/Movies</path>
-            <allowsharing>true</allowsharing>
-        </source>
-<!-- TV Shows -->
+
         <source>
             <name>TV Shows</name>
-            <path pathversion="1">/JambulaTV/Videos/TV_Shows</path>
+            <path pathversion="1">USER_TV_SHOWS_DIR</path>
             <allowsharing>true</allowsharing>
         </source>
+
+        <source>
+            <name>Movies</name>
+            <path pathversion="1">USER_MOVIES_DIR</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
+        <source>
+            <name>Podcasts</name>
+            <path pathversion="1">PODCASTS_DIRECTORY</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
+        <source>
+            <name>Torrents</name>
+            <path pathversion="1">TORRENTS_COMPLETED_DIRECTORY</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
+        <source>
+            <name>TV Recordings</name>
+            <path pathversion="1">USER_TV_RECORDINGS_DIR</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
+        <source>
+            <name>Video On Demand</name>
+            <path pathversion="1">VLM_VOD_DIRECTORY</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
+        <source>
+            <name>Video Library</name>
+            <path pathversion="1">videodb://</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
     </video>
 
+
+<!-- MUSIC -->
     <music>
+
         <default pathversion="1"></default>
-<!-- Music -->
+
         <source>
             <name>Music</name>
-            <path pathversion="1">/JambulaTV/Music</path>
+            <path pathversion="1">USER_MUSIC_DIR</path>
             <allowsharing>true</allowsharing>
         </source>
+
+        <source>
+            <name>Music Library</name>
+            <path pathversion="1">musicdb://</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
     </music>
 
+
+<!-- PICTURES -->
     <pictures>
-        <default pathversion="1"></default>
-<!-- Pictures -->
+
+        <default pathversion="1">Pictures</default>
+
         <source>
             <name>Pictures</name>
-            <path pathversion="1">/JambulaTV/Pictures</path>
+            <path pathversion="1">USER_PICTURES_DIR</path>
             <allowsharing>true</allowsharing>
         </source>
+
+        <source>
+            <name>Camera Events</name>
+            <path pathversion="1">ZONEMINDER_EVENTS_DIRECTORY</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
     </pictures>
+
+
+<!-- FILES -->
+    <files>
+
+        <default pathversion="1">Cloud</default>
+
+        <source>
+            <name>Cloud</name>
+            <path pathversion="1">NEXTCLOUD_DATA_DIRECTORY/jambulatv/files</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
+        <source>
+            <name>Backups</name>
+            <path pathversion="1">BACKUPS_DIR</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
+        <source>
+            <name>Documents</name>
+            <path pathversion="1">AUTOLOGIN_USER_HOME_DIR/Documents</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
+        <source>
+            <name>Downloads</name>
+            <path pathversion="1">AUTOLOGIN_USER_HOME_DIR/Downloads</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
+        <source>
+            <name>Public</name>
+            <path pathversion="1">AUTOLOGIN_USER_HOME_DIR/Public</path>
+            <allowsharing>true</allowsharing>
+        </source>
+
+    </files>
+
 
 </sources>
