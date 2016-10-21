@@ -208,6 +208,10 @@ QRCODE_PID=$(ps auxw | grep $QRCODE_FILE | awk {'print $2'})
 kill -15 $QRCODE_PID || kill -9 $QRCODE_PID
 }
 
+create_video_music_db () {
+sudo jambulatv-library create
+}
+
 
 
 #################
@@ -222,3 +226,4 @@ display_osd_message
 configure_internet_connection
 configure_wifi_mac_addresses
 remove_current_qrcode
+create_video_music_db
