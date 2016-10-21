@@ -38,8 +38,12 @@ case $@ in
 kodi)
 # Pre-settings for kodi
 echo "$(date): JambulaTV started" > $JAMBULATV_LOG
-# BUG: Reset Kodi Volume Level to 1.000000 
-sed -i "s:<fvolumelevel>0.000000</fvolumelevel>:<fvolumelevel>1.000088</fvolumelevel>:" $KODI_GUI_SETTINGS
+# BUG: Reset Kodi Volume Level to 1.000000 + Unmute if muted
+cp -v $KODI_GUI_SETTINGS .${KODI_GUI_SETTINGS}.tmp
+cat .${KODI_GUI_SETTINGS}.tmp | \
+sed -e "s:<fvolumelevel>0.000000</fvolumelevel>:<fvolumelevel>1.000000</fvolumelevel>:g" | sed -e "s:<mute>true</mute>:<mute>false</mute>:g" \
+ 	> $KODI_GUI_SETTINGS
+
 # Start pulseaudio if not running
 /usr/bin/pulseaudio --check || /usr/bin/pulseaudio -D
 # Set Audio Mixer Levels
