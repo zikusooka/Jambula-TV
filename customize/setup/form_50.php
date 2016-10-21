@@ -42,6 +42,7 @@
  // Post-Setup Links
  echo '<b>';
  echo '<p><span id="success">Thank you for completing setup!</span></p>';
+ echo '<p><span id="span">JambulaTV is now restarting.  Please wait until all your video and music content has been scanned</span></p>';
 
  echo '<p>
    <table style="width: 100%;" border="0" cellpadding="5"><tbody>
