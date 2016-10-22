@@ -5687,6 +5687,8 @@ cat $FREEVO_USER_HOME_DIR/freevo.conf.orig | \
 dvb_drivers_support () {
 # Copy DVB Drivers into firmware directory
 rsync -av $PROJECT_GITHUB_DIR/dvb-firmware/firmware/ $FIRMWARE_DIR/
+# Do not powerdown on sleep for some DVB sticks like August 210
+cp -v $PROJECT_CONFIGS_DIR/dvb.conf.sample $MODPROBE_DIR/dvb.conf
 }
 
 w_scan_install () {
