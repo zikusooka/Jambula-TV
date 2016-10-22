@@ -159,6 +159,7 @@ ziproxy_wan_accel_configure
 vncserver_configure
 desktop_configure
 firefox_install
+libreoffice_install
 
 # --------------------
 # Web/GUI Interfaces

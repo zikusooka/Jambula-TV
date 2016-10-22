@@ -7968,7 +7968,7 @@ esac
 # Create link
 ln -s $INSTALL_SRC_DIR/firefox/firefox-bin $BINARY_PREFIX/firefox
 # Add desktop entry
-cat > /usr/share/applications/firefox.desktop << EOF
+cat > $PREFIX/share/applications/firefox.desktop << EOF
 [Desktop Entry]
 Version=1.0
 Name=Firefox
@@ -7984,6 +7984,13 @@ Categories=Network;WebBrowser;
 Keywords=web;browser;internet;
 X-Desktop-File-Install-Version=0.21
 EOF
+}
+
+libreoffice_install () {
+# Install LibreOffice
+rpm -Uvh $PROJECT_RPMS_DIR/LibreOffice_*_Linux_x86-64_rpm/RPMS/*.rpm
+# Add .desktop files
+cp -v /opt/libreoffice*/share/xdg/*.desktop $PREFIX/share/applications
 }
 
 minisapserver_install () {
