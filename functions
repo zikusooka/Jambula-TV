@@ -1419,6 +1419,10 @@ rm -rf $DOMOTICZ_HTML_DIR
 rm -rf $INSTALL_SRC_DIR/domoticz
 }
 
+uninstall_firefox () {
+[ -d $INSTALL_SRC_DIR/firefox ] && rm -rf $INSTALL_SRC_DIR/firefox
+}
+
 
 
 #######################
