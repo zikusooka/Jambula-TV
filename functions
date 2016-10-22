@@ -3143,7 +3143,7 @@ done
 
 kodi_customization () {
 # Default skin configuration i.e. confluence
-cp -fv $PROJECT_IMAGES_DIR/kodi/background.jpg \
+cp -fv $PROJECT_IMAGES_DIR/kodi/backgrounds/default_bg.jpg \
 	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/SKINDEFAULT.jpg
 # Change top left logo at Home screen 
 sed -i "s:<texture>kodi-logo.png</texture>:<texture>jambulatv-logo.png</texture>:" \
@@ -3159,7 +3159,7 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/$KODI_PREFERRED_SKIN/ 
 cp -v $KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg \
 	$KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.orig.jpg
 # Change default background for preferred skin
-cp -fv $PROJECT_IMAGES_DIR/kodi/background.jpg $KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg
+cp -fv $PROJECT_IMAGES_DIR/kodi/backgrounds/default_bg.jpg $KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg
 ;;
 aeonmq6)
 # Unzip skin files to addons directory
@@ -3173,9 +3173,13 @@ do
 unzip -o -d $KODI_SYSTEM_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
 done
 # Change default background for preferred skin
-cp -fv $PROJECT_IMAGES_DIR/kodi/background.jpg $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg
+cp -fv $PROJECT_IMAGES_DIR/kodi/backgrounds/default_bg.jpg $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg
 ;;
 esac
+#
+# Add custom backgrounds like apps.jpg
+# ---
+rsync -av $PROJECT_IMAGES_DIR/kodi/backgrounds/ $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/
 #
 # Replace some background images like tvshows, movies, and extras
 # ---
