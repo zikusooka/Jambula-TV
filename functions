@@ -2941,6 +2941,11 @@ unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/script.module.bea
 elif [ "$KODI_ADDON" = "script.module.beautifulsoup4" ];
 then
 unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/script.module.beautifulsoup4-*.zip
+# plugin.video.youtube
+elif [ "$KODI_ADDON" = "plugin.video.youtube" ];
+then
+rsync -avz $PROJECT_GITHUB_DIR/kodi-addons/plugin.video.youtube/ \
+	$KODI_SYSTEM_ADDONS/plugin.video.youtube/
 else
 # All others
 unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
