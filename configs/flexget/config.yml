@@ -1,11 +1,6 @@
 secrets: variables.yml
 
-web_server:
-  bind: 0.0.0.0
-  port: 8532 # '{{secrets.webui.port}}'
-
-api: yes
-webui: yes
+web_server: 8532 # '{{secrets.webui.port}}'
 
 templates:
 
@@ -274,7 +269,6 @@ templates:
       matching: strict
     tmdb_lookup: yes
     imdb_lookup: yes
-    imdb_required: yes
     imdb:
       min_score: 8.0
       min_votes: 60000
@@ -459,7 +453,7 @@ tasks:
       filename: "{{tvdb_series_name|replace(' ', '.')|replace('(', '')|replace(')', '')}}.{{tvdb_ep_id}}.{{tvdb_ep_name|replace(' ', '.')}}.{{quality|upper|replace(' ', '.')}}"
       clean_source: 18
       along:
-        files:
+        extensions:
           - sub
           - srt
         subdirs:
@@ -485,7 +479,6 @@ tasks:
     accept_all: yes
     seen: local
     imdb_lookup: yes
-    imdb_required: yes
     tmdb_lookup: yes
     proper_movies: yes
     #require_field: [movie_name, movie_year]
@@ -504,7 +497,7 @@ tasks:
       filename: "{{tmdb_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')|replace('(', '')|replace(')', '')}}.({{tmdb_year|replace('(', '')|replace(')', '')}})"
       clean_source: 18
       along:
-        files:
+        extensions:
           - sub
           - srt
         subdirs:
