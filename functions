@@ -8124,6 +8124,66 @@ cd $INSTALL_SRC_DIR/cockpit
 make_install_jambulatv
 }
 
+bonjour_configure () {
+# Create avahi-daemon config file
+cat > $CONFDIR/avahi/avahi-daemon.conf << EOF
+[server]
+#host-name=$PROJECT_NAME
+#domain-name=local
+browse-domains=jambulatv.com, jambula.co, jambula.net
+use-ipv4=yes
+use-ipv6=no
+#allow-interfaces=
+deny-interfaces=$WIFI_STATION_INTERFACE
+#check-response-ttl=no
+#use-iff-running=no
+#enable-dbus=yes
+disallow-other-stacks=yes
+allow-point-to-point=yes
+#cache-entries-max=4096
+#clients-max=4096
+#objects-per-client-max=1024
+#entries-per-entry-group-max=32
+ratelimit-interval-usec=1000000
+ratelimit-burst=1000
+
+[wide-area]
+enable-wide-area=yes
+
+[publish]
+#disable-publishing=no
+#disable-user-service-publishing=no
+#add-service-cookie=no
+#publish-addresses=yes
+#publish-hinfo=yes
+#publish-workstation=yes
+#publish-domain=yes
+#publish-dns-servers=192.168.50.1, 192.168.50.2
+#publish-resolv-conf-dns-servers=yes
+#publish-aaaa-on-ipv4=yes
+#publish-a-on-ipv6=no
+
+[reflector]
+enable-reflector=yes
+reflect-ipv=no
+
+[rlimits]
+#rlimit-as=
+rlimit-core=0
+rlimit-data=4194304
+rlimit-fsize=0
+rlimit-nofile=768
+rlimit-stack=4194304
+rlimit-nproc=3
+EOF
+# Copy avahi-daemon unit service  file
+cp -v $PROJECT_INIT_SCRIPTS_DIR/avahi-daemon.service $SYSTEMD_UNITS_DIR_SYSTEM/
+# Reload services daemon
+systemctl --system daemon-reload
+# Restart avahi daemon
+systemctl restart avahi-daemon.service
+}
+
 initial_setup_configure () {
 # Copy jambulatv-initial-setup, if none exists in bin directory
 [ -e $BINARY_PREFIX/jambulatv-initial-setup ] || cp -v $PROJECT_BIN_DIR/jambulatv-initial-setup $BINARY_PREFIX/

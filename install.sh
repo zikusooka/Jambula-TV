@@ -353,6 +353,7 @@ whatsapp_messaging_configure
 # --------------
 # Initial Setup
 # --------------
+bonjour_configure
 initial_setup_configure
 
 # -------
