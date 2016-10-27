@@ -1,15 +1,25 @@
---- /usr/src/jambulatv/coova-chilli/conf/functions	2015-11-22 08:57:45.934250154 +0300
-+++ /etc/chilli/functions	2016-05-05 16:32:14.575879081 +0300
-@@ -54,7 +54,7 @@
+--- functions.orig	2016-10-27 16:05:47.832262434 +0300
++++ functions	2016-10-27 16:57:54.380144020 +0300
+@@ -5,9 +5,6 @@
+ # http://coova.github.io/
+ #
+ 
+-IPTABLES=/sbin/iptables
+-IFCONFIG=/sbin/ifconfig
+-
+ CHILLI=/etc/chilli
+ RUN_D=/var/run
+ SBIN=/usr/sbin
+@@ -54,7 +51,7 @@
  HS_PAP_OK=${HS_PAP_OK:-on}
  HS_DNS1=${HS_DNS1:-$HS_DNS}
  HS_DNS1=${HS_DNS1:-$(grep '^nameserver' /etc/resolv.conf | head -n1 | awk '{print $2}')}
 -HS_WANIF=${HS_WANIF:-$(route -n|grep '^0.0.0.0'|head -n1|awk '{print $8}')}
-+#HS_WANIF=$(ip route list | grep default | sed -n 's/^.*dev //p' | awk {'print $1'})
++HS_WANIF=$(ip route list | grep default | sed -n 's/^.*dev //p' | awk '{print $1}')
  
  bailout() { echo $1; exit; }
  
-@@ -63,12 +63,12 @@
+@@ -63,12 +60,12 @@
  }
  
  configs1=/tmp/configs1.$$
@@ -24,7 +34,7 @@
  $*
  EOF
  }
-@@ -83,7 +83,7 @@
+@@ -83,7 +80,7 @@
  uamlisten	$HS_UAMLISTEN
  uamport         $HS_UAMPORT
  dhcpif		$HS_LANIF
@@ -33,7 +43,17 @@
  uamanydns
  $(cat $configs1)
  $HS_RAW_CONFIG1
-@@ -367,4 +367,3 @@
+@@ -125,7 +122,8 @@
+     addconfig1 ${HS_GID:+"gid \"$HS_GID\""}
+ 
+     [ -n "$HS_DHCPGATEWAY" ] && {
+-	HS_DHCPRELAYAGENT=${HS_DHCPRELAYAGENT:-$(ifconfig $(route -n|grep '^0.0.0.0'|awk '{ print $8 }')|grep 'inet addr:'|cut -d: -f 2|cut -d' ' -f1)}
++        # Internet gateway ip address
++	HS_DHCPRELAYAGENT=${HS_DHCPRELAYAGENT:-$(ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')}
+ 	addconfig1 "dhcpgateway \"$HS_DHCPGATEWAY\""
+ 	addconfig1 "dhcprelayagent \"$HS_DHCPRELAYAGENT\""
+     }
+@@ -367,4 +365,3 @@
      fi
      checkfornew
  }

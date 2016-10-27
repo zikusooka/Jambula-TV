@@ -1,13 +1,50 @@
---- /usr/src/jambulatv/coova-chilli/conf/up.sh	2015-11-21 16:18:44.429646704 +0300
-+++ up.sh	2015-11-21 17:42:02.477504191 +0300
-@@ -56,7 +56,9 @@
+--- up.sh.orig	2016-10-27 16:24:09.037222253 +0300
++++ up.sh	2016-10-27 17:37:03.225770843 +0300
+@@ -21,14 +21,25 @@
+ run_up() {
+     if [ -n "$TUNTAP" ]
+     then
+-        # ifconfig $TUNTAP mtu $MTU
++ 	# ----------------------
++  	# JambulaTV
++        # ----------------------
++ 	# Turn on tun tap device
++	ip link set $TUNTAP up    
++        # tun tap device settings
++        ip link set $TUNTAP mtu $MTU
++	# Turn on multicast and mDNS on tun tap device
++	ip link set $TUNTAP multicast on
++	# ----------------------
++
+ 	if [ "$KNAME" != "" ]
+ 	then
+ 	    ipt -I FORWARD -i $DHCPIF -m coova --name $KNAME -j ACCEPT 
+ 	    ipt -I FORWARD -o $DHCPIF -m coova --name $KNAME --dest -j ACCEPT
+ 	    ipt -I FORWARD -i $TUNTAP -j ACCEPT
+ 	    ipt -I FORWARD -o $TUNTAP -j ACCEPT
+-	    [ -n "$DHCPLISTEN" ] && ifconfig $DHCPIF $DHCPLISTEN
++	    [ -n "$DHCPLISTEN" ] && ip addr add $DHCPLISTEN dev $DHCPIF
++
+ 	else
+ 	    if [ "$LAYER3" != "1" ]
+ 	    then
+@@ -56,7 +67,18 @@
  		ipt_in -p udp -d $ADDR --destination-port 67:68 -j ACCEPT
  		ipt_in -p udp --dst $ADDR --dport 53 -j ACCEPT
  		ipt_in -p icmp --dst $ADDR -j ACCEPT
 -		
 +
-+  		# JambulaTV:  Allow UPNP/DLNA traffic
-+		ipt_in -p udp -d 239.255.255.250 --destination-port 1900 -j ACCEPT 		
++                # ----------------------
++  		# JambulaTV
++                # ----------------------
++                # Allow UPNP/DLNA traffic
++		ipt_in -p udp -d 239.255.255.250 --destination-port 1900 -j ACCEPT 			   #
++                # Allow mDNS/Bonjour traffic
++		ipt_in -p udp -m udp -d 224.0.0.251 --destination-port 5353 -j ACCEPT 
++		ipt_in -p udp -m udp -d $ADDR --destination-port 5353 -j ACCEPT
++		#
++	        # ----------------------
++
  		if [ "$ONLY8021Q" != "1" ]
  		then
  		    ipt -I INPUT -i $DHCPIF -j DROP

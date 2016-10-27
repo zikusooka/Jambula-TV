@@ -520,7 +520,7 @@ WIFI_WAIT_TIME=40
 
 NETWORK_ETHERNET_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 NETWORK_IP_ADDRESS=$(ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
-NETWORK_GATEWAY_ADDRESS=$(ip route list | grep default | sed 's/^.*via //' | awk {'print $1'})
+NETWORK_GATEWAY_ADDRESS=$(ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')
 NETWORK_MASK_PREFIX=24
 NETWORK_DOMAIN=jambulatv.com
 NETWORK_WIRELESS_SSID="$PROJECT_NAME-$(echo $SYSTEM_IDENTIFIER | cut -c 1-5)"
@@ -942,7 +942,9 @@ You are about to install the latest Linux kernel version [$KERNEL_VERSION],
 
 CAUTION:  This may take anywhere from 4 to 7 hours to complete! 
 
+Enter to proceed ...
 EOF
+read
 }
 
 
@@ -5244,11 +5246,11 @@ SYSCONFIG_DIR=/etc/sysconfig
 SYSCONFIG_NETWORK_SCRIPTS_DIR=\$SYSCONFIG_DIR/network-scripts
 NETWORK_ETHERNET_DEVICE=\`ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g'\`
 NETWORK_GATEWAY_ADDRESS=\`grep GATEWAY \$SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-\$NETWORK_ETHERNET_DEVICE | cut -d = -f2 | sed \"s/\\\"//g\"\`
-INTERNET_GATEWAY_DEV=\$(ip route list | grep default | sed -n 's/^.*dev //p' | awk {'print \$1'})
+INTERNET_GATEWAY_DEV=\$(ip route list | grep default | sed -n 's/^.*dev //p' | awk '{print \$1}')
 # Gateway device
 if [ \"x\$INTERNET_GATEWAY_DEV\" != \"x\" ];
 then
-INTERNET_GATEWAY_IP=\$(ip route list | grep default | sed -n 's/^.*via //p' | awk {'print \$1'})
+INTERNET_GATEWAY_IP=\$(ip route list | grep default | sed -n 's/^.*via //p' | awk '{print \$1}')
 fi
 TUNTAP=\$(basename \$DEV)
 
@@ -5267,10 +5269,7 @@ if [ \"x\$INTERNET_GATEWAY_DEV\" != \"x\" ];
 then
 /bin/echo 1 > /proc/sys/net/ipv4/ip_forward
 /usr/sbin/iptables -t nat -A POSTROUTING -o \$INTERNET_GATEWAY_DEV -j MASQUERADE
-fi
-
-# Tun on multicast on tun tap device
-ip link set \$TUNTAP multicast on" > $COOVA_CONFIG_DIR/ipup.sh
+fi" > $COOVA_CONFIG_DIR/ipup.sh
 #
 # Make script executable
 chmod 755 $COOVA_CONFIG_DIR/ipup.sh
