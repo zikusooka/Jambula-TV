@@ -2409,7 +2409,21 @@ chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 cp -v $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service $SYSTEMD_UNITS_DIR_USER/
 # Enable tvheadend
 systemctl enable tvheadend.service
-# Start tvheadend
+# Start tvheadend if adapter has been inserted
+if [ ! -d /dev/dvb ];
+then
+clear
+cat <<EOF
+******************************************************************************************
+WARNING: No DVB-T Adapter was detected!  Please insert the DVB-T device before continuing.
+You must also ensure the TV Antenna is also hooked up properly
+
+Please enter to proceed ...
+******************************************************************************************
+EOF
+read
+fi
+sleep 9
 systemctl start tvheadend.service
 #
 # Wait until adapters directory has been populated
