@@ -3,7 +3,7 @@ PROJECT_NAME=JambulaTV
 PROJECT_URL="http://www.jambulatv.com"
 COMPANY_NAME="Jambula Labs"
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.4.27"
+KERNEL_VERSION="4.4.30"
 
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
@@ -929,9 +929,8 @@ kernel_patches () {
 patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel.usb_core.message.patch
 # DVB Core Frontend - Set dvb_powerdown_on_sleep = 0
 patch -p1 ./drivers/media/dvb-core/dvb_frontend.c < $PROJECT_PATCHES_DIR/kernel.dvb_core.frontend.patch
-
 # Realtek WiFi
-patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
+#patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
 # USB TV Tuner - Gadmei
 patch -p1 ./drivers/media/usb/usbtv/usbtv-core.c < $PROJECT_PATCHES_DIR/kernel.usbtv_core.patch
 }
