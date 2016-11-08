@@ -320,8 +320,6 @@ templates:
     free_space:
       path: '{{secrets.podcasts.path}}'
       space: 1000
-    exists:
-      - '{{secrets.podcasts.exists}}'
     limit_new: 5
     priority: 5    
     include: [ '{{secrets.podcasts.include}}' ]
