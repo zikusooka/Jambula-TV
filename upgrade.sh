@@ -31,7 +31,7 @@ KODI_ADDONS_4_UPGRADE=$@
 # Uninstall Old
 uninstall_kodi_addons $KODI_ADDONS_4_UPGRADE
 # Install New
-for KODI_ADDON in $KODI_ADDONS_4_UPGRADE; do kodi_addons_unpack $KODI_ADDON; done
+for KODI_ADDON in $KODI_ADDONS_4_UPGRADE; do kodi_addons_unpack $KODI_ADDON; echo; echo "$KODI_ADDON installed, please enter to proceed ..."; echo; read; done
 }
  
 upgrade_flexget_deps () {
