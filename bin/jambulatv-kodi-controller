@@ -1,5 +1,12 @@
 #!/bin/sh
+# This is a general purpose script used in interacting with kodi API from the command line
+# Jambula Labs @copyright 2016-2017 All rights reserved
 
+# HOW TO PARSE JSON DATA
+# Use this string to extract exact value from json output
+# jq '.result.channelgroups[] | select(.label=="All channels") | .channelgroupid'
+
+# Variables
 KODI_HTTP_IP=MY_KODI_HTTP_IP
 KODI_HTTP_PORT=MY_KODI_HTTP_PORT
 KODI_HTTP_USER=MY_KODI_HTTP_USER
@@ -16,7 +23,7 @@ TV_DURATION="$3"
 OSD_MESSAGE="$2"
 KODI_ADDON="$2"
 
-PVR_GROUP=1
+PVR_GROUP=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannelGroups", "params": {"channeltype":"tv"}, "id": 1}' "http://127.0.0.1:8510/jsonrpc" | jq '.result.channelgroups[] | select(.label=="All channels") | .channelgroupid')
 PVR_STOP_REC_SCRIPT=/tmp/.stop_recording_tv_channel.sh
 PVR_STATUS_FILE=/tmp/pvr_status
 
@@ -33,7 +40,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|pvr_hts_status|tv_play_start|mute|tv_play_stop|tv_record_start|tv_record_stop|scan_video|scan_audio|clean_video|clean_audio)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|pvr_hts_status|tv_play_start|mute|tv_play_stop|video_play_start|video_play_stop|tv_record_start|tv_record_stop|scan_video|scan_audio|clean_video|clean_audio)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -87,7 +94,7 @@ curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: applicatio
 }
 
 start_player () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Open", "params":{"item":{"file":"/JambulaTV/Videos/TV_Recordings/tnss0054_h264b_640x368_256.mp4"}}}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Open", "params":{"item":{"file":"'"$1"'"}}}' "http://127.0.0.1:8510/jsonrpc"
 }
 
 mute_player () {
@@ -221,6 +228,14 @@ mute_player
 ;;
 
 tv_play_stop)
+stop_player
+;;
+
+video_play_start)
+start_player "$2"
+;;
+
+video_play_stop)
 stop_player
 ;;
 
