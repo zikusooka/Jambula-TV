@@ -104,6 +104,12 @@ echo "JambulaTV is Restarting, please be patient ... "
 kodi_sources_configure () {
 set_kodi_db_variables
 #
+# Remove previous entries from path tables in Videos and Music Databases
+for KODI_DB in $USER_KODI_VIDEO_DB $USER_KODI_MUSIC_DB;
+do
+echo "DELETE FROM path;" | mysql -u $KODI_DB_USER -p$KODI_DB_PASS $KODI_DB
+done
+#
 # Videos DB
 cat > $KODI_DB_VIDEO_SCHEMA <<EOF
 INSERT INTO path VALUES (1,"$USER_TV_SHOWS_DIR/",'tvshows','metadata.tvdb.com',NULL,0,0,'<settings><setting id=\"RatingS\" value=\"TheTVDB\" /><setting id=\"absolutenumber\" value=\"false\" /><setting id=\"dvdorder\" value=\"false\" /><setting id=\"fallback\" value=\"true\" /><setting id=\"fanart\" value=\"true\" /><setting id=\"language\" value=\"en\" /></settings>',0,0,NULL,NULL); 
