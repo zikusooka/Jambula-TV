@@ -2,6 +2,7 @@
 PROJECT_NAME=JambulaTV
 PROJECT_URL="http://www.jambulatv.com"
 COMPANY_NAME="Jambula Labs"
+COMPANY_WORKGROUP="JAMBULA"
 KERNEL_NAME="$PROJECT_NAME"
 KERNEL_VERSION="4.4.30"
 
@@ -4812,8 +4813,36 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 }
 
 samba_configure () {
-# Patch samba smb.conf
-patch -p1 $CONFDIR/samba/smb.conf < $PROJECT_PATCHES_DIR/samba.smb.conf.patch
+# Create our samba smb.conf file
+cat > $CONFDIR/samba/smb.conf << EOF
+# Samba configuration file for $PROJECT_NAME
+
+[global]
+	workgroup = $COMPANY_WORKGROUP
+	server string = My media at $PROJECT_NAME
+	netbios name = $PROJECT_NAME
+        name resolve order = bcast host 
+	log file = $PROJECT_SYSTEM_LOG_DIR/samba/log.%m
+	max log size = 50
+	security = user
+	passdb backend = tdbsam
+	domain master = no
+	local master = no 
+	dns proxy = no
+	load printers = no
+	client lanman auth = yes
+	lanman auth = yes
+	socket options = TCP_NODELAY IPTOS_LOWDELAY SO_RCVBUF=65536 SO_SNDBUF=65536
+	map to guest = bad user
+
+[Media-Disk]
+	comment = My Media at $PROJECT_NAME
+	path = $PROJECT_PARTITION
+	browseable = yes
+	public = yes
+	writable = yes
+	printable = no
+EOF
 # Enable smb, nmb services
 systemctl enable smb.service
 systemctl enable nmb.service
