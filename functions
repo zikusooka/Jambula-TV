@@ -4843,12 +4843,14 @@ cat > $CONFDIR/samba/smb.conf << EOF
 	writable = yes
 	printable = no
 EOF
+# Create samba log directory
+[ -d $PROJECT_SYSTEM_LOG_DIR/samba ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/samba
 # Enable smb, nmb services
 systemctl enable smb.service
 systemctl enable nmb.service
 # Start smb, nmb services
-systemctl start smb.service
-systemctl start nmb.service
+systemctl restart smb.service
+systemctl restart nmb.service
 }
 
 nginx_install () {
