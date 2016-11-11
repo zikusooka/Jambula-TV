@@ -7800,9 +7800,7 @@ EOF
 [ -d $ICINGA2_WEB_CONFIG_DIR/enabledModules ] || \
 	mkdir -p $ICINGA2_WEB_CONFIG_DIR/enabledModules
 # Link to monitoring under enabledModules directory if it does not exist
-[ -e $ICINGA2_WEB_CONFIG_DIR/enabledModules/monitoring ] || \
-	ln -s $WWW_HTML_DIR/icingaweb2/modules/monitoring \
-	$ICINGA2_WEB_CONFIG_DIR/enabledModules/monitoring
+[ -e $ICINGA2_WEB_CONFIG_DIR/enabledModules/monitoring ] || ln -s $WWW_HTML_DIR/icingaweb2/modules/monitoring $ICINGA2_WEB_CONFIG_DIR/enabledModules/monitoring
 # Documentation
 # Link to doc under enabledModules directory if it does not exist
 [ -e $ICINGA2_WEB_CONFIG_DIR/enabledModules/doc ] || \

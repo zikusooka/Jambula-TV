@@ -1,8 +1,15 @@
 #!/bin/sh
+# This is a wrapper script used by icinga2 to connect to a wireless access point
+# Jambula Labs @copyright 2016-2017 All rights reserved
+
 # Argument from icinga2 script
 ICINGA2_AP_STATUS=$@
 
 SCRIPT_RUNNING_FILE=/tmp/connect_2_ap_running
+
+PING_CMD=/usr/sbin/fping
+PING_CMD_OPTS="-l"
+HOST_2_PING=8.8.8.8 #192.168.8.1 #8.8.8.8
 
 # Available in functions file
 INTERNET_WIFI_ISP_CONFIG=/etc/JambulaTV/internet-mobile-wifi.cfg
@@ -124,8 +131,6 @@ check_link_status () {
 # Check link status
 WIFI_LINK_STATUS=$(sudo iw dev $WIFI_STATION_INTERFACE link)
 #
-echo "WIFI_LINK_STATUS=$WIFI_LINK_STATUS" > /tmp/link_status
-#
 if [ "$WIFI_LINK_STATUS" = "Not connected." ];
 then
 echo "Connection to $WIFI_SSID failed!. Exiting ..."
@@ -166,11 +171,8 @@ exit 1
 fi
 }
 
-check_4_updates () {
-$MONITORING_PLUGINS_DIR/check_updates > /dev/null 2>&1
-UPDATES_STATUS=$?
-# Notify if updates are available
-[ "$UPDATES_STATUS" = "2" ] && $OSD_SCRIPT "$UPDATE_AVAIL_MSG"
+keep_alive () {
+$PING_CMD $PING_CMD_OPTS $HOST_2_PING > /dev/null 2>&1 &
 }
 
 
@@ -180,6 +182,8 @@ UPDATES_STATUS=$?
 #################
 # Quit if script is already running
 quit_if_already_running
+# Kill ping if keep_alive function is activated
+#killall fping
 
 # Find WiFi interface to be used as station
 number_of_interfaces
@@ -223,4 +227,5 @@ make_this_internet_gateway
 # Reload coova-chilli in order to change default gateway device and DNS settings
 #/usr/bin/jambulatv-chilli restart
 
+#keep_alive
 remove_script_running_file
