@@ -64,6 +64,10 @@ UPDATES_STATUS=$?
 [ "$UPDATES_STATUS" = "2" ] && $OSD_SCRIPT "$UPDATE_AVAIL_MSG"
 }
 
+reverse_ssh_tunnel () {
+sudo /usr/bin/jambulatv-reverse-ssh-tunnel
+}
+
 
 
 ##########################
@@ -113,6 +117,10 @@ EOF
 # --------------------------------------
 sleep 60
 check_4_updates
+
+# JambulaTV: Create a reverse SSH tunnel for remote connection when Internet is UP
+# --------------------------------------------------------------------------------
+reverse_ssh_tunnel
 
 
 
