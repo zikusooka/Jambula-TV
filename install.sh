@@ -140,7 +140,7 @@ openresolv_configure
 # -----------------
 # Internet Access 
 # -----------------
-connectify_configure # Dual WiFi Interfaces
+#connectify_configure # Dual WiFi Interfaces # NOTE: Not working, so disabled
 internet_mifi_configure # Wifi (mifi)
 internet_usb_3g_configure # USB (3G)
 

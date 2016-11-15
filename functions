@@ -489,33 +489,14 @@ WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
 WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
 WIFI_INTERFACES_AVAILABLE=$(iw dev |grep Interface |wc -l)
-WIFI_OLD_INTERFACE=$(dmesg | grep 'renamed network interface wlan0' | cut -d : -f2- | sed 's: renamed network interface wlan0 to ::' | head -1)
-WIFI_OLD_INTERFACE_2=$(dmesg | grep 'renamed network interface wlan1' | cut -d : -f2- | sed 's: renamed network interface wlan1 to ::' | head -1)
-# Virtual wifi interfaces support
-lsmod | grep mac80211 | grep 'ath9k' > /dev/null 2>&1
-VIRT_WIFI_SUPPORT=$?
-# Set MAC Addresses depending on virtual wifi support
-if [ "$VIRT_WIFI_SUPPORT" = "0" ] ;
-then
-# Set virtual wiFi AP/Station device names
+# Virtual wifi interfaces support 
+#lsmod | grep mac80211 | grep 'ath9k' > /dev/null 2>&1
+#VIRT_WIFI_SUPPORT=$?
+VIRT_WIFI_SUPPORT=2 # Disabled
+
+# WiFi AP/Station device names
 WIFI_AP_INTERFACE=jwlan0
 WIFI_STATION_INTERFACE=jwlan1
-#
-# Set Random AP/Station MAC Addresses based on OEM/UUID
-WIFI_AP_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):01"
-WIFI_STATION_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):02"
-else
-# Set actual wiFi AP/Station device names
-WIFI_AP_INTERFACE=$WIFI_OLD_INTERFACE
-WIFI_STATION_INTERFACE=$WIFI_OLD_INTERFACE_2
-#
-# Set actual AP/Station MAC Addresses
-WIFI_AP_MACADDRESS=$(iw dev ${WIFI_AP_INTERFACE} info | grep addr | awk {'print $2'})
-#
-[ "x${WIFI_STATION_INTERFACE}" = "x" ] || \
-WIFI_STATION_MACADDRESS=$(iw dev ${WIFI_STATION_INTERFACE} info | grep addr | awk {'print $2'})
-fi
-#
 WIFI_PHY_DEV=0
 WIFI_WAIT_TIME=40
 
@@ -3350,7 +3331,7 @@ inputlirc_configure () {
 # Copy udev rules 4 remotes - rename to /dev/input/jambulatv-remote instead of ../eventX
 cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-remotes.rules $UDEV_RULES_DIR
 # Reload udev
-/usr/sbin/udevadm control --reload
+/usr/sbin/udevadm control --reload && udevadm trigger --action=add
 #
 # Copy ir-key tables for remote - used in start file
 cp -v $PROJECT_CONTRIB_DIR/remotes/$IR_REMOTE/ir-keytable.cfg $CONFDIR/lirc
@@ -3629,7 +3610,7 @@ done
 # Configure 3G modems to auto start Internet when plugged in
 cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-modems.rules $UDEV_RULES_DIR/
 # Reload udev
-/usr/sbin/udevadm control --reload
+/usr/sbin/udevadm control --reload && udevadm trigger --action=add
 #
 # Copy systemctl init helper file used by udev rules above - DON'T enable
 cp -v $PROJECT_INIT_SCRIPTS_DIR/3g_internet.service $SYSTEMD_UNITS_DIR_USER/
@@ -3677,6 +3658,7 @@ done
 #
 # Quit plymouth only after mysqld.service - Makes handoff to kodi less rougher
 sed -i "s:After=rc-local.service:After=mysqld.service rc-local.service:" $SYSTEMD_UNITS_DIR_SYSTEM/plymouth-quit.service
+#
 # Reload 
 systemctl --system daemon-reload
 }
@@ -3703,7 +3685,7 @@ wired_interfaces_configure () {
 if [ "x$NETWORK_GATEWAY_ADDRESS" != "x" ];
 then
 # Network gateway exists - configure static boot protocol
-cat > $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE <<EOF
+cat > $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE << EOF
 # IP/DNS settings for $NETWORK_ETHERNET_DEVICE
 HWADDR="$NETWORK_MAC_ADDRESS"
 DEVICE="$NETWORK_ETHERNET_DEVICE"
@@ -3723,7 +3705,7 @@ EOF
 #
 else
 # Network gateway DOES NOT exist - configure dhcp boot protocol
-cat > $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE <<EOF
+cat > $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE << EOF
 # IP/DNS settings for $NETWORK_ETHERNET_DEVICE
 HWADDR="$NETWORK_MAC_ADDRESS"
 DEVICE="$NETWORK_ETHERNET_DEVICE"
@@ -3770,26 +3752,193 @@ EOF
 fi
 }
 
-wireless_interfaces_configure () {
-# If no Virtual Interfaces
-if [ "$VIRT_WIFI_SUPPORT" != "0" ];
+create_list_of_wireless_devices () {
+# Temp list file
+WIFI_DEVICES_RAW_LIST=/tmp/list_of_wireless_devices_raw
+# Remove existing wireless devices file
+[ -f $WIFI_DEVICES_RAW_LIST ] && rm -f $WIFI_DEVICES_RAW_LIST
+#
+# Extract detected wireless device information
+journalctl -b -o cat --no-pager | grep 'renamed network interface wlan' | awk '{print $NF}' | sort -u | while read LINE
+
+do
+# Get device biosdev name
+export WIFI_DEVICE=$LINE
+# Query MAC address
+export MAC_ADDRESS=$(ip link show dev ${WIFI_DEVICE} | grep 'link/ether' | awk {'print $2'})
+#
+# Determine if device is USB or PCI based
+WIFI_DEVICE_CHARS=$(echo -n $WIFI_DEVICE | wc -c)
+if [ $WIFI_DEVICE_CHARS -gt 6 ]
 then
-# Create udev rules file for wlan* - Naming scheme instead of biosdev names
+export WIFI_DEVICE_TYPE=USB
+else
+export WIFI_DEVICE_TYPE=PCI
+fi
+#
+# Generate temporary list of wireless devices
+cat >> $WIFI_DEVICES_RAW_LIST << EOF
+$WIFI_DEVICE_TYPE $WIFI_DEVICE $MAC_ADDRESS 
+EOF
+
+done
+}
+
+assign_roles_2_wireless_devices () {
+# Get raw list of wireless devies
+create_list_of_wireless_devices
+# Set temp file variables
+WIFI_DEVICES_SORTED_LIST=/tmp/list_of_wireless_devices_sorted
+WIFI_DEVICES_ROLES_LIST=/tmp/list_of_wireless_devices_roles
+# Remove existing wireless device roles and sorted list files
+[ -f $WIFI_DEVICES_SORTED_LIST ] && rm -f $WIFI_DEVICES_SORTED_LIST
+[ -f $WIFI_DEVICES_ROLES_LIST ] && rm -f $WIFI_DEVICES_ROLES_LIST
+#
+# Sort list of detected WiFi devices.  Starting with PCI and then USB, see if they exist in raw file
+for DEVTYPE in PCI USB;
+do
+
+grep $DEVTYPE $WIFI_DEVICES_RAW_LIST > /dev/null 2>&1
+DEVTYPE_EXISTS=$?
+if [ "$DEVTYPE_EXISTS" = "0" ];
+then
+cat >> $WIFI_DEVICES_SORTED_LIST << EOF
+$(grep $DEVTYPE $WIFI_DEVICES_RAW_LIST)
+EOF
+fi
+
+done
+#
+# Set Access Point (AP) and Station (ST) device roles
+LINE_NUMBER=1
+cat $WIFI_DEVICES_SORTED_LIST | while read LINE
+do
+
+# Quit if no line data
+[ "x$LINE" = "x" ] && break
+#
+if [ "$LINE_NUMBER" = 1 ];
+then
+WIFI_DEVICE_ROLE=WIFI_AP
+else
+WIFI_DEVICE_ROLE=WIFI_ST
+fi
+#
+# Generate list of wireless devices and their roles
+cat >> $WIFI_DEVICES_ROLES_LIST << EOF
+$LINE $WIFI_DEVICE_ROLE
+EOF
+#
+# Increment line no.
+let "LINE_NUMBER = $LINE_NUMBER + 1"
+
+done
+}
+
+get_wireless_interface_parameters () {
+# Create list and get roles and variables
+assign_roles_2_wireless_devices
+# AP
+WIFI_AP_BIOSDEV_NAME=$(grep WIFI_AP $WIFI_DEVICES_ROLES_LIST | awk {'print $2'})
+# If configuring virtual interfaces, then set random AP/Station MAC addresses based on OEM/UUID
+if [ "$VIRT_WIFI_SUPPORT" = "0" ];
+then
+WIFI_AP_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):01"
+else
+WIFI_AP_MACADDRESS=$(grep WIFI_AP $WIFI_DEVICES_ROLES_LIST | awk {'print $3'})
+fi
+#
+# ST
+WIFI_STATION_BIOSDEV_NAME=$(grep WIFI_ST $WIFI_DEVICES_ROLES_LIST | awk {'print $2'})
+# If configuring virtual interfaces, then set random AP/Station MAC addresses based on OEM/UUID
+if [ "$VIRT_WIFI_SUPPORT" = "0" ];
+then
+WIFI_STATION_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):02"
+else
+WIFI_STATION_MACADDRESS=$(grep WIFI_ST $WIFI_DEVICES_ROLES_LIST | awk {'print $3'})
+fi
+}
+
+create_wifi_ap_rule () {
+# Import WiFi variables
+get_wireless_interface_parameters
+# Create AP rule
 cat > $UDEV_RULES_DIR/96-jambulatv.wifi-net.rules <<EOF
 # $WIFI_AP_INTERFACE
 SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_AP_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_AP_INTERFACE", TAG+="systemd", ENV{SYSTEMD_WANTS}+="coova-chilli.service"
 EOF
-#
-elif [ "$VIRT_WIFI_SUPPORT" != "0" ] && [ "x$WIFI_STATION_MACADDRESS" != "x" ];
+# Reload Udev
+/usr/sbin/udevadm control --reload && udevadm trigger --action=add
+}
+
+create_wifi_st_rule () {
+# Import WiFi variables
+get_wireless_interface_parameters
+# Create ST rule if station device present
+if [ "x$WIFI_STATION_MACADDRESS" != "x" ];
 then
-# Create udev rules file for wlan* - Naming scheme instead of biosdev names
 cat >> $UDEV_RULES_DIR/96-jambulatv.wifi-net.rules <<EOF
 # $WIFI_STATION_INTERFACE
 SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_STATION_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_STATION_INTERFACE"
 EOF
 fi
 # Reload Udev
-[ "$VIRT_WIFI_SUPPORT" = "0" ] || /usr/sbin/udevadm control --reload
+/usr/sbin/udevadm control --reload && udevadm trigger --action=add
+}
+
+wireless_interfaces_configure () {
+# Get woreless parameters
+get_wireless_interface_parameters
+# Get number of PCI/WiFi devices
+NUMBER_PCI_WIFI_DEVICES=$(grep PCI $WIFI_DEVICES_ROLES_LIST | wc -l)
+NUMBER_USB_WIFI_DEVICES=$(grep USB $WIFI_DEVICES_ROLES_LIST | wc -l)
+# Notify
+cat << EOF
+================================================================================
+
+	Configuring wireless interfaces, please be patient ...
+
+	Number of [PCI] based WiFi devices detected:  $NUMBER_PCI_WIFI_DEVICES
+	Number of [USB] based WiFi devices detected:  $NUMBER_USB_WIFI_DEVICES
+
+================================================================================
+
+EOF
+
+# 2 PCI Cards
+if [ "$NUMBER_PCI_WIFI_DEVICES" = 2 ];
+then
+create_wifi_ap_rule
+create_wifi_st_rule
+break
+
+# 1 PCI Card + 0 USB Stick
+elif [ "$NUMBER_PCI_WIFI_DEVICES" = 1 ] && [ "$NUMBER_USB_WIFI_DEVICES" = 0 ];
+then
+create_wifi_ap_rule
+break
+
+# 1 PCI Card + 1 USB Stick
+elif [ "$NUMBER_PCI_WIFI_DEVICES" = 1 ] && [ "$NUMBER_USB_WIFI_DEVICES" = 1 ];
+then
+create_wifi_ap_rule
+create_wifi_st_rule
+break
+
+# 2 USB Sticks
+elif [ "$NUMBER_USB_WIFI_DEVICES" = 2 ];
+then
+create_wifi_ap_rule
+create_wifi_st_rule
+break
+
+# 1 USB Stick + 0 PCI Card
+elif [ "$NUMBER_USB_WIFI_DEVICES" = 1 ] || [ "$NUMBER_PCI_WIFI_DEVICES" = 0 ];
+then
+create_wifi_ap_rule
+break
+
+fi
 }
 
 optical_disc_drive_configure () {
@@ -5427,7 +5576,13 @@ patch -p1 defconfig < $PROJECT_PATCHES_DIR/hostapd.defconfig.patch
 cp -v defconfig .config
 make_install_jambulatv
 # Copy hostapd systemd file 
+if [ "$VIRT_WIFI_SUPPORT" = "0" ];
+then
+# If connectify is enabled, then add 'Requires=connectify.service' to hostapd.service file
+cp -v $PROJECT_INIT_SCRIPTS_DIR/hostapd-connectify.service $SYSTEMD_UNITS_DIR_USER/hostapd.service
+else
 cp -v $PROJECT_INIT_SCRIPTS_DIR/hostapd.service $SYSTEMD_UNITS_DIR_USER/
+fi
 # Enable hostapd if needed
 systemctl enable hostapd.service
 }
@@ -7259,7 +7414,7 @@ mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $TMPDIR
 # Copy udev rules file for USB webcams - Naming scheme instead of /dev/videoX
 cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-webcams.rules $UDEV_RULES_DIR
 # Reload udev
-/usr/sbin/udevadm control --reload
+/usr/sbin/udevadm control --reload && udevadm trigger --action=add
 }
 
 zoneminder_zms_inetd () {
@@ -8133,6 +8288,8 @@ systemctl enable reminders.timer
 # Virtual WiFi Dual Interfaces Support i.e. Connectify
 # -----------------------------------------------------
 virtual_wifi_interfaces_configure () {
+# Import WiFi variables
+get_wireless_interface_parameters
 # Copy jambulatv-connectify script and add appropraite device parameters
 cat $PROJECT_BIN_DIR/jambulatv-connectify | \
 		sed -e "s:MY_WIFI_AP_INTERFACE:$WIFI_AP_INTERFACE:g" | \
@@ -8142,11 +8299,10 @@ cat $PROJECT_BIN_DIR/jambulatv-connectify | \
 			> $BINARY_PREFIX/jambulatv-connectify
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-connectify
-
 # Copy connectify systemd file, and modify some variables
 # Note: This is a static service needed by hostapd/coova-chilli
 cat $PROJECT_INIT_SCRIPTS_DIR/connectify.service | \
-		sed -e "s:MY_WIFI_OLD_INTERFACE:$WIFI_OLD_INTERFACE:g" \
+		sed -e "s:MY_WIFI_OLD_INTERFACE:$WIFI_AP_BIOSDEV_NAME:g" \
 			> $SYSTEMD_UNITS_DIR_USER/connectify.service
 }
 
