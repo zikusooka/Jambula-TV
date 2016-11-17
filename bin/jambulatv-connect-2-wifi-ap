@@ -14,12 +14,12 @@ HOST_2_PING=8.8.8.8 #192.168.8.1 #8.8.8.8
 # Available in functions file
 INTERNET_WIFI_ISP_CONFIG=/etc/JambulaTV/internet-mobile-wifi.cfg
 WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
-WIFI_INTERFACES_AVAILABLE=$(sudo iw dev |grep Interface |wc -l)
+WIFI_INTERFACES_AVAILABLE=$(sudo journalctl -b -o cat --no-pager | grep 'renamed from wlan' | awk {'print $3'} | sed 's/://g' | sort -u | wc -l)
 # Variable specific to this script
-WIFI_DRIVER=nl80211
 WIFI_SSID=$(grep -i SSID $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 WIFI_SECURITY_KEY=$(grep -i SECURITY_KEY $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 OSD_SCRIPT="sudo /usr/bin/jambulatv-osd -m"
+AP_NOT_FOUND_MSG="WARNING - Wireless Access Point ($WIFI_SSID) Not Available"
 AP_FOUND_MSG="Found your WiFi Access Point ($WIFI_SSID). Please wait while I connect to it"
 CONNECTED_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID), Assigning IP Address ..."
 INSERT_WIFI_DONGLE_MSG="Please insert your USB Wireless (WiFi) Network Adapter. I will try connecting to $WIFI_SSID shortly ..."
@@ -47,9 +47,38 @@ remove_script_running_file () {
 rm -f $SCRIPT_RUNNING_FILE
 }
 
+number_of_interfaces () { 
+# Quit if less than 2 WiFi devices are detected
+if [ "$WIFI_INTERFACES_AVAILABLE" -lt "2" ];
+then
+echo "CRITICAL: Sorry, I did not find a second and/or usable WiFi interface "
+exit 2
+fi
+}
+
+type_of_station_interface () {
+# Unsupported r8188eu devices like RTL8188ETV, RTL8188EUS (TP-Link TL-WN723/TL-WN725N)
+sudo journalctl -b -o cat --no-pager | grep $WIFI_STATION_INTERFACE | grep r8188eu > /dev/null 2>&1
+UNSUPPORTED=$?
+# Check to see if supported
+if [ "$UNSUPPORTED" = "0" ];
+then
+IW_COMPATIBLE=no
+else
+IW_COMPATIBLE=yes
+fi
+}
+
 check_4_wifi_dongle () {
 # Test to see if WiFi stick is now present
+if [ "$IW_COMPATIBLE" = "yes" ];
+then
+# Using iw command
 iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
+else
+# Using iwconfig
+iwconfig ${WIFI_STATION_INTERFACE} | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
+fi
 WIFI_STICK_PRESENT=$?
 until [ "$WIFI_STICK_PRESENT" = "0" ];
 do
@@ -58,18 +87,16 @@ $OSD_SCRIPT "$INSERT_WIFI_DONGLE_MSG"
 # Pause while waiting for insertion
 sleep 60
 # Test if WiFi stick is now present
+if [ "$IW_COMPATIBLE" = "yes" ];
+then
+# Using iw command
 iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
+else
+# Using iwconfig command
+iwconfig ${WIFI_STATION_INTERFACE} | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
+fi
 WIFI_STICK_PRESENT=$?
 done
-}
-
-number_of_interfaces () { 
-# Quit if less than 2 WiFi devices are detected
-if [ "$WIFI_INTERFACES_AVAILABLE" -lt "2" ];
-then
-echo "CRITICAL: Sorry, WiFi dual Interface mode is not supported"
-exit 2
-fi
 }
 
 scan_4_wifi () {
@@ -77,26 +104,28 @@ scan_4_wifi () {
 sudo ip link set $WIFI_STATION_INTERFACE up
 #
 # Scan for AP, and get scanned SSID
-sudo iw dev $WIFI_STATION_INTERFACE scan | grep "SSID: $WIFI_SSID" | cut -d : -f2 | awk {'print $1'}
+if [ "$IW_COMPATIBLE" = "yes" ];
+then
+# Using iw command
+sudo iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: \"$WIFI_SSID\"" > /dev/null 2>&1
+AP_EXISTENCE=$?
+else
+# Using iwlist command
+sudo iwlist $WIFI_STATION_INTERFACE scan | grep -w "ESSID:\"$WIFI_SSID\"" > /dev/null 2>&1
+AP_EXISTENCE=$?
+fi
+#
 # See if there's a match
-if [[ $? = 0 ]];
+if [ "$AP_EXISTENCE" = "0" ];
 then
 WIFI_FOUND=yes
 # Notify
 echo "$AP_FOUND_MSG"
 else
 WIFI_FOUND=no
+echo "$AP_NOT_FOUND_MSG"
 fi
 export WIFI_FOUND
-}
-
-reset_hostapd_channel () {
-# Get channel number
-WIFI_CHANNEL=$(sudo iw dev $WIFI_STATION_INTERFACE scan  | grep -A2 "SSID: $WIFI_SSID" | grep 'DS Parameter set' | cut -d : -f2 | awk {'print $2'})
-# Replace existing channel number
-sed -i "/^channel=/d" $HOSTAPD_CONFIG_FILE
-echo "channel=$WIFI_CHANNEL" >> $HOSTAPD_CONFIG_FILE
-sudo systemctl restart hostapd.service
 }
 
 disconnect_4rm_access_point () {
@@ -124,14 +153,21 @@ connect_2_access_point () {
 # Disconnect any existing WiFi processes
 disconnect_4rm_access_point
 # Connect to HotSpot
-sudo wpa_supplicant -B -D $WIFI_DRIVER -i $WIFI_STATION_INTERFACE -c $WIFI_WPA_CONFIG_FILE
+sudo wpa_supplicant -B -i $WIFI_STATION_INTERFACE -c $WIFI_WPA_CONFIG_FILE
 }
 
 check_link_status () {
 # Check link status
+if [ "$IW_COMPATIBLE" = "yes" ];
+then
+# Using iw command
 WIFI_LINK_STATUS=$(sudo iw dev $WIFI_STATION_INTERFACE link)
+else
+# Using iwconfig command
+WIFI_LINK_STATUS=$(sudo iwconfig $WIFI_STATION_INTERFACE | head -1 | awk {'print $2'})
+fi
 #
-if [ "$WIFI_LINK_STATUS" = "Not connected." ];
+if [ "$WIFI_LINK_STATUS" = "Not connected." ] || [ "$WIFI_LINK_STATUS" = "unassociated" ];
 then
 echo "Connection to $WIFI_SSID failed!. Exiting ..."
 exit 1
@@ -166,7 +202,7 @@ make_this_internet_gateway () {
 quit_not_found () {
 if [[ $WIFI_FOUND != yes ]];
 then
-echo "WARNING - Wireless Access Point ($WIFI_SSID) Not Available"
+echo "$AP_NOT_FOUND_MSG"
 exit 1
 fi
 }
@@ -187,6 +223,9 @@ quit_if_already_running
 
 # Find WiFi interface to be used as station
 number_of_interfaces
+
+# See if station device is properly supported i.e. iw command compatible
+type_of_station_interface
 
 # Act according to who called this script
 case $ICINGA2_AP_STATUS in
@@ -209,9 +248,6 @@ quit_not_found
 ;;
 esac
 
-
-# Reset channel in hostapd.conf to match AP
-#reset_hostapd_channel # Restarts hostAPD - Not desirable!!!
 
 # Check to see if USB WiFi dongle is inserted
 check_4_wifi_dongle

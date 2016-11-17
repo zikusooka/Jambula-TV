@@ -3759,8 +3759,7 @@ WIFI_DEVICES_RAW_LIST=/tmp/list_of_wireless_devices_raw
 [ -f $WIFI_DEVICES_RAW_LIST ] && rm -f $WIFI_DEVICES_RAW_LIST
 #
 # Extract detected wireless device information
-journalctl -b -o cat --no-pager | grep 'renamed network interface wlan' | awk '{print $NF}' | sort -u | while read LINE
-
+journalctl -b -o cat --no-pager | grep 'renamed from wlan' | awk {'print $3'} | sed 's/://g' | sort -u | while read LINE
 do
 # Get device biosdev name
 export WIFI_DEVICE=$LINE
