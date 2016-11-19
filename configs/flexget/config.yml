@@ -447,8 +447,8 @@ tasks:
     move:
       #to: "/{{secrets.tv.series_jambulatv_dir}}/{{series_name|replace(' ', '_')}}/Season_{{'%02d'|format(series_season)}}"
       to: "/{{secrets.tv.series_jambulatv_dir}}/{{tvdb_series_name|replace(' ', '_')|replace('(', '')|replace(')', '')}}/Season_{{'%02d'|format(tvdb_season)}}"
-      #filename: "{{series_name}}.{{series_id}}.{{quality|upper}}"
-      filename: "{{tvdb_series_name|replace(' ', '.')|replace('(', '')|replace(')', '')}}.{{tvdb_ep_id}}.{{tvdb_ep_name|replace(' ', '.')}}.{{quality|upper|replace(' ', '.')}}"
+      #rename: "{{series_name}}.{{series_id}}.{{quality|upper}}"
+      rename: "{{tvdb_series_name|replace(' ', '.')|replace('(', '')|replace(')', '')}}.{{tvdb_ep_id}}.{{tvdb_ep_name|replace(' ', '.')}}.{{quality|upper|replace(' ', '.')}}"
       clean_source: 18
       along:
         extensions:
@@ -491,8 +491,8 @@ tasks:
       regexp: '.*\.(avi|mkv|mp4|m4v|iso)$' 
     move:
       to: "/{{secrets.movies.movies_jambulatv_dir}}"
-      #filename: "{{movie_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')}}.({{movie_year}}){% if quality|default(False) %}: - {{quality}}{% endif %}"
-      filename: "{{tmdb_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')|replace('(', '')|replace(')', '')}}.({{tmdb_year|replace('(', '')|replace(')', '')}})"
+      #rename: "{{movie_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')}}.({{movie_year}}){% if quality|default(False) %}: - {{quality}}{% endif %}"
+      rename: "{{tmdb_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')|replace('(', '')|replace(')', '')}}.({{tmdb_year|replace('(', '')|replace(')', '')}})"
       clean_source: 18
       along:
         extensions:
