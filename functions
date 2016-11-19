@@ -51,6 +51,7 @@ MANDIR3=$PREFIX/share/man/man3
 MANDIR8=$PREFIX/share/man/man8
 SYSCTL_DIR=$CONFDIR/sysctl.d
 UDEV_RULES_DIR=/etc/udev/rules.d
+LOGROTATE_CONF_DIR=$CONFDIR/logrotate.d
 PYTHON_SITEDIR=$LIBDIR/python2.7/site-packages
 FIRMWARE_DIR=$PREFIX/lib/firmware
 POST_INSTALL_NOTES=$ROOT_DIR/post_install_notes
@@ -1152,7 +1153,7 @@ userdel -r $ICINGA_USER
 mv -v $CONFDIR/icinga2 $CONFDIR/icinga2.$ICINGA2_PREVIOUS_VERSION
 rm -f $CONFDIR/rc.d/rc{0,1,2,3,4,5,6}.d/*icinga2
 rm -f $CONFDIR/bash_completion.d/icinga2
-rm -f $CONFDIR/logrotate.d/icinga2
+rm -f $LOGROTATE_CONF_DIR/icinga2
 rm -f $CONFDIR/sysconfig/icinga2
 # /var 
 rm -rf $STATEDIR/cache/icinga2 \
@@ -5275,6 +5276,9 @@ systemctl enable radiusd.service
 # ******************************************
 echo "INSERT INTO radcheck (UserName, Attribute, Value, Op) VALUES ('$FREERADIUS_ADMIN_USER', 'Cleartext-Password', '$FREERADIUS_ADMIN_PASS', ':=');" | mysql -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME
 #
+# Copy logrotate file to reduce size of radius logs
+cp -v $PROJECT_CONFIGS_DIR/logrotate/radius $LOGROTATE_CONF_DIR/
+#
 # Start radius for initialization purposes
 # *****************************************
 /usr/sbin/radiusd -X >> /dev/null &
@@ -7662,7 +7666,7 @@ make_install_jambulatv
 rsync -avz $PREFIX/etc/icinga2/ $ICINGA2_CONFIG_DIR/
 rm -rf $PREFIX/etc/icinga2
 # Move logrotate
-rsync -avz $PREFIX/etc/logrotate.d/ $CONFDIR/logrotate.d/
+rsync -avz $PREFIX/etc/logrotate.d/ $LOGROTATE_CONF_DIR/
 rm -rf $PREFIX/etc/logrotate.d
 #
 # Create icinga group
