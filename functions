@@ -4,6 +4,10 @@ PROJECT_URL="http://www.jambulatv.com"
 PROJECT_DOMAINS="jambulatv.com, jambula.co, jambula.net, jambula.xyz" 
 COMPANY_NAME="Jambula Labs"
 COMPANY_WORKGROUP="JAMBULA"
+COPYRIGHT_YEAR_START=$(date '+%Y')
+COPYRIGHT_YEAR_END=$(date '+%Y' --date='12 months')
+COPYRIGHT_NOTICE=" ©$COPYRIGHT_YEAR_START-$COPYRIGHT_YEAR_END $COMPANY_NAME All Rights Reserved."
+
 KERNEL_NAME="$PROJECT_NAME"
 KERNEL_VERSION="4.4.30"
 
@@ -273,6 +277,7 @@ GDATA_VERSION=2.0.17
 BUILD_LOG=$HOME/$PROJECT_NAME-build.log
 
 EMAIL_CONFIG_DIR=/etc/email
+EMAIL_SIGNATURE_FILE=$PROJECT_SYSTEM_CONF_DIR/email.signature
 EMAIL_VIA_GMAIL_CMD=$BINARY_PREFIX/jambulatv-email
 EMAIL_GMAIL_CONFIG=$PROJECT_SYSTEM_CONF_DIR/email-gmail.cfg
 
@@ -5899,9 +5904,23 @@ make_install_jambulatv
 email_smtp_configure () {
 # BUG: Fix email not running if VCARD is not properly defined 
 cp -v $EMAIL_CONFIG_DIR/email.conf $EMAIL_CONFIG_DIR/email.conf.orig
+# Change path of our email signature file
 cat $EMAIL_CONFIG_DIR/email.conf.orig | \
-	sed -e 's/SIGNATURE_FILE/#SIGNATURE_FILE/g' | \
+	sed -e "s:SIGNATURE_FILE    = '&/email.sig':SIGNATURE_FILE    = '$EMAIL_SIGNATURE_FILE':" | \
 	sed -e 's/VCARD =/#VCARD =/g' > $EMAIL_CONFIG_DIR/email.conf
+# Add email signature file
+cat > $EMAIL_SIGNATURE_FILE << EOF
+---------
+This message was sent using your $PROJECT_NAME, a product of
+                            
+	 ▗▄         ▐       ▝▜          ▗       ▐       
+	  ▐  ▄▖ ▗▄▄ ▐▄▖ ▗ ▗  ▐   ▄▖     ▐    ▄▖ ▐▄▖  ▄▖ 
+	  ▐ ▝ ▐ ▐▐▐ ▐▘▜ ▐ ▐  ▐  ▝ ▐     ▐   ▝ ▐ ▐▘▜ ▐ ▝ 
+	  ▐ ▗▀▜ ▐▐▐ ▐ ▐ ▐ ▐  ▐  ▗▀▜     ▐   ▗▀▜ ▐ ▐  ▀▚ 
+	▝▄▞ ▝▄▜ ▐▐▐ ▐▙▛ ▝▄▜  ▝▄ ▝▄▜     ▐▄▄▖▝▄▜ ▐▙▛ ▝▄▞ 
+
+	   $COPYRIGHT_NOTICE
+EOF
 }
 
 email_via_gmail_setup () {
