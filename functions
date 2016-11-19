@@ -1,6 +1,7 @@
 #!/bin/sh
 PROJECT_NAME=JambulaTV
 PROJECT_URL="http://www.jambulatv.com"
+PROJECT_DOMAINS="jambulatv.com, jambula.co, jambula.net, jambula.xyz" 
 COMPANY_NAME="Jambula Labs"
 COMPANY_WORKGROUP="JAMBULA"
 KERNEL_NAME="$PROJECT_NAME"
@@ -337,6 +338,9 @@ SYSCONFIG_NETWORK_SCRIPTS_DIR=$SYSCONFIG_DIR/network-scripts
 SYSCONFIG_i18N_FILE=/etc/sysconfig/i18n
 
 NETWORK_MAC_ADDRESS=`ip addr show | grep ether | awk {'print $2'} | head -1`
+
+DHCLIENT_CONFIG_DIR=$CONFDIR/dhcp
+DHCLIENT_CONFIG_FILE=$DHCLIENT_CONFIG_DIR/dhclient.conf
 
 SYSTEM_UUID=$(uuid)
 SYSTEM_IDENTIFIER=$(echo $SYSTEM_UUID | cut -d - -f5)
@@ -3681,42 +3685,6 @@ done
 }
 
 wired_interfaces_configure () {
-# Configure IP & DNS settings for wired interface depending on existence of gateway
-if [ "x$NETWORK_GATEWAY_ADDRESS" != "x" ];
-then
-# Network gateway exists - configure static boot protocol
-cat > $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE << EOF
-# IP/DNS settings for $NETWORK_ETHERNET_DEVICE
-HWADDR="$NETWORK_MAC_ADDRESS"
-DEVICE="$NETWORK_ETHERNET_DEVICE"
-TYPE="Ethernet"
-BOOTPROTO="static"
-ONBOOT="yes"
-NM_CONTROLLED="no"
-IPADDR0="$NETWORK_IP_ADDRESS"
-PREFIX0="$NETWORK_MASK_PREFIX"
-GATEWAY="$NETWORK_GATEWAY_ADDRESS"
-DNS1="$NETWORK_DNS_1"
-DNS2="$NETWORK_DNS_2"
-#DNS3=8.26.56.26
-#DNS4=208.67.222.222
-#DNS5=8.8.8.8
-EOF
-#
-else
-# Network gateway DOES NOT exist - configure dhcp boot protocol
-cat > $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE << EOF
-# IP/DNS settings for $NETWORK_ETHERNET_DEVICE
-HWADDR="$NETWORK_MAC_ADDRESS"
-DEVICE="$NETWORK_ETHERNET_DEVICE"
-TYPE="Ethernet"
-BOOTPROTO="dhcp"
-ONBOOT="yes"
-NM_CONTROLLED="no"
-EOF
-#
-fi
-#
 # Configure hostname
 HOSTNAME=$PROJECT_NAME.$SYSTEM_IDENTIFIER.local
 # Use 'hostnamectl'
@@ -3727,29 +3695,44 @@ HOSTNAME=$HOSTNAME" > $SYSCONFIG_NETWORK_FILE
 echo "# JambulaTV IP-Hostname
 $NETWORK_IP_ADDRESS	$HOSTNAME $PROJECT_NAME" >> /etc/hosts
 #
+# Configure dhclient so it picks up specific options from DHCP server on network. 
+cat > $DHCLIENT_CONFIG_FILE << EOF
+interface "$NETWORK_ETHERNET_DEVICE" {
+           send host-name "$HOSTNAME";
+           supersede domain-search $(for DOMAIN in $PROJECT_DOMAINS;do echo -n "\"$DOMAIN\", " | sed 's:,::';done);
+           prepend domain-name-servers 127.0.0.1;
+           #send dhcp-requested-address 192.168.0.249;
+       }
+EOF
+#
+# Configure IP & DNS settings for wired interface - Use DHCP boot protocol
+cat > $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE << EOF
+# IP/DNS settings for $NETWORK_ETHERNET_DEVICE
+HWADDR="$NETWORK_MAC_ADDRESS"
+DEVICE="$NETWORK_ETHERNET_DEVICE"
+TYPE="Ethernet"
+BOOTPROTO="dhcp"
+ONBOOT="yes"
+NM_CONTROLLED="no"
+EOF
+#
 # BUG: Patch network rc.d init file i.e. delay start with something
 patch -p1 $CONFDIR/rc.d/init.d/network  < $PROJECT_PATCHES_DIR/network.rc.init.patch
 # 
-# Do post install notes if network not completely configured
-if [ "x$NETWORK_GATEWAY_ADDRESS" = "x" ] || [ "$NETWORK_DNS_1" = "127.0.0.1" ];
-then
 # Post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
 #
 Network Configuration
 =====================
-% In order to access the Internet using a wired connection, you will need to 
-add the following to $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE as
-follows:
+% If you need a static IP address assigned to this system.  Edit the following file:
 
-  GATEWAY="$NETWORK_GATEWAY_ADDRESS"
-  DNS1="$NETWORK_DNS_1"
-  DNS2="$NETWORK_DNS_2"
+  $DHCLIENT_CONFIG_FILE
+
+  Uncomment the line 'send dhcp-requested-address ...' and set to desired IP address
 
 #
 EOF
-fi
 }
 
 create_list_of_wireless_devices () {
@@ -8327,7 +8310,7 @@ cat > $CONFDIR/avahi/avahi-daemon.conf << EOF
 [server]
 #host-name=$PROJECT_NAME
 #domain-name=local
-browse-domains=jambulatv.com, jambula.co, jambula.net
+browse-domains=$PROJECT_DOMAINS
 use-ipv4=yes
 use-ipv6=no
 #allow-interfaces=
