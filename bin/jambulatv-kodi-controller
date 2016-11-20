@@ -40,7 +40,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|pvr_hts_status|tv_play_start|mute|tv_play_stop|video_play_start|video_play_stop|tv_record_start|tv_record_stop|scan_video|scan_audio|clean_video|clean_audio)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|tv_play_start|mute|tv_play_stop|video_play_start|video_play_stop|tv_record_start|tv_record_stop|scan_video|scan_audio|clean_video|clean_audio)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -73,6 +73,15 @@ fi
 #
 # Enable/Disable Kodi addons
 if [ "$TV_ACTION" = "addon_switch" ] && [ "x$KODI_ADDON" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` $TV_ACTION [KODI_ADDON]
+"
+exit 1
+fi
+#
+# Status of Kodi addons
+if [ "$TV_ACTION" = "addon_status" ] && [ "x$KODI_ADDON" = "x" ];
 then
 clear
 echo "Usage:  ./`basename $0` $TV_ACTION [KODI_ADDON]
@@ -167,11 +176,15 @@ kodi_addon_toggle () {
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"Addons.SetAddonEnabled","params":{"addonid":"'"$1"'","enabled":"toggle"},"id":1}' http://127.0.0.1:8510/jsonrpc
 }
 
-check_pvr_hts_status () {
-PVR_HTS_STATUS=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"Addons.GetAddonDetails","params":{"addonid":"pvr.hts","properties":["enabled"]},"id":1}' http://127.0.0.1:8510/jsonrpc | egrep -o 'true|false')
+check_addon_status () {
+ADDON_STATUS=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"Addons.GetAddonDetails","params":{"addonid":"'"$1"'","properties":["enabled"]},"id":1}' http://127.0.0.1:8510/jsonrpc | egrep -o 'true|false')
 # Export variable
 cat > $PVR_STATUS_FILE << EOF
-PVR_HTS_STATUS=$PVR_HTS_STATUS
+ADDON_STATUS=$ADDON_STATUS
+EOF
+# Echo status
+cat <<EOF
+Addon [$1] enabled: $ADDON_STATUS
 EOF
 }
 
@@ -215,8 +228,8 @@ addon_switch)
 kodi_addon_toggle "$2"
 ;;
 
-pvr_hts_status)
-check_pvr_hts_status
+addon_status)
+check_addon_status "$2"
 ;;
 
 tv_play_start)
