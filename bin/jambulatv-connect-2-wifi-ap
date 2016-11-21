@@ -6,6 +6,7 @@
 ICINGA2_AP_STATUS=$@
 
 SCRIPT_RUNNING_FILE=/tmp/connect_2_ap_running
+INTERNET_OFF_FILE=/etc/dnsmasq.d/dns_off.conf
 
 PING_CMD=/usr/sbin/fping
 PING_CMD_OPTS="-l"
@@ -34,9 +35,22 @@ WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 ###############
 #  FUNCTIONS  #
 ###############
-# Check if script is already running
+# Check if script is already running and internet is off
 quit_if_already_running () {
-[ -e "$SCRIPT_RUNNING_FILE" ] && exit 1
+if [ -e "$SCRIPT_RUNNING_FILE" ] && [ -e "$INTERNET_OFF_FILE" ];
+then
+# Remove script running file and continue
+rm -f $SCRIPT_RUNNING_FILE
+
+elif [ -e "$INTERNET_OFF_FILE" ];
+then
+echo Internet-Off
+break
+
+else
+# Quit
+exit 1
+fi
 }
 
 add_script_running_file () {
@@ -142,11 +156,15 @@ sudo ip addr flush dev $WIFI_STATION_INTERFACE
 }
 
 generate_wpa_config () {
+grep "psk=\"$WIFI_SECURITY_KEY\"" $WIFI_WPA_CONFIG_FILE > /dev/null 2>&1
+PASSPHRASE_MATCH=$?
 grep "ssid=\"$WIFI_SSID\"" $WIFI_WPA_CONFIG_FILE > /dev/null 2>&1
-WPA_EXISTS=$?
+SSID_MATCH=$?
 # Generate a wpa/wpa2 configuration file if not yet set
-[ "$WPA_EXISTS" = "0" ] || \
+if [ "$PASSPHRASE_MATCH" != "0" ] || [ "$SSID_MATCH" != "0" ];
+then
 sudo wpa_passphrase "$WIFI_SSID" "$WIFI_SECURITY_KEY" > $WIFI_WPA_CONFIG_FILE
+fi
 }
 
 connect_2_access_point () {
