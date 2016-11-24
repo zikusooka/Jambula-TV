@@ -1,6 +1,12 @@
 #!/bin/sh
 # Use this script to register for whatsapp; and then to send and receive messages
 # Fixed Variables
+# MCC/MNC table is pulled from http://mcc-mnc.com
+MCC_MNC_TABLE_FILE_URL=https://github.com/musalbas/mcc-mnc-table/raw/master/mcc-mnc-table.csv
+MCC_MNC_TABLE_FILE=/usr/share/JambulaTV/mobile_providers/mcc-mnc-table.csv
+COUNTRY_MCC_MNC_RAW_FILE=/tmp/mcc_mnc_raw.csv
+
+WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
 WHATSAPP_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-whatsapp.cfg
 WHATSAPP_METHOD_NAME=$1
 WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
@@ -35,7 +41,7 @@ esac
 
 registration_status () {
 # Source settings file
-. $WHATSAPP_CREDENTIALS_CONFIG
+[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
 # Check if already registered
 if [ "x$WHATSAPP_ENCRYPTED_PASSWORD" != "x" ] && [ "x$WHATSAPP_REGISTRATION_CODE" != "x" ];
 then
@@ -50,51 +56,108 @@ exit 0
 fi
 }
 
+download_mcc_mnc_file () {
+# Check if Internet connection is up
+ping -c 1 8.8.8.8 > /dev/null 2>&1
+INTERNET_ALIVE=$?
+# Download MCC-MNC table file if not present and Internet is up
+if [ ! -s $MCC_MNC_TABLE_FILE ] && [ "$INTERNET_ALIVE" = "0" ];
+then
+wget -c -O $MCC_MNC_TABLE_FILE $MCC_MNC_TABLE_FILE_URL 
+fi
+}
+
+extract_country_info () {
+# Country
+clear
+DEFAULT_COUNTRY=Uganda
+read -p "Please enter the name of your country [$DEFAULT_COUNTRY]
+" COUNTRY
+# If empty set to default
+if [ "x$COUNTRY" = "x" ];
+then
+COUNTRY=$DEFAULT_COUNTRY
+fi
+#
+# Create raw file containing user's country, MCC, MNC, etc
+grep -i $COUNTRY $MCC_MNC_TABLE_FILE > $COUNTRY_MCC_MNC_RAW_FILE
+}
+
+extract_network_info () {
+# Network
+clear
+DEFAULT_NETWORK_NUMBER=1
+read -p "Please select the mobile network in $COUNTRY that you will use for WhatsApp [$DEFAULT_NETWORK_NUMBER]
+
+$(cut -d , -f8 $COUNTRY_MCC_MNC_RAW_FILE | cat -n )
+
+" NETWORK_NUMBER
+# If empty set to default
+if [ "x$NETWORK_NUMBER" = "x" ];
+then
+NETWORK_NUMBER=$DEFAULT_NETWORK_NUMBER
+fi
+#
+# Extract codes
+# Network
+NETWORK_NAME=$(awk "NR==$NETWORK_NUMBER" $COUNTRY_MCC_MNC_RAW_FILE | cut -d , -f8)
+# Telephone Country Code
+TELEPHONE_COUNTRY_CODE=$(awk "NR==$NETWORK_NUMBER" $COUNTRY_MCC_MNC_RAW_FILE | cut -d , -f7)
+# MCC
+MOBILE_COUNTRY_CODE=$(awk "NR==$NETWORK_NUMBER" $COUNTRY_MCC_MNC_RAW_FILE | cut -d , -f1)
+# MNC
+MOBILE_NETWORK_CODE=$(awk "NR==$NETWORK_NUMBER" $COUNTRY_MCC_MNC_RAW_FILE | cut -d , -f3)
+}
+
 registration_request_code () {
 # Check if registered before
 registration_status 
+
+# Download mcc_mnc file
+download_mcc_mnc_file
+
+# Extract country information
+extract_country_info
+
+# Extract network information
+extract_network_info
+
+# Ask for receiving phone number
 clear
-read -p "Please enter your whatsapp phone number (Include country code e.g. 256)
+read -p "Please enter the phone number you will use to receive WhatsApp messages (Include country code e.g. ${TELEPHONE_COUNTRY_CODE}XXXXXXXXX)
+" WHATSAPP_PHONE_NUMBER_RECIPIENT
+#
+# Ask for sending phone number
+clear
+read -p "Please enter the phone number you will use to send WhatsApp messages (Include country code e.g. ${TELEPHONE_COUNTRY_CODE}XXXXXXXXX)
 " WHATSAPP_PHONE_NUMBER_SENDER
 #
-# Telephone Country Code
+# Print summary of info collected
 clear
-DEFAULT_TELEPHONE_COUNTRY_CODE=256
-read -p "Please enter your country's telephone code below [$DEFAULT_TELEPHONE_COUNTRY_CODE]
-" TELEPHONE_COUNTRY_CODE
-# If empty set to default
-if [ "x$TELEPHONE_COUNTRY_CODE" = "x" ];
-then
-TELEPHONE_COUNTRY_CODE=$DEFAULT_TELEPHONE_COUNTRY_CODE
-fi
-#
-# MCC
-clear
-DEFAULT_MOBILE_COUNTRY_CODE=641
-read -p "Please enter your country's Mobile Country Code (MCC) below [$DEFAULT_MOBILE_COUNTRY_CODE]
-" MOBILE_COUNTRY_CODE
-# If empty set to default
-if [ "x$MOBILE_COUNTRY_CODE" = "x" ];
-then
-MOBILE_COUNTRY_CODE=$DEFAULT_MOBILE_COUNTRY_CODE
-fi
-#
-# MNC
-clear
-DEFAULT_MOBILE_NETWORK_CODE=18
-read -p "Please enter your Mobile Network Code (MNC)  below [$DEFAULT_MOBILE_NETWORK_CODE]
-" MOBILE_NETWORK_CODE
-# If empty set to default
-if [ "x$MOBILE_NETWORK_CODE" = "x" ];
-then
-MOBILE_NETWORK_CODE=$DEFAULT_MOBILE_NETWORK_CODE
-fi
+cat <<EOF
+You have chosen the following mobile network as your carrier for WhatsApp:
 
-# Copy variables to whatsapp settings file
-cat >> $WHATSAPP_CREDENTIALS_CONFIG << EOF
+===============================================================================
+
+Phone Number used for receiving:	$WHATSAPP_PHONE_NUMBER_SENDER
+Phone Number used for sending:		$WHATSAPP_PHONE_NUMBER_SENDER
+
+Mobile Network:				$NETWORK_NAME
+Country:  				$COUNTRY
+Country Telephone Code:  		$TELEPHONE_COUNTRY_CODE
+Mobile Country Code (MCC):		$MOBILE_COUNTRY_CODE
+Mobile Network Code (MNC):		$MOBILE_NETWORK_CODE
+
+===============================================================================
+
+EOF
+
+# Write variables to whatsapp settings file i.e. Overwrite in case previous registrations existed
+cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
 # Generated using jambulatv-whatsapp on $(date)
+WHATSAPP_SCRIPT=$WHATSAPP_SCRIPT
 WHATSAPP_PHONE_NUMBER_SENDER=$WHATSAPP_PHONE_NUMBER_SENDER
-WHATSAPP_PHONE_NUMBER_RECIPIENT=WHATSAPP_PHONE_NUMBER_4_RECEIVING
+WHATSAPP_PHONE_NUMBER_RECIPIENT=$WHATSAPP_PHONE_NUMBER_RECIPIENT
 TELEPHONE_COUNTRY_CODE=$TELEPHONE_COUNTRY_CODE
 MOBILE_COUNTRY_CODE=$MOBILE_COUNTRY_CODE
 MOBILE_NETWORK_CODE=$MOBILE_NETWORK_CODE
@@ -163,7 +226,6 @@ EOF
 #################
 #  MAIN SCRIPT  #
 #################
-
 usage
 
 case $WHATSAPP_METHOD_NAME in

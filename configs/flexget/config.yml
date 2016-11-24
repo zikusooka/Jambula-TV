@@ -147,7 +147,7 @@ templates:
           - echo -e "*[JambulaTV] TV Show(s) Queued*\nThe following TV Episode has been queued for download\n" > "/tmp/{{tv_series_info_file}}"
           - echo -e "{{tv_series_details}}" >> "/tmp/{{tv_series_info_file}}"
           # Send queued notice via WhatsApp
-          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage "{{secrets.whatsapp.recipient}}" "$(cat "/tmp/{{tv_series_info_file}}")" &
+          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage \"\" "$(cat "/tmp/{{tv_series_info_file}}")" &
 
   send_whatsapp_tv_series_downloaded_notification:
     exec:
@@ -158,7 +158,7 @@ templates:
           - echo -e "*[JambulaTV] New TV Episode(s) Added*\nThe following TV Series Episode was successfully downloaded. You may find it under 'TV Shows' on your JambulaTV. Enjoy!\n" > "/tmp/{{tv_series_info_file}}"
           - echo -e "{{tv_series_details}}" >> "/tmp/{{tv_series_info_file}}"
           # Send queued notice via WhatsApp
-          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage "{{secrets.whatsapp.recipient}}" "$(cat "/tmp/{{tv_series_info_file}}")" &
+          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage \"\" "$(cat "/tmp/{{tv_series_info_file}}")" &
           # Remove tv series info file
           - /usr/bin/rm "/tmp/{{tv_series_info_file}}"
 
@@ -177,7 +177,7 @@ templates:
           - echo -e "*[JambulaTV] Movie(s) Queued*\nThe following Movie has been queued for download\n" > "/tmp/{{movie_info_file}}"
           - echo -e "{{movie_details}}" >> "/tmp/{{movie_info_file}}"
           # Send queued notice via WhatsApp
-          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage "{{secrets.whatsapp.recipient}}" "$(cat "/tmp/{{movie_info_file}}")" &
+          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage \"\" "$(cat "/tmp/{{movie_info_file}}")" &
 
   send_whatsapp_movie_downloaded_notification:
     exec:
@@ -188,7 +188,7 @@ templates:
           - echo -e "*[JambulaTV] New Movie(s) Added*\nThe following movie was successfully downloaded. You may find it under 'Movies' on your JambulaTV. Enjoy!\n" > "/tmp/{{movie_info_file}}"
           - echo -e "{{movie_details}}" >> "/tmp/{{movie_info_file}}"
           # Send queued notice via WhatsApp
-          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage "{{secrets.whatsapp.recipient}}" "$(cat "/tmp/{{movie_info_file}}")" &
+          - /bin/sh "{{secrets.whatsapp.send_script}}" sendmessage \"\" "$(cat "/tmp/{{movie_info_file}}")" &
           # Remove movie info file
           - /usr/bin/rm "/tmp/{{movie_info_file}}"
 

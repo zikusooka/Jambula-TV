@@ -728,7 +728,6 @@ TELEGRAM_USERNAME="username"
 # WhatsApp Info
 WHATSAPP_SCRIPT=$BINARY_PREFIX/jambulatv-whatsapp
 WHATSAPP_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-whatsapp.cfg
-WHATSAPP_PHONE_NUMBER_4_RECEIVING=""
 
 # Enter User's personal email credentials here
 EMAIL_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-email.cfg
@@ -4603,7 +4602,6 @@ cat $PROJECT_CONFIGS_DIR/flexget/variables.yml.template | \
    sed -e "s:GOOGLE_SERVICES_PASSWORD:$GOOGLE_SERVICES_PASSWORD:g" | \
    sed -e "s/TELEGRAM_API_BOT/$TELEGRAM_API_BOT/g" | \
    sed -e "s:TELEGRAM_USERNAME:$TELEGRAM_USERNAME:g" | \
-   sed -e "s:WHATSAPP_PHONE_NUMBER_4_RECEIVING:$WHATSAPP_PHONE_NUMBER_4_RECEIVING:g" | \
    sed -e "s:KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
    sed -e "s:KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
    sed -e "s:KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
@@ -4926,17 +4924,21 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 
 whatsapp_messaging_configure () {
 # Copy jambulatv-whatsapp script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-whatsapp ] || cat $PROJECT_BIN_DIR/jambulatv-whatsapp | \
-	sed "s:WHATSAPP_PHONE_NUMBER_4_RECEIVING:$WHATSAPP_PHONE_NUMBER_4_RECEIVING:g" \
-		> $BINARY_PREFIX/jambulatv-whatsapp
+[ -e $BINARY_PREFIX/jambulatv-whatsapp ] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-whatsapp $BINARY_PREFIX/jambulatv-whatsapp
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-whatsapp
 #
-# Add whatsapp settings file
+# Add empty whatsapp settings file
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
 # TIP: Run the script $WHATSAPP_SCRIPT to generate the rest of whatsapp settings
-WHATSAPP_SCRIPT=$WHATSAPP_SCRIPT
 EOF
+#
+# Create directory of Mobile Providers 
+[ -d $PROJECT_SYSTEM_SHARE_DIR/mobile_providers ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/mobile_providers
+# Add table of MCC and MNC codes for providers from allover the world
+cp -v $PROJECT_CONTRIB_DIR/mobile_providers/mcc-mnc-table.csv \
+	$PROJECT_SYSTEM_SHARE_DIR/mobile_providers
 }
 
 sleekxmpp_install () {
