@@ -54,8 +54,7 @@ templates:
         - (?i)[ .]trailer[ .]: {from: title}
         - (?i)[ .]ts[ .]: {from: title}
         - (?i)[ .]vostfr[ .]: {from: title}
-        - (?i)[ .]web dl[ .]: {from: title}
-        - (?i)[ .]web-dl[ .]: {from: title}
+        - (?i)[ .]web-dl[ .]: {from: title} 
         - (?i)[ .]webscr[ .]: {from: title}
     content_filter:
       require:
@@ -83,6 +82,7 @@ templates:
       smtp_username: '{{secrets.email.smtp_username}}'
       smtp_password: '{{secrets.email.smtp_password}}'
       smtp_tls: yes
+      template: jambula
  
     telegram:
       bot_token: '{{secrets.telegram.bot_token}}'
@@ -123,6 +123,7 @@ templates:
         {{imdb_plot_outline|striptags}}
         {% else %}
         {% endif %}
+
 
 
 ##############
@@ -200,6 +201,7 @@ templates:
       - send_whatsapp_tv_series_info_and_details
       - send_whatsapp_tv_series_queued_notification
     priority: 10
+    limit_new: 5
     thetvdb_lookup: yes
     tvmaze_lookup: yes
     verify_ssl_certificates: no
@@ -228,6 +230,7 @@ templates:
     
     # Pull TV shows from trakt.tv watchlist
     discover:
+      release_estimations: ignore
       what: 
         - next_series_episodes:
             from_start: yes
@@ -236,10 +239,23 @@ templates:
             list: '{{secrets.trakt.watchlist}}'
             type: shows
             strip_dates: yes
+
       from:
         - piratebay:
+            category: video
             sort_by: seeds
-
+        - rarbg:
+            category:
+              - HDTV
+              - x264 1080p
+              - XviD
+              - SDTV
+            sorted_by: seeders
+            use_tvdb: True
+        - 1337x:
+            order_by: seeders
+        - extratorrent: 
+            category: tv
 
 
 
@@ -255,8 +271,8 @@ templates:
       - "h264 xvid !h265 !720p"
       - "!dts !cam !10bit"
     content_size:
-      max: 1400
-      min: 100
+      max: 1600
+      min: 200
     free_space:
       path: '{{secrets.movies.path}}'
       space: 1500
@@ -264,17 +280,17 @@ templates:
       - '{{secrets.movies.exists_movie}}'
     only_new: no
     download: '{{secrets.movies.download}}'
-#    accept_all: yes # Uncomment if IMDB is not used
+    accept_all: yes # Uncomment if IMDB is not used
     seen_movies:
       matching: strict
     tmdb_lookup: yes
     imdb_lookup: yes
-    imdb:
-      min_score: 8.0
-      min_votes: 60000
-      min_year: 2001
-      accept_languages:
-        - english
+#    imdb:
+      #min_score: 8.0
+      #min_votes: 60000
+      #min_year: 2001
+#      accept_languages:
+#        - english
       #reject_genres:
         #- adventure
         #- animation
@@ -292,6 +308,7 @@ templates:
       - movie_list: locally_added
 
     discover:
+      release_estimations: ignore
       what:
         # imdb requested
         #- imdb_list:
@@ -307,9 +324,22 @@ templates:
 
       from:
         - piratebay:
+            category: video
             sort_by: seeds
+        - rarbg:
+            category:
+              - HDTV
+              - x264 1080p
+              - XviD
+              - SDTV
+            sorted_by: seeders
+        - 1337x:
+            order_by: seeders
+        - extratorrent: 
+            category: movies
 
       interval: 1 day
+
 
 
 # Podcasts 

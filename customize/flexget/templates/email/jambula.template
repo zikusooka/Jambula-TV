@@ -1,0 +1,23 @@
+{% if task.accepted -%}
+Hi there!
+
+{%- for group in task.accepted|groupby('task') %}
+
+This is the automated downloads service at your JambulaTV.  I have queued *{{group.list|length}}* new download(s) from the task *{{group.grouper}}* as follows:
+
+  {%- for entry in group.list %}
+
+- {{entry.title}} ({{entry.url}}){% if entry.output|d(false) %} => {{entry.output}}{% endif %}
+  {% endfor %}
+{% endfor %}
+----------------
+This message was sent using your JambulaTV, a product of
+                            
+	 ▗▄         ▐       ▝▜          ▗       ▐       
+	  ▐  ▄▖ ▗▄▄ ▐▄▖ ▗ ▗  ▐   ▄▖     ▐    ▄▖ ▐▄▖  ▄▖ 
+	  ▐ ▝ ▐ ▐▐▐ ▐▘▜ ▐ ▐  ▐  ▝ ▐     ▐   ▝ ▐ ▐▘▜ ▐ ▝ 
+	  ▐ ▗▀▜ ▐▐▐ ▐ ▐ ▐ ▐  ▐  ▗▀▜     ▐   ▗▀▜ ▐ ▐  ▀▚ 
+	▝▄▞ ▝▄▜ ▐▐▐ ▐▙▛ ▝▄▜  ▝▄ ▝▄▜     ▐▄▄▖▝▄▜ ▐▙▛ ▝▄▞ 
+
+	    ©2016-2017 Jambula Labs All Rights Reserved.
+{% endif -%}
