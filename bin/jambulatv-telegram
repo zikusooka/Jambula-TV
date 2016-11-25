@@ -1,11 +1,14 @@
 #!/bin/sh
 TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
+TELEGRAM_SCRIPT=$0
 TELEGRAM_METHOD_NAME=$1
 TELEGRAM_ARGUMENTS="$2"
 TELEGRAM_API_URL="https://api.telegram.org"
 
+FLEXGET_VARIABLES_FILE=/etc/JambulaTV/flexget/variables.yml
+
 # Source Telegram credentials
-. $TELEGRAM_CREDENTIALS_CONFIG
+[ -e $TELEGRAM_CREDENTIALS_CONFIG ] && . $TELEGRAM_CREDENTIALS_CONFIG
 
 # Functions
 # ---------
@@ -14,24 +17,41 @@ usage () {
 clear
 if [ "x$TELEGRAM_METHOD_NAME" = "x" ];
 then
-echo "Usage:  ./`basename $0` [METHOD]
-"
+clear
+cat <<EOF
+Usage:  ./`basename $0` [METHOD]
+Available methods: sendmessage|senddiskimage|newbot
+EOF
 exit 1
 fi
-
-if [ "x$TELEGRAM_ARGUMENTS" = "x" ];
+# If arguments are missing
+if [ "x$TELEGRAM_ARGUMENTS" = "x" ]
 then
+#
+USAGE="Usage:  ./`basename $0` $TELEGRAM_METHOD_NAME $TELEGRAM_API_BOT $CHAT_ID $1"
+#
 case $TELEGRAM_METHOD_NAME in
 [Ss][Ee][Nn][Dd][Mm][Ee][Ss][Ss][Aa][Gg][Ee])
-ARGUMENTS=TELEGRAM_MESSAGE
+echo "$USAGE [TELEGRAM_MESSAGE]"
+exit 1
 ;;
 [Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee][Dd][Ii][Ss][Kk])
-ARGUMENTS=IMAGE_PATH_eg_/tmp/bell.png
+echo "$USAGE [IMAGE_PATH_eg_/tmp/bell.png]"
+exit 1
+;;
+[Nn][Ee][Ww][Bb][Oo][Tt])
+# No arguments when creating new bot
+break
+;;
+*)
+clear
+cat <<EOF
+Usage:  ./`basename $0` [METHOD]
+Available methods: sendmessage|senddiskimage|newbot
+EOF
+exit 1
 ;;
 esac
-echo "Usage:  ./`basename $0` $TELEGRAM_METHOD_NAME $TELEGRAM_API_BOT $CHAT_ID [$ARGUMENTS]
-"
-exit 1
 fi
 }
 
@@ -42,6 +62,98 @@ if [ "x$CHAT_ID" = "x" ];
 then
 CHAT_ID=$TELEGRAM_CHAT_ID
 fi
+}
+
+# Username
+get_username () {
+CHAT_USERNAME=$(curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/getUpdates | jq . | grep \"username\": | sort -u | awk {'print $2'} | sed s:[\",]::g)
+}
+
+# Create Bot
+create_api_bot () {
+clear
+cat << EOF
+==================================================================================================================
+  This script will guide you on setting up a telegram bot.  This is needed in order for JambulaTV to send various
+  notices using telegram.  Please be patient ...
+==================================================================================================================
+
+Step 1:  Please install Telegram app on your phone.  
+	 Note:  There's a QR code under APPS on the menu to take you straight to the app store
+
+Step 2:  Signup for Telegram
+
+Step 3:  Start a new message and search for the recipient named @Botfather:
+
+Step 4:  Click on RESTART
+
+step 5:  In message field, type:  /newbot
+
+Step 6:  Choose a name for your bot.  We recommend:  JambulaTV
+
+Step 7:  Now choose a unique username end with the word 'Bot':  jtv001Bot
+
+Step 8:  Copy the API token.  We are going to ask for it shortly 
+
+Step 9:  Open the following link as indicated in the previous congratulatory message:
+
+	 telegram.me/jtv001Bot  (NOTE: Make sure you change to your bot's name)
+
+Step 10: Click on START. (IMPORTANT: After start/restart.  You must proceed quickly to the next step)
+
+ 	 Please enter to proceed ...
+
+EOF
+read
+}
+
+ask_4_credentials () {
+# API Bot
+clear
+DEFAULT_TELEGRAM_API_BOT=19503441015:AAHmUPqqCNP4AZ_ydxXabcsa4FveH51GLyXC4
+read -p "Please enter the API token you got from the telegram app [$DEFAULT_TELEGRAM_API_BOT]
+" TELEGRAM_API_BOT
+# If empty set to default 
+if [ "x$TELEGRAM_API_BOT" = "x" ];
+then
+TELEGRAM_API_BOT=$DEFAULT_TELEGRAM_API_BOT
+fi
+#
+# Set chat ID and Username before proceeding
+get_chat_id
+get_username
+#
+# Username
+clear
+DEFAULT_TELEGRAM_USERNAME=$CHAT_USERNAME
+read -p "Please enter your telegram username (optional) [$DEFAULT_TELEGRAM_USERNAME]
+" TELEGRAM_USERNAME
+# If empty set to default
+if [ "x$TELEGRAM_USERNAME" = "x" ];
+then
+TELEGRAM_USERNAME=$DEFAULT_TELEGRAM_USERNAME
+fi
+}
+
+generate_credentials_file () {
+echo 2>&1 | tee $TELEGRAM_CREDENTIALS_CONFIG << EOF
+TELEGRAM_SCRIPT="$TELEGRAM_SCRIPT"
+TELEGRAM_API_BOT="$TELEGRAM_API_BOT"
+TELEGRAM_CHAT_ID="$CHAT_ID"
+TELEGRAM_USERNAME="$TELEGRAM_USERNAME"
+EOF
+}
+
+update_flexget_variables () {
+# Set old and new token/username
+OLD_TOKEN=$(grep -A1 -i telegram $FLEXGET_VARIABLES_FILE | grep bot_token | awk {'print $2'} | sed 's:\"::g')
+OLD_USERNAME=$(grep -A2 -i telegram $FLEXGET_VARIABLES_FILE | grep username | awk {'print $2'} | sed 's:\"::g')
+NEW_TOKEN=$TELEGRAM_API_BOT
+NEW_USERNAME=$TELEGRAM_USERNAME
+# Replace old with new token/username 
+sed -i "s/$OLD_TOKEN/$NEW_TOKEN/g" $FLEXGET_VARIABLES_FILE
+sleep 2
+sed -i "s/$OLD_USERNAME/$NEW_USERNAME/g" $FLEXGET_VARIABLES_FILE
 }
 
 # Send
@@ -56,6 +168,27 @@ send_image_disk () {
 curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/sendPhoto \
 	-F chat_id=$TELEGRAM_CHAT_ID \
 	-F photo=@$TELEGRAM_ARGUMENTS > /dev/null 2>&1
+}
+
+create_new_bot () {
+# Create API bot token
+create_api_bot
+# Ask for credentials
+ask_4_credentials
+#
+# Update flexget variables file
+update_flexget_variables
+#
+# Generate credentials file
+clear
+echo "Your telegram credentials have been saved and listed below:"
+echo
+echo ==========================================================================
+echo
+generate_credentials_file
+echo
+echo ==========================================================================
+echo
 }
 
 
@@ -74,6 +207,10 @@ send_message
 [Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee][Dd][Ii][Ss][Kk])
 get_chat_id 
 send_image_disk
+;;
+
+[Nn][Ee][Ww][Bb][Oo][Tt])
+create_new_bot
 ;;
 
 esac
