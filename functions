@@ -102,7 +102,7 @@ USER_TV_RECORDINGS_DIR=$USER_VIDEOS_DIR/TV_Recordings
 USER_MOVIES_DIR=$USER_VIDEOS_DIR/Movies
 
 PLAYLISTS_DIRECTORY=$PROJECT_PARTITION/Playlists
-PLAYLISTS_PORT=$(grep -i 'playlists' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+PLAYLISTS_PORT=$(grep -i 'playlists$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 PLAYLISTS_IPTV_WORLD_M3U_FILE=iptv-world.m3u8
 PLAYLISTS_IPTV_ICONS_DIR=$PROJECT_SYSTEM_SHARE_DIR/picons/IPTV
 
@@ -1235,7 +1235,7 @@ uninstall_asterisk () {
 # Stop running asterisk
 systemctl stop asterisk || kill -9 $(ps auxw | grep asterisk | awk {'print $2'})
 # Backup sqlite database - contains CallerID lookups etc..
-mv -v $VARLIBDIR/asterisk/astdb.sqlite3 /$BACKUPS_DIR
+mv -v $VARLIBDIR/asterisk/astdb.sqlite3 $BACKUPS_DIR
 # Make build directory
 cd $INSTALL_SRC_DIR/asterisk 
 # Uninstall
@@ -6351,12 +6351,16 @@ do
 # copy current core, moh, and extra sounds packages
 cp -v $PROJECT_TARBALLS_DIR/asterisk*$CODEC*gz $INSTALL_SRC_DIR/asterisk/sounds/
 # Create links to current core, moh, and extra sounds package
-ln -s asterisk-core-sounds-en-$CODEC-current.tar.gz \
-asterisk-core-sounds-en-$CODEC-$ASTERISK_CORE_SOUNDS_VERSION.tar.gz
-ln -s asterisk-moh-opsound-$CODEC-current.tar.gz \
-asterisk-moh-opsound-$CODEC-$ASTERISK_MOH_SOUNDS_VERSION.tar.gz
-ln -s asterisk-extra-sounds-en-$CODEC-current.tar.gz \
-asterisk-extra-sounds-en-$CODEC-$ASTERISK_EXTRA_SOUNDS_VERSION.tar.gz
+[ -e asterisk-core-sounds-en-$CODEC-$ASTERISK_CORE_SOUNDS_VERSION.tar.gz ] || \
+	ln -s asterisk-core-sounds-en-$CODEC-current.tar.gz \
+		asterisk-core-sounds-en-$CODEC-$ASTERISK_CORE_SOUNDS_VERSION.tar.gz
+[ -e asterisk-moh-opsound-$CODEC-$ASTERISK_MOH_SOUNDS_VERSION.tar.gz ] || \
+	ln -s asterisk-moh-opsound-$CODEC-current.tar.gz \
+		asterisk-moh-opsound-$CODEC-$ASTERISK_MOH_SOUNDS_VERSION.tar.gz
+
+[ -e asterisk-extra-sounds-en-$CODEC-$ASTERISK_EXTRA_SOUNDS_VERSION.tar.gz ] || \
+	ln -s asterisk-extra-sounds-en-$CODEC-current.tar.gz \
+		asterisk-extra-sounds-en-$CODEC-$ASTERISK_EXTRA_SOUNDS_VERSION.tar.gz
 done
 #
 cd $INSTALL_SRC_DIR/asterisk
