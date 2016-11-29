@@ -1,0 +1,17 @@
+#!/bin/sh
+# This is a wrapper to  allow playing IPTV streams using TVHeadend 
+
+RTMPDUMP_CMD=/usr/bin/rtmpdump
+FFMPEG_CMD=/usr/bin/ffmpeg
+
+
+$RTMPDUMP_CMD \
+	--rtmp "$1" \
+	--playpath "$2" \
+	--swfUrl "$3" \
+	--playlist "$4" \
+	--pageUrl "$5" \
+	--swfVfy "$6" \
+	--live \
+	--timeout 15 | \
+		$FFMPEG_CMD -v error -fflags +genpts -i pipe:0 -bsf h264_mp4toannexb -vcodec copy -acodec copy -bsf h264_mp4toannexb -f mpegts pipe:1

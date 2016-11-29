@@ -200,6 +200,7 @@ video_on_demand_configure
 playlists_configure
 
 # IPTV
+iptv_tvheadend_configure
 iptv_icons_add 
 
 # Auto download of TV Shows, Movies, and Podcasts

@@ -3038,6 +3038,11 @@ EOF
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_ADDON_DATA_DIR
 }
 
+iptv_tvheadend_configure () {
+# Copy jambulatv-rtmplayer used to play rtmp based IPTV streams via TVHeadend
+[ -e $BINARY_PREFIX/jambulatv-rtmplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-rtmplayer $BINARY_PREFIX/
+}
+
 iptv_icons_add () {
 # Get WWW User and Group
 set_www_user_group
