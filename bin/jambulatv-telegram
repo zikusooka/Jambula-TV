@@ -20,7 +20,7 @@ then
 clear
 cat <<EOF
 Usage:  ./`basename $0` [METHOD]
-Available methods: sendmessage|senddiskimage|newbot
+Available methods: sendmessage|sendimagedisk|newbot
 EOF
 exit 1
 fi
@@ -28,7 +28,7 @@ fi
 if [ "x$TELEGRAM_ARGUMENTS" = "x" ]
 then
 #
-USAGE="Usage:  ./`basename $0` $TELEGRAM_METHOD_NAME $TELEGRAM_API_BOT $CHAT_ID $1"
+USAGE="Usage:  ./`basename $0` $TELEGRAM_METHOD_NAME $1"
 #
 case $TELEGRAM_METHOD_NAME in
 [Ss][Ee][Nn][Dd][Mm][Ee][Ss][Ss][Aa][Gg][Ee])
@@ -47,7 +47,7 @@ break
 clear
 cat <<EOF
 Usage:  ./`basename $0` [METHOD]
-Available methods: sendmessage|senddiskimage|newbot
+Available methods: sendmessage|sendimagedisk|newbot
 EOF
 exit 1
 ;;
