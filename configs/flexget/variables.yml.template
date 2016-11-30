@@ -61,9 +61,23 @@ podcasts:
   hour: FLEXGET_SCHEDULE_PODCASTS_HR
   minute: FLEXGET_SCHEDULE_PODCASTS_MIN
 
+iptv:
+  lists_dir: PLAYLISTS_DIRECTORY
+  day_of_week: sun,mon,tue,wed,thu,fri,sat
+  hour: FLEXGET_SCHEDULE_IPTV_LISTS_HR
+  minute: FLEXGET_SCHEDULE_IPTV_LISTS_MIN
+
 wget:
   wget_log: PROJECT_SYSTEM_LOG_DIR/flexget/wget.log
   limit_rate: 14k
+
+ftp:
+  host: JAMBULATV_FTP_SERVER
+  user: JAMBULATV_FTP_USER
+  pass: JAMBULATV_FTP_PASS
+  port: 21
+  dir_remote: JambulaTV
+  dir_temp:  TMPDIR
 
 tv_feeds:
   rarbg: "https://rarbg.to/rssdd.php?category=18"

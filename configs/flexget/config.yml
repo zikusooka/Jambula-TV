@@ -543,6 +543,43 @@ tasks:
       - kodi_library_scan
 
 
+# IPTV lists
+# ----------
+  iptv_lists:
+
+    disable:
+      - retry_failed
+      - seen
+      - email
+      - telegram
+
+    ftp_list:
+      username: '{{secrets.ftp.user}}'
+      password: '{{secrets.ftp.pass}}'
+      host: '{{secrets.ftp.host}}'
+      #port: '{{secrets.ftp.port}}'
+      use_ssl: no
+      dirs: 
+        - '{{secrets.ftp.dir_remote}}/iptv'
+      retrieve: 
+        - dirs
+        - files
+      recursion: yes
+      recursion_depth: 5
+
+    accept_all: yes
+
+    ftp_download:
+      use-ssl: False
+      ftp_tmp_path: '{{secrets.ftp.dir_temp}}'
+      delete_origin: False
+      download_empty_dirs: False
+
+    exec:
+      - /usr/bin/rsync -qavz --delay-updates '{{secrets.ftp.dir_temp}}/{{filename}}' '{{secrets.iptv.lists_dir}}'/
+      - /bin/rm '{{secrets.ftp.dir_temp}}/{{filename}}'
+
+
 
 ##############
 #  Scheduler #
@@ -573,6 +610,16 @@ schedules:
       day_of_week: '{{secrets.podcasts.day_of_week}}'
       hour: '{{secrets.podcasts.hour}}'
       minute: '{{secrets.podcasts.minute}}'
+      day: '*'
+      week: '*'
+      month: '*'
+      year: '*'
+
+  - tasks: [iptv_lists]
+    schedule:
+      day_of_week: '{{secrets.iptv.day_of_week}}'
+      hour: '{{secrets.iptv.hour}}'
+      minute: '{{secrets.iptv.minute}}'
       day: '*'
       week: '*'
       month: '*'
