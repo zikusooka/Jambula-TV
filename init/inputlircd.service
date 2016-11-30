@@ -4,7 +4,6 @@ Before=jambulatv@kodi.service
 After=network-online.target
 
 [Service]
-User=root
 Type=forking
 EnvironmentFile=/etc/sysconfig/inputlirc
 ExecStartPre=/bin/sh -c "/usr/bin/ir-keytable -p ${IR_PROTOCOLS} -c -D ${IR_REPEAT_DELAY} -P ${IR_REPEAT_PERIOD} -w ${IR_KEYTABLE}"
