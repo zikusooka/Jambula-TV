@@ -192,6 +192,9 @@ TVHEADEND_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/dvb/networks
 TVHEADEND_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
 TVHEADEND_NETWORK_CONFIG_FILE=$TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/config
 
+TVHEADEND_IPTV_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/iptv/networks
+TVHEADEND_IPTV_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
+
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
 
 PLATFORM_TAG=1.0.10
@@ -3041,6 +3044,46 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_ADDON_DATA_DIR
 }
 
 iptv_tvheadend_configure () {
+# Create tvheadend IPTV directory if it does not exist
+[ -d $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID ] || \
+	mkdir -p $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID
+#
+# Create IPTV Network i.e. jambulaIPTV
+cat > $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config << EOF
+{
+	"url": "http://$TVHEADEND_HTTP_IP:$PLAYLISTS_PORT/jambula-iptv.m3u8",
+	"bouquet": false,
+	"channel_number": 31,
+	"refetch_period": 60,
+	"ssl_peer_verify": false,
+	"tsid_zero": false,
+	"remove_args": "ticket",
+	"scan_create": true,
+	"service_sid": 0,
+	"priority": 1,
+	"spriority": 1,
+	"max_streams": 0,
+	"max_bandwidth": 0,
+	"max_timeout": 90,
+	"icon_url": "file://$PROJECT_SYSTEM_SHARE_DIR/picons/IPTV",
+	"networkname": "jambulaIPTV",
+	"nid": 0,
+	"autodiscovery": 0,
+	"skipinitscan": false,
+	"idlescan": false,
+	"sid_chnum": false,
+	"ignore_chnum": false,
+	"satip_source": 0,
+	"localtime": 0,
+	"wizard": false
+}
+EOF
+# Give multimedia user permission to access tvheadend directories
+chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+#
+# Restart tvheadend
+systemctl restart tvheadend.service
+#
 # Copy jambulatv-rtmplayer used to play rtmp based IPTV streams via TVHeadend
 [ -e $BINARY_PREFIX/jambulatv-rtmplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-rtmplayer $BINARY_PREFIX/
 }
