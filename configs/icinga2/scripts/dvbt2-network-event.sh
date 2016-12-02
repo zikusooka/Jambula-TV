@@ -6,7 +6,7 @@
 
 # Variables
 PVR_STATUS_FILE=/tmp/pvr_status # Use the same file in '/usr/bin/jambulatv-kodi-controller'
-PVR_STATUS_CMD="/usr/bin/jambulatv-kodi-controller pvr_hts_status"
+PVR_STATUS_CMD="/usr/bin/jambulatv-kodi-controller addon_status pvr.hts"
 
 DVBT_TUNER_NAME="Silicon Labs Si2168"
 DVBT_NETWORK_NAME="ug-Kampala"
@@ -47,7 +47,6 @@ $PVR_STATUS_CMD
 # Query channel list
 wget -q -O - localhost:9981/api/channel/list | jq . | grep \"val\" | awk {'print $2'} | sed 's:[{|}|"|,]::g' | grep 'name-not-set' > /dev/null 2>&1
 NULL_NETWORK=$?
-
 
 # DVB-T Tuner node not found
 # --------------------------
