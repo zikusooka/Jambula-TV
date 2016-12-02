@@ -201,7 +201,6 @@ templates:
       - send_whatsapp_tv_series_info_and_details
       - send_whatsapp_tv_series_queued_notification
     priority: 10
-    limit_new: 5
     thetvdb_lookup: yes
     tvmaze_lookup: yes
     verify_ssl_certificates: no
