@@ -752,10 +752,14 @@ OSD_SCRIPT=$BINARY_PREFIX/jambulatv-osd
 
 # TV Market
 TV_MARKET=UG-Kampala
+#TV_MARKET=KE-Nairobi
 DVBT_NETWORK_NAME=$(basename $(find $PREFIX/share/dvb/dvb-t -iname "$TV_MARKET"))
 case $TV_MARKET in
 UG-Kampala)
 DVBT_PNETWORK_NAME="UBC TX2"
+;;
+KE-Nairobi)
+DVBT_PNETWORK_NAME="ADN"
 ;;
 *)
 DVBT_PNETWORK_NAME=$DVBT_NETWORK_NAME
