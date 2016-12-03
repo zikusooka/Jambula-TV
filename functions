@@ -752,9 +752,15 @@ OSD_SCRIPT=$BINARY_PREFIX/jambulatv-osd
 
 # TV Market
 TV_MARKET=UG-Kampala
-
 DVBT_NETWORK_NAME=$(basename $(find $PREFIX/share/dvb/dvb-t -iname "$TV_MARKET"))
+case $TV_MARKET in
+UG-Kampala)
 DVBT_PNETWORK_NAME="UBC TX2"
+;;
+*)
+DVBT_PNETWORK_NAME=$DVBT_NETWORK_NAME
+esac
+#
 DVBT_TUNER_NAME="Silicon Labs Si2168"
 #
 DVB_TUNER_ADAPTER=$(dmesg | grep "Silicon Labs Si2168" | grep 'DVB: registering adapter' | cut -d : -f3 | awk {'print $3'})
@@ -2390,9 +2396,9 @@ cat > $TVHEADEND_CONFIG_DIR/config << EOF
 }
 EOF
 
-# Copy muxes for Kampala, Uganda - TODO: Include other markets
-# ------------------------------------------------------------
-rsync -av $PROJECT_CONFIGS_DIR/tvheadend/muxes/ $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes/
+# Copy muxes for specified TV Market
+# ----------------------------------
+rsync -av $PROJECT_CONFIGS_DIR/tvheadend/muxes/$TV_MARKET/ $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes/
 
 # Give multimedia user permission to access tvheadend main config file
 # --------------------------------------------------------------------
