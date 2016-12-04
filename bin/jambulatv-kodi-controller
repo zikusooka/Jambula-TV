@@ -2,10 +2,6 @@
 # This is a general purpose script used in interacting with kodi API from the command line
 # Jambula Labs @copyright 2016-2017 All rights reserved
 
-# HOW TO PARSE JSON DATA
-# Use this string to extract exact value from json output
-# jq '.result.channelgroups[] | select(.label=="All channels") | .channelgroupid'
-
 # Variables
 KODI_HTTP_IP=MY_KODI_HTTP_IP
 KODI_HTTP_PORT=MY_KODI_HTTP_PORT

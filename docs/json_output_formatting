@@ -1,0 +1,9 @@
+# HOW TO PARSE JSON DATA
+# Examples of selecting needed variables from json output
+# --------------------------------------------------------
+
+# curl -s http://{IP_ADDRESS}:{PORT}/api/mpegts/network/grid | \
+# jq '.entries[] | select(.networkname=="jambulaIPTV") | .uuid' | sed 's:"::g'
+
+# Use this string to extract exact value from json output
+# jq '.result.channelgroups[] | select(.label=="All channels") | .channelgroupid'
