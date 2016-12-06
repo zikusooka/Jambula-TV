@@ -1,0 +1,16 @@
+#!/bin/sh
+# This is a helper script used in forcing IPTV network to scan from the command line
+# Jambula Labs @copyright 2016-2017 All rights reserved
+
+# Variables
+TVH_HTTP_IP=MY_TVHEADEND_HTTP_IP
+TVH_HTTP_PORT=MY_TVHEADEND_HTTP_PORT
+TVH_IPTV_NETWORK_UUID=$(curl -s http://${TVH_HTTP_IP}:${TVH_HTTP_PORT}/api/mpegts/network/grid | jq '.entries[] | select(.networkname=="jambulaIPTV") | .uuid' | sed 's:"::g')
+CURL_CMD=/usr/bin/curl
+OSD_CMD=/usr/bin/jambulatv-osd
+
+# Force scan of IPTV Network
+$CURL_CMD -s http://${TVH_HTTP_IP}:${TVH_HTTP_PORT}/api/mpegts/network/scan -d uuid=$TVH_IPTV_NETWORK_UUID
+
+# Display notice
+$OSD_CMD -m "IPTV network scan started.  Please be patient ..."

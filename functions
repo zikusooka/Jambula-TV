@@ -168,8 +168,8 @@ FLEXGET_SCHEDULE_PODCASTS_HR=5
 FLEXGET_SCHEDULE_PODCASTS_MIN=15
 FLEXGET_SCHEDULE_MOVIES_HR=3
 FLEXGET_SCHEDULE_MOVIES_MIN=5
-FLEXGET_SCHEDULE_IPTV_LISTS_HR=6
-FLEXGET_SCHEDULE_IPTV_LISTS_MIN=1
+FLEXGET_SCHEDULE_IPTV_LISTS_HR="*/1"
+FLEXGET_SCHEDULE_IPTV_LISTS_MIN="*/30"
 # 
 FLEXGET_PORT=$(grep -i 'flexget$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
@@ -3074,7 +3074,7 @@ cat > $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config << 
 	"spriority": 1,
 	"max_streams": 0,
 	"max_bandwidth": 0,
-	"max_timeout": 90,
+	"max_timeout": 120,
 	"icon_url": "file://$PROJECT_SYSTEM_SHARE_DIR/picons/IPTV",
 	"networkname": "jambulaIPTV",
 	"nid": 0,
@@ -3093,6 +3093,14 @@ chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 #
 # Restart tvheadend
 systemctl restart tvheadend.service
+#
+# Add IPTV network scan script
+cat $PROJECT_BIN_DIR/jambulatv-iptv-scan | \
+		sed -e "s:MY_TVHEADEND_HTTP_IP:$TVHEADEND_HTTP_IP:g" | \
+		sed -e "s:MY_TVHEADEND_HTTP_PORT:$TVHEADEND_HTTP_PORT:g" \
+			> $BINARY_PREFIX/jambulatv-iptv-scan
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-iptv-scan
 #
 # Copy jambulatv-rtmplayer used to play rtmp based IPTV streams via TVHeadend
 [ -e $BINARY_PREFIX/jambulatv-rtmplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-rtmplayer $BINARY_PREFIX/
@@ -5902,8 +5910,8 @@ ls $PROJECT_CONTRIB_DIR/tv/digital/*.m3u* > /dev/null 2>&1 && \
 # Add World IP TV playlists if any
 ls $PROJECT_CONTRIB_DIR/tv/iptv/*.m3u* > /dev/null 2>&1 && \
 	cp -v $PROJECT_CONTRIB_DIR/tv/iptv/*.m3u* $PLAYLISTS_DIRECTORY
-# Change playlist directory permissions: Give owner and Web user
-chown -R $WWW_USER:$WWW_GROUP $PLAYLISTS_DIRECTORY
+# Change playlist directory permissions: IMPORTANT: User='Web User' Group='Multimedia User'
+chown -R $WWW_USER:$MULTIMEDIA_USER $PLAYLISTS_DIRECTORY
 chmod -R 775 $PLAYLISTS_DIRECTORY
 }
 

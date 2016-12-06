@@ -63,9 +63,9 @@ podcasts:
 
 iptv:
   lists_dir: PLAYLISTS_DIRECTORY
-  day_of_week: sun,mon,tue,wed,thu,fri,sat
-  hour: FLEXGET_SCHEDULE_IPTV_LISTS_HR
-  minute: FLEXGET_SCHEDULE_IPTV_LISTS_MIN
+  day_of_week: "*"
+  hour: "FLEXGET_SCHEDULE_IPTV_LISTS_HR"
+  minute: "FLEXGET_SCHEDULE_IPTV_LISTS_MIN"
 
 wget:
   wget_log: PROJECT_SYSTEM_LOG_DIR/flexget/wget.log
