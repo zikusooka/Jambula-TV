@@ -2417,6 +2417,7 @@ systemctl enable tvheadend.service
 # Start tvheadend if adapter has been inserted
 if [ ! -d /dev/dvb ];
 then
+beep
 clear
 cat <<EOF
 ******************************************************************************************
