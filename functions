@@ -2487,13 +2487,14 @@ cat > $TVHEADEND_NETWORK_CONFIG_FILE <<EOF
 	"networkname": "$DVBT_NETWORK_NAME",
 	"pnetworkname": "$DVBT_PNETWORK_NAME",
 	"nid": 0,
-	"autodiscovery": false,
+	"autodiscovery": 0,
 	"skipinitscan": false,
 	"idlescan": false,
 	"sid_chnum": false,
-	"ignore_chnum": false,
+	"ignore_chnum": true,
 	"satip_source": 0,
-	"localtime": false,
+	"localtime": 180,
+	"wizard": false,
 	"class": "dvb_network_dvbt"
 }
 EOF
@@ -3066,25 +3067,26 @@ cat > $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config << 
 	"channel_number": 31,
 	"refetch_period": 60,
 	"ssl_peer_verify": false,
-	"tsid_zero": false,
+	"tsid_zero": true,
 	"remove_args": "ticket",
 	"scan_create": true,
 	"service_sid": 0,
 	"priority": 1,
 	"spriority": 1,
-	"max_streams": 0,
+	"max_streams": 1,
 	"max_bandwidth": 0,
 	"max_timeout": 120,
 	"icon_url": "file://$PROJECT_SYSTEM_SHARE_DIR/picons/IPTV",
 	"networkname": "jambulaIPTV",
+	"pnetworkname": "JambulaTV",
 	"nid": 0,
 	"autodiscovery": 0,
 	"skipinitscan": false,
 	"idlescan": false,
 	"sid_chnum": false,
-	"ignore_chnum": false,
+	"ignore_chnum": true,
 	"satip_source": 0,
-	"localtime": 0,
+	"localtime": 180,
 	"wizard": false
 }
 EOF
@@ -3095,6 +3097,7 @@ chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 systemctl restart tvheadend.service
 #
 # Add IPTV network scan script
+[ -e $BINARY_PREFIX/jambulatv-iptv-scan ] || \
 cat $PROJECT_BIN_DIR/jambulatv-iptv-scan | \
 		sed -e "s:MY_TVHEADEND_HTTP_IP:$TVHEADEND_HTTP_IP:g" | \
 		sed -e "s:MY_TVHEADEND_HTTP_PORT:$TVHEADEND_HTTP_PORT:g" \
