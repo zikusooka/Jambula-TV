@@ -79,6 +79,7 @@ PROJECT_SYSTEM_SHARE_DIR=$PREFIX/share/$PROJECT_NAME
 PROJECT_SYSTEM_LOG_DIR=$LOGDIR/$PROJECT_NAME
 PROJECT_SYSTEM_LIB_DIR=$STATEDIR/lib/$PROJECT_NAME
 PROJECT_SYSTEM_CACHE_DIR=$STATEDIR/cache/$PROJECT_NAME
+PROJECT_SYSTEM_ICONS_DIR=$PROJECT_SYSTEM_SHARE_DIR/picons
 
 PROJECT_VERSION=$(cd $PROJECT_BASE_DIR && git tag -l | tail -1 && cd)
 PROJECT_RELEASE_FILE=$PROJECT_SYSTEM_CONF_DIR/release
@@ -103,8 +104,7 @@ USER_MOVIES_DIR=$USER_VIDEOS_DIR/Movies
 
 PLAYLISTS_DIRECTORY=$PROJECT_PARTITION/Playlists
 PLAYLISTS_PORT=$(grep -i 'playlists$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-PLAYLISTS_IPTV_WORLD_M3U_FILE=iptv-world.m3u8
-PLAYLISTS_IPTV_ICONS_DIR=$PROJECT_SYSTEM_SHARE_DIR/picons/IPTV
+PLAYLISTS_IPTV_WORLD_M3U_FILE=jambula-iptv.m3u8
 
 # Remind
 REMINDERS_DIRECTORY=$PROJECT_PARTITION/Reminders
@@ -194,7 +194,7 @@ TVHEADEND_NETWORK_CONFIG_FILE=$TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_U
 
 TVHEADEND_IPTV_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/iptv/networks
 TVHEADEND_IPTV_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
-
+TVHEADEND_IPTV_NETWORK_NAME=jambulaIPTV
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
 
 PLATFORM_TAG=1.0.10
@@ -2349,6 +2349,15 @@ tvheadend_configure () {
 [ -d $TVHEADEND_ADAPTERS_CONFIG_DIR ] || mkdir -p $TVHEADEND_ADAPTERS_CONFIG_DIR
 [ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
 
+# TV Icons directory
+# ------------------
+# Create picons directory if it does not exist
+[ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
+# Copy Live TV picons e.g. logos to JambulaTV share directory
+rsync -av $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET/ $PROJECT_SYSTEM_ICONS_DIR/$TV_MARKET/
+# Give permissons to TV Icons
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_ICONS_DIR/$TV_MARKET
+
 # Setup tvheadend main config file
 # --------------------------------
 cat > $TVHEADEND_CONFIG_DIR/config << EOF
@@ -2379,7 +2388,7 @@ cat > $TVHEADEND_CONFIG_DIR/config << EOF
 	"tvhtime_ntp_enabled": false,
 	"tvhtime_tolerance": 5000,
 	"prefer_picon": false,
-        "chiconpath": "file://$PROJECT_SYSTEM_SHARE_DIR/picons/$TV_MARKET/%C.png",
+        "chiconpath": "file://$PROJECT_SYSTEM_ICONS_DIR/$TV_MARKET/%C.png",
 	"chiconscheme": 0,
 	"piconpath": "",
 	"piconscheme": 0,
@@ -2569,73 +2578,34 @@ cat > $TVHEADEND_DVR_CONFIG_DIR/$TVHEADEND_DVR_UUID << EOF
 }
 EOF
 
-# Configure Channels
-# ------------------
 # Give multimedia user permission to access tvheadend directories
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
-#
-# Restart tvheadend
-systemctl restart tvheadend.service
-#
-echo
-echo -------------------------------------------------------------------------
-echo "Mapping TV Channels.  This will take 2 minutes.  Please be patient ..."
-echo -------------------------------------------------------------------------
-echo
-sleep 120
-#
-DIGIT=1
-
-curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/service/list | jq .entries[] | grep "text\": \"$DVBT_NETWORK_NAME" | cut -d '/' -f3 | sed 's:["|,]::g' | sed 's:---::g' | grep -wEv TEST | grep -wEv '{PMT:0}' | sort -u | while read LINE
-do
-CHANNEL_NUMBER=$DIGIT
-CHANNEL_NAME=$LINE
-#CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:upper:] [:lower:]| sed 's: :_:g').png
-CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:lower:] [:upper:]| sed 's: :_:g').png
-CHANNEL_UUID=$(uuidgen -t | sed 's:-::g')
-#
-SERVICE_UUID=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/service/list | jq .entries[] | grep -A2 "text\": \"$DVBT_NETWORK_NAME" | grep -w -A2 "$CHANNEL_NAME" | grep uuid | awk {'print $2'} | head -1 | sed 's:"::g')
-#
-# Create channel config file
-cat > $TVHEADEND_CHANNELS_CONFIG_DIR/$CHANNEL_UUID <<EOF
-{
-	"enabled": true,
-	"number": $CHANNEL_NUMBER,
-	"icon": "file://$PROJECT_SYSTEM_SHARE_DIR/picons/$TV_MARKET/$CHANNEL_LOGO",
-	"epgauto": true,
-	"dvr_pre_time": 0,
-	"dvr_pst_time": 0,
-	"epg_running": -1,
-	"services": [
-		"$SERVICE_UUID"
-	],
-	"tags": [
-		"",
-		""
-	],
-	"bouquet": ""
-}
-EOF
-#
-let "DIGIT = $CHANNEL_NUMBER + 1"
-done
-
-# Give multimedia user permission to access tvheadend directories
-chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
-#
-# Restart tvheadend
-systemctl restart tvheadend.service
-
-# Clean picons directory if it does not exist
-[ -d $PROJECT_SYSTEM_SHARE_DIR/picons ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/picons
-# Copy Live TV picons e.g. logos to JambulaTV share directory
-rsync -av $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET/ $PROJECT_SYSTEM_SHARE_DIR/picons/$TV_MARKET/
-# Give permissons to TV Icons
-chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/picons/$TV_MARKET
-#
 #
 # Copy jambulatv-dvbt-scan used to scan 4 DVB-T services, if none exists in bin directory
 [ -e $BINARY_PREFIX/jambulatv-dvbt-scan ] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/
+#
+# Generate jambulatv-channel-mapper script
+[ -e $BINARY_PREFIX/jambulatv-channel-mapper ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-channel-mapper | \
+		sed -e "s:MY_TVHEADEND_HTTP_IP:$TVHEADEND_HTTP_IP:g" | \
+		sed -e "s:MY_TVHEADEND_HTTP_PORT:$TVHEADEND_HTTP_PORT:g" | \
+		sed "s:MY_TVHEADEND_CONFIG_DIR:$TVHEADEND_CONFIG_DIR:g" | \
+		sed "s:MY_TVHEADEND_IPTV_NETWORK_NAME:$TVHEADEND_IPTV_NETWORK_NAME:g" | \
+		sed "s:MY_TMPDIR:$TMPDIR:g" | \
+		sed "s:MY_PLAYLISTS_DIRECTORY:$PLAYLISTS_DIRECTORY:g" | \
+		sed "s:MY_PLAYLISTS_IPTV_WORLD_M3U_FILE:$PLAYLISTS_IPTV_WORLD_M3U_FILE:g" | \
+		sed "s:MY_PROJECT_SYSTEM_ICONS_DIR:$PROJECT_SYSTEM_ICONS_DIR:g" | \
+		sed "s:MY_DVBT_NETWORK_NAME:$DVBT_NETWORK_NAME:g" | \
+		sed "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
+			> $BINARY_PREFIX/jambulatv-channel-mapper
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-channel-mapper
+
+# Restart tvheadend
+#systemctl restart tvheadend.service
+#sleep 120
+# Add DVB-T2 channels using helper script
+#jambulatv-channel-mapper dvbt
 }
 
 fmtools_install () {
@@ -3038,7 +3008,7 @@ cat > $KODI_ADDON_DATA_DIR/pvr.iptvsimple/settings.xml << EOF
     <setting id="epgUrl" value="" />
     <setting id="logoBaseUrl" value="" />
     <setting id="logoFromEpg" value="0" />
-    <setting id="logoPath" value="$PLAYLISTS_IPTV_ICONS_DIR/" />
+    <setting id="logoPath" value="$PROJECT_SYSTEM_ICONS_DIR/IPTV/" />
     <setting id="logoPathType" value="0" />
     <setting id="m3uCache" value="true" />
     <setting id="m3uPath" value="" />
@@ -3076,9 +3046,9 @@ cat > $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config << 
 	"spriority": 1,
 	"max_streams": 1,
 	"max_bandwidth": 0,
-	"max_timeout": 120,
-	"icon_url": "file://$PROJECT_SYSTEM_SHARE_DIR/picons/IPTV",
-	"networkname": "jambulaIPTV",
+	"max_timeout": 180,
+	"icon_url": "file://$PROJECT_SYSTEM_ICONS_DIR/IPTV",
+	"networkname": "$TVHEADEND_IPTV_NETWORK_NAME",
 	"pnetworkname": "JambulaTV",
 	"nid": 0,
 	"autodiscovery": 0,
@@ -3114,11 +3084,11 @@ iptv_icons_add () {
 # Get WWW User and Group
 set_www_user_group
 # Clean picons directory if it does not exist
-[ -d $PROJECT_SYSTEM_SHARE_DIR/picons ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/picons
+[ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
 # Copy IP TV picons e.g. logos to JambulaTV share directory
-rsync -av $PROJECT_CONTRIB_DIR/tv/picons/IPTV/ $PROJECT_SYSTEM_SHARE_DIR/picons/IPTV/
+rsync -av $PROJECT_CONTRIB_DIR/tv/picons/IPTV/ $PROJECT_SYSTEM_ICONS_DIR/
 # Give permissons to TV Icons
-chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_SHARE_DIR/picons/IPTV
+chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/IPTV
 }
 
 kodi_configure () {
