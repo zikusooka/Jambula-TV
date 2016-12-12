@@ -366,7 +366,7 @@ ISP_USERNAME_DEFAULT=none
 ISP_PASSWORD_DEFAULT=none
 
 FLEXGET_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/flexget
-FLEXGET_DEPENDENCIES="itsdangerous setuptools MarkupSafe Paver feedparser SQLAlchemy PyYAML beautifulsoup4 html5lib PyRSS2Gen pynzb progressbar Jinja2 Werkzeug Flask CherryPy certifi chardet requests six jsonschema python-dateutil python-tvrage functools32 plumbum rpyc tmdb3 pbr argparse stevedore babelfish setuptools_scm path.py pytest-runner rebulk guessit future pytz tzlocal funcsigs futures APScheduler aniso8601 Flask-RESTful ordereddict flask-restplus webassets Flask-Assets cssmin Flask-Compress Flask-Login pycparser cffi ipaddress enum34 pyasn1 idna cryptography pyOpenSSL ndg_httpsclient pathlib pyScss pytvmaze Safe Flask-Cors terminaltables colorclass"
+FLEXGET_DEPENDENCIES="itsdangerous setuptools MarkupSafe Paver feedparser SQLAlchemy PyYAML beautifulsoup4 html5lib PyRSS2Gen pynzb progressbar Jinja2 Werkzeug Flask CherryPy certifi chardet requests six jsonschema python-dateutil python-tvrage functools32 plumbum rpyc tmdb3 pbr argparse stevedore babelfish setuptools_scm path.py pytest-runner rebulk guessit future pytz tzlocal funcsigs futures APScheduler aniso8601 Flask-RESTful ordereddict flask-restplus webassets Flask-Assets cssmin Flask-Compress Flask-Login pycparser cffi ipaddress enum34 pyasn1 idna cryptography pyOpenSSL ndg_httpsclient pathlib pyScss pytvmaze Safe Flask-Cors terminaltables colorclass ftputil"
 
 TIMEZONE="Africa/Kampala"
 TIMEZONE_FILE=/etc/timezone
@@ -767,7 +767,7 @@ esac
 #
 DVBT_TUNER_NAME="Silicon Labs Si2168"
 #
-DVB_TUNER_ADAPTER=$(dmesg | grep "Silicon Labs Si2168" | grep 'DVB: registering adapter' | cut -d : -f3 | awk {'print $3'})
+DVB_TUNER_ADAPTER=$(dmesg | grep "$DVBT_TUNER_NAME" | grep 'DVB: registering adapter' | cut -d : -f3 | awk {'print $3'})
 if [ "x$DVB_TUNER_ADAPTER" = "x" ];
 then
 DVBT_TUNER_NO=0
@@ -2409,10 +2409,6 @@ cat > $TVHEADEND_CONFIG_DIR/config << EOF
 }
 EOF
 
-# Copy muxes for specified TV Market
-# ----------------------------------
-rsync -av $PROJECT_CONFIGS_DIR/tvheadend/muxes/$TV_MARKET/ $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes/
-
 # Give multimedia user permission to access tvheadend main config file
 # --------------------------------------------------------------------
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
@@ -2509,6 +2505,10 @@ cat > $TVHEADEND_NETWORK_CONFIG_FILE <<EOF
 }
 EOF
 
+# Copy muxes for specified TV Market
+# ----------------------------------
+rsync -av $PROJECT_CONFIGS_DIR/tvheadend/muxes/$TV_MARKET/ $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes/
+
 # Configure Timeshift i.e. Pausing of Live TV
 # -------------------------------------------
 cat > $TVHEADEND_TIMESHIFT_CONFIG_DIR/config << EOF
@@ -2525,7 +2525,6 @@ cat > $TVHEADEND_TIMESHIFT_CONFIG_DIR/config << EOF
 	"ram_fit": false
 }
 EOF
-#
 
 # Configure recording profile for JambulaTV i.e. Make sure tvheadend is running
 # -----------------------------------------------------------------------------
@@ -3078,6 +3077,10 @@ chmod 755 $BINARY_PREFIX/jambulatv-iptv-scan
 #
 # Copy jambulatv-rtmplayer used to play rtmp based IPTV streams via TVHeadend
 [ -e $BINARY_PREFIX/jambulatv-rtmplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-rtmplayer $BINARY_PREFIX/
+
+# Copy default IPTV list for JambulaTV if not existent - see playlists_configure
+[ -e $PLAYLISTS_DIRECTORY/$PLAYLISTS_IPTV_WORLD_M3U_FILE ] || \
+	cp -rv $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_IPTV_WORLD_M3U_FILE $PLAYLISTS_DIRECTORY
 }
 
 iptv_icons_add () {
@@ -3199,6 +3202,9 @@ done
 }
 
 kodi_customization () {
+# Create backgrounds directory if it does not exist
+[ -d $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds ] || \
+	mkdir -p $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds
 # Default skin configuration i.e. confluence
 cp -fv $PROJECT_IMAGES_DIR/kodi/backgrounds/default_bg.jpg \
 	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/SKINDEFAULT.jpg
@@ -3663,10 +3669,8 @@ cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-modems.rules $UDEV_RULES_DIR/
 # Reload udev
 /usr/sbin/udevadm control --reload && udevadm trigger --action=add
 #
-# Copy systemctl init helper file used by udev rules above - DON'T enable
+# Copy systemctl init helper file used by udev rules above - DON'T enable - No [install] 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/3g_internet.service $SYSTEMD_UNITS_DIR_USER/
-# enable 3g_internet.service
-systemctl enable 3g_internet.service
 }
 
 internet_mifi_configure () {
@@ -4189,8 +4193,8 @@ fi
 systemctl enable dnsmasq.service
 # Reload dnsmasq
 systemctl restart dnsmasq.service
-# Reload network
-systemctl restart network.service
+# Reload network - DONT!!! Remote SSH connections are lost as a result
+#systemctl restart network.service
 }
 
 openresolv_install () {
@@ -7052,7 +7056,6 @@ make_install_jambulatv
 }
 
 google_tts_configure () {
-
 # Copy googletts* agi to asterisk agi-bin directory
 cp -v $PROJECT_GITHUB_DIR/asterisk-googletts/googletts*.agi $ASTERISK_AGI_BIN_DIR/
 }
@@ -7264,6 +7267,7 @@ echo "INSERT INTO authreg (username, realm, password) values ('$ASTERISK_XMPP_US
 echo "INSERT INTO authreg (username, realm, password) values ('$USER_001_XMPP_USERNAME', '$USER_001_XMPP_RESOURCE', '$USER_001_XMPP_PASSWORD');" | mysql -u jabberd2 -p$JABBERD_PASSWD jabberd2
 # Add normal xmpp user to roster
 sed -i "/<\/query>/d" $JABBERD_TEMPLATES_DIR/roster.xml
+sleep 1
 cat >> $JABBERD_TEMPLATES_DIR/roster.xml <<EOF
 <item name='$USER_001_XMPP_USERNAME' jid='$USER_001_XMPP_USERNAME@$USER_001_XMPP_RESOURCE' subscription='none'><group>Asterisk</group></item> 
 </query>
@@ -8515,6 +8519,13 @@ read
 less $POST_INSTALL_NOTES
 # Give owner permissions
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $POST_INSTALL_NOTES
+
+# Remote Access
+clear
+cat << EOF
+IMPORTANT:  To access this box remotely, please setup reverse ssh and make sure to add user at remote server:
+For credentials to use, see the file: $POST_INSTALL_NOTES
+EOF
 }
 ###################
 # End End End End #
