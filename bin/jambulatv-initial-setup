@@ -7,11 +7,15 @@ QRCODE_HEIGHT=240
 QRCODE_PLAYER_OPTIONS="--daemon -I dummy --quiet --no-audio --width $QRCODE_WIDTH --height $QRCODE_HEIGHT --loop --no-video-title-show"
 
 JAMBULATV_USER=jambula
+JAMBULATV_USER_HOME_DIR=/JambulaTV
 JAMBULTAV_CONFIG_DIR=/etc/JambulaTV
 JAMBULTAV_SHARE_DIR=/usr/share/JambulaTV
 JAMBULTAV_LOG_DIR=/var/log/JambulaTV
 
 OSDRUNFILE=/tmp/osd_process_running
+
+FLEXGET_CONFIG_DIR=$JAMBULTAV_CONFIG_DIR/flexget
+ASTERISK_AGI_BIN_DIR=/var/lib/asterisk/agi-bin
 
 QRCODE_DIR=$JAMBULTAV_SHARE_DIR/images/qrcodes
 QRCODE_FILE=setup_url.png
@@ -24,6 +28,13 @@ SETUP_LAN_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //
 SETUP_3_4G_DONGLE_FILE=$JAMBULTAV_CONFIG_DIR/internet-mobile-usb.cfg
 SETUP_MIFI_ROUTER_FILE=$JAMBULTAV_CONFIG_DIR/internet-mobile-wifi.cfg
 SETUP_WIFI_DEVICES_FILE=$JAMBULTAV_CONFIG_DIR/my-wifi-devices.cfg
+
+EMAIL_CREDENTIALS_CONFIG=$JAMBULTAV_CONFIG_DIR/messaging-email.cfg
+EMAIL_GMAIL_CONFIG=$JAMBULTAV_CONFIG_DIR/email-gmail.cfg
+TELEGRAM_CREDENTIALS_CONFIG=$JAMBULTAV_CONFIG_DIR/messaging-telegram.cfg
+WHATSAPP_CREDENTIALS_CONFIG=$JAMBULTAV_CONFIG_DIR/messaging-whatsapp.cfg
+WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
+
 SETUP_LAN_SYSCONFIG_FILE=/etc/sysconfig/network-scripts/ifcfg-${SETUP_LAN_DEVICE}
 
 JAMBULATV_SSID=$(grep ^ssid= /etc/hostapd/hostapd.conf | cut -d '=' -f2)
@@ -31,6 +42,11 @@ JAMBULATV_SSID=$(grep ^ssid= /etc/hostapd/hostapd.conf | cut -d '=' -f2)
 QRCODE_OSD_MSG="Please connect to this ($JAMBULATV_SSID) Hotspot using the credentials you received at time of purchase.  Then, use a Barcode scanner app on your phone to scan this code.  This QR code will only be removed once setup has been completed."
 
 ICINGA2_JAMBULATV_HOSTS_FILE=/etc/icinga2/conf.d/JambulaTV/hosts.conf
+
+JAMBULATV_SETUP_DB_NAME=jambulatv
+JAMBULATV_SETUP_DB_USER=jambula_setup
+JAMBULATV_SETUP_DB_PASS=eng8Na
+JAMBULATV_SETUP_DB_TABLE=setup
 
 
 
@@ -208,6 +224,153 @@ QRCODE_PID=$(ps auxw | grep $QRCODE_FILE | awk {'print $2'})
 kill -15 $QRCODE_PID || kill -9 $QRCODE_PID
 }
 
+query_mysql_db () {
+mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} << EOF
+USE ${JAMBULATV_SETUP_DB_NAME};
+SELECT $@ FROM ${JAMBULATV_SETUP_DB_TABLE} WHERE id = (SELECT MAX(id) FROM ${JAMBULATV_SETUP_DB_TABLE});
+EOF
+}
+
+extract_setup_variables () {
+# Set All variables
+CONTACT_NAME=$(query_mysql_db contact_name)
+CONTACT_EMAIL=$(query_mysql_db contact_email)
+CONTACT_PHONE=$(query_mysql_db contact_phone)
+CONTACT_BIRTHDAY=$(query_mysql_db contact_birthday)
+CONTACT_ADDRESS1=$(query_mysql_db contact_address1)
+CONTACT_ADDRESS2=$(query_mysql_db contact_address2)
+CONTACT_CITY=$(query_mysql_db contact_city)
+CONTACT_COUNTRY=$(query_mysql_db contact_country)
+ISP_NAME=$(query_mysql_db isp_name)
+INTERNET_DEVICE=$(query_mysql_db internet_device)
+WIFI_NICKNAME_1=$(query_mysql_db wifi_nickname_1)
+WIFI_MAC_1=$(query_mysql_db wifi_mac_1)
+WIFI_NICKNAME_2=$(query_mysql_db wifi_nickname_2)
+WIFI_MAC_2=$(query_mysql_db wifi_mac_2)
+WIFI_NICKNAME_3=$(query_mysql_db wifi_nickname_3)
+WIFI_MAC_3=$(query_mysql_db wifi_mac_3)
+WIFI_NICKNAME_4=$(query_mysql_db wifi_nickname_4)
+WIFI_MAC_4=$(query_mysql_db wifi_mac_4)
+WIFI_NICKNAME_5=$(query_mysql_db wifi_nickname_5)
+WIFI_MAC_5=$(query_mysql_db wifi_mac_5)
+NETWORK_APN=$(query_mysql_db network_apn)
+MIFI_SSID=$(query_mysql_db mifi_ssid)
+MIFI_PASS=$(query_mysql_db mifi_pass)
+LAN_IP_ADDR=$(query_mysql_db lan_ip_addr)
+LAN_IP_GATE=$(query_mysql_db lan_ip_gate)
+LAN_DNS_1=$(query_mysql_db lan_dns_1)
+LAN_DNS_2=$(query_mysql_db lan_dns_2)
+SCHEDULE_TVSERIES=$(query_mysql_db schedule_tvseries)
+SCHEDULE_PODCASTS=$(query_mysql_db schedule_podcasts)
+SCHEDULE_MOVIES=$(query_mysql_db schedule_movies)
+TRAKTV_USERNAME=$(query_mysql_db traktv_username)
+TRAKTV_WATCHLIST=$(query_mysql_db traktv_watchlist)
+TELEGRAM_BOT_ID=$(query_mysql_db telegram_bot_id)
+TELEGRAM_CHAT_ID=$(query_mysql_db telegram_chat_id)
+TELEGRAM_USERNAME=$(query_mysql_db telegram_username)
+WHATSAPP_NO_RECIPIENT=$(query_mysql_db whatsapp_no_recipient)
+WHATSAPP_NO_SENDER=$(query_mysql_db whatsapp_no_sender)
+NOTIFICATION_EMAIL_ADDRESS=$(query_mysql_db notification_email_address)
+GMAIL_ADDRESS=$(query_mysql_db gmail_address)
+GMAIL_PASSWORD=$(query_mysql_db gmail_password)
+}
+
+gmail_smtp_setup () {
+# Add usernames, passwords credentials to Gmail config
+cat >> $EMAIL_GMAIL_CONFIG << EOF
+# GMail username and password
+EMAIL_SMTP_AUTH_USERNAME="$GMAIL_ADDRESS"
+EMAIL_SMTP_AUTH_ENCRYPT="$(echo $GMAIL_PASSWORD | openssl enc -base64 -e)"
+EOF
+}
+
+email_messaging_setup () {
+cat > $EMAIL_CREDENTIALS_CONFIG << EOF
+EMAIL_TO_ADDRESS="$NOTIFICATION_EMAIL_ADDRESS"
+EMAIL_CC_ADDRESS=""
+EOF
+}
+
+telegram_messaging_setup () {
+cat >> $TELEGRAM_CREDENTIALS_CONFIG << EOF
+TELEGRAM_API_BOT="$TELEGRAM_BOT_ID"
+TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
+TELEGRAM_USERNAME="$TELEGRAM_USERNAME"
+EOF
+}
+
+whatsapp_messaging_setup () {
+cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
+# TIP: Run the script $WHATSAPP_SCRIPT to generate the rest of whatsapp settings
+WHATSAPP_SCRIPT=$WHATSAPP_SCRIPT
+WHATSAPP_PHONE_NUMBER_SENDER=$WHATSAPP_NO_SENDER
+WHATSAPP_PHONE_NUMBER_RECIPIENT=$WHATSAPP_NO_RECIPIENT
+EOF
+}
+
+messaging_services_setup () {
+# Extract variables from mysql
+extract_setup_variables
+# GMail smtp setup
+gmail_smtp_setup
+# Regular email
+email_messaging_setup
+# Telegram
+telegram_messaging_setup
+# WhatsApp
+whatsapp_messaging_setup
+}
+
+flexget_secrets_setup () {
+# Extract variables from mysql
+extract_setup_variables
+# Split into Hour, Minute
+FLEXGET_SCHEDULE_TVSHOWS_HR=$(echo $SCHEDULE_TVSERIES | cut -d : -f1 | sed 's:^0::g')
+FLEXGET_SCHEDULE_TVSHOWS_MIN=$(echo $SCHEDULE_TVSERIES | cut -d : -f2 | sed 's:^0::g')
+FLEXGET_SCHEDULE_PODCASTS_HR=$(echo $SCHEDULE_PODCASTS | cut -d : -f1 | sed 's:^0::g')
+FLEXGET_SCHEDULE_PODCASTS_MIN=$(echo $SCHEDULE_PODCASTS | cut -d : -f2 | sed 's:^0::g')
+FLEXGET_SCHEDULE_MOVIES_HR=$(echo $SCHEDULE_MOVIES | cut -d : -f1 | sed 's:^0::g')
+FLEXGET_SCHEDULE_MOVIES_MIN=$(echo $SCHEDULE_MOVIES | cut -d : -f2 | sed 's:^0::g')
+#
+# Copy original flexget secrets file
+cp -v $FLEXGET_CONFIG_DIR/variables.yml $FLEXGET_CONFIG_DIR/variables.yml.b4.setup
+# Replace variables
+cat $FLEXGET_CONFIG_DIR/variables.yml.b4.setup | \
+   sed -e "s:EMAIL_TO_ADDRESS:$NOTIFICATION_EMAIL_ADDRESS:g" | \
+   sed -e "s:TRAKT_USERNAME:$TRAKTV_USERNAME:g" | \
+   sed -e "s:TRAKT_WATCHLIST:$TRAKTV_WATCHLIST:g" | \
+   sed -e "s:GOOGLE_SERVICES_USERNAME:$GMAIL_ADDRESS:g" | \
+   sed -e "s:GOOGLE_SERVICES_PASSWORD:$GMAIL_PASSWORD:g" | \
+   sed -e "s/TELEGRAM_API_BOT/$TELEGRAM_BOT_ID/g" | \
+   sed -e "s:TELEGRAM_USERNAME:$TELEGRAM_USERNAME:g" | \
+   sed -e "s:FLEXGET_SCHEDULE_TVSHOWS_HR:$FLEXGET_SCHEDULE_TVSHOWS_HR:g" | \
+   sed -e "s:FLEXGET_SCHEDULE_TVSHOWS_MIN:$FLEXGET_SCHEDULE_TVSHOWS_MIN:g" | \
+   sed -e "s:FLEXGET_SCHEDULE_PODCASTS_HR:$FLEXGET_SCHEDULE_PODCASTS_HR:g" | \
+   sed -e "s:FLEXGET_SCHEDULE_PODCASTS_MIN:$FLEXGET_SCHEDULE_PODCASTS_MIN:g" | \
+   sed -e "s:FLEXGET_SCHEDULE_MOVIES_HR:$FLEXGET_SCHEDULE_MOVIES_HR:g" | \
+   sed -e "s:FLEXGET_SCHEDULE_MOVIES_MIN:$FLEXGET_SCHEDULE_MOVIES_MIN:g" \
+	> $FLEXGET_CONFIG_DIR/variables.yml
+}
+
+rtorrent_event_setup () {
+# Extract variables from mysql
+extract_setup_variables
+# rTorrent event.download.finished notify_via_email address
+sed -i "s:RTORRENT_NOTIFICATION_EMAIL:$NOTIFICATION_EMAIL_ADDRESS:g" $JAMBULATV_USER_HOME_DIR/.rtorrent.rc
+}
+
+asterisk_google_xmpp_setup() {
+# Extract variables from mysql
+extract_setup_variables
+# Backup original xmpp_providers.sh script
+cp -v $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh.b4.setup
+# Add google credentials
+cat $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh.b4.setup | \
+	sed -e "s:GOOGLE_SERVICES_USERNAME:$GMAIL_ADDRESS:g" | \
+	sed -e "s:GOOGLE_SERVICES_PASSWORD:$GMAIL_PASSWORD:g" \
+		> $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
+}
+
 create_video_music_db () {
 sudo jambulatv-library create
 }
@@ -226,4 +389,10 @@ display_osd_message
 configure_internet_connection
 configure_wifi_mac_addresses
 remove_current_qrcode
+
+messaging_services_setup
+flexget_secrets_setup
+rtorrent_event_setup
+asterisk_google_xmpp_setup
+
 create_video_music_db

@@ -122,15 +122,32 @@ extract_country_info
 # Extract network information
 extract_network_info
 
+# Source settings file
+. $WHATSAPP_CREDENTIALS_CONFIG
+#
 # Ask for receiving phone number
 clear
-read -p "Please enter the phone number you will use to receive WhatsApp messages (Include country code e.g. ${TELEPHONE_COUNTRY_CODE}XXXXXXXXX)
+DEFAULT_WHATSAPP_PHONE_NUMBER_RECIPIENT=$WHATSAPP_PHONE_NUMBER_RECIPIENT
+read -p "Please enter the phone number you will use to receive WhatsApp messages (Include country code [$DEFAULT_WHATSAPP_PHONE_NUMBER_RECIPIENT])
 " WHATSAPP_PHONE_NUMBER_RECIPIENT
+
+# If empty set to default
+if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ];
+then
+WHATSAPP_PHONE_NUMBER_RECIPIENT=$DEFAULT_WHATSAPP_PHONE_NUMBER_RECIPIENT
+fi
 #
 # Ask for sending phone number
 clear
-read -p "Please enter the phone number you will use to send WhatsApp messages (Include country code e.g. ${TELEPHONE_COUNTRY_CODE}XXXXXXXXX)
+DEFAULT_WHATSAPP_PHONE_NUMBER_SENDER=$WHATSAPP_PHONE_NUMBER_SENDER
+read -p "Please enter the phone number you will use to send WhatsApp messages (Include country code [$DEFAULT_WHATSAPP_PHONE_NUMBER_SENDER])
 " WHATSAPP_PHONE_NUMBER_SENDER
+# If empty set to default
+if [ "x$WHATSAPP_PHONE_NUMBER_SENDER" = "x" ];
+then
+WHATSAPP_PHONE_NUMBER_SENDER=$DEFAULT_WHATSAPP_PHONE_NUMBER_SENDER
+fi
+#
 #
 # Print summary of info collected
 clear

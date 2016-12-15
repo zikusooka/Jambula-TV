@@ -343,7 +343,6 @@ home_automation_scripts
 # ------------------------
 # Notifications/ Messaging
 # ------------------------
-email_messaging_configure
 sleekxmpp_install 
 python_telegram_bot_install
 telegram_messaging_configure
