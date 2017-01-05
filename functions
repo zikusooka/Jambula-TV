@@ -2921,6 +2921,8 @@ else
 unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
 #_install_pause_check_4_errors_
 fi
+# Give permissions to multimedia user for addons system directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_SYSTEM_ADDONS
 }
 
 kodi_addons_install() {
