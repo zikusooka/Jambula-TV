@@ -3025,7 +3025,7 @@ cat > $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config << 
 	"spriority": 1,
 	"max_streams": 1,
 	"max_bandwidth": 0,
-	"max_timeout": 180,
+	"max_timeout": 120,
 	"icon_url": "file://$PROJECT_SYSTEM_ICONS_DIR/IPTV",
 	"networkname": "$TVHEADEND_IPTV_NETWORK_NAME",
 	"pnetworkname": "JambulaTV",
