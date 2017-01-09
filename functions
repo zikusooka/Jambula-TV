@@ -162,7 +162,7 @@ GENERATE_LOCAL_CONF_SCRIPT=$BINARY_PREFIX/jambulatv-generate-local-conf
 FREEVO_VERSION=svn
 
 # Flexget IPTV list download schedule
-FLEXGET_SCHEDULE_IPTV_LISTS_HR="*/1"
+FLEXGET_SCHEDULE_IPTV_LISTS_HR="*/24"
 FLEXGET_SCHEDULE_IPTV_LISTS_MIN="*/30"
 # 
 FLEXGET_PORT=$(grep -i 'flexget$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
