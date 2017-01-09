@@ -150,7 +150,7 @@
         <overridetags default="true">false</overridetags>
         <showallitems default="true">true</showallitems>
         <showcompilationartists default="true">true</showcompilationartists>
-        <updateonstartup>false</updateonstartup>
+        <updateonstartup default="true">false</updateonstartup>
     </musiclibrary>
     <musicplayer>
         <autoplaynextitem default="true">true</autoplaynextitem>
@@ -332,7 +332,7 @@
         <showunwatchedplots default="true">true</showunwatchedplots>
         <tvshowsincludeallseasonsandspecials default="true">0</tvshowsincludeallseasonsandspecials>
         <tvshowsselectfirstunwatcheditem default="true">0</tvshowsselectfirstunwatcheditem>
-        <updateonstartup>false</updateonstartup>
+        <updateonstartup default="true">false</updateonstartup>
     </videolibrary>
     <videoplayer>
         <adjustrefreshrate default="true">0</adjustrefreshrate>
@@ -418,7 +418,7 @@
         <setting type="bool" name="skin.aeonmq6.gotofullscreen">false</setting>
         <setting type="bool" name="skin.aeonmq6.originaltitle">false</setting>
         <setting type="bool" name="skin.aeonmq6.nopausedlabel">false</setting>
-        <setting type="bool" name="skin.aeonmq6.custommode">true</setting>
+        <setting type="bool" name="skin.aeonmq6.custommode">false</setting>
         <setting type="bool" name="skin.aeonmq6.keepaspect">false</setting>
         <setting type="bool" name="skin.aeonmq6.animation_panscan">false</setting>
         <setting type="bool" name="skin.aeonmq6.visanimation_panscan">true</setting>
@@ -919,10 +919,10 @@
         <setting type="string" name="skin.aeonmq6.menu4.action">ActivateWindow(music)</setting>
         <setting type="string" name="skin.aeonmq6.menu5.master">livetv</setting>
         <setting type="string" name="skin.aeonmq6.menu5.action">ActivateWindow(TVChannels)</setting>
-        <setting type="string" name="skin.aeonmq6.menu6.master">addons</setting>
-        <setting type="string" name="skin.aeonmq6.menu6.action">ActivateWindow(addonbrowser)</setting>
-        <setting type="string" name="skin.aeonmq6.menu7.master">videofiles</setting>
-        <setting type="string" name="skin.aeonmq6.menu7.action">ActivateWindow(videos,files)</setting>
+        <setting type="string" name="skin.aeonmq6.menu6.master">settingsaddonsvideo</setting>
+        <setting type="string" name="skin.aeonmq6.menu6.action">ActivateWindow(video,addons,return)</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.master">settingsfilemanager</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.action">ActivateWindow(filemanager)</setting>
         <setting type="string" name="skin.aeonmq6.menu8.master">mymenu5</setting>
         <setting type="string" name="skin.aeonmq6.menu8.action">SetFocus(510)</setting>
         <setting type="string" name="skin.aeonmq6.menu10.master">pictures</setting>
@@ -1123,11 +1123,11 @@
         <setting type="string" name="skin.aeonmq6.menu5.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu5.path"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.label">INTERNET TV</setting>
-        <setting type="string" name="skin.aeonmq6.menu6.defaultlabel"></setting>
-        <setting type="string" name="skin.aeonmq6.menu6.path">plugin.video.jambulaIPTV</setting>
-        <setting type="string" name="skin.aeonmq6.menu7.label"></setting>
-        <setting type="string" name="skin.aeonmq6.menu7.defaultlabel">FILES</setting>
-        <setting type="string" name="skin.aeonmq6.menu7.path">plugin.video.jambulaIPTV</setting>
+        <setting type="string" name="skin.aeonmq6.menu6.defaultlabel">VIDEO ADD-ONS</setting>
+        <setting type="string" name="skin.aeonmq6.menu6.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7.label">FILES</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.defaultlabel">FILES MANAGER</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.path"></setting>
         <setting type="string" name="skin.aeonmq6.menu8.label">APPS</setting>
         <setting type="string" name="skin.aeonmq6.menu8.defaultlabel">MY MENU 5</setting>
         <setting type="string" name="skin.aeonmq6.menu8.path"></setting>
@@ -1207,12 +1207,12 @@
         <setting type="string" name="skin.aeonmq6.menu5.subid"></setting>
         <setting type="string" name="skin.aeonmq6.menu5.widgets">channel.tv</setting>
         <setting type="string" name="skin.aeonmq6.menu5.target">plus</setting>
-        <setting type="string" name="skin.aeonmq6.menu6.bg">/usr/share/kodi/addons/skin.aeonmq6/backgrounds/vnodes.jpg</setting>
+        <setting type="string" name="skin.aeonmq6.menu6.bg"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.visible"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.subid"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.widgets"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.target"></setting>
-        <setting type="string" name="skin.aeonmq6.menu7.bg">/usr/share/kodi/addons/skin.aeonmq6/backgrounds/summer.jpg</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.bg"></setting>
         <setting type="string" name="skin.aeonmq6.menu7.visible"></setting>
         <setting type="string" name="skin.aeonmq6.menu7.subid"></setting>
         <setting type="string" name="skin.aeonmq6.menu7.widgets"></setting>
@@ -2080,17 +2080,17 @@
         <setting type="string" name="skin.aeonmq6.preset10.label"></setting>
         <setting type="string" name="skin.aeonmq6.weathericonsfolder.label"></setting>
         <setting type="string" name="skin.aeonmq6.weather.bg"></setting>
-        <setting type="string" name="skin.aeonmq6.custom_on">menu15.visible</setting>
-        <setting type="string" name="skin.aeonmq6.custom_bg">menu15.bg</setting>
-        <setting type="string" name="skin.aeonmq6.custom_thumb">menu15.thumb</setting>
-        <setting type="string" name="skin.aeonmq6.custom_label">menu15.label</setting>
-        <setting type="string" name="skin.aeonmq6.custom_defaultlabel">menu15.defaultlabel</setting>
-        <setting type="string" name="skin.aeonmq6.custom_path">menu15.path</setting>
-        <setting type="string" name="skin.aeonmq6.custom_action">menu15.action</setting>
-        <setting type="string" name="skin.aeonmq6.custom_subid">menu15.subid</setting>
-        <setting type="string" name="skin.aeonmq6.custom_widgets">menu15.widgets</setting>
-        <setting type="string" name="skin.aeonmq6.custom_target">menu15.target</setting>
-        <setting type="string" name="skin.aeonmq6.custom_master">menu15.master</setting>
+        <setting type="string" name="skin.aeonmq6.custom_on">menu7.visible</setting>
+        <setting type="string" name="skin.aeonmq6.custom_bg">menu7.bg</setting>
+        <setting type="string" name="skin.aeonmq6.custom_thumb">menu7.thumb</setting>
+        <setting type="string" name="skin.aeonmq6.custom_label">menu7.label</setting>
+        <setting type="string" name="skin.aeonmq6.custom_defaultlabel">menu7.defaultlabel</setting>
+        <setting type="string" name="skin.aeonmq6.custom_path">menu7.path</setting>
+        <setting type="string" name="skin.aeonmq6.custom_action">menu7.action</setting>
+        <setting type="string" name="skin.aeonmq6.custom_subid">menu7.subid</setting>
+        <setting type="string" name="skin.aeonmq6.custom_widgets">menu7.widgets</setting>
+        <setting type="string" name="skin.aeonmq6.custom_target">menu7.target</setting>
+        <setting type="string" name="skin.aeonmq6.custom_master">menu7.master</setting>
         <setting type="string" name="skin.aeonmq6.duallabel">widget1</setting>
         <setting type="string" name="skin.aeonmq6.dualwidgets">widget1</setting>
         <setting type="string" name="skin.aeonmq6.WindowBack">/usr/share/kodi/addons/script.game.connect4/resources/skins/default/media/black1.png</setting>
@@ -2642,9 +2642,9 @@
         <setting type="string" name="skin.aeonmq6.menu20preset1.action"></setting>
         <setting type="string" name="skin.aeonmq6.menu20preset1.condition"></setting>
         <setting type="string" name="skin.aeonmq6.menu51701.label">INTERNET TV</setting>
-        <setting type="string" name="skin.aeonmq6.menu51701.master">addons</setting>
+        <setting type="string" name="skin.aeonmq6.menu51701.master">settingsaddonsvideo</setting>
         <setting type="string" name="skin.aeonmq6.menu51701.defaultlabel"></setting>
-        <setting type="string" name="skin.aeonmq6.menu51701.path">plugin.video.jambulaIPTV</setting>
+        <setting type="string" name="skin.aeonmq6.menu51701.path"></setting>
         <setting type="string" name="skin.aeonmq6.menu51701.visible"></setting>
         <setting type="string" name="skin.aeonmq6.menu51702.label"></setting>
         <setting type="string" name="skin.aeonmq6.menu51702.master">addons</setting>
@@ -3351,6 +3351,6 @@
     </viewstates>
     <audio>
         <mute>false</mute>
-        <fvolumelevel>1.000000</fvolumelevel>
+        <fvolumelevel>0.000000</fvolumelevel>
     </audio>
 </settings>
