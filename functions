@@ -2561,9 +2561,9 @@ chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 # Copy jambulatv-dvbt-scan used to scan 4 DVB-T services, if none exists in bin directory
 [ -e $BINARY_PREFIX/jambulatv-dvbt-scan ] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/
 #
-# Generate jambulatv-channel-mapper script
-[ -e $BINARY_PREFIX/jambulatv-channel-mapper ] || \
-	cat $PROJECT_BIN_DIR/jambulatv-channel-mapper | \
+# Generate jambulatv-tvheadend-controller script
+[ -e $BINARY_PREFIX/jambulatv-tvheadend-controller ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-tvheadend-controller | \
 		sed -e "s:MY_TVHEADEND_HTTP_IP:$TVHEADEND_HTTP_IP:g" | \
 		sed -e "s:MY_TVHEADEND_HTTP_PORT:$TVHEADEND_HTTP_PORT:g" | \
 		sed "s:MY_TVHEADEND_CONFIG_DIR:$TVHEADEND_CONFIG_DIR:g" | \
@@ -2574,15 +2574,15 @@ chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 		sed "s:MY_PROJECT_SYSTEM_ICONS_DIR:$PROJECT_SYSTEM_ICONS_DIR:g" | \
 		sed "s:MY_DVBT_NETWORK_NAME:$DVBT_NETWORK_NAME:g" | \
 		sed "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
-			> $BINARY_PREFIX/jambulatv-channel-mapper
+			> $BINARY_PREFIX/jambulatv-tvheadend-controller
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-channel-mapper
+chmod 755 $BINARY_PREFIX/jambulatv-tvheadend-controller
 
 # Restart tvheadend
 #systemctl restart tvheadend.service
 #sleep 120
 # Add DVB-T2 channels using helper script
-#jambulatv-channel-mapper dvbt
+# ... jambulatv-tvheadend-controller dvbt .....
 }
 
 fmtools_install () {
@@ -3045,15 +3045,6 @@ chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 #
 # Restart tvheadend
 systemctl restart tvheadend.service
-#
-# Add IPTV network scan script
-[ -e $BINARY_PREFIX/jambulatv-iptv-scan ] || \
-cat $PROJECT_BIN_DIR/jambulatv-iptv-scan | \
-		sed -e "s:MY_TVHEADEND_HTTP_IP:$TVHEADEND_HTTP_IP:g" | \
-		sed -e "s:MY_TVHEADEND_HTTP_PORT:$TVHEADEND_HTTP_PORT:g" \
-			> $BINARY_PREFIX/jambulatv-iptv-scan
-# Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-iptv-scan
 #
 # Copy jambulatv-rtmplayer used to play rtmp based IPTV streams via TVHeadend
 [ -e $BINARY_PREFIX/jambulatv-rtmplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-rtmplayer $BINARY_PREFIX/

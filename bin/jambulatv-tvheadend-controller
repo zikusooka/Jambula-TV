@@ -1,0 +1,253 @@
+#!/bin/sh
+# This script is used to create DVB-T and IPTV channels in TVHeadend using CLI.
+# Use it after services for both have been generated
+# Also used in forcing IPTV network to scan from the command line
+# Jambula Labs @copyright 2017-2018 All rights reserved
+
+# Variables
+CURL_CMD="/usr/bin/curl -s"
+OSD_CMD="/usr/bin/jambulatv-osd"
+
+TVHEADEND_HTTP_IP=MY_TVHEADEND_HTTP_IP
+TVHEADEND_HTTP_PORT=MY_TVHEADEND_HTTP_PORT
+TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
+TVHEADEND_CONFIG_DIR=MY_TVHEADEND_CONFIG_DIR
+TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
+TVHEADEND_IPTV_NETWORK_NAME=MY_TVHEADEND_IPTV_NETWORK_NAME
+TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $TVHEADEND_API_URL/mpegts/network/grid | jq '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid' | sed 's:"::g')
+TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=MY_TMPDIR/iptv_service_uuid.txt
+TVHEADEND_LAST_CHANNEL_NUMBER=$($CURL_CMD $TVHEADEND_API_URL/channel/grid | jq '.entries[] | .number' | sort -n | tail -1)
+let "TVHEADEND_DVB_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
+let "TVHEADEND_IPTV_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
+PLAYLISTS_DIRECTORY=MY_PLAYLISTS_DIRECTORY
+PLAYLISTS_IPTV_WORLD_M3U_FILE=MY_PLAYLISTS_IPTV_WORLD_M3U_FILE
+PROJECT_SYSTEM_ICONS_DIR=MY_PROJECT_SYSTEM_ICONS_DIR
+DVBT_NETWORK_NAME=MY_DVBT_NETWORK_NAME
+MULTIMEDIA_USER=MY_MULTIMEDIA_USER
+
+INTERNET_GATEWAY_IP=$(ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')
+
+TV_TYPE=$1
+TV_TASK=$2
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage () {
+# Device Name
+if [ "x$TV_TYPE" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` [dvb|iptv]
+"
+exit 1
+fi
+}
+
+usage_dvb () {
+if [ "x$TV_TASK" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` dvb [scan|map]
+"
+exit 1
+fi
+}
+
+usage_iptv () {
+if [ "x$TV_TASK" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` iptv [scan|map]
+"
+exit 1
+fi
+}
+
+refresh_tvheadend () {
+# Probably better to use TVH API for this, so we dont stop completely
+# Delete Internet default route - Save IP first
+GATEWAY=$INTERNET_GATEWAY_IP
+ip route del default
+# Restart TVHeadend
+systemctl restart tvheadend.service
+# Restore Internet default route
+ip route add default via $GATEWAY
+}
+
+dvb_map_services_2_channels () {
+# Set DIGIT i.e. First channel number
+if [ "x$TVHEADEND_DVB_FIRST_CHANNEL_NUMBER" = "x" ];
+then
+DIGIT=1
+else
+DIGIT=$TVHEADEND_DVB_FIRST_CHANNEL_NUMBER
+fi
+$CURL_CMD $TVHEADEND_API_URL/service/list | jq .entries[] | grep "text\": \"$DVBT_NETWORK_NAME" | cut -d '/' -f3 | sed 's:["|,]::g' | sed 's:---::g' | grep -wEv TEST | grep -wEv '{PMT:0}' | sort -u | while read LINE
+do
+CHANNEL_NUMBER=$DIGIT
+CHANNEL_NAME=$LINE
+CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:lower:] [:upper:]| sed 's: :_:g').png
+CHANNEL_UUID=$(uuidgen -t | sed 's:-::g')
+#
+SERVICE_UUID=$($CURL_CMD $TVHEADEND_API_URL/service/list | jq .entries[] | grep -A2 "text\": \"$DVBT_NETWORK_NAME" | grep -w -A2 "$CHANNEL_NAME" | grep uuid | awk {'print $2'} | head -1 | sed 's:"::g')
+
+# Check if channel already exists
+$CURL_CMD $TVHEADEND_API_URL/channel/grid | jq '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
+CHANNEL_EXISTS=$?
+# Don't add if channel already exists
+[ "$CHANNEL_EXISTS" = "0" ] && break
+
+# Create channel config file
+cat > $TVHEADEND_CHANNELS_CONFIG_DIR/$CHANNEL_UUID <<EOF
+{
+	"enabled": true,
+	"number": $CHANNEL_NUMBER,
+	"icon": "file://$PROJECT_SYSTEM_SHARE_DIR/picons/$TV_MARKET/$CHANNEL_LOGO",
+	"epgauto": true,
+	"dvr_pre_time": 0,
+	"dvr_pst_time": 0,
+	"epg_running": -1,
+	"services": [
+		"$SERVICE_UUID"
+	],
+	"tags": [
+		"",
+		""
+	],
+	"bouquet": ""
+}
+EOF
+#
+let "DIGIT = $CHANNEL_NUMBER + 1"
+done
+}
+
+iptv_map_services_2_channels () {
+$CURL_CMD $TVHEADEND_API_URL/service/list | jq '.entries[] | select(.text | contains("'${TVHEADEND_IPTV_NETWORK_NAME}'")).uuid' | sed 's:"::g' > $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
+
+DIGIT=$TVHEADEND_IPTV_FIRST_CHANNEL_NUMBER
+cat $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE | while read SERVICE_UUID
+do
+CHANNEL_NUMBER=$DIGIT
+CHANNEL_NAME=$($CURL_CMD $TVHEADEND_API_URL/service/list | jq '.entries[] | select(.uuid=="'$SERVICE_UUID'") | .text' | sed "s:$TVHEADEND_IPTV_NETWORK_NAME/$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g"| cut -d / -f2- | sed 's:"::g')
+CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:upper:] [:lower:]| sed 's: :_:g').png
+CHANNEL_UUID=$(uuidgen -t | sed 's:-::g')
+CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_IPTV_WORLD_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
+CHANNEL_TAG=$($CURL_CMD $TVHEADEND_API_URL/channeltag/list | jq '.entries[] | select(.val=="'${CHANNEL_CATEGORY}'") | .key' | sed 's:"::g')
+
+# Check if channel already exists
+$CURL_CMD $TVHEADEND_API_URL/channel/grid | jq '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
+CHANNEL_EXISTS=$?
+# Don't add if channel already exists
+[ "$CHANNEL_EXISTS" = "0" ] && break
+
+# Create channel config file
+cat > $TVHEADEND_CHANNELS_CONFIG_DIR/$CHANNEL_UUID <<EOF
+{
+	"enabled": true,
+	"number": $CHANNEL_NUMBER,
+	"icon": "file://$PROJECT_SYSTEM_ICONS_DIR/IPTV/$CHANNEL_LOGO",
+	"epgauto": true,
+	"dvr_pre_time": 0,
+	"dvr_pst_time": 0,
+	"epg_running": -1,
+	"services": [
+		"$SERVICE_UUID"
+	],
+	"tags": [
+		"$CHANNEL_TAG"
+	],
+	"bouquet": ""
+}
+EOF
+#
+let "DIGIT = $CHANNEL_NUMBER + 1"
+done
+}
+
+iptv_scan_add_services  () {
+# Cycle through all IPTV MUX IDs and test to create services
+$CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid | jq '.entries[] | select(.network_uuid=="'"$TVHEADEND_IPTV_NETWORK_UUID"'") | .uuid' | sed 's:"::g' | while read MUX_UUID
+do
+# Do not play if we already have a service
+
+# Play briefly i.e. create service
+su -l $MULTIMEDIA_USER -c "cvlc --no-video --no-audio -A alsa $TVHEADEND_API_URL/play/stream/mux/$MUX_UUID --run-time 5 vlc://quit"
+done
+}
+
+iptv_scan_4_services () {
+# Force scan of IPTV Network
+$CURL_CMD $TVHEADEND_API_URL/mpegts/network/scan -d uuid=$TVHEADEND_IPTV_NETWORK_UUID
+
+# Display notice
+$OSD_CMD -m "IPTV network scan started.  Please be patient ..."
+}
+
+pre_config () {
+# Create directory, if non-existent
+[ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
+}
+
+post_config () {
+# Give multimedia user permission to access tvheadend directories
+chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+#
+# Refresh tvheadend
+refresh_tvheadend
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+
+
+
+pre_config
+
+
+case $TV_TYPE in
+dvb)
+# Usage
+usage_dvb
+# Scan
+if [ "$TV_TASK" = "scan" ];
+then
+dvb_scan_4_services
+# Map
+elif [ "$TV_TASK" = "map" ];
+then
+dvb_map_services_2_channels
+fi
+
+
+
+;;
+iptv)
+# Usage
+usage_iptv
+if [ "$TV_TASK" = "scan" ];
+then
+iptv_scan_add_services 
+#iptv_scan_4_services
+# Map
+elif [ "$TV_TASK" = "map" ];
+then
+iptv_map_services_2_channels
+fi
+
+
+
+;;
+*)
+usage
+;;
+esac
+
+post_config
