@@ -1,6 +1,6 @@
 #!/bin/sh
 # This is a general purpose script used in interacting with kodi API from the command line
-# Jambula Labs @copyright 2016-2017 All rights reserved
+# Jambula Labs @copyright 2017-2018 All rights reserved
 
 # Variables
 KODI_HTTP_IP=MY_KODI_HTTP_IP
@@ -36,7 +36,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|tv_play_start|mute|tv_play_stop|video_play_start|video_play_stop|tv_record_start|tv_record_stop|scan_video|scan_audio|clean_video|clean_audio)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_play_start|mute|tv_play_stop|video_play_start|video_play_stop|tv_record_start|tv_record_stop|scan_video|scan_audio|clean_video|clean_audio)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -152,9 +152,36 @@ UUID=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/dvr/entry/
 curl -X POST -H "text/x-json" -d uuid="%5B%22$UUID%22%5D" http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/dvr/entry/stop
 }
 
-
-# Kodi Addons
 # -----------
+# Play Addons
+# -----------
+play_youtube_plugin () {
+# Video IDs
+NTV_LIVE_VIDEO_ID=$(curl -s https://www.youtube.com/user/ntvuganda | grep -i "NTV Uganda Live Stream" | grep watch? | grep live-promo | cut -d ";" -f2 | cut -d = -f4 | cut -d "\"" -f1)
+BUKEDDE_LIVE_VIDEO_ID=$(curl -s https://www.youtube.com/user/bukeddetv | grep -i "Bukedde TV Live Stream" | grep watch? | grep live-promo | cut -d ";" -f2 | cut -d = -f4 | cut -d "\"" -f1)
+# Set video_id variable
+
+case "$1" in
+# NTV Uganda
+[Nn][Tt][Vv][Uu][Gg][Aa][Nn][Dd][Aa])
+YOUTUBE_VIDEO_ID=$NTV_LIVE_VIDEO_ID
+;;
+# Bukedde Uganda
+[Bb][Uu][Kk][Ee][Dd][Dd][Ee])
+YOUTUBE_VIDEO_ID=$BUKEDDE_LIVE_VIDEO_ID
+;;
+*)
+YOUTUBE_VIDEO_ID=$1
+esac
+#
+# Play video
+curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"id":1,"jsonrpc":"2.0","method":"Player.Open","params":{"item":{"file":"plugin:\/\/plugin.video.youtube\/?path=\/root\/search&action=play_video&videoid='$YOUTUBE_VIDEO_ID'"}}}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+}
+
+play_streamztv_plugin () {
+curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Addons.ExecuteAddon","params":{"addonid":"plugin.video.streamztv", "params":{"url":"url", "mode":"2", "name":"'"$2"'", "channelid":"'"$1"'"}},"id":"2"}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+}
+
 kodi_screensaver_poke () {
 # Poke screen if screensaver is active
 if [ "$KODI_SCREENSAVER_STATUS" = "true" ];
@@ -226,6 +253,14 @@ kodi_addon_toggle "$2"
 
 addon_status)
 check_addon_status "$2"
+;;
+
+addon_play_youtube)
+play_youtube_plugin "$2"
+;;
+
+addon_play_streamztv)
+play_streamztv_plugin "$2" "$3"
 ;;
 
 tv_play_start)
