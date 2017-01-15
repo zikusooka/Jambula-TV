@@ -148,7 +148,7 @@ firefox_install
 #  MAIN SCRIPT  #
 #################
 
-#upgrade_kernel 4.4.40
+#upgrade_kernel 4.4.42
 
 #upgrade_kodi
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
