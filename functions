@@ -3043,8 +3043,12 @@ EOF
 # Give multimedia user permission to access tvheadend directories
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 #
-# Restart tvheadend
+# Remove default gateway so TVH service can restart
+ip route del default
+# Restart TVHeadend
 systemctl restart tvheadend.service
+# Restore Internet default route
+ip route add default via $NETWORK_GATEWAY_ADDRESS
 #
 # Copy jambulatv-rtmplayer used to play rtmp based IPTV streams via TVHeadend
 [ -e $BINARY_PREFIX/jambulatv-rtmplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-rtmplayer $BINARY_PREFIX/
