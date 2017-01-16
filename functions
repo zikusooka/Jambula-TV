@@ -7026,6 +7026,8 @@ sed -i "s:\$(PREFIX)/etc:$CONFDIR:g" cpp/build/support.mk
 # Build
 BUILD=release PREFIX=$PREFIX LIB=$LIBDIR SYSCONFDIR=$CONFDIR/openzwave
 make_install_jambulatv
+# Link to openzwave library - FIX this - install should be in /usr not /usr/local? 
+ln -s /usr/local/lib64/libopenzwave.so.1.4 $LIBDIR/libopenzwave.so.1.4
 }
 
 domoticz_install () {
@@ -7039,7 +7041,7 @@ cd $INSTALL_SRC_DIR/domoticz
 # Log to build file
 cmake_build_log
 # cMake
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX -DUSE_PYTHON_PLUGINS=NO
 make -j$SYSTEM_CPU_CORES
 #
 # Post-install actions - Not done by compile

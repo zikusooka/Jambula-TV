@@ -109,6 +109,12 @@ sphinxbase_install
 pocketsphinx_install
 }
 
+upgrade_open_zwave () {
+uninstall_python_pkgs open-zwave
+rm -f $(which MinOZW ozw_config)
+open_zwave_install 
+}
+
 upgrade_domoticz () {
 uninstall_domoticz
 domoticz_install
@@ -173,6 +179,7 @@ firefox_install
 
 #upgrade_sphinx
 
+#upgrade_open_zwave
 #upgrade_domoticz
 
 #upgrade_zoneminder
