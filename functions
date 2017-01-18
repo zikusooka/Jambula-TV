@@ -5624,6 +5624,13 @@ cd $INSTALL_SRC_DIR/youtube-dl
 python setup.py install
 }
 
+youtube_setup () {
+# Copy jambulatv-youtube script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-youtube ] || cp -v $PROJECT_BIN_DIR/jambulatv-youtube $BINARY_PREFIX/
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-youtube
+}
+
 gstreamer_install () {
 tar xvf $PROJECT_TARBALLS_DIR/gstreamer-$GSTREAMER_VERSION.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v gstreamer-* gstreamer

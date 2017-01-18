@@ -226,6 +226,7 @@ samba_configure
 # Utilities/tools
 # -----------------
 youtube_dl_install
+youtube_setup
 cutter_install 
 rtmpdump_install
 gnokii_install
