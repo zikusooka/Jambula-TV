@@ -26,6 +26,8 @@ PVR_STATUS_FILE=/tmp/pvr_status
 SCAN_VIDEOS_DIR=MY_USER_VIDEOS_DIR
 SCAN_AUDIO_DIR=MY_USER_MUSIC_DIR
 
+YOUTUBE_CMD=/usr/bin/jambulatv-youtube
+
 
 
 ###############
@@ -156,24 +158,8 @@ curl -X POST -H "text/x-json" -d uuid="%5B%22$UUID%22%5D" http://${TVHEADEND_HTT
 # Play Addons
 # -----------
 play_youtube_plugin () {
-# Video IDs
-NTV_LIVE_VIDEO_ID=$(curl -s https://www.youtube.com/user/ntvuganda | grep -i "NTV Uganda Live Stream" | grep watch? | grep live-promo | cut -d ";" -f2 | cut -d = -f4 | cut -d "\"" -f1)
-BUKEDDE_LIVE_VIDEO_ID=$(curl -s https://www.youtube.com/user/bukeddetv | grep -i "Bukedde TV Live Stream" | grep watch? | grep live-promo | cut -d ";" -f2 | cut -d = -f4 | cut -d "\"" -f1)
-# Set video_id variable
-
-case "$1" in
-# NTV Uganda
-[Nn][Tt][Vv][Uu][Gg][Aa][Nn][Dd][Aa])
-YOUTUBE_VIDEO_ID=$NTV_LIVE_VIDEO_ID
-;;
-# Bukedde Uganda
-[Bb][Uu][Kk][Ee][Dd][Dd][Ee])
-YOUTUBE_VIDEO_ID=$BUKEDDE_LIVE_VIDEO_ID
-;;
-*)
-YOUTUBE_VIDEO_ID=$1
-esac
-#
+# Source Youitube video ID from JambulaTV's youtube command
+. $YOUTUBE_CMD
 # Play video
 curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"id":1,"jsonrpc":"2.0","method":"Player.Open","params":{"item":{"file":"plugin:\/\/plugin.video.youtube\/?path=\/root\/search&action=play_video&videoid='$YOUTUBE_VIDEO_ID'"}}}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
 }
