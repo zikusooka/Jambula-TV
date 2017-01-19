@@ -148,6 +148,11 @@ uninstall_firefox
 firefox_install
 }
 
+upgrade_youtube_dl () {
+uninstall_youtube_dl
+youtube_dl_install
+}
+
 
 
 #################
@@ -191,3 +196,5 @@ firefox_install
 #upgrade_vlc
 
 #upgrade_firefox 
+
+#upgrade_youtube_dl 

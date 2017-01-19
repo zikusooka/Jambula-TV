@@ -1407,6 +1407,9 @@ rm -rf $INSTALL_SRC_DIR/domoticz
 uninstall_firefox () {
 [ -d $INSTALL_SRC_DIR/firefox ] && rm -rf $INSTALL_SRC_DIR/firefox
 }
+uninstall_youtube_dl () {
+uninstall_python_pkgs youtube-dl
+}
 
 
 
