@@ -1,0 +1,23 @@
+#!/bin/sh
+# This is a wrapper to  allow playing Youtube based IPTV streams using TVHeadend 
+# Jambula Labs @copyright 2017-2018 All rights reserved
+
+# Variables
+FFMPEG_CMD=/usr/bin/ffmpeg
+
+YOUTUBE_CMD=/usr/bin/jambulatv-youtube
+
+IPTV_SERVICE_PROVIDER=JambulaIPTV
+IPTV_USER_AGENT="Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible"
+IPTV_SERVICE_NAME=$1
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+# Source Youitube video ID from JambulaTV's youtube command
+. $YOUTUBE_CMD
+
+# Run stream via Ffmpeg Pipe
+$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$IPTV_USER_AGENT" -i $YOUTUBE_MANIFEST_URL -codec copy -bsf:v h264_mp4toannexb,dump_extra -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=$IPTV_SERVICE_NAME -tune zerolatency -f mpegts pipe:1

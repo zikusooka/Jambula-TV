@@ -3055,6 +3055,8 @@ ip route add default via $NETWORK_GATEWAY_ADDRESS
 #
 # Copy jambulatv-rtmplayer used to play rtmp based IPTV streams via TVHeadend
 [ -e $BINARY_PREFIX/jambulatv-rtmplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-rtmplayer $BINARY_PREFIX/
+# Copy jambulatv-yplayer used to play Youtube based IPTV streams via TVHeadend
+[ -e $BINARY_PREFIX/jambulatv-yplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-yplayer $BINARY_PREFIX/
 
 # Copy default IPTV list for JambulaTV if not existent - see playlists_configure
 [ -e $PLAYLISTS_DIRECTORY/$PLAYLISTS_IPTV_WORLD_M3U_FILE ] || \
