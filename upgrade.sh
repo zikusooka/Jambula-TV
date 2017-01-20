@@ -193,7 +193,7 @@ youtube_dl_install
 
 #upgrade_ffmpeg
 
-#upgrade_vlc
+upgrade_vlc
 
 #upgrade_firefox 
 
