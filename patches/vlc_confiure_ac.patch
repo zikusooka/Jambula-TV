@@ -1,0 +1,11 @@
+--- /opt/JambulaTV/src/github/vlc/configure.ac	2017-01-26 14:20:32.814524548 +0300
++++ configure.ac	2017-01-26 16:05:11.176290016 +0300
+@@ -79,7 +79,7 @@
+ AC_C_CONST
+ AC_C_INLINE
+ AC_C_RESTRICT
+-AX_CXX_COMPILE_STDCXX_11(noext, mandatory)
++AX_CXX_COMPILE_STDCXX_11(noext, optional)
+ 
+ dnl Extend the --help string at the current spot.
+ AC_DEFUN([EXTEND_HELP_STRING], [m4_divert_once([HELP_ENABLE], [$1])])
