@@ -3793,6 +3793,14 @@ Network Configuration
 EOF
 }
 
+wireless_drivers_support () {
+# Copy various WiFi Drivers into firmware directory
+# Intel 7260
+rsync -av $PROJECT_GITHUB_DIR/linux-firmware/iwlwifi-7260-* $FIRMWARE_DIR/
+# Reload this module
+rmmod -f iwlwifi && modprobe iwlwifi
+}
+
 create_list_of_wireless_devices () {
 # Temp list file
 WIFI_DEVICES_RAW_LIST=/tmp/list_of_wireless_devices_raw
