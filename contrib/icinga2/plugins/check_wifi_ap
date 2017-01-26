@@ -43,7 +43,7 @@ sudo ip link set $WIFI_STATION_INTERFACE up
 if [ "$IW_COMPATIBLE" = "yes" ];
 then
 # Using iw command
-sudo iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: \"$WIFI_SSID\"" > /dev/null 2>&1
+sudo iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: $WIFI_SSID" > /dev/null 2>&1
 AP_EXISTENCE=$?
 else
 # Using iwlist command

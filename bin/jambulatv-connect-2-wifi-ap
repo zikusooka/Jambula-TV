@@ -1,6 +1,6 @@
 #!/bin/sh
 # This is a wrapper script used by icinga2 to connect to a wireless access point
-# Jambula Labs @copyright 2016-2017 All rights reserved
+# Jambula Labs @copyright 2017-2018 All rights reserved
 
 # Argument from icinga2 script
 ICINGA2_AP_STATUS=$@
@@ -121,7 +121,7 @@ sudo ip link set $WIFI_STATION_INTERFACE up
 if [ "$IW_COMPATIBLE" = "yes" ];
 then
 # Using iw command
-sudo iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: \"$WIFI_SSID\"" > /dev/null 2>&1
+sudo iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: $WIFI_SSID" > /dev/null 2>&1
 AP_EXISTENCE=$?
 else
 # Using iwlist command
@@ -265,7 +265,6 @@ scan_4_wifi
 quit_not_found
 ;;
 esac
-
 
 # Check to see if USB WiFi dongle is inserted
 check_4_wifi_dongle
