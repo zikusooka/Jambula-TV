@@ -9,7 +9,7 @@ COPYRIGHT_YEAR_END=$(date '+%Y' --date='12 months')
 COPYRIGHT_NOTICE=" ©$COPYRIGHT_YEAR_START-$COPYRIGHT_YEAR_END $COMPANY_NAME All Rights Reserved."
 
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.4.42"
+KERNEL_VERSION="4.4.44"
 
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
@@ -273,7 +273,6 @@ DNS2TCP_VERSION=0.5.2
 OPENRESOLV_VERSION=3.5.7
 BEEP2_VERSION=1.2a
 GDATA_VERSION=2.0.17
-VLC_TAG=2.2.0-git
 
 BUILD_LOG=$HOME/$PROJECT_NAME-build.log
 
@@ -2196,9 +2195,7 @@ make clean
 }
 
 vlc_install () {
-# Unpack - Use latest git tag
-cd $PROJECT_GITHUB_DIR/vlc
-git archive --format tar.gz --prefix=vlc/ $VLC_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Unpack
 rsync -avz $PROJECT_GITHUB_DIR/vlc/ $INSTALL_SRC_DIR/vlc/
 # Patch configure_ac - make AX_CXX_COMPILE_STDCXX_11 optional
 patch -p1 $INSTALL_SRC_DIR/vlc/configure.ac < $PROJECT_PATCHES_DIR/vlc_confiure_ac.patch
@@ -2206,7 +2203,6 @@ patch -p1 $INSTALL_SRC_DIR/vlc/configure.ac < $PROJECT_PATCHES_DIR/vlc_confiure_
 cd $INSTALL_SRC_DIR/vlc && ./bootstrap
 # Configure
 ./configure --libdir=$LIBDIR --prefix=$PREFIX --with-contrib=$PREFIX CXXFLAGS="-std=c++0x" PKG_CONFIG_PATH=$LIBDIR/pkgconfig --enable-debug --enable-run-as-root --enable-realrtsp --enable-wma-fixed --enable-shine --enable-omxil --enable-omxil-vout --enable-rpi-omxil --enable-merge-ffmpeg --enable-fdkaac --enable-tremor --enable-aa --enable-opensles --enable-lirc --disable-ncurses --disable-skins2 --enable-shine=no --enable-goom=no
-# Compile
 make_install_jambulatv
 # Cache recently shared libraries 
 ldconfig
@@ -3770,6 +3766,14 @@ Network Configuration
 
 #
 EOF
+}
+
+wireless_drivers_support () {
+# Copy various WiFi Drivers into firmware directory
+# Intel 7260
+rsync -av $PROJECT_GITHUB_DIR/linux-firmware/iwlwifi-7260-* $FIRMWARE_DIR/
+# Reload this module
+rmmod -f iwlwifi && modprobe iwlwifi
 }
 
 create_list_of_wireless_devices () {
