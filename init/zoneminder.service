@@ -7,8 +7,9 @@ Type=forking
 ExecStartPre=/bin/sh -c "/usr/bin/rm -rf /run/zm/*"
 ExecStartPre=/usr/bin/zmupdate.pl -f
 ExecStart=/usr/bin/zmpkg.pl start
+ExecStartPost=/bin/sh -c "ls -x /dev/shm/zm.mmap.* > /dev/null 2>&1" 
 ExecStartPost=/bin/sh -c "echo '/usr/bin/perl /usr/bin/zmalarm_daemon.pl' | /usr/bin/at now" 
-ExecStop=/bin/sh -c "/usr/bin/kill $(/usr/bin/cat /run/zm/zm_alarm.pid)"
+ExecStop=/bin/sh -c "[ -f /run/zm/zm_alarm.pid ] && /usr/bin/kill $(/usr/bin/cat /run/zm/zm_alarm.pid)"
 ExecReload=/usr/bin/zmpkg.pl reload
 PIDFile=/run/zm/zm.pid
 
