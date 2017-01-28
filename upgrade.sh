@@ -153,6 +153,13 @@ uninstall_youtube_dl
 youtube_dl_install
 }
 
+upgrade_squid () {
+systemctl stop squid.service
+uninstall_src_pkgs squid
+squid_install
+squid_configure
+}
+
 
 
 #################
@@ -198,3 +205,5 @@ youtube_dl_install
 #upgrade_firefox 
 
 #upgrade_youtube_dl 
+
+#upgrade_squid
