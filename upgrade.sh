@@ -159,7 +159,7 @@ youtube_dl_install
 #  MAIN SCRIPT  #
 #################
 
-#upgrade_kernel 4.4.44
+#upgrade_kernel 4.4.45
 
 #upgrade_kodi
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
