@@ -5634,6 +5634,10 @@ cat $PROJECT_CONFIGS_DIR/hostapd-conf.template | sed -e "s/WIFIDEVICE0/$WIFI_AP_
 [ ! -f $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service ] || \
       mv -v $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service \
       $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service.disabled
+# Copy over auto wifi provisioning tool
+[ -e $BINARY_PREFIX/jambulatv-auto-wifi-provision ] || cp -v $PROJECT_BIN_DIR/jambulatv-auto-wifi-provision $BINARY_PREFIX/
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-auto-wifi-provision
 #
 # Display WiFi SSID and Passphrase post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
@@ -5647,9 +5651,9 @@ WiFi HotSpot
 
 	Passphrase:  $NETWORK_WIRELESS_PASSPHRASE
 
+NOTE:  There is also an auto WiFi provisioning tool - use it during initial setup!
 #
 EOF
-
 }
 
 youtube_dl_install () {

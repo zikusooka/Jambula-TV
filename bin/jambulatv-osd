@@ -18,12 +18,12 @@ import threading
 # Variables
 JAMBULATV_VIRTUAL_TERMINAL = 'tty7'
 KODI_GUI_SETTINGS = '/JambulaTV/.kodi/userdata/guisettings.xml'
-TIME = 30000  # ms
+TIME = 35000  # ms
 ICON = '/usr/share/kodi/addons/Aeon-Nox/media/DefaultIconInfo.png'
 OSDRUNFILE = '/tmp/osd_process_running' 
 
 # Copyright
-__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2016-2017 All rights reserved'
+__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2017-2018 All rights reserved'
 
 # Parse arguments/ message
 parser = argparse.ArgumentParser(description='Display Announcements on JambulaTV Screen')

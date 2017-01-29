@@ -1,0 +1,115 @@
+#!/bin/sh
+# This script generates a QR code with WiFi credentials for the hotspot at JambulaTV
+# Use it to autoconnect for first time Android users.  iOs clients can copy and paste
+# WiFi passphrase 
+# Requires: qrencode, VLC, convert (ImageMagick) utilities
+# Jambula Labs @copyright 2017-2018 All rights reserved
+
+# Variables
+PROJECT_SYSTEM_SHARE_DIR=/usr/share/JambulaTV
+
+HOSTAPD_CONFIG_FILE=/etc/hostapd/hostapd.conf
+
+WIRELESS_SSID=$(sudo grep '^ssid=' $HOSTAPD_CONFIG_FILE | sed 's:ssid=::')
+WIRELESS_PASSPHRASE=$(sudo grep '^wpa_passphrase=' $HOSTAPD_CONFIG_FILE | sed 's:wpa_passphrase=::')
+
+CONVERT_CMD=/usr/bin/convert
+
+OSD_CMD="/usr/bin/jambulatv-osd -m"
+OSDRUNFILE=/tmp/osd_process_running # This is hardcorded in jambulatv-osd script
+
+QRCODE_CMD=/usr/bin/qrencode
+QRCODE_DIR=$PROJECT_SYSTEM_SHARE_DIR/images/qrcodes
+QRCODE_IMAGE_NAME=auto_wifi
+QRCODE_IMAGE_EXT=png
+
+QRCODE_RAW_IMAGE_FILENAME_ANDROID=$TMPDIR/$QRCODE_IMAGE_NAME.android.$QRCODE_IMAGE_EXT
+QRCODE_RAW_IMAGE_FILENAME_IOS=$TMPDIR/$QRCODE_IMAGE_NAME.ios.$QRCODE_IMAGE_EXT
+
+QRCODE_IMAGE_FILENAME_ANDROID=$QRCODE_DIR/$QRCODE_IMAGE_NAME.android.$QRCODE_IMAGE_EXT
+QRCODE_IMAGE_FILENAME_IOS=$QRCODE_DIR/$QRCODE_IMAGE_NAME.ios.$QRCODE_IMAGE_EXT
+
+QRCODE_IMAGE_FILENAME_ANDROID_IOS=$QRCODE_DIR/$QRCODE_IMAGE_NAME.android.ios.$QRCODE_IMAGE_EXT
+
+QRCODE_OSD_MSG_AUTO_WIFI_PROVISION="Please download and install any Quick Response (QR) Code Reader on your WiFi device.  Then launch the installed app to scan the QR Code displayed on the TV Screen.  You may also connect to $WIRELESS_SSID manually using the key:  $WIRELESS_PASSPHRASE   This QR Code will be removed once you have connected to the Hotspot"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+create_auto_wifi_qrcode_4_android_ios () {
+# Android
+$QRCODE_CMD -s 9 -o $QRCODE_RAW_IMAGE_FILENAME_ANDROID "WIFI:S:$WIRELESS_SSID;T:WPA2;P:$WIRELESS_PASSPHRASE;;"
+# iOS # Note: Auto connect not yet supported in iOS devices, so just display credentials
+$QRCODE_CMD -s 9 -o $QRCODE_RAW_IMAGE_FILENAME_IOS <<EOT
+ssid: $WIRELESS_SSID
+password: $WIRELESS_PASSPHRASE
+EOT
+
+# Add Text to raw images
+# Android
+$CONVERT_CMD -pointsize 25 -fill green -draw 'text 50,30 "Android Devices" ' $QRCODE_RAW_IMAGE_FILENAME_ANDROID $QRCODE_IMAGE_FILENAME_ANDROID
+#iOS
+$CONVERT_CMD -pointsize 25 -fill blue -draw 'text 50,30 "iOS Devices" ' $QRCODE_RAW_IMAGE_FILENAME_IOS $QRCODE_IMAGE_FILENAME_ANDROID_IOS
+
+# Combine Android and iOS images
+$CONVERT_CMD -append $QRCODE_IMAGE_FILENAME_ANDROID $QRCODE_IMAGE_FILENAME_ANDROID_IOS \
+	$QRCODE_IMAGE_FILENAME_ANDROID_IOS
+}
+
+display_auto_wifi_qrcode_4_android_ios () {
+# Display QR codes
+cvlc -I dummy -V x11 --quiet --no-audio --width 320 --height 240 --loop --no-video-title $QRCODE_IMAGE_FILENAME_ANDROID_IOS &
+PID_AUTO_WIFI_QR="$!"
+export PID_AUTO_WIFI_QR
+}
+
+destroy_auto_wifi_qrcode_4_android_ios () {
+# Wait for WiFi handshake, and when completed remove QR codes displayed
+/usr/bin/journalctl -f -o cat --no-pager | grep -m 1 -i "WPA: pairwise key handshake completed" | while read LINE
+do
+# Kill VLC process
+kill -15 $PID_AUTO_WIFI_QR || kill -9 $PID_AUTO_WIFI_QR
+#
+# Kill existing OSD message scroll
+killall -15 $(basename $OSD_CMD) || killall -9 $(basename $OSD_CMD)
+# Kill any lingering OSD message scrolls
+OSD_PID=$(ps auxw | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
+kill -15 $OSD_PID || kill -9 $OSD_PID
+# Remove OSD run file if it exists
+[ ! -e $OSDRUNFILE ] || rm -f $OSDRUNFILE
+done
+}
+
+display_osd_message_4_auto_wifi_provisioning () {
+ps auxw | grep `basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS` | \
+	grep $PID_AUTO_WIFI_QR > /dev/null 2>&1
+OSDEXITVAL=$?
+# While waiting for user action
+while [ "$OSDEXITVAL" = "0" ];
+do
+# Display OSD Message
+$OSD_CMD "$QRCODE_OSD_MSG_AUTO_WIFI_PROVISION"
+# Pause for next scroll
+sleep 3
+ps auxw | grep `basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS` | \
+	grep $PID_AUTO_WIFI_QR > /dev/null 2>&1
+OSDEXITVAL=$?
+done
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+create_auto_wifi_qrcode_4_android_ios
+
+display_auto_wifi_qrcode_4_android_ios
+
+destroy_auto_wifi_qrcode_4_android_ios &
+
+display_osd_message_4_auto_wifi_provisioning &
