@@ -867,7 +867,6 @@ cMake: Building $PACKAGE, this may take some time.  Please be patient ...
 %
 
 EOF
-
 }
 
 make_install_jambulatv () {
@@ -2067,6 +2066,27 @@ cd $INSTALL_SRC_DIR/libvdpau
 ./autogen.sh
 ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
 make_install_jambulatv
+#
+# libvdpau-va-gl
+# Unpack
+rsync -av --delete-after $PROJECT_GITHUB_DIR/libvdpau-va-gl/ $INSTALL_SRC_DIR/libvdpau-va-gl/
+# configure
+cd $INSTALL_SRC_DIR/libvdpau-va-gl
+# Create cmake build directory
+mkdir build
+cd build
+# Log to build file
+cmake_build_log
+# cMake
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX \
+	-DCMAKE_INSTALL_LIBDIR=$LIBDIR ..
+make install
+#
+#Add VDPAU_DRIVER=va_gl to your environment
+#
+# Add symbolic link to libdir
+[ -e $LIBDIR/vdpau/libvdpau_va_gl.so ] || \
+	ln -s $PREFIX/lib/vdpau/libvdpau_va_gl.so.1 $LIBDIR/vdpau/libvdpau_va_gl.so
 #
 # nut
 # Unpack
