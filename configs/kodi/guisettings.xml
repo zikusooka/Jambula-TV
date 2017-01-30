@@ -87,7 +87,7 @@
         <addonnotifications>false</addonnotifications>
         <addonupdates>2</addonupdates>
         <settinglevel>3</settinglevel>
-        <systemtotaluptime>12830</systemtotaluptime>
+        <systemtotaluptime>14055</systemtotaluptime>
     </general>
     <input>
         <enablejoystick>false</enablejoystick>
@@ -287,7 +287,7 @@
         <upnpserver>true</upnpserver>
         <useairplaypassword default="true">false</useairplaypassword>
         <webserver>true</webserver>
-        <webserverpassword>KODI_HTTP_PASS</webserverpassword>
+	<webserverpassword>KODI_HTTP_PASS</webserverpassword>
         <webserverport>KODI_HTTP_PORT</webserverport>
         <webserverusername>KODI_HTTP_USER</webserverusername>
         <webskin default="true">webinterface.default</webskin>
@@ -418,7 +418,7 @@
         <setting type="bool" name="skin.aeonmq6.gotofullscreen">false</setting>
         <setting type="bool" name="skin.aeonmq6.originaltitle">false</setting>
         <setting type="bool" name="skin.aeonmq6.nopausedlabel">false</setting>
-        <setting type="bool" name="skin.aeonmq6.custommode">false</setting>
+        <setting type="bool" name="skin.aeonmq6.custommode">true</setting>
         <setting type="bool" name="skin.aeonmq6.keepaspect">false</setting>
         <setting type="bool" name="skin.aeonmq6.animation_panscan">false</setting>
         <setting type="bool" name="skin.aeonmq6.visanimation_panscan">true</setting>
@@ -921,7 +921,7 @@
         <setting type="string" name="skin.aeonmq6.menu5.action">ActivateWindow(TVChannels)</setting>
         <setting type="string" name="skin.aeonmq6.menu6.master">settingsaddonsvideo</setting>
         <setting type="string" name="skin.aeonmq6.menu6.action">ActivateWindow(video,addons,return)</setting>
-        <setting type="string" name="skin.aeonmq6.menu7.master">settingsfilemanager</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.master">addons</setting>
         <setting type="string" name="skin.aeonmq6.menu7.action">ActivateWindow(filemanager)</setting>
         <setting type="string" name="skin.aeonmq6.menu8.master">mymenu5</setting>
         <setting type="string" name="skin.aeonmq6.menu8.action">SetFocus(510)</setting>
@@ -1125,9 +1125,9 @@
         <setting type="string" name="skin.aeonmq6.menu6.label">INTERNET TV</setting>
         <setting type="string" name="skin.aeonmq6.menu6.defaultlabel">VIDEO ADD-ONS</setting>
         <setting type="string" name="skin.aeonmq6.menu6.path"></setting>
-        <setting type="string" name="skin.aeonmq6.menu7.label">FILES</setting>
-        <setting type="string" name="skin.aeonmq6.menu7.defaultlabel">FILES MANAGER</setting>
-        <setting type="string" name="skin.aeonmq6.menu7.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7.label">LIVE SPORTS</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7.path">plugin.video.SportsDevil</setting>
         <setting type="string" name="skin.aeonmq6.menu8.label">APPS</setting>
         <setting type="string" name="skin.aeonmq6.menu8.defaultlabel">MY MENU 5</setting>
         <setting type="string" name="skin.aeonmq6.menu8.path"></setting>
@@ -1207,14 +1207,14 @@
         <setting type="string" name="skin.aeonmq6.menu5.subid"></setting>
         <setting type="string" name="skin.aeonmq6.menu5.widgets">channel.tv</setting>
         <setting type="string" name="skin.aeonmq6.menu5.target">plus</setting>
-        <setting type="string" name="skin.aeonmq6.menu6.bg"></setting>
+        <setting type="string" name="skin.aeonmq6.menu6.bg">/usr/share/kodi/addons/plugin.video.bbts/fanart.jpg</setting>
         <setting type="string" name="skin.aeonmq6.menu6.visible"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.subid"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.widgets"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.target"></setting>
-        <setting type="string" name="skin.aeonmq6.menu7.bg"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7.bg">/usr/share/kodi/addons/plugin.video.SportsDevil/fanart.jpg</setting>
         <setting type="string" name="skin.aeonmq6.menu7.visible"></setting>
-        <setting type="string" name="skin.aeonmq6.menu7.subid"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7.subid">settingsaddonsvideo</setting>
         <setting type="string" name="skin.aeonmq6.menu7.widgets"></setting>
         <setting type="string" name="skin.aeonmq6.menu7.target"></setting>
         <setting type="string" name="skin.aeonmq6.menu8.bg">/usr/share/kodi/addons/skin.aeonmq6/backgrounds/apps.jpg</setting>
@@ -2080,17 +2080,17 @@
         <setting type="string" name="skin.aeonmq6.preset10.label"></setting>
         <setting type="string" name="skin.aeonmq6.weathericonsfolder.label"></setting>
         <setting type="string" name="skin.aeonmq6.weather.bg"></setting>
-        <setting type="string" name="skin.aeonmq6.custom_on">menu7.visible</setting>
-        <setting type="string" name="skin.aeonmq6.custom_bg">menu7.bg</setting>
-        <setting type="string" name="skin.aeonmq6.custom_thumb">menu7.thumb</setting>
-        <setting type="string" name="skin.aeonmq6.custom_label">menu7.label</setting>
-        <setting type="string" name="skin.aeonmq6.custom_defaultlabel">menu7.defaultlabel</setting>
-        <setting type="string" name="skin.aeonmq6.custom_path">menu7.path</setting>
-        <setting type="string" name="skin.aeonmq6.custom_action">menu7.action</setting>
-        <setting type="string" name="skin.aeonmq6.custom_subid">menu7.subid</setting>
-        <setting type="string" name="skin.aeonmq6.custom_widgets">menu7.widgets</setting>
-        <setting type="string" name="skin.aeonmq6.custom_target">menu7.target</setting>
-        <setting type="string" name="skin.aeonmq6.custom_master">menu7.master</setting>
+        <setting type="string" name="skin.aeonmq6.custom_on">menu6.visible</setting>
+        <setting type="string" name="skin.aeonmq6.custom_bg">menu6.bg</setting>
+        <setting type="string" name="skin.aeonmq6.custom_thumb">menu6.thumb</setting>
+        <setting type="string" name="skin.aeonmq6.custom_label">menu6.label</setting>
+        <setting type="string" name="skin.aeonmq6.custom_defaultlabel">menu6.defaultlabel</setting>
+        <setting type="string" name="skin.aeonmq6.custom_path">menu6.path</setting>
+        <setting type="string" name="skin.aeonmq6.custom_action">menu6.action</setting>
+        <setting type="string" name="skin.aeonmq6.custom_subid">menu6.subid</setting>
+        <setting type="string" name="skin.aeonmq6.custom_widgets">menu6.widgets</setting>
+        <setting type="string" name="skin.aeonmq6.custom_target">menu6.target</setting>
+        <setting type="string" name="skin.aeonmq6.custom_master">menu6.master</setting>
         <setting type="string" name="skin.aeonmq6.duallabel">widget1</setting>
         <setting type="string" name="skin.aeonmq6.dualwidgets">widget1</setting>
         <setting type="string" name="skin.aeonmq6.WindowBack">/usr/share/kodi/addons/script.game.connect4/resources/skins/default/media/black1.png</setting>
@@ -3351,6 +3351,6 @@
     </viewstates>
     <audio>
         <mute>false</mute>
-        <fvolumelevel>0.000000</fvolumelevel>
+        <fvolumelevel>1.000000</fvolumelevel>
     </audio>
 </settings>
