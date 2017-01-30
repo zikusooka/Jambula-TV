@@ -676,6 +676,10 @@ FREEPBX_EXTENSION_WEBRTC_001_NAME="Jambula WebRTC"
 FREEPBX_EXTENSION_WEBRTC_001_PASS="ellis2012"
 FREEPBX_DIALPLAN_NAME=office04
 
+# Chan_mobile
+BLUEZ_ADAPTER_0_ADDR=$(hciconfig hci0 | grep 'BD Address' | awk {'print $3'})
+BLUEZ_PHONE_0_ADDR="30:D7:4F:3B:66:22"
+
 # Samba
 SMB_WORKGROUP=$PROJECT_NAME
 
@@ -6548,6 +6552,13 @@ make_install_jambulatv
 }
 
 chan_mobile_configure () {
+# Modify chan_mobile config file - Add custom bluez adapter and phone(s)
+cp -v $ASTERISK_CONF_DIR/chan_mobile.conf $ASTERISK_CONF_DIR/chan_mobile.conf.sample
+cat $ASTERISK_CONF_DIR/chan_mobile.conf.sample | \
+	sed -e "s/BLUEZ_ADAPTER_0_ADDR/$BLUEZ_ADAPTER_0_ADDR/g" | \
+	sed -e "s/BLUEZ_PHONE_0_ADDR/$BLUEZ_PHONE_0_ADDR/g" \
+		> $ASTERISK_CONF_DIR/chan_mobile.conf
+#
 # First available mobile device in group
 # ---------------------------------------
 # Add agi script to query chan_mobile active device in realtime
