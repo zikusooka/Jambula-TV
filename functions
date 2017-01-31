@@ -412,6 +412,7 @@ CHILLI_DHCP_END=99
 
 
 HOSTAPD_DIR=/etc/hostapd
+HOSTAPD_GROUP=hostapd
 
 IPTABLES_CMD=/usr/sbin/iptables
 
@@ -5631,7 +5632,12 @@ hostapd_configure () {
 # **************************
 cp -v $INSTALL_SRC_DIR/hostap/hostapd/hostapd.conf $HOSTAPD_DIR/hostapd.conf.orig
 # Make some changes to hostapd.conf; and then
-cat $PROJECT_CONFIGS_DIR/hostapd-conf.template | sed -e "s/WIFIDEVICE0/$WIFI_AP_INTERFACE/" | sed -e "s/NETWORK_WIRELESS_CHANNEL_NO/$NETWORK_WIRELESS_CHANNEL_NO/" | sed -e "s/JAMBULATV/$NETWORK_WIRELESS_SSID/" | sed -e "s/thankgodtodayisfridaynovember5/$NETWORK_WIRELESS_PASSPHRASE/"  > $HOSTAPD_DIR/hostapd.conf
+cat $PROJECT_CONFIGS_DIR/hostapd-conf.template | sed -e "s/HOSTAPD_GROUP/$HOSTAPD_GROUP/" | sed -e "s/WIFIDEVICE0/$WIFI_AP_INTERFACE/" | sed -e "s/NETWORK_WIRELESS_CHANNEL_NO/$NETWORK_WIRELESS_CHANNEL_NO/" | sed -e "s/JAMBULATV/$NETWORK_WIRELESS_SSID/" | sed -e "s/thankgodtodayisfridaynovember5/$NETWORK_WIRELESS_PASSPHRASE/"  > $HOSTAPD_DIR/hostapd.conf
+#
+# Add hostapd access control group
+groupadd -r $HOSTAPD_GROUP
+# Add jambula to hostapd access control group
+usermod -a -G $HOSTAPD_GROUP $MULTIMEDIA_USER
 #
 # Disable wpa_supplicant service, which is automatically started by NetworkManager
 # ********************************************************************************
@@ -7743,6 +7749,8 @@ useradd -c "Icinga User" -d $SPOOLDIR/$ICINGA_USER -s /sbin/nologin -G $ICINGA_C
 usermod -a -G $ICINGA_CMD_GROUP $WWW_USER
 # Add icinga to systemd-journal group so they can query using journalctl
 usermod -a -G systemd-journal $ICINGA_USER
+# Add icinga to hostapd access control group
+usermod -a -G $HOSTAPD_GROUP $ICINGA_USER
 }
 
 monitoring_plugins_install () {
