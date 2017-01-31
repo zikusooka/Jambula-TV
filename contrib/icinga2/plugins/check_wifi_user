@@ -12,9 +12,8 @@ WIFI_MONITORED="$(cat $MY_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' | grep -i $
 ###############
 
 scan_4_wifi_device () {
-
 # Scan for WiFi device
-sudo /usr/sbin/hostapd_cli sta $(echo $WIFI_DEVICE_ADDRESS | sed "s/-/:/g") | grep -i connected_time > /dev/null 2>&1
+/usr/sbin/hostapd_cli sta $(echo $WIFI_DEVICE_ADDRESS | sed "s/-/:/g") | grep -i connected_time > /dev/null 2>&1
 SCAN_RESULT=$?
 #
 #
@@ -30,7 +29,6 @@ echo "$WIFI_DEVICE_USER is Absent"
 
 exit 2
 fi
-
 }
 
 
