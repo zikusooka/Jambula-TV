@@ -7739,7 +7739,10 @@ rm -rf $PREFIX/etc/logrotate.d
 groupadd $ICINGA_CMD_GROUP
 # Create icinga user 
 useradd -c "Icinga User" -d $SPOOLDIR/$ICINGA_USER -s /sbin/nologin -G $ICINGA_CMD_GROUP $ICINGA_USER
+# Add www user to icinga_cmd group
 usermod -a -G $ICINGA_CMD_GROUP $WWW_USER
+# Add icinga to systemd-journal group so they can query using journalctl
+usermod -a -G systemd-journal $ICINGA_USER
 }
 
 monitoring_plugins_install () {
