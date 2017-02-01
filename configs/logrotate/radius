@@ -5,7 +5,7 @@
 	   missingok
 	   notifempty
     	   size 30k
-	   create 0600 radius radiusd
+	   create 0600 radiusd radiusd
            postrotate
                /usr/bin/killall -HUP radiusd
            endscript
