@@ -3086,7 +3086,7 @@ ip route add default via $NETWORK_GATEWAY_ADDRESS
 [ -e $BINARY_PREFIX/jambulatv-yplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-yplayer $BINARY_PREFIX/
 
 # Copy default IPTV list for JambulaTV if not existent - see playlists_configure
-[ -e $PLAYLISTS_DIRECTORY/$PLAYLISTS_IPTV_WORLD_M3U_FILE ] || \
+[ -e $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_IPTV_WORLD_M3U_FILE ] && \
 	cp -rv $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_IPTV_WORLD_M3U_FILE $PLAYLISTS_DIRECTORY
 }
 
