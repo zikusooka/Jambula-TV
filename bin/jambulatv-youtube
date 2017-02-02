@@ -29,6 +29,15 @@ YOUTUBE_VIDEO_ID=$BUKEDDE_LIVE_VIDEO_ID
 YOUTUBE_VIDEO_ID=$1
 esac
 
+# Quit if no Youtube ID is found 
+$YOUTUBE_DL_CMD --get-id $YOUTUBE_VIDEO_ID > /dev/null 2>&1
+YTEXITVAL=$?
+if [ "$YTEXITVAL" != "0" ];
+then
+echo "Error: No Youtube ID was found for $1, quitting ..."
+exit 0
+fi
+
 # Youtube Manifest URL
 YOUTUBE_MANIFEST_URL=$($YOUTUBE_DL_CMD -g $YOUTUBE_VIDEO_ID | grep http | head -1)
 
