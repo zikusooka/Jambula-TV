@@ -29,6 +29,9 @@ UMEME_MONTHLY_FILE=/JambulaTV/Downloads/UMEME_Planned.${THIS_MONTH}.csv
 
 TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
 
+PING_COUNT=1 #9
+PING_IP_ADDRESS=8.8.8.8
+
 LIST_OF_AREAS="$@"
 
 
@@ -52,6 +55,18 @@ exit
 fi
 }
 
+check_internet_access () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+ping -c $PING_COUNT $PING_IP_ADDRESS > /dev/null 2>&1
+EXITVAL=$?
+if [ "$EXITVAL" != "0" ];
+then
+# Quit script, since there's no internet.  Leave exit status at 0 so systemd service works
+echo "JambulaTV Error: There's no Internet.  Please connect first!"
+exit 0
+fi
+}
+
 
 
 #################
@@ -61,8 +76,8 @@ fi
 usage
 
 # Check if Internet connection is up
-host -W 1 google.com 8.8.8.8 > /dev/null 2>&1
-INTERNET_ALIVE=$?
+check_internet_access
+INTERNET_ALIVE=$EXITVAL
 
 # Download UMEME file for this month if Internet is up
 if [ "$INTERNET_ALIVE" = "0" ];
