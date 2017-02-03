@@ -3096,7 +3096,7 @@ set_www_user_group
 # Clean picons directory if it does not exist
 [ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
 # Copy IP TV picons e.g. logos to JambulaTV share directory
-rsync -av $PROJECT_CONTRIB_DIR/tv/picons/IPTV/ $PROJECT_SYSTEM_ICONS_DIR/
+rsync -av $PROJECT_CONTRIB_DIR/tv/picons/IPTV $PROJECT_SYSTEM_ICONS_DIR/
 # Give permissons to TV Icons
 chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/IPTV
 }
