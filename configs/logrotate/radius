@@ -1,5 +1,31 @@
-  /var/log/radius/radacct/127.0.0.1/* /var/log/radius/radius.log {
+  /var/log/radius/radius.log {
            daily
+           rotate 24
+	   compress
+	   missingok
+	   notifempty
+    	   size 30k
+	   create 0600 radiusd radiusd
+           postrotate
+               /usr/bin/killall -HUP radiusd
+           endscript
+       }
+
+  /var/log/radius/radwtmp {
+          daily
+           rotate 24
+	   compress
+	   missingok
+	   notifempty
+    	   size 30k
+	   create 0600 radiusd radiusd
+           postrotate
+               /usr/bin/killall -HUP radiusd
+           endscript
+       }
+
+  /var/log/radius/radacct/127.0.0.1/* {
+          daily
            rotate 24
 	   compress
 	   missingok
