@@ -8,15 +8,23 @@
 CURL_CMD="/usr/bin/curl -s"
 OSD_CMD="/usr/bin/jambulatv-osd"
 
+TVHEADEND_IPTV_LOG_DIR=MY_TVHEADEND_IPTV_LOG_DIR
+TVHEADEND_IPTV_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/scan-full.$(date +%Y%m%d).log
+TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/scan-error.$(date +%Y%m%d).log
+
+PING_COUNT=1 #9
+PING_IP_ADDRESS=8.8.8.8
+
 TVHEADEND_HTTP_IP=MY_TVHEADEND_HTTP_IP
 TVHEADEND_HTTP_PORT=MY_TVHEADEND_HTTP_PORT
 TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
+TVHEADEND_PLAY_STREAM_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/play/stream"
 TVHEADEND_CONFIG_DIR=MY_TVHEADEND_CONFIG_DIR
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
 TVHEADEND_IPTV_NETWORK_NAME=MY_TVHEADEND_IPTV_NETWORK_NAME
-TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $TVHEADEND_API_URL/mpegts/network/grid | jq '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid' | sed 's:"::g')
-TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=MY_TMPDIR/iptv_service_uuid.txt
-TVHEADEND_LAST_CHANNEL_NUMBER=$($CURL_CMD $TVHEADEND_API_URL/channel/grid | jq '.entries[] | .number' | sort -n | tail -1)
+TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid' | sed 's:"::g')
+TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=/tmp/iptv_service_uuid.txt
+TVHEADEND_LAST_CHANNEL_NUMBER=$($CURL_CMD $TVHEADEND_API_URL/channel/grid?limit=100000 | jq '.entries[] | .number' | sort -n | tail -1)
 let "TVHEADEND_DVB_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
 let "TVHEADEND_IPTV_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
 PLAYLISTS_DIRECTORY=MY_PLAYLISTS_DIRECTORY
@@ -66,18 +74,90 @@ exit 1
 fi
 }
 
+check_if_in_use () {
+CURRENT_PROFILES=$($CURL_CMD $TVHEADEND_API_URL/status/subscriptions | jq '.entries[] | .profile' | sed 's:null::g')
+CURRENT_CHANNELS=$($CURL_CMD $TVHEADEND_API_URL/status/subscriptions | jq '.entries[] | .channel' | sed 's:null::g')
+
+# Quit if TVH Server is being used
+if [ "x$CURRENT_CHANNELS" != "x" ] || [ "x$CURRENT_PROFILES" != "x" ];
+then
+echo "JambulaTV Error:  The TV Server is currently in use, please pick another convenient time to perform this task"
+exit 0
+fi
+}
+
+log_file () {
+# Create IPTV log directory if non existent
+[ -d $TVHEADEND_IPTV_LOG_DIR ] || mkdir -p $TVHEADEND_IPTV_LOG_DIR
+# Give it Multimedia user's permissions
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_IPTV_LOG_DIR
+# Date stamp log file
+cat >> $TVHEADEND_IPTV_FULL_LOG_FILE <<EOT
+
+**********************************************************************
+IPTV scan log performed on:  $(date)
+**********************************************************************
+
+EOT
+}
+
+check_internet_access () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+ping -c $PING_COUNT $PING_IP_ADDRESS > /dev/null 2>&1
+EXITVAL=$?
+if [ "$EXITVAL" != "0" ];
+then
+# Quit script, since there's no internet.  Leave exit status at 0 so systemd service works
+echo "Error: There's no Internet connectivity, quitting ..."
+exit 0
+fi
+}
+
 refresh_tvheadend () {
 # Probably better to use TVH API for this, so we dont stop completely
 # Delete Internet default route - Save IP first
 GATEWAY=$INTERNET_GATEWAY_IP
-ip route del default
+sudo ip route del default
 # Restart TVHeadend
-systemctl restart tvheadend.service
+sudo systemctl restart tvheadend.service
 # Restore Internet default route
-ip route add default via $GATEWAY
+sudo ip route add default via $GATEWAY
+}
+
+pre_config () {
+# Create directory, if non-existent
+[ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
+#
+# Load IPTV Lists i.e. refresh tvheadend
+refresh_tvheadend
+}
+
+post_config () {
+# Give multimedia user permission to access tvheadend directories
+chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+#
+# Refresh tvheadend
+refresh_tvheadend
+}
+
+scan_osd_notice () {
+# Display notice
+$OSD_CMD -m "Scanning of $2 network started.  Please be patient ..." > /dev/null 2>&1 &
+}
+
+zap_dead_channels () { 
+# Find dead channels and remove them before mapping
+$CURL_CMD $TVHEADEND_API_URL/channel/grid?limit=100000 | jq '.entries[] | select(.name | contains("name-not-set")).uuid' | sed 's:"::g' | while read DEAD_CHANNEL_UUID
+do
+rm -f $TVHEADEND_CHANNELS_CONFIG_DIR/$DEAD_CHANNEL_UUID
+done
+# Refresh TVH
+refresh_tvheadend
 }
 
 dvb_map_services_2_channels () {
+# Remove dead channels
+zap_dead_channels
 # Set DIGIT i.e. First channel number
 if [ "x$TVHEADEND_DVB_FIRST_CHANNEL_NUMBER" = "x" ];
 then
@@ -85,17 +165,17 @@ DIGIT=1
 else
 DIGIT=$TVHEADEND_DVB_FIRST_CHANNEL_NUMBER
 fi
-$CURL_CMD $TVHEADEND_API_URL/service/list | jq .entries[] | grep "text\": \"$DVBT_NETWORK_NAME" | cut -d '/' -f3 | sed 's:["|,]::g' | sed 's:---::g' | grep -wEv TEST | grep -wEv '{PMT:0}' | sort -u | while read LINE
+$CURL_CMD $TVHEADEND_API_URL/service/list?limit=100000 | jq .entries[] | grep "text\": \"$DVBT_NETWORK_NAME" | cut -d '/' -f3 | sed 's:["|,]::g' | sed 's:---::g' | grep -wEv TEST | grep -wEv '{PMT:0}' | sort -u | while read LINE
 do
 CHANNEL_NUMBER=$DIGIT
 CHANNEL_NAME=$LINE
 CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:lower:] [:upper:]| sed 's: :_:g').png
 CHANNEL_UUID=$(uuidgen -t | sed 's:-::g')
 #
-SERVICE_UUID=$($CURL_CMD $TVHEADEND_API_URL/service/list | jq .entries[] | grep -A2 "text\": \"$DVBT_NETWORK_NAME" | grep -w -A2 "$CHANNEL_NAME" | grep uuid | awk {'print $2'} | head -1 | sed 's:"::g')
+SERVICE_UUID=$($CURL_CMD $TVHEADEND_API_URL/service/list?limit=100000 | jq .entries[] | grep -A2 "text\": \"$DVBT_NETWORK_NAME" | grep -w -A2 "$CHANNEL_NAME" | grep uuid | awk {'print $2'} | head -1 | sed 's:"::g')
 
 # Check if channel already exists
-$CURL_CMD $TVHEADEND_API_URL/channel/grid | jq '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
+$CURL_CMD $TVHEADEND_API_URL/channel/grid?limit=100000 | jq '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
 CHANNEL_EXISTS=$?
 # Don't add if channel already exists
 [ "$CHANNEL_EXISTS" = "0" ] && break
@@ -126,24 +206,26 @@ done
 }
 
 iptv_map_services_2_channels () {
-$CURL_CMD $TVHEADEND_API_URL/service/list | jq '.entries[] | select(.text | contains("'${TVHEADEND_IPTV_NETWORK_NAME}'")).uuid' | sed 's:"::g' > $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
-
+# Remove dead channels
+zap_dead_channels
+#
+$CURL_CMD $TVHEADEND_API_URL/service/list?limit=100000 | jq '.entries[] | select(.text | contains("'${TVHEADEND_IPTV_NETWORK_NAME}'")).uuid' | sed 's:"::g' > $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
 DIGIT=$TVHEADEND_IPTV_FIRST_CHANNEL_NUMBER
 cat $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE | while read SERVICE_UUID
 do
 CHANNEL_NUMBER=$DIGIT
-CHANNEL_NAME=$($CURL_CMD $TVHEADEND_API_URL/service/list | jq '.entries[] | select(.uuid=="'$SERVICE_UUID'") | .text' | sed "s:$TVHEADEND_IPTV_NETWORK_NAME/$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g"| cut -d / -f2- | sed 's:"::g')
+CHANNEL_NAME=$($CURL_CMD $TVHEADEND_API_URL/service/list?limit=100000 | jq '.entries[] | select(.uuid=="'$SERVICE_UUID'") | .text' | sed "s:$TVHEADEND_IPTV_NETWORK_NAME/$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g"| cut -d / -f2- | sed 's:"::g')
 CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:upper:] [:lower:]| sed 's: :_:g').png
 CHANNEL_UUID=$(uuidgen -t | sed 's:-::g')
 CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_IPTV_WORLD_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
-CHANNEL_TAG=$($CURL_CMD $TVHEADEND_API_URL/channeltag/list | jq '.entries[] | select(.val=="'${CHANNEL_CATEGORY}'") | .key' | sed 's:"::g')
-
+CHANNEL_TAG=$($CURL_CMD $TVHEADEND_API_URL/channeltag/list?limit=100000 | jq '.entries[] | select(.val=="'${CHANNEL_CATEGORY}'") | .key' | sed 's:"::g')
+#
 # Check if channel already exists
-$CURL_CMD $TVHEADEND_API_URL/channel/grid | jq '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
+$CURL_CMD $TVHEADEND_API_URL/channel/grid?limit=100000 | jq '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
 CHANNEL_EXISTS=$?
+#
 # Don't add if channel already exists
-[ "$CHANNEL_EXISTS" = "0" ] && break
-
+[ "$CHANNEL_EXISTS" = "0" ] && continue
 # Create channel config file
 cat > $TVHEADEND_CHANNELS_CONFIG_DIR/$CHANNEL_UUID <<EOF
 {
@@ -169,35 +251,59 @@ done
 }
 
 iptv_scan_add_services  () {
+# timestamp log file
+log_file
+#
+# Check for Internet connectivity 
+check_internet_access
 # Cycle through all IPTV MUX IDs and test to create services
-$CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid | jq '.entries[] | select(.network_uuid=="'"$TVHEADEND_IPTV_NETWORK_UUID"'") | .uuid' | sed 's:"::g' | while read MUX_UUID
+$CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.network_uuid=="'"$TVHEADEND_IPTV_NETWORK_UUID"'") | .uuid' | sed 's:"::g' | while read MUX_UUID
+
 do
 # Do not play if we already have a service
-
+SERVICE_ADDED=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .num_svc' | sed 's:"::g')
+SERVICE_NAME=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .name' | sed 's:"::g' | sed "s:$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g")
 # Play briefly i.e. create service
-su -l $MULTIMEDIA_USER -c "cvlc --no-video --no-audio -A alsa $TVHEADEND_API_URL/play/stream/mux/$MUX_UUID --run-time 5 vlc://quit"
+if [ "$SERVICE_ADDED" = "0" ];
+then
+
+echo 2>&1 | tee -a $TVHEADEND_IPTV_FULL_LOG_FILE << EOF
+
+JambulaTV: Testing IPTV stream: [$SERVICE_NAME], please wait ...
+----------------------------------------------------------------
+
+EOF
+
+# Skip for pipes?
+# Skip for plugins?
+# Use code below?
+#
+#MUX_UUID=612e632357c28328f708c50696949ab8
+#SERVICE_URL_CONTAINS=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .iptv_url' | awk {'print $2'} | sed 's:"::g')
+#echo SERVICE_URL=[$SERVICE_URL_CONTAINS]
+#exit
+
+
+# Test stream
+cvlc --file-logging --logfile $TVHEADEND_IPTV_FULL_LOG_FILE --no-video --no-audio -A alsa $TVHEADEND_PLAY_STREAM_URL/mux/$MUX_UUID --run-time 5 vlc://quit | grep 'core error: VLC is unable to open the MRL'
+VLC_EXIT_STATUS=$?
+# Log failures
+[ "$VLC_EXIT_STATUS" != "0" ] || \
+cat >> $TVHEADEND_IPTV_FAILED_LOG_FILE << STREAMLOG
+JambulaTV: Can not connect to stream :$SERVICE_NAME
+VLC_EXIT_STATUS=$VLC_EXIT_STATUS
+STREAMLOG
+
+fi
+
 done
 }
 
 iptv_scan_4_services () {
+# Check for Internet connectivity 
+check_internet_access
 # Force scan of IPTV Network
 $CURL_CMD $TVHEADEND_API_URL/mpegts/network/scan -d uuid=$TVHEADEND_IPTV_NETWORK_UUID
-
-# Display notice
-$OSD_CMD -m "IPTV network scan started.  Please be patient ..."
-}
-
-pre_config () {
-# Create directory, if non-existent
-[ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
-}
-
-post_config () {
-# Give multimedia user permission to access tvheadend directories
-chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
-#
-# Refresh tvheadend
-refresh_tvheadend
 }
 
 
@@ -206,11 +312,9 @@ refresh_tvheadend
 #  MAIN SCRIPT  #
 #################
 
-
-
+check_if_in_use 
 
 pre_config
-
 
 case $TV_TYPE in
 dvb)
@@ -219,21 +323,21 @@ usage_dvb
 # Scan
 if [ "$TV_TASK" = "scan" ];
 then
+scan_osd_notice
 dvb_scan_4_services
 # Map
 elif [ "$TV_TASK" = "map" ];
 then
 dvb_map_services_2_channels
 fi
-
-
-
 ;;
+
 iptv)
 # Usage
 usage_iptv
 if [ "$TV_TASK" = "scan" ];
 then
+scan_osd_notice
 iptv_scan_add_services 
 #iptv_scan_4_services
 # Map
@@ -241,10 +345,8 @@ elif [ "$TV_TASK" = "map" ];
 then
 iptv_map_services_2_channels
 fi
-
-
-
 ;;
+
 *)
 usage
 ;;
