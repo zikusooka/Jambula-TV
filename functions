@@ -168,6 +168,7 @@ FLEXGET_SCHEDULE_IPTV_LISTS_MIN="*/30"
 FLEXGET_PORT=$(grep -i 'flexget$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 TVHEADEND_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.hts/tvheadend
+TVHEADEND_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/tvheadend.log
 TVHEADEND_HTTP_IP=127.0.0.1
 TVHEADEND_HTTP_PORT=9981  # Please change to conform with our lineup
 TVHEADEND_HTSP_PORT=9982  # Please change to conform with our lineup
@@ -2424,10 +2425,13 @@ chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 
 # Tvheadend systemd unit
 # ----------------------
-# Copy tvheadend systemd file 
-cp -v $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service $SYSTEMD_UNITS_DIR_USER/
+# Configure Systemd service file
+cat $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service | \
+	sed "s:TVHEADEND_LOG_FILE:$TVHEADEND_LOG_FILE:g" \
+		> $SYSTEMD_UNITS_DIR_USER/tvheadend.service
 # Enable tvheadend
 systemctl enable tvheadend.service
+#
 # Start tvheadend if adapter has been inserted
 if [ ! -d /dev/dvb ];
 then

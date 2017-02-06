@@ -288,7 +288,7 @@ EOF
 cvlc --file-logging --logfile $TVHEADEND_IPTV_FULL_LOG_FILE --no-video --no-audio -A alsa $TVHEADEND_PLAY_STREAM_URL/mux/$MUX_UUID --run-time 5 vlc://quit | grep 'core error: VLC is unable to open the MRL'
 VLC_EXIT_STATUS=$?
 # Log failures
-[ "$VLC_EXIT_STATUS" != "0" ] || \
+[ "$VLC_EXIT_STATUS" = "0" ] || \
 cat >> $TVHEADEND_IPTV_FAILED_LOG_FILE << STREAMLOG
 JambulaTV: Can not connect to stream :$SERVICE_NAME
 VLC_EXIT_STATUS=$VLC_EXIT_STATUS
