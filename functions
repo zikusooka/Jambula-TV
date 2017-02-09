@@ -72,6 +72,7 @@ PROJECT_TARBALLS_DIR=$PROJECT_SRC_DIR/tarballs
 PROJECT_GITHUB_DIR=$PROJECT_SRC_DIR/github
 PROJECT_RPMS_DIR=$PROJECT_SRC_DIR/rpms
 PROJECT_ZIPS_DIR=$PROJECT_SRC_DIR/zips
+PROJECT_DEBS_DIR=$PROJECT_SRC_DIR/debs
 # System directories
 PROJECT_SYSTEM_ARCH=`uname -m`
 PROJECT_SYSTEM_CONF_DIR=$CONFDIR/$PROJECT_NAME
@@ -7079,6 +7080,41 @@ make_install_jambulatv
 google_tts_configure () {
 # Copy googletts* agi to asterisk agi-bin directory
 cp -v $PROJECT_GITHUB_DIR/asterisk-googletts/googletts*.agi $ASTERISK_AGI_BIN_DIR/
+}
+
+picotts_install () {
+# Setup src directory
+[ -d $INSTALL_SRC_DIR/libttspico ] || mkdir -p $INSTALL_SRC_DIR/libttspico
+# Extract Pico TTS libraries
+cd $TMPDIR
+ar x $PROJECT_DEBS_DIR/libttspico0_1.*_amd64.deb data.tar.xz
+tar -xvf data.tar.xz -C  $INSTALL_SRC_DIR/libttspico
+rm -f data.tar.xz
+# Extract Pico TTS voice data
+cd $TMPDIR
+ar x $PROJECT_DEBS_DIR/libttspico-data_1.*_all.deb data.tar.xz
+tar -xvf data.tar.xz -C  $INSTALL_SRC_DIR/libttspico
+rm -f data.tar.xz
+# Extract Pico TTS utilities (pico2wave)
+cd $TMPDIR
+ar x $PROJECT_DEBS_DIR/libttspico-utils_1.*_amd64.deb data.tar.xz
+tar -xvf data.tar.xz -C  $INSTALL_SRC_DIR/libttspico
+rm -f data.tar.xz
+# Move files into place
+cd $INSTALL_SRC_DIR
+mv -v "libttspico/usr/lib/"*-linux-gnu/* "libttspico/usr/lib"
+rmdir "libttspico/usr/lib/"*-linux-gnu
+mv -v libttspico/usr/bin/* $BINARY_PREFIX/
+mv -v libttspico/usr/lib/* $LIBDIR
+mv -v libttspico/usr/share/pico $PREFIX/share/
+mv -v libttspico/usr/share/doc/* $PREFIX/share/doc/
+mv -v libttspico/usr/share/man/man1/* $MANDIR1/
+#
+# Install picospeaker
+rsync -avz $PROJECT_GITHUB_DIR/picospeaker/ $INSTALL_SRC_DIR/picospeaker/
+cd $INSTALL_SRC_DIR
+install -D -m755 picospeaker/picospeaker $BINARY_PREFIX/picospeaker
+rm -rf picospeaker
 }
 
 boost_install () {

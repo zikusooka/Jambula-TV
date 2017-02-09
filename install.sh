@@ -276,6 +276,9 @@ fi
 # Google TTS # Requires Internet connection
 google_tts_configure
 
+# Pico TTS by sVox
+picotts_install
+
 # ASR - Speech Recognition
 sphinxbase_install
 pocketsphinx_install
