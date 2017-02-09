@@ -69,6 +69,7 @@ templates:
         - 'password.txt'
         - 'password.zip'
         - '*.wmv'
+    verify_ssl_certificates: no
     domain_delay:
       bt-chat.com: 5 seconds
     magnets: no
@@ -205,7 +206,6 @@ templates:
     priority: 10
     thetvdb_lookup: yes
     tvmaze_lookup: yes
-    verify_ssl_certificates: no
     content_size:
       max: 490
     free_space:
@@ -450,15 +450,26 @@ tasks:
       - seen
       - email
       - regexp
+
     thetvdb_lookup: yes
+    # Specify TVDB ID for badly named series
+    if:
+      - "series_name == 'Power 2014'":
+          set:
+            tvdb_id: 276562
+      - "series_name == 'Scandal Us'":
+          set:
+            tvdb_id: 248841
+
     tvmaze_lookup: yes
     metainfo_series: yes
-    #require_field: [series_name, series_id, series_season]
     require_field: [tvdb_series_name, tvdb_season, tvdb_episode, tvdb_ep_id]
+    #require_field: [tvmaze_series_name, tvmaze_season, tvmaze_episode, tvmaze_episode_id]
     accept_all: yes
     seen: local
     all_series:
       parse_only: yes
+
     exec:
       auto_escape: yes
       on_start:
@@ -467,6 +478,7 @@ tasks:
           - /bin/sh '/{{secrets.tv.series_rename_script}}'
           # Create dummy 19M file
           - truncate -s 19M '/{{secrets.tv.series_completed_dir}}/DO.NOT.REMOVE.ME'
+
     filesystem:
       path: 
         - "/{{secrets.tv.series_completed_dir}}"
@@ -475,11 +487,13 @@ tasks:
         - files
         - dirs
       regexp: '.*\.(avi|mkv|mp4|m4v|iso)$' 
+
     move:
-      #to: "/{{secrets.tv.series_jambulatv_dir}}/{{series_name|replace(' ', '_')}}/Season_{{'%02d'|format(series_season)}}"
       to: "/{{secrets.tv.series_jambulatv_dir}}/{{tvdb_series_name|replace(' ', '_')|replace('(', '')|replace(')', '')}}/Season_{{'%02d'|format(tvdb_season)}}"
-      #rename: "{{series_name}}.{{series_id}}.{{quality|upper}}"
+      #to: "/{{secrets.tv.series_jambulatv_dir}}/{{tvmaze_series_name|replace(' ', '_')|replace('(', '')|replace(')', '')}}/Season_{{'%02d'|format(tvmaze_season)}}"
       rename: "{{tvdb_series_name|replace(' ', '.')|replace('(', '')|replace(')', '')}}.{{tvdb_ep_id}}.{{tvdb_ep_name|replace(' ', '.')}}.{{quality|upper|replace(' ', '.')}}"
+      #rename: "{{tvmaze_series_name|replace(' ', '.')|replace('(', '')|replace(')', '')}}.{{tvmaze_episode_id}}.{{tvmaze_episode_name|replace(' ', '.')}}.{{quality|upper|replace(' ', '.')}}"
+
       clean_source: 18
       along:
         extensions:
@@ -522,8 +536,8 @@ tasks:
       regexp: '.*\.(avi|mkv|mp4|m4v|iso)$' 
     move:
       to: "/{{secrets.movies.movies_jambulatv_dir}}"
-      #rename: "{{movie_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')}}.({{movie_year}}){% if quality|default(False) %}: - {{quality}}{% endif %}"
-      rename: "{{tmdb_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')|replace('(', '')|replace(')', '')}}.({{tmdb_year|replace('(', '')|replace(')', '')}})"
+      rename: "{{movie_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')}}.({{movie_year}}){% if quality|default(False) %}: - {{quality}}{% endif %}"
+      #rename: "{{tmdb_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')|replace('(', '')|replace(')', '')}}.({{tmdb_year|replace('(', '')|replace(')', '')}})"
       clean_source: 18
       along:
         extensions:
@@ -581,6 +595,10 @@ tasks:
       - /usr/bin/rsync -qavz --delay-updates '{{secrets.ftp.dir_temp}}/{{filename}}' '{{secrets.iptv.lists_dir}}'/
       # Remove temp m3u8 files
       - /bin/rm '{{secrets.ftp.dir_temp}}/{{filename}}'
+      # Refresh IPTV services i.e. add services if non-existent
+      - /usr/bin/jambulatv-tvheadend-controller iptv scan
+      # Map new IPTV services to channels if non-existent
+      - /usr/bin/jambulatv-tvheadend-controller iptv map
 
 
 
