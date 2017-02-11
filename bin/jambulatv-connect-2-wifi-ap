@@ -15,7 +15,7 @@ HOST_2_PING=8.8.8.8 #192.168.8.1 #8.8.8.8
 # Available in functions file
 INTERNET_WIFI_ISP_CONFIG=/etc/JambulaTV/internet-mobile-wifi.cfg
 WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
-WIFI_INTERFACES_AVAILABLE=$(journalctl -b -o cat --no-pager | grep 'renamed from wlan' | awk {'print $3'} | sed 's/://g' | sort -u | wc -l)
+WIFI_INTERFACES_AVAILABLE=$(sudo ip link |grep jwlan | wc -l)
 # Variable specific to this script
 WIFI_SSID=$(grep -i SSID $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 WIFI_SECURITY_KEY=$(grep -i SECURITY_KEY $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
