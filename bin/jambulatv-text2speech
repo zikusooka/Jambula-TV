@@ -1,0 +1,103 @@
+#!/bin/sh
+# This is the text-to-speech tool used for JambulaTV services.
+# AUse it to read time, etc
+# Jambula Labs @copyright 2017-2018 All rights reserved
+
+# Variables
+DOWNLOAD_CMD="/usr/bin/curl"
+DOWNLOAD_USER_AGENT="Mozilla/5.0"
+DOWNLOAD_CMD_OPTS="-s -A '$DOWNLOAD_USER_AGENT'"
+
+TTS_PLAY_CMD="/usr/bin/ffplay"
+TTS_QUIT_CMD=""
+TTS_PLAY_CMD_OPTS="-loglevel quiet -autoexit"
+TTS_GOOGLE_API_URL="http://translate.google.com/translate_tts" 
+
+TTS_ACTION=$1
+
+PICO_CMD=/usr/bin/pico2wave
+PICO_CMD_OPTS="--lang=en-US" 
+PICO_TEMP_WAVE_FILE=/tmp/pico.wav
+
+PING_TIMEOUT=2 #9
+PING_IP_ADDRESS=8.8.8.8
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage () {
+# TTS Action
+if [ "x$TTS_ACTION" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` [time]
+"
+exit 1
+fi
+}
+
+check_internet_access () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+ping -w $PING_TIMEOUT $PING_IP_ADDRESS > /dev/null 2>&1
+INTERNET_ALIVE=$?
+export INTERNET_ALIVE
+}
+
+text2speech_google () {
+# Connect to google TTS
+$DOWNLOAD_CMD $DOWNLOAD_CMD_OPTS "$TTS_GOOGLE_API_URL?ie=UTF-8&client=tw-ob&q=The+time+now+is+$TIME_NOW&tl=En-us" | \
+	$TTS_PLAY_CMD $TTS_PLAY_CMD_OPTS - $TTS_QUIT_CMD
+}
+
+text2speech_pico () {
+# Run pico2wave command
+$PICO_CMD $PICO_CMD_OPTS --wave=$PICO_TEMP_WAVE_FILE "The time now is $TIME_NOW"
+# Play temp file i.e. read time
+$TTS_PLAY_CMD $TTS_PLAY_CMD_OPTS $PICO_TEMP_WAVE_FILE $TTS_QUIT_CMD
+# Remove temp file
+rm -f $PICO_TEMP_WAVE_FILE
+}
+
+say_time() {
+# Get current hour and min
+TIME_HOUR=$(date +%-I)
+TIME_MIN=$(date +%M)
+# Use Google TTS if Internet is on, else choose Pico TTS
+if [ "$INTERNET_ALIVE" = "0" ];
+then
+
+# Set current time
+TIME_AMPM="$(date +%p | cut -c 1)+$(date +%p | cut -c 2)"
+TIME_NOW="$TIME_HOUR+$TIME_MIN+$TIME_AMPM"
+# Use Google TTS since Internet is available
+text2speech_google
+
+else
+# Set current time
+TIME_AMPM="$(date +%p | cut -c 1) $(date +%p | cut -c 2)"
+TIME_NOW="$TIME_HOUR $TIME_MIN $TIME_AMPM"
+# Use Pico TTS, since Internet is NOT available
+text2speech_pico
+
+fi
+}
+
+
+
+################
+#  MAIN SCRIPT #
+################
+
+check_internet_access
+
+case $TTS_ACTION in 
+time)
+say_time
+;;
+*)
+echo
+usage
+;;
+esac 
