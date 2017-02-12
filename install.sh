@@ -278,6 +278,7 @@ google_tts_configure
 
 # Pico TTS by sVox
 picotts_install
+picotts_asterisk_configure
 
 # ASR - Speech Recognition
 sphinxbase_install

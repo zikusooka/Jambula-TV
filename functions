@@ -7117,6 +7117,14 @@ install -D -m755 picospeaker/picospeaker $BINARY_PREFIX/picospeaker
 rm -rf picospeaker
 }
 
+picotts_asterisk_configure () {
+# Copy picotts agi to asterisk agi-bin directory
+cp -v $PROJECT_GITHUB_DIR/asterisk-picotts/picotts*.agi $ASTERISK_AGI_BIN_DIR/
+# Change permissions to asterisk user
+chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_AGI_BIN_DIR/picotts.agi
+chmod 700 $ASTERISK_AGI_BIN_DIR/picotts.agi
+}
+
 boost_install () {
 # Remove existing boost rpm packages
 rpm -e --nodeps boost-chrono boost-filesystem boost-regex boost-system boost-iostreams boost-signals boost-python boost-thread boost-program-options boost-date-time boost-locale
