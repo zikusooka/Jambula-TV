@@ -78,7 +78,7 @@
       <epgsearch>ActivateWindow(TVSearch)</epgsearch>
       <red>ActivateWindow(TVChannels)</red>
       <green>ActivateWindow(MyVideos)</green>
-      <yellow>ActivateWindow(MyMusic)</yellow>
+      <yellow>RunScript(/usr/share/kodi/scripts/kodi_say_time.py)</yellow>
       <blue>ActivateWindow(MyPictures)</blue>
       <zero>Number0</zero>
       <one>Number1</one>
@@ -167,6 +167,11 @@
       <star>Queue</star>
     </remote>
   </MyMusicLibrary>
+  <MyPictures>
+    <remote>
+      <clear>Delete</clear>
+    </remote>
+  </MyPictures>
   <FullscreenVideo>
     <remote>
       <zero>Number0</zero>
@@ -179,10 +184,10 @@
       <seven>Number7</seven>
       <eight>Number8</eight>
       <nine>Number9</nine>
-      <left>VolumeDown</left>
-      <right>VolumeUp</right>
-      <up>StepForward</up>
-      <down>StepBack</down>
+      <left>StepBack</left>
+      <right>StepForward</right>
+      <up>ChapterOrBigStepForward</up>
+      <down>ChapterOrBigStepBack</down>
       <back>Back</back>
       <menu>OSD</menu>
       <contentsmenu>OSD</contentsmenu>
@@ -200,8 +205,6 @@
       <hash>AudioNextLanguage</hash>
       <pageplus>SkipNext</pageplus>
       <pageminus>SkipPrevious</pageminus>
-      <yellow>RunScript(/usr/share/kodi/scripts/pip.py, change-channels)</yellow>
-      <blue>RunScript(/usr/share/kodi/scripts/pip.py, toggle-switch)</blue>
     </remote>
   </FullscreenVideo>
   <VideoTimeSeek>
@@ -572,12 +575,10 @@
   </Favourites>
   <FullscreenLiveTV>
     <remote>
-      <left>VolumeDown</left>
-      <right>VolumeUp</right>
+      <left>StepBack</left>
+      <right>StepForward</right>
       <up>ChannelUp</up>
       <down>ChannelDown</down>
-      <yellow>RunScript(/usr/share/kodi/scripts/pip.py, change-channels)</yellow>
-      <blue>RunScript(/usr/share/kodi/scripts/pip.py, toggle-switch)</blue>
     </remote>
   </FullscreenLiveTV>
   <FullscreenRadio>

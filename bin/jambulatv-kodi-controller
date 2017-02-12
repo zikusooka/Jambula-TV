@@ -38,7 +38,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_play_start|mute|tv_play_stop|video_play_start|video_play_stop|tv_record_start|tv_record_stop|scan_video|scan_audio|clean_video|clean_audio)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_play_start|mute|tv_play_stop|video_play_start|video_play_pause|video_play_stop|tv_record_start|tv_record_stop|scan_video|scan_audio|clean_video|clean_audio)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -98,6 +98,10 @@ curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: applicatio
 
 stop_player () {
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Stop", "params": {"playerid":1}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+pause_player () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.PlayPause", "params": {"playerid":1}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
 }
 
 start_player () {
@@ -267,6 +271,10 @@ start_player "$2"
 
 video_play_stop)
 stop_player
+;;
+
+video_play_pause)
+pause_player
 ;;
 
 tv_record_start) 

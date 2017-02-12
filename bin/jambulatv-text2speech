@@ -1,6 +1,6 @@
 #!/bin/sh
 # This is the text-to-speech tool used for JambulaTV services.
-# AUse it to read time, etc
+# Use it to read time, etc
 # Jambula Labs @copyright 2017-2018 All rights reserved
 
 # Variables
@@ -10,7 +10,7 @@ DOWNLOAD_CMD_OPTS="-s -A '$DOWNLOAD_USER_AGENT'"
 
 TTS_PLAY_CMD="/usr/bin/ffplay"
 TTS_QUIT_CMD=""
-TTS_PLAY_CMD_OPTS="-loglevel quiet -autoexit"
+TTS_PLAY_CMD_OPTS="-loglevel quiet -vn -nodisp -autoexit"
 TTS_GOOGLE_API_URL="http://translate.google.com/translate_tts" 
 
 TTS_ACTION=$1

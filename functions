@@ -3312,14 +3312,12 @@ cat $PROJECT_BIN_DIR/jambulatv-library | \
 	sed -e "s:MY_USER_MUSIC_DIR:$USER_MUSIC_DIR:g" > $BINARY_PREFIX/jambulatv-library
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-library
-
+#
 # Picture-In-Picture
 # Copy jambulatv-pip script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-pip ] || cp -v $PROJECT_BIN_DIR/jambulatv-pip $BINARY_PREFIX/
 # Create kodi scripts directory
 [ -d $KODI_SHARE_DIR/scripts ] || mkdir -p $KODI_SHARE_DIR/scripts
-# Copy pip.py script for picture in picture
-cp -v $PROJECT_UTILS_DIR/pip.py $KODI_SHARE_DIR/scripts
 #
 # kodi-api-controller
 cat $PROJECT_BIN_DIR/jambulatv-kodi-controller | \
@@ -3335,6 +3333,8 @@ cat $PROJECT_BIN_DIR/jambulatv-kodi-controller | \
 			> $BINARY_PREFIX/jambulatv-kodi-controller
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-kodi-controller
+# Copy kodi wrapper scripts e.g. time, pip
+cp -v $PROJECT_CONTRIB_DIR/scripts/kodi_*.py $KODI_SHARE_DIR/scripts
 }
 
 kodi_jambulatv_service_configure () {
