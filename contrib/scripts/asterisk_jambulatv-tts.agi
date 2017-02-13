@@ -1,0 +1,39 @@
+#!/bin/sh
+# This is a wrapper AGI script for Text-2-Speech used in asterisk dialplans
+# Choose appropraite AGI script depending on availability of Internet
+# Jambula Labs @copyright 2017-2018 All rights reserved
+
+# Variables
+PING_TIMEOUT=3
+PING_IP_ADDRESS=8.8.8.8
+
+ASTERISK_AGI_BIN_DIR=/var/lib/asterisk/agi-bin
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+check_internet_access () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+ping -w $PING_TIMEOUT $PING_IP_ADDRESS > /dev/null 2>&1
+INTERNET_ALIVE=$?
+export INTERNET_ALIVE
+}
+
+
+
+################
+#  MAIN SCRIPT #
+################
+# Check for Internet availability
+check_internet_access
+
+# Choose googletts or picotts depending on availability of Internet
+if [ "$INTERNET_ALIVE" = "0" ];
+then
+$ASTERISK_AGI_BIN_DIR/googletts-tiny.agi
+else
+$ASTERISK_AGI_BIN_DIR/picotts.agi
+fi

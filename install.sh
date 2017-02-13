@@ -273,12 +273,15 @@ app_swift_install
 app_swift_configure
 fi
 
-# Google TTS # Requires Internet connection
+# Google TTS 
 google_tts_configure
 
 # Pico TTS by sVox
 picotts_install
 picotts_asterisk_configure
+
+# JambulaTV TTS 
+jambulatvtts_asterisk_configure
 
 # ASR - Speech Recognition
 sphinxbase_install

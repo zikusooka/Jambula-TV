@@ -7080,6 +7080,9 @@ make_install_jambulatv
 google_tts_configure () {
 # Copy googletts* agi to asterisk agi-bin directory
 cp -v $PROJECT_GITHUB_DIR/asterisk-googletts/googletts*.agi $ASTERISK_AGI_BIN_DIR/
+# Change permissions to asterisk user
+chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_AGI_BIN_DIR/googletts*.agi
+chmod 700 $ASTERISK_AGI_BIN_DIR/googletts*.agi
 }
 
 picotts_install () {
@@ -7123,6 +7126,14 @@ cp -v $PROJECT_GITHUB_DIR/asterisk-picotts/picotts*.agi $ASTERISK_AGI_BIN_DIR/
 # Change permissions to asterisk user
 chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_AGI_BIN_DIR/picotts.agi
 chmod 700 $ASTERISK_AGI_BIN_DIR/picotts.agi
+}
+
+jambulatvtts_asterisk_configure () {
+# Copy jambulatv tts agi to asterisk agi-bin directory
+cp -v $PROJECT_CONTRIB_DIR/scripts/asterisk_jambulatv-tts.agi $ASTERISK_AGI_BIN_DIR/jambulatv-tts.agi
+# Change permissions to asterisk user
+chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_AGI_BIN_DIR/jambulatv-tts.agi
+chmod 700 $ASTERISK_AGI_BIN_DIR/jambulatv-tts.agi
 }
 
 boost_install () {
