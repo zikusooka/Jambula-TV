@@ -96,7 +96,7 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_IPTV_LOG_DIR
 cat >> $TVHEADEND_IPTV_FULL_LOG_FILE <<EOT
 
 **********************************************************************
-IPTV scan log performed on:  $(date)
+IPTV [$TV_MEASURE] services scan performed on:  $(date)
 **********************************************************************
 
 EOT

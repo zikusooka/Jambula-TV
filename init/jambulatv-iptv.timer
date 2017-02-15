@@ -1,0 +1,11 @@
+[Unit]
+Description = Check for broken IPTV links on Monday, wednesday, and Friday Nights at 11:45 pm
+
+[Timer]
+OnCalendar=Mon,Wed,Thu *-*-* 23:45:00
+Unit=jambulatv-iptv.service
+
+
+
+[Install]
+WantedBy = multi-user.target

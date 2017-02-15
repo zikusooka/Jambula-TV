@@ -3095,6 +3095,11 @@ ip route add default via $NETWORK_GATEWAY_ADDRESS
 # Copy default IPTV list for JambulaTV if not existent - see playlists_configure
 [ -e $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_IPTV_WORLD_M3U_FILE ] && \
 	cp -rv $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_IPTV_WORLD_M3U_FILE $PLAYLISTS_DIRECTORY
+
+# Add iptv services scanning to schedule
+# Copy reminder .timer and .service files
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-iptv.{timer,service} $SYSTEMD_UNITS_DIR_USER/
+systemctl enable jambulatv-iptv.timer
 }
 
 iptv_icons_add () {
