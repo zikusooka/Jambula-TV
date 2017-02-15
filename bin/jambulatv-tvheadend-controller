@@ -37,6 +37,7 @@ INTERNET_GATEWAY_IP=$(ip route list | grep default | sed -n 's/^.*via //p' | awk
 
 TV_TYPE=$1
 TV_TASK=$2
+TV_MEASURE=$3
 
 
 
@@ -68,7 +69,7 @@ usage_iptv () {
 if [ "x$TV_TASK" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` iptv [scan|map]
+echo "Usage:  ./`basename $0` iptv [scan|map] [full|incremental]
 "
 exit 1
 fi
@@ -205,6 +206,25 @@ let "DIGIT = $CHANNEL_NUMBER + 1"
 done
 }
 
+iptv_test_stream () {
+# Add to log file
+echo 2>&1 | tee -a $TVHEADEND_IPTV_FULL_LOG_FILE << EOF
+
+JambulaTV: Testing IPTV stream: [$SERVICE_NAME], please wait ...
+----------------------------------------------------------------
+
+EOF
+# Play stream
+cvlc --file-logging --logfile $TVHEADEND_IPTV_FULL_LOG_FILE --no-video --no-audio -A alsa $TVHEADEND_PLAY_STREAM_URL/mux/$MUX_UUID --run-time 5 vlc://quit | grep 'core error: VLC is unable to open the MRL'
+VLC_EXIT_STATUS=$?
+# Log failures
+[ "$VLC_EXIT_STATUS" = "0" ] || \
+cat >> $TVHEADEND_IPTV_FAILED_LOG_FILE << STREAMLOG
+JambulaTV: Can not connect to stream :$SERVICE_NAME
+VLC_EXIT_STATUS=$VLC_EXIT_STATUS
+STREAMLOG
+}
+
 iptv_map_services_2_channels () {
 # Remove dead channels
 zap_dead_channels
@@ -263,17 +283,9 @@ do
 # Do not play if we already have a service
 SERVICE_ADDED=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .num_svc' | sed 's:"::g')
 SERVICE_NAME=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .name' | sed 's:"::g' | sed "s:$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g")
-# Play briefly i.e. create service
-if [ "$SERVICE_ADDED" = "0" ];
-then
 
-echo 2>&1 | tee -a $TVHEADEND_IPTV_FULL_LOG_FILE << EOF
-
-JambulaTV: Testing IPTV stream: [$SERVICE_NAME], please wait ...
-----------------------------------------------------------------
-
-EOF
-
+#
+# TO DO:
 # Skip for pipes?
 # Skip for plugins?
 # Use code below?
@@ -281,20 +293,27 @@ EOF
 #MUX_UUID=612e632357c28328f708c50696949ab8
 #SERVICE_URL_CONTAINS=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .iptv_url' | awk {'print $2'} | sed 's:"::g')
 #echo SERVICE_URL=[$SERVICE_URL_CONTAINS]
-#exit
+#
 
-
-# Test stream
-cvlc --file-logging --logfile $TVHEADEND_IPTV_FULL_LOG_FILE --no-video --no-audio -A alsa $TVHEADEND_PLAY_STREAM_URL/mux/$MUX_UUID --run-time 5 vlc://quit | grep 'core error: VLC is unable to open the MRL'
-VLC_EXIT_STATUS=$?
-# Log failures
-[ "$VLC_EXIT_STATUS" = "0" ] || \
-cat >> $TVHEADEND_IPTV_FAILED_LOG_FILE << STREAMLOG
-JambulaTV: Can not connect to stream :$SERVICE_NAME
-VLC_EXIT_STATUS=$VLC_EXIT_STATUS
-STREAMLOG
-
+# Test stream i.e. create service depending on whether full or incremental is specified
+case $1 in
+incremental)
+# Play briefly i.e. create service
+if [ "$SERVICE_ADDED" = "0" ];
+then
+iptv_test_stream
 fi
+;;
+full)
+iptv_test_stream
+;;
+*)
+if [ "$SERVICE_ADDED" = "0" ];
+then
+iptv_test_stream
+fi
+;;
+esac
 
 done
 }
@@ -335,11 +354,21 @@ fi
 iptv)
 # Usage
 usage_iptv
-if [ "$TV_TASK" = "scan" ];
-then
-scan_osd_notice
-iptv_scan_add_services 
+scan_osd_notice 
+
 #iptv_scan_4_services
+if [ "$TV_TASK" = "scan" ] && [ "$TV_MEASURE" = "incremental" ];
+then
+iptv_scan_add_services incremental
+
+elif [ "$TV_TASK" = "scan" ] && [ "$TV_MEASURE" = "full" ];
+then
+iptv_scan_add_services full
+
+elif [ "$TV_TASK" = "scan" ] && [ "x$TV_MEASURE" = "x" ];
+then
+iptv_scan_add_services incremental
+
 # Map
 elif [ "$TV_TASK" = "map" ];
 then
