@@ -19,6 +19,9 @@ TV_DURATION="$3"
 OSD_MESSAGE="$2"
 KODI_ADDON="$2"
 
+PING_TIMEOUT=3 #9
+PING_IP_ADDRESS=8.8.8.8
+
 PVR_GROUP=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannelGroups", "params": {"channeltype":"tv"}, "id": 1}' "http://127.0.0.1:8510/jsonrpc" | jq '.result.channelgroups[] | select(.label=="All channels") | .channelgroupid')
 PVR_STOP_REC_SCRIPT=/tmp/.stop_recording_tv_channel.sh
 PVR_STATUS_FILE=/tmp/pvr_status
@@ -86,6 +89,13 @@ echo "Usage:  ./`basename $0` $TV_ACTION [KODI_ADDON]
 "
 exit 1
 fi
+}
+
+check_internet_access () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+ping -w $PING_TIMEOUT $PING_IP_ADDRESS > /dev/null 2>&1
+INTERNET_ALIVE=$?
+export INTERNET_ALIVE
 }
 
 osd_notification_short () {
@@ -202,10 +212,42 @@ EOF
 }
 
 scan_video_library () {
+# Check for Internet connectivity
+check_internet_access
+# Notify and quit if No Internet
+if [ "$INTERNET_ALIVE" != "0" ];
+then
+# Notice - OSD
+osd_notification_long "Warning:  Failed to scan video library because there's currently no connection to the Internet.  Please try again ..." "Video Library Scan"
+# Notice - shell
+echo
+echo "
+Warning:  Failed to scan video library because there's currently no connection to the
+Internet.  Please try again ..."
+echo
+exit 0
+fi
+# Scan
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"VideoLibrary.Scan","id":"1","params":{"directory":"'"$1"'"}}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
 }
 
 scan_audio_library () {
+# Check for Internet connectivity
+check_internet_access
+# Notify and quit if No Internet
+if [ "$INTERNET_ALIVE" != "0" ];
+then
+# Notice - OSD
+osd_notification_long "Warning:  Failed to scan audio library because there's currently no connection to the Internet.  Please try again ..." "Audio Library Scan"
+# Notice - shell
+echo
+echo "
+Warning:  Failed to scan audio library because there's currently no connection to the
+Internet.  Please try again ..."
+echo
+exit 0
+fi
+# Scan
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"AudioLibrary.Scan","id":"1","params":{"directory":"'"$1"'"}}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
 }
 
