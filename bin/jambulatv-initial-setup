@@ -293,6 +293,7 @@ GMAIL_PASSWORD=$(query_mysql_db gmail_password)
 }
 
 gmail_smtp_setup () {
+sudo chown $JAMBULATV_USER $EMAIL_GMAIL_CONFIG
 # Add usernames, passwords credentials to Gmail config
 cat >> $EMAIL_GMAIL_CONFIG << EOF
 # GMail username and password
@@ -302,6 +303,8 @@ EOF
 }
 
 email_messaging_setup () {
+[ -e $EMAIL_CREDENTIALS_CONFIG ] || sudo touch $EMAIL_CREDENTIALS_CONFIG
+sudo chown $JAMBULATV_USER $EMAIL_CREDENTIALS_CONFIG
 cat > $EMAIL_CREDENTIALS_CONFIG << EOF
 EMAIL_TO_ADDRESS="$NOTIFICATION_EMAIL_ADDRESS"
 EMAIL_CC_ADDRESS=""
@@ -309,6 +312,7 @@ EOF
 }
 
 telegram_messaging_setup () {
+sudo chown $JAMBULATV_USER $TELEGRAM_CREDENTIALS_CONFIG
 cat >> $TELEGRAM_CREDENTIALS_CONFIG << EOF
 TELEGRAM_API_BOT="$TELEGRAM_BOT_ID"
 TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
@@ -317,6 +321,7 @@ EOF
 }
 
 whatsapp_messaging_setup () {
+sudo chown $JAMBULATV_USER $WHATSAPP_CREDENTIALS_CONFIG
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
 # TIP: Run the script $WHATSAPP_SCRIPT to generate the rest of whatsapp settings
 WHATSAPP_SCRIPT=$WHATSAPP_SCRIPT
@@ -379,17 +384,17 @@ sed -i "s:RTORRENT_NOTIFICATION_EMAIL:$NOTIFICATION_EMAIL_ADDRESS:g" $JAMBULATV_
 asterisk_google_xmpp_setup() {
 # Extract variables from mysql
 extract_setup_variables
-# Backup original xmpp_providers.sh script
-cp -v $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh.b4.setup
 # Add google credentials
-cat $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh.b4.setup | \
-	sed -e "s:GOOGLE_SERVICES_USERNAME:$GMAIL_ADDRESS:g" | \
-	sed -e "s:GOOGLE_SERVICES_PASSWORD:$GMAIL_PASSWORD:g" \
-		> $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
+sudo sed -i "s:GOOGLE_SERVICES_USERNAME:$GMAIL_ADDRESS:g" $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
+sudo sed -i "s:GOOGLE_SERVICES_PASSWORD:$GMAIL_PASSWORD:g" $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 }
 
 create_video_music_db () {
 sudo jambulatv-library create
+}
+
+scan_video_music_db () {
+sudo jambulatv-library scan
 }
 
 
@@ -415,3 +420,4 @@ rtorrent_event_setup
 asterisk_google_xmpp_setup
 
 create_video_music_db
+scan_video_music_db
