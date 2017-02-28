@@ -31,11 +31,11 @@ if (!empty($_SESSION['error_form_02'])) {
  Please enter the most suitable time for downloading content from the Internet.  Please choose a time when you rarely use the Internet e.g. After work hours.   You must enter the time in 24 hour (military) format e.g. 23:30 which is equivalent to 11:30pm.
   <p>
  <label>TV Series :</label>
- <input name="schedule_tvseries" id="schedule_tvseries" type="text" placeholder="23:30" size="15">
+ <input name="schedule_tvseries" id="schedule_tvseries" type="text" value="23:30" size="15">
  <label>Podcasts :</label>
- <input name="schedule_podcasts" id="schedule_podcasts" type="text" placeholder="0:45" size="15">
+ <input name="schedule_podcasts" id="schedule_podcasts" type="text" value="0:45" size="15">
  <label>Movies :</label>
- <input name="schedule_movies" id="schedule_movies" type="text" placeholder="2:00" size="15">
+ <input name="schedule_movies" id="schedule_movies" type="text" value="2:00" size="15">
 
 <hr></hr>
 
