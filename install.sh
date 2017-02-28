@@ -280,7 +280,8 @@ google_tts_configure
 picotts_install
 picotts_asterisk_configure
 
-# JambulaTV TTS 
+# JambulaTV TTS
+text2speech_setup
 jambulatvtts_asterisk_configure
 
 # ASR - Speech Recognition
