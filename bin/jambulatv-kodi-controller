@@ -111,7 +111,14 @@ curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: applicatio
 }
 
 pause_player () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.PlayPause", "params": {"playerid":1}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
+if [ "$1" = "noreplay" ];
+then
+# No replay/toggle
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.PlayPause", "params": {"playerid":1, "play":false}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
+else
+# replay/toggle
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.PlayPause", "params": {"playerid":1, "play":true}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
+fi
 }
 
 start_player () {
@@ -316,7 +323,7 @@ stop_player
 ;;
 
 video_play_pause)
-pause_player
+pause_player "$2"
 ;;
 
 tv_record_start) 
