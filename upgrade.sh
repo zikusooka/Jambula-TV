@@ -166,7 +166,7 @@ squid_configure
 #  MAIN SCRIPT  #
 #################
 
-#upgrade_kernel 4.4.48
+#upgrade_kernel 4.4.52
 
 #upgrade_kodi
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
