@@ -5970,6 +5970,16 @@ cd $INSTALL_SRC_DIR/w_scan && ./configure --prefix=$PREFIX \
 make_install_jambulatv
 }
 
+xmltv_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/xmltv-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v xmltv-* xmltv
+# Compile
+cd $INSTALL_SRC_DIR/xmltv
+echo "yes" | perl Makefile.PL PREFIX=$PREFIX
+make_install_jambulatv
+}
+
 email_smtp_install () {
 # Install Email - A standalone SMTP-Like client (Required)
 rsync -av --delete-after $PROJECT_GITHUB_DIR/eMail/ $INSTALL_SRC_DIR/eMail/

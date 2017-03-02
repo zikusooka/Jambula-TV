@@ -86,6 +86,7 @@ tvheadend_install
 tvheadend_configure
 dvb_drivers_support
 w_scan_install
+xmltv_install
 fmtools_install
 
 # Kodi
