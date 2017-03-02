@@ -12,6 +12,9 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #  MAIN SCRIPT  #
 #################
 
+# Info banner
+about_install
+
 # Enable Logging
 exec 2> $BUILD_LOG
 

@@ -1423,6 +1423,30 @@ uninstall_python_pkgs youtube-dl
 #######################
 #  INSTALL FUNCTIONS  #
 #######################
+# Info about this install
+about_install () {
+clear
+cat <<EOF
+ ========================================================================================
+  $COMPANY_NAME Installation Program
+ $COPYRIGHT_NOTICE
+
+  Product:	$PROJECT_NAME
+  Version:	$PROJECT_VERSION
+  Website: 	$PROJECT_URL
+
+ ========================================================================================
+
+ ***********
+ * WARNING *
+ ***********
+ Please be advised that this install process will take at least 8 hours 
+ to complete.  Please enter to proceed or press 'Ctrl+C to cancel' ...
+
+EOF
+read
+}
+
 kernel_install () {
 # See how much space is left
 kernel_check_4_space
