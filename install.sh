@@ -381,6 +381,12 @@ initial_setup_configure
 # -------
 auto_updates_configure
 
+# -----
+# Timer
+# -----
+# How long has this script run?
+SCRIPT_RUNTIME=$SECONDS && export SCRIPT_RUNTIME
+
 # ---------
 # Notices
 # ---------
