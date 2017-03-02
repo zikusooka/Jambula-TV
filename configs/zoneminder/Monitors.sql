@@ -97,7 +97,7 @@ CREATE TABLE `Monitors` (
 
 LOCK TABLES `Monitors` WRITE;
 /*!40000 ALTER TABLE `Monitors` DISABLE KEYS */;
-INSERT INTO `Monitors` VALUES (1,'Logitech-C200','Local','Monitor',1,'','','/dev/video-C200-0',0,255,0,1,'','v4l2','','80','','','','','',320,240,3,0,'0',0,-1,-1,-1,-1,'Event-','%N - %d/%m/%y %H:%M:%S',0,0,50,25,25,25,1000,1,600,0,0,0.00,0.00,1000,6,6,0,0,NULL,NULL,NULL,0,0,-1,0,'Events',100,100,'#0000c0','red',1),(2,'Logitech-Quickcam','Local','Monitor',1,'','','/dev/video-quickcam-0',0,255,0,1,'','v4l2','','80','','','','','',320,240,3,0,'0',0,-1,-1,-1,-1,'Event-','%N - %d/%m/%y %H:%M:%S',0,0,50,25,25,25,1000,1,600,0,0,0.00,0.00,1000,6,6,0,0,NULL,NULL,NULL,0,0,-1,0,'Events',100,100,'#0000c0','red',2);
+INSERT INTO `Monitors` VALUES (1,'Logitech-C200','Local','Monitor',1,'','','/dev/video-C200-0',0,255,0,1,'','v4l2','','80','','','','','',320,240,4,0,'0',0,-1,-1,-1,-1,'Event-','%N - %d/%m/%y %H:%M:%S',0,0,50,25,25,25,1000,1,600,0,0,0.00,0.00,1000,6,6,0,0,NULL,NULL,NULL,0,0,-1,0,'Events',100,100,'#0000c0','red',1),(2,'Logitech-Quickcam','Local','Monitor',1,'','','/dev/video-quickcam-0',0,255,0,1,'','v4l2','','80','','','','','',320,240,4,0,'0',0,-1,-1,-1,-1,'Event-','%N - %d/%m/%y %H:%M:%S',0,0,50,25,25,25,1000,1,600,0,0,0.00,0.00,1000,6,6,0,0,NULL,NULL,NULL,0,0,-1,0,'Events',100,100,'#0000c0','red',2);
 /*!40000 ALTER TABLE `Monitors` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
