@@ -15,6 +15,9 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 # Enable Logging
 exec 2> $BUILD_LOG
 
+# Disable/Enable some services, before next boot i.e. 4 kernel install, reboot is needed
+boot_optimization
+
 # Install custom kernel
 kernel_install 
 
@@ -131,7 +134,6 @@ bash_configure
 release_info_configure
 updates_server_info_configure
 motd_configure
-boot_optimization
 nfs_server_configure
 wired_interfaces_configure
 wireless_drivers_support
