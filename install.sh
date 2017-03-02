@@ -12,14 +12,18 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #  MAIN SCRIPT  #
 #################
 
-# Info banner
-about_install
-
 # Enable Logging
 exec 2> $BUILD_LOG
 
 # Install custom kernel
 kernel_install 
+
+# Info banner
+about_install
+
+# Ask and set key variables
+ask_4_variables
+set_variables
 
 # Create installation directory
 install_dir_create

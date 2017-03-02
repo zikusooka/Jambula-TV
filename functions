@@ -121,7 +121,6 @@ TORRENTS_WATCH_DIRECTORY=$TORRENTS_DIRECTORY/watch
 RTORRENT_SESSIONS_DIR=$TORRENTS_WATCH_DIRECTORY/.sessions_rtorrent
 RTORRENT_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/rtorrent
 
-
 # aria2
 ARIA2_CONFIG_FILE=$PROJECT_SYSTEM_CONF_DIR/aria2.conf
 ARIA2_DOWNLOADS_DIRECTORY=$PROJECT_PARTITION/Downloads
@@ -300,7 +299,6 @@ XORG_CONF=$XORG_DIR/xorg.conf
 XORG_CONF_DIR=$XORG_DIR/xorg.conf.d
 XORG_CONF_NEW=/root/xorg.conf.new
 XORG_CONF_DISPLAY=1
-
 
 XSET_CMD=$BINARY_PREFIX/xset 
 
@@ -489,7 +487,6 @@ PUBLIC_DNS_SERVERS="8.8.8.8 208.67.222.222 8.26.56.26 107.170.95.180 77.88.8.8"
 
 # Netdata
 NETDATA_PORT=$(grep -i 'netdata$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-
 
 # Dynamic variables
 # -----------------
@@ -735,31 +732,6 @@ ASTERISK_DIAL_OUT_NUMBER_1=""
 
 # OSD
 OSD_SCRIPT=$BINARY_PREFIX/jambulatv-osd
-
-# TV Market
-TV_MARKET=UG-Kampala
-#TV_MARKET=KE-Nairobi
-DVBT_NETWORK_NAME=$(basename $(find $PREFIX/share/dvb/dvb-t -iname "$TV_MARKET"))
-case $TV_MARKET in
-UG-Kampala)
-DVBT_PNETWORK_NAME="UBC TX2"
-;;
-KE-Nairobi)
-DVBT_PNETWORK_NAME="ADN"
-;;
-*)
-DVBT_PNETWORK_NAME=$DVBT_NETWORK_NAME
-esac
-#
-DVBT_TUNER_NAME="Silicon Labs Si2168"
-#
-DVB_TUNER_ADAPTER=$(dmesg | grep "$DVBT_TUNER_NAME" | grep 'DVB: registering adapter' | cut -d : -f3 | awk {'print $3'})
-if [ "x$DVB_TUNER_ADAPTER" = "x" ];
-then
-DVBT_TUNER_NO=0
-else
-DVBT_TUNER_NO=$DVB_TUNER_ADAPTER
-fi
 
 
 
@@ -1423,29 +1395,6 @@ uninstall_python_pkgs youtube-dl
 #######################
 #  INSTALL FUNCTIONS  #
 #######################
-# Info about this install
-about_install () {
-clear
-cat <<EOF
- ========================================================================================
-  $COMPANY_NAME Installation Program
- $COPYRIGHT_NOTICE
-
-  Product:	$PROJECT_NAME
-  Version:	$PROJECT_VERSION
-  Website: 	$PROJECT_URL
-
- ========================================================================================
-
- ***********
- * WARNING *
- ***********
- Please be advised that this install process will take at least 8 hours 
- to complete.  Please enter to proceed or press 'Ctrl+C to cancel' ...
-
-EOF
-read
-}
 
 kernel_install () {
 # See how much space is left
@@ -1496,6 +1445,128 @@ cat << EOF
 EOF
 exit
 fi
+}
+
+# Info about this install
+about_install () {
+clear
+cat <<EOF
+ ========================================================================================
+  $COMPANY_NAME Installation Program
+ $COPYRIGHT_NOTICE
+
+  Product:	$PROJECT_NAME
+  Version:	$PROJECT_VERSION
+  Website: 	$PROJECT_URL
+
+ ========================================================================================
+
+ ***********
+ * WARNING *
+ ***********
+ Please be advised that this install process will take at least 8 hours 
+ to complete.  Please enter to proceed or press 'Ctrl+C to cancel' ...
+
+EOF
+read
+}
+
+ask_4_variables () {
+# ----------
+# TV Market
+# ----------
+clear
+DEFAULT_TV_MARKET=UG-Kampala
+read -p "Please enter the name of your TV Market [$DEFAULT_TV_MARKET]
+
+Examples:
+UG-Kampala
+KE-Nairobi
+
+" TV_MARKET
+# If empty set to default
+if [ "x$TV_MARKET" = "x" ];
+then
+TV_MARKET=$DEFAULT_TV_MARKET
+fi
+# Export
+export TV_MARKET
+#
+# -----------------
+# TV Tuner chipset
+# -----------------
+clear
+DEFAULT_DVBT_TUNER_NAME="Silicon Labs Si2168"
+read -p "Please enter the name of your TV tuner chipset [$DEFAULT_DVBT_TUNER_NAME]
+
+Examples:
+Silicon Labs Si2168
+Sony CXD2820R
+
+" DVBT_TUNER_NAME
+# If empty set to default
+if [ "x$DVBT_TUNER_NAME" = "x" ];
+then
+DVBT_TUNER_NAME=$DEFAULT_DVBT_TUNER_NAME
+fi
+# Export
+export DVBT_TUNER_NAME
+#
+# ------------------------
+# DVB-T Configure request
+# ------------------------
+clear
+DEFAULT_TVH_DVBT_CONFIG_REQUESTED=no
+read -p "Would you like to configure DVB-T network in tvheadend (yes|no)? [$DEFAULT_TVH_DVBT_CONFIG_REQUESTED]
+
+IMPORTANT: If yes, please insert the DVB-T device before continuing.
+You must also ensure the TV Antenna is also hooked up properly
+
+" TVH_DVBT_CONFIG_REQUESTED
+# If empty set to default
+if [ "x$TVH_DVBT_CONFIG_REQUESTED" = "x" ];
+then
+TVH_DVBT_CONFIG_REQUESTED=$DEFAULT_TVH_DVBT_CONFIG_REQUESTED
+fi
+# Export
+export TVH_DVBT_CONFIG_REQUESTED
+}
+
+set_variables () {
+# ----------
+# TV Market
+# ----------
+#TV_MARKET=UG-Kampala
+#TV_MARKET=KE-Nairobi
+DVBT_NETWORK_NAME=$(basename $(find $PREFIX/share/dvb/dvb-t -iname "$TV_MARKET"))
+case $TV_MARKET in
+UG-Kampala)
+DVBT_PNETWORK_NAME="UBC TX2"
+;;
+KE-Nairobi)
+DVBT_PNETWORK_NAME="ADN"
+;;
+*)
+DVBT_PNETWORK_NAME=$DVBT_NETWORK_NAME
+esac
+# Export
+export DVBT_NETWORK_NAME DVBT_PNETWORK_NAME
+#
+# -----------------
+# TV Tuner chipset
+# -----------------
+#DVBT_TUNER_NAME="Silicon Labs Si2168"
+#
+DVB_TUNER_ADAPTER=$(dmesg | grep "$DVBT_TUNER_NAME" | grep 'DVB: registering adapter' | cut -d : -f3 | awk {'print $3'})
+if [ "x$DVB_TUNER_ADAPTER" = "x" ];
+then
+DVBT_TUNER_NO=0
+else
+DVBT_TUNER_NO=$DVB_TUNER_ADAPTER
+fi
+# Export
+export DVB_TUNER_ADAPTER DVBT_TUNER_NO
+#
 }
 
 install_dir_create () {
@@ -2372,6 +2443,94 @@ cd $INSTALL_SRC_DIR/tvheadend
 make_install_jambulatv
 }
 
+tvheadend_dvbt_configure () {
+# Start tvheadend if adapter has been inserted
+if [ ! -d /dev/dvb ];
+then
+beep
+clear
+cat <<EOF
+******************************************************************************************
+WARNING: No DVB-T Adapter was detected!  Please insert the DVB-T device before continuing.
+You must also ensure the TV Antenna is also hooked up properly
+
+Please enter to proceed ...
+******************************************************************************************
+EOF
+read
+fi
+sleep 9
+systemctl start tvheadend.service
+#
+# Wait until adapters directory has been populated
+while true
+do
+  if [ "$(ls -A "$TVHEADEND_ADAPTERS_CONFIG_DIR")" ]; 
+    then
+    break
+  else 
+    echo "Waiting for tvheadend.service to settle. Please be patient ..."
+    sleep 7
+  fi
+
+done
+
+# Configure DVBT-2 adapter settings
+ ---------------------------------
+TVHEADEND_ADAPTERS_CONFIG_FILE=$(grep -rli "$DVBT_TUNER_NAME" $TVHEADEND_ADAPTERS_CONFIG_DIR | xargs grep -l adapter${DVBT_TUNER_NO})
+#
+cat > $TVHEADEND_ADAPTERS_CONFIG_FILE << EOF
+{
+	"rootpath": "/dev/dvb/adapter${DVBT_TUNER_NO}",
+	"frontends": {		
+		"DVB-T #0": {
+			"lna": false,
+			"pids_max": 32,
+			"powersave": false,
+			"tune_repeats": 0,
+			"skip_bytes": 0,
+			"ibuf_size": 188000,
+			"status_period": 1000,
+			"old_status": false,
+			"enabled": true,
+			"priority": 0,
+			"spriority": 0,
+			"displayname": "$DVBT_TUNER_NAME : DVB-T #0",
+			"ota_epg": true,
+			"initscan": true,
+			"idlescan": true,
+			"free_weight": 0,
+			"networks": [
+				"$TVHEADEND_NETWORK_UUID"
+			],
+			"linked": "",
+			"type": "DVB-T",
+			"uuid": "$TVHEADEND_ADAPTER_UUID"
+		}
+	}
+}
+EOF
+
+# Configure network that will be used and type
+# --------------------------------------------
+cat > $TVHEADEND_NETWORK_CONFIG_FILE <<EOF
+{
+	"networkname": "$DVBT_NETWORK_NAME",
+	"pnetworkname": "$DVBT_PNETWORK_NAME",
+	"nid": 0,
+	"autodiscovery": 0,
+	"skipinitscan": false,
+	"idlescan": false,
+	"sid_chnum": false,
+	"ignore_chnum": true,
+	"satip_source": 0,
+	"localtime": 180,
+	"wizard": false,
+	"class": "dvb_network_dvbt"
+}
+EOF
+}
+
 tvheadend_configure () {
 #
 # Create tvheadend directories if it does not exist
@@ -2456,92 +2615,27 @@ cat $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service | \
 		> $SYSTEMD_UNITS_DIR_USER/tvheadend.service
 # Enable tvheadend
 systemctl enable tvheadend.service
-#
-# Start tvheadend if adapter has been inserted
-if [ ! -d /dev/dvb ];
+
+# Configure DVB-T2 network if requested
+# -------------------------------------
+if [ "$TVH_DVBT_CONFIG_REQUESTED" = "yes" ];
 then
-beep
-clear
-cat <<EOF
-******************************************************************************************
-WARNING: No DVB-T Adapter was detected!  Please insert the DVB-T device before continuing.
-You must also ensure the TV Antenna is also hooked up properly
-
-Please enter to proceed ...
-******************************************************************************************
-EOF
-read
-fi
-sleep 9
-systemctl start tvheadend.service
+tvheadend_dvbt_configure
+else
+# Remind to run manually in post install information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
-# Wait until adapters directory has been populated
-while true
-do
-  if [ "$(ls -A "$TVHEADEND_ADAPTERS_CONFIG_DIR")" ]; 
-    then
-    break
-  else 
-    echo "Waiting for tvheadend.service to settle. Please be patient ..."
-    sleep 7
-  fi
+#
+TVHeadend DVB-T Network
+========================
+% The DVB-T network was not configured during install.  Please run the following function:
 
-done
-
-# Configure DVBT-2 adapter settings
-# ---------------------------------
-TVHEADEND_ADAPTERS_CONFIG_FILE=$(grep -rli "$DVBT_TUNER_NAME" $TVHEADEND_ADAPTERS_CONFIG_DIR | xargs grep -l adapter${DVBT_TUNER_NO})
-
-cat > $TVHEADEND_ADAPTERS_CONFIG_FILE << EOF
-{
-	"rootpath": "/dev/dvb/adapter${DVBT_TUNER_NO}",
-	"frontends": {		
-		"DVB-T #0": {
-			"lna": false,
-			"pids_max": 32,
-			"powersave": false,
-			"tune_repeats": 0,
-			"skip_bytes": 0,
-			"ibuf_size": 188000,
-			"status_period": 1000,
-			"old_status": false,
-			"enabled": true,
-			"priority": 0,
-			"spriority": 0,
-			"displayname": "$DVBT_TUNER_NAME : DVB-T #0",
-			"ota_epg": true,
-			"initscan": true,
-			"idlescan": true,
-			"free_weight": 0,
-			"networks": [
-				"$TVHEADEND_NETWORK_UUID"
-			],
-			"linked": "",
-			"type": "DVB-T",
-			"uuid": "$TVHEADEND_ADAPTER_UUID"
-		}
-	}
-}
+  tvheadend_dvbt_configure
+  
+TIP: just add it to testing.sh and run!  
+#
 EOF
-
-# Configure network that will be used and type
-# --------------------------------------------
-cat > $TVHEADEND_NETWORK_CONFIG_FILE <<EOF
-{
-	"networkname": "$DVBT_NETWORK_NAME",
-	"pnetworkname": "$DVBT_PNETWORK_NAME",
-	"nid": 0,
-	"autodiscovery": 0,
-	"skipinitscan": false,
-	"idlescan": false,
-	"sid_chnum": false,
-	"ignore_chnum": true,
-	"satip_source": 0,
-	"localtime": 180,
-	"wizard": false,
-	"class": "dvb_network_dvbt"
-}
-EOF
+fi
 
 # Copy muxes for specified TV Market
 # ----------------------------------
@@ -2638,12 +2732,6 @@ chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 			> $BINARY_PREFIX/jambulatv-tvheadend-controller
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-tvheadend-controller
-
-# Restart tvheadend
-#systemctl restart tvheadend.service
-#sleep 120
-# Add DVB-T2 channels using helper script
-# ... jambulatv-tvheadend-controller dvbt .....
 }
 
 fmtools_install () {
