@@ -3927,7 +3927,8 @@ wireless_drivers_support () {
 # Intel 7260
 rsync -av $PROJECT_GITHUB_DIR/linux-firmware/iwlwifi-7260-* $FIRMWARE_DIR/
 # Reload this module
-rmmod -f iwlwifi && modprobe iwlwifi
+#rmmod -f iwlwifi
+modprobe iwlwifi
 }
 
 create_list_of_wireless_devices () {
@@ -6698,8 +6699,7 @@ make_install_jambulatv
 
 chan_mobile_configure () {
 # Modify chan_mobile config file - Add custom bluez adapter and phone(s)
-cp -v $ASTERISK_CONF_DIR/chan_mobile.conf $ASTERISK_CONF_DIR/chan_mobile.conf.sample
-cat $ASTERISK_CONF_DIR/chan_mobile.conf.sample | \
+cat $PROJECT_CONFIGS_DIR/asterisk/chan_mobile.conf | \
 	sed -e "s/BLUEZ_ADAPTER_0_ADDR/$BLUEZ_ADAPTER_0_ADDR/g" | \
 	sed -e "s/BLUEZ_PHONE_0_ADDR/$BLUEZ_PHONE_0_ADDR/g" \
 		> $ASTERISK_CONF_DIR/chan_mobile.conf
@@ -7449,8 +7449,10 @@ jabberd_configure () {
 # Add customized config files: sm.xml, c2s.xml, s2s.xml, router.xml
 for JABBERD_CONFIG in sm.xml c2s.xml s2s.xml router.xml;
 do
+# Make a copy of config
+cp -v $PROJECT_CONFIGS_DIR/jabberd/$JABBERD_CONFIG $PROJECT_CONFIGS_DIR/jabberd/${JABBERD_CONFIG}.orig
 # Change password while copying to /etc/jabberd directory
-cat $PROJECT_CONFIGS_DIR/jabberd/$JABBERD_CONFIG | sed -e "s:JABBERD_PASSWORD_CHANGE_ME:$JABBERD_PASSWORD:g" | sed -e "s:LIBDIR:$LIBDIR:g" > /etc/jabberd/$JABBERD_CONFIG
+cat $PROJECT_CONFIGS_DIR/jabberd/${JABBERD_CONFIG}.orig | sed -e "s:JABBERD_PASSWORD_CHANGE_ME:$JABBERD_PASSWORD:g" | sed -e "s:LIBDIR:$LIBDIR:g" > /etc/jabberd/$JABBERD_CONFIG
 done
 # Create jabberd logs directory
 [ -d $PROJECT_SYSTEM_LOG_DIR/jabberd ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/jabberd
