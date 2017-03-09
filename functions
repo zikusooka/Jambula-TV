@@ -3053,6 +3053,28 @@ cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
 make_install_jambulatv
 }
 
+kodi_pvr_rtl_radiofm_install () {
+# Install p8-platform - dependency
+PLATFORM_TAG=p8-platform-2.0.1 && platform_install
+#
+# Unpack pvr.rtl.radiofm sources
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.rtl.radiofm/ $INSTALL_SRC_DIR/pvr.rtl.radiofm/
+# configure
+cd $INSTALL_SRC_DIR/pvr.rtl.radiofm
+# Log to build file
+cmake_build_log
+# CMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi \
+	-DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON .
+
+_install_pause_check_4_errors_
+make
+
+_install_pause_check_4_errors_
+
+make_install_jambulatv
+}
+
 kodi_addons_unpack () {
 # script.module.beautifulsoup
 if [ "$KODI_ADDON" = "script.module.beautifulsoup" ];
@@ -6056,6 +6078,24 @@ make_build_log
 # Make
 make -s SYS=posix
 make install
+}
+
+rtl_sdr_install () {
+# Unpack
+rsync -av --delete-after $PROJECT_GITHUB_DIR/rtl-sdr/ $INSTALL_SRC_DIR/rtl-sdr/
+# configure
+cd $INSTALL_SRC_DIR/rtl-sdr
+# Create cmake build directory
+mkdir build
+cd build
+# Log to build file
+cmake_build_log
+# cMake
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX \
+	-DDETACH_KERNEL_DRIVER=ON -DINSTALL_UDEV_RULES=ON ..
+make install
+ldconfig
+make install-udev-rules
 }
 
 iptv_support () {

@@ -105,6 +105,7 @@ kodi_install # ~160 mins (107m on SSD)
 kodi_platform_install
 kodi_pvr_hts_install
 kodi_pvr_iptvsimple_install
+#kodi_pvr_rtl_radiofm_install # ~ Not yet compiling 
 kodi_addons_install
 kodi_addons_configure
 kodi_configure
@@ -248,6 +249,7 @@ email_via_gmail_setup
 gdata_install
 google_sms_setup
 reverse_ssh_configure
+rtl_sdr_install
 
 # ----------------
 # Communications 
