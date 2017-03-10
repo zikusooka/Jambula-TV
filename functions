@@ -4265,6 +4265,8 @@ sed -i 's:#PrintLastLog yes:PrintLastLog no:' $CONFDIR/ssh/sshd_config
 reverse_ssh_configure () {
 # Create SSH server, username, password credentials that will be used for this box
 cat > $REVERSE_SSH_CONFIG << EOF
+REVERSE_SSH_ENABLED="YES" #YES
+
 # Local SSH
 LOCAL_SSH_USER=$LOCAL_SSH_USER
 LOCAL_SSH_SERVER=$LOCAL_SSH_SERVER
