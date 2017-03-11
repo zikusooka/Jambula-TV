@@ -3055,7 +3055,7 @@ make_install_jambulatv
 
 kodi_pvr_rtl_radiofm_install () {
 # Install p8-platform - dependency
-PLATFORM_TAG=p8-platform-2.0.1 && platform_install
+PLATFORM_TAG=platform-2.1.0 && platform_install
 #
 # Unpack pvr.rtl.radiofm sources
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.rtl.radiofm/ $INSTALL_SRC_DIR/pvr.rtl.radiofm/
