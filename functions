@@ -9,7 +9,7 @@ COPYRIGHT_YEAR_END=$(date '+%Y' --date='12 months')
 COPYRIGHT_NOTICE=" ©$COPYRIGHT_YEAR_START-$COPYRIGHT_YEAR_END $COMPANY_NAME All Rights Reserved."
 
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.4.52"
+KERNEL_VERSION="4.4.53"
 
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
@@ -3482,6 +3482,8 @@ cp -v $PROJECT_CONTRIB_DIR/scripts/kodi_*.py $KODI_SHARE_DIR/scripts
 }
 
 kodi_jambulatv_service_configure () {
+# Reinstate default to graphical.target
+systemctl set-default graphical.target
 # Disable lxdm - We dont need as default
 systemctl disable lxdm.service
 # Disable display-manager.service - We dont need as default
@@ -3845,35 +3847,6 @@ cat $PROJECT_BIN_DIR/jambulatv-connect-2-wifi-ap | \
 		> $BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-connect-2-wifi-ap
-}
-
-boot_optimization () {
-# Start mandatory services as a result of what is disabled below
-for NEEDED_SERVICE in \
-network.service
-do
-systemctl start $NEEDED_SERVICE
-systemctl enable $NEEDED_SERVICE
-done
-# Disable services that take a lot longer
-for NOT_NEEDED_SERVICE in \
-dnf-makecache.service \
-firewalld.service \
-NetworkManager-dispatcher.service \
-NetworkManager-wait-online.service \
-NetworkManager.service \
-sendmail.service \
-sm-client.service
-do
-systemctl stop $NOT_NEEDED_SERVICE
-systemctl mask $NOT_NEEDED_SERVICE
-done
-#
-# Quit plymouth only after mysqld.service - Makes handoff to kodi less rougher
-sed -i "s:After=rc-local.service:After=mysqld.service rc-local.service:" $SYSTEMD_UNITS_DIR_SYSTEM/plymouth-quit.service
-#
-# Reload 
-systemctl --system daemon-reload
 }
 
 nfs_server_configure () {

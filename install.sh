@@ -12,13 +12,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #  MAIN SCRIPT  #
 #################
 
-# Enable Logging
-exec 2> $BUILD_LOG
-
-# Disable/Enable some services, before next boot i.e. 4 kernel install, reboot is needed
-boot_optimization
-
-# Install custom kernel
+# Custom kernel install, reboot is needed
 kernel_install 
 
 # Info banner
@@ -27,6 +21,9 @@ about_install
 # Ask and set key variables
 ask_4_variables
 set_variables
+
+# Non-Interactive install starts here i.e. Start logging to file 
+exec 2> $BUILD_LOG
 
 # Create installation directory
 install_dir_create
