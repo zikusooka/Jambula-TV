@@ -93,7 +93,7 @@ do
 # Display OSD Message
 $OSD_CMD "$QRCODE_OSD_MSG_AUTO_WIFI_PROVISION"
 # Pause for next scroll
-sleep 3
+sleep 45
 ps auxw | grep `basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS` | \
 	grep $PID_AUTO_WIFI_QR > /dev/null 2>&1
 OSDEXITVAL=$?
