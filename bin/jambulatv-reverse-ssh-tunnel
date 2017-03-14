@@ -5,6 +5,11 @@
 # Jambula Labs @copyright 2017-2018 All rights reserved
 #
 # Variables
+RELEASE_FILE=/etc/JambulaTV/release
+PRODUCT=$(grep -i Product $RELEASE_FILE | cut -d : -f2)
+VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
+SERIAL=$(grep -i Serial $RELEASE_FILE | cut -d : -f2)
+
 REVERSE_SSH_CONFIG=/etc/JambulaTV/reverse-ssh.cfg
 TMP_EMAIL_FILE=/tmp/email.tmp
 EXPECT_TIMEOUT=60
@@ -92,7 +97,7 @@ echo "Sending SMS Notification"
 email)
 # Create temp email file
 cat > $TMP_EMAIL_FILE << EOF
-Reverse SSH connection failed. Possible causes:
+Reverse SSH connection for [$SERIAL] failed. Possible causes:
 
 1. The information you provided is incorrect or the SSH account was not setup on the
    remote server at $MIDDLEMAN_SSH_SERVER:$MIDDLEMAN_SSH_SERVER_PORT
@@ -106,7 +111,7 @@ Reverse SSH connection failed. Possible causes:
 
 EOF
 # Send email
-$EMAIL_VIA_GMAIL_CMD $REVERSE_SSH_NOTIFICATION_EMAIL "[JambulaTV] Error: Reverse SSH connection failed" "$(cat $TMP_EMAIL_FILE)"
+$EMAIL_VIA_GMAIL_CMD $REVERSE_SSH_NOTIFICATION_EMAIL "[$SERIAL] Error: Reverse SSH connection failed" "$(cat $TMP_EMAIL_FILE)"
 ;;
 *)
 echo "No notification sent"
@@ -135,7 +140,7 @@ echo "Sending SMS Notification"
 email)
 # Create temp email file
 cat > $TMP_EMAIL_FILE << EOF
-Reverse SSH has been established at ${MIDDLEMAN_SSH_SERVER}.  
+Reverse SSH for [$SERIAL] has been established at ${MIDDLEMAN_SSH_SERVER}.  
 
 To connect, run the following command from any terminal:
 
@@ -143,7 +148,7 @@ ssh -p ${PORT_MIDDLEMAN_WILL_LISTEN_ON} ${LOCAL_SSH_USER}@${MIDDLEMAN_SSH_SERVER
 
 EOF
 # Send email
-$EMAIL_VIA_GMAIL_CMD $REVERSE_SSH_NOTIFICATION_EMAIL "JambulaTV: Reverse SSH connection has been made" "$(cat $TMP_EMAIL_FILE)"
+$EMAIL_VIA_GMAIL_CMD $REVERSE_SSH_NOTIFICATION_EMAIL "[$SERIAL]: Reverse SSH connection has been made" "$(cat $TMP_EMAIL_FILE)"
 ;;
 none)
 echo "No notification is needed"
