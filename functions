@@ -14,7 +14,7 @@ KERNEL_VERSION="4.4.53"
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
-AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed"
+AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep"
 MULTIMEDIA_USER=$AUTOLOGIN_USER
 MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
 BACKUPS_DIR=$ROOT_DIR/Backups
@@ -421,8 +421,8 @@ JABBERD_CONF_DIR=$CONFDIR/jabberd
 JABBERD_ROUTER_USERS_FILE=$JABBERD_CONF_DIR/router-users.xml
 JABBERD_TEMPLATES_DIR=$JABBERD_CONF_DIR/templates
 JABBERD_DB_CREATE=/usr/share/jabberd/db-setup.mysql
-
-JABBERD_PASSWORD=`grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //'`
+JABBERD_PASSWORD=$(sudo grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //')
+JABBERD_RESOURCE=Home
 
 # OpenHAB
 OPENHAB_HTTP_PORT=$(grep -i 'openhab$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -533,9 +533,6 @@ COOVA_NORMAL_USER_PASSWORD=coovpass
 COOVA_SERVER_IP=172.16.0.1
 COOVA_UAM_SECRET=lled371
 COOVA_PRIVILEGED_MAC="00:21:5c:25:32:5b,00:02:2D:53:66:21,00:0E:9B:15:98:8E"
-
-JABBERD_PASSWD=`grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //'`
-JABBERD_RESOURCE=Home
 
 # Cepstral
 CEPSTRAL_VERSION=6.0.1
@@ -677,8 +674,7 @@ FREEPBX_EXTENSION_WEBRTC_001_NAME="Jambula WebRTC"
 FREEPBX_EXTENSION_WEBRTC_001_PASS="ellis2012"
 FREEPBX_DIALPLAN_NAME=office04
 
-# Chan_mobile
-BLUEZ_ADAPTER_0_ADDR=$(hciconfig hci0 | grep 'BD Address' | awk {'print $3'})
+# Chan_mobile Phone
 BLUEZ_PHONE_0_ADDR="30:D7:4F:3B:66:22"
 
 # Samba
@@ -2622,7 +2618,9 @@ systemctl enable tvheadend.service
 # -------------------------------------
 if [ "$TVH_DVBT_CONFIG_REQUESTED" = "yes" ];
 then
-tvheadend_dvbt_configure
+tvheadend_dvbt_configure 
+# Let other tools know, we already configured DVB-T
+touch $TVHEADEND_CONFIG_DIR/.dvbt_configured
 else
 # Remind to run manually in post install information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
@@ -2634,7 +2632,7 @@ TVHeadend DVB-T Network
 
   tvheadend_dvbt_configure
   
-TIP: just add it to testing.sh and run!  
+TIP: Run initial-setup or just add it to testing.sh and run!  
 #
 EOF
 fi
@@ -6620,7 +6618,7 @@ cp -v $ASTERISK_CONF_DIR/xmpp.conf $ASTERISK_CONF_DIR/xmpp.conf.orig
 cat $ASTERISK_CONF_DIR/xmpp.conf.orig | sed -e "s:JAMBULA_ASTERISK_XMPP_USERNAME:$ASTERISK_XMPP_USERNAME:g" | sed -e "s:JAMBULA_ASTERISK_XMPP_PASSWORD:$ASTERISK_XMPP_PASSWORD:g" | sed -e "s:JAMBULA_USER_001_XMPP_USERNAME:$USER_001_XMPP_USERNAME:g" | sed -e "s:JAMBULA_ASTERISK_XMPP_HOST:$ASTERISK_XMPP_HOST:g" > $ASTERISK_CONF_DIR/xmpp.conf
 #
 # Jambula Asterisk files configuration
-for CONFIG_FILE in extensions.conf sip.conf voicemail.conf chan_mobile.conf musiconhold.conf xmpp.conf motif.conf confbridge.conf http.conf
+for CONFIG_FILE in extensions.conf sip.conf voicemail.conf musiconhold.conf xmpp.conf motif.conf confbridge.conf http.conf
 do
 # Backup config file
 cp -v $CONFDIR/asterisk/$CONFIG_FILE $CONFDIR/asterisk/$CONFIG_FILE.orig
@@ -6712,6 +6710,8 @@ make_install_jambulatv
 }
 
 chan_mobile_configure () {
+# Get bluetooth MAC Address
+BLUEZ_ADAPTER_0_ADDR=$(hciconfig hci0 | grep 'BD Address' | awk {'print $3'})
 # Modify chan_mobile config file - Add custom bluez adapter and phone(s)
 cat $PROJECT_CONFIGS_DIR/asterisk/chan_mobile.conf | \
 	sed -e "s/BLUEZ_ADAPTER_0_ADDR/$BLUEZ_ADAPTER_0_ADDR/g" | \
@@ -7480,7 +7480,7 @@ mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Defa
 # Create jabberd database
 mysql -u root -p$MYSQL_ROOT_PASSWORD < $JABBERD_DB_CREATE
 # Create SQL to set privileges on database
-echo "GRANT select,insert,delete,update ON jabberd2.* to jabberd2@localhost IDENTIFIED by '$JABBERD_PASSWD';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+echo "GRANT select,insert,delete,update ON jabberd2.* to jabberd2@localhost IDENTIFIED by '$JABBERD_PASSWORD';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
 # Copy modified jabberd2 systemd file - i.e. Start after MySQL, otherwise,services fail
 cp -v $PROJECT_INIT_SCRIPTS_DIR/jabberd*.service $SYSTEMD_UNITS_DIR_SYSTEM/
 # Symlink jabberd/authreg_mysql.so, storage_mysql.so if on x86-64 plaform
@@ -7496,9 +7496,9 @@ systemctl start jabberd.service
 
 jabberd_add_users () {
 # Asterisk xmpp user
-echo "INSERT INTO authreg (username, realm, password) values ('$ASTERISK_XMPP_USERNAME', '$ASTERISK_XMPP_RESOURCE', '$ASTERISK_XMPP_PASSWORD');" | mysql -u jabberd2 -p$JABBERD_PASSWD jabberd2
+echo "INSERT INTO authreg (username, realm, password) values ('$ASTERISK_XMPP_USERNAME', '$ASTERISK_XMPP_RESOURCE', '$ASTERISK_XMPP_PASSWORD');" | mysql -u jabberd2 -p$JABBERD_PASSWORD jabberd2
 # Normal xmpp user
-echo "INSERT INTO authreg (username, realm, password) values ('$USER_001_XMPP_USERNAME', '$USER_001_XMPP_RESOURCE', '$USER_001_XMPP_PASSWORD');" | mysql -u jabberd2 -p$JABBERD_PASSWD jabberd2
+echo "INSERT INTO authreg (username, realm, password) values ('$USER_001_XMPP_USERNAME', '$USER_001_XMPP_RESOURCE', '$USER_001_XMPP_PASSWORD');" | mysql -u jabberd2 -p$JABBERD_PASSWORD jabberd2
 # Add normal xmpp user to roster
 sed -i "/<\/query>/d" $JABBERD_TEMPLATES_DIR/roster.xml
 sleep 1
@@ -8282,15 +8282,6 @@ chmod -R 777 $ICINGA2_WEB_CONFIG_DIR/enabledModules
 #
 # Change ownership of icingaweb2 config directory
 chown -R $ASTERISK_FILES_USER:$WWW_USER $ICINGA2_WEB_CONFIG_DIR
-
-# Debug Remove THIS!
-echo "
-===============================
-# Debug Remove THIS at:
-functions - Line 7306
-chown -R $ASTERISK_FILES_USER:$WWW_USER $ICINGA2_WEB_CONFIG_DIR
-===============================
-" >> $DEBUG_LOG
 #
 # Create Icingaweb2 Admin User in MySQL database
 echo "INSERT INTO icingaweb_user (name, active, password_hash, ctime) VALUES ('$ICINGAWEB2_ADMIN_USER', '1', '$ICINGAWEB2_ADMIN_PASS_HASH', NOW());" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
