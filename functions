@@ -6070,7 +6070,6 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX \
 	-DDETACH_KERNEL_DRIVER=ON -DINSTALL_UDEV_RULES=ON ..
 make install
 ldconfig
-make install-udev-rules
 }
 
 iptv_support () {
