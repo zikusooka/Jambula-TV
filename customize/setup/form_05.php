@@ -1,6 +1,6 @@
 <?php
 session_start();
- // Fetching all values posted from second page and storing it in variable.
+// Fetching all values posted from second page and storing it in variable.
  foreach ($_POST as $key => $value) {
  $_SESSION['post'][$key] = $value;
  }
@@ -16,43 +16,48 @@ session_start();
  <body>
  <div class="container">
  <div class="main">
- <h2>4. TV Series, Movies, Music, and Podcasts</h2><hr/>
+ <h2>4. Free to Air Digital TV</h2><hr/>
  <span id="error">
 <?php
-// To show error of last form
-if (!empty($_SESSION['error_form_02'])) {
- echo $_SESSION['error_form_02'];
- unset($_SESSION['error_form_02']);
+// To show error of last form 
+if (!empty($_SESSION['error_form_04'])) {
+ echo $_SESSION['error_form_04'];
+ unset($_SESSION['error_form_04']);
 }
 ?>
  </span>
  <form action="form_06.php" method="post">
- <h4>Content Download Schedule</h4>
- Please enter the most suitable time for downloading content from the Internet.  Please choose a time when you rarely use the Internet e.g. After work hours.   You must enter the time in 24 hour (military) format e.g. 23:30 which is equivalent to 11:30pm.
-  <p>
- <label>TV Series :</label>
- <input name="schedule_tvseries" id="schedule_tvseries" type="text" value="23:30" size="15">
- <label>Podcasts :</label>
- <input name="schedule_podcasts" id="schedule_podcasts" type="text" value="0:45" size="15">
- <label>Movies :</label>
- <input name="schedule_movies" id="schedule_movies" type="text" value="2:00" size="15">
 
-<hr></hr>
+ <label>Do you want to setup Live TV Now?</label>
+<p>
+IMPORTANT: If Yes, please ensure that your JambulaTV comes with a DVB-T tuner pre-installed. Then you must connect the TV Antenna before proceeding!
 
- <h4>Trakt.tv Account</h4>
+<br>
+ <select name="tvh_dvbt_config_requested" >
+ <option value="UG-Kampala">----Select----</options>
+ <option value="y">Yes </options>
+ <option value="n">No </options>
+ </select>
 
-Please <a href="https://trakt.tv/auth/join" "target=_blank"> SignUp</a> for a Trakt.tv account.
+<br>
 
- <p>
- <label>Username :</label>
- <input name="traktv_username" id="schedule_tvseries" type="text" size="25">
- <label>Watchlist (Create one named JambulaTV) :</label>
- <input name="traktv_watchlist" id="schedule_podcasts" type="text" placeholder="JambulaTV" size="25">
+<hr/>
 
+ <label>TV Market Area :<span>*</span></label>
+ <select name="tv_market" >
+ <option value="UG-Kampala">----Select----</options>
+ <option value="UG-Kampala">Uganda - Kampala </options>
+ <option value="KE-Nairobi">Kenya - Nairobi </options>
+ </select>
 
+ <label>TV Tuner Name :<span></span></label>
+ <select name="dvbt_tuner_name" >
+ <option value="Silicon Labs Si2168">----Select----</options>
+ <option value="Silicon Labs Si2168">Silicon Labs Si2168 </options>
+ <option value="Sony CXD2820R">Sony CXD2820R </options>
+ </select>
 
-
-  <p>
+<hr/>
 
  <input type="submit" value="Next" />
  </form>

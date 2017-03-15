@@ -1,9 +1,18 @@
 <?php
 session_start();
-// Fetching all values posted from second page and storing it in variable.
+ // Fetching all values posted from second page and storing it in variable.
  foreach ($_POST as $key => $value) {
  $_SESSION['post'][$key] = $value;
  }
+// Extract Array
+ extract($_SESSION['post']); // Function to extract array.
+
+// Add DVB-T2 settings - Whether to configure Live TV
+ $dvbt_settings_file=".dvbt-settings.txt";
+
+ $file=fopen($dvbt_settings_file,"w");
+ fwrite($file,"TVH_DVBT_CONFIG_REQUESTED=\"$tvh_dvbt_config_requested\"\nTV_MARKET=\"$tv_market\"\nDVBT_TUNER_NAME=\"$dvbt_tuner_name\"");
+ fclose($file);
 ?>
 
 <!DOCTYPE HTML>
@@ -16,60 +25,43 @@ session_start();
  <body>
  <div class="container">
  <div class="main">
- <h2>5. Messaging clients used for your Notifications</h2><hr/>
+ <h2>5. TV Series, Movies, Music, and Podcasts</h2><hr/>
  <span id="error">
 <?php
-// To show error of last form 
-if (!empty($_SESSION['error_form_04'])) {
- echo $_SESSION['error_form_04'];
- unset($_SESSION['error_form_04']);
+// To show error of last form
+if (!empty($_SESSION['error_form_02'])) {
+ echo $_SESSION['error_form_02'];
+ unset($_SESSION['error_form_02']);
 }
 ?>
  </span>
- <form action="form_50.php" method="post">
+ <form action="form_07.php" method="post">
+ <h4>Content Download Schedule</h4>
+ Please enter the most suitable time for downloading content from the Internet.  Please choose a time when you rarely use the Internet e.g. After work hours.   You must enter the time in 24 hour (military) format e.g. 23:30 which is equivalent to 11:30pm.
+  <p>
+ <label>TV Series :</label>
+ <input name="schedule_tvseries" id="schedule_tvseries" type="text" value="23:30" size="15">
+ <label>Podcasts :</label>
+ <input name="schedule_podcasts" id="schedule_podcasts" type="text" value="0:45" size="15">
+ <label>Movies :</label>
+ <input name="schedule_movies" id="schedule_movies" type="text" value="2:00" size="15">
 
- <label>What client(s) should I use to notify you :</label>
- <br><input type="radio" name="telegram" value="telegram">Telegram
- <br><input type="radio" name="whatsapp" value="whatsapp">WhatsApp
- <br><input type="radio" name="email" value="email">Email
+<hr></hr>
 
-<hr/>
+ <h4>Trakt.tv Account</h4>
 
- <h4>Telegram</h4>
-To setup your telegram bot, please start <a href="tg://resolve?domain=botfather" target="_blank">Botfather</a> 
-<p>
- <label>Telegram API Bot ID :</label><br />
- <input name="telegram_bot_id" id="telegram_bot_id" type="text" value="" >
- <label>Telegram API Chat ID :</label><br />
- <input name="telegram_chat_id" id="telegram_chat_id" type="text" value="" >
- <label>Telegram API Username (Optional) :</label><br />
- <input name="telegram_username" id="telegram_username" type="text" value="" >
+Please <a href="https://trakt.tv/auth/join" "target=_blank"> SignUp</a> for a Trakt.tv account.
 
-<hr/>
+ <p>
+ <label>Username :</label>
+ <input name="traktv_username" id="schedule_tvseries" type="text" size="25">
+ <label>Watchlist (Create one named JambulaTV) :</label>
+ <input name="traktv_watchlist" id="schedule_podcasts" type="text" placeholder="JambulaTV" size="25">
 
- <h4>WhatsApp</h4>
 
- <label>WhatsApp Number for Receiving :</label><br />
- <input name="whatsapp_no_recipient" id="whatsapp_no_recipient" type="text" value="" >
- <label>WhatsApp Number for Sending :</label><br />
- <input name="whatsapp_no_sender" id="whatsapp_no_sender" type="text" value="" >
 
-<hr/>
 
- <h4>Email</h4>
-
- <label>Email Address :</label><br />
- <input name="notification_email_address" id="notification_email_address" type="text" value="" >
-
-</hr>
- <p><b>IMPORTANT:</b>In order for email to work, you will need a Google services account.  This can be another GMail account different from your primary one.  For this purpose, it is recommended that you <a href="https://accounts.google.com/SignUp?service=mail" target="_blank">create a new account</a></p>
- <label>GMail Address :</label><br />
- <input name="gmail_address" id="gmail_address" type="text" value="" >
- <label>GMail Password :</label><br />
- <input name="gmail_password" id="gmail_password" type="text" value="" >
- 
-
-<hr/>
+  <p>
 
  <input type="submit" value="Next" />
  </form>

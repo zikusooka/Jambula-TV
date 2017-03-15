@@ -3,39 +3,43 @@
 # Jambula Labs @copyright 2017-2018 All rights reserved
 #
 # Variables
+PROJECT_NAME=JambulaTV
+SOURCESDIR=/opt
+PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
+
+# Source functions file
+. $PROJECT_BASE_DIR/functions
+
+KODI_GUI_SETTINGS=$KODI_USER_DATA/guisettings.xml
+
 AUTO_WIFI_PROVISION_CMD=/usr/bin/jambulatv-auto-wifi-provision
 QRCODE_PLAYER_CMD="/usr/bin/cvlc"
 QRCODE_WIDTH=320
 QRCODE_HEIGHT=240
 QRCODE_PLAYER_OPTIONS="--daemon -I dummy --quiet --no-audio --width $QRCODE_WIDTH --height $QRCODE_HEIGHT --loop --meta-title=SETUP --video-title-timeout=300000000000000"
 
-JAMBULATV_USER=jambula
-JAMBULATV_USER_HOME_DIR=/JambulaTV
-JAMBULTAV_CONFIG_DIR=/etc/JambulaTV
-JAMBULTAV_SHARE_DIR=/usr/share/JambulaTV
-JAMBULTAV_LOG_DIR=/var/log/JambulaTV
-
 OSDRUNFILE=/tmp/osd_process_running
 
-FLEXGET_CONFIG_DIR=$JAMBULTAV_CONFIG_DIR/flexget
+FLEXGET_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/flexget
 ASTERISK_AGI_BIN_DIR=/var/lib/asterisk/agi-bin
 
-QRCODE_DIR=$JAMBULTAV_SHARE_DIR/images/qrcodes
+QRCODE_DIR=$PROJECT_SYSTEM_SHARE_DIR/images/qrcodes
 QRCODE_FILE=setup_url.png
 
-SETUP_INTERNET_CONFIG_FILE=$JAMBULTAV_SHARE_DIR/html/setup/.internet-settings.txt
-SETUP_MAC_ADDRESSES_FILE=$JAMBULTAV_SHARE_DIR/html/setup/.wifi_devices.txt
-SETUP_COMPLETED_FILE=$JAMBULTAV_SHARE_DIR/html/setup/.initial-setup-completed
+SETUP_INTERNET_CONFIG_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.internet-settings.txt
+SETUP_MAC_ADDRESSES_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.wifi_devices.txt
+SETUP_COMPLETED_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.initial-setup-completed
+SETUP_DVBT_CONFIG_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.dvbt-settings.txt
 
 SETUP_LAN_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
-SETUP_3_4G_DONGLE_FILE=$JAMBULTAV_CONFIG_DIR/internet-mobile-usb.cfg
-SETUP_MIFI_ROUTER_FILE=$JAMBULTAV_CONFIG_DIR/internet-mobile-wifi.cfg
-SETUP_WIFI_DEVICES_FILE=$JAMBULTAV_CONFIG_DIR/my-wifi-devices.cfg
+SETUP_3_4G_DONGLE_FILE=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-usb.cfg
+SETUP_MIFI_ROUTER_FILE=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-wifi.cfg
+SETUP_WIFI_DEVICES_FILE=$PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg
 
-EMAIL_CREDENTIALS_CONFIG=$JAMBULTAV_CONFIG_DIR/messaging-email.cfg
-EMAIL_GMAIL_CONFIG=$JAMBULTAV_CONFIG_DIR/email-gmail.cfg
-TELEGRAM_CREDENTIALS_CONFIG=$JAMBULTAV_CONFIG_DIR/messaging-telegram.cfg
-WHATSAPP_CREDENTIALS_CONFIG=$JAMBULTAV_CONFIG_DIR/messaging-whatsapp.cfg
+EMAIL_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-email.cfg
+EMAIL_GMAIL_CONFIG=$PROJECT_SYSTEM_CONF_DIR/email-gmail.cfg
+TELEGRAM_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-telegram.cfg
+WHATSAPP_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-whatsapp.cfg
 WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
 
 SETUP_LAN_SYSCONFIG_FILE=/etc/sysconfig/network-scripts/ifcfg-${SETUP_LAN_DEVICE}
@@ -66,7 +70,7 @@ check_if_setup_completed () {
 
 clear_logfile () {
 # Remove nginx setup log file
-sudo rm -f $JAMBULTAV_LOG_DIR/setup-nginx.log
+sudo rm -f $PROJECT_SYSTEM_LOG_DIR/setup-nginx.log
 # Restart nginx
 sudo systemctl restart nginx.service
 }
@@ -96,7 +100,7 @@ sudo $AUTO_WIFI_PROVISION_CMD
 
 display_osd_message_4_setup () {
 # Check to see if setup web server has been accessed, so we can display OSD
-grep form_01.php $JAMBULTAV_LOG_DIR/setup-nginx.log > /dev/null 2>&1
+grep form_01.php $PROJECT_SYSTEM_LOG_DIR/setup-nginx.log > /dev/null 2>&1
 SERVER_ACCESSED=$?
 while [ "$SERVER_ACCESSED" != "0" ];
 do
@@ -107,7 +111,7 @@ $OSD_CMD  "$QRCODE_OSD_MSG_4_SETUP"
 # Wait
 sleep 3
 # Check again
-grep form_01.php $JAMBULTAV_LOG_DIR/setup-nginx.log > /dev/null 2>&1
+grep form_01.php $PROJECT_SYSTEM_LOG_DIR/setup-nginx.log > /dev/null 2>&1
 SERVER_ACCESSED=$?
 done
 # Remove OSD Message
@@ -126,7 +130,7 @@ done
 # Configure internet based on device type selected
 case $TYPE in
 3_4g_dongle)
-sudo chown $JAMBULATV_USER $SETUP_3_4G_DONGLE_FILE
+sudo chown $MULTIMEDIA_USER $SETUP_3_4G_DONGLE_FILE
 cat > $SETUP_3_4G_DONGLE_FILE <<EOF
 TYPE='3_4g_dongle'
 ISP_NAME=$ISP_NAME
@@ -138,7 +142,7 @@ EOF
 sudo jambulatv-ppp-dialer $ISP_NAME $USERNAME $PASSWORD 1 &
 ;;
 mifi_router)
-sudo chown $JAMBULATV_USER $SETUP_MIFI_ROUTER_FILE
+sudo chown $MULTIMEDIA_USER $SETUP_MIFI_ROUTER_FILE
 cat > $SETUP_MIFI_ROUTER_FILE <<EOF
 ISP_NAME=$ISP_NAME
 SSID="$WIFI_SSID"
@@ -148,7 +152,7 @@ EOF
 sudo jambulatv-connect-2-wifi-ap UP &
 ;;
 lan_dhcp)
-sudo chown $JAMBULATV_USER $SETUP_LAN_SYSCONFIG_FILE
+sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
 cat > $SETUP_LAN_SYSCONFIG_FILE <<EOF
 # IP/DNS settings for ${SETUP_LAN_DEVICE}
 DEVICE="${SETUP_LAN_DEVICE}"
@@ -161,7 +165,7 @@ EOF
 sudo systemctl restart network.service
 ;;
 lan_static)
-sudo chown $JAMBULATV_USER $SETUP_LAN_SYSCONFIG_FILE
+sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
 cat > $SETUP_LAN_SYSCONFIG_FILE <<EOF
 # IP/DNS settings for ${SETUP_LAN_DEVICE}
 DEVICE="${SETUP_LAN_DEVICE}"
@@ -193,7 +197,7 @@ do
 sleep 1
 done
 # Change permissions so we can write to My WiFi devices file
-sudo chown $JAMBULATV_USER $SETUP_WIFI_DEVICES_FILE
+sudo chown $MULTIMEDIA_USER $SETUP_WIFI_DEVICES_FILE
 # Copy MAC Addresses to JambulaTV WiFi devices file
 cat $SETUP_MAC_ADDRESSES_FILE | while read LINE 
 do
@@ -206,7 +210,7 @@ then
 echo "$MAC_DASHED | $NICKNAME | no" >> $SETUP_WIFI_DEVICES_FILE
 #
 # Change permissions so we can write to icinga2 hosts file
-sudo chown $JAMBULATV_USER $ICINGA2_JAMBULATV_HOSTS_FILE
+sudo chown $MULTIMEDIA_USER $ICINGA2_JAMBULATV_HOSTS_FILE
 # Add to icinga2 hosts file
 cat >> $ICINGA2_JAMBULATV_HOSTS_FILE <<EOF
 
@@ -227,6 +231,38 @@ fi
 done
 # Remove MAC set up file
 sudo rm -f $SETUP_MAC_ADDRESSES_FILE
+}
+
+configure_live_tv () {
+# Wait for dvbt config file to show up first
+while [ ! -e $SETUP_DVBT_CONFIG_FILE  ];
+do
+# Wait
+sleep 1
+done
+#
+# Source DVBT settings
+[ -e $SETUP_DVBT_CONFIG_FILE ] && . $SETUP_DVBT_CONFIG_FILE
+#
+# Configure TVHeadend
+if [ ! -e $TVHEADEND_CONFIG_DIR/.dvbt_configured ] && \
+	[ "$TVH_DVBT_CONFIG_REQUESTED" = "y" ];
+then
+# dvbt_configure 
+set_variables 
+# dvbt_configure if dvbt tuner is detected
+[ -d /dev/dvb ] && tvheadend_dvbt_configure
+fi
+
+# Since DVBT configure was requested, perform kodi pvr setups anyway
+if [ "$TVH_DVBT_CONFIG_REQUESTED" = "y" ];
+then
+# toggle pvr.hts to on
+jambulatv-kodi-controller addon_switch pvr.hts
+#
+# Enable pvrmanager = true
+xmlstarlet ed -L -u '/settings/pvrmanager/enabled' -v "true" $KODI_GUI_SETTINGS
+fi
 }
 
 remove_current_qrcode () {
@@ -277,6 +313,9 @@ LAN_IP_ADDR=$(query_mysql_db lan_ip_addr)
 LAN_IP_GATE=$(query_mysql_db lan_ip_gate)
 LAN_DNS_1=$(query_mysql_db lan_dns_1)
 LAN_DNS_2=$(query_mysql_db lan_dns_2)
+TVH_DVBT_CONFIG_REQUESTED=$(query_mysql_db tvh_dvbt_config_requested)
+TV_MARKET=$(query_mysql_db tv_market)
+DVBT_TUNER_NAME=$(query_mysql_db dvbt_tuner_name)
 SCHEDULE_TVSERIES=$(query_mysql_db schedule_tvseries)
 SCHEDULE_PODCASTS=$(query_mysql_db schedule_podcasts)
 SCHEDULE_MOVIES=$(query_mysql_db schedule_movies)
@@ -293,7 +332,7 @@ GMAIL_PASSWORD=$(query_mysql_db gmail_password)
 }
 
 gmail_smtp_setup () {
-sudo chown $JAMBULATV_USER $EMAIL_GMAIL_CONFIG
+sudo chown $MULTIMEDIA_USER $EMAIL_GMAIL_CONFIG
 # Add usernames, passwords credentials to Gmail config
 cat >> $EMAIL_GMAIL_CONFIG << EOF
 # GMail username and password
@@ -304,7 +343,7 @@ EOF
 
 email_messaging_setup () {
 [ -e $EMAIL_CREDENTIALS_CONFIG ] || sudo touch $EMAIL_CREDENTIALS_CONFIG
-sudo chown $JAMBULATV_USER $EMAIL_CREDENTIALS_CONFIG
+sudo chown $MULTIMEDIA_USER $EMAIL_CREDENTIALS_CONFIG
 cat > $EMAIL_CREDENTIALS_CONFIG << EOF
 EMAIL_TO_ADDRESS="$NOTIFICATION_EMAIL_ADDRESS"
 EMAIL_CC_ADDRESS=""
@@ -312,7 +351,7 @@ EOF
 }
 
 telegram_messaging_setup () {
-sudo chown $JAMBULATV_USER $TELEGRAM_CREDENTIALS_CONFIG
+sudo chown $MULTIMEDIA_USER $TELEGRAM_CREDENTIALS_CONFIG
 cat >> $TELEGRAM_CREDENTIALS_CONFIG << EOF
 TELEGRAM_API_BOT="$TELEGRAM_BOT_ID"
 TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
@@ -321,7 +360,7 @@ EOF
 }
 
 whatsapp_messaging_setup () {
-sudo chown $JAMBULATV_USER $WHATSAPP_CREDENTIALS_CONFIG
+sudo chown $MULTIMEDIA_USER $WHATSAPP_CREDENTIALS_CONFIG
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
 # TIP: Run the script $WHATSAPP_SCRIPT to generate the rest of whatsapp settings
 WHATSAPP_SCRIPT=$WHATSAPP_SCRIPT
@@ -378,7 +417,7 @@ rtorrent_event_setup () {
 # Extract variables from mysql
 extract_setup_variables
 # rTorrent event.download.finished notify_via_email address
-sed -i "s:RTORRENT_NOTIFICATION_EMAIL:$NOTIFICATION_EMAIL_ADDRESS:g" $JAMBULATV_USER_HOME_DIR/.rtorrent.rc
+sed -i "s:RTORRENT_NOTIFICATION_EMAIL:$NOTIFICATION_EMAIL_ADDRESS:g" $MULTIMEDIA_USER_HOME_DIR/.rtorrent.rc
 }
 
 asterisk_google_xmpp_setup() {
@@ -412,6 +451,9 @@ display_osd_message_4_setup
 
 configure_internet_connection
 configure_wifi_mac_addresses
+
+configure_live_tv
+
 remove_current_qrcode
 
 messaging_services_setup

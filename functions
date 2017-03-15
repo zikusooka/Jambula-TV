@@ -2442,6 +2442,9 @@ make_install_jambulatv
 }
 
 tvheadend_dvbt_configure () {
+# NOTE: This functions will be used by other tools e.g. jambulatv-initial-setup
+#       This means functions/commands should be executable by normal user like jambula
+#
 # Start tvheadend if adapter has been inserted
 if [ ! -d /dev/dvb ];
 then
@@ -2458,7 +2461,7 @@ EOF
 read
 fi
 sleep 9
-systemctl start tvheadend.service
+sudo systemctl restart tvheadend.service
 #
 # Wait until adapters directory has been populated
 while true
@@ -2474,7 +2477,7 @@ do
 done
 
 # Configure DVBT-2 adapter settings
- ---------------------------------
+# ---------------------------------
 TVHEADEND_ADAPTERS_CONFIG_FILE=$(grep -rli "$DVBT_TUNER_NAME" $TVHEADEND_ADAPTERS_CONFIG_DIR | xargs grep -l adapter${DVBT_TUNER_NO})
 #
 cat > $TVHEADEND_ADAPTERS_CONFIG_FILE << EOF
@@ -2511,6 +2514,9 @@ EOF
 
 # Configure network that will be used and type
 # --------------------------------------------
+[ -d $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID ] || \
+	mkdir -p $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID
+#
 cat > $TVHEADEND_NETWORK_CONFIG_FILE <<EOF
 {
 	"networkname": "$DVBT_NETWORK_NAME",
