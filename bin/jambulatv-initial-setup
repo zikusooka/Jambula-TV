@@ -10,9 +10,9 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 # Source functions file
 . $PROJECT_BASE_DIR/functions
 
-PRODUCT=$(grep -i Product $RELEASE_FILE | cut -d : -f2)
-VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
-SERIAL=$(grep -i Serial $RELEASE_FILE | cut -d : -f2)
+PRODUCT=$(grep -i Product $PROJECT_RELEASE_FILE | cut -d : -f2)
+VERSION=$(grep -i Version $PROJECT_RELEASE_FILE | cut -d : -f2)
+SERIAL=$(grep -i Serial $PROJECT_RELEASE_FILE | cut -d : -f2)
 
 KODI_GUI_SETTINGS=$KODI_USER_DATA/guisettings.xml
 
@@ -113,7 +113,7 @@ do
 # Display OSD Message
 $OSD_CMD  "$QRCODE_OSD_MSG_4_SETUP"
 # Wait
-sleep 3
+sleep 45
 # Check again
 grep form_01.php $PROJECT_SYSTEM_LOG_DIR/setup-nginx.log > /dev/null 2>&1
 SERVER_ACCESSED=$?
@@ -416,6 +416,8 @@ cat $FLEXGET_CONFIG_DIR/variables.yml.b4.setup | \
    sed -e "s:FLEXGET_SCHEDULE_MOVIES_HR:$FLEXGET_SCHEDULE_MOVIES_HR:g" | \
    sed -e "s:FLEXGET_SCHEDULE_MOVIES_MIN:$FLEXGET_SCHEDULE_MOVIES_MIN:g" \
 	> $FLEXGET_CONFIG_DIR/variables.yml
+# Restart Flexget
+sudo systemctl restart flexget.service
 }
 
 rtorrent_event_setup () {
@@ -475,6 +477,10 @@ sudo jambulatv-library scan
 #  MAIN SCRIPT  #
 #################
 check_if_setup_completed
+
+# Debug
+logger "JambulaTV Setup: START"
+
 clear_logfile
 remove_previous_osd_message
 remove_previous_qrcode
@@ -500,3 +506,6 @@ create_video_music_db
 scan_video_music_db
 
 email_system_info
+
+# Debug
+logger "JambulaTV Setup: END"

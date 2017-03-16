@@ -12,7 +12,25 @@ session_start();
  <title>JambulaTV Setup</title>
  <meta name="viewport" content="width=device-width, initial-scale=0.84">
  <link rel="stylesheet" href="css/style.css" />
+
+<!-- Check to see if passwords match-->
+ <script src="jquery.min.js"></script>
+ <script>
+$(document).ready(function () {
+   $("#txtConfirmPassword").keyup(checkPasswordMatch);
+});
+function checkPasswordMatch() {
+    var password = $("#txtNewPassword").val();
+    var confirmPassword = $("#txtConfirmPassword").val();
+
+    if (password != confirmPassword)
+        $("#divCheckPasswordMatch").html("Passwords do not match!");
+    else
+        $("#divCheckPasswordMatch").html("Passwords match.");
+}
+ </script>
  </head>
+
  <body>
  <div class="container">
  <div class="main">
@@ -24,7 +42,11 @@ session_start();
  <label>WiFi SSID Name :</label><br />
  <input name="mifi_ssid" id="mifi_ssid" type="text" value="" required>
  <label>WiFi Password :</label><br />
- <input name="mifi_pass" id="mifi_pass" type="text" value="" required>
+ <input name="mifi_pass" id="txtNewPassword" type="password" placeholder="Enter Password" required/>
+ <input name="mifi_pass" id="txtConfirmPassword" type="password" onkeyup="checkPasswordMatch();" placeholder="Confirm Password" required/>
+ <div class="registrationFormAlert" id="divCheckPasswordMatch">
+ </div>
+
 <hr/>
 
 <b> Please turn on your MiFi device now ... </b>

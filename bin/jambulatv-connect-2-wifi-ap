@@ -7,6 +7,7 @@ ICINGA2_AP_STATUS=$@
 
 SCRIPT_RUNNING_FILE=/tmp/connect_2_ap_running
 INTERNET_OFF_FILE=/etc/dnsmasq.d/dns_off.conf
+SETUP_COMPLETED_FILE=/usr/share/JambulaTV/html/setup/.initial-setup-completed
 
 PING_CMD=/usr/sbin/fping
 PING_CMD_OPTS="-l"
@@ -43,6 +44,11 @@ then
 rm -f $SCRIPT_RUNNING_FILE
 
 elif [ -e "$INTERNET_OFF_FILE" ];
+then
+echo Internet-Off
+break
+
+elif [ ! -e "$SETUP_COMPLETED_FILE" ];
 then
 echo Internet-Off
 break
