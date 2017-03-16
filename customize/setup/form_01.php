@@ -8,6 +8,24 @@ session_start();
  <title>JambulaTV Setup</title>
  <meta name="viewport" content="width=device-width, initial-scale=0.84">
  <link rel="stylesheet" href="css/style.css" />
+
+<!-- Check to see if passwords match-->
+ <script src="jquery.min.js"></script>
+ <script>
+$(document).ready(function () {
+   $("#txtConfirmPassword").keyup(checkPasswordMatch);
+});
+function checkPasswordMatch() {
+    var password = $("#txtNewPassword").val();
+    var confirmPassword = $("#txtConfirmPassword").val();
+
+    if (password != confirmPassword)
+        $("#divCheckPasswordMatch").html("Passwords do not match!");
+    else
+        $("#divCheckPasswordMatch").html("Passwords match.");
+}
+ </script>
+
  </head>
 
  <body>
@@ -41,6 +59,15 @@ session_start();
  <input name="contact_city" id="city" type="text" size="25" required>
  <label>Country :<span>*</span></label>
  <input name="contact_country" id="country" type="text" size="25" required>
+
+ <hr/>
+ <label>System Password: <span>*</span></label>
+ <br>
+ <br>Please choose a secure password for your JambulaTV
+ <input name="system_password" id="txtNewPassword" type="password" placeholder="Enter Password" required/>
+ <input name="system_password" id="txtConfirmPassword" type="password" onkeyup="checkPasswordMatch();" placeholder="Confirm Password" required/>
+ <div class="registrationFormAlert" id="divCheckPasswordMatch">
+ </div>
 
  <p>
 

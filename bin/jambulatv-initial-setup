@@ -10,6 +10,10 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 # Source functions file
 . $PROJECT_BASE_DIR/functions
 
+PRODUCT=$(grep -i Product $RELEASE_FILE | cut -d : -f2)
+VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
+SERIAL=$(grep -i Serial $RELEASE_FILE | cut -d : -f2)
+
 KODI_GUI_SETTINGS=$KODI_USER_DATA/guisettings.xml
 
 AUTO_WIFI_PROVISION_CMD=/usr/bin/jambulatv-auto-wifi-provision
@@ -294,6 +298,7 @@ CONTACT_ADDRESS1=$(query_mysql_db contact_address1)
 CONTACT_ADDRESS2=$(query_mysql_db contact_address2)
 CONTACT_CITY=$(query_mysql_db contact_city)
 CONTACT_COUNTRY=$(query_mysql_db contact_country)
+SYSTEM_PASSWORD=$(query_mysql_db system_password)
 ISP_NAME=$(query_mysql_db isp_name)
 INTERNET_DEVICE=$(query_mysql_db internet_device)
 WIFI_NICKNAME_1=$(query_mysql_db wifi_nickname_1)
@@ -428,6 +433,34 @@ sudo sed -i "s:GOOGLE_SERVICES_USERNAME:$GMAIL_ADDRESS:g" $ASTERISK_AGI_BIN_DIR/
 sudo sed -i "s:GOOGLE_SERVICES_PASSWORD:$GMAIL_PASSWORD:g" $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 }
 
+reset_system_password () {
+# Extract variables from mysql
+extract_setup_variables
+echo "root:$SYSTEM_PASSWORD" | sudo /usr/sbin/chpasswd
+echo "$MULTIMEDIA_USER:$SYSTEM_PASSWORD" | sudo /usr/sbin/chpasswd
+}
+
+email_system_info () {
+# Email system info and passwords for storage
+jambulatv-email $CONTACT_EMAIL "[JambulaTV] Setup completed" "$(cat <<EOF
+Dear $CONTACT_NAME, 
+
+Congratulations! The initial setup of your JambulaTV completed successfully.
+
+Please store the following system information in a safe place.
+
+In case you need assistance, our support team may ask you for this!
+
+Product:	$PRODUCT
+Version:	$VERSION
+Serial No:	$SERIAL
+
+root:	$SYSTEM_PASSWORD
+$MULTIMEDIA_USER:	$SYSTEM_PASSWORD
+
+EOF)"
+}
+
 create_video_music_db () {
 sudo jambulatv-library create
 }
@@ -461,5 +494,9 @@ flexget_secrets_setup
 rtorrent_event_setup
 asterisk_google_xmpp_setup
 
+reset_system_password
+
 create_video_music_db
 scan_video_music_db
+
+email_system_info
