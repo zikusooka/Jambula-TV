@@ -2445,6 +2445,10 @@ tvheadend_dvbt_configure () {
 # NOTE: This functions will be used by other tools e.g. jambulatv-initial-setup
 #       This means functions/commands should be executable by normal user like jambula
 #
+# Copy muxes for specified TV Market
+# ----------------------------------
+rsync -av $PROJECT_CONFIGS_DIR/tvheadend/muxes/$TV_MARKET/ $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes/
+#
 # Start tvheadend if adapter has been inserted
 if [ ! -d /dev/dvb ];
 then
@@ -2533,10 +2537,9 @@ cat > $TVHEADEND_NETWORK_CONFIG_FILE <<EOF
 	"class": "dvb_network_dvbt"
 }
 EOF
-#
-# Copy muxes for specified TV Market
-# ----------------------------------
-rsync -av $PROJECT_CONFIGS_DIR/tvheadend/muxes/$TV_MARKET/ $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes/
+
+# Set DVBT_NETWORK in tvheadend-controller sript
+sed -i "s:MY_DVBT_NETWORK_NAME:$DVBT_NETWORK_NAME:g" $BINARY_PREFIX/jambulatv-tvheadend-controller
 }
 
 tvheadend_configure () {
@@ -2733,7 +2736,6 @@ chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 		sed "s:MY_PLAYLISTS_DIRECTORY:$PLAYLISTS_DIRECTORY:g" | \
 		sed "s:MY_PLAYLISTS_IPTV_WORLD_M3U_FILE:$PLAYLISTS_IPTV_WORLD_M3U_FILE:g" | \
 		sed "s:MY_PROJECT_SYSTEM_ICONS_DIR:$PROJECT_SYSTEM_ICONS_DIR:g" | \
-		sed "s:MY_DVBT_NETWORK_NAME:$DVBT_NETWORK_NAME:g" | \
 		sed "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
 			> $BINARY_PREFIX/jambulatv-tvheadend-controller
 # Make script executable
