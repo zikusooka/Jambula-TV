@@ -1,0 +1,25 @@
+--- /opt/JambulaTV/bin/jambulatv-lights	2016-08-25 20:26:32.210127426 +0300
++++ /usr/bin/jambulatv-lights	2017-03-19 20:36:24.390555328 +0300
+@@ -41,7 +41,7 @@
+ then
+ ITS_DARK=yes
+ else
+-ITS_DARK=no
++ITS_DARK=yes
+ fi
+ }
+ 
+@@ -132,13 +132,6 @@
+ status_of_tv
+ case $DOMOTICZ_LAMP_ACTION in
+ [Oo][Nn])
+-# Exit == Don't turn on Light if its in the Living Room and Video is playing
+-if [ "$DOMOTICZ_TV_STATUS" = "Video" ] && [ "$DOMOTICZ_LAMP_NAME" = "Living Room" ];
+-then
+-exit 0
+-fi
+-# Turn on security Light if it is not on and its dark 
+-#if [ "$DOMOTICZ_LAMP_STATE" = "Off" ] && [ "$ITS_DARK" = "yes" ];
+ if [ "$ITS_DARK" = "yes" ];
+ then
+ turn_on_lamp

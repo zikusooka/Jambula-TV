@@ -7639,8 +7639,7 @@ chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
 		sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
 		sed -e "s:MY_ASTERISK_USER:$ASTERISK_FILES_USER:g" | \
-		sed -e "s:MY_ASTERISK_GROUP:$WWW_USER:g" | \
-		sed -e "s:MY_ASTERISK_DIAL_OUT_NUMBER:$ASTERISK_DIAL_OUT_NUMBER_1:g" \
+		sed -e "s:MY_ASTERISK_GROUP:$WWW_USER:g" \
 			> $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications

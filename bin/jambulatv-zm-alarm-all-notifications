@@ -247,7 +247,7 @@ create_asterisk_call_file
 
 # OSD Message using jambulatv-osd script
 # --------------------------------------
-#$OSD_SCRIPT -m "$NOTIFICATION_MESSAGE"
+$OSD_SCRIPT -m "$NOTIFICATION_MESSAGE"
 
 
 # Send Email (IMPORTANT:  Make this one the last notification to run)

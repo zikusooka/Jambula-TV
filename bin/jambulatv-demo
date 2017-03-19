@@ -1,0 +1,57 @@
+#!/bin/sh
+
+
+
+
+
+
+
+PROJECT_NAME=JambulaTV
+SOURCESDIR=/opt
+PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
+
+
+clear
+
+# Source functions file
+. $PROJECT_BASE_DIR/functions
+
+# Other variables
+ASTERISK_DIAL_OUT_NUMBER_1=0776338000
+ACTION=$1
+
+
+case $ACTION in
+[Oo][Nn])
+
+# Lights - patch
+patch -p1 $BINARY_PREFIX/jambulatv-lights < $PROJECT_PATCHES_DIR/demo.lights.patch
+
+# ZM Alarms - asterisk dialout number
+sed -i "s:MY_ASTERISK_DIAL_OUT_NUMBER:$ASTERISK_DIAL_OUT_NUMBER_1:g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
+
+# Set to Dark even if daytime
+sed -i "s:-ge \"19\":-le \"19\":g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
+sed -i "s:-le \"6\":-ge \"6\":g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
+;;
+
+[Oo][Ff][Ff])
+# Lights - undo patch
+cp -v $PROJECT_BIN_DIR/$SCRIPT/jambulatv-lights $BINARY_PREFIX/
+
+# ZM Alarms - asterisk dialout number
+sed -i "s:$ASTERISK_DIAL_OUT_NUMBER_1:MY_ASTERISK_DIAL_OUT_NUMBER:g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
+
+# Set to Dark even if daytime
+sed -i "s:-le \"19\":-ge \"19\":g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
+sed -i "s:-ge \"6\":-le \"6\":g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
+;;
+
+*)
+# Usage
+cat <<EOF
+Usage: $(basename $0) [ON|OFF]
+EOF
+exit
+;;
+esac
