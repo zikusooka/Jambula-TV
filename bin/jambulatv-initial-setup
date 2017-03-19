@@ -16,7 +16,6 @@ SERIAL=$(grep -i Serial $PROJECT_RELEASE_FILE | cut -d : -f2)
 
 KODI_GUI_SETTINGS=$KODI_USER_DATA/guisettings.xml
 
-AUTO_WIFI_PROVISION_CMD=/usr/bin/jambulatv-auto-wifi-provision
 QRCODE_PLAYER_CMD="/usr/bin/cvlc"
 QRCODE_WIDTH=320
 QRCODE_HEIGHT=240
@@ -82,7 +81,7 @@ sudo systemctl restart nginx.service
 remove_previous_osd_message () {
 # Kill any lingering OSD message scrolls
 OSD_PID=$(ps auxw | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
-kill -15 $OSD_PID || kill -9 $OSD_PID
+[ "x$OSD_PID" = "x" ] || kill -15 $OSD_PID
 # Remove OSD run file if it exists
 [ ! -e $OSDRUNFILE ] || rm -f $OSDRUNFILE
 }
@@ -98,28 +97,31 @@ display_qrcode_4_setup () {
 $QRCODE_PLAYER_CMD $QRCODE_PLAYER_OPTIONS $QRCODE_DIR/$QRCODE_FILE 
 }
 
-display_qrcode_4_wifi_provisioning () {
-sudo $AUTO_WIFI_PROVISION_CMD
+run_auto_wifi_provision () {
+sudo jambulatv-auto-wifi-provision 
 }
 
 display_osd_message_4_setup () {
+# Stop other OSD messages form showing
+[ -e $OSDRUNFILE ] || touch $OSDRUNFILE
+#
 # Check to see if setup web server has been accessed, so we can display OSD
 grep form_01.php $PROJECT_SYSTEM_LOG_DIR/setup-nginx.log > /dev/null 2>&1
 SERVER_ACCESSED=$?
 while [ "$SERVER_ACCESSED" != "0" ];
 do
-# Remove OSD Message
-[ -e $OSDRUNFILE ] && rm -f $OSDRUNFILE
+
 # Display OSD Message
-$OSD_CMD  "$QRCODE_OSD_MSG_4_SETUP"
+jambulatv-kodi-controller osd_long "$QRCODE_OSD_MSG_4_SETUP"
 # Wait
-sleep 45
+sleep 30
 # Check again
 grep form_01.php $PROJECT_SYSTEM_LOG_DIR/setup-nginx.log > /dev/null 2>&1
 SERVER_ACCESSED=$?
+
 done
-# Remove OSD Message
-rm -f $OSDRUNFILE
+# Allow OSD messages from showing again
+[ ! -e $OSDRUNFILE ] || rm -f $OSDRUNFILE
 }
 
 configure_internet_connection () {
@@ -390,13 +392,15 @@ whatsapp_messaging_setup
 flexget_secrets_setup () {
 # Extract variables from mysql
 extract_setup_variables
-# Split into Hour, Minute
-FLEXGET_SCHEDULE_TVSHOWS_HR=$(echo $SCHEDULE_TVSERIES | cut -d : -f1 | sed 's:^0::g')
-FLEXGET_SCHEDULE_TVSHOWS_MIN=$(echo $SCHEDULE_TVSERIES | cut -d : -f2 | sed 's:^0::g')
-FLEXGET_SCHEDULE_PODCASTS_HR=$(echo $SCHEDULE_PODCASTS | cut -d : -f1 | sed 's:^0::g')
-FLEXGET_SCHEDULE_PODCASTS_MIN=$(echo $SCHEDULE_PODCASTS | cut -d : -f2 | sed 's:^0::g')
-FLEXGET_SCHEDULE_MOVIES_HR=$(echo $SCHEDULE_MOVIES | cut -d : -f1 | sed 's:^0::g')
-FLEXGET_SCHEDULE_MOVIES_MIN=$(echo $SCHEDULE_MOVIES | cut -d : -f2 | sed 's:^0::g')
+# Split into Hour, Minute. Use expr to remove leading zeros
+FLEXGET_SCHEDULE_TVSHOWS_HR=$(expr $(echo $SCHEDULE_TVSERIES | cut -d : -f1) + 0)
+FLEXGET_SCHEDULE_TVSHOWS_MIN=$(expr $(echo $SCHEDULE_TVSERIES | cut -d : -f2) + 0)
+#
+FLEXGET_SCHEDULE_PODCASTS_HR=$(expr $(echo $SCHEDULE_PODCASTS | cut -d : -f1) + 0)
+FLEXGET_SCHEDULE_PODCASTS_MIN=$(expr $(echo $SCHEDULE_PODCASTS | cut -d : -f2) + 0)
+#
+FLEXGET_SCHEDULE_MOVIES_HR=$(expr $(echo $SCHEDULE_MOVIES | cut -d : -f1) + 0)
+FLEXGET_SCHEDULE_MOVIES_MIN=$(expr $(echo $SCHEDULE_MOVIES | cut -d : -f2) + 0)
 #
 # Copy original flexget secrets file
 cp -v $FLEXGET_CONFIG_DIR/variables.yml $FLEXGET_CONFIG_DIR/variables.yml.b4.setup
@@ -484,7 +488,9 @@ logger "JambulaTV Setup: START"
 clear_logfile
 remove_previous_osd_message
 remove_previous_qrcode
-display_qrcode_4_wifi_provisioning
+
+run_auto_wifi_provision
+
 display_qrcode_4_setup
 display_osd_message_4_setup
 

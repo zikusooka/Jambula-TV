@@ -16,7 +16,10 @@ WIRELESS_PASSPHRASE=$(sudo grep '^wpa_passphrase=' $HOSTAPD_CONFIG_FILE | sed 's
 CONVERT_CMD=/usr/bin/convert
 
 OSD_CMD="/usr/bin/jambulatv-osd -m"
-OSDRUNFILE=/tmp/osd_process_running # This is hardcorded in jambulatv-osd script
+OSDRUNFILE=/tmp/osd_process_running # Hardcoded in $OSD_CMD
+
+AUTO_WIFI_OSD_TEMP_SCRIPT=/tmp/osd_4_auto_wifi_provision
+PAUSE_OSD_AUTO_WIFI="35"
 
 QRCODE_CMD=/usr/bin/qrencode
 QRCODE_DIR=$PROJECT_SYSTEM_SHARE_DIR/images/qrcodes
@@ -66,37 +69,74 @@ PID_AUTO_WIFI_QR="$!"
 export PID_AUTO_WIFI_QR
 }
 
-destroy_auto_wifi_qrcode_4_android_ios () {
-# Wait for WiFi handshake, and when completed remove QR codes displayed
-/usr/bin/journalctl -f -o cat --no-pager | grep -m 1 -i "WPA: pairwise key handshake completed" | while read LINE
+display_osd_message_4_auto_wifi_provisioning () {
+# Create OSD temp script
+cat > $AUTO_WIFI_OSD_TEMP_SCRIPT <<EOF
+#!/bin/sh
+
+# Check if QR code is being shown on screen
+ps auxw | grep `basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS` | grep $PID_AUTO_WIFI_QR > /dev/null
+OSDEXITVAL=\$?
+
+# While waiting for user action
+while [ "\$OSDEXITVAL" = "0" ];
 do
-# Kill VLC process
-kill -15 $PID_AUTO_WIFI_QR || kill -9 $PID_AUTO_WIFI_QR
-#
-# Kill existing OSD message scroll
-killall -15 $(basename $OSD_CMD) || killall -9 $(basename $OSD_CMD)
-# Kill any lingering OSD message scrolls
-OSD_PID=$(ps auxw | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
-kill -15 $OSD_PID || kill -9 $OSD_PID
-# Remove OSD run file if it exists
-[ ! -e $OSDRUNFILE ] || rm -f $OSDRUNFILE
+
+# Stop other OSD messages form showing
+[ -e $OSDRUNFILE ] || touch $OSDRUNFILE
+
+# Display OSD message
+jambulatv-kodi-controller osd_long "$QRCODE_OSD_MSG_AUTO_WIFI_PROVISION" &
+
+# Pause for next scroll
+sleep $PAUSE_OSD_AUTO_WIFI
+
+# Check if QR code is still being shown on screen
+ps auxw | grep `basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS` | grep $PID_AUTO_WIFI_QR > /dev/null
+OSDEXITVAL=\$?
+
 done
+
+# Allow OSD messages from showing again
+[ ! -e $OSDRUNFILE ] || rm -f $OSDRUNFILE
+EOF
+
+chmod 755 $AUTO_WIFI_OSD_TEMP_SCRIPT
+#
+# Remove any existing OSD notice
+EXISTING_OSD_PID=$(ps auxw | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
+[ "x$EXISTING_OSD_PID" = "x" ] || kill -15 $EXISTING_OSD_PID
+#
+# Display OSD Message
+. $AUTO_WIFI_OSD_TEMP_SCRIPT
 }
 
-display_osd_message_4_auto_wifi_provisioning () {
-ps auxw | grep `basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS` | \
-	grep $PID_AUTO_WIFI_QR > /dev/null 2>&1
-OSDEXITVAL=$?
-# While waiting for user action
-while [ "$OSDEXITVAL" = "0" ];
+kill_qrcode_process () {
+[ "x$PID_AUTO_WIFI_QR" = "x" ] || kill -15 $PID_AUTO_WIFI_QR
+}
+
+kill_osd_process () {
+# PID variables
+OSD_SCRIPT_PID=$(ps auxw | grep $(basename $AUTO_WIFI_OSD_TEMP_SCRIPT) | awk {'print $2'})
+OSD_SLEEP_PID=$(ps auxw | grep "sleep $PAUSE_OSD_AUTO_WIFI" | awk {'print $2'})
+#
+# Kill lingering OSD message scrolls
+[ "x$OSD_SCRIPT_PID" = "x" ] || kill -15 $OSD_SCRIPT_PID
+[ "x$OSD_SLEEP_PID" = "x" ] || kill -15 $OSD_SLEEP_PID
+#
+# Remove OSD temp script
+rm -f $AUTO_WIFI_OSD_TEMP_SCRIPT
+}
+
+destroy_auto_wifi_qrcode_and_osd () {
+# Wait for WiFi handshake, and when completed remove QR codes displayed
+/usr/bin/journalctl -b -f -o cat --no-pager | grep -m 1 -i "WPA: pairwise key handshake completed" | while read LINE
 do
-# Display OSD Message
-$OSD_CMD "$QRCODE_OSD_MSG_AUTO_WIFI_PROVISION"
-# Pause for next scroll
-sleep 45
-ps auxw | grep `basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS` | \
-	grep $PID_AUTO_WIFI_QR > /dev/null 2>&1
-OSDEXITVAL=$?
+#
+# Kill QR Code and OSD processes
+kill_qrcode_process
+kill_osd_process
+#
 done
 }
 
@@ -110,6 +150,6 @@ create_auto_wifi_qrcode_4_android_ios
 
 display_auto_wifi_qrcode_4_android_ios
 
-destroy_auto_wifi_qrcode_4_android_ios &
+destroy_auto_wifi_qrcode_and_osd &
 
-display_osd_message_4_auto_wifi_provisioning &
+display_osd_message_4_auto_wifi_provisioning
