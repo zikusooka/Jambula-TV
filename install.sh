@@ -113,6 +113,7 @@ kodi_scripts
 kodi_remote_configure
 kodi_osd_configure 
 remind_configure 
+livestreamer_install
 
 # X11 setup
 x11_superuser_permissions_configure
