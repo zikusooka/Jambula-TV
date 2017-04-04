@@ -18,6 +18,9 @@ kernel_install
 # Info banner
 about_install
 
+# Update dtv scan tables
+update_dtv_scan_tables
+
 # Ask and set key variables
 ask_4_variables
 set_variables

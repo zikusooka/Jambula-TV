@@ -1469,6 +1469,11 @@ EOF
 read
 }
 
+update_dtv_scan_tables () {
+# Update dtv scan tables
+rsync -avz $PROJECT_GITHUB_DIR/dtv-scan-tables/ $PREFIX/share/dvb/
+}
+
 ask_4_variables () {
 # ----------
 # TV Market
@@ -2431,8 +2436,6 @@ make_install_jambulatv
 tvheadend_install () {
 # Unpack
 rsync -avz $PROJECT_GITHUB_DIR/tvheadend/ $INSTALL_SRC_DIR/tvheadend/
-# Update dtv scan tables
-rsync -avz $PROJECT_GITHUB_DIR/dtv-scan-tables/ $PREFIX/share/dvb/
 # Change to tvheadend directory
 cd $INSTALL_SRC_DIR/tvheadend
 # configure tvheadend
