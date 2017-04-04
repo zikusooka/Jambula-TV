@@ -5271,6 +5271,15 @@ patch -p1 $CONFDIR/php.ini < $PROJECT_PATCHES_DIR/php.ini.patch
 # Change permissions of save session path (php.ini) to web user
 chown -R $WWW_USER:$WWW_GROUP $STATEDIR/lib/php
 #
+# Disable and stop php-fpm service if it is running
+systemctl -q is-active php-fpm.service && systemctl disable php-fpm.service
+systemctl -q is-active php-fpm.service && systemctl stop php-fpm.service
+# Remove default php-fpm.service file
+[ ! -e $SYSTEMD_UNITS_DIR_SYSTEM/php-fpm.service ] || \
+	rm -f $SYSTEMD_UNITS_DIR_SYSTEM/php-fpm.service
+# Copy php-fpm systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/php-fpm.service $SYSTEMD_UNITS_DIR_USER/
+#systemctl --system daemon-reload
 # Enable php-fpm
 systemctl enable php-fpm.service
 systemctl start php-fpm.service

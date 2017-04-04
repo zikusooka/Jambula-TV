@@ -13,5 +13,8 @@ ExecStop=/bin/sh -c "[ -f /run/zm/zm_alarm.pid ] && /usr/bin/kill $(/usr/bin/cat
 ExecReload=/usr/bin/zmpkg.pl reload
 PIDFile=/run/zm/zm.pid
 
+# Process takes ages to stop - kill after a few seconds
+TimeoutStopSec=3
+
 [Install]
 WantedBy=multi-user.target
