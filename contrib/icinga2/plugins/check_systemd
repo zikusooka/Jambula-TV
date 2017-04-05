@@ -25,7 +25,14 @@
 # Wait until all systemd services have run i.e. Wait until boot up is complete
 systemd-analyze | grep finished > /dev/null 2>&1
 STARTUP_FINISHED=$?
-[ "$STARTUP_FINISHED" = "0" ] || exit 1
+# Uptime in seconds
+UPTIME_SECS=$(cat /proc/uptime | awk {'print $1'} | cut -d . -f1)
+
+# Quit if system just booted.  Most times gives false positives
+if [ "$STARTUP_FINISHED" != "0" ] || [ "$UPTIME_SECS" -lt "180" ];
+then
+exit 1
+fi
 
 # Get failed units
 FAILED_UNITS=$(systemctl --failed --no-legend | awk {'print $5'})
