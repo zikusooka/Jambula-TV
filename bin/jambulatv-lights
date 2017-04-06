@@ -11,6 +11,8 @@ DOMOTICZ_LAMP_NAME="$1"
 DOMOTICZ_LAMP_ACTION=$2
 DOMOTICZ_LOG_NOTICE="[$(basename $0)]%20$DOMOTICZ_LAMP_NAME%20was%20turned"
 
+MODE=$3
+
 
 
 ###############
@@ -21,7 +23,7 @@ usage () {
 if [ "x$DOMOTICZ_LAMP_NAME" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [DOMOTICZ_LAMP_NAME (Use Quotes for spaced names] [DOMOTICZ_LAMP_ACTION (on|off)]
+echo "Usage:  ./`basename $0` [DOMOTICZ_LAMP_NAME (Use Quotes for spaced names] [DOMOTICZ_LAMP_ACTION (on|off)] [demo (Optional)]
 "
 exit 1
 fi
@@ -29,7 +31,8 @@ fi
 if [ "x$DOMOTICZ_LAMP_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` $DOMOTICZ_LAMP_NAME [DOMOTICZ_LAMP_ACTION (on|off)]
+echo "Usage:  ./`basename $0` $DOMOTICZ_LAMP_NAME [DOMOTICZ_LAMP_ACTION (on|off)] [demo (Optional)]
+
 "
 exit 1
 fi
@@ -42,6 +45,16 @@ then
 ITS_DARK=yes
 else
 ITS_DARK=no
+# Test mode option
+[ "$MODE" = "demo" ] || \
+cat << EOF
+You are running this tool during day time.  If you want to overide default 
+i.e. run it anytime, add 'demo' to list of CLI arguments
+
+Usage:  ./`basename $0` $DOMOTICZ_LAMP_NAME $DOMOTICZ_LAMP_ACTION demo
+
+EOF
+#
 fi
 }
 
@@ -139,7 +152,7 @@ exit 0
 fi
 # Turn on security Light if it is not on and its dark 
 #if [ "$DOMOTICZ_LAMP_STATE" = "Off" ] && [ "$ITS_DARK" = "yes" ];
-if [ "$ITS_DARK" = "yes" ];
+if [ "$ITS_DARK" = "yes" ] || [ "$MODE" = "demo" ];
 then
 turn_on_lamp
 log_event $DOMOTICZ_LOG_NOTICE:%20On
@@ -149,7 +162,7 @@ fi
 [Oo][Ff][Ff])
 # Switch off security Light if it was turned on after desired period e.g. 60 minutes
 #if [ "$DOMOTICZ_LAMP_STATE" = "On" ] && [ "$ITS_DARK" = "yes" ];
-if [ "$ITS_DARK" = "yes" ];
+if [ "$ITS_DARK" = "yes" ] || [ "$MODE" = "demo" ];
 then
 turn_off_lamp
 log_event $DOMOTICZ_LOG_NOTICE:%20Off
@@ -157,6 +170,6 @@ fi
 ;;
 *)
 clear
-echo "Usage:  ./`basename $0` [DOMOTICZ_LAMP_NAME (Use Quotes for spaced names] [DOMOTICZ_LAMP_ACTION (on|off)]
+echo "Usage:  ./`basename $0` [DOMOTICZ_LAMP_NAME (Use Quotes for spaced names] [DOMOTICZ_LAMP_ACTION (on|off)] [demo (Optional)]
 "
 esac

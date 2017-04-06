@@ -1,11 +1,5 @@
 #!/bin/sh
 
-
-
-
-
-
-
 PROJECT_NAME=JambulaTV
 SOURCESDIR=/opt
 PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
@@ -30,9 +24,6 @@ patch -p1 $BINARY_PREFIX/jambulatv-lights < $PROJECT_PATCHES_DIR/demo.lights.pat
 # ZM Alarms - asterisk dialout number
 sed -i "s:MY_ASTERISK_DIAL_OUT_NUMBER:$ASTERISK_DIAL_OUT_NUMBER_1:g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
 
-# Set to Dark even if daytime
-sed -i "s:-ge \"19\":-le \"19\":g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
-sed -i "s:-le \"6\":-ge \"6\":g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
 ;;
 
 [Oo][Ff][Ff])
@@ -42,9 +33,6 @@ cp -v $PROJECT_BIN_DIR/$SCRIPT/jambulatv-lights $BINARY_PREFIX/
 # ZM Alarms - asterisk dialout number
 sed -i "s:$ASTERISK_DIAL_OUT_NUMBER_1:MY_ASTERISK_DIAL_OUT_NUMBER:g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
 
-# Set to Dark even if daytime
-sed -i "s:-le \"19\":-ge \"19\":g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
-sed -i "s:-ge \"6\":-le \"6\":g" $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
 ;;
 
 *)
