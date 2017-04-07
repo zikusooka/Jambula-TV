@@ -1,1 +1,5 @@
 options dvb-core dvb_powerdown_on_sleep=0
+
+# Order if using more than one adapter
+#options dvb_usb_cxusb adapter_nr=0
+#options smsdvb adapter_nr=1
