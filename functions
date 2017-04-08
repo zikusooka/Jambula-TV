@@ -4249,7 +4249,7 @@ EOF
 
 motd_configure () {
 cat > $CONFDIR/cron.d/motd << EOF
-*/3 * * * * root $BINARY_PREFIX/jambulatv-sysinfo > $CONFDIR/motd
+@daily root $BINARY_PREFIX/jambulatv-sysinfo > $CONFDIR/motd
 EOF
 # Copy jambulatv-sysinfo & weather-api scripts, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-sysinfo ] || cp -v $PROJECT_BIN_DIR/jambulatv-sysinfo $BINARY_PREFIX/
