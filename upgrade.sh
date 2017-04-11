@@ -174,7 +174,7 @@ squid_configure
 #FLEXGET_DEPENDENCIES="DEP_1 DEP_2 DEP_3" upgrade_flexget_deps
 #upgrade_flexget
 
-#upgrade_icinga2
+#upgrade_icinga2 # Takes ~20 mins
 #upgrade_icingaweb2
 
 #upgrade_owncloud 
