@@ -87,7 +87,7 @@
         <addonnotifications>false</addonnotifications>
         <addonupdates>2</addonupdates>
         <settinglevel>3</settinglevel>
-        <systemtotaluptime>14055</systemtotaluptime>
+        <systemtotaluptime>15938</systemtotaluptime>
     </general>
     <input>
         <enablejoystick>false</enablejoystick>
@@ -418,7 +418,7 @@
         <setting type="bool" name="skin.aeonmq6.gotofullscreen">false</setting>
         <setting type="bool" name="skin.aeonmq6.originaltitle">false</setting>
         <setting type="bool" name="skin.aeonmq6.nopausedlabel">false</setting>
-        <setting type="bool" name="skin.aeonmq6.custommode">true</setting>
+        <setting type="bool" name="skin.aeonmq6.custommode">false</setting>
         <setting type="bool" name="skin.aeonmq6.keepaspect">false</setting>
         <setting type="bool" name="skin.aeonmq6.animation_panscan">false</setting>
         <setting type="bool" name="skin.aeonmq6.visanimation_panscan">true</setting>
@@ -919,10 +919,10 @@
         <setting type="string" name="skin.aeonmq6.menu4.action">ActivateWindow(music)</setting>
         <setting type="string" name="skin.aeonmq6.menu5.master">livetv</setting>
         <setting type="string" name="skin.aeonmq6.menu5.action">ActivateWindow(TVChannels)</setting>
-        <setting type="string" name="skin.aeonmq6.menu6.master">settingsaddonsvideo</setting>
+        <setting type="string" name="skin.aeonmq6.menu6.master">addons</setting>
         <setting type="string" name="skin.aeonmq6.menu6.action">ActivateWindow(video,addons,return)</setting>
-        <setting type="string" name="skin.aeonmq6.menu7.master">addons</setting>
-        <setting type="string" name="skin.aeonmq6.menu7.action">ActivateWindow(filemanager)</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.master">settingsaddonsvideo</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.action">ActivateWindow(video,addons,return)</setting>
         <setting type="string" name="skin.aeonmq6.menu8.master">mymenu5</setting>
         <setting type="string" name="skin.aeonmq6.menu8.action">SetFocus(510)</setting>
         <setting type="string" name="skin.aeonmq6.menu10.master">pictures</setting>
@@ -1107,7 +1107,7 @@
         <setting type="string" name="skin.aeonmq6.CustomVideoGenreFanart"></setting>
         <setting type="string" name="skin.aeonmq6.CustomMusicGenreFanart"></setting>
         <setting type="string" name="skin.aeonmq6.customaudiodisc"></setting>
-        <setting type="string" name="skin.aeonmq6.menu1.label">SERIES</setting>
+        <setting type="string" name="skin.aeonmq6.menu1.label">TV SERIES</setting>
         <setting type="string" name="skin.aeonmq6.menu1.defaultlabel">TV SHOWS</setting>
         <setting type="string" name="skin.aeonmq6.menu1.path"></setting>
         <setting type="string" name="skin.aeonmq6.menu2.label"></setting>
@@ -1119,34 +1119,34 @@
         <setting type="string" name="skin.aeonmq6.menu4.label"></setting>
         <setting type="string" name="skin.aeonmq6.menu4.defaultlabel">MUSIC</setting>
         <setting type="string" name="skin.aeonmq6.menu4.path"></setting>
-        <setting type="string" name="skin.aeonmq6.menu5.label">LOCAL TV</setting>
+        <setting type="string" name="skin.aeonmq6.menu5.label">LIVE TV</setting>
         <setting type="string" name="skin.aeonmq6.menu5.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu5.path"></setting>
-        <setting type="string" name="skin.aeonmq6.menu6.label">INTERNET TV</setting>
-        <setting type="string" name="skin.aeonmq6.menu6.defaultlabel">VIDEO ADD-ONS</setting>
-        <setting type="string" name="skin.aeonmq6.menu6.path"></setting>
-        <setting type="string" name="skin.aeonmq6.menu7.label">LIVE SPORTS</setting>
-        <setting type="string" name="skin.aeonmq6.menu7.defaultlabel"></setting>
-        <setting type="string" name="skin.aeonmq6.menu7.path">plugin.video.SportsDevil</setting>
-        <setting type="string" name="skin.aeonmq6.menu8.label">APPS</setting>
+        <setting type="string" name="skin.aeonmq6.menu6.label">SPORTS MATCHES</setting>
+        <setting type="string" name="skin.aeonmq6.menu6.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu6.path">plugin.video.SportsDevil</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.label">IPTV SERVICES</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.defaultlabel">VIDEO ADD-ONS</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu8.label">MOBILE APPS</setting>
         <setting type="string" name="skin.aeonmq6.menu8.defaultlabel">MY MENU 5</setting>
         <setting type="string" name="skin.aeonmq6.menu8.path"></setting>
-        <setting type="string" name="skin.aeonmq6.menu9.label">GAMES</setting>
+        <setting type="string" name="skin.aeonmq6.menu9.label">PC GAMES</setting>
         <setting type="string" name="skin.aeonmq6.menu9.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu9.path"></setting>
-        <setting type="string" name="skin.aeonmq6.menu10.label">PHOTOS</setting>
+        <setting type="string" name="skin.aeonmq6.menu10.label">PHOTO ALBUMS</setting>
         <setting type="string" name="skin.aeonmq6.menu10.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu10.path"></setting>
-        <setting type="string" name="skin.aeonmq6.menu11.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu11.label">WEATHER FORECASTS</setting>
         <setting type="string" name="skin.aeonmq6.menu11.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu11.path"></setting>
-        <setting type="string" name="skin.aeonmq6.menu12.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu12.label">SYSTEM SETTINGS</setting>
         <setting type="string" name="skin.aeonmq6.menu12.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu12.path"></setting>
-        <setting type="string" name="skin.aeonmq6.menu13.label">COMPUTER</setting>
+        <setting type="string" name="skin.aeonmq6.menu13.label">COMPUTER MODE</setting>
         <setting type="string" name="skin.aeonmq6.menu13.defaultlabel"></setting>
         <setting type="string" name="skin.aeonmq6.menu13.path">script.service.pcmode</setting>
-        <setting type="string" name="skin.aeonmq6.menu14.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu14.label">POWER OFF</setting>
         <setting type="string" name="skin.aeonmq6.menu14.defaultlabel">TURN OFF</setting>
         <setting type="string" name="skin.aeonmq6.menu14.path"></setting>
         <setting type="string" name="skin.aeonmq6.menu15.label">YOUTUBE</setting>
@@ -1207,12 +1207,12 @@
         <setting type="string" name="skin.aeonmq6.menu5.subid"></setting>
         <setting type="string" name="skin.aeonmq6.menu5.widgets">channel.tv</setting>
         <setting type="string" name="skin.aeonmq6.menu5.target">plus</setting>
-        <setting type="string" name="skin.aeonmq6.menu6.bg">/usr/share/kodi/addons/plugin.video.bbts/fanart.jpg</setting>
+        <setting type="string" name="skin.aeonmq6.menu6.bg">/usr/share/kodi/addons/plugin.video.SportsDevil/fanart.jpg</setting>
         <setting type="string" name="skin.aeonmq6.menu6.visible"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.subid"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.widgets"></setting>
         <setting type="string" name="skin.aeonmq6.menu6.target"></setting>
-        <setting type="string" name="skin.aeonmq6.menu7.bg">/usr/share/kodi/addons/plugin.video.SportsDevil/fanart.jpg</setting>
+        <setting type="string" name="skin.aeonmq6.menu7.bg">/usr/share/kodi/addons/plugin.video.bbts/fanart.jpg</setting>
         <setting type="string" name="skin.aeonmq6.menu7.visible"></setting>
         <setting type="string" name="skin.aeonmq6.menu7.subid">settingsaddonsvideo</setting>
         <setting type="string" name="skin.aeonmq6.menu7.widgets"></setting>
@@ -2080,17 +2080,17 @@
         <setting type="string" name="skin.aeonmq6.preset10.label"></setting>
         <setting type="string" name="skin.aeonmq6.weathericonsfolder.label"></setting>
         <setting type="string" name="skin.aeonmq6.weather.bg"></setting>
-        <setting type="string" name="skin.aeonmq6.custom_on">menu6.visible</setting>
-        <setting type="string" name="skin.aeonmq6.custom_bg">menu6.bg</setting>
-        <setting type="string" name="skin.aeonmq6.custom_thumb">menu6.thumb</setting>
-        <setting type="string" name="skin.aeonmq6.custom_label">menu6.label</setting>
-        <setting type="string" name="skin.aeonmq6.custom_defaultlabel">menu6.defaultlabel</setting>
-        <setting type="string" name="skin.aeonmq6.custom_path">menu6.path</setting>
-        <setting type="string" name="skin.aeonmq6.custom_action">menu6.action</setting>
-        <setting type="string" name="skin.aeonmq6.custom_subid">menu6.subid</setting>
-        <setting type="string" name="skin.aeonmq6.custom_widgets">menu6.widgets</setting>
-        <setting type="string" name="skin.aeonmq6.custom_target">menu6.target</setting>
-        <setting type="string" name="skin.aeonmq6.custom_master">menu6.master</setting>
+        <setting type="string" name="skin.aeonmq6.custom_on">menu12.visible</setting>
+        <setting type="string" name="skin.aeonmq6.custom_bg">menu12.bg</setting>
+        <setting type="string" name="skin.aeonmq6.custom_thumb">menu12.thumb</setting>
+        <setting type="string" name="skin.aeonmq6.custom_label">menu12.label</setting>
+        <setting type="string" name="skin.aeonmq6.custom_defaultlabel">menu12.defaultlabel</setting>
+        <setting type="string" name="skin.aeonmq6.custom_path">menu12.path</setting>
+        <setting type="string" name="skin.aeonmq6.custom_action">menu12.action</setting>
+        <setting type="string" name="skin.aeonmq6.custom_subid">menu12.subid</setting>
+        <setting type="string" name="skin.aeonmq6.custom_widgets">menu12.widgets</setting>
+        <setting type="string" name="skin.aeonmq6.custom_target">menu12.target</setting>
+        <setting type="string" name="skin.aeonmq6.custom_master">menu12.master</setting>
         <setting type="string" name="skin.aeonmq6.duallabel">widget1</setting>
         <setting type="string" name="skin.aeonmq6.dualwidgets">widget1</setting>
         <setting type="string" name="skin.aeonmq6.WindowBack">/usr/share/kodi/addons/script.game.connect4/resources/skins/default/media/black1.png</setting>
@@ -3072,6 +3072,131 @@
         <setting type="string" name="skin.aeonmq6.menu2512.thumb"></setting>
         <setting type="string" name="skin.aeonmq6.menu2512.icon"></setting>
         <setting type="string" name="skin.aeonmq6.menu2512.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51501.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51501.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51501.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51501.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51501.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51502.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51502.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51502.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51502.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51502.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51503.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51503.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51503.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51503.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51503.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51504.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51504.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51504.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51504.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51504.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51505.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51505.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51505.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51505.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51505.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51506.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51506.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51506.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51506.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51506.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51507.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51507.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51507.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51507.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51507.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51508.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51508.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51508.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51508.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51508.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51509.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51509.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51509.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51509.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51509.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51510.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51510.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51510.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51510.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51510.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51511.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51511.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51511.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51511.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51511.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51512.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51512.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51512.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51512.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51512.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51513.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51513.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51513.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51513.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51513.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51514.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51514.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51514.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51514.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51514.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51515.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51515.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51515.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51515.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu51515.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7801.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7801.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7801.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7801.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7801.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7802.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7802.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7802.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7802.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7802.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7803.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7803.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7803.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7803.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7803.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7804.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7804.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7804.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7804.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7804.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7805.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7805.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7805.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7805.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7805.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7806.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7806.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7806.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7806.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7806.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7807.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7807.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7807.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7807.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7807.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7808.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7808.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7808.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7808.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7808.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7809.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7809.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7809.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7809.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7809.visible"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7810.label"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7810.master"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7810.defaultlabel"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7810.path"></setting>
+        <setting type="string" name="skin.aeonmq6.menu7810.visible"></setting>
     </skinsettings>
     <resolutions>
         <resolution>
@@ -3283,7 +3408,7 @@
             <sortattributes>0</sortattributes>
         </musicnavsongs>
         <pictures>
-            <viewmode>720896</viewmode>
+            <viewmode>131128</viewmode>
             <sortmethod>1</sortmethod>
             <sortorder>1</sortorder>
             <sortattributes>0</sortattributes>
