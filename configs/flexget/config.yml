@@ -346,13 +346,14 @@ templates:
 # Podcasts 
 # --------
   podcasts:
+    no_entries_ok: yes
     disable:
       - telegram
     free_space:
       path: '{{secrets.podcasts.path}}'
       space: 1000
     limit_new: 5
-    priority: 5    
+    priority: 5 
     include: [ '{{secrets.podcasts.include}}' ]
     # Set podcast meta and info spool files 
     set:

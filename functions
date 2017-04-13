@@ -4759,6 +4759,9 @@ rm -rf $PYTHON_SITEDIR/FlexGet*
 # Install python modules
 echo "Installing FlexGet ..."
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/Flexget/ $INSTALL_SRC_DIR/Flexget/
+# Apply our patches
+patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT_PATCHES_DIR/flexget.plugin.include.patch
+# Install
 cd $INSTALL_SRC_DIR/Flexget
 pip install -e .
 }
@@ -4828,30 +4831,15 @@ done
 # Configure TV series
 if [ ! -e $FLEXGET_CONFIG_DIR/tvseries.yml ];
 then
-# Create sample TV Series feeds
-cat > $FLEXGET_CONFIG_DIR/tvseries.yml << EOF
-series:
-  group 1:
-    - Arrow
-    - Blindspot
-    - Devious Maids
-    - Game of Thrones
-    - Person of Interest: { begin: S05E01 }
-    - Scandal: { alternate_name: Scandal US }
-    - Silicon Valley
-    - Suits: { begin: S06E01 }
-EOF
+# Add sample TV Series feeds
+cp -v $PROJECT_CONFIGS_DIR/flexget/tvseries.yml.* $FLEXGET_CONFIG_DIR/
 fi
 #
 # Podcasts
 if [ ! -e $FLEXGET_CONFIG_DIR/podcasts.yml ];
 then
-# Create sample Podcasts feeds
-cat > $FLEXGET_CONFIG_DIR/podcasts.yml <<EOF
-inputs:
-  - rss: http://feeds.5by5.tv/inbeta # 5by5 - In Beta
-  - rss: http://revision3.com/tzdaily/feed/MP4-Small # TekZilla - Daily" 
-EOF
+# Add sample Podcasts feeds
+cp -v $PROJECT_CONFIGS_DIR/flexget/podcasts.yml.* $FLEXGET_CONFIG_DIR/
 fi
 # Copy jambulatv-fetch-podcasts script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-fetch-podcasts ] || cp -v $PROJECT_BIN_DIR/jambulatv-fetch-podcasts $BINARY_PREFIX/

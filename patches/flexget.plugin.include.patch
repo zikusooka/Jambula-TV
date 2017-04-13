@@ -1,0 +1,21 @@
+--- include.py.orig	2017-04-13 14:15:45.352767221 +0300
++++ include.py	2017-04-13 16:32:42.752013561 +0300
+@@ -39,9 +39,17 @@
+ 
+         for name in files:
+             name = os.path.expanduser(name)
++
+             if not os.path.isabs(name):
+                 name = os.path.join(task.manager.config_base, name)
+-            include = yaml.load(io.open(name, encoding='utf-8'))
++
++	    # JambulaTV: Check if included file exists
++	    if os.path.exists(name):
++                include = yaml.load(io.open(name, encoding='utf-8'))
++            else:
++                log.warning('JambulaTV: Please add the file: %s ' % name)
++ 		break
++
+             errors = process_config(include, plugin.plugin_schemas(context='task'))
+             if errors:
+                 log.error('Included file %s has invalid config:' % name)
