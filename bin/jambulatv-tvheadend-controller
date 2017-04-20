@@ -21,6 +21,7 @@ TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
 TVHEADEND_PLAY_STREAM_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/play/stream"
 TVHEADEND_CONFIG_DIR=MY_TVHEADEND_CONFIG_DIR
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
+TVHEADEND_CHANNELS_TAGS_DIR=$TVHEADEND_CONFIG_DIR/channel/tag
 TVHEADEND_IPTV_NETWORK_NAME=MY_TVHEADEND_IPTV_NETWORK_NAME
 TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid' | sed 's:"::g')
 TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=/tmp/iptv_service_uuid.txt
@@ -126,8 +127,10 @@ sudo ip route add default via $GATEWAY
 }
 
 pre_config () {
-# Create directory, if non-existent
+# Create channels directory, if non-existent
 [ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
+# Create tags directory, if non-existent
+[ -d $TVHEADEND_CHANNELS_TAGS_DIR ] || mkdir -p $TVHEADEND_CHANNELS_TAGS_DIR
 #
 # Load IPTV Lists i.e. refresh tvheadend
 refresh_tvheadend
@@ -153,6 +156,28 @@ do
 rm -f $TVHEADEND_CHANNELS_CONFIG_DIR/$DEAD_CHANNEL_UUID
 done
 # Refresh TVH
+refresh_tvheadend
+}
+
+dvb_add_channel_tags () {
+for TAG_NAME in "Free-To-Air" "Local" "$DVBT_NETWORK_NAME"
+do
+TAG_UUID=$(uuidgen -t | sed 's:-::g')
+# Create channel tag(s)
+cat > $TVHEADEND_CHANNELS_TAGS_DIR/$TAG_UUID <<EOF
+{
+	"enabled": true,
+	"index": 0,
+	"name": "$TAG_NAME",
+	"internal": false,
+	"private": false,
+	"icon": "",
+	"titled_icon": false,
+	"comment": "DVB-T2 $TAG_NAME Channels"
+}
+EOF
+done
+# Refresh tvheadend
 refresh_tvheadend
 }
 
@@ -223,6 +248,29 @@ cat >> $TVHEADEND_IPTV_FAILED_LOG_FILE << STREAMLOG
 JambulaTV: Can not connect to stream :$SERVICE_NAME
 VLC_EXIT_STATUS=$VLC_EXIT_STATUS
 STREAMLOG
+}
+
+iptv_add_channel_tags () {
+cat ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_IPTV_WORLD_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | sort -u | while read IPTV_CHANNEL
+do
+TAG_NAME=$IPTV_CHANNEL 
+TAG_UUID=$(uuidgen -t | sed 's:-::g')
+# Create channel tag(s)
+cat > $TVHEADEND_CHANNELS_TAGS_DIR/$TAG_UUID <<EOF
+{
+	"enabled": true,
+	"index": 0,
+	"name": "$TAG_NAME",
+	"internal": false,
+	"private": false,
+	"icon": "",
+	"titled_icon": false,
+	"comment": "IPTV $TAG_NAME Channels"
+}
+EOF
+done
+# Refresh tvheadend
+refresh_tvheadend
 }
 
 iptv_map_services_2_channels () {
@@ -347,6 +395,7 @@ dvb_scan_4_services
 # Map
 elif [ "$TV_TASK" = "map" ];
 then
+dvb_add_channel_tags
 dvb_map_services_2_channels
 fi
 ;;
@@ -372,6 +421,7 @@ iptv_scan_add_services incremental
 # Map
 elif [ "$TV_TASK" = "map" ];
 then
+iptv_add_channel_tags
 iptv_map_services_2_channels
 fi
 ;;
