@@ -8355,8 +8355,9 @@ cat $PROJECT_CONFIGS_DIR/netdata.conf.template | \
 	sed "s:NETDATA_HOSTNAME:$PROJECT_NAME:g" \
 	> $CONFDIR/netdata/netdata.conf
 # Copy systemd start file
-cp -v $INSTALL_SRC_DIR/netdata/system/netdata.service \
-	$SYSTEMD_UNITS_DIR_USER/netdata.service
+cat $INSTALL_SRC_DIR/netdata/system/netdata.service | \
+	sed -e "s:KillMode=mixed:#KillMode=mixed:g" \
+		> $SYSTEMD_UNITS_DIR_USER/netdata.service
 # Enable and start netdata systemd service
 systemctl enable netdata.service
 systemctl start netdata.service
