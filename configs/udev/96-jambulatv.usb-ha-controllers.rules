@@ -1,0 +1,2 @@
+# Gen 2 Z-Wave stick
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="ttyUSB-ZStick-2G" 
