@@ -8,8 +8,12 @@ DOMOTICZ_WWW_PORT=8540
 HOUR=`date +%H`
 
 DOMOTICZ_LAMP_NAME="$1"
+DOMOTICZ_LAMP_LIVING_ROOM_NAME="Living Room"
 DOMOTICZ_LAMP_ACTION=$2
 DOMOTICZ_LOG_NOTICE="[$(basename $0)]%20$DOMOTICZ_LAMP_NAME%20was%20turned"
+
+JAMBULATV_LIVING_ROOM_NAME="JambulaTV (Living Room)"
+JAMBULATV_LIVING_ROOM_STATE_ON="Video"
 
 MODE=$3
 
@@ -60,7 +64,7 @@ fi
 
 # TV ID, Status, and Data
 get_id_of_tv () {
-DOMOTICZ_TV_ID=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=getlightswitches" | jq -c ".result[] | select(.Name == \"TV in Living Room\") | .idx" | sed "s:\"::g")
+DOMOTICZ_TV_ID=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=getlightswitches" | jq -c ".result[] | select(.Name == \"$JAMBULATV_LIVING_ROOM_NAME\") | .idx" | sed "s:\"::g")
 }
 
 status_of_tv () {
@@ -145,8 +149,12 @@ status_of_lamp
 status_of_tv
 case $DOMOTICZ_LAMP_ACTION in
 [Oo][Nn])
+# If in demo mode, continue out of 'if' statement
+if [ "$MODE" = "demo" ];
+then
+continue
 # Exit == Don't turn on Light if its in the Living Room and Video is playing
-if [ "$DOMOTICZ_TV_STATUS" = "Video" ] && [ "$DOMOTICZ_LAMP_NAME" = "Living Room" ];
+elif [ "$DOMOTICZ_TV_STATUS" = "$JAMBULATV_LIVING_ROOM_STATE_ON" ] && [ "$DOMOTICZ_LAMP_NAME" = "$DOMOTICZ_LAMP_LIVING_ROOM_NAME" ];
 then
 exit 0
 fi
