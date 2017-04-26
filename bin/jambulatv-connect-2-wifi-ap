@@ -36,6 +36,7 @@ WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 ###############
 #  FUNCTIONS  #
 ###############
+
 # Check if script is already running and internet is off
 quit_if_already_running () {
 if [ -e "$SCRIPT_RUNNING_FILE" ] && [ -e "$INTERNET_OFF_FILE" ];
@@ -204,17 +205,15 @@ fi
 }
 
 get_ip_address () {
-# Start dhclient if it is not running
-ps auxw | grep dhclient | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
-# Get IP Address using dhclient
-if [ "$?" != "0" ];
-then
+# Remove previous/failed dhclient process 
+DHCLIENT_FAILED_PID=$(ps auxw | grep dhclient | grep ${WIFI_STATION_INTERFACE} | awk {'print $2'} | tail -1)
+# Kill existing dhclient process
+[ "x$DHCLIENT_FAILED_PID" = "x" ] || kill $DHCLIENT_FAILED_PID
 # Clear default route
 ip route del default
 # Get IP Address/Gateway/DNS
 echo "Acquiring IP address information ..."
 sudo /sbin/dhclient -H $(hostname -s) -q -lf /var/lib/dhclient/dhclient--${WIFI_STATION_INTERFACE}.lease -pf /var/run/dhclient-${WIFI_STATION_INTERFACE}.pid ${WIFI_STATION_INTERFACE}
-fi
 }
 
 make_this_internet_gateway () {
