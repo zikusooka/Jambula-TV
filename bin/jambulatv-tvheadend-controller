@@ -22,6 +22,7 @@ TVHEADEND_PLAY_STREAM_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/pl
 TVHEADEND_CONFIG_DIR=MY_TVHEADEND_CONFIG_DIR
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
 TVHEADEND_CHANNELS_TAGS_DIR=$TVHEADEND_CONFIG_DIR/channel/tag
+TVHEADEND_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/dvb/networks
 TVHEADEND_IPTV_NETWORK_NAME=MY_TVHEADEND_IPTV_NETWORK_NAME
 TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid' | sed 's:"::g')
 TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=/tmp/iptv_service_uuid.txt
@@ -32,6 +33,7 @@ PLAYLISTS_DIRECTORY=MY_PLAYLISTS_DIRECTORY
 PLAYLISTS_IPTV_WORLD_M3U_FILE=MY_PLAYLISTS_IPTV_WORLD_M3U_FILE
 PROJECT_SYSTEM_ICONS_DIR=MY_PROJECT_SYSTEM_ICONS_DIR
 DVBT_NETWORK_NAME=MY_DVBT_NETWORK_NAME
+DVBT_PNETWORK_NAME=$DVBT_NETWORK_NAME
 MULTIMEDIA_USER=MY_MULTIMEDIA_USER
 
 INTERNET_GATEWAY_IP=$(ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')
@@ -60,7 +62,7 @@ usage_dvb () {
 if [ "x$TV_TASK" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` dvb [scan|map]
+echo "Usage:  ./`basename $0` dvb [network|scan|map]
 "
 exit 1
 fi
@@ -157,6 +159,68 @@ rm -f $TVHEADEND_CHANNELS_CONFIG_DIR/$DEAD_CHANNEL_UUID
 done
 # Refresh TVH
 refresh_tvheadend
+}
+
+configure_dvb_network () {
+# Configure network that will be used and type
+[ -d $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID ] || \
+	mkdir -p $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID
+#
+cat > $TVHEADEND_NETWORK_CONFIG_FILE <<EOF
+{
+	"networkname": "$DVBT_NETWORK_NAME",
+	"pnetworkname": "$DVBT_PNETWORK_NAME",
+	"nid": 0,
+	"autodiscovery": 0,
+	"skipinitscan": false,
+	"idlescan": false,
+	"sid_chnum": false,
+	"ignore_chnum": true,
+	"satip_source": 0,
+	"localtime": 180,
+	"wizard": false,
+	"class": "dvb_network_dvbt"
+}
+EOF
+}
+
+dvb_add_network () {
+# Get number of existing DVB networks
+ls $TVHEADEND_NETWORK_CONFIG_DIR/*/config > /dev/null 2>&1
+DVB_NETWORK_EXISTS=$?
+if [ "$DVB_NETWORK_EXISTS" = "0" ];
+then
+NUMBER_OF_DVB_NETWORKS=$(ls -x $TVHEADEND_NETWORK_CONFIG_DIR/*/config | wc -l)
+else
+NUMBER_OF_DVB_NETWORKS=0
+fi
+#
+# See if DVB network is corrupted
+find $TVHEADEND_NETWORK_CONFIG_DIR -size 0 -type f -print | xargs ls | grep config > /dev/null 2>&1
+DVB_NETWORK_CORRUPTED=$?
+
+if [ "$DVB_NETWORK_CORRUPTED" = "0" ];
+then
+echo "DVB network is corrupted.  Fixing ..."
+# Get corrupted DVB network config file
+TVHEADEND_NETWORK_CONFIG_FILE=$(find $TVHEADEND_NETWORK_CONFIG_DIR -size 0 -type f -print | xargs ls | grep config)
+# Add network
+configure_dvb_network
+
+elif [ "$NUMBER_OF_DVB_NETWORKS" = "0" ];
+then
+echo "Setting up a fresh DVB network"
+# Set fresh DVB network config file
+TVHEADEND_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
+TVHEADEND_NETWORK_CONFIG_FILE=$TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/config
+# Add network
+configure_dvb_network
+
+else
+echo "DVB network already exists, proceeding"
+break
+
+fi
 }
 
 dvb_add_channel_tags () {
@@ -387,8 +451,12 @@ case $TV_TYPE in
 dvb)
 # Usage
 usage_dvb
+# Network
+if [ "$TV_TASK" = "network" ];
+then
+dvb_add_network
 # Scan
-if [ "$TV_TASK" = "scan" ];
+elif [ "$TV_TASK" = "scan" ];
 then
 scan_osd_notice
 dvb_scan_4_services

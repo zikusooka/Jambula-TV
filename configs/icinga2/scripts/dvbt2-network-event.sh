@@ -22,7 +22,6 @@ DVBT_ADAPTER_CONFIG=$(sudo grep -rli "$DVBT_TUNER_NAME" $TVHEADEND_CONFIG_DIR/in
 DVBT_NETWORK_UUID=$(sudo grep -A 6 "\"displayname\": \"$DVBT_TUNER_NAME : DVB-T #0\"" $DVBT_ADAPTER_CONFIG | tail -1 | awk {'print $1'} | sed "s:\"::g")
 DVBT_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/dvb/networks
 DVBT_NETWORK_CONFIG_FILE=$DVBT_NETWORK_CONFIG_DIR/$DVBT_NETWORK_UUID/config
-DVBT_NETWORK_CONFIG_TMP_FILE=/tmp/dvbt_network.config
 
 
 
@@ -70,27 +69,6 @@ OSD_MESSAGE="TV Channels list was corrupted possibly due to a bad shutdown previ
 sudo /usr/bin/jambulatv-osd -m "$OSD_MESSAGE"
 #
 # Restore network
-cat > $DVBT_NETWORK_CONFIG_TMP_FILE <<EOF
-{
-	"networkname": "$DVBT_NETWORK_NAME",
-	"pnetworkname": "$DVBT_PNETWORK_NAME",
-	"nid": 0,
-	"autodiscovery": false,
-	"skipinitscan": false,
-	"idlescan": false,
-	"sid_chnum": false,
-	"ignore_chnum": false,
-	"satip_source": 0,
-	"localtime": false,
-	"class": "dvb_network_dvbt"
-}
-EOF
-#
-# Move config file from temp to right location
-sudo mv -v $DVBT_NETWORK_CONFIG_TMP_FILE $DVBT_NETWORK_CONFIG_FILE
-# Change ownership of config file to jambula user
-sudo chown $MULTIMEDIA_USER:$MULTIMEDIA_USER $DVBT_NETWORK_CONFIG_FILE
-# Restart tvheadend
-sudo /usr/bin/systemctl restart tvheadend.service
+sudo /usr/bin/jambulatv-tvheadend-controller dvb network
 
 fi
