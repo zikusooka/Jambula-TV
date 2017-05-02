@@ -27,7 +27,7 @@ usage () {
 if [ "x$DOMOTICZ_LAMP_NAME" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [DOMOTICZ_LAMP_NAME (Use Quotes for spaced names] [DOMOTICZ_LAMP_ACTION (on|off)] [demo (Optional)]
+echo "Usage:  ./`basename $0` [DOMOTICZ_LAMP_NAME (Use Quotes for spaced names] [DOMOTICZ_LAMP_ACTION (on|off|toggle)] [demo (Optional)]
 "
 exit 1
 fi
@@ -35,7 +35,7 @@ fi
 if [ "x$DOMOTICZ_LAMP_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` $DOMOTICZ_LAMP_NAME [DOMOTICZ_LAMP_ACTION (on|off)] [demo (Optional)]
+echo "Usage:  ./`basename $0` $DOMOTICZ_LAMP_NAME [DOMOTICZ_LAMP_ACTION (on|off|toggle)] [demo (Optional)]
 
 "
 exit 1
@@ -158,8 +158,8 @@ elif [ "$DOMOTICZ_TV_STATUS" = "$JAMBULATV_LIVING_ROOM_STATE_ON" ] && [ "$DOMOTI
 then
 exit 0
 fi
-# Turn on security Light if it is not on and its dark 
-#if [ "$DOMOTICZ_LAMP_STATE" = "Off" ] && [ "$ITS_DARK" = "yes" ];
+# Turn on security Light if it is not on and its dark or during demo mode
+
 if [ "$ITS_DARK" = "yes" ] || [ "$MODE" = "demo" ];
 then
 turn_on_lamp
@@ -168,16 +168,24 @@ fi
 ;;
 
 [Oo][Ff][Ff])
-# Switch off security Light if it was turned on after desired period e.g. 60 minutes
-#if [ "$DOMOTICZ_LAMP_STATE" = "On" ] && [ "$ITS_DARK" = "yes" ];
+# Switch off security Light if its is dark or during demo mode
 if [ "$ITS_DARK" = "yes" ] || [ "$MODE" = "demo" ];
 then
 turn_off_lamp
 log_event $DOMOTICZ_LOG_NOTICE:%20Off
 fi
 ;;
+
+[Tt][Oo][Gg][Gg][Ll][Ee])
+# Turn on
+[ "$DOMOTICZ_LAMP_STATE" = "On" ] || turn_on_lamp
+# Turn off
+[ "$DOMOTICZ_LAMP_STATE" = "Off" ] || turn_off_lamp
+log_event $DOMOTICZ_LOG_NOTICE:%20Toggle
+;;
+
 *)
 clear
-echo "Usage:  ./`basename $0` [DOMOTICZ_LAMP_NAME (Use Quotes for spaced names] [DOMOTICZ_LAMP_ACTION (on|off)] [demo (Optional)]
+echo "Usage:  ./`basename $0` [DOMOTICZ_LAMP_NAME (Use Quotes for spaced names] [DOMOTICZ_LAMP_ACTION (on|off|toggle)] [demo (Optional)]
 "
 esac
