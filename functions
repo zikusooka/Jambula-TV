@@ -633,8 +633,16 @@ VLM_VOD_DELETE_SCRIPT=$BINARY_PREFIX/jambulatv-delete-video-on-demand
 
 INCRON_DIRECTORY=/etc/incron.d
 
-# Asterisk
+# Asterisk config directory
+if [ -d $PROJECT_SYSTEM_CONF_DIR/asterisk ];
+then
 ASTERISK_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/asterisk
+elif [ -d $PROJECT_SYSTEM_CONF_DIR/freepbx ];
+then
+ASTERISK_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/freepbx
+else
+ASTERISK_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/asterisk
+fi
 ASTERISK_AGI_BIN_DIR=$STATEDIR/lib/asterisk/agi-bin
 # Asterisk AMI
 ASTERISK_AMI_USER=JambulaTV
