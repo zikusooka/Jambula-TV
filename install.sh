@@ -240,6 +240,7 @@ samba_configure
 # -----------------
 youtube_dl_install
 youtube_setup
+vcfconvert_install
 cutter_install 
 rtmpdump_install
 gnokii_install

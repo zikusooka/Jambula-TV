@@ -4331,6 +4331,12 @@ make
 cp -v $INSTALL_SRC_DIR/cutter/cutter $BINARY_PREFIX/
 }
 
+vcfconvert_install () {
+# Copy vcfconvert php files, and link executable to php folder
+rsync -avz $PROJECT_GITHUB_DIR/vcfconvert/ $PREFIX/share/php/vcfconvert/
+ln -s $PREFIX/share/php/vcfconvert/vcfconvert.sh $BINARY_PREFIX/vcfconvert
+}
+
 dnsmasq_configure () {
 # make backup copy
 cp -pv $CONFDIR/dnsmasq.conf $CONFDIR/dnsmasq.conf.orig
