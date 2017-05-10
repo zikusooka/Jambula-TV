@@ -11,9 +11,10 @@
 
 
 # Variables
-ASTERISK_CMD=/usr/sbin/asterisk
 VCARD_FILE=$@
-NAME_AND_NUMBER_DRAFT=/tmp/phone_number_draft
+VCF_CONVERT_CMD=/usr/bin/vcfconvert
+CONVERTED_VCARD_FILE=/tmp/contacts_vcard_converted.csv
+ASTERISK_CMD=/usr/sbin/asterisk
 
 
 
@@ -30,14 +31,25 @@ exit 1
 fi
 
 # Dump Name and phone number field combinations to draft file
-grep '^TEL\|^N' $VCARD_FILE | cut -d : -f2 | paste - - -d ";" | tr -d $'\r' > $NAME_AND_NUMBER_DRAFT
+$VCF_CONVERT_CMD -p -d ";" -o $CONVERTED_VCARD_FILE -f csv $VCARD_FILE
 
 # Cycle through phone numbers to match names
-cat $NAME_AND_NUMBER_DRAFT | while read LINE
-do
-CALLER_ID_NUMBER=$(echo $LINE | cut -d ";" -f1)
+cat $CONVERTED_VCARD_FILE | while read LINE
 
-CALLER_ID_NAME=$(echo $LINE | cut -d ";" -f2)
+do
+HOME_PHONE=$(echo $LINE | cut -d ';' -f8)
+MOBILE_PHONE=$(echo $LINE | cut -d ';' -f13)
+DISPLAY_NAME=$(echo $LINE | cut -d ';' -f3)
+
+# Set caller ID display name
+CALLER_ID_NAME=$DISPLAY_NAME
+# Pick phone number from either Home or Mobile Phone fields
+if [ "x$MOBILE_PHONE" = "x" ];
+then
+CALLER_ID_NUMBER=$HOME_PHONE
+else
+CALLER_ID_NUMBER=$MOBILE_PHONE
+fi
 
 # Add Record to Asterisk AddressBook
 echo "
