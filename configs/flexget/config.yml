@@ -226,6 +226,9 @@ templates:
           timeframe: 6 hours
           target: "h264"
           upgrade: yes
+    set:
+      filename: "{{series_name|replace(' ', '.')}}.S{{series_season|pad(2)}}E{{series_episode|pad(2)}}.torrent"
+      content-disposition: no
     include: [ '{{secrets.tv.include}}' ]
     download: '{{secrets.tv.download}}'
     
