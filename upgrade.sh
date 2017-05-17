@@ -171,6 +171,8 @@ squid_configure
 #upgrade_kodi
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
 
+upgrade_kodi_addons plugin.video.ZemTV-shani plugin.video.ccloudtv plugin.video.phstreams plugin.video.livepremiership plugin.video.youtube plugin.video.FTFA
+
 #FLEXGET_DEPENDENCIES="DEP_1 DEP_2 DEP_3" upgrade_flexget_deps
 #upgrade_flexget
 
