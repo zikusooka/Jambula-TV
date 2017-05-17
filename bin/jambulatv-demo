@@ -15,6 +15,10 @@ PRESENCE_DETECT_USER_1=Zik
 PRESENCE_DETECT_USER_1_MAC="c0-ee-fb-28-00-0e"
 
 ASTERISK_DIAL_OUT_NUMBER_1=0776338000
+
+# ZM Camera ID
+ZONEMINDER_CAMERA_ID=2
+
 ACTION=$1
 
 
@@ -45,6 +49,11 @@ minidlnad -R -f $PROJECT_SYSTEM_CONF_DIR/minidlna.conf
 # Add presence detection for demo user
 sed -i "s:$PRESENCE_DETECT_USER_1_MAC | $PRESENCE_DETECT_USER_1 | no:$PRESENCE_DETECT_USER_1_MAC | $PRESENCE_DETECT_USER_1 | yes:g" $MY_WIFI_DEVICES_FILE
 
+# Change Zoneminder camera to function = Modect
+echo "UPDATE Monitors SET Function = 'Modect' WHERE Id = '$ZONEMINDER_CAMERA_ID';" | mysql -sN -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME
+# Restart Zoneminder
+systemctl restart zoneminder.service
+
 ;;
 
 [Oo][Ff][Ff])
@@ -61,6 +70,11 @@ grub2-mkconfig -o $GRUB2_BOOT_FILE
 
 # Remove presence detection for demo user
 sed -i "s:$PRESENCE_DETECT_USER_1_MAC | $PRESENCE_DETECT_USER_1 | yes:$PRESENCE_DETECT_USER_1_MAC | $PRESENCE_DETECT_USER_1 | no:g" $MY_WIFI_DEVICES_FILE
+
+# Change Zoneminder camera to function = Monitor
+echo "UPDATE Monitors SET Function = 'Monitor' WHERE Id = '$ZONEMINDER_CAMERA_ID';" | mysql -sN -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME
+# Restart Zoneminder
+systemctl restart zoneminder.service
 
 ;;
 
