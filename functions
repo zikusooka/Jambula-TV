@@ -240,7 +240,7 @@ KODI_ADDONS_GAMES="script.game.connect4 script.game.2048 plugin.game.blackjack p
 # Jambula Custom
 KODI_ADDONS_JAMBULA="plugin.video.jambulaIPTV script.doorbell script.service.kodi.callbacks script.service.pcmode"
 # Miscellaneous
-KODI_ADDONS_MISC="weather.openweathermap.extended script.xbmc.unpausejumpback"
+KODI_ADDONS_MISC="script.xbmc.unpausejumpback"
 #
 X11_DRIVER="intel" # intel|nouveau|mga|openchrome
 INTEL_X11_DRIVER_VERSION=git
@@ -3106,6 +3106,22 @@ elif [ "$KODI_ADDON" = "plugin.video.youtube" ];
 then
 rsync -avz $PROJECT_GITHUB_DIR/kodi-addons/plugin.video.youtube/ \
 	$KODI_SYSTEM_ADDONS/plugin.video.youtube/
+# weather.openweathermap.extended
+elif [ "$KODI_ADDON" = "weather.openweathermap.extended" ];
+then
+rsync -avz $PROJECT_GITHUB_DIR/kodi-addons/weather.openweathermap.extended/ \
+	$KODI_SYSTEM_ADDONS/weather.openweathermap.extended/
+# weather.weatherchina
+elif [ "$KODI_ADDON" = "weather.weatherchina" ];
+then
+rsync -avz $PROJECT_GITHUB_DIR/kodi-addons/weather.weatherchina/ \
+	$KODI_SYSTEM_ADDONS/weather.weatherchina/
+# weather.yahoo
+elif [ "$KODI_ADDON" = "weather.yahoo" ];
+then
+rsync -avz $PROJECT_GITHUB_DIR/kodi-addons/weather.yahoo/ \
+	$KODI_SYSTEM_ADDONS/weather.yahoo/
+
 else
 # All others
 unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
