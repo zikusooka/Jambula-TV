@@ -10,6 +10,10 @@ COOVA_MAIN_CONFIG_FILE=$COOVA_CONFIG_DIR/main.conf
 CHRONYC_CMD=/usr/bin/chronyc
 CHRONY_KEYS_FILE=/etc/chrony.keys
 CHRONYC_PASSWD=`awk {'print $2'} $CHRONY_KEYS_FILE`
+GEOLOCATION_FILE=/etc/JambulaTV/geolocation.txt
+GEOLOCATION_REFRESH_FILE=/tmp/geolocation_refresh
+HTTP_USER_AGENT="Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)"
+MULTIMEDIA_USER=jambula
 
 BEEP_SOUNDS_SCRIPT=/usr/bin/jambulatv-sounds
 SPEED_TEST_SCRIPT=/usr/bin/jambulatv-speed-test
@@ -55,6 +59,73 @@ sed -i /name_servers_append/d $RESOLVCONF_CONFIG
 sed -i "/name_servers=127.0.0.1/a name_servers_append=\"$SECONDARY_DNS_SERVER $TETIARY_DNS_SERVER $PUBLIC_DNS_SERVERS\"" $RESOLVCONF_CONFIG
 # Update resolvconf
 /usr/sbin/resolvconf -u
+}
+
+get_public_ip () {
+# Get public IP address
+PUBLIC_IP_ADDRESS=$(curl --get -sS -m 60  -A "$HTTP_USER_AGENT" https://api.ipify.org)
+export PUBLIC_IP_ADDRESS
+}
+
+get_city_using_ip () {
+# Get city using public IP address
+CITY_BY_IP=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.city' | sed 's:[,|"]::g')
+export CITY_BY_IP
+}
+
+get_latitude_longitude () {
+LATITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY_BY_IP&country=$COUNTRY&format=json" | jq '.[0] | .lat' | tr -d '"')
+LONGITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY_BY_IP&country=$COUNTRY&format=json" | jq '.[0] | .lon' | tr -d '"')
+}
+
+set_current_geolocation () {
+# See if geolocation file exists and is recent
+if [ -e "$GEOLOCATION_FILE" ];
+then
+# Get age of geolocation data file
+AGE_OF_GEOLOCATION_DATA=$(date -d "now - $(stat -c "%Y" $GEOLOCATION_FILE) seconds" +%s)
+# Source geolocation variables
+. $GEOLOCATION_FILE
+#
+# Remove old refresh yes or no file
+sudo rm -f $GEOLOCATION_REFRESH_FILE
+# If age of geolocation data file is less than a day then check if an empty variable exists
+[[ "$AGE_OF_GEOLOCATION_DATA" -lt "86400" ]] && \
+	cat $GEOLOCATION_FILE | cut -d '=' -f2 | while read GEO_VARIABLE
+		do
+		# Quit if there is missing variable
+			if [ "x$GEO_VARIABLE" = "x" ];
+			then
+			clear
+				echo "FORCE_REFRESH=y" > $GEOLOCATION_REFRESH_FILE
+				break
+			else
+				echo "FORCE_REFRESH=n" > $GEOLOCATION_REFRESH_FILE
+			fi
+		done
+# Source refresh yes or no file
+[ -e $GEOLOCATION_REFRESH_FILE ] && . $GEOLOCATION_REFRESH_FILE
+fi
+
+# Force refresh of geolocation data
+if [ "$FORCE_REFRESH" = "y" ] || [ "x$FORCE_REFRESH" = "x" ];
+then
+# Lookup public IP address and city
+get_public_ip
+get_city_using_ip
+get_latitude_longitude
+#
+# Create geolocation file
+cat > $GEOLOCATION_FILE <<EOF
+PUBLIC_IP_ADDRESS=$PUBLIC_IP_ADDRESS
+CITY=$CITY_BY_IP
+LATITUDE=$LATITUDE
+LONGITUDE=$LONGITUDE
+EOF
+#
+# Change ownership
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $GEOLOCATION_FILE
+fi
 }
 
 check_4_updates () {
@@ -104,6 +175,10 @@ $CHRONYC_CMD <<EOF
 password $CHRONYC_PASSWD
 online
 EOF
+
+# Lookup current public IP Address and City Name
+# ----------------------------------------------
+set_current_geolocation
 
 # Sound alert beep
 # ----------------
