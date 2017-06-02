@@ -4275,9 +4275,8 @@ motd_configure () {
 cat > $CONFDIR/cron.d/motd << EOF
 @daily root $BINARY_PREFIX/jambulatv-sysinfo > $CONFDIR/motd
 EOF
-# Copy jambulatv-sysinfo & weather-api scripts, if it does not exist in bin directory
+# Copy jambulatv-sysinfo script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-sysinfo ] || cp -v $PROJECT_BIN_DIR/jambulatv-sysinfo $BINARY_PREFIX/
-[ -e $BINARY_PREFIX/jambulatv-weather-api ] || cp -v $PROJECT_BIN_DIR/jambulatv-weather-api $BINARY_PREFIX/
 # Remove ssh lastlog
 sed -i 's:#PrintLastLog yes:PrintLastLog no:' $CONFDIR/ssh/sshd_config
 }
@@ -8735,6 +8734,19 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/avahi-daemon.service $SYSTEMD_UNITS_DIR_SYSTEM/
 systemctl --system daemon-reload
 # Restart avahi daemon
 systemctl restart avahi-daemon.service
+}
+
+weather_api () {
+# Add correct DB name, username and password credentials in weather-api tool
+[ -e $BINARY_PREFIX/jambulatv-weather-api ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-weather-api | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" \
+			> $BINARY_PREFIX/jambulatv-weather-api 
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-weather-api 
 }
 
 initial_setup_configure () {

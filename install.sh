@@ -374,6 +374,11 @@ yowsup2_deps_install
 yowsup2_install
 whatsapp_messaging_configure
 
+# ---------------
+# API based tools
+# ---------------
+weather_api
+
 # --------------
 # Initial Setup
 # --------------

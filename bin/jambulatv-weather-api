@@ -1,42 +1,286 @@
 #!/bin/sh
-API=2
+# This is an API for JambulaTV weather requests
+# Jambula Labs @copyright 2017-2018 All rights reserved
 
-# Functions
-# ----------
-weather_forecast_io () {
-# Forecast.io: https://developer.forecast.io/docs/v2
-# ---------------------------------------------------
-APIKEY=631f3b499aeb738a4e64a66d70d96395
-APIURL="https://api.forecast.io/forecast"
-# Kampala
-LATITUDE="0.3136"
-LONGITUDE="32.5811"
-FORECAST=$(curl -s $APIURL/$APIKEY/$LATITUDE,$LONGITUDE?exclude=hourly,minutely,daily,alerts,flags)
-TEMPERATURE_F=$(echo $FORECAST | cut -d ',' -f 11 | cut -d ':' -f 2 | sed s/\"//g)
-TEMPERATURE_C=$(printf %.1f $(echo "scale=2;(5/9)*($TEMPERATURE_F-32)" | bc))
-CITY=$(echo $FORECAST | cut -d ',' -f 3 | cut -d ':' -f 2 | sed s/\"//g | cut -d '/' -f 2)
-SUMMARY=$(echo $FORECAST | cut -d ',' -f 6 | cut -d ':' -f 2 | sed s/\"//g)
+# API(s)
+# 1=darksky.net 2=openweathermap. #NOTE# OpenWeatherMap is broken, use darksky i.e. 1
+API=1
+
+# DarkSky.net
+# -----------
+# Register: https://darksky.net 
+# Docs: https://darksky.net/dev/docs/forecast
+# -------------------------------------------
+DARKSKY_APIURL="https://api.darksky.net/forecast"
+DARKSKY_APIKEY="e1b066fec8590435bc79b3dd735b380c"
+
+# OpenWeatherMap
+# --------------
+# Register: api.openweathermap.org/data/2.5/weather
+# -------------------------------------------------
+OWM_APIKEY="9141b00d5d6fcf3074a72efdb07d6135"
+OWM_APIURL="api.openweathermap.org/data/2.5/weather"
+
+# Curl HTTP UA
+HTTP_USER_AGENT="Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)"
+
+PING_TIMEOUT=2 #9
+PING_IP_ADDRESS=8.8.8.8
+
+# Weather raw data files
+CURRENT_WEATHER_RAW_DATA_FILE=/tmp/current_weather.json
+HOURLY_WEATHER_RAW_DATA_FILE=/tmp/hourly_weather.json
+DAILY_WEATHER_RAW_DATA_FILE=/tmp/daily_weather.json
+
+# Weather Times
+HOUR_NOW=$(date +%H)
+HOUR_3_HOURS_LATER=$(date -d "$HOUR_NOW today + 3 hour" +'%H')
+EPOCH_3_HOURS_LATER=$(date --date="$(date "+%a %b %e $HOUR_3_HOURS_LATER:00:00 %Z %Y")" +%s)
+EPOCH_TIME_DESIRED=$EPOCH_3_HOURS_LATER
+#
+case $HOUR_3_HOURS_LATER in
+[0-4]*)
+TIME_OF_DAY_CALL="Overnight"
+;;
+[5-11]*)
+TIME_OF_DAY_CALL="In the Morning"
+;;
+[12-16]*)
+TIME_OF_DAY_CALL="This Afternoon"
+;;
+[17-20]*)
+TIME_OF_DAY_CALL="This Evening"
+;;
+[21-23]*)
+TIME_OF_DAY_CALL="Tonight"
+;;
+esac
+
+# Saved city and country names
+GEOLOCATION_FILE=/etc/JambulaTV/geolocation.txt
+
+JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
+JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
+JAMBULATV_SETUP_DB_PASS=MY_JAMBULATV_SETUP_DB_PASS
+JAMBULATV_SETUP_DB_TABLE=MY_JAMBULATV_SETUP_DB_TABLE
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+query_mysql_db () {
+mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} << EOF
+USE ${JAMBULATV_SETUP_DB_NAME};
+SELECT $@ FROM ${JAMBULATV_SETUP_DB_TABLE} WHERE id = (SELECT MAX(id) FROM ${JAMBULATV_SETUP_DB_TABLE});
+EOF
+}
+
+get_registered_city_country () {
+CONTACT_CITY=$(query_mysql_db contact_city)
+CONTACT_COUNTRY=$(query_mysql_db contact_country)
+REGISTERED_CITY=$CONTACT_CITY
+REGISTERED_COUNTRY=$CONTACT_COUNTRY
+}
+
+usage () {
+# Quit if city or country is not sprecified
+if [ "x$REGISTERED_CITY" = "x" ] || [ "x$REGISTERED_COUNTRY" = "x" ];
+then
+cat << EOF
+Usage: $(basename $0) [CITY] [COUNTRY]
+EOF
+exit 1
+fi
+}
+
+check_internet_access () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+ping -w $PING_TIMEOUT $PING_IP_ADDRESS > /dev/null 2>&1
+INTERNET_ALIVE=$?
+if [ "$INTERNET_ALIVE" != "0" ];
+then
+#
+# Beep
+beep
+# TTS - Say error out loud
+/usr/bin/jambulatv-text2speech custom "Am sorry I was unable to connect to the Internet"
+# Quit script, since there's no internet.  Leave exit status at 0 so systemd service works
+/usr/bin/jambulatv-osd -m "Error: Could not check the weather since there's no Internet connectivity"
+exit 0
+fi
+}
+
+get_public_ip () {
+# Get public IP address
+PUBLIC_IP_ADDRESS=$(curl --get -sS -m 60  -A "$HTTP_USER_AGENT" https://api.ipify.org)
+}
+
+get_city_using_ip () {
+# Get city using public IP address
+CITY_BY_IP=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.city' | sed 's:[,|"]::g')
+}
+
+get_current_geolocation () {
+# See if geolocation file exists and get its age
+[ -e "$GEOLOCATION_FILE" ] && AGE_OF_GEOLOCATION_DATA=$(date -d "now - $(stat -c "%Y" $GEOLOCATION_FILE) seconds" +%s)
+# See if geolocation file exists and if it is a day or less old source i.e. Use it!
+if [ -e "$GEOLOCATION_FILE" ] && [ "$AGE_OF_GEOLOCATION_DATA" -lt "86400" ];
+then
+. $GEOLOCATION_FILE
+export PUBLIC_IP_ADDRESS CITY LATITUDE LONGITUDE
+
+else
+
+# Go to Internet and pull geo-location data
+get_public_ip
+get_city_using_ip
+#
+# Detect if not using a Proxy
+curl --get -sS -m 60  -A "$HTTP_USER_AGENT" https://www.whatismyip.com/proxy-check/?iref=home | grep -i ">No Proxy Detected<" > /dev/null 2>&1
+PROXY_NOT_DETECTED=$?
+
+# If using a VPN/Proxy or registered city name matches city of IP address
+if [ "$PROXY_NOT_DETECTED" != "0" ] || [ "$CITY_BY_IP" = "${REGISTERED_CITY^}" ];
+then 
+CITY=$REGISTERED_CITY
+COUNTRY=$REGISTERED_COUNTRY
+LATITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq '.[0] | .lat' | tr -d '"')
+LONGITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq '.[0] | .lon' | tr -d '"')
+
+# If connecting direct to the Internet and city by IP does NOT match registered city
+else
+LATITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.latitude')
+LONGITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.longitude')
+CITY=$CITY_BY_IP
+fi
+
+fi
+}
+
+weather_darksky_net () {
+# Age of current weatherdata
+if [ -e $CURRENT_WEATHER_RAW_DATA_FILE ];
+then
+AGE_OF_CURRENT_WEATHER_DATA=$(date -d "now - $(stat -c "%Y" $CURRENT_WEATHER_RAW_DATA_FILE) seconds" +%M)
+else
+AGE_OF_CURRENT_WEATHER_DATA=60
+fi
+
+# Dont fetch weather information if age is less than 15 minutes ago
+if [ "$AGE_OF_CURRENT_WEATHER_DATA" -le "15" ];
+then
+continue
+
+else
+
+# Fetch current weather information
+curl --get -sS -A "$HTTP_USER_AGENT" \
+	-d exclude=hourly,minutely,daily,alerts,flags \
+	-d units=uk2 \
+		$DARKSKY_APIURL/$DARKSKY_APIKEY/$LATITUDE,$LONGITUDE | \
+			jq . > $CURRENT_WEATHER_RAW_DATA_FILE
+# Fetch current weather information
+curl --get -sS -A "$HTTP_USER_AGENT" \
+	-d exclude=daily,currently,minutely,alerts,flags \
+	-d units=uk2 \
+		$DARKSKY_APIURL/$DARKSKY_APIKEY/$LATITUDE,$LONGITUDE | \
+			jq . > $HOURLY_WEATHER_RAW_DATA_FILE
+# Fetch daily weather information
+curl --get -sS -A "$HTTP_USER_AGENT" \
+	-d exclude=currently,hourly,minutely,alerts,flags \
+	-d units=uk2 \
+		$DARKSKY_APIURL/$DARKSKY_APIKEY/$LATITUDE,$LONGITUDE | \
+			jq . > $DAILY_WEATHER_RAW_DATA_FILE
+fi
+
+# Set current weather variables
+CURRENT_SUMMARY=$(grep summary $CURRENT_WEATHER_RAW_DATA_FILE | cut -d : -f2 | cut -d\  -f2- | sed 's:[,|"]::g' | sed 's:\.::g')
+CURRENT_TEMPERATURE=$(grep temperature $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
+CURRENT_HUMIDITY=$(echo "$(grep humidity $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
+CURRENT_PRECIP_PROBABILITY=$(echo "$(grep precipProbability $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
+CURRENT_WIND_SPEED=$(grep windSpeed $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
+CURRENT_WIND_BEARING=$(grep windBearing $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
+CURRENT_CLOUD_COVER=$(echo "$(grep cloudCover $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
+#
+# Set hourly weather variables
+HOURLY_SUMMARY=$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .summary" | sed 's:[,|"]::g' | sed 's:\.::g')
+HOURLY_TEMPERATURE=$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .temperature" | sed 's:[,|"]::g' | xargs printf '%.0f')
+HOURLY_HUMIDITY=$(echo "$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .humidity" | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
+HOURLY_PRECIP_PROBABILITY=$(echo "$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .precipProbability" | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
+HOURLY_WIND_SPEED=$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .windSpeed" | sed 's:[,|"]::g' | xargs printf '%.0f')
+HOURLY_WIND_BEARING=$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .windBearing" | sed 's:[,|"]::g' | xargs printf '%.0f')
+HOURLY_CLOUD_COVER=$(echo "$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .cloudCover" | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
+#
+# Set current weather variables
+DAILY_SUMMARY=$(grep -m 1 summary $DAILY_WEATHER_RAW_DATA_FILE | cut -d : -f2 | cut -d\  -f2- | sed 's:[,|"]::g' | sed 's:\.::g' | head -1)
+DAILY_TEMPERATURE_MAX=$(grep -m 1 temperatureMax $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
+DAILY_TEMPERATURE_MIN=$(grep -m 1 temperatureMax $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
+DAILY_HUMIDITY=$(echo "$(grep -m 1 humidity $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
+DAILY_PRECIP_PROBABILITY=$(echo "$(grep -m 1 precipProbability $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
+DAILY_WIND_SPEED=$(grep -m 1 windSpeed $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
+DAILY_WIND_BEARING=$(grep -m 1 windBearing $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
+DAILY_CLOUD_COVER=$(echo "$(grep -m 1 cloudCover $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
+#
+# Hourly Wind direction
+case $HOURLY_WIND_BEARING in
+[1-44]*)
+HOURLY_WIND_DIRECTION="North"
+;;
+[45-89]*)
+HOURLY_WIND_DIRECTION="North East"
+;;
+[90-134]*)
+HOURLY_WIND_DIRECTION="East"
+;;
+[135-179]*)
+HOURLY_WIND_DIRECTION="South East"
+;;
+[180-224]*)
+HOURLY_WIND_DIRECTION="South"
+;;
+[225-269]*)
+HOURLY_WIND_DIRECTION="South West"
+;;
+[270-314]*)
+HOURLY_WIND_DIRECTION="West"
+;;
+[315-360]*)
+HOURLY_WIND_DIRECTION="North West"
+;;
+esac
 }
 
 weather_openweathermap () {
-# OpenWeatherMap: api.openweathermap.org/data/2.5/weather
-# -------------------------------------------------------
-APIKEY="9141b00d5d6fcf3074a72efdb07d6135"
-APIURL="api.openweathermap.org/data/2.5/weather"
-CITY=$(cat /etc/timezone | cut -d / -f2)
-UNITS=metric
-FORECAST=$(curl -s $APIURL?q="$CITY&units=$UNITS&appid=$APIKEY")
-TEMPERATURE_C=$(echo $FORECAST | jq '.main' | grep temp | tail -1 | awk {'print $2'})
-SUMMARY=$(echo $FORECAST | jq '.weather' | grep description | cut -d : -f2 | sed 's:"::g' | sed 's:^ ::' | sed 's:,::g')
+# Fetch current weather information
+curl --get -sS -m 60 -A "$HTTP_USER_AGENT" \
+	-d q=$CITY \
+	-d units=metric \
+	-d appid=$OWM_APIKEY \
+		$OWM_APIURL | \
+			jq . > $CURRENT_WEATHER_RAW_DATA_FILE
+# Set weather variables
+CURRENT_SUMMARY=$(cat $CURRENT_WEATHER_RAW_DATA_FILE | jq '.weather' | grep description | cut -d : -f2 | sed 's:"::g' | sed 's:^ ::' | sed 's:,::g')
+CURRENT_TEMPERATURE=$(cat $CURRENT_WEATHER_RAW_DATA_FILE | jq '.main' | grep temp | tail -1 | awk {'print $2'} | sed 's:,::g')
+CURRENT_HUMIDITY=$(cat $CURRENT_WEATHER_RAW_DATA_FILE | jq '.main' | grep humidity | tail -1 | awk {'print $2'} | sed 's:,::g') 
+CURRENT_PRECIP_PROBABILITY=?
+CURRENT_WIND_SPEED=$(cat $CURRENT_WEATHER_RAW_DATA_FILE | jq '.wind' | grep speed | tail -1 | awk {'print $2'} | sed 's:,::g')
 }
+
 
 
 #################
 #  MAIN SCRIPT  #
 #################
+
+get_registered_city_country
+usage
+check_internet_access
+get_current_geolocation
+
 case $API in
 1)
-weather_forecast_io
+weather_darksky_net
 ;;
 2)
 weather_openweathermap
