@@ -7339,6 +7339,12 @@ text2speech_setup () {
 	cp -v $PROJECT_BIN_DIR/jambulatv-text2speech $BINARY_PREFIX/jambulatv-text2speech
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-text2speech
+# Create sounds directory if no-existent
+[ -d $PROJECT_SYSTEM_SHARE_DIR/sounds ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/sounds
+# Copy beep2 sound files
+cp -rv $PROJECT_CONTRIB_DIR/sounds/text2speech $PROJECT_SYSTEM_SHARE_DIR/sounds/
+# Change ownership of text2speech sounds directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/sounds
 }
 
 boost_install () {
