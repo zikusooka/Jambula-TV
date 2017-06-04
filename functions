@@ -3150,6 +3150,12 @@ kodi_addons_configure() {
 #
 [ -d $KODI_ADDON_DATA_DIR ] || mkdir -p $KODI_ADDON_DATA_DIR
 #
+# weather.openweathermap.extended
+# ---
+# Kampala
+[ "$(echo $TIMEZONE | cut -d '/' -f2)" = "Kampala" ] && \
+tar zxvf $PROJECT_CONFIGS_DIR/kodi/addon_data/weather.openweathermap.extended-kampala.tgz -C $KODI_ADDON_DATA_DIR 
+#
 # script.service.kodi.callbacks 
 # ---
 tar zxvf $PROJECT_CONFIGS_DIR/kodi/addon_data/script.service.kodi.callbacks.tgz -C $KODI_ADDON_DATA_DIR 
