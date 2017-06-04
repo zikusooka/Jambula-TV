@@ -182,7 +182,7 @@ query_text2speech_engine
 #################
 
 # Remove previously saved TTS audio
-rm -f $TTS_OUTPUT_FILE
+sudo rm -f $TTS_OUTPUT_FILE
 
 # Add sound effects while waiting script
 tts_waiting_sound_effects
