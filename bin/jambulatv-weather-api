@@ -39,20 +39,23 @@ EPOCH_3_HOURS_LATER=$(date --date="$(date "+%a %b %e $HOUR_3_HOURS_LATER:00:00 %
 EPOCH_TIME_DESIRED=$EPOCH_3_HOURS_LATER
 #
 case $HOUR_3_HOURS_LATER in
-[0-4]*)
+[0-4])
 TIME_OF_DAY_CALL="Overnight"
 ;;
-[5-11]*)
+[5-9])
 TIME_OF_DAY_CALL="In the Morning"
 ;;
-[12-16]*)
+1[0-1])
+TIME_OF_DAY_CALL="In the Morning"
+;;
+1[2-6])
 TIME_OF_DAY_CALL="This Afternoon"
 ;;
-[17-20]*)
+1[7-9])
 TIME_OF_DAY_CALL="This Evening"
 ;;
-[21-23]*)
-TIME_OF_DAY_CALL="Tonight"
+2[0-3])
+TIME_OF_DAY_CALL="Tonght"
 ;;
 esac
 
@@ -224,29 +227,65 @@ DAILY_CLOUD_COVER=$(echo "$(grep -m 1 cloudCover $DAILY_WEATHER_RAW_DATA_FILE | 
 #
 # Hourly Wind direction
 case $HOURLY_WIND_BEARING in
-[1-44]*)
+[0-9]|[1-3][0-9])
 HOURLY_WIND_DIRECTION="North"
 ;;
-[45-89]*)
+4[0-4])
+HOURLY_WIND_DIRECTION="North"
+;;
+4[5-9])
 HOURLY_WIND_DIRECTION="North East"
 ;;
-[90-134]*)
+[6-8][0-9])
+HOURLY_WIND_DIRECTION="North East"
+;;
+9[0-9])
 HOURLY_WIND_DIRECTION="East"
 ;;
-[135-179]*)
+1[0-2][0-9])
+HOURLY_WIND_DIRECTION="East"
+;;
+13[0-4])
+HOURLY_WIND_DIRECTION="East"
+;;
+13[5-9])
 HOURLY_WIND_DIRECTION="South East"
 ;;
-[180-224]*)
+1[4-7][0-9])
+HOURLY_WIND_DIRECTION="South East"
+;;
+1[8-9][0-9])
 HOURLY_WIND_DIRECTION="South"
 ;;
-[225-269]*)
+2[0-1][0-9])
+HOURLY_WIND_DIRECTION="South"
+;;
+22[0-4])
+HOURLY_WIND_DIRECTION="South"
+;;
+22[5-9])
 HOURLY_WIND_DIRECTION="South West"
 ;;
-[270-314]*)
+2[3-6][0-9])
+HOURLY_WIND_DIRECTION="South West"
+;;
+2[7-9][0-9])
 HOURLY_WIND_DIRECTION="West"
 ;;
-[315-360]*)
+30[0-9])
+HOURLY_WIND_DIRECTION="West"
+;;
+31[0-4])
+HOURLY_WIND_DIRECTION="West"
+;;
+31[5-9])
 HOURLY_WIND_DIRECTION="North West"
+;;
+3[2-5][0-9])
+HOURLY_WIND_DIRECTION="North West"
+;;
+360)
+HOURLY_WIND_DIRECTION="North"
 ;;
 esac
 }
