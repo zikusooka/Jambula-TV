@@ -21,7 +21,9 @@ PING_IP_ADDRESS=8.8.8.8
 JAMBULATV_SOUNDS_DIR="/usr/share/JambulaTV/sounds"
 SOUND_EFFECTS_WAITING="$JAMBULATV_SOUNDS_DIR/text2speech/beep-waiting-01.wav"
 SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
-SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep $SOUND_EFFECTS_WAITING | awk {'print $2'})
+SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep $(basename $SOUND_EFFECTS_WAITING) | awk {'print $2'})
+
+MULTIMEDIA_USER=jambula
 
 
 
@@ -52,6 +54,7 @@ export INTERNET_ALIVE
 tts_waiting_sound_effects () {
 # Add bogus sound effects file to stop beep if No action specified
 [ "x$TTS_ACTION" = "x" ] && touch $TTS_OUTPUT_FILE
+[ -e $SOUND_EFFECTS_TEMP_SCRIPT ] && sudo chown $MULTIMEDIA_USER $SOUND_EFFECTS_TEMP_SCRIPT
 cat > $SOUND_EFFECTS_TEMP_SCRIPT <<EOF
 #!/bin/sh
 while [ ! -e $TTS_OUTPUT_FILE ];
@@ -60,7 +63,7 @@ do
 sleep 2
 done
 EOF
-# Make script executables
+# Make script executable
 chmod 755 $SOUND_EFFECTS_TEMP_SCRIPT
 # Run script
 at -f $SOUND_EFFECTS_TEMP_SCRIPT now
@@ -206,7 +209,6 @@ echo
 usage
 ;;
 esac 
-
 
 # Kill waiting sound effects 
 [ "x$SOUND_EFFECTS_TEMP_SCRIPT_PID" = "x" ] || kill $SOUND_EFFECTS_TEMP_SCRIPT_PID
