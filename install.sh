@@ -301,7 +301,8 @@ jambulatvtts_asterisk_configure
 # ASR - Speech Recognition
 sphinxbase_install
 pocketsphinx_install
-SpeechRecognition_install
+pocketsphinx_configure
+#SpeechRecognition_install
 
 # -----------------------------------------
 # Wireless Access Point (HotSpot)

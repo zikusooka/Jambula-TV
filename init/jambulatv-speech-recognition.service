@@ -1,0 +1,14 @@
+[Unit]
+Description = JambulaTV Automatic Speech Recognition (ASR) 
+After = graphical.target
+
+[Service]
+User=jambula
+Type = forking
+
+ExecStart=/usr/bin/jambulatv-speech2text start
+ExecStop=/usr/bin/jambulatv-speech2text stop
+ExecReload=/usr/bin/jambulatv-speech2text restart
+
+[Install]
+WantedBy = graphical.target

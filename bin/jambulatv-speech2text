@@ -1,0 +1,558 @@
+#!/bin/sh
+# This is the speech-to-text tool used for JambulaTV services.
+# Use it to detect requested phrases for read time, weather, etc
+# Jambula Labs @copyright 2017-2018 All rights reserved
+
+
+# Mic Sources
+# -----------
+# Run the following command to find your default source
+#pactl list sources short && exit
+#
+# Logitech - C200
+PS_MIC_SOURCE="alsa_input.usb-046d_0802_8CB73750-02-U0x46d0x802.analog-mono" 
+#
+# Logitech - QuickCam Communicate STX
+#PS_MIC_SOURCE="alsa_input.usb-046d_08d7-01-U0x46d0x8d7.analog-mono"
+#
+# Plantronics - black old mic
+#PS_MIC_SOURCE="alsa_output.pci-0000_00_1b.0.analog-stereo.monitor"
+#PS_MIC_SOURCE="alsa_input.pci-0000_00_1b.0.analog-stereo"
+#
+#PS_MIC_SOURCE="alsa_output.usb-IPEVO_corp_FR-33.2_0000000000-01-FR332.analog-mono.monitor"
+
+PS_ACOUSTIC_MODEL_DIR=MY_PREFIX/share/pocketsphinx/model/en-us/en-us
+PS_DATA_DIR=MY_POCKETSPHINX_DATA_DIR
+PS_DICTIONARY_FILE=$PS_DATA_DIR/jambulatv.000.dic
+PS_LANGUAGE_MODEL_FILE=$PS_DATA_DIR/jambulatv.000.lm
+#PS_LOG_FILE=MY_JAMBULATV_LOG_DIR/pocketsphinx.log
+PS_LOG_FILE=/dev/null
+PS_OUTPUT_FILE=MY_TMPDIR/results
+PS_KEYPHRASE_LIST=$PS_DATA_DIR/keyphrase.list
+#PS_KEYPHRASE="OKAY JAMB BOO LA"
+PS_SAMPRATE="16000/8000/48000"
+PS_OLD_TAIL_PID=$(ps auxw | grep -v grep | grep 'tail -n 0 -F' | awk {'print $2'} | head -1)
+PS_OLD_CONTINUOUS_PID=$(ps auxw | grep -v grep | grep 'pocketsphinx_continuous' | awk {'print $2'} | head -1)
+TEXT_2_SPEECH_TOOL_PATH=/usr/bin/jambulatv-text2speech
+TEXT_2_SPEECH_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $TEXT_2_SPEECH_TOOL_PATH | cut -d '=' -f2 | head -1 | awk {'print $1'})
+
+JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
+JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
+JAMBULATV_SETUP_DB_PASS=MY_JAMBULATV_SETUP_DB_PASS
+JAMBULATV_SETUP_DB_TABLE=MY_JAMBULATV_SETUP_DB_TABLE
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+query_mysql_db () {
+mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} << EOF
+USE ${JAMBULATV_SETUP_DB_NAME};
+SELECT $@ FROM ${JAMBULATV_SETUP_DB_TABLE} WHERE id = (SELECT MAX(id) FROM ${JAMBULATV_SETUP_DB_TABLE});
+EOF
+}
+
+get_contact_details () {
+CONTACT_FIRST_NAME=$(query_mysql_db contact_name | awk {'print $1'})
+CONTACT_CITY=$(query_mysql_db contact_)
+CONTACT_COUNTRY=$(query_mysql_db contact_country)
+REGISTERED_CITY=$CONTACT_CITY
+REGISTERED_COUNTRY=$CONTACT_COUNTRY
+}
+
+setup_default_microphone () {
+# Set to desired source i.e. microphone
+pactl set-default-source $PS_MIC_SOURCE
+}
+
+cleanup_old_processes () {
+# kill existing pocketsphinx_continuous processes
+[ "x$PS_OLD_CONTINUOUS_PID" = "x" ] || kill $PS_OLD_CONTINUOUS_PID
+
+# kill existing tail -n 0 -F processes
+[ "x$PS_OLD_TAIL_PID" = "x" ] || kill $PS_OLD_TAIL_PID
+
+# Remove previous output/results file
+if [ -e "$PS_OUTPUT_FILE" ];
+then
+# Remove previous output/results file
+sudo rm -f $PS_OUTPUT_FILE
+else
+# Create new output/results file
+touch $PS_OUTPUT_FILE
+fi
+}
+
+run_speech2text_engine () {
+# Using multiple keyphrases
+pocketsphinx_continuous -hmm $PS_ACOUSTIC_MODEL_DIR -adcdev $PS_MIC_SOURCE -inmic yes \
+	-lm $PS_LANGUAGE_MODEL_FILE -dict $PS_DICTIONARY_FILE -kws "$PS_KEYPHRASE_LIST" \
+	-samprate $PS_SAMPRATE -logfn $PS_LOG_FILE | tee $PS_OUTPUT_FILE &
+#
+# Using one keyphrase
+#pocketsphinx_continuous -hmm $PS_ACOUSTIC_MODEL_DIR -adcdev $PS_MIC_SOURCE -inmic yes \
+#	-lm $PS_LANGUAGE_MODEL_FILE -dict $PS_DICTIONARY_FILE -keyphrase "$PS_KEYPHRASE" \
+#	-kws_threshold 1e-20 -logfn $PS_LOG_FILE | tee $PS_OUTPUT_FILE &
+}
+
+detect_triggers_and_activate_text2speech () {
+#!/bin/sh
+# Detect phrase mentioned
+tail -n 0 -F $PS_OUTPUT_FILE | \
+while read LINE
+do
+case $LINE in
+
+# Time
+*"WHAT IS THE TIME"*)
+skill_time
+;;
+
+# Weather
+*"WHAT IS THE WEATHER"*)
+skill_weather
+;;
+
+# Headlines
+*"WHAT ARE THE HEADLINES"*)
+skill_headlines
+;;
+
+# Reminders
+*"REMINDERS FOR TODAY"*)
+skill_reminders
+;;
+
+# MOTD or Today's scripture
+*"MESSAGE OF THE DAY"*)
+skill_motd
+;;
+
+*"READ MY FLASH BRIEFING"*)
+skill_flash_briefing
+;;
+
+# Lights on
+*"TURN ON LIGHTS"*)
+skill_lights_on
+;;
+
+# Lights off
+*"TURN OFF LIGHTS"*)
+skill_lights_off
+;;
+
+# Start playing tv channel
+*"START PLAYING TV"*)
+skill_tv_start 
+;;
+
+# Play next tv channel
+*"PLAY NEXT CHANNEL"*)
+skill_tv_play_next
+;;
+
+# Play previous tv channel
+*"PLAY PREVIOUS CHANNEL"*)
+skill_tv_play_previous
+;;
+
+# Play tv channel - NTV
+*"PLAY TV CHANNEL N T V"*)
+skill_tv_play_ntv
+;;
+
+# Play tv channel - NBS
+*"PLAY TV CHANNEL N B S"*)
+skill_tv_play_nbs
+;;
+
+# Stop playing tv channel
+*"STOP PLAYING TV"*)
+skill_tv_stop
+;;
+
+# Record tv channel now
+*"RECORD TV CHANNEL NOW"*)
+skill_tv_record_start_now
+;;
+
+# Stop recording tv channel now
+*"STOP RECORDING TV CHANNEL"*)
+skill_tv_record_stop
+;;
+
+# Start video
+*"START PLAYING VIDEO"*)
+skill_video_start
+;;
+
+# Pause video
+*"PAUSE VIDEO"*)
+skill_video_pause
+;;
+
+# Unpause video
+*"UN PAUSE VIDEO"*)
+skill_video_unpause
+;;
+
+# Play next video
+*"PLAY NEXT VIDEO"*)
+skill_video_play_next
+;;
+
+# Play previous video
+*"PLAY PREVIOUS VIDEO"*)
+skill_video_play_previous
+;;
+
+# Stop playing video
+*"STOP PLAYING VIDEO"*)
+skill_video_play_stop
+;;
+
+# Start music -Any
+*"START PLAYING MUSIC"*)
+skill_music_start unknown
+;;
+
+# Start music - Jazz
+*"START PLAYING JAZZ MUSIC"*)
+skill_music_start jazz
+;;
+
+# Start music - Gospel
+*"START PLAYING GOSPEL MUSIC"*)
+skill_music_start gospel
+;;
+
+# Start music - Local
+*"START PLAYING LOCAL MUSIC"*)
+skill_music_start local
+;;
+
+# Start music - Lingala
+*"START PLAYING LEAN GALA MUSIC"*)
+skill_music_start lingala
+;;
+
+# Start music - On line Music
+*"START PLAYING ON LINE MUSIC"*)
+skill_internet_music_start jazz_fm_online
+;;
+
+# Start music - Stream Jazz on line
+*"STREAM JAZZ MUSIC ON LINE"*)
+skill_internet_music_start jazz_fm_online
+;;
+
+# Start music - East Africa Radio On line
+*"START PLAYING EAST AFRICA RADIO ON LINE"*)
+skill_internet_music_start east_africa_online
+;;
+
+# Pause music
+*"PAUSE MUSIC"*)
+skill_music_pause
+;;
+
+# Unpause music
+*"UN PAUSE MUSIC"*)
+skill_music_unpause
+;;
+
+# Play next song
+*"PLAY NEXT SONG"*)
+skill_music_play_next
+;;
+
+# Play previous song
+*"PLAY PREVIOUS SONG"*)
+skill_music_play_previous
+;;
+
+# Stop playing music
+*"STOP PLAYING MUSIC"*)
+skill_music_play_stop
+;;
+
+# Turn off
+*"TURN OFF JAMB BOO LA TV"*)
+skill_power_off
+;;
+
+# Take speech recognition offline
+*"KEEP QUIET NOW"*)
+skill_mute_speech_recognition
+;;
+
+# Bring back speech recognition online
+*"COME BACK ON LINE"*)
+skill_unmute_speech_recognition
+;;
+
+# Unknown
+*)
+skill_unknown
+continue
+esac
+
+done
+}
+
+
+
+###############################################
+#  VARIABLES  IMPORTANT: PLACE BEFORE SKILLS  #
+###############################################
+
+FAVORITE_TV_CHANNEL="NBS TV"
+FAVORITE_VIDEO="MY_USER_TV_SHOWS_DIR/Arrow/Season_05/Arrow.S05E04.Penance.HDTV.H264.mkv"
+MUSIC_DIR="MY_USER_MUSIC_DIR"
+DOMOTICZ_LAMP_NAME="Living Room"
+
+
+
+##############################################
+#  SKILLS  IMPORTANT: PLACE AFTER FUNCTIONS  #
+##############################################
+
+skill_time () {
+/usr/bin/python /usr/share/kodi/scripts/kodi_say_time.py
+}
+
+skill_weather () {
+/usr/bin/python /usr/share/kodi/scripts/kodi_say_weather.py 
+}
+
+skill_headlines () {
+$TEXT_2_SPEECH_TOOL_PATH custom "Here's whats making news today"
+}
+
+skill_reminders () {
+$TEXT_2_SPEECH_TOOL_PATH custom "$(/usr/bin/remind /JambulaTV/Reminders/)"
+}
+
+skill_motd () {
+$TEXT_2_SPEECH_TOOL_PATH custom "Today's message of the day is - -  $(/usr/bin/fortune -s -n 80)"
+}
+
+skill_flash_briefing () {
+# Get registered name, etc
+get_contact_details
+# Daily Digest
+$TEXT_2_SPEECH_TOOL_PATH custom "Hello $CONTACT_FIRST_NAME - - here is your daily digest for today $(date "+%A %d %B %Y")"
+skill_reminders
+skill_weather
+skill_headlines
+skill_motd
+skill_time
+$TEXT_2_SPEECH_TOOL_PATH custom "Happy $(date "+%A")"
+}
+
+skill_lights_on () {
+/usr/bin/jambulatv-lights "$DOMOTICZ_LAMP_NAME" on demo
+}
+
+skill_lights_off () {
+/usr/bin/jambulatv-lights "$DOMOTICZ_LAMP_NAME" off demo
+}
+
+skill_tv_start () {
+/usr/bin/jambulatv-kodi-controller tv_play_start "$FAVORITE_TV_CHANNEL"
+}
+
+skill_tv_play_next () {
+/usr/bin/jambulatv-kodi-controller video_play_next
+}
+
+skill_tv_play_previous () {
+/usr/bin/jambulatv-kodi-controller video_play_previous
+}
+
+skill_tv_play_ntv () {
+/usr/bin/jambulatv-kodi-controller tv_play_start "N TV"
+}
+
+skill_tv_play_nbs () {
+/usr/bin/jambulatv-kodi-controller tv_play_start "NBS TV"
+}
+
+skill_tv_stop () {
+/usr/bin/jambulatv-kodi-controller tv_play_stop
+}
+
+skill_tv_record_start_now () {
+/usr/bin/jambulatv-kodi-controller tv_record_start
+}
+
+skill_tv_record_stop () {
+/usr/bin/jambulatv-kodi-controller tv_record_stop
+}
+
+skill_video_start () {
+/usr/bin/jambulatv-kodi-controller video_play_start "$FAVORITE_VIDEO"
+}
+
+skill_video_pause () {
+/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+}
+
+skill_video_unpause () {
+/usr/bin/jambulatv-kodi-controller video_play_pause
+}
+
+skill_video_play_next () {
+/usr/bin/jambulatv-kodi-controller navigate_down
+/usr/bin/jambulatv-kodi-controller navigate_select
+}
+
+skill_video_play_previous () {
+/usr/bin/jambulatv-kodi-controller navigate_up
+/usr/bin/jambulatv-kodi-controller navigate_select
+}
+
+skill_video_play_stop () {
+/usr/bin/jambulatv-kodi-controller video_play_stop
+}
+
+skill_music_start () {
+# Music playlists using categories
+MUSIC_CATEGORY="$@"
+case $MUSIC_CATEGORY in
+jazz)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_jazz.m3u
+;;
+gospel)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_gospel.m3u
+;;
+local)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_local.m3u
+;;
+lingala)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_lingala.m3u
+;;
+*)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_jazz.m3u
+;;
+esac
+#
+# Remove old playlist
+[ -e $MUSIC_PLAYLIST ] && rm -f $MUSIC_PLAYLIST
+# Generate playlist - TODO: Cache playlist and refresh periodically
+find $(find $MUSIC_DIR -type d -iname $MUSIC_CATEGORY) -type f | grep -E "*(\.mp3|\.mp4|\.wav|\.m4a|\.webm)" | while read SONG
+do 
+echo "$SONG" >> "$MUSIC_PLAYLIST"
+done
+
+# Play requested music category
+/usr/bin/jambulatv-kodi-controller music_play_offline_start "$MUSIC_PLAYLIST" 
+}
+
+skill_internet_music_start () {
+# Music playlists using categories
+ONLINE_MUSIC_STATION="$@"
+case $ONLINE_MUSIC_STATION in
+jazz_fm_online)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_internet_jazz_fm.m3u
+STATION_URL="http://sj64.hnux.com"
+;;
+east_africa_online)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_internet_east_africa.m3u
+STATION_URL="http://www.ophanim.net:8270/"
+;;
+*)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_internet_various.m3u
+;;
+esac
+#
+# Remove old playlist
+[ -e $MUSIC_PLAYLIST ] && rm -f $MUSIC_PLAYLIST
+#
+# Generate playlist
+echo "$STATION_URL" >> "$MUSIC_PLAYLIST"
+
+# Play requested music category
+/usr/bin/jambulatv-kodi-controller music_play_online_start "$MUSIC_PLAYLIST" 
+}
+
+skill_music_pause () {
+/usr/bin/jambulatv-kodi-controller music_play_pause noreplay
+}
+
+skill_music_unpause () {
+/usr/bin/jambulatv-kodi-controller music_play_pause
+}
+
+skill_music_play_next () {
+/usr/bin/jambulatv-kodi-controller navigate_down
+/usr/bin/jambulatv-kodi-controller navigate_select
+}
+
+skill_music_play_previous () {
+/usr/bin/jambulatv-kodi-controller navigate_up
+/usr/bin/jambulatv-kodi-controller navigate_select
+}
+
+skill_music_play_stop () {
+/usr/bin/jambulatv-kodi-controller music_play_stop
+}
+
+skill_power_off () {
+$TEXT_2_SPEECH_TOOL_PATH custom "Turning off system"
+systemctl poweroff -i
+}
+
+skill_mute_speech_recognition () {
+$TEXT_2_SPEECH_TOOL_PATH custom "Geez - Am I that noisy? - - OK - I will go off line for now"
+[ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
+touch $TEXT_2_SPEECH_OUTPUT_FILE
+sudo chattr +i $TEXT_2_SPEECH_OUTPUT_FILE
+
+}
+
+skill_unmute_speech_recognition () {
+sudo chattr -i $TEXT_2_SPEECH_OUTPUT_FILE 
+[ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
+$TEXT_2_SPEECH_TOOL_PATH custom "You missed me - Right? - - OK - I am baack"
+}
+
+skill_unknown () {
+echo "Unknown"
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+case $1 in
+
+start)
+setup_default_microphone
+run_speech2text_engine 
+detect_triggers_and_activate_text2speech &
+;;
+
+stop)
+cleanup_old_processes
+;;
+
+restart)
+$0 stop
+$0 start
+;;
+
+*)
+clear
+cat <<EOF
+Usage: $(basename $0) [start|stop|restart] 
+EOF
+exit 1
+;;
+
+esac

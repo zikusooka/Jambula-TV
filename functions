@@ -14,7 +14,7 @@ KERNEL_VERSION="4.4.70"
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
-AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd"
+AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd, /usr/bin/chattr"
 MULTIMEDIA_USER=$AUTOLOGIN_USER
 MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
 BACKUPS_DIR=$ROOT_DIR/Backups
@@ -464,6 +464,9 @@ MOTION_DB_HOST=localhost
 MOTION_DB_NAME=motion
 MOTION_DB_USER=jambulatv
 MOTION_DB_PASS=jambulatvmotion3
+
+# Pocketsphinx ASR
+POCKETSPHINX_DATA_DIR=$PROJECT_SYSTEM_SHARE_DIR/pocketsphinx
 
 JAMBULATV_SETUP_DB_NAME=jambulatv
 JAMBULATV_SETUP_DB_USER=jambula_setup
@@ -8628,6 +8631,33 @@ cd $INSTALL_SRC_DIR/pocketsphinx
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
 --localstatedir=$STATEDIR
 make_install_jambulatv
+}
+
+pocketsphinx_configure () {
+# Copy over pocketsphinx language dictionaries, models, etc 
+rsync -av $PROJECT_CONTRIB_DIR/speech_tts_asr/pocketsphinx/ $POCKETSPHINX_DATA_DIR/
+
+# Copy jambulatv-speech2text script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-speech2text ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-speech2text | \
+		sed -e "s:MY_PREFIX:$PREFIX:g" | \
+		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
+		sed -e "s:MY_POCKETSPHINX_DATA_DIR:$POCKETSPHINX_DATA_DIR:g" | \
+		sed -e "s:MY_USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
+		sed -e "s:MY_USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" | \
+		sed -e "s:MY_JAMBULATV_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" \
+			> $BINARY_PREFIX/jambulatv-speech2text
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-speech2text
+
+# Copy jambulatv-speech-recognition.service systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-speech-recognition.service $SYSTEMD_UNITS_DIR_USER/
+# Enable jambulatv-speech-recognition.service if needed
+systemctl enable jambulatv-speech-recognition.service
 }
 
 SpeechRecognition_install () {

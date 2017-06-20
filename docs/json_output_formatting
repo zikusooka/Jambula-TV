@@ -2,6 +2,8 @@
 # Examples of selecting needed variables from json output
 # --------------------------------------------------------
 
+# | jq ".result[] | .type" | sed 's:[,|"]::g' 
+
 # curl -s http://{IP_ADDRESS}:{PORT}/api/mpegts/network/grid | \
 # jq '.entries[] | select(.networkname=="jambulaIPTV") | .uuid' | sed 's:"::g'
 

@@ -12,7 +12,7 @@ TTS_PLAY_CMD="/usr/bin/ffplay"
 TTS_QUIT_CMD=""
 TTS_PLAY_CMD_OPTS="-loglevel quiet -vn -nodisp -autoexit"
 
-TTS_OUTPUT_FILE=/tmp/tts_output.wav
+TTS_OUTPUT_FILE=/var/tmp/tts_output.wav # IMPORTANT: Must be on 'ext4' partition i.e. /var
 TTS_ACTION=$1
 
 PING_TIMEOUT=2 #9
