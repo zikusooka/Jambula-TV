@@ -41,7 +41,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_play_start|mute|tv_play_stop|video_play_start|video_play_pause|video_play_stop|tv_record_start|tv_record_stop|scan_video|scan_audio|clean_video|clean_audio)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_play_start|mute|tv_play_stop|video_play_start|video_play_type|video_play_pause|video_play_next|video_play_previous|video_play_stop|music_play_offline_start|music_play_online_start|music_play_type|music_play_pause|music_play_next|music_play_previous|music_play_stop|tv_record_start|tv_record_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -106,11 +106,26 @@ osd_notification_long () {
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "GUI.ShowNotification", "params": {"message":"'"$1"'", "title":"'"$2"'", "displaytime":30000}}' "http://127.0.0.1:8510/jsonrpc"
 }
 
+type_of_player () {
+ACTIVE_PLAYER_TYPE=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GetActivePlayers", "id": 1}' "http://127.0.0.1:8510/jsonrpc" | jq ".result[] | .type" | sed 's:[,|"]::g')
+# See if video is active i.e. running
+if [ "$ACTIVE_PLAYER_TYPE" = "video" ];
+then
+export VIDEO_IS_PLAYING=yes
+else
+export VIDEO_IS_PLAYING=no
+fi
+echo "TYPE OF ACTIVE PLAYER = [$VIDEO_IS_PLAYING]"
+}
+
 stop_player () {
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Stop", "params": {"playerid":1}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
 }
 
 pause_player () {
+type_of_player
+[ "$VIDEO_IS_PLAYING" = "yes" ] || exit 0
+
 if [ "$1" = "noreplay" ];
 then
 # No replay/toggle
@@ -121,12 +136,40 @@ curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: applicatio
 fi
 }
 
-start_player () {
+start_player_video () {
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Open", "params":{"item":{"file":"'"$1"'"}}}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+start_player_music_offline () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '[{"id": 1,"jsonrpc": "2.0", "method": "Playlist.Clear", "params":{"playlistid":1}},{"id":1,"jsonrpc":"2.0","method":"Playlist.Add","params":{"item":{"directory":"'"$1"'"},"playlistid":1}},{"jsonrpc": "2.0", "method": "Player.Open", "params": { "item": { "playlistid": 1, "position": 0 } }, "id": 1}]' "http://127.0.0.1:8510/jsonrpc"
+}
+
+start_player_music_online () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '[{"id": 1,"jsonrpc": "2.0", "method": "Playlist.Clear", "params":{"playlistid":1}},{"id":1,"jsonrpc":"2.0","method":"Playlist.Add","params":{"item":{"file":"'"$1"'"},"playlistid":1}},{"jsonrpc": "2.0", "method": "Player.Open", "params": { "item": { "playlistid": 1, "position": 0 } }, "id": 1}]' "http://127.0.0.1:8510/jsonrpc"
 }
 
 mute_player () {
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Application.SetMute", "params": {"mute":"toggle"}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+player_next () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GoTo", "params":{"playerid":1,"to": "next"},"id":1}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+player_previous () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GoTo", "params":{"playerid":1,"to": "previous"},"id":1}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+input_up () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Up", "id":"up"}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+input_down () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Down", "id":"down"}' "http://127.0.0.1:8510/jsonrpc"
+}
+
+input_select () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Select", "id":"select"}' "http://127.0.0.1:8510/jsonrpc"
 }
 
 get_tv_channel_id () {
@@ -315,15 +358,67 @@ stop_player
 ;;
 
 video_play_start)
-start_player "$2"
+start_player_video "$2"
+;;
+
+video_play_type)
+type_of_player
+;;
+
+video_play_pause)
+pause_player "$2"
+;;
+
+video_play_next)
+player_next 
+;;
+
+video_play_previous)
+player_previous
 ;;
 
 video_play_stop)
 stop_player
 ;;
 
-video_play_pause)
+music_play_offline_start)
+start_player_music_offline "$2"
+;;
+
+music_play_online_start)
+start_player_music_online "$2"
+;;
+
+music_play_type)
+type_of_player
+;;
+
+music_play_pause)
 pause_player "$2"
+;;
+
+music_play_next)
+player_next 
+;;
+
+music_play_previous)
+player_previous
+;;
+
+music_play_stop)
+stop_player
+;;
+
+navigate_up)
+input_up
+;;
+
+navigate_down)
+input_down
+;;
+
+navigate_select)
+input_select
 ;;
 
 tv_record_start) 
