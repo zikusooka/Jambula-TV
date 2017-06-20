@@ -24,7 +24,7 @@ OWM_APIURL="api.openweathermap.org/data/2.5/weather"
 # Curl HTTP UA
 HTTP_USER_AGENT="Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)"
 
-PING_TIMEOUT=2 #9
+PING_TIMEOUT=3 #9
 PING_IP_ADDRESS=8.8.8.8
 
 # Weather raw data files
@@ -35,14 +35,15 @@ DAILY_WEATHER_RAW_DATA_FILE=/tmp/daily_weather.json
 # Weather Times
 HOUR_NOW=$(date +%H)
 HOUR_3_HOURS_LATER=$(date -d "$HOUR_NOW today + 3 hour" +'%H')
-EPOCH_3_HOURS_LATER=$(date --date="$(date "+%a %b %e $HOUR_3_HOURS_LATER:00:00 %Z %Y")" +%s)
+DATE_3_HOURS_LATER=$(date -d "$HOUR_NOW today + 3 hour" +'%Y%m%d')
+EPOCH_3_HOURS_LATER=$(date --date "$DATE_3_HOURS_LATER ${HOUR_3_HOURS_LATER}00" +%s) 
 EPOCH_TIME_DESIRED=$EPOCH_3_HOURS_LATER
 #
 case $HOUR_3_HOURS_LATER in
-[0-4])
+0[0-4])
 TIME_OF_DAY_CALL="Overnight"
 ;;
-[5-9])
+0[5-9])
 TIME_OF_DAY_CALL="In the Morning"
 ;;
 1[0-1])
@@ -109,7 +110,7 @@ beep
 # TTS - Say error out loud
 /usr/bin/jambulatv-text2speech custom "Am sorry I was unable to connect to the Internet"
 # Quit script, since there's no internet.  Leave exit status at 0 so systemd service works
-/usr/bin/jambulatv-osd -m "Error: Could not check the weather since there's no Internet connectivity"
+#/usr/bin/jambulatv-osd -m "Error: Could not check the weather since there's no Internet connectivity"
 exit 0
 fi
 }
@@ -124,13 +125,31 @@ get_city_using_ip () {
 CITY_BY_IP=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.city' | sed 's:[,|"]::g')
 }
 
+geolocation_using_registered_data () {
+CITY=$REGISTERED_CITY
+COUNTRY=$REGISTERED_COUNTRY
+LATITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq '.[0] | .lat' | tr -d '"')
+LONGITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq '.[0] | .lon' | tr -d '"')
+}
+
+geolocation_using_internet_lookup () {
+LATITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.latitude')
+LONGITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.longitude')
+CITY=$CITY_BY_IP
+}
+
 get_current_geolocation () {
-# See if geolocation file exists and get its age
-[ -e "$GEOLOCATION_FILE" ] && AGE_OF_GEOLOCATION_DATA=$(date -d "now - $(stat -c "%Y" $GEOLOCATION_FILE) seconds" +%s)
-# See if geolocation file exists and if it is a day or less old source i.e. Use it!
-if [ -e "$GEOLOCATION_FILE" ] && [ "$AGE_OF_GEOLOCATION_DATA" -lt "86400" ];
-then
+# See if geolocation file exists + get its age + if its 1 day or less source i.e. Use it!
+if [[ -e "$GEOLOCATION_FILE" && AGE_OF_GEOLOCATION_DATA=$(date -d "now - $(stat -c "%Y" $GEOLOCATION_FILE) seconds" +%s) && "$AGE_OF_GEOLOCATION_DATA" -lt "86400" ]];
+then 
 . $GEOLOCATION_FILE
+fi
+
+# Check for null city, latitude, and longitude values in geolocation file
+# -----------------------------------------------------------------------
+if [[ "x$CITY" != "x" || "$LATITUDE" != "null" || "$LONGITUDE" != "null" ]];
+then
+# Export Geolocation data
 export PUBLIC_IP_ADDRESS CITY LATITUDE LONGITUDE
 
 else
@@ -142,20 +161,21 @@ get_city_using_ip
 # Detect if not using a Proxy
 curl --get -sS -m 60  -A "$HTTP_USER_AGENT" https://www.whatismyip.com/proxy-check/?iref=home | grep -i ">No Proxy Detected<" > /dev/null 2>&1
 PROXY_NOT_DETECTED=$?
-
-# If using a VPN/Proxy or registered city name matches city of IP address
+#
+# If using a VPN/Proxy or registered city name matches city by IP
+# ---------------------------------------------------------------
 if [ "$PROXY_NOT_DETECTED" != "0" ] || [ "$CITY_BY_IP" = "${REGISTERED_CITY^}" ];
 then 
-CITY=$REGISTERED_CITY
-COUNTRY=$REGISTERED_COUNTRY
-LATITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq '.[0] | .lat' | tr -d '"')
-LONGITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq '.[0] | .lon' | tr -d '"')
-
+geolocation_using_registered_data
 # If connecting direct to the Internet and city by IP does NOT match registered city
+# ----------------------------------------------------------------------------------
+# 1. If using IP doesn't return city, then use registered city to find latitude/longitude
+elif [ "x$CITY_BY_IP" = "x" ];
+then
+geolocation_using_registered_data
+# 2. If using IP returns city, then query Internet for latitude/longitude
 else
-LATITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.latitude')
-LONGITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.longitude')
-CITY=$CITY_BY_IP
+geolocation_using_internet_lookup
 fi
 
 fi
