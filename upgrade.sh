@@ -63,6 +63,13 @@ uninstall_owncloud
 owncloud_install
 }
 
+upgrade_nextcloud () {
+uninstall_nextcloud
+nextcloud_install
+nextcloud_permissions
+nextcloud_configure
+}
+
 upgrade_coova_chilli () {
 uninstall_coova_chilli
 coova_chilli_install
@@ -176,6 +183,8 @@ squid_configure
 
 #upgrade_icinga2 # Takes ~20 mins
 #upgrade_icingaweb2
+
+#upgrade_nextcloud
 
 #upgrade_owncloud 
 

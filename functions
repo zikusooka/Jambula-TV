@@ -1336,6 +1336,17 @@ uninstall_owncloud () {
 rm -rf $WWW_HTML_DIR/owncloud
 }
 
+uninstall_nextcloud () {
+# Remove owncloud HTML files
+rm -rf $WWW_HTML_DIR/nextcloud
+# Drop database data for tests/new installs
+cat <<EOF
+CAUTION: Take care here - NextCloud data is about to be dropped !!!
+====================================================================
+EOF
+mysqladmin -p$MYSQL_ROOT_PASSWORD drop $NEXTCLOUD_DB_NAME
+}
+
 uninstall_gstreamer_plugins () {
 for GST_PLUGIN in \
 base \
@@ -5317,6 +5328,10 @@ php_configure () {
 set_www_user_group
 # Copy www.conf php-fpm config file
 cp -v $PROJECT_CONFIGS_DIR/php-fpm/www.conf $CONFDIR/php-fpm.d/
+# make php-fpm run under webserver user/group
+sed -i "s:user = nginx:user = $WWW_USER:g" $CONFDIR/php-fpm.d/www.conf
+sed -i "s:group = nginx:group = $WWW_GROUP:g" $CONFDIR/php-fpm.d/www.conf
+#
 # Patch php.ini
 # Make backup of default php.ini file
 cp -v $CONFDIR/php.ini $CONFDIR/php.ini.orig
@@ -6353,8 +6368,14 @@ EOF
 nextcloud_install () {
 # Get WWW User and Group
 set_www_user_group
-# Unpack
+# Unpack core
 tar jxvf $PROJECT_TARBALLS_DIR/nextcloud-*tar.bz2 -C $WWW_HTML_DIR
+# Unpack apps
+for APP in $(ls -x $PROJECT_TARBALLS_DIR/nextcloud_apps)
+do
+tar zxvf $PROJECT_TARBALLS_DIR/nextcloud_apps/$APP -C $WWW_HTML_DIR/nextcloud/apps
+done
+#
 # Change permissions on data directory
 chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/nextcloud
 # Copy nextcloud nginx config file or run the command:
@@ -6373,8 +6394,7 @@ mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Defa
 mysqladmin -p$MYSQL_ROOT_PASSWORD create $NEXTCLOUD_DB_NAME
 
 # Generate database tables using schema
-#mysql -u root -p$MYSQL_ROOT_PASSWORD $NEXTCLOUD_DB_NAME < $NEXTCLOUD_DB_SCHEMA
-# Set privileges on zoneminder database
+# Set privileges on nextcloud database
 echo "GRANT ALL PRIVILEGES ON $NEXTCLOUD_DB_NAME.* to $NEXTCLOUD_DB_USER@localhost IDENTIFIED by '$NEXTCLOUD_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
 #
 # Switch to nextcloud directory and run occ
@@ -6382,6 +6402,12 @@ cd $WWW_HTML_DIR/nextcloud && sudo -u $WWW_USER php occ maintenance:install \
 	--database "mysql" --database-name "$NEXTCLOUD_DB_NAME" \
 	--database-user "$NEXTCLOUD_DB_USER" --database-pass "$NEXTCLOUD_DB_PASS" \
 	--admin-user "$NEXTCLOUD_ADMIN_USER" --admin-pass "$NEXTCLOUD_ADMIN_PASS"
+#
+# Enable Installed Apps
+for APP in $(ls -x $PROJECT_TARBALLS_DIR/nextcloud_apps | sed 's:.tar.gz::g')
+do
+cd $WWW_HTML_DIR/nextcloud && sudo -u $WWW_USER php occ app:enable $APP
+done
 }
 
 nextcloud_permissions () {
@@ -6450,7 +6476,6 @@ cat > $NEXTCLOUD_CONFIG_FILE << EOF
   'logtimezone' => '$TIMEZONE',
   'mail_domain' => '$NETWORK_DOMAIN',
   'mail_from_address' => '$PROJECT_NAME',
-  'installed' => 'true',
 );
 EOF
 
@@ -6461,7 +6486,8 @@ EOF
 # Make custom files directory if not existent
 [ -d $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/files ] || mkdir -p $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/files
 # Add link to /JambulaTV folder - Find a better way to access these files
-ln -s $PROJECT_PARTITION $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/files/$PROJECT_NAME
+[ -e $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/files/$PROJECT_NAME ] || \
+	ln -s $PROJECT_PARTITION $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/files/$PROJECT_NAME
 # Change permissions on data directory
 chown -R $WWW_USER:$WWW_GROUP $NEXTCLOUD_DATA_DIRECTORY
 #

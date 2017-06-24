@@ -347,8 +347,8 @@ zoneminder_zms_inetd
 # ----------------
 # Cloud and Backup support: NextCloud
 nextcloud_install
-nextcloud_configure
 nextcloud_permissions
+nextcloud_configure
 
 # ----------------
 # Home Automation 
