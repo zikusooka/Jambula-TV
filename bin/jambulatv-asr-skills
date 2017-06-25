@@ -1,0 +1,255 @@
+#!/bin/sh
+# This is a set of voice recognition skills used by JambulaTV 
+# It is used by jambulatv-speech2text tool
+# Jambula Labs @copyright 2017-2018 All rights reserved
+
+# Variables
+FAVORITE_TV_CHANNEL="NBS TV"
+FAVORITE_VIDEO="MY_USER_TV_SHOWS_DIR/Arrow/Season_05/Arrow.S05E04.Penance.HDTV.H264.mkv"
+MUSIC_DIR="MY_USER_MUSIC_DIR"
+TV_RECORD_STATUS_FILE=MY_TMPDIR/tv_record_status # Must be same as in kodi-controller!
+DOMOTICZ_LAMP_NAME="Living Room"
+
+
+
+############
+#  SKILLS  #
+############
+
+skill_time () {
+/usr/bin/python /usr/share/kodi/scripts/kodi_say_time.py
+}
+
+skill_weather () {
+/usr/bin/python /usr/share/kodi/scripts/kodi_say_weather.py 
+}
+
+skill_headlines () {
+$TEXT_2_SPEECH_TOOL_PATH custom "Here's whats making news today"
+}
+
+skill_reminders () {
+$TEXT_2_SPEECH_TOOL_PATH custom "$(/usr/bin/remind /JambulaTV/Reminders/)"
+}
+
+skill_motd () {
+$TEXT_2_SPEECH_TOOL_PATH custom "Today's message of the day is - -  $(/usr/bin/fortune -s -n 80)"
+}
+
+skill_flash_briefing () {
+# Get registered name, etc
+get_contact_details
+# Daily Digest
+$TEXT_2_SPEECH_TOOL_PATH custom "Hello $CONTACT_FIRST_NAME - - here is your daily digest for today $(date "+%A %d %B %Y")"
+skill_reminders
+skill_weather
+skill_headlines
+skill_motd
+skill_time
+$TEXT_2_SPEECH_TOOL_PATH custom "Happy $(date "+%A")"
+}
+
+skill_lights_on () {
+/usr/bin/jambulatv-lights "$DOMOTICZ_LAMP_NAME" on demo
+}
+
+skill_lights_off () {
+/usr/bin/jambulatv-lights "$DOMOTICZ_LAMP_NAME" off demo
+}
+
+skill_tv_start () {
+/usr/bin/jambulatv-kodi-controller tv_play_start "$FAVORITE_TV_CHANNEL"
+}
+
+skill_tv_play_next () {
+/usr/bin/jambulatv-kodi-controller video_play_next
+}
+
+skill_tv_play_previous () {
+/usr/bin/jambulatv-kodi-controller video_play_previous
+}
+
+skill_tv_play_ntv () {
+/usr/bin/jambulatv-kodi-controller tv_play_start "N TV"
+}
+
+skill_tv_play_nbs () {
+/usr/bin/jambulatv-kodi-controller tv_play_start "NBS TV"
+}
+
+skill_tv_stop () {
+/usr/bin/jambulatv-kodi-controller tv_play_stop
+}
+
+skill_tv_record_start_now () {
+# Check status of tv recording
+/usr/bin/jambulatv-kodi-controller tv_record_status
+# Source current TV recording status file
+. $TV_RECORD_STATUS_FILE && export TV_RECORDING_CURRENT_STATUS
+#
+if [ "$TV_RECORDING_CURRENT_STATUS" = "true" ];
+then
+# Let user know there's already a recording and quit
+$TEXT_2_SPEECH_TOOL_PATH custom "Am sorry, there is already another recording in progress. To end that recording, please say - - STOP RECORDING TV CHANNEL. - -  Then repeat your request"
+# Quit
+exit 1
+
+else
+# Record TV channel now
+/usr/bin/jambulatv-kodi-controller tv_record_instant_start
+fi
+}
+
+skill_tv_record_stop_now () {
+# Check status of tv recording
+/usr/bin/jambulatv-kodi-controller tv_record_status
+# Source current TV recording status file
+. $TV_RECORD_STATUS_FILE && export TV_RECORDING_CURRENT_STATUS
+#
+if [ "$TV_RECORDING_CURRENT_STATUS" = "false" ];
+then
+# Let user know there's no recording to stop
+$TEXT_2_SPEECH_TOOL_PATH custom "Am sorry, there is no recording for me to stop"
+# Quit
+exit 1
+
+else
+# Stop recording TV channel now
+/usr/bin/jambulatv-kodi-controller tv_record_instant_stop
+fi
+}
+
+skill_video_start () {
+/usr/bin/jambulatv-kodi-controller video_play_start "$FAVORITE_VIDEO"
+}
+
+skill_video_pause () {
+/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+}
+
+skill_video_unpause () {
+/usr/bin/jambulatv-kodi-controller video_play_pause
+}
+
+skill_video_play_next () {
+/usr/bin/jambulatv-kodi-controller navigate_down
+/usr/bin/jambulatv-kodi-controller navigate_select
+}
+
+skill_video_play_previous () {
+/usr/bin/jambulatv-kodi-controller navigate_up
+/usr/bin/jambulatv-kodi-controller navigate_select
+}
+
+skill_video_play_stop () {
+/usr/bin/jambulatv-kodi-controller video_play_stop
+}
+
+skill_music_start () {
+# Music playlists using categories
+MUSIC_CATEGORY="$@"
+case $MUSIC_CATEGORY in
+jazz)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_jazz.m3u
+;;
+gospel)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_gospel.m3u
+;;
+local)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_local.m3u
+;;
+lingala)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_lingala.m3u
+;;
+*)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_jazz.m3u
+;;
+esac
+#
+# Remove old playlist
+[ -e $MUSIC_PLAYLIST ] && rm -f $MUSIC_PLAYLIST
+# Generate playlist - TODO: Cache playlist and refresh periodically
+find $(find $MUSIC_DIR -type d -iname $MUSIC_CATEGORY) -type f | grep -E "*(\.mp3|\.mp4|\.wav|\.m4a|\.webm)" | while read SONG
+do 
+echo "$SONG" >> "$MUSIC_PLAYLIST"
+done
+
+# Play requested music category
+/usr/bin/jambulatv-kodi-controller music_play_offline_start "$MUSIC_PLAYLIST" 
+}
+
+skill_internet_music_start () {
+# Music playlists using categories
+ONLINE_MUSIC_STATION="$@"
+case $ONLINE_MUSIC_STATION in
+jazz_fm_online)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_internet_jazz_fm.m3u
+STATION_URL="http://sj64.hnux.com"
+;;
+east_africa_online)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_internet_east_africa.m3u
+STATION_URL="http://www.ophanim.net:8270/"
+;;
+*)
+MUSIC_PLAYLIST=/JambulaTV/Playlists/music_internet_various.m3u
+;;
+esac
+#
+# Remove old playlist
+[ -e $MUSIC_PLAYLIST ] && rm -f $MUSIC_PLAYLIST
+#
+# Generate playlist
+echo "$STATION_URL" >> "$MUSIC_PLAYLIST"
+
+# Play requested music category
+/usr/bin/jambulatv-kodi-controller music_play_online_start "$MUSIC_PLAYLIST" 
+}
+
+skill_music_pause () {
+/usr/bin/jambulatv-kodi-controller music_play_pause noreplay
+}
+
+skill_music_unpause () {
+/usr/bin/jambulatv-kodi-controller music_play_pause
+}
+
+skill_music_play_next () {
+/usr/bin/jambulatv-kodi-controller navigate_down
+/usr/bin/jambulatv-kodi-controller navigate_select
+}
+
+skill_music_play_previous () {
+/usr/bin/jambulatv-kodi-controller navigate_up
+/usr/bin/jambulatv-kodi-controller navigate_select
+}
+
+skill_music_play_stop () {
+/usr/bin/jambulatv-kodi-controller music_play_stop
+}
+
+skill_connect_2_hotspot () {
+sudo /usr/bin/jambulatv-auto-wifi-provision
+$TEXT_2_SPEECH_TOOL_PATH custom "Please scan the QR Code displayed on the TV Screen to get the Wifi password.  For Android devices, you may connect automatically"
+}
+
+skill_power_off () {
+$TEXT_2_SPEECH_TOOL_PATH custom "Turning off system"
+systemctl poweroff -i
+}
+
+skill_mute_speech_recognition () {
+$TEXT_2_SPEECH_TOOL_PATH custom "Geez - Am I that noisy? - - OK - I will go off line for now"
+[ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
+touch $TEXT_2_SPEECH_OUTPUT_FILE
+sudo chattr +i $TEXT_2_SPEECH_OUTPUT_FILE
+}
+
+skill_unmute_speech_recognition () {
+sudo chattr -i $TEXT_2_SPEECH_OUTPUT_FILE 
+[ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
+$TEXT_2_SPEECH_TOOL_PATH custom "You missed me - Right? - - OK - I am baack"
+}
+
+skill_unknown () {
+$TEXT_2_SPEECH_TOOL_PATH custom "Am sorry, I did not understand what you said"
+}

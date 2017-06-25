@@ -8674,8 +8674,6 @@ rsync -av $PROJECT_CONTRIB_DIR/speech_tts_asr/pocketsphinx/ $POCKETSPHINX_DATA_D
 		sed -e "s:MY_PREFIX:$PREFIX:g" | \
 		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
 		sed -e "s:MY_POCKETSPHINX_DATA_DIR:$POCKETSPHINX_DATA_DIR:g" | \
-		sed -e "s:MY_USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
-		sed -e "s:MY_USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" | \
 		sed -e "s:MY_JAMBULATV_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
@@ -8684,6 +8682,16 @@ rsync -av $PROJECT_CONTRIB_DIR/speech_tts_asr/pocketsphinx/ $POCKETSPHINX_DATA_D
 			> $BINARY_PREFIX/jambulatv-speech2text
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-speech2text
+
+# Copy jambulatv-asr-skills script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-asr-skills ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-asr-skills | \
+		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
+		sed -e "s:MY_USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
+		sed -e "s:MY_USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" \
+			> $BINARY_PREFIX/jambulatv-asr-skills
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-asr-skills
 
 # Copy jambulatv-speech-recognition.service systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-speech-recognition.service $SYSTEMD_UNITS_DIR_USER/
