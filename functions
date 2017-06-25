@@ -3537,6 +3537,7 @@ cat $PROJECT_BIN_DIR/jambulatv-kodi-controller | \
 		sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
 		sed -e "s:MY_KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
 		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
+		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
 		sed -e "s:MY_KODI_LOG:$KODI_LOG_FILE:g" | \
 		sed -e "s:MY_TVHEADEND_HTTP_IP:$TVHEADEND_HTTP_IP:g" | \
 		sed -e "s:MY_TVHEADEND_HTTP_PORT:$TVHEADEND_HTTP_PORT:g" | \
