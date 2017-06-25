@@ -2715,6 +2715,7 @@ cat > $TVHEADEND_DVR_CONFIG_DIR/$TVHEADEND_DVR_UUID << EOF
 	"name": "",
 	"comment": "JambulaTV TV Recording (Pass)",
 	"profile": "$TVHEADEND_PROFILE_PASS",
+	"pri": 0,
 	"cache": 2,
 	"retention-days": 2147483646,
 	"removal-days": 92,
@@ -2727,16 +2728,17 @@ cat > $TVHEADEND_DVR_CONFIG_DIR/$TVHEADEND_DVR_UUID << EOF
 	"epg-running": false,
 	"autorec-maxcount": 0,
 	"autorec-maxsched": 0,
-	"preproc": "sudo jambulatv-osd -m \\"Recording of %t on %c started\\"",
-	"postproc": "sudo jambulatv-osd -m \\"Recording of %t on %c completed\\"",
-	"storage": "/JambulaTV/Videos/TV_Recordings",
+	"preproc": "jambulatv-tvheadend-processor pre-recording \"%f\" \"%b\" \"%t\" \"%c\"",
+	"postproc": "jambulatv-tvheadend-processor post-recording \"%f\" \"%b\" \"%t\" \"%c\"",
+	"postremove": "jambulatv-tvheadend-processor remove-recording \"%f\" \"%b\" \"%t\" \"%c\"",
+	"storage": "$USER_TV_RECORDINGS_DIR",
 	"storage-mfree": 1000,
 	"storage-mused": 0,
 	"file-permissions": "0664",
 	"charset": "ASCII",
 	"tag-files": true,
 	"skip-commercials": true,
-	"pathname": "%F/\$t\$-c\$.s%R\$n.\$x",
+	"pathname": "%F/\$t\$-c-\$.s%R\$n.\$x",
 	"directory-permissions": "0775",
 	"day-dir": true,
 	"channel-dir": false,
@@ -2755,6 +2757,9 @@ EOF
 
 # Give multimedia user permission to access tvheadend directories
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+#
+# Copy jambulatv-tvheadend-processor used to process tvheadend processes like recordings
+[ -e $BINARY_PREFIX/jambulatv-tvheadend-processor ] || cp -v $PROJECT_BIN_DIR/jambulatv-tvheadend-processor $BINARY_PREFIX/
 #
 # Copy jambulatv-dvbt-scan used to scan 4 DVB-T services, if none exists in bin directory
 [ -e $BINARY_PREFIX/jambulatv-dvbt-scan ] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/

@@ -1,0 +1,48 @@
+#!/bin/sh
+# This script is used to process recording in tvheadend either before start or after
+# Jambula Labs @copyright 2017-2018 All rights reserved
+
+RECORDED_FILE_PATH="$2" # %f
+RECORDED_FILE_NAME="$3" # %b
+RECORDING_TITLE="$4" # %t
+RECORDED_CHANNEL="$5" # %c
+RECORDED_FILE_DIR=$(dirname "$RECORDED_FILE_PATH")
+RECORDED_FILE_DIR_DATE=$(echo $RECORDED_FILE_DIR | grep -o '[^/]*$')
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+case $1 in
+pre-recording)
+# Notify - OSD
+sudo jambulatv-osd -m "Recording of $RECORDING_TITLE on $RECORDED_CHANNEL started"
+;;
+
+post-recording)
+# Rename Directory of recording if script was called by kodi processes i.e. BUG in kodi 15
+if [ "$RECORDED_FILE_DIR_DATE" = "1970-01-01" ];
+then
+# Replace epoc date with current
+RECORDED_FILE_DIR_RENAMED="$(echo $RECORDED_FILE_DIR | sed "s:1970-01-01:$(date +%Y-%m-%d):")"
+# Rename directory
+mv -v $RECORDED_FILE_DIR $RECORDED_FILE_DIR_RENAMED
+fi
+
+# Notify - OSD
+sudo jambulatv-osd -m "Recording of $RECORDING_TITLE on $RECORDED_CHANNEL completed"
+;;
+
+remove-recording)
+;;
+
+*)
+clear
+cat <<EOF
+Usage: $(basename $0) [pre-recording|post-recording|remove-recording] arguments
+EOF
+exit 1
+;;
+esac
