@@ -30,6 +30,7 @@ PS_LOG_FILE=/dev/null
 PS_OUTPUT_FILE=MY_TMPDIR/results
 PS_KEYPHRASE_LIST=$PS_DATA_DIR/keyphrase.list
 #PS_KEYPHRASE="OKAY JAMB BOO LA"
+PS_NOISE_SILENCE_THRESHOLD="4.0"
 PS_SAMPRATE="16000/8000/48000"
 PS_OLD_TAIL_PID=$(ps auxw | grep -v grep | grep 'tail -n 0 -F' | awk {'print $2'} | head -1)
 PS_OLD_CONTINUOUS_PID=$(ps auxw | grep -v grep | grep 'pocketsphinx_continuous' | awk {'print $2'} | head -1)
@@ -91,7 +92,8 @@ run_speech2text_engine () {
 # Using multiple keyphrases
 pocketsphinx_continuous -hmm $PS_ACOUSTIC_MODEL_DIR -adcdev $PS_MIC_SOURCE -inmic yes \
 	-lm $PS_LANGUAGE_MODEL_FILE -dict $PS_DICTIONARY_FILE -kws "$PS_KEYPHRASE_LIST" \
-	-samprate $PS_SAMPRATE -logfn $PS_LOG_FILE | tee $PS_OUTPUT_FILE &
+	-vad_threshold $PS_NOISE_SILENCE_THRESHOLD -samprate $PS_SAMPRATE \
+	-logfn $PS_LOG_FILE | tee $PS_OUTPUT_FILE &
 #
 # Using one keyphrase
 #pocketsphinx_continuous -hmm $PS_ACOUSTIC_MODEL_DIR -adcdev $PS_MIC_SOURCE -inmic yes \
@@ -303,16 +305,13 @@ skill_mute_speech_recognition
 skill_unmute_speech_recognition
 ;;
 
-# Unrecognized command
-*"JAMB BOO LA"*)
+# Unrecognized voice command
+*)
 skill_unknown
+continue
 ;;
 
-# Unknown
-*)
-continue
 esac
-
 done
 }
 
