@@ -6161,6 +6161,14 @@ make install
 ldconfig
 }
 
+TermFeed_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/TermFeed-*.tgz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR/TermFeed 
+# Compile
+python setup.py install --install-lib=$PYTHON_SITEDIR
+}
+
 iptv_support () {
 # Copy IPTV xml files to html directory
 cp -rv $PROJECT_CONTRIB_DIR/iptv $WWW_HTML_DIR
