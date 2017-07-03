@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- JambulaTV - Lircmap.xml -->
+
+<lircmap>
+	<remote device="linux-input-layer">
+	<altname>/dev/input/jambulatv-remote1</altname>
+	<altname>/dev/input/jambulatv-remote0</altname>
+	
+		<start>KEY_HOMEPAGE</start>
+		<power>KEY_SLEEP</power>
+		<myTV>CTRL_SHIFT_KEY_T</myTV>
+		<mymusic>CTRL_KEY_M</mymusic>
+		<mypictures>CTRL_KEY_I</mypictures>
+		<myvideo>CTRL_KEY_E</myvideo>
+
+		<!--JambulaTV Buttons-->
+		<language>CTRL_KEY_O</language>
+		<teletext>CTRL_KEY_G</teletext>
+		<xbox>CTRL_KEY_T</xbox>
+		<eject>CTRL_SHIFT_KEY_M</eject>
+		<!-- -->
+
+		<reverse>CTRL_SHIFT_KEY_B</reverse>
+		<forward>CTRL_SHIFT_KEY_F</forward>
+		<pause>KEY_PLAYPAUSE</pause>
+		<skipminus>KEY_PREVIOUSSONG</skipminus>
+		<skipplus>KEY_NEXTSONG</skipplus>
+		<stop>KEY_STOPCD</stop>
+		<record>CTRL_KEY_R</record>
+		<back>KEY_BACKSPACE</back>
+		<info>BTN_RIGHT</info>
+		<title>BTN_MOUSE</title>
+		<left>KEY_LEFT</left>
+		<right>KEY_RIGHT</right>
+		<up>KEY_UP</up>
+		<down>KEY_DOWN</down>
+		<select>KEY_ENTER</select>
+		<volumeplus>KEY_VOLUMEUP</volumeplus>
+		<volumeminus>KEY_VOLUMEDOWN</volumeminus>
+		<pageplus>KEY_PAGEUP</pageplus>
+		<pageminus>KEY_PAGEDOWN</pageminus>
+		<mute>KEY_MUTE</mute>
+		<menu>ALT_META_KEY_ENTER</menu>
+		<one>KEY_KP1</one>
+		<two>KEY_KP2</two>
+		<three>KEY_KP3</three>
+		<four>KEY_KP4</four>
+		<five>KEY_KP5</five>
+		<six>KEY_KP6</six>
+		<seven>KEY_KP7</seven>
+		<eight>KEY_KP8</eight>
+		<nine>KEY_KP9</nine>
+		<zero>KEY_KP0</zero>
+		<star>KEY_KPASTERISK</star>
+		<hash>ALT_KEY_KP3</hash>
+		<hash>ALT_KEY_KP5</hash>
+		<close>ALT_KEY_F4</close>
+		<clear>KEY_ESC</clear>
+		<!-- DONOT UNCOMMENT THIS - DUPLICATE BUTTON
+		<enter>KEY_ENTER </enter>
+		-->
+
+	</remote>
+</lircmap>

@@ -1,0 +1,12 @@
+[Unit]
+Description=Inputlirc, a lirc daemon using input event devices
+Before=jambulatv@kodi.service
+After=network-online.target
+
+[Service]
+Type=forking
+EnvironmentFile=/etc/sysconfig/inputlirc
+ExecStart=/bin/sh -c "/usr/sbin/inputlircd ${LIRC_OPTIONS} ${LIRC_DEVICE}"
+
+[Install]
+WantedBy=multi-user.target

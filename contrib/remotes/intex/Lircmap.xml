@@ -1,6 +1,11 @@
-<!-- For a list of XBMC_COMMAND's check out the <remote> sections of keymap.xml   -->
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- JambulaTV - Lircmap.xml -->
+
 <lircmap>
-	<remote device="intex">
+	<remote device="linux-input-layer">
+	<altname>/dev/input/jambulatv-remote1</altname>
+	<altname>/dev/input/jambulatv-remote0</altname>
 		<play>Play</play>
 		<pause>Pause</pause>
 		<stop>Stop</stop>

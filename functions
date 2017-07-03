@@ -503,7 +503,6 @@ NETDATA_PORT=$(grep -i 'netdata$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # Dynamic variables
 # -----------------
-IR_REMOTE=pctv-290e #intex #streamzap #samsung
 IR_DAEMON=inputlirc #lircd
 IR_PROTOCOLS="NEC,RC-5,RC-6"
 IR_REPEAT_DELAY=1200
@@ -1565,6 +1564,50 @@ TVH_DVBT_CONFIG_REQUESTED=$DEFAULT_TVH_DVBT_CONFIG_REQUESTED
 fi
 # Export
 export TVH_DVBT_CONFIG_REQUESTED
+#
+# ---------------
+# InfraRed Remote
+# ---------------
+DEFAULT_IR_REMOTE_CHOICE=1
+clear
+read -p "Please enter the name of your Infra Red Remote [$DEFAULT_IR_REMOTE_CHOICE]
+
+1. vr-1100
+2. hauppauge
+3. intex
+4. streamzap
+5. samsung
+
+" IR_REMOTE_CHOICE
+# If empty set to default
+if [ "x$IR_REMOTE_CHOICE" = "x" ];
+then
+IR_REMOTE_CHOICE=$DEFAULT_IR_REMOTE_CHOICE
+fi
+# Set Remote name
+case $IR_REMOTE_CHOICE in
+1)
+IR_REMOTE=vr-1100
+;;
+2)
+IR_REMOTE=hauppauge
+;;
+3)
+IR_REMOTE=intex
+;;
+4)
+IR_REMOTE=streamzap
+;;
+5)
+IR_REMOTE=samsung
+;;
+*)
+IR_REMOTE=vr-1100
+;;
+esac
+# Export
+export IR_REMOTE
+#
 }
 
 set_variables () {
@@ -3615,24 +3658,68 @@ make_install_jambulatv
 
 inputlirc_configure () {
 # Copy udev rules 4 remotes - rename to /dev/input/jambulatv-remote instead of ../eventX
-cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-remotes.rules $UDEV_RULES_DIR
+case "$IR_REMOTE" in
+vr-1100)
+# VR-1100
+cat > $UDEV_RULES_DIR/96-jambulatv.usb-remotes.rules <<EOF
+# VR-1100
+KERNEL=="event*",SUBSYSTEM=="input",ATTRS{idVendor}=="05a4",ATTRS{idProduct}=="9881",IMPORT{program}="input_id %p"
+KERNEL=="event*",SUBSYSTEM=="input",ATTRS{idVendor}=="05a4",ATTRS{idProduct}=="9881",ENV{ID_INPUT_KEYBOARD}=="1",SYMLINK="input/jambulatv-remote0"
+KERNEL=="event*",SUBSYSTEM=="input",ATTRS{idVendor}=="05a4",ATTRS{idProduct}=="9881",ENV{ID_INPUT_MOUSE}=="1",SYMLINK="input/jambulatv-remote1"
+EOF
+;;
+
+hauppauge)
+# Hauppauge
+cat > $UDEV_RULES_DIR/96-jambulatv.usb-remotes.rules <<EOF
+# Hauppauge WinTV MiniStick
+KERNEL=="event*", ATTRS{idVendor}=="2040", ATTRS{idProduct}=="c000", MODE="0666", SYMLINK="input/jambulatv-remote0"
+EOF
+;;
+
+*)
+cat > $UDEV_RULES_DIR/96-jambulatv.usb-remotes.rules <<EOF
+# August DVB-T2
+KERNEL=="event*", ATTRS{idVendor}=="0572", ATTRS{idProduct}=="c688", MODE="0666", SYMLINK="input/jambulatv-remote0"
+# Pinnacle PCTV 290e
+#KERNEL=="event*", ATTRS{idVendor}=="2013", ATTRS{idProduct}=="024f", MODE="0666", SYMLINK="input/jambulatv-remote0"
+EOF
+
+;;
+esac
+#
 # Reload udev
 /usr/sbin/udevadm control --reload && udevadm trigger --action=add
 #
-# Copy ir-key tables for remote - used in start file
-cp -v $PROJECT_CONTRIB_DIR/remotes/$IR_REMOTE/ir-keytable.cfg $CONFDIR/lirc
 #
 # Add Environment file for Systemd
 cat > $SYSCONFIG_DIR/inputlirc <<EOF
 LIRC_OPTIONS="-g -m 0 -c"
-LIRC_DEVICE="/dev/input/jambulatv-remote"
-IR_KEYTABLE="$CONFDIR/lirc/ir-keytable.cfg"
+LIRC_DEVICE="/dev/input/jambulatv-remote0 /dev/input/jambulatv-remote1"
 IR_PROTOCOLS="$IR_PROTOCOLS"
 IR_REPEAT_DELAY=$IR_REPEAT_DELAY
 IR_REPEAT_PERIOD=$IR_REPEAT_PERIOD
 EOF
-# Copy inputlircd systemd file 
-cp -v $PROJECT_INIT_SCRIPTS_DIR/inputlircd.service $SYSTEMD_UNITS_DIR_USER/
+#
+# If ir-keytable.cfg exists
+if [ -e $PROJECT_CONTRIB_DIR/remotes/$IR_REMOTE/ir-keytable.cfg ];
+then
+# Copy ir-key tables for remote - used in start file
+cp -v $PROJECT_CONTRIB_DIR/remotes/$IR_REMOTE/ir-keytable.cfg $CONFDIR/lirc
+# Add IR keytable to Environment file for Systemd
+cat >> $SYSCONFIG_DIR/inputlirc <<EOF
+IR_KEYTABLE="$CONFDIR/lirc/ir-keytable.cfg"
+EOF
+#
+# Copy inputlircd systemd file  - with keytable
+cp -v $PROJECT_INIT_SCRIPTS_DIR/inputlircd.with.keytable.service $SYSTEMD_UNITS_DIR_USER/inputlircd.service
+
+else
+# Copy inputlircd systemd file - without keytable
+cp -v $PROJECT_INIT_SCRIPTS_DIR/inputlircd.no.keytable.service $SYSTEMD_UNITS_DIR_USER/inputlircd.service
+
+fi
+#
 # Enable inputlircd if needed
 systemctl enable inputlircd.service
 #
@@ -3644,7 +3731,7 @@ InputLirc / Remote
 ==================
 % I have configured inputlirc to read the remote at:
 
-  LIRC_DEVICE="/dev/input/jambulatv-remote"
+  LIRC_DEVICE="/dev/input/jambulatv-remote0 /dev/input/jambulatv-remote1"
 
 % Take a look at: $UDEV_RULES_DIR/96-jambulatv.usb-remotes.rules 
   and ensure that your remote devices will be renamed to the above after plugging in
