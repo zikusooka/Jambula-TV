@@ -1,0 +1,43 @@
+--- termfeed/feed.py.orig	2015-10-17 02:21:55.000000000 +0300
++++ termfeed/feed.py	2017-07-05 14:22:11.342923576 +0300
+@@ -75,8 +75,16 @@
+ def print_feed(zipped):
+ 
+     for num, post in zipped.items():
+-        print(bcolors.OKGREEN + '[{}] '.format(num) + bcolors.ENDC, end='')
+-        print('{}'.format(post.title.encode('utf8')))
++
++	RSS_OUTPUT_FILE = '/tmp/rss_output.txt'
++
++        # Select only 10 titles i.e. headlines
++        if(num >= 10):
++            break
++	# Write to output file
++	processfile = open(RSS_OUTPUT_FILE, 'a')
++	processfile.write('{}'.format(post.title.encode('utf8')) + "\n")
++	processfile.close()
+ 
+ 
+ def print_desc(topic, txt):
+@@ -114,11 +122,9 @@
+ def _continue():
+     try:
+ 
+-        msg = """\n\nPress: Enter to continue, ... [NUM] for short description / open a page, ... or CTRL-C to exit: """
+-        print(bcolors.FAIL + msg + bcolors.ENDC, end='')
+         # kb is the pressed keyboard key
+         try:
+-            kb = raw_input()
++            kb = ''
+         except NameError:
+             kb = input()
+         return kb
+@@ -151,8 +157,6 @@
+ 
+         # feeds source
+         l = len(urls) - 1
+-        print(
+-            bcolors.HEADER + "\n     {}/{} SOURCE>> {}\n".format(i, l, url) + bcolors.ENDC)
+ 
+         # print out feeds
+         zipped = dict(enumerate(d.entries))

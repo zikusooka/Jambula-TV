@@ -6251,6 +6251,9 @@ ldconfig
 TermFeed_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/TermFeed-*.tgz -C $INSTALL_SRC_DIR
+# Patch
+patch -p1 $INSTALL_SRC_DIR/TermFeed/termfeed/feed.py < $PROJECT_PATCHES_DIR/termfeed.patch
+#
 cd $INSTALL_SRC_DIR/TermFeed 
 # Compile
 python setup.py install --install-lib=$PYTHON_SITEDIR
@@ -8788,6 +8791,23 @@ chmod 755 $BINARY_PREFIX/jambulatv-speech2text
 			> $BINARY_PREFIX/jambulatv-asr-skills
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-asr-skills
+
+# Copy jambulatv-fetch-news helper tool for headlines ASR skill
+[ -e $BINARY_PREFIX/jambulatv-fetch-news ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-fetch-news | \
+		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
+		sed -e "s:MY_PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" | \
+		sed -e "s:MY_BINARY_PREFIX:$BINARY_PREFIX:g" \
+			> $BINARY_PREFIX/jambulatv-fetch-news
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-fetch-news
+# Add sample RSS file for news headlines
+cat > $PROJECT_SYSTEM_CONF_DIR/rss-feeds.cfg << EOF
+World Political | http://feeds.bbci.co.uk/news/world/rss.xml
+World Business | http://feeds.bbci.co.uk/news/business/rss.xml
+World Technology | http://feeds.bbci.co.uk/news/technology/rss.xml
+World Sports | http://feeds.bbci.co.uk/sport/rss.xml
+EOF
 
 # Copy jambulatv-speech-recognition.service systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-speech-recognition.service $SYSTEMD_UNITS_DIR_USER/

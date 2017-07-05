@@ -26,6 +26,7 @@ skill_weather () {
 
 skill_headlines () {
 $TEXT_2_SPEECH_TOOL_PATH custom "Here's whats making news today"
+/usr/bin/jambulatv-fetch-news
 }
 
 skill_reminders () {

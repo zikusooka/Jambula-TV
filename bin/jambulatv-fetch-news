@@ -1,0 +1,88 @@
+#!/bin/sh
+# This script will fetch news headlines from your selected news sources i.e. rss feeds
+# Use it with voice recognition tool to read out headlines
+# Jambula Labs @copyright 2017-2018 All rights reserved
+#
+# Variables
+RSS_FEEDS_FILE=MY_PROJECT_SYSTEM_CONF_DIR/rss-feeds.cfg
+RSS_OUTPUT_FILE=MY_TMPDIR/rss_output.txt # Hardcoded in Termfeed sources
+CATEGORIES_TMP_FILE=MY_TMPDIR/rss_categories
+
+TEXT_2_SPEECH_TOOL_PATH=MY_BINARY_PREFIX/jambulatv-text2speech
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage () {
+# Ensure RSS feeds file exists, otherwise quit
+if [ ! -e $RSS_FEEDS_FILE ];
+then
+cat <<EOF
+I did not find the following file. Please add it first:
+[$RSS_FEEDS_FILE]
+EOF
+exit 1
+fi
+}
+
+process_rss_feeds () {
+# Remove RSS output file
+[ -e $RSS_OUTPUT_FILE ] && sudo rm -f $RSS_OUTPUT_FILE
+# Get category and URL of sorted feeds
+cat $RSS_FEEDS_FILE | awk '!a[$0]++' | while read FEED;
+do
+RSS_CATEGORY=$(echo "$FEED" | cut -d '|' -f1 | sed 's: $::g')
+RSS_URL=$(echo "$FEED" | cut -d '|' -f2 | sed 's:^ ::g')
+# Add category line to RSS outputfile
+cat >> $RSS_OUTPUT_FILE <<EOF
+
+In $RSS_CATEGORY news
+ 
+EOF
+# Fetch titles and add to RSS outputfile
+/usr/bin/feed $RSS_URL > /dev/null 2>&1
+done
+}
+
+fetch_headlines () {
+# Age of current news data
+if [ -e $RSS_OUTPUT_FILE ];
+then
+AGE_OF_RSS_DATA=$(date -d "now - $(stat -c "%Y" $RSS_OUTPUT_FILE) seconds" +%M)
+else
+AGE_OF_RSS_DATA=60
+fi
+
+# Dont fetch news information if age is less than 15 minutes ago
+if [ "$AGE_OF_RSS_DATA" -le "15" ];
+then
+continue
+else
+# Fetch current news
+echo "Fetching fresh news feeds, please be patient ..."
+process_rss_feeds
+fi
+}
+
+read_headlines () {
+# Read entire headlines file
+cat $RSS_OUTPUT_FILE | while read TITLE
+do
+echo "$TITLE"
+$TEXT_2_SPEECH_TOOL_PATH custom "$TITLE"
+done
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+usage
+
+fetch_headlines
+
+read_headlines
