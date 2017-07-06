@@ -1,5 +1,5 @@
 #EXTM3U
-# 20170420-0255
+# 20170706-0000
 
 ##########
 #  NEWS  #
@@ -8,10 +8,7 @@
 # BBC NEWS
 # --------
 #EXTINF:0 tvg-id="id1" tvg-name="BBC NEWS" tvg-logo="bbc_news.png" group-title="News",BBC NEWS
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3401.ts
-#http://iudtv.org:8000/live/190001993192162/190001993192162/66.ts
-#http://hlslive.lcdn.une.net.co/v1/AUTH_HLSLIVE/BBCW/tu1_1.m3u8
-#http://lcdn.une.net.co:80/v1/AUTH_HLSLIVE/BBCW/tu1_1.m3u8
+http://hlslive.lcdn.une.net.co/v1/AUTH_HLSLIVE/BBCW/tu1_1.m3u8
 # --------
 # SKY NEWS
 # --------
@@ -21,18 +18,18 @@ http://skydvn-nowtv-atv-prod.skydvn.com/atv/skynews/1404/live/04.m3u8
 # CNN
 # ---
 #EXTINF:0 tvg-id="id3" tvg-name="CNN" tvg-logo="cnn.png" group-title="News",CNN
-http://iudtv.org:8000/live/190001993192162/190001993192162/454.ts
+pipe:///usr/bin/jambulatv-rtmplayer rtmp://d.cdn.newschat.tv/edge cnn_live http://www.newsviews.tv/player.swf http://www.newsviews.tv/news-views-video-six
 # ---------
 # ALJAZEERA
 # ---------
 #EXTINF:0 tvg-id="id4" tvg-name="ALJAZEERA" tvg-logo="aljazeera.png" group-title="News",ALJAZEERA
-http://iudtv.org:8000/live/190001993192162/190001993192162/990.ts
+http://aljazeera-eng-hd-live.hls.adaptive.level3.net/aljazeera/english2/index255.m3u8
 #pipe:///usr/bin/jambulatv-rtmplayer rtmp://aljazeeraflashlivefs.fplive.net/aljazeeraflashlive-live aljazeera_eng_high http://static.ls-cdn.com/player/5.10/livestation-player.swf
 # --------
 # FOX NEWS
 # --------
 #EXTINF:0 tvg-id="id5" tvg-name="FOX NEWS" tvg-logo="fox_news.png" group-title="News",FOX NEWS
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3398.ts
+http://cmghlslive-i.akamaihd.net/hls/live/224709/KOKI/904k/prog.m3u8
 # -----
 # MSNBC
 # -----
@@ -42,7 +39,8 @@ http://tvemsnbc-lh.akamaihd.net/i/nbcmsnbc_1@122532/master.m3u8
 # FRANCE 24
 # ---------
 #EXTINF:0 tvg-id="id7" tvg-name="FRANCE 24" tvg-logo="france_24.png" group-title="News",FRANCE 24
-http://static.france24.com/live/F24_EN_LO_HLS/live_web.m3u8
+http://f24hls-i.akamaihd.net/hls/live/221193/F24_EN_LO_HLS/master.m3u8
+#http://static.france24.com/live/F24_EN_LO_HLS/live_web.m3u8
 # --------
 # EURONEWS
 # --------
@@ -64,6 +62,11 @@ http://37.58.85.156/rlo001/ngrp:rlo001.stream_all/playlist.m3u8
 # ----
 #EXTINF:0 tvg-id="id11" tvg-name="CGTN" tvg-logo="cctv.png" group-title="News",CGTN
 http://pro213.com/live/Mohaammed/12MAlQubtan/3723.m3u8
+# --------
+# PRESS TV
+# --------
+#EXTINF:0 tvg-id="id12" tvg-name="PRESS TV" tvg-logo="presstv.png" group-title="News",PRESS TV
+http://178.32.255.199:1935/live/ptven/playlist.m3u8
 # -----------
 # VOA ENGLISH
 # -----------
@@ -73,7 +76,7 @@ https://edge-823-ch-gv.filmon.com/live/2996.low.stream/playlist.m3u8?id=0ad5aac3
 # CBS NEWS
 # --------
 #EXTINF:0 tvg-id="id13" tvg-name="CBS NEWS" tvg-logo="cbs_news.png" group-title="News",CBS NEWS
-http://cbsnews-linear.mdialog.com/video_assets/cbsnews.m3u8?api_key=563b80c1ae4ce359830f572d2496a947&iu=/8264/vaw-can/mobile_web/cbsnews_mobile
+http://cbsNEWShd-lh.akamaihd.net/i/CBSNHD_7@199302/index_700_av-p.m3u8
 # --------
 # ABC NEWS
 # --------
@@ -84,6 +87,11 @@ http://abclive.abcnews.com/i/abc_live4@136330/master.m3u8?b=500,300,700,900,1200
 # -----------
 #EXTINF:0 tvg-id="id15" tvg-name="WGN" tvg-logo="wgn.png" group-title="News",WGN
 http://wgntribune-lh.akamaihd.net/i/WGNPrimary_1@304622/master.m3u8
+# -----------
+# TVC NIGERIA
+# -----------
+#EXTINF:0 tvg-id="id15" tvg-name="TVC NIGERIA" tvg-logo="tvc_nigeria.png" group-title="News",TVC NIGERIA
+http://77.92.76.135:1935/tvcnews/livestream/playlist.m3u8
 
 ##############
 #  BUSINESS  #
@@ -92,7 +100,7 @@ http://wgntribune-lh.akamaihd.net/i/WGNPrimary_1@304622/master.m3u8
 # BLOOMBERG
 # ---------
 #EXTINF:0 tvg-id="id16" tvg-name="BLOOMBERG" tvg-logo="bloomberg.png" group-title="Business",BLOOMBERG
-http://iudtv.org:8000/live/190001993192162/190001993192162/457.ts
+http://cdn3.videos.bloomberg.com/btv/us/master.m3u8?b?b*t$
 #http://cdn3.videos.bloomberg.com/btv/us/master.m3u8
 # ----
 # CNBC
@@ -270,8 +278,7 @@ http://iudtv.org:8000/live/190001993192162/190001993192162/484.ts
 # EUROSPORT 1
 # -----------
 #EXTINF:0 tvg-id="id48" tvg-name="EUROSPORT 1" tvg-logo="eurosport_1.png" group-title="Sports",EUROSPORT 1
-http://iudtv.org:8000/live/190001993192162/190001993192162/541.ts
-#http://esioslive6-i.akamaihd.net/hls/live/202874/AL_P_ESP1_INTER_ENG/playlist_1000.m3u8
+http://esioslive6-i.akamaihd.net/hls/live/202874/AL_P_ESP1_INTER_ENG/playlist_1800.m3u8
 # -----------
 # EUROSPORT 2
 # -----------
