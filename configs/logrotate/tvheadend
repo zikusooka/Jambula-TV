@@ -1,0 +1,9 @@
+  /var/log/JambulaTV/tvheadend.log {
+           daily
+           rotate 24
+	   compress
+	   missingok
+	   notifempty
+    	   size 30M
+	   create 0600 jambula video
+       }

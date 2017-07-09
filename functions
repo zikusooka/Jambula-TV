@@ -2707,6 +2707,9 @@ cat $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service | \
 # Enable tvheadend
 systemctl enable tvheadend.service
 
+# Copy logrotate file to reduce size of tvheadend log
+cp -v $PROJECT_CONFIGS_DIR/logrotate/tvheadend $LOGROTATE_CONF_DIR/
+
 # Configure DVB-T2 network if requested
 # -------------------------------------
 if [ "$TVH_DVBT_CONFIG_REQUESTED" = "yes" ];
