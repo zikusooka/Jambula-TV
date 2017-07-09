@@ -48,4 +48,10 @@
             access_log off;
    	}
 
+	location = /data/htaccesstest.txt {
+  	    allow all;
+            log_not_found off;
+            access_log off;
+	}
+
     }

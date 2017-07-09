@@ -33,6 +33,34 @@ skill_reminders () {
 $TEXT_2_SPEECH_TOOL_PATH custom "$(/usr/bin/remind /JambulaTV/Reminders/)"
 }
 
+skill_calendar_events () {
+# Calendar events variables
+CALENDAR_EVENT_START=$1
+CALENDAR_EVENT_END=$2
+CALENDAR_EVENT_ASR_PERIOD=$3
+CALENDAR_EVENTS_TOOL_PATH=/usr/bin/jambulatv-calendar-events
+CALENDAR_TEXT_2_SPEECH_INPUT_FILE=$(grep '^TEXT2SPEECH_INPUT_FILE' $CALENDAR_EVENTS_TOOL_PATH | cut -d '=' -f2 | head -1 | awk {'print $1'})
+
+# Query calendar for events
+$CALENDAR_EVENTS_TOOL_PATH $CALENDAR_EVENT_START $CALENDAR_EVENT_END
+
+# If no events are found, say it 
+[ -s $CALENDAR_TEXT_2_SPEECH_INPUT_FILE ] || \
+	$TEXT_2_SPEECH_TOOL_PATH custom "No events are scheduled for $CALENDAR_EVENT_ASR_PERIOD" 
+# Quit if no events found
+[ -s $CALENDAR_TEXT_2_SPEECH_INPUT_FILE ] || exit 0
+
+# Say header message
+$TEXT_2_SPEECH_TOOL_PATH custom "The following events are scheduled for $CALENDAR_EVENT_ASR_PERIOD"
+# Cycle through speech-to-text input file and say event summary
+cat $CALENDAR_TEXT_2_SPEECH_INPUT_FILE | while read EVENT_SUMMARY
+do
+$TEXT_2_SPEECH_TOOL_PATH custom "The $EVENT_SUMMARY"
+done
+# Say footer message
+$TEXT_2_SPEECH_TOOL_PATH custom "That is all for $CALENDAR_EVENT_ASR_PERIOD"
+}
+
 skill_motd () {
 $TEXT_2_SPEECH_TOOL_PATH custom "Today's message of the day is - -  $(/usr/bin/fortune -s -n 80)"
 }
@@ -68,6 +96,14 @@ skill_tv_play_next () {
 
 skill_tv_play_previous () {
 /usr/bin/jambulatv-kodi-controller video_play_previous
+}
+
+skill_tv_pause_channel () {
+/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+}
+
+skill_tv_unpause_channel () {
+/usr/bin/jambulatv-kodi-controller video_play_pause
 }
 
 skill_tv_play_ntv () {
@@ -229,7 +265,7 @@ skill_music_play_stop () {
 }
 
 skill_connect_2_hotspot () {
-sudo /usr/bin/jambulatv-auto-wifi-provision
+sudo /usr/bin/jambulatv-auto-wifi-provision &
 $TEXT_2_SPEECH_TOOL_PATH custom "Please scan the QR Code displayed on the TV Screen to get the Wifi password.  For Android devices, you may connect automatically"
 }
 

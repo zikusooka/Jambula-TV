@@ -131,6 +131,21 @@ skill_headlines
 skill_reminders
 ;;
 
+# Calendar Events - Today
+*"WHAT EVENTS ARE SCHEDULED FOR TODAY"*)
+skill_calendar_events today today "TODAY"
+;;
+
+# Calendar Events - Tomorrow
+*"WHAT EVENTS ARE SCHEDULED FOR TOMORROW"*)
+skill_calendar_events tomorrow tomorrow "TOMORROW"
+;;
+
+# Calendar Events - This week
+*"WHAT EVENTS ARE SCHEDULED FOR THIS WEEK"*)
+skill_calendar_events today one_week "THIS WEEK"
+;;
+
 # MOTD or Today's scripture
 *"MESSAGE OF THE DAY"*)
 skill_motd
@@ -163,6 +178,16 @@ skill_tv_play_next
 # Play previous tv channel
 *"PLAY PREVIOUS CHANNEL"*)
 skill_tv_play_previous
+;;
+
+# Pause tv channel
+*"PAUSE TV CHANNEL"*)
+skill_tv_pause_channel
+;;
+
+# Pause tv channel
+*"UN PAUSE TV CHANNEL"*)
+skill_tv_unpause_channel
 ;;
 
 # Play tv channel - NTV

@@ -14,7 +14,7 @@ KERNEL_VERSION="4.4.73"
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
-AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd, /usr/bin/chattr"
+AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer, /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd, /usr/bin/chattr,"
 MULTIMEDIA_USER=$AUTOLOGIN_USER
 MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
 BACKUPS_DIR=$ROOT_DIR/Backups
@@ -709,6 +709,8 @@ OWNCLOUD_DATA_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Cloud
 OWNCLOUD_WWW_SERVER_NAME=$(grep server_name $PROJECT_CONFIGS_DIR/nginx/sites-enabled/owncloud | awk {'print $2'} | sed 's/;//')
 
 # Nextcloud
+NEXTCLOUD_VERSION="9.0.58.1"
+NEXTCLOUD_DEFAULT_APP="files" # calendar
 NEXTCLOUD_DB_NAME=nextcloud
 NEXTCLOUD_DB_USER=nextcloud
 NEXTCLOUD_DB_PASS=jambulatv45
@@ -6499,13 +6501,10 @@ mysqladmin -p$MYSQL_ROOT_PASSWORD create $NEXTCLOUD_DB_NAME
 
 # Generate database tables using schema
 # Set privileges on nextcloud database
-echo "GRANT ALL PRIVILEGES ON $NEXTCLOUD_DB_NAME.* to $NEXTCLOUD_DB_USER@localhost IDENTIFIED by '$NEXTCLOUD_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+echo "GRANT ALL PRIVILEGES ON $NEXTCLOUD_DB_NAME.* to '$NEXTCLOUD_DB_USER'@'localhost' IDENTIFIED by '$NEXTCLOUD_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
 #
 # Switch to nextcloud directory and run occ
-cd $WWW_HTML_DIR/nextcloud && sudo -u $WWW_USER php occ maintenance:install \
-	--database "mysql" --database-name "$NEXTCLOUD_DB_NAME" \
-	--database-user "$NEXTCLOUD_DB_USER" --database-pass "$NEXTCLOUD_DB_PASS" \
-	--admin-user "$NEXTCLOUD_ADMIN_USER" --admin-pass "$NEXTCLOUD_ADMIN_PASS"
+cd $WWW_HTML_DIR/nextcloud && sudo -u $WWW_USER php occ maintenance:install --database "mysql" --database-name "$NEXTCLOUD_DB_NAME" --database-user "$NEXTCLOUD_DB_USER" --database-pass "$NEXTCLOUD_DB_PASS" --admin-user "$NEXTCLOUD_ADMIN_USER" --admin-pass "$NEXTCLOUD_ADMIN_PASS"
 #
 # Enable Installed Apps
 for APP in $(ls -x $PROJECT_TARBALLS_DIR/nextcloud_apps | sed 's:.tar.gz::g')
@@ -6580,6 +6579,10 @@ cat > $NEXTCLOUD_CONFIG_FILE << EOF
   'logtimezone' => '$TIMEZONE',
   'mail_domain' => '$NETWORK_DOMAIN',
   'mail_from_address' => '$PROJECT_NAME',
+  'installed' => true,
+  'version' => '$NEXTCLOUD_VERSION',
+  'updatechecker' => false,
+  'defaultapp' => '$NEXTCLOUD_DEFAULT_APP',
 );
 EOF
 
@@ -6594,7 +6597,18 @@ EOF
 	ln -s $PROJECT_PARTITION $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/files/$PROJECT_NAME
 # Change permissions on data directory
 chown -R $WWW_USER:$WWW_GROUP $NEXTCLOUD_DATA_DIRECTORY
-#
+
+# Add jambulatv-calendar-events tool if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-calendar-events ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-calendar-events | \
+		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
+		sed -e "s:MY_NEXTCLOUD_ADMIN_USER:$NEXTCLOUD_ADMIN_USER:g" | \
+		sed -e "s:MY_NEXTCLOUD_ADMIN_PASS:$NEXTCLOUD_ADMIN_PASS:g" | \
+		sed -e "s:MY_NEXTCLOUD_HTTP_PORT:$NEXTCLOUD_HTTP_PORT:g" \
+			> $BINARY_PREFIX/jambulatv-calendar-events
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-calendar-events
+
 # Display NextCloud's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #

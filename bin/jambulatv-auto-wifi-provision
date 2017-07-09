@@ -63,8 +63,8 @@ $CONVERT_CMD -append $QRCODE_IMAGE_FILENAME_ANDROID $QRCODE_IMAGE_FILENAME_ANDRO
 }
 
 display_auto_wifi_qrcode_4_android_ios () {
-# Display QR codes
-cvlc -I dummy -V x11 --quiet --no-audio --width 320 --height 240 --loop --no-video-title $QRCODE_IMAGE_FILENAME_ANDROID_IOS &
+# Display QR codes - Set display first for vlc
+export DISPLAY=:0.0 && cvlc -I dummy -V x11 --quiet --no-audio --width 320 --height 240 --loop --no-video-title $QRCODE_IMAGE_FILENAME_ANDROID_IOS &
 PID_AUTO_WIFI_QR="$!"
 export PID_AUTO_WIFI_QR
 }

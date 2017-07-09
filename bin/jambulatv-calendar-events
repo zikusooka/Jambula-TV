@@ -1,0 +1,269 @@
+#!/bin/sh
+# This tool queries the Nextcloud/Owncloud calendar API using the command line interface
+# Use it along with voice recognition tool to read out scheduled events and appointments
+# Jambula Labs @copyright 2017-2018 All rights reserved
+#
+# Variables
+#
+# CalDav credentials
+CALDAV_SERVER_IP=127.0.0.1
+CALDAV_SERVER_PORT=MY_NEXTCLOUD_HTTP_PORT
+CALDAV_USER_PASS="MY_NEXTCLOUD_ADMIN_USER:MY_NEXTCLOUD_ADMIN_PASS"
+CALDAV_CALENDAR_ADDRESS=remote.php/caldav/calendars
+CALDAV_CALENDAR=default
+CALDAV_URL="http://$CALDAV_SERVER_IP:$CALDAV_SERVER_PORT/$CALDAV_CALENDAR_ADDRESS/MY_NEXTCLOUD_ADMIN_USER/$CALDAV_CALENDAR"
+CALDAV_REQUEST_OUTPUT_FILE=MY_TMPDIR/calendar_output_results
+CALDAV_DATE_RANGE_FILE=MY_TMPDIR/calendar_start_end_dates
+TEXT2SPEECH_INPUT_FILE=MY_TMPDIR/calendar_events_text2speech
+
+# Dates
+TIMESTAMP_START=$1
+TIMESTAMP_END=$2
+
+TODAY_START=$(date +%Y%m%d)T000000
+TODAY_END=$(date +%Y%m%d)T235900
+TOMORROW_START=$(date -d '+1 day' +%Y%m%d)T000000
+TOMORROW_END=$(date -d '+1 day' +%Y%m%d)T235900
+END_OF_ONE_WEEK=$(date -d '+7 day' +%Y%m%d)T235900
+
+# Current day and time
+TIME_NOW_HUMAN="$(date '+%Y%m%d %H%M')"
+DAY_NOW_HUMAN="$(date +%Y%m%d)"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+calendar_date_range () {
+# Start
+case "$TIMESTAMP_START" in
+[Tt][Oo][Dd][Aa][Yy])
+START="\$TODAY_START"
+;;
+[Tt][Oo][Mm][Oo][Rr][Rr][Oo][Ww])
+START="\$TOMORROW_START"
+;;
+esac
+# End
+case "$TIMESTAMP_END" in
+[Tt][Oo][Dd][Aa][Yy])
+END="\$TODAY_END"
+;;
+[Tt][Oo][Mm][Oo][Rr][Rr][Oo][Ww])
+END="\$TOMORROW_END"
+;;
+[Oo][Nn][Ee]_[Ww][Ee][Ee][Kk])
+END="\$END_OF_ONE_WEEK"
+;;
+esac
+#
+# Create dates ranges temp file
+cat > $CALDAV_DATE_RANGE_FILE <<EOF
+START=$START
+END=$END
+export START END
+EOF
+#
+# Source start and end dates file
+. $CALDAV_DATE_RANGE_FILE
+}
+
+usage () {
+if [ "x$START" = "x" ] || [ "x$END" = "x" ];
+then
+clear
+cat <<EOF
+Usage:  $(basename $0) [START (today|tomorrow)] [END (today|tomorrow|one_week)]
+EOF
+exit 1
+fi
+}
+
+calendar_events_remove_old () {
+# Remove date ranges temp file from previous run
+[ -e $CALDAV_DATE_RANGE_FILE ] && rm -f $CALDAV_DATE_RANGE_FILE
+# Remove text2speech input temp file from previous run
+[ -e $TEXT2SPEECH_INPUT_FILE ] && sudo rm -f $TEXT2SPEECH_INPUT_FILE
+}
+
+calendar_query_by_date () {
+
+        req_type_basic=false
+        START=$1
+
+    if [[ -n $CALDAV_USER_PASS ]]; then
+        request="curl --silent -k --user $CALDAV_USER_PASS -X REPORT "
+    else
+        request="curl --silent -X REPORT "
+    fi
+
+    request=$request" --header 'Depth: 1'"
+    request=$request" --header 'Prefer: return-minimal'"
+    request=$request" --header 'Content-Type: application/xml; charset=utf-8'"
+    #request=$request" --header 'Content-Length: 0'"
+    request=$request" --data-binary '<C:calendar-query xmlns:D=\"DAV:\" xmlns:C=\"urn:ietf:params:xml:ns:caldav\">"
+    if [[ $req_type_basic == true ]]; then
+        prop='    <D:prop>
+        <D:getetag />
+        <C:calendar-data />
+    </D:prop>'
+        filter='    <C:filter>
+        <C:comp-filter name="VCALENDAR" />
+    </C:filter>'
+    else
+        prop='
+        <D:prop>
+          <D:getetag/>
+            <C:calendar-data>
+              <C:comp name="VCALENDAR">
+                <C:prop name="VERSION"/>
+                <C:comp name="VEVENT">
+                  <C:prop name="SUMMARY"/>
+                  <C:prop name="UID"/>
+                  <C:prop name="DTSTART"/>
+                  <C:prop name="DTEND"/>
+                  <C:prop name="DURATION"/>
+                  <C:prop name="RRULE"/>
+                  <C:prop name="RDATE"/>
+                  <C:prop name="EXRULE"/>
+                  <C:prop name="EXDATE"/>
+                  <C:prop name="RECURRENCE-ID"/>'
+        prop=$prop'
+              </C:comp>
+              <C:comp name="VTIMEZONE" />
+            </C:comp>
+          </C:calendar-data>
+        </D:prop>'
+        filter='
+    <C:filter>
+      <C:comp-filter name="VCALENDAR">
+        <C:comp-filter name="VEVENT">
+          <C:time-range start="'$START
+        if [[ -n $2 ]]; then
+            END=$2
+            filter=$filter'" end="'$END'"/>'
+        else
+            filter=$filter'" />'
+        fi
+        filter=$filter"
+        </C:comp-filter>
+      </C:comp-filter>
+    </C:filter>"
+    fi
+    request=$request$prop$filter
+    request=$request"</C:calendar-query>'"
+    request=$request" --url $CALDAV_URL"
+}
+
+calendar_format_request_output () {
+eval $request | grep -E "(SUMMARY:|DTSTART;|DTEND;)" | sed "s/SUMMARY://g" | sed "s/DTSTART;VALUE=DATE:/|/g" | sed "s/DTEND;VALUE=DATE:/|/g" | sed "s:DTSTART;TZID=:|:g" | sed "s:DTEND;TZID=:|:g" | awk 'NR%3{printf "%s ",$0;next;}1' > $CALDAV_REQUEST_OUTPUT_FILE
+}
+
+calendar_events_quit_if_null () {
+# Quit if no calendar entries found
+[ -s $CALDAV_REQUEST_OUTPUT_FILE ] || exit 0
+}
+
+populate_text2speech_input_file () {
+# Cycle through calendar results
+cat $CALDAV_REQUEST_OUTPUT_FILE | while read LINE
+do
+
+CALENDAR_EVENT="$(echo $LINE | cut -d '|' -f1 | sed 's: $::g')"
+#CALENDAR_EVENT_START="$(echo $LINE | cut -d '|' -f2 | sed 's: ::g')"
+CALENDAR_EVENT_START="$(echo $LINE | cut -d '|' -f2 | sed 's: ::g' | cut -d ':' -f2)"
+CALENDAR_EVENT_END="$(echo $LINE | cut -d '|' -f3 | sed 's: ::g' | cut -d ':' -f2)"
+#CALENDAR_EVENT_END="$(echo $LINE | cut -d '|' -f3 | sed 's: ::g')"
+DIGITS_START=$(echo $CALENDAR_EVENT_START| awk '{ print length }')
+
+# Different between appointments and all-day events
+if [ "$DIGITS_START" -gt "8" ]
+then
+# Format Timestamp into human readable date
+TIME_START_HUMAN="$(echo $CALENDAR_EVENT_START | cut -d 'T' -f1) $(echo $CALENDAR_EVENT_START | cut -d 'T' -f2 | head -c4)"
+TIME_START_AM_PM=$(echo $(date -d "$TIME_START_HUMAN" +'%p') | sed 's/./& /g')
+TIME_END_HUMAN="$(echo $CALENDAR_EVENT_END | cut -d 'T' -f1) $(echo $CALENDAR_EVENT_END | cut -d 'T' -f2 | head -c4)"
+TIME_END_AM_PM=$(echo $(date -d "$TIME_END_HUMAN" +'%p') | sed 's/./& /g')
+# Convert to Epoch timestamp
+TIME_START_EPOCH=$(date --date "$TIME_START_HUMAN" +%s)
+TIME_END_EPOCH=$(date --date "$TIME_END_HUMAN" +%s)
+TIME_NOW_EPOCH=$(date +%s)
+ 
+# Make start time human readable
+if [ "$(echo $TIME_START_HUMAN | awk {'print $1'})" = "$DAY_NOW_HUMAN" ];
+then
+APPOINTMENT_TIME_START="Today at $(date --date "$TIME_START_HUMAN" '+%l %M') $TIME_START_AM_PM"
+else
+APPOINTMENT_TIME_START="$(date -d "$TIME_START_HUMAN" +'%A %e %B at %l %M') $TIME_START_AM_PM"
+fi
+# Make end time human readable
+if [ "$(echo $TIME_END_HUMAN | awk {'print $1'})" = "$DAY_NOW_HUMAN" ];
+then
+APPOINTMENT_TIME_END="at $(date --date "$TIME_END_HUMAN" '+%l %M') $TIME_END_AM_PM"
+else
+APPOINTMENT_TIME_END="$(date -d "$TIME_END_HUMAN" +'%A %e %B at %l %M') $TIME_END_AM_PM"
+fi
+
+# If appointment time has not yet started
+if [ "$TIME_START_EPOCH" -gt "$TIME_NOW_EPOCH" ];
+then
+
+# Output 2 speech2text input file
+echo Appointment:  $CALENDAR_EVENT starts $APPOINTMENT_TIME_START and ends $APPOINTMENT_TIME_END >> $TEXT2SPEECH_INPUT_FILE
+
+# If appointmentment started but has not ended 
+elif [ "$TIME_END_EPOCH" -gt "$TIME_NOW_EPOCH" ];
+then
+
+# Output 2 speech2text input file
+echo Appointment:  $CALENDAR_EVENT already started $APPOINTMENT_TIME_START, so it appears like you are running late. This appointment will end $APPOINTMENT_TIME_END >> $TEXT2SPEECH_INPUT_FILE
+
+else
+continue
+fi
+
+else
+# Make start day human readable
+if [ "$CALENDAR_EVENT_START" = "$DAY_NOW_HUMAN" ];
+then
+DAY_START_HUMAN=Today
+else
+DAY_START_HUMAN=$(date -d "$CALENDAR_EVENT_START" +'%A %e %B')
+fi
+# Make end day human readable
+if [ "$CALENDAR_EVENT_END" = "$DAY_NOW_HUMAN" ];
+then
+DAY_END_HUMAN=Today
+else
+DAY_END_HUMAN=$(date -d "$CALENDAR_EVENT_END" +'%A %e %B')
+fi
+
+# Output 2 speech2text input file
+echo Event:  $CALENDAR_EVENT starts $DAY_START_HUMAN and ends $DAY_END_HUMAN >> $TEXT2SPEECH_INPUT_FILE
+
+fi
+
+done
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+calendar_events_remove_old
+
+calendar_date_range 
+
+usage
+
+calendar_query_by_date $START $END
+
+calendar_format_request_output
+
+calendar_events_quit_if_null
+
+populate_text2speech_input_file
