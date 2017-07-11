@@ -1039,6 +1039,7 @@ PKG_LEFTOVERS_EXIST=$?
 
 uninstall_python_pkgs () {
 [ ! -d $PYTHON_SITEDIR/$1 ] || rm -rf $PYTHON_SITEDIR/$1
+[ -d $PYTHON_SITEDIR/$1*.egg ] && rm -rf $PYTHON_SITEDIR/$1*.egg
 whereis $1 > /dev/null
 PKG_LEFTOVERS_EXIST=$?
 [ "$PKG_LEFTOVERS_EXIST" != "0" ] || rm -rf `whereis $1`

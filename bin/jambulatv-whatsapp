@@ -13,6 +13,9 @@ WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
 WHATSAPP_TEXT_MESSAGE="$3"
 WHATSAPP_REGISTRATION_METHOD=sms
 
+PING_TIMEOUT=3 #9
+PING_IP_ADDRESS=8.8.8.8
+
 
 
 ###############
@@ -37,6 +40,20 @@ exit 1
 fi
 ;;
 esac
+}
+
+check_internet_access () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+ping -w $PING_TIMEOUT $PING_IP_ADDRESS > /dev/null 2>&1
+INTERNET_ALIVE=$?
+if [ "$INTERNET_ALIVE" != "0" ];
+then
+#
+cat <<EOF
+ERROR ($(basename $basename $0)): Unable to connect to WhatsApp. Check your Internet connection"
+EOF
+exit 0
+fi
 }
 
 registration_status () {
@@ -156,7 +173,7 @@ You have chosen the following mobile network as your carrier for WhatsApp:
 
 ===============================================================================
 
-Phone Number used for receiving:	$WHATSAPP_PHONE_NUMBER_SENDER
+Phone Number used for receiving:	$WHATSAPP_PHONE_NUMBER_RECIPIENT
 Phone Number used for sending:		$WHATSAPP_PHONE_NUMBER_SENDER
 
 Mobile Network:				$NETWORK_NAME
@@ -244,6 +261,8 @@ EOF
 #  MAIN SCRIPT  #
 #################
 usage
+
+check_internet_access
 
 case $WHATSAPP_METHOD_NAME in
 [Rr][Ee][Gg][Ii][Ss][Tt][Ee][Rr])

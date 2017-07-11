@@ -167,6 +167,12 @@ squid_install
 squid_configure
 }
 
+upgrade_yowsup () {
+uninstall_python_pkgs yowsup
+uninstall_python_pkgs yowsup-cli
+yowsup2_install 
+}
+
 
 
 #################
@@ -216,3 +222,5 @@ squid_configure
 #upgrade_youtube_dl 
 
 #upgrade_squid
+
+#upgrade_yowsup
