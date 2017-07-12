@@ -1,0 +1,38 @@
+--- kodi/xbmc/network/upnp/UPnP.cpp.orig	2017-07-12 11:15:34.361959572 +0300
++++ kodi/xbmc/network/upnp/UPnP.cpp	2017-07-12 11:20:02.177027341 +0300
+@@ -638,12 +638,12 @@
+                     CSettings::Get().GetInt("services.webserverport"),
+                     "/").ToString();
+ 
+-    device->m_ModelName        = "Kodi";
++    device->m_ModelName        = "JambulaTV";
+     device->m_ModelNumber      = g_infoManager.GetVersion().c_str();
+-    device->m_ModelDescription = "Kodi - Media Server";
+-    device->m_ModelURL         = "http://kodi.tv/";
+-    device->m_Manufacturer     = "XBMC Foundation";
+-    device->m_ManufacturerURL  = "http://kodi.tv/";
++    device->m_ModelDescription = "JambulaTV - Media Renderer";
++    device->m_ModelURL         = "http://www.jambulatv.com/";
++    device->m_Manufacturer     = "Jambula Labs";
++    device->m_ManufacturerURL  = "http://www.jambulalabs.com/";
+ 
+     device->SetDelegate(device);
+     return device;
+@@ -720,12 +720,12 @@
+         NPT_HttpUrl(m_IP.c_str(),
+                     CSettings::Get().GetInt("services.webserverport"),
+                     "/").ToString();
+-    device->m_ModelName        = "Kodi";
++    device->m_ModelName        = "JambulaTV";
+     device->m_ModelNumber      = g_infoManager.GetVersion().c_str();
+-    device->m_ModelDescription = "Kodi - Media Renderer";
+-    device->m_ModelURL         = "http://kodi.tv/";
+-    device->m_Manufacturer     = "XBMC Foundation";
+-    device->m_ManufacturerURL  = "http://kodi.tv/";
++    device->m_ModelDescription = "JambulaTV - Media Renderer";
++    device->m_ModelURL         = "http://www.jambulatv.com/";
++    device->m_Manufacturer     = "Jambula Labs";
++    device->m_ManufacturerURL  = "http://www.jambulalabs.com/";
+ 
+     return device;
+ }
