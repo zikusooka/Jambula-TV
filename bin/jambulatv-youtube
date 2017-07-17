@@ -8,25 +8,40 @@
 # Variables
 YOUTUBE_USER_URL="https://www.youtube.com/user"
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
+YOUTUBE_VARIABLES_TEMP_FILE="/tmp/youtube_variables"
 CURL_CMD="/usr/bin/curl -s"
 
 # Favorite youtube video IDs
 # --------------------------
 NTV_LIVE_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/ntvuganda | grep -i "NTV Uganda Live Stream" | grep watch? | grep live-promo | cut -d ";" -f2 | cut -d = -f4 | cut -d "\"" -f1)
-BUKEDDE_LIVE_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/bukeddetv | grep -i "Bukedde TV Live Stream" | grep watch? | grep live-promo | cut -d ";" -f2 | cut -d = -f4 | cut -d "\"" -f1)
+SPARK_LIVE_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/ntvuganda | grep -i "Spark TV Live Stream" | grep watch? | grep live-promo | cut -d ";" -f2 | cut -d = -f4 | cut -d "\"" -f1)
+KTN_LIVE_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/standardgroupkenya | grep -i "KTN News Live Stream" | grep watch? | grep live-promo | cut -d ";" -f2 | cut -d = -f4 | cut -d "\"" -f1)
 
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+#
+# Set Channel
+CHANNEL=$(echo $@ | sed 's:"::g')
+#
 # Set Youtube Video ID
-case "$1" in
-# NTV Uganda
-[Nn][Tt][Vv][Uu][Gg][Aa][Nn][Dd][Aa])
+case "$CHANNEL" in
+# NTV Uganda | NTV
+[Nn][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa]|[Nn][Tt][Vv])
 YOUTUBE_VIDEO_ID=$NTV_LIVE_VIDEO_ID
 ;;
-# Bukedde Uganda
-[Bb][Uu][Kk][Ee][Dd][Dd][Ee])
-YOUTUBE_VIDEO_ID=$BUKEDDE_LIVE_VIDEO_ID
+# Spark Uganda | Spark
+[Ss][Pp][Aa][Rr][Kk]*[Uu][Gg][Aa][Nn][Dd][Aa]|[Ss][Pp][Aa][Rr][Kk])
+YOUTUBE_VIDEO_ID=$SPARK_LIVE_VIDEO_ID
+;;
+# KTN Kenya | KTN
+[Kk][Tt][Nn]*[Kk][Ee][Nn][Yy][Aa]|[Kk][Tt][Nn])
+YOUTUBE_VIDEO_ID=$KTN_LIVE_VIDEO_ID
 ;;
 *)
-YOUTUBE_VIDEO_ID=$1
+YOUTUBE_VIDEO_ID="$CHANNEL"
 esac
 
 # Quit if no Youtube ID is found 
@@ -34,12 +49,21 @@ $YOUTUBE_DL_CMD --get-id $YOUTUBE_VIDEO_ID > /dev/null 2>&1
 YTEXITVAL=$?
 if [ "$YTEXITVAL" != "0" ];
 then
-echo "Error: No Youtube ID was found for $1, quitting ..."
+echo "Error: No Youtube ID was found for $CHANNEL, quitting ..."
 exit 0
 fi
 
 # Youtube Manifest URL
 YOUTUBE_MANIFEST_URL=$($YOUTUBE_DL_CMD -g $YOUTUBE_VIDEO_ID | grep http | head -1)
+
+# Remove Youtube variables temp file if it exists
+[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && rm -f $YOUTUBE_VARIABLES_TEMP_FILE
+
+# Create a Youtube variables temp file for other tools to use
+cat > $YOUTUBE_VARIABLES_TEMP_FILE <<EOF
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
+YOUTUBE_MANIFEST_URL=$YOUTUBE_MANIFEST_URL
+EOF
 
 # Export set Youtube variables
 export YOUTUBE_VIDEO_ID YOUTUBE_MANIFEST_URL
