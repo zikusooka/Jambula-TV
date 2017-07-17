@@ -6,18 +6,23 @@
 FFMPEG_CMD=/usr/bin/ffmpeg
 
 YOUTUBE_CMD=/usr/bin/jambulatv-youtube
+YOUTUBE_VARIABLES_TEMP_FILE=$(grep ^YOUTUBE_VARIABLES_TEMP_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g')
 
 IPTV_SERVICE_PROVIDER=JambulaIPTV
 IPTV_USER_AGENT="Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible"
-IPTV_SERVICE_NAME=$1
+IPTV_SERVICE_NAME="$(echo $@ | sed 's:"::g')"
 
 
 
 #################
 #  MAIN SCRIPT  #
 #################
-# Source Youtube video ID from JambulaTV's youtube command
-. $YOUTUBE_CMD
+# Source Youtube video manifest URL from JambulaTV's youtube command
+$YOUTUBE_CMD "$IPTV_SERVICE_NAME" > /dev/null &
+YOUTUBE_MANIFEST_URL="$(grep YOUTUBE_MANIFEST_URL $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2)"
 
 # Run stream via Ffmpeg Pipe
-$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$IPTV_USER_AGENT" -i $YOUTUBE_MANIFEST_URL -codec copy -bsf:v h264_mp4toannexb,dump_extra -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=$IPTV_SERVICE_NAME -tune zerolatency -f mpegts pipe:1
+$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$IPTV_USER_AGENT" -i $YOUTUBE_MANIFEST_URL -codec copy -bsf:v h264_mp4toannexb,dump_extra -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name="$IPTV_SERVICE_NAME" -tune zerolatency -f mpegts pipe:1
+
+# Remove Youtube temp variables file in case of next run
+[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && rm -f $YOUTUBE_VARIABLES_TEMP_FILE
