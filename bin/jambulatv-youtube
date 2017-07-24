@@ -7,15 +7,25 @@
 
 # Variables
 YOUTUBE_USER_URL="https://www.youtube.com/user"
+YOUTUBE_CHANNEL_URL="https://www.youtube.com/channel"
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
 YOUTUBE_VARIABLES_TEMP_FILE="/tmp/youtube_variables"
 CURL_CMD="/usr/bin/curl -s"
 
 # Favorite youtube video IDs
 # --------------------------
-NTV_LIVE_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/ntvuganda | grep -i "NTV Uganda Live Stream" | grep watch? | grep live-promo | cut -d ";" -f2 | cut -d = -f4 | cut -d "\"" -f1)
-SPARK_LIVE_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/ntvuganda | grep -i "Spark TV Live Stream" | grep watch? | grep live-promo | cut -d ";" -f2 | cut -d = -f4 | cut -d "\"" -f1)
-KTN_LIVE_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/standardgroupkenya | grep -i "KTN News Live Stream" | grep watch? | grep live-promo | cut -d ";" -f2 | cut -d = -f4 | cut -d "\"" -f1)
+# NTV Uganda
+NTV_UGANDA_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/ntvuganda | grep -i "NTV Uganda Livestream" | grep -oP '(?<=href="/watch).+?(?=">NTV Uganda Livestream</a>)' | sed "s:?v=::g" | uniq)
+
+# Spark TV Uganda
+SPARK_TV_UGANDA_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/ntvuganda | grep -i "Spark TV Live Stream" | grep -oP '(?<=href="/watch).+?(?=">Spark TV Live Stream</a>)' | sed "s:?v=::g" | uniq)
+
+# KTN Kenya (Nairobi Kenya)
+KTN_KENYA_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/standardgroupkenya | grep -i "KTN News Live Stream" | grep -oP '(?<=href="/watch).+?(?=">KTN News Live Stream \(Nairobi Kenya\)</a>)' | sed "s:?v=::g" | uniq)
+
+# NTV Kenya
+NTV_KENYA_LIVE_CHANNEL_PAGE_ID=$($CURL_CMD $YOUTUBE_USER_URL/qtvkenya/channels | awk -F: '/title="Live"/ { print $0 }' | grep -oP '(?<=href="/channel/).+?(?=">Live</a>)' | uniq)
+NTV_KENYA_VIDEO_ID=$($CURL_CMD $YOUTUBE_CHANNEL_URL/$NTV_KENYA_LIVE_CHANNEL_PAGE_ID | grep "NTV Kenya Live Stream" | grep -oP '(?<=href="/watch).+?(?=">NTV Kenya Live Stream</a>)' | sed "s:?v=::g")
 
 
 
@@ -28,17 +38,21 @@ CHANNEL=$(echo $@ | sed 's:"::g')
 #
 # Set Youtube Video ID
 case "$CHANNEL" in
-# NTV Uganda | NTV
-[Nn][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa]|[Nn][Tt][Vv])
-YOUTUBE_VIDEO_ID=$NTV_LIVE_VIDEO_ID
+# NTV Uganda | NTVU
+[Nn][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa]|[Nn][Tt][Vv][Uu])
+YOUTUBE_VIDEO_ID=$NTV_UGANDA_VIDEO_ID
 ;;
 # Spark Uganda | Spark
 [Ss][Pp][Aa][Rr][Kk]*[Uu][Gg][Aa][Nn][Dd][Aa]|[Ss][Pp][Aa][Rr][Kk])
-YOUTUBE_VIDEO_ID=$SPARK_LIVE_VIDEO_ID
+YOUTUBE_VIDEO_ID=$SPARK_TV_UGANDA_VIDEO_ID
 ;;
 # KTN Kenya | KTN
 [Kk][Tt][Nn]*[Kk][Ee][Nn][Yy][Aa]|[Kk][Tt][Nn])
-YOUTUBE_VIDEO_ID=$KTN_LIVE_VIDEO_ID
+YOUTUBE_VIDEO_ID=$KTN_KENYA_VIDEO_ID
+;;
+# NTV Kenya | NTVK
+[Nn][Tt][Vv]*[Kk][Ee][Nn][Yy][Aa]|[Nn][Tt][Vv][Kk])
+YOUTUBE_VIDEO_ID=$NTV_KENYA_VIDEO_ID
 ;;
 *)
 YOUTUBE_VIDEO_ID="$CHANNEL"

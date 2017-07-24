@@ -7,14 +7,22 @@
 # Variables
 CURL_CMD="/usr/bin/curl -s"
 OSD_CMD="/usr/bin/jambulatv-osd"
+TIMEOUT_PROBE="60s"
+TIMEOUT_CMD="/usr/bin/timeout $TIMEOUT_PROBE"
+FFPROBE_CMD="$TIMEOUT_CMD /usr/bin/ffprobe"
+FFPROBE_OPTS="-hide_banner"
+YOUTUBE_CMD="/usr/bin/jambulatv-youtube"
+YOUTUBE_VARIABLES_TEMP_FILE=$(grep ^YOUTUBE_VARIABLES_TEMP_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g')
 
-TVHEADEND_IPTV_LOG_DIR=MY_TVHEADEND_IPTV_LOG_DIR
-TVHEADEND_IPTV_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/scan-full.$(date +%Y%m%d).log
-TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/scan-error.$(date +%Y%m%d).log
+# Email
+EMAIL_CREDENTIALS_CONFIG=MY_EMAIL_CREDENTIALS_CONFIG
+EMAIL_NOTIFICATION_ADDRESS=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+EMAIL_SCRIPT="MY_EMAIL_VIA_GMAIL_CMD"
 
 PING_COUNT=1 #9
 PING_IP_ADDRESS=8.8.8.8
 
+# TVHeadend
 TVHEADEND_HTTP_IP=MY_TVHEADEND_HTTP_IP
 TVHEADEND_HTTP_PORT=MY_TVHEADEND_HTTP_PORT
 TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
@@ -23,16 +31,22 @@ TVHEADEND_CONFIG_DIR=MY_TVHEADEND_CONFIG_DIR
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
 TVHEADEND_CHANNELS_TAGS_DIR=$TVHEADEND_CONFIG_DIR/channel/tag
 TVHEADEND_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/dvb/networks
+TVHEADEND_IPTV_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/iptv/networks
 TVHEADEND_IPTV_NETWORK_NAME=MY_TVHEADEND_IPTV_NETWORK_NAME
 TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid' | sed 's:"::g')
 TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=/tmp/iptv_service_uuid.txt
 TVHEADEND_LAST_CHANNEL_NUMBER=$($CURL_CMD $TVHEADEND_API_URL/channel/grid?limit=100000 | jq '.entries[] | .number' | sort -n | tail -1)
 let "TVHEADEND_DVB_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
 let "TVHEADEND_IPTV_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
+TVHEADEND_IPTV_LOG_DIR=MY_TVHEADEND_IPTV_LOG_DIR
+TVHEADEND_IPTV_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/scan-full.$(date +%Y%m%d%H%M).log
+TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/scan-error.$(date +%Y%m%d%H%M).log
+TVHEADEND_IPTV_SERVICE_LOG_FILE=/tmp/iptv_service_output.log
 PLAYLISTS_DIRECTORY=MY_PLAYLISTS_DIRECTORY
 PLAYLISTS_IPTV_WORLD_M3U_FILE=MY_PLAYLISTS_IPTV_WORLD_M3U_FILE
+PLAYLISTS_PORT=MY_PLAYLISTS_PORT
 PROJECT_SYSTEM_ICONS_DIR=MY_PROJECT_SYSTEM_ICONS_DIR
-DVBT_NETWORK_NAME=MY_DVBT_NETWORK_NAME
+DVBT_NETWORK_NAME=MY_TVHEADEND_TV_MARKET
 DVBT_PNETWORK_NAME=$DVBT_NETWORK_NAME
 MULTIMEDIA_USER=MY_MULTIMEDIA_USER
 
@@ -40,7 +54,13 @@ INTERNET_GATEWAY_IP=$(ip route list | grep default | sed -n 's/^.*via //p' | awk
 
 TV_TYPE=$1
 TV_TASK=$2
+# Full, or Incremental scan
+if [ "x$3" = "x" ];
+then
+TV_MEASURE="incremental"
+else
 TV_MEASURE=$3
+fi
 
 
 
@@ -98,9 +118,9 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_IPTV_LOG_DIR
 # Date stamp log file
 cat >> $TVHEADEND_IPTV_FULL_LOG_FILE <<EOT
 
-**********************************************************************
+###############################################################################
 IPTV [$TV_MEASURE] services scan performed on:  $(date)
-**********************************************************************
+###############################################################################
 
 EOT
 }
@@ -119,13 +139,8 @@ fi
 
 refresh_tvheadend () {
 # Probably better to use TVH API for this, so we dont stop completely
-# Delete Internet default route - Save IP first
-GATEWAY=$INTERNET_GATEWAY_IP
-sudo ip route del default
 # Restart TVHeadend
 sudo systemctl restart tvheadend.service
-# Restore Internet default route
-sudo ip route add default via $GATEWAY
 }
 
 pre_config () {
@@ -148,7 +163,17 @@ refresh_tvheadend
 
 scan_osd_notice () {
 # Display notice
-$OSD_CMD -m "Scanning of $2 network started.  Please be patient ..." > /dev/null 2>&1 &
+$OSD_CMD -m "Scanning of $1 network started. This will take some time, please be patient ..." > /dev/null 2>&1 &
+}
+
+email_failed_iptv_notice () {
+# Email notice regarding failed IPTV streams
+$EMAIL_SCRIPT $EMAIL_NOTIFICATION_ADDRESS "[JambulaTV]: IPTV services failed" "The following IPTV streams are no longer working.  Please notify the support team immediately" $TVHEADEND_IPTV_FAILED_LOG_FILE
+}
+
+zap_dead_services () { 
+# Find dead services and remove them 
+$CURL_CMD $TVHEADEND_API_URL/service/removeunseen 
 }
 
 zap_dead_channels () { 
@@ -161,6 +186,11 @@ done
 refresh_tvheadend
 }
 
+
+############
+#  DVB-T2  #
+############
+# 
 configure_dvb_network () {
 # Configure network that will be used and type
 [ -d $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID ] || \
@@ -226,7 +256,13 @@ fi
 dvb_add_channel_tags () {
 for TAG_NAME in "Free-To-Air" "Local" "$DVBT_NETWORK_NAME"
 do
+
 TAG_UUID=$(uuidgen -t | sed 's:-::g')
+TAG_EXISTS=$($CURL_CMD $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | sed 's:"::g' | head -1)
+#
+# Test for existence of channel tag
+if [ "$TAG_EXISTS" != "true" ];
+then
 # Create channel tag(s)
 cat > $TVHEADEND_CHANNELS_TAGS_DIR/$TAG_UUID <<EOF
 {
@@ -240,6 +276,8 @@ cat > $TVHEADEND_CHANNELS_TAGS_DIR/$TAG_UUID <<EOF
 	"comment": "DVB-T2 $TAG_NAME Channels"
 }
 EOF
+fi
+
 done
 # Refresh tvheadend
 refresh_tvheadend
@@ -248,6 +286,9 @@ refresh_tvheadend
 dvb_map_services_2_channels () {
 # Remove dead channels
 zap_dead_channels
+# Remove dead services
+zap_dead_services
+#
 # Set DIGIT i.e. First channel number
 if [ "x$TVHEADEND_DVB_FIRST_CHANNEL_NUMBER" = "x" ];
 then
@@ -295,46 +336,176 @@ let "DIGIT = $CHANNEL_NUMBER + 1"
 done
 }
 
+
+##########
+#  IPTV  #
+##########
+#
+configure_iptv_network () {
+# Test for existing IPTV network
+if [ "x$TVHEADEND_IPTV_NETWORK_UUID" != "x" ];
+then
+# Proceed if there's already an IPTV network
+echo "Error: $TVHEADEND_IPTV_NETWORK_NAME network already exists.  Proceeding ..."
+continue
+
+else
+# Since this is new setup, generate UUID
+TVHEADEND_IPTV_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
+fi
+
+# Configure iptv_network. NOTE: This was pulled from functions/install files
+# --------------------------------------------------------------------------
+# Create tvheadend IPTV directory if it does not exist
+[ -d $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID ] || \
+	mkdir -p $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID
+#
+# Create IPTV Network i.e. jambulaIPTV
+cat > $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config << EOF
+{
+	"url": "http://$TVHEADEND_HTTP_IP:$PLAYLISTS_PORT/jambula-iptv.m3u8",
+	"bouquet": false,
+	"channel_number": 31,
+	"refetch_period": 60,
+	"ssl_peer_verify": false,
+	"tsid_zero": true,
+	"remove_args": "ticket",
+	"scan_create": false,
+	"service_sid": 0,
+	"priority": 1,
+	"spriority": 1,
+	"max_streams": 1,
+	"max_bandwidth": 0,
+	"max_timeout": 120,
+	"icon_url": "file://$PROJECT_SYSTEM_ICONS_DIR/IPTV",
+	"networkname": "$TVHEADEND_IPTV_NETWORK_NAME",
+	"pnetworkname": "JambulaTV",
+	"nid": 0,
+	"autodiscovery": 0,
+	"skipinitscan": true,
+	"idlescan": false,
+	"sid_chnum": false,
+	"ignore_chnum": true,
+	"satip_source": 0,
+	"localtime": 180,
+	"wizard": false
+}
+EOF
+# Give multimedia user permission to access tvheadend directories
+chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+#
+# Refresh tvheadend
+refresh_tvheadend
+}
+
 iptv_test_stream () {
+# Stream variables
+MUX_URL="$TVHEADEND_PLAY_STREAM_URL/mux/$MUX_UUID"
+PLAYLIST_URL=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_url' | sed 's:"::g')
+PLAYLIST_CATEGORY=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_tags' | sed 's:"::g' | head -1)
+PLAYLIST_CHANNEL=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_sname' | sed 's:"::g' | head -1)
+PLAYLIST_PIPE_COMMAND="$(echo $PLAYLIST_URL | sed 's|pipe://||g')"
+
 # Add to log file
 echo 2>&1 | tee -a $TVHEADEND_IPTV_FULL_LOG_FILE << EOF
 
+
+*******************************************************************************
 JambulaTV: Testing IPTV stream: [$SERVICE_NAME], please wait ...
-----------------------------------------------------------------
+*******************************************************************************
 
 EOF
-# Play stream
-cvlc --file-logging --logfile $TVHEADEND_IPTV_FULL_LOG_FILE --no-video --no-audio -A alsa $TVHEADEND_PLAY_STREAM_URL/mux/$MUX_UUID --run-time 5 vlc://quit | grep 'core error: VLC is unable to open the MRL'
-VLC_EXIT_STATUS=$?
-# Log failures
-[ "$VLC_EXIT_STATUS" = "0" ] || \
+
+# Probe remote stream using ffprobe i.e. play mux briefly to add service
+$FFPROBE_CMD $FFPROBE_OPTS $MUX_URL 2>&1 | tee -a $TVHEADEND_IPTV_FULL_LOG_FILE > $TVHEADEND_IPTV_SERVICE_LOG_FILE
+
+# Check if service was added i.e. Remote Link works
+SERVICE_ADDED=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .num_svc' | sed 's:"::g')
+
+# Test for whether stream was working
+if [ "$SERVICE_ADDED" != "1" ];
+then
+# Log failed streams
 cat >> $TVHEADEND_IPTV_FAILED_LOG_FILE << STREAMLOG
-JambulaTV: Can not connect to stream :$SERVICE_NAME
-VLC_EXIT_STATUS=$VLC_EXIT_STATUS
+
+*******************************************************************************
+$PLAYLIST_CHANNEL ($PLAYLIST_CATEGORY)
+*******************************************************************************
+
+Link:	$PLAYLIST_URL
+
+Error:	$(cat $TVHEADEND_IPTV_SERVICE_LOG_FILE)
+
 STREAMLOG
+fi
 }
 
-iptv_add_channel_tags () {
-cat ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_IPTV_WORLD_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | sort -u | while read IPTV_CHANNEL
-do
-TAG_NAME=$IPTV_CHANNEL 
-TAG_UUID=$(uuidgen -t | sed 's:-::g')
-# Create channel tag(s)
-cat > $TVHEADEND_CHANNELS_TAGS_DIR/$TAG_UUID <<EOF
-{
-	"enabled": true,
-	"index": 0,
-	"name": "$TAG_NAME",
-	"internal": false,
-	"private": false,
-	"icon": "",
-	"titled_icon": false,
-	"comment": "IPTV $TAG_NAME Channels"
+iptv_scan_add_muxes () {
+# Force scan of IPTV network
+$CURL_CMD $TVHEADEND_API_URL/mpegts/network/scan -d uuid=$TVHEADEND_IPTV_NETWORK_UUID > /dev/null 2>&1
 }
-EOF
+
+iptv_scan_add_services () {
+# Check for Internet connectivity 
+check_internet_access
+# timestamp log file
+log_file
+#
+# Remove dead services
+zap_dead_services
+#
+# OSD otify of scan
+scan_osd_notice $TVHEADEND_IPTV_NETWORK_NAME
+#
+# ----------------------------------------------------------
+# Cycle through all IPTV MUX IDs and test to create services
+# ----------------------------------------------------------
+#
+$CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.network_uuid=="'"$TVHEADEND_IPTV_NETWORK_UUID"'") | .uuid' | sed 's:"::g' | while read MUX_UUID
+
+do
+# Do not play if we already have a service
+SERVICE_ADDED=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .num_svc' | sed 's:"::g')
+SERVICE_NAME=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .name' | sed 's:"::g' | sed "s:$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g")
+# Pipe stream variables
+PLAYLIST_URL=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_url' | sed 's:"::g')
+PLAYLIST_CHANNEL=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_sname' | sed 's:"::g' | head -1)
+PLAYLIST_PIPE_COMMAND="$(echo $PLAYLIST_URL | sed 's|pipe://||g')"
+#
+echo $PLAYLIST_URL | grep $PLAYLIST_PIPE_COMMAND > /dev/null 2>&1
+IS_YPIPE=$?
+
+# Test stream i.e. create service depending on whether full or incremental is specified
+case $1 in
+
+incremental)
+# Play mux i.e. Add service if no service is found or force if it is a Youtube pipe
+if [ "$SERVICE_ADDED" = "0" ] || [ "$IS_YPIPE" = "0" ];
+then
+iptv_test_stream
+fi
+;;
+
+full)
+# Play mux i.e. Add service regardless of existence of service
+iptv_test_stream
+;;
+
+*)
+# Assume this is incremental
+# Play mux i.e. Add service if no service is found or force if it is a Youtube pipe
+if [ "$SERVICE_ADDED" = "0" ] || [ "$IS_YPIPE" = "0" ];
+then
+iptv_test_stream
+fi
+;;
+esac
+
 done
-# Refresh tvheadend
-refresh_tvheadend
+#
+# Email failed IPTV streams
+email_failed_iptv_notice
+# ----------------------------------------------------------
 }
 
 iptv_map_services_2_channels () {
@@ -358,6 +529,13 @@ CHANNEL_EXISTS=$?
 #
 # Don't add if channel already exists
 [ "$CHANNEL_EXISTS" = "0" ] && continue
+
+# Play service URL using ffprobe i.e. Activate it to make it usable as a channel
+SERVICE_URL="$TVHEADEND_PLAY_STREAM_URL/service/$SERVICE_UUID"
+
+# Probe remote stream using ffprobe i.e. play mux briefly to add service
+$FFPROBE_CMD $FFPROBE_OPTS $SERVICE_URL 2>&1 | tee -a $TVHEADEND_IPTV_FULL_LOG_FILE 
+
 # Create channel config file
 cat > $TVHEADEND_CHANNELS_CONFIG_DIR/$CHANNEL_UUID <<EOF
 {
@@ -382,59 +560,36 @@ let "DIGIT = $CHANNEL_NUMBER + 1"
 done
 }
 
-iptv_scan_add_services  () {
-# timestamp log file
-log_file
-#
-# Check for Internet connectivity 
-check_internet_access
-# Cycle through all IPTV MUX IDs and test to create services
-$CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.network_uuid=="'"$TVHEADEND_IPTV_NETWORK_UUID"'") | .uuid' | sed 's:"::g' | while read MUX_UUID
-
+iptv_add_channel_tags () {
+cat ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_IPTV_WORLD_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | sort -u | while read IPTV_CHANNEL
 do
-# Do not play if we already have a service
-SERVICE_ADDED=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .num_svc' | sed 's:"::g')
-SERVICE_NAME=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .name' | sed 's:"::g' | sed "s:$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g")
 
+TAG_NAME=$IPTV_CHANNEL 
+TAG_UUID=$(uuidgen -t | sed 's:-::g')
+TAG_EXISTS=$($CURL_CMD $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | sed 's:"::g' | head -1)
 #
-# TO DO:
-# Skip for pipes?
-# Skip for plugins?
-# Use code below?
+# Refresh tvheadend
+refresh_tvheadend
 #
-#MUX_UUID=612e632357c28328f708c50696949ab8
-#SERVICE_URL_CONTAINS=$($CURL_CMD $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .iptv_url' | awk {'print $2'} | sed 's:"::g')
-#echo SERVICE_URL=[$SERVICE_URL_CONTAINS]
-#
-
-# Test stream i.e. create service depending on whether full or incremental is specified
-case $1 in
-incremental)
-# Play briefly i.e. create service
-if [ "$SERVICE_ADDED" = "0" ];
+# Test for existence of channel tag
+if [ "$TAG_EXISTS" != "true" ];
 then
-iptv_test_stream
+# Create channel tag(s)
+cat > $TVHEADEND_CHANNELS_TAGS_DIR/$TAG_UUID <<EOF
+{
+	"enabled": true,
+	"index": 0,
+	"name": "$TAG_NAME",
+	"internal": false,
+	"private": false,
+	"icon": "",
+	"titled_icon": false,
+	"comment": "IPTV $TAG_NAME Channels"
+}
+EOF
 fi
-;;
-full)
-iptv_test_stream
-;;
-*)
-if [ "$SERVICE_ADDED" = "0" ];
-then
-iptv_test_stream
-fi
-;;
-esac
 
 done
-}
-
-iptv_scan_4_services () {
-# Check for Internet connectivity 
-check_internet_access
-# Force scan of IPTV Network
-$CURL_CMD $TVHEADEND_API_URL/mpegts/network/scan -d uuid=$TVHEADEND_IPTV_NETWORK_UUID
 }
 
 
@@ -458,7 +613,7 @@ dvb_add_network
 # Scan
 elif [ "$TV_TASK" = "scan" ];
 then
-scan_osd_notice
+zap_dead_services
 dvb_scan_4_services
 # Map
 elif [ "$TV_TASK" = "map" ];
@@ -471,9 +626,14 @@ fi
 iptv)
 # Usage
 usage_iptv
-scan_osd_notice 
 
-#iptv_scan_4_services
+# Add IPTV Network
+configure_iptv_network
+
+# Add Muxes i.e. Force scan
+iptv_scan_add_muxes 
+
+# Add Services i.e. Manually play each mux found
 if [ "$TV_TASK" = "scan" ] && [ "$TV_MEASURE" = "incremental" ];
 then
 iptv_scan_add_services incremental

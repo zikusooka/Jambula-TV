@@ -21,8 +21,8 @@ IPTV_SERVICE_NAME="$(echo $@ | sed 's:"::g')"
 $YOUTUBE_CMD "$IPTV_SERVICE_NAME" > /dev/null &
 YOUTUBE_MANIFEST_URL="$(grep YOUTUBE_MANIFEST_URL $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2)"
 
-# Run stream via Ffmpeg Pipe
-$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$IPTV_USER_AGENT" -i $YOUTUBE_MANIFEST_URL -codec copy -bsf:v h264_mp4toannexb,dump_extra -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name="$IPTV_SERVICE_NAME" -tune zerolatency -f mpegts pipe:1
-
 # Remove Youtube temp variables file in case of next run
 [ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && rm -f $YOUTUBE_VARIABLES_TEMP_FILE
+
+# Run stream via Ffmpeg Pipe
+$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$IPTV_USER_AGENT" -i $YOUTUBE_MANIFEST_URL -codec copy -bsf:v h264_mp4toannexb,dump_extra -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name="$IPTV_SERVICE_NAME" -tune zerolatency -f mpegts pipe:1

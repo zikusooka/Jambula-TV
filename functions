@@ -192,6 +192,7 @@ TVHEADEND_IPTV_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
 TVHEADEND_IPTV_NETWORK_NAME=jambulaIPTV
 TVHEADEND_IPTV_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/iptv
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
+TVHEADEND_TV_MARKET=ug-Kampala
 
 PLATFORM_TAG=1.0.10
 LIBCEC_TAG=libcec-2.2.0
@@ -1513,7 +1514,7 @@ ask_4_variables () {
 # TV Market
 # ----------
 clear
-DEFAULT_TV_MARKET=UG-Kampala
+DEFAULT_TV_MARKET=$TVHEADEND_TV_MARKET
 read -p "Please enter the name of your TV Market [$DEFAULT_TV_MARKET]
 
 Examples:
@@ -2526,6 +2527,10 @@ tvheadend_dvbt_configure () {
 # NOTE: This functions will be used by other tools e.g. jambulatv-initial-setup
 #       This means functions/commands should be executable by normal user like jambula
 #
+# Create muxes directory if it does not exist
+[ -d $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes ] || \
+	mkdir -p $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes
+#
 # Copy muxes for specified TV Market
 # ----------------------------------
 rsync -av $PROJECT_CONFIGS_DIR/tvheadend/muxes/$TV_MARKET/ $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes/
@@ -2820,11 +2825,15 @@ chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 		sed -e "s:MY_TVHEADEND_HTTP_IP:$TVHEADEND_HTTP_IP:g" | \
 		sed -e "s:MY_TVHEADEND_HTTP_PORT:$TVHEADEND_HTTP_PORT:g" | \
 		sed "s:MY_TVHEADEND_CONFIG_DIR:$TVHEADEND_CONFIG_DIR:g" | \
+		sed "s:MY_TVHEADEND_TV_MARKET:$TVHEADEND_TV_MARKET:g" | \
 		sed "s:MY_TVHEADEND_IPTV_NETWORK_NAME:$TVHEADEND_IPTV_NETWORK_NAME:g" | \
 		sed "s:MY_TMPDIR:$TMPDIR:g" | \
 		sed "s:MY_PLAYLISTS_DIRECTORY:$PLAYLISTS_DIRECTORY:g" | \
 		sed "s:MY_PLAYLISTS_IPTV_WORLD_M3U_FILE:$PLAYLISTS_IPTV_WORLD_M3U_FILE:g" | \
+		sed "s:MY_PLAYLISTS_PORT:$PLAYLISTS_PORT:g" | \
 		sed "s:MY_PROJECT_SYSTEM_ICONS_DIR:$PROJECT_SYSTEM_ICONS_DIR:g" | \
+		sed "s:MY_EMAIL_CREDENTIALS_CONFIG:$EMAIL_CREDENTIALS_CONFIG:g" | \
+		sed "s:MY_EMAIL_VIA_GMAIL_CMD:$EMAIL_VIA_GMAIL_CMD:g" | \
 		sed "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
 			> $BINARY_PREFIX/jambulatv-tvheadend-controller
 # Make script executable

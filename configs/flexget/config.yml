@@ -602,7 +602,7 @@ tasks:
       # Refresh IPTV services i.e. add services if non-existent
       - /usr/bin/jambulatv-tvheadend-controller iptv scan
       # Map new IPTV services to channels if non-existent
-      - /usr/bin/jambulatv-tvheadend-controller iptv map
+      - /usr/bin/echo "/usr/bin/jambulatv-tvheadend-controller iptv map" | /usr/bin/at now + 5 min
 
 
 

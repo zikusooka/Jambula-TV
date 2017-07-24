@@ -1,0 +1,8 @@
+/var/log/JambulaTV/iptv/* {
+	weekly
+	missingok
+	rotate 52
+	compress
+	notifempty
+}
+
