@@ -48,5 +48,6 @@ whatsapp_no_sender int(15) NOT NULL,
 notification_email_address varchar(255) NOT NULL,
 gmail_address varchar(255) NOT NULL,
 gmail_password varchar(255) NOT NULL,
+news_sources varchar(255) NOT NULL,
 PRIMARY KEY (id)
 )

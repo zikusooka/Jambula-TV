@@ -38,6 +38,7 @@ SETUP_LAN_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //
 SETUP_3_4G_DONGLE_FILE=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-usb.cfg
 SETUP_MIFI_ROUTER_FILE=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-wifi.cfg
 SETUP_WIFI_DEVICES_FILE=$PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg
+SETUP_NEWS_RSS_FILE=$PROJECT_SYSTEM_CONF_DIR/rss-feeds.cfg
 
 EMAIL_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-email.cfg
 EMAIL_GMAIL_CONFIG=$PROJECT_SYSTEM_CONF_DIR/email-gmail.cfg
@@ -336,6 +337,7 @@ WHATSAPP_NO_SENDER=$(query_mysql_db whatsapp_no_sender)
 NOTIFICATION_EMAIL_ADDRESS=$(query_mysql_db notification_email_address)
 GMAIL_ADDRESS=$(query_mysql_db gmail_address)
 GMAIL_PASSWORD=$(query_mysql_db gmail_password)
+NEWS_SOURCES=$(query_mysql_db news_sources | sed 's:,: :g')
 }
 
 gmail_smtp_setup () {
@@ -439,6 +441,79 @@ sudo sed -i "s:GOOGLE_SERVICES_USERNAME:$GMAIL_ADDRESS:g" $ASTERISK_AGI_BIN_DIR/
 sudo sed -i "s:GOOGLE_SERVICES_PASSWORD:$GMAIL_PASSWORD:g" $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 }
 
+news_headlines_setup() {
+# Extract variables from mysql
+extract_setup_variables
+
+# Backup/rename existing rss file
+[ -e $SETUP_NEWS_RSS_FILE ] && sudo mv -v $SETUP_NEWS_RSS_FILE $SETUP_NEWS_RSS_FILE-old
+
+# Cycle through user chosen sources
+for SOURCE in $NEWS_SOURCES;
+do
+
+case $SOURCE in
+
+bbc_world)
+# BBC World
+cat >> $SETUP_NEWS_RSS_FILE <<FEEDS
+# BBC World
+World Political | http://feeds.bbci.co.uk/news/world/rss.xml
+World Business | http://feeds.bbci.co.uk/news/business/rss.xml
+World Technology | http://feeds.bbci.co.uk/news/technology/rss.xml
+World Sports | http://feeds.bbci.co.uk/sport/rss.xml
+
+FEEDS
+;;
+
+daily_monitor_ug)
+# Daily Monitor Uganda
+cat >> $SETUP_NEWS_RSS_FILE <<FEEDS
+# Daily Monitor Uganda
+Local Political | http://www.monitor.co.ug/News/688324-688324-view-asFeed-1116p1pz/index.xml
+Local Business | http://www.monitor.co.ug/Business/688322-688322-view-asFeed-ey54eez/index.xml
+Local Sports | http://www.monitor.co.ug/Sports/690254-690254-view-asFeed-rknahxz/index.xml
+
+FEEDS
+;;
+
+allafrica)
+# All Africa
+cat >> $SETUP_NEWS_RSS_FILE <<FEEDS
+# All Africa
+Latest News | http://allafrica.com/tools/headlines/rdf/latest/headlines.rdf
+Business | http://allafrica.com/tools/headlines/rdf/business/headlines.rdf
+Sports | http://allafrica.com/tools/headlines/rdf/sport/headlines.rdf
+Technology | http://allafrica.com/tools/headlines/rdf/ict/headlines.rdf
+
+FEEDS
+;;
+
+observer_ug)
+# Observer - Uganda
+cat >> $SETUP_NEWS_RSS_FILE <<FEEDS
+# Observer - Uganda
+Latest News | http://www.observer.ug/news/headlines/?format=feed&type=rss
+
+FEEDS
+;;
+
+chimpreports_ug)
+# Chimp Reports - Uganda
+cat >> $SETUP_NEWS_RSS_FILE <<FEEDS
+# Chimp Reports - Uganda
+Latest News | http://www.chimpreports.com/feed/
+
+FEEDS
+;;
+
+esac
+
+done
+# Change permissions of RSS file
+sudo chown $MULTIMEDIA_USER $SETUP_NEWS_RSS_FILE
+}
+
 reset_system_password () {
 # Extract variables from mysql
 extract_setup_variables
@@ -505,6 +580,8 @@ messaging_services_setup
 flexget_secrets_setup
 rtorrent_event_setup
 asterisk_google_xmpp_setup
+
+news_headlines_setup
 
 reset_system_password
 

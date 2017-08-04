@@ -19,6 +19,12 @@
  } 
  extract($_SESSION['post']); // Function to extract array.
 
+// Choose what news sources checkbox user selected
+foreach ($_POST['newssource'] as $_newssourceValue)
+    {
+        $checksub[] = $_newssourceValue;
+    }   $news_sources = implode(',', $checksub);
+
  // Initialize variables for pages that are skipped i.e. Internet device settings
  $network_apn = !empty($_POST['network_apn']) ? $_POST['network_apn'] : '';
  $mifi_ssid = !empty($_POST['mifi_ssid']) ? $_POST['mifi_ssid'] : '';
@@ -31,7 +37,7 @@
  // Connect to our MySQL Database
  $connection = mysql_connect("localhost", "JAMBULATV_SETUP_DB_USER", "JAMBULATV_SETUP_DB_PASS");
  $db = mysql_select_db("JAMBULATV_SETUP_DB_NAME", $connection); // Storing values in database. 
- $query = mysql_query("insert into setup (contact_name, contact_email, contact_phone, contact_birthday, contact_address1, contact_address2, contact_city, contact_country, system_password, isp_name, internet_device, wifi_nickname_1, wifi_mac_1, wifi_nickname_2, wifi_mac_2, wifi_nickname_3, wifi_mac_3, wifi_nickname_4, wifi_mac_4, wifi_nickname_5, wifi_mac_5, network_apn, mifi_ssid, mifi_pass, lan_ip_addr, lan_ip_gate, lan_dns_1, lan_dns_2, tvh_dvbt_config_requested, tv_market, dvbt_tuner_name, schedule_tvseries, schedule_podcasts, schedule_movies, traktv_username, traktv_watchlist, telegram_bot_id, telegram_chat_id, telegram_username, whatsapp_no_recipient, whatsapp_no_sender, notification_email_address, gmail_address, gmail_password) values('$contact_name', '$contact_email', '$contact_phone', '$contact_birthday', '$contact_address1', '$contact_address2', '$contact_city', '$contact_country', '$system_password', '$isp_name', '$internet_device', '$wifi_nickname_1', '$wifi_mac_1', '$wifi_nickname_2', '$wifi_mac_2', '$wifi_nickname_3', '$wifi_mac_3', '$wifi_nickname_4', '$wifi_mac_4', '$wifi_nickname_5', '$wifi_mac_5', '$network_apn', '$mifi_ssid', '$mifi_pass', '$lan_ip_addr', '$lan_ip_gate', '$lan_dns_1', '$lan_dns_2', '$tvh_dvbt_config_requested', '$tv_market', '$dvbt_tuner_name', '$schedule_tvseries', '$schedule_podcasts', '$schedule_movies', '$traktv_username', '$traktv_watchlist', '$telegram_bot_id', '$telegram_chat_id', '$telegram_username', '$whatsapp_no_recipient', '$whatsapp_no_sender', '$notification_email_address', '$gmail_address', '$gmail_password')", $connection);
+ $query = mysql_query("insert into setup (contact_name, contact_email, contact_phone, contact_birthday, contact_address1, contact_address2, contact_city, contact_country, system_password, isp_name, internet_device, wifi_nickname_1, wifi_mac_1, wifi_nickname_2, wifi_mac_2, wifi_nickname_3, wifi_mac_3, wifi_nickname_4, wifi_mac_4, wifi_nickname_5, wifi_mac_5, network_apn, mifi_ssid, mifi_pass, lan_ip_addr, lan_ip_gate, lan_dns_1, lan_dns_2, tvh_dvbt_config_requested, tv_market, dvbt_tuner_name, schedule_tvseries, schedule_podcasts, schedule_movies, traktv_username, traktv_watchlist, telegram_bot_id, telegram_chat_id, telegram_username, whatsapp_no_recipient, whatsapp_no_sender, notification_email_address, gmail_address, gmail_password, news_sources) values('$contact_name', '$contact_email', '$contact_phone', '$contact_birthday', '$contact_address1', '$contact_address2', '$contact_city', '$contact_country', '$system_password', '$isp_name', '$internet_device', '$wifi_nickname_1', '$wifi_mac_1', '$wifi_nickname_2', '$wifi_mac_2', '$wifi_nickname_3', '$wifi_mac_3', '$wifi_nickname_4', '$wifi_mac_4', '$wifi_nickname_5', '$wifi_mac_5', '$network_apn', '$mifi_ssid', '$mifi_pass', '$lan_ip_addr', '$lan_ip_gate', '$lan_dns_1', '$lan_dns_2', '$tvh_dvbt_config_requested', '$tv_market', '$dvbt_tuner_name', '$schedule_tvseries', '$schedule_podcasts', '$schedule_movies', '$traktv_username', '$traktv_watchlist', '$telegram_bot_id', '$telegram_chat_id', '$telegram_username', '$whatsapp_no_recipient', '$whatsapp_no_sender', '$notification_email_address', '$gmail_address', '$gmail_password', '$news_sources')", $connection);
 
  if ($query) {
  // Create file to indicate setup was completed

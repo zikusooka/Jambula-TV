@@ -26,7 +26,7 @@ if (!empty($_SESSION['error_form_04'])) {
 }
 ?>
  </span>
- <form action="form_50.php" method="post">
+ <form action="form_08.php" method="post">
 
  <label>What client(s) should I use to notify you :</label>
  <br><input type="radio" name="telegram" value="telegram">Telegram
