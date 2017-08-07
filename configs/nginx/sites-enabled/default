@@ -12,6 +12,15 @@
             }
         }
 
+        location /stub_status {
+            # monitoring support
+            stub_status;
+            # Security: Only allow access from the IP below.
+            #allow 127.0.0.1;
+            # Deny anyone else
+            #deny all;
+        }
+
         location ~ \.php$ {
             include  includes/php_params;
         }

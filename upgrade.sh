@@ -173,6 +173,12 @@ uninstall_python_pkgs yowsup-cli
 yowsup2_install 
 }
 
+upgrade_netdata () {
+uninstall_netdata
+netdata_install
+netdata_configure
+}
+
 
 
 #################
@@ -224,3 +230,5 @@ yowsup2_install
 #upgrade_squid
 
 #upgrade_yowsup
+
+#upgrade_netdata 

@@ -1423,6 +1423,27 @@ uninstall_youtube_dl () {
 uninstall_python_pkgs youtube-dl
 }
 
+uninstall_netdata () {
+# Stop and disable netdata systemd service
+systemctl stop netdata.service
+systemctl disable netdata.service
+# Uninstall
+if [ -e $INSTALL_SRC_DIR/netdata/netdata-uninstaller.sh ];
+then
+$INSTALL_SRC_DIR/netdata/netdata-uninstaller.sh --force
+else
+# Backup config directory
+[ -e $CONFDIR/netdata/netdata.conf ] && \
+	mv -v $CONFDIR/netdata $CONFDIR/netdata.$(date +%Y%m%d)
+# Remove sources
+[ -d $INSTALL_SRC_DIR/netdata ] && rm -rf $INSTALL_SRC_DIR/netdata
+rm -rf $(whereis netdata) $LOGDR/netdata $STATEDIR/cache/netdata
+fi
+# Remove user and groups
+groupdel netdata
+userdel -r netdata
+}
+
 
 
 #######################
