@@ -33,8 +33,12 @@ process_rss_feeds () {
 # Get category and URL of sorted feeds
 cat $RSS_FEEDS_FILE | awk '!a[$0]++' | while read FEED;
 do
-RSS_CATEGORY=$(echo "$FEED" | cut -d '|' -f1 | sed 's: $::g')
+RSS_CATEGORY=$(echo "$FEED" | cut -d '|' -f1 | sed 's: $::g' | sed '/^#/d')
 RSS_URL=$(echo "$FEED" | cut -d '|' -f2 | sed 's:^ ::g')
+
+# Skip blank lines
+[ "x$RSS_CATEGORY" = "x" ] && continue
+
 # Add category line to RSS outputfile
 cat >> $RSS_OUTPUT_FILE <<EOF
 
@@ -70,7 +74,9 @@ read_headlines () {
 # Read entire headlines file
 cat $RSS_OUTPUT_FILE | while read TITLE
 do
-echo "$TITLE"
+# Skip blank lines
+[ "x$TITLE" = "x" ] && continue
+# Read headline
 $TEXT_2_SPEECH_TOOL_PATH custom "$TITLE"
 done
 }
