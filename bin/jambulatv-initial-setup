@@ -470,9 +470,9 @@ daily_monitor_ug)
 # Daily Monitor Uganda
 cat >> $SETUP_NEWS_RSS_FILE <<FEEDS
 # Daily Monitor Uganda
-Local Political | http://www.monitor.co.ug/News/688324-688324-view-asFeed-1116p1pz/index.xml
-Local Business | http://www.monitor.co.ug/Business/688322-688322-view-asFeed-ey54eez/index.xml
-Local Sports | http://www.monitor.co.ug/Sports/690254-690254-view-asFeed-rknahxz/index.xml
+Uganda Political | http://www.monitor.co.ug/News/688324-688324-view-asFeed-1116p1pz/index.xml
+Uganda Business | http://www.monitor.co.ug/Business/688322-688322-view-asFeed-ey54eez/index.xml
+Uganda Sports | http://www.monitor.co.ug/Sports/690254-690254-view-asFeed-rknahxz/index.xml
 
 FEEDS
 ;;
@@ -481,10 +481,10 @@ allafrica)
 # All Africa
 cat >> $SETUP_NEWS_RSS_FILE <<FEEDS
 # All Africa
-Latest News | http://allafrica.com/tools/headlines/rdf/latest/headlines.rdf
-Business | http://allafrica.com/tools/headlines/rdf/business/headlines.rdf
-Sports | http://allafrica.com/tools/headlines/rdf/sport/headlines.rdf
-Technology | http://allafrica.com/tools/headlines/rdf/ict/headlines.rdf
+Africa Political | http://allafrica.com/tools/headlines/rdf/latest/headlines.rdf
+Africa Business | http://allafrica.com/tools/headlines/rdf/business/headlines.rdf
+Africa Sports | http://allafrica.com/tools/headlines/rdf/sport/headlines.rdf
+Africa Technology | http://allafrica.com/tools/headlines/rdf/ict/headlines.rdf
 
 FEEDS
 ;;
@@ -493,7 +493,7 @@ observer_ug)
 # Observer - Uganda
 cat >> $SETUP_NEWS_RSS_FILE <<FEEDS
 # Observer - Uganda
-Latest News | http://www.observer.ug/news/headlines/?format=feed&type=rss
+Uganda Political | http://www.observer.ug/news/headlines/?format=feed&type=rss
 
 FEEDS
 ;;
@@ -502,7 +502,7 @@ chimpreports_ug)
 # Chimp Reports - Uganda
 cat >> $SETUP_NEWS_RSS_FILE <<FEEDS
 # Chimp Reports - Uganda
-Latest News | http://www.chimpreports.com/feed/
+Uganda Political | http://www.chimpreports.com/feed/
 
 FEEDS
 ;;
