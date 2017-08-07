@@ -62,6 +62,8 @@ esac
 
 # Saved city and country names
 GEOLOCATION_FILE=/etc/JambulaTV/geolocation.txt
+REQUESTED_CITY=$1
+REQUESTED_COUNTRY=$2
 
 JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
 JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
@@ -83,8 +85,16 @@ EOF
 get_registered_city_country () {
 CONTACT_CITY=$(query_mysql_db contact_city)
 CONTACT_COUNTRY=$(query_mysql_db contact_country)
+# Test for existence of City or Country
+if [ "x$CONTACT_CITY" != "x" ] || [ "x$CONTACT_COUNTRY" != "x" ];
+then
 REGISTERED_CITY=$CONTACT_CITY
 REGISTERED_COUNTRY=$CONTACT_COUNTRY
+else
+REGISTERED_CITY=$REQUESTED_CITY
+REGISTERED_COUNTRY=$REQUESTED_COUNTRY
+fi
+export REGISTERED_CITY REGISTERED_COUNTRY
 }
 
 usage () {
@@ -94,6 +104,9 @@ then
 cat << EOF
 Usage: $(basename $0) [CITY] [COUNTRY]
 EOF
+# TTS - Say error out loud
+/usr/bin/jambulatv-text2speech custom "To get the weather forecast, please first set your preferred city and country"
+# Exit
 exit 1
 fi
 }
