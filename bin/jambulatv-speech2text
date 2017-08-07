@@ -107,236 +107,243 @@ detect_triggers_and_activate_text2speech () {
 
 # Detect phrase mentioned
 tail -n 0 -F $PS_OUTPUT_FILE | \
-while read LINE
+# Look for exact matching patterns
+while read DETECTED_PATTERN
 do
-case $LINE in
 
 # Time
-*"WHAT IS THE TIME"*)
+if [ "$DETECTED_PATTERN" = "WHAT IS THE TIME" ];
+then
 skill_time
-;;
 
 # Weather
-*"WHAT IS THE WEATHER"*)
+elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER" ];
+then
 skill_weather
-;;
 
-# Headlines
-*"WHAT ARE THE HEADLINES"*)
-skill_headlines
-;;
+# Headlines (Start)
+elif [ "$DETECTED_PATTERN" = "WHAT ARE THE HEADLINES" ];
+then
+skill_headlines_start &
+
+# Headlines (Stop)
+elif [ "$DETECTED_PATTERN" = "STOP THE HEADLINES" ];
+then
+skill_headlines_stop
 
 # Reminders
-*"REMINDERS FOR TODAY"*)
-skill_reminders
-;;
+elif [ "$DETECTED_PATTERN" = "REMINDERS FOR TODAY" ];
+then
+skill_reminders &
 
 # Calendar Events - Today
-*"WHAT EVENTS ARE SCHEDULED FOR TODAY"*)
+elif [ "$DETECTED_PATTERN" = "WHAT EVENTS ARE SCHEDULED FOR TODAY" ];
+then
 skill_calendar_events today today "TODAY"
-;;
 
 # Calendar Events - Tomorrow
-*"WHAT EVENTS ARE SCHEDULED FOR TOMORROW"*)
+elif [ "$DETECTED_PATTERN" = "WHAT EVENTS ARE SCHEDULED FOR TOMORROW" ];
+then
 skill_calendar_events tomorrow tomorrow "TOMORROW"
-;;
 
 # Calendar Events - This week
-*"WHAT EVENTS ARE SCHEDULED FOR THIS WEEK"*)
+elif [ "$DETECTED_PATTERN" = "WHAT EVENTS ARE SCHEDULED FOR THIS WEEK" ];
+then
 skill_calendar_events today one_week "THIS WEEK"
-;;
 
 # MOTD or Today's scripture
-*"MESSAGE OF THE DAY"*)
+elif [ "$DETECTED_PATTERN" = "MESSAGE OF THE DAY" ];
+then
 skill_motd
-;;
 
-*"READ MY FLASH BRIEFING"*)
+# Flash Briefing
+elif [ "$DETECTED_PATTERN" = "READ MY FLASH BRIEFING" ];
+then
 skill_flash_briefing
-;;
 
 # Lights on
-*"TURN ON LIGHTS"*)
+elif [ "$DETECTED_PATTERN" = "TURN ON LIGHTS" ];
+then
 skill_lights_on
-;;
 
 # Lights off
-*"TURN OFF LIGHTS"*)
+elif [ "$DETECTED_PATTERN" = "TURN OFF LIGHTS" ];
+then
 skill_lights_off
-;;
 
 # Start playing tv channel
-*"START PLAYING TV"*)
+elif [ "$DETECTED_PATTERN" = "START PLAYING TV" ];
+then
 skill_tv_start 
-;;
 
 # Play next tv channel
-*"PLAY NEXT CHANNEL"*)
+elif [ "$DETECTED_PATTERN" = "PLAY NEXT CHANNEL" ];
+then
 skill_tv_play_next
-;;
 
 # Play previous tv channel
-*"PLAY PREVIOUS CHANNEL"*)
+elif [ "$DETECTED_PATTERN" = "PLAY PREVIOUS CHANNEL" ];
+then
 skill_tv_play_previous
-;;
 
 # Pause tv channel
-*"PAUSE TV CHANNEL"*)
+elif [ "$DETECTED_PATTERN" = "PAUSE TV CHANNEL" ];
+then
 skill_tv_pause_channel
-;;
 
-# Pause tv channel
-*"UN PAUSE TV CHANNEL"*)
+# Unpause tv channel
+elif [ "$DETECTED_PATTERN" = "CONTINUE WITH TV CHANNEL" ];
+then
 skill_tv_unpause_channel
-;;
 
 # Play tv channel - NTV
-*"PLAY TV CHANNEL N T V"*)
+elif [ "$DETECTED_PATTERN" = "PLAY TV CHANNEL N T V" ];
+then
 skill_tv_play_ntv
-;;
 
 # Play tv channel - NBS
-*"PLAY TV CHANNEL N B S"*)
+elif [ "$DETECTED_PATTERN" = "PLAY TV CHANNEL N B S" ];
+then
 skill_tv_play_nbs
-;;
 
 # Stop playing tv channel
-*"STOP PLAYING TV"*)
+elif [ "$DETECTED_PATTERN" = "STOP PLAYING TV" ];
+then
 skill_tv_stop
-;;
 
 # Record tv channel now
-*"RECORD TV CHANNEL NOW"*)
+elif [ "$DETECTED_PATTERN" = "RECORD TV CHANNEL NOW" ];
+then
 skill_tv_record_start_now
-;;
 
 # Stop recording tv channel now
-*"STOP RECORDING TV CHANNEL"*)
+elif [ "$DETECTED_PATTERN" = "STOP RECORDING TV CHANNEL" ];
+then
 skill_tv_record_stop_now
-;;
 
 # Start video
-*"START PLAYING VIDEO"*)
+elif [ "$DETECTED_PATTERN" = "START PLAYING VIDEO" ];
+then
 skill_video_start
-;;
 
 # Pause video
-*"PAUSE VIDEO"*)
+elif [ "$DETECTED_PATTERN" = "PAUSE VIDEO" ];
+then
 skill_video_pause
-;;
 
 # Unpause video
-*"UN PAUSE VIDEO"*)
+elif [ "$DETECTED_PATTERN" = "CONTINUE WITH VIDEO" ];
+then
 skill_video_unpause
-;;
 
 # Play next video
-*"PLAY NEXT VIDEO"*)
+elif [ "$DETECTED_PATTERN" = "PLAY NEXT VIDEO" ];
+then
 skill_video_play_next
-;;
 
 # Play previous video
-*"PLAY PREVIOUS VIDEO"*)
+elif [ "$DETECTED_PATTERN" = "PLAY PREVIOUS VIDEO" ];
+then
 skill_video_play_previous
-;;
 
 # Stop playing video
-*"STOP PLAYING VIDEO"*)
+elif [ "$DETECTED_PATTERN" = "STOP PLAYING VIDEO" ];
+then
 skill_video_play_stop
-;;
 
 # Start music -Any
-*"START PLAYING MUSIC"*)
+elif [ "$DETECTED_PATTERN" = "START PLAYING MUSIC" ];
+then
 skill_music_start unknown
-;;
 
 # Start music - Jazz
-*"START PLAYING JAZZ MUSIC"*)
+elif [ "$DETECTED_PATTERN" = "START PLAYING JAZZ MUSIC" ];
+then
 skill_music_start jazz
-;;
 
 # Start music - Gospel
-*"START PLAYING GOSPEL MUSIC"*)
+elif [ "$DETECTED_PATTERN" = "START PLAYING GOSPEL MUSIC" ];
+then
 skill_music_start gospel
-;;
 
 # Start music - Local
-*"START PLAYING LOCAL MUSIC"*)
+elif [ "$DETECTED_PATTERN" = "START PLAYING LOCAL MUSIC" ];
+then
 skill_music_start local
-;;
 
 # Start music - Lingala
-*"START PLAYING LEAN GALA MUSIC"*)
+elif [ "$DETECTED_PATTERN" = "START PLAYING LEAN GALA MUSIC" ];
+then
 skill_music_start lingala
-;;
 
 # Start music - On line Music
-*"START PLAYING ON LINE MUSIC"*)
+elif [ "$DETECTED_PATTERN" = "START PLAYING ON LINE MUSIC" ];
+then
 skill_internet_music_start jazz_fm_online
-;;
 
 # Start music - Stream Jazz on line
-*"STREAM JAZZ MUSIC ON LINE"*)
+elif [ "$DETECTED_PATTERN" = "STREAM JAZZ MUSIC ON LINE" ];
+then
 skill_internet_music_start jazz_fm_online
-;;
 
 # Start music - East Africa Radio On line
-*"START PLAYING EAST AFRICA RADIO ON LINE"*)
+elif [ "$DETECTED_PATTERN" = "START PLAYING EAST AFRICA RADIO ON LINE" ];
+then
 skill_internet_music_start east_africa_online
-;;
 
 # Pause music
-*"PAUSE MUSIC"*)
+elif [ "$DETECTED_PATTERN" = "PAUSE SONG" ];
+then
 skill_music_pause
-;;
 
 # Unpause music
-*"UN PAUSE MUSIC"*)
+elif [ "$DETECTED_PATTERN" = "CONTINUE WITH SONG" ];
+then
 skill_music_unpause
-;;
 
 # Play next song
-*"PLAY NEXT SONG"*)
+elif [ "$DETECTED_PATTERN" = "PLAY NEXT SONG" ];
+then
 skill_music_play_next
-;;
 
 # Play previous song
-*"PLAY PREVIOUS SONG"*)
+elif [ "$DETECTED_PATTERN" = "PLAY PREVIOUS SONG" ];
+then
 skill_music_play_previous
-;;
 
 # Stop playing music
-*"STOP PLAYING MUSIC"*)
+elif [ "$DETECTED_PATTERN" = "STOP PLAYING MUSIC" ];
+then
 skill_music_play_stop
-;;
 
 # Auto WiFi provision
-*"I WANT TO CONNECT TO THE HOTSPOT"*)
+elif [ "$DETECTED_PATTERN" = "I WANT TO CONNECT TO THE HOTSPOT" ];
+then
 skill_connect_2_hotspot
-;;
 
 # Turn off
-*"TURN OFF JAMB BOO LA TV"*)
+elif [ "$DETECTED_PATTERN" = "TURN OFF JAMB BOO LA TV" ];
+then
 skill_power_off
-;;
 
 # Take speech recognition offline
-*"KEEP QUIET NOW"*)
+elif [ "$DETECTED_PATTERN" = "KEEP QUIET NOW" ];
+then
 skill_mute_speech_recognition
-;;
 
 # Bring back speech recognition online
-*"COME BACK ON LINE"*)
+elif [ "$DETECTED_PATTERN" = "COME BACK ON LINE" ];
+then
 skill_unmute_speech_recognition
-;;
+
+else
 
 # Unrecognized voice command
-*)
 skill_unknown
 continue
-;;
 
-esac
+fi
+
 done
 }
 

@@ -9,6 +9,7 @@ FAVORITE_VIDEO="MY_USER_TV_SHOWS_DIR/Arrow/Season_05/Arrow.S05E04.Penance.HDTV.H
 MUSIC_DIR="MY_USER_MUSIC_DIR"
 TV_RECORD_STATUS_FILE=MY_TMPDIR/tv_record_status # Must be same as in kodi-controller!
 DOMOTICZ_LAMP_NAME="Living Room"
+TTS_OUTPUT_FILE=/var/tmp/tts_output.wav # IMPORTANT: Must be on 'ext4' partition i.e. /var
 
 
 
@@ -24,9 +25,15 @@ skill_weather () {
 /usr/bin/python /usr/share/kodi/scripts/kodi_say_weather.py 
 }
 
-skill_headlines () {
+skill_headlines_start () {
 $TEXT_2_SPEECH_TOOL_PATH custom "Here's whats making news today"
 /usr/bin/jambulatv-fetch-news
+}
+
+skill_headlines_stop () {
+killall jambulatv-fetch-news && killall jambulatv-text2speech
+$TEXT_2_SPEECH_TOOL_PATH custom "Okay, I will stop reading the news"
+touch $TTS_OUTPUT_FILE
 }
 
 skill_reminders () {
