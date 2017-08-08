@@ -185,7 +185,7 @@ netdata_configure
 #  MAIN SCRIPT  #
 #################
 
-#upgrade_kernel 4.4.76
+#upgrade_kernel 4.4.80
 
 #upgrade_kodi
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
