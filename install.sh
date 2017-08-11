@@ -216,6 +216,9 @@ playlists_configure
 iptv_tvheadend_configure
 iptv_icons_add 
 
+# EPG
+epg_tvheadend_configure
+
 # Auto download of TV Shows, Movies, and Podcasts
 flexget_deps_install
 flexget_install

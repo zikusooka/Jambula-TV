@@ -192,6 +192,12 @@ TVHEADEND_IPTV_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
 TVHEADEND_IPTV_NETWORK_NAME=jambulaIPTV
 TVHEADEND_IPTV_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/iptv
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
+
+TVHEADEND_EPG_GRAB_DIR=$TVHEADEND_CONFIG_DIR/epggrab
+TVHEADEND_EPG_XMLTV_DIR=$TVHEADEND_EPG_GRAB_DIR/xmltv
+
+XMLTV_GRABBER=tv_grab_combiner
+
 TVHEADEND_TV_MARKET=ug-Kampala
 
 PLATFORM_TAG=1.0.10
@@ -3404,6 +3410,64 @@ rsync -av $PROJECT_CONTRIB_DIR/tv/picons/IPTV $PROJECT_SYSTEM_ICONS_DIR/
 chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/IPTV
 }
 
+epg_tvheadend_configure () {
+# Create XMLTV directory in multimedia user's home directory
+[ -d $MULTIMEDIA_USER_HOME_DIR/.xmltv ] || mkdir -p $MULTIMEDIA_USER_HOME_DIR/.xmltv
+# Create tvheadend epggrab directory if it does not exist
+[ -d $TVHEADEND_EPG_GRAB_DIR ] || mkdir -p $TVHEADEND_EPG_GRAB_DIR
+
+# Copy xmltv system config for selected grabber
+[ -e $PROJECT_CONTRIB_DIR/tv/epg/xmltv/${XMLTV_GRABBER}.conf ] && \
+	cp -v $PROJECT_CONTRIB_DIR/tv/epg/xmltv/${XMLTV_GRABBER}.conf $MULTIMEDIA_USER_HOME_DIR/.xmltv
+
+# Create xmltv supplement maps directory
+[ -d $MULTIMEDIA_USER_HOME_DIR/.xmltv/supplement/${XMLTV_GRABBER} ] || \
+	mkdir -p $MULTIMEDIA_USER_HOME_DIR/.xmltv/supplement/${XMLTV_GRABBER}
+
+# Copy xmltv system maps for grabbers like uk_tvguide if available
+[ -e $PROJECT_CONTRIB_DIR/tv/epg/xmltv/maps/${XMLTV_GRABBER}.map.conf ] && \
+	cp -v $PROJECT_CONTRIB_DIR/tv/epg/xmltv/maps/${XMLTV_GRABBER}.map.conf $MULTIMEDIA_USER_HOME_DIR/.xmltv/supplement/${XMLTV_GRABBER}/${XMLTV_GRABBER}.map.conf
+
+# Create epg grab config
+cat > $TVHEADEND_EPG_GRAB_DIR/config <<EOF
+{
+	"channel_rename": false,
+	"channel_renumber": false,
+	"channel_reicon": true,
+	"epgdb_periodicsave": 0,
+	"cron": "# Default config (00:04 and 12:04 everyday)\n4 */12 * * *",
+	"ota_initial": true,
+	"ota_cron": "# Default config (02:04 and 14:04 everyday)\n4 2 * * *\n4 14 * * *",
+	"ota_timeout": 600,
+	"modules": {
+		"$BINARY_PREFIX/${XMLTV_GRABBER}": {
+			"class": "epggrab_mod_int_xmltv",
+			"dn_chnum": 0,
+			"name": "XMLTV: JambulaTV Combined Grabber",
+			"type": "Internal",
+			"enabled": true,
+			"priority": 3
+		},
+		"eit": {
+			"class": "epggrab_mod_ota",
+			"name": "EIT: DVB Grabber",
+			"type": "Over-the-air",
+			"enabled": true,
+			"priority": 1
+		}
+	}
+}
+EOF
+
+# Change xmltv directory permissions to multimedia user
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $MULTIMEDIA_USER_HOME_DIR/.xmltv
+# Change epg directory permissions to multimedia user
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_EPG_GRAB_DIR
+
+# Restart TVHeadend
+systemctl restart tvheadend.service
+}
+
 kodi_configure () {
 # JambulaTV: Start Linux Desktop i.e. PC Mode after quiting Kodi
 cp -v ${KODI_STANDALONE_SCRIPT} ${KODI_STANDALONE_SCRIPT}.orig
@@ -4079,7 +4143,7 @@ done
 
 wired_interfaces_configure () {
 # Configure hostname
-HOSTNAME=$PROJECT_NAME.$SYSTEM_IDENTIFIER.local
+HOSTNAME=$SYSTEM_IDENTIFIER.$PROJECT_NAME
 # Use 'hostnamectl'
 hostname $HOSTNAME 
 echo "NETWORKING=yes
