@@ -74,7 +74,7 @@ then
 # Telegram
 MESSAGE=$(cat $PODCAST_INFO_FILE_PATH); /usr/bin/jambulatv-telegram sendmessage "$MESSAGE" &
 # WhatsApp
-MESSAGE=$(cat $PODCAST_INFO_FILE_PATH); /usr/bin/jambulatv-whatsapp sendmessage $WHATSAPP_PHONE_NUMBER_RECIPIENT "$MESSAGE" &
+MESSAGE=$(cat $PODCAST_INFO_FILE_PATH); /usr/bin/jambulatv-whatsapp sendmessage "$MESSAGE" $WHATSAPP_PHONE_NUMBER_RECIPIENT &
 fi
 
 # Remove podcast info file after sending notice

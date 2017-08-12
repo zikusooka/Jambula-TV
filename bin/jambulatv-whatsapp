@@ -9,8 +9,8 @@ COUNTRY_MCC_MNC_RAW_FILE=/tmp/mcc_mnc_raw.csv
 WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
 WHATSAPP_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-whatsapp.cfg
 WHATSAPP_METHOD_NAME=$1
-WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
-WHATSAPP_TEXT_MESSAGE="$3"
+WHATSAPP_TEXT_MESSAGE="$2"
+WHATSAPP_PHONE_NUMBER_RECIPIENT=$3
 WHATSAPP_REGISTRATION_METHOD=sms
 
 PING_TIMEOUT=3 #9
@@ -32,9 +32,12 @@ fi
 
 case $WHATSAPP_METHOD_NAME in
 [Ss][Ee][Nn][Dd][Mm][Ee][Ss][Ss][Aa][Gg][Ee])
+# Source settings file
+[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+# Test for blank message or recipient phone number
 if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_TEXT_MESSAGE" = "x" ];
 then
-echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_PHONE_NUMBER_RECIPIENT] [WHATSAPP_TEXT_MESSAGE]
+echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_TEXT_MESSAGE] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
 "
 exit 1
 fi
@@ -218,7 +221,10 @@ yowsup-cli registration -d -E android -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEP
 send_message () {
 # Source settings file
 . $WHATSAPP_CREDENTIALS_CONFIG
-#
+
+# Where applicable, use recipient phone number specified on command line
+[ "x$2" = "x" ] || WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
+
 # Check if registration was done
 if [ "x$WHATSAPP_ENCRYPTED_PASSWORD" = "x" ];
 then
@@ -226,6 +232,8 @@ clear;
 echo "Error:  Please register this device for whatsapp first before you can send"
 exit 1
 fi
+
+# Send message to Whatsapp recipient
 yowsup-cli demos -d -l "$WHATSAPP_PHONE_NUMBER_SENDER:$WHATSAPP_ENCRYPTED_PASSWORD" -s $WHATSAPP_PHONE_NUMBER_RECIPIENT "$WHATSAPP_TEXT_MESSAGE"
 }
 
@@ -270,7 +278,7 @@ register_4_whatsapp
 ;;
 
 [Ss][Ee][Nn][Dd][Mm][Ee][Ss][Ss][Aa][Gg][Ee])
-send_message
+send_message "$2" "$3"
 ;;
 
 *)
