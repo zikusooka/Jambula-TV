@@ -5,6 +5,7 @@ After=mysqld.service
 [Service]
 Type=forking
 EnvironmentFile=/etc/sysconfig/icinga2
+ExecStartPre=/bin/rm -f /var/lib/icinga2/icinga2.state
 ExecStartPre=/bin/mkdir -p ${ICINGA2_RUN_DIR}/icinga2/cmd
 ExecStartPre=/bin/mkdir -p /var/log/icinga2/compat
 ExecStartPre=/usr/lib/icinga2/prepare-dirs /etc/sysconfig/icinga2
