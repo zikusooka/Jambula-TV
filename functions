@@ -6364,6 +6364,19 @@ cd $INSTALL_SRC_DIR/TermFeed
 python setup.py install --install-lib=$PYTHON_SITEDIR
 }
 
+usbreset_install () {
+# Unpack usbreset 
+tar zxvf $PROJECT_TARBALLS_DIR/usbreset.tgz -C $INSTALL_SRC_DIR
+
+# Compile usbreset program
+cd $INSTALL_SRC_DIR/usbreset && \
+	cc usbreset.c -o $BINARY_PREFIX/usbreset
+
+# Copy jambulatv-usb-device-reset script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-usb-device ] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-usb-device $BINARY_PREFIX/
+}
+
 iptv_support () {
 # Copy IPTV xml files to html directory
 cp -rv $PROJECT_CONTRIB_DIR/iptv $WWW_HTML_DIR

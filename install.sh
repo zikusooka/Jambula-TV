@@ -256,6 +256,7 @@ google_sms_setup
 reverse_ssh_configure
 rtl_sdr_install
 TermFeed_install
+usbreset_install
 
 # ----------------
 # Communications 
