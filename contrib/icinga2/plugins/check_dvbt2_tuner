@@ -1,0 +1,16 @@
+#!/bin/sh
+
+/usr/bin/journalctl -b -o cat --no-pager -n 10  | grep -m 5 -i "dvb-usb: recv bulk message failed: -110" > /dev/null 2>&1
+DVB_ERR_DETECTED=$?
+
+if [ "$DVB_ERR_DETECTED" = "0" ];
+then
+
+echo "CRITICAL - DVBT-2 Tuner Error ($DVB_ERR_DETECTED): dvb-usb: recv bulk message failed: -110.  Please restart the system" 
+exit 2
+
+else
+echo "OK - TV tuner is fine"
+exit 0
+
+fi
