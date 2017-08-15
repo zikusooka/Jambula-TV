@@ -185,6 +185,7 @@ netdata_configure
 #  MAIN SCRIPT  #
 #################
 
+#upgrade_kernel 4.9.43
 #upgrade_kernel 4.4.80
 
 #upgrade_kodi
