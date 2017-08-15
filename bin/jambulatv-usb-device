@@ -32,7 +32,7 @@ fi
 get_bus_dev_path () {
 BUS_ID=$(lsusb -d ${idVendor}:${idProduct} | cut -d : -f1 | awk {'print $2'})
 DEVICE_ID=$(lsusb -d ${idVendor}:${idProduct} | cut -d : -f1 | awk {'print $4'})
-BUS_DEV_PATH=$(journalctl -b -o cat --no-pager | grep -i "idVendor=${idVendor}, idProduct=${idProduct}" | cut -d ':' -f1 | awk {'print $2'})
+BUS_DEV_PATH=$(journalctl -b -o cat --no-pager | grep -i "idVendor=${idVendor}, idProduct=${idProduct}" | cut -d ':' -f1 | awk {'print $2'} | tail -1)
 }
 
 
@@ -48,15 +48,31 @@ get_bus_dev_path
 case $action in
 
 eject)
+# Test for existence of path
+if [ -e /sys/bus/usb/devices/$BUS_DEV_PATH/authorized ];
+then
 # Eject USB device depending on what was specified
 echo "JambulaTV: Ejecting USB device ..."
 echo 0 > /sys/bus/usb/devices/$BUS_DEV_PATH/authorized
+else
+clear
+echo "Error: The file path [/sys/bus/usb/devices/$BUS_DEV_PATH/authorized] does NOT exist!"
+exit 1
+fi
 ;;
 
 insert)
+# Test for existence of path
+if [ -e /sys/bus/usb/devices/$BUS_DEV_PATH/authorized ];
+then
 # Insert USB device depending on what was specified
 echo "JambulaTV: Inserting USB device ..."
 echo 1 > /sys/bus/usb/devices/$BUS_DEV_PATH/authorized
+else
+clear
+echo "Error: The file path [/sys/bus/usb/devices/$BUS_DEV_PATH/authorized] does NOT exist!"
+exit 1
+fi
 ;;
 
 reinsert)
