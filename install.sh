@@ -282,6 +282,9 @@ chan_mobile_configure
 chan_dongle_install 
 chan_dongle_configure
 
+# AGI scripts 4 JambulaTV
+asterisk_agi_scripts_install
+
 # TTS
 # Cepstral Support # Not Free!
 if [ "$CEPSTRAL_EULA" = "agree" ];
@@ -301,7 +304,6 @@ picotts_asterisk_configure
 
 # JambulaTV TTS
 text2speech_setup
-jambulatvtts_asterisk_configure
 
 # ASR - Speech Recognition
 sphinxbase_install

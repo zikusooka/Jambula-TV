@@ -7425,6 +7425,20 @@ password            = "$FREEPBX_ADMIN_PASS"
 EOF
 }
 
+# AGI scripts 4 JambulaTV
+asterisk_agi_scripts_install () {
+# Copy jambulatv agi sripsts to asterisk agi-bin directory
+for AGI_SCRIPT in \
+jambulatv-tts.agi \
+jambulatv-recording.sh
+do
+cp -v $PROJECT_CONTRIB_DIR/scripts/asterisk_${AGI_SCRIPT} $ASTERISK_AGI_BIN_DIR/${AGI_SCRIPT}
+# Change permissions to asterisk user
+chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_AGI_BIN_DIR/${AGI_SCRIPT}
+chmod 700 $ASTERISK_AGI_BIN_DIR/${AGI_SCRIPT}
+done
+}
+
 cepstral_install () {
 # Unpack Cepstral tarball with correct architecture
 case $PROJECT_SYSTEM_ARCH in
@@ -7603,14 +7617,6 @@ cp -v $PROJECT_GITHUB_DIR/asterisk-picotts/picotts*.agi $ASTERISK_AGI_BIN_DIR/
 # Change permissions to asterisk user
 chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_AGI_BIN_DIR/picotts.agi
 chmod 700 $ASTERISK_AGI_BIN_DIR/picotts.agi
-}
-
-jambulatvtts_asterisk_configure () {
-# Copy jambulatv tts agi to asterisk agi-bin directory
-cp -v $PROJECT_CONTRIB_DIR/scripts/asterisk_jambulatv-tts.agi $ASTERISK_AGI_BIN_DIR/jambulatv-tts.agi
-# Change permissions to asterisk user
-chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_AGI_BIN_DIR/jambulatv-tts.agi
-chmod 700 $ASTERISK_AGI_BIN_DIR/jambulatv-tts.agi
 }
 
 text2speech_setup () {
