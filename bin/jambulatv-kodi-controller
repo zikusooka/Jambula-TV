@@ -26,6 +26,7 @@ PVR_GROUP=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-T
 PVR_STOP_REC_SCRIPT=MY_TMPDIR/.stop_recording_tv_channel.sh
 PVR_STATUS_FILE=MY_TMPDIR/pvr_status
 TV_RECORD_STATUS_FILE=MY_TMPDIR/tv_record_status
+ALL_TV_CHANNELS_LIST=MY_TMPDIR/tv_list_all
 
 SCAN_VIDEOS_DIR=MY_USER_VIDEOS_DIR
 SCAN_AUDIO_DIR=MY_USER_MUSIC_DIR
@@ -42,7 +43,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_play_start|tv_play_stop|video_play_start|video_play_type|video_play_pause|video_play_next|video_play_previous|video_play_stop|music_play_offline_start|music_play_online_start|music_play_type|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_start|tv_record_stop|tv_record_instant_start|tv_record_instant_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|video_play_type|video_play_pause|video_play_next|video_play_previous|video_play_stop|music_play_offline_start|music_play_online_start|music_play_type|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_start|tv_record_stop|tv_record_instant_start|tv_record_instant_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -181,6 +182,13 @@ input_select () {
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Select", "id":"select"}' "http://127.0.0.1:8510/jsonrpc"
 }
 
+list_tv_channels () {
+# Remove previous channel list
+[ -e $ALL_TV_CHANNELS_LIST_FILE ] && rm -f $ALL_TV_CHANNELS_LIST_FILE
+# Generate entire list of channel names -> numbers
+curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/channel/grid?limit=100000 | jq ".entries[] | .number, .name " | sed 's:["|,]::g' | paste -s -d"|\n" | sort -g | tee $ALL_TV_CHANNELS_LIST
+}
+
 get_tv_channel_id () {
 CHANNELID=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannels", "params": {"channelgroupid":'$PVR_GROUP'}, "id": 1}' "http://127.0.0.1:8510/jsonrpc" | jq . | grep -A1 -i "$TV_CHANNEL"  | grep channelid | awk {'print $2'}| head -1)
 }
@@ -192,12 +200,13 @@ curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: applicatio
 record_tv_channel_current_status () {
 TV_RECORDING_CURRENT_STATUS=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetProperties", "params": { "properties": [ "recording" ] }, "id": 1}' "http://127.0.0.1:8510/jsonrpc" | jq ".result[]")
 # Remove old state temp file
-[ -e $TV_RECORD_STATUS_FILE ] && sudo rm -f $TV_RECORD_STATUS_FILE
+[ -e $TV_RECORD_STATUS_FILE ] && echo > $TV_RECORD_STATUS_FILE
 # Save state to temp file - neeed by other tools
 echo "TV_RECORDING_CURRENT_STATUS=$TV_RECORDING_CURRENT_STATUS" > $TV_RECORD_STATUS_FILE
+# Change permissions of state temp file
+[ "$(id -u)" = "0" ] && chmod 766 $TV_RECORD_STATUS_FILE
 # Display state
-echo "TV_RECORDING_CURRENT_STATUS = [$TV_RECORDING_CURRENT_STATUS]"
-echo
+echo $TV_RECORDING_CURRENT_STATUS
 }
 
 record_tv_channel_scheduled_start () {
@@ -377,6 +386,10 @@ play_youtube_plugin "$2"
 
 addon_play_streamztv)
 play_streamztv_plugin "$2" "$3"
+;;
+
+tv_channels)
+list_tv_channels
 ;;
 
 tv_play_start)
