@@ -1,0 +1,17 @@
+--- proxycontroller.php.orig	2017-07-17 14:18:08.602213869 +0300
++++ proxycontroller.php	2017-07-17 14:30:20.876187919 +0300
+@@ -88,6 +88,14 @@
+ 				$clientResponse = $client->get($queryUrl, [
+ 					'stream' => true,
+ 					'allow_redirects' => $allow_redirects,
++                                        'verify'  => true,
++                                        'config' => [
++                                                'stream_context' => [
++                                                        'ssl' => [
++                                                                'crypto_type' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT,
++                                                        ]
++                                                ]
++                                        ]
+ 				]);
+ 
+ 				$statusCode = $clientResponse->getStatusCode();

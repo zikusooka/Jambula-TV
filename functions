@@ -6715,6 +6715,9 @@ EOF
 # Change permissions on data directory
 chown -R $WWW_USER:$WWW_GROUP $NEXTCLOUD_DATA_DIRECTORY
 
+# Patch nextcloud Calendar App to enable successful connections/subscriptions to external calendars like Google
+patch -p1 $WWW_HTML_DIR/nextcloud/apps/calendar/controller/proxycontroller.php < $PROJECT_PATCHES_DIR/nextcloud.proxycontroller.patch
+
 # Add jambulatv-calendar-events tool if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-calendar-events ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-calendar-events | \
