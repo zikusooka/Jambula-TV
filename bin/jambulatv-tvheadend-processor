@@ -2,12 +2,30 @@
 # This script is used to process recording in tvheadend either before start or after
 # Jambula Labs @copyright 2017-2018 All rights reserved
 
+# Variables
+CURL_CMD="/usr/bin/curl -s"
+# Get current date
+CURRENT_DATE=$(date +%Y-%m-%d)
+CURRENT_TIMESTAMP=$(date "+%-I:%M:%P")
+# TVHeadend
+TVHEADEND_HTTP_IP=MY_TVHEADEND_HTTP_IP
+TVHEADEND_HTTP_PORT=MY_TVHEADEND_HTTP_PORT
+TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
+TVHEADEND_CONFIG_DIR=MY_TVHEADEND_CONFIG_DIR
+TVHEADEND_DVR_LOG_DIR=$TVHEADEND_CONFIG_DIR/dvr/log
+# Recordings
 RECORDED_FILE_PATH="$2" # %f
 RECORDED_FILE_NAME="$3" # %b
 RECORDING_TITLE="$4" # %t
 RECORDED_CHANNEL="$5" # %c
+RECORDING_START_EPOCH="$6" # %S
+RECORDING_STOP_EPOCH="$7" # %E
 RECORDED_FILE_DIR=$(dirname "$RECORDED_FILE_PATH")
 RECORDED_FILE_DIR_DATE=$(echo $RECORDED_FILE_DIR | grep -o '[^/]*$')
+# Get log file associated with this recording
+RECORDED_FILE_UUID=$($CURL_CMD $TVHEADEND_API_URL/dvr/entry/grid?limit=100000 | jq '.entries[] | select(.stop_real=='$RECORDING_STOP_EPOCH') |.uuid' | sed 's:"::g' | head -1)
+RECORDING_START_TIME=$(date --date="@$(stat -c %Y $TVHEADEND_DVR_LOG_DIR/$RECORDED_FILE_UUID)" "+%-I:%M:%P")
+RECORDING_STOP_TIME=$CURRENT_TIMESTAMP
 
 
 
@@ -22,13 +40,25 @@ sudo jambulatv-osd -m "Recording of $RECORDING_TITLE on $RECORDED_CHANNEL starte
 ;;
 
 post-recording)
-# Rename Directory of recording if script was called by kodi processes i.e. BUG in kodi 15
+# Rename Directory/file of recording if script was called by kodi "record" api i.e. BUG in kodi 15
+# This is manifested when recording using Yatse App, kodi-controller tv_record_instant command
 if [ "$RECORDED_FILE_DIR_DATE" = "1970-01-01" ];
 then
-# Replace epoc date with current
-RECORDED_FILE_DIR_RENAMED="$(echo $RECORDED_FILE_DIR | sed "s:1970-01-01:$(date +%Y-%m-%d):")"
-# Rename directory
-mv -v $RECORDED_FILE_DIR $RECORDED_FILE_DIR_RENAMED
+
+# Set renamed dir and file names
+RECORDED_FILE_DIR_RENAMED=$(dirname "$RECORDED_FILE_DIR")/$CURRENT_DATE
+RECORDED_FILE_NAME_RENAMED=$(echo "${RECORDED_CHANNEL}"-from-${RECORDING_START_TIME}-to-${RECORDING_STOP_TIME}.$(echo $RECORDED_FILE_NAME | cut -d '.' -f2) | sed "s: :-:g")
+
+# Create current date directory if not existent
+[ -d $RECORDED_FILE_DIR_RENAMED ] || mkdir -p $RECORDED_FILE_DIR_RENAMED
+
+# Move recorded file to current dated directory
+mv -v $RECORDED_FILE_DIR/$RECORDED_FILE_NAME \
+	$RECORDED_FILE_DIR_RENAMED/"$RECORDED_FILE_NAME_RENAMED"
+
+# Remove 1970-01-01 directory
+rmdir $RECORDED_FILE_DIR
+
 fi
 
 # Notify - OSD
