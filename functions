@@ -361,6 +361,8 @@ SYSCONFIG_NETWORK_SCRIPTS_DIR=$SYSCONFIG_DIR/network-scripts
 
 SYSCONFIG_i18N_FILE=/etc/sysconfig/i18n
 
+HOSTNAME_FILE=/etc/hostname
+
 NETWORK_MAC_ADDRESS=`ip addr show | grep ether | awk {'print $2'} | head -1`
 
 DHCLIENT_CONFIG_DIR=$CONFDIR/dhcp
@@ -4156,19 +4158,19 @@ wired_interfaces_configure () {
 HOSTNAME=$SYSTEM_IDENTIFIER.$PROJECT_NAME
 # Use 'hostnamectl'
 hostname $HOSTNAME 
-echo "NETWORKING=yes
-HOSTNAME=$HOSTNAME" > $SYSCONFIG_NETWORK_FILE
+echo "$HOSTNAME" > $HOSTNAME_FILE
 # Add IP Address to hosts file
 echo "# JambulaTV IP-Hostname
 $NETWORK_IP_ADDRESS	$HOSTNAME $PROJECT_NAME" >> /etc/hosts
-#
+# Remove IPv6 localhost address
+sed -i "s/::1/#::1/g" /etc/hosts
 # Configure dhclient so it picks up specific options from DHCP server on network. 
 cat > $DHCLIENT_CONFIG_FILE << EOF
 interface "$NETWORK_ETHERNET_DEVICE" {
            send host-name "$HOSTNAME";
            supersede domain-search $(for DOMAIN in $PROJECT_DOMAINS;do echo -n "\"$DOMAIN\", " | sed 's:,::';done);
            prepend domain-name-servers 127.0.0.1;
-           #send dhcp-requested-address 192.168.0.249;
+           send dhcp-requested-address 192.168.0.249;
        }
 EOF
 #
