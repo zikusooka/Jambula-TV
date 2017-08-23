@@ -6466,8 +6466,8 @@ email_via_gmail_setup () {
 cat > $EMAIL_GMAIL_CONFIG << EOF
 EMAIL_CMD=$BINARY_PREFIX/email
 EMAIL_OPTIONS="-V --tls"
-MACHINE_HOST=$(hostname -s)
-EMAIL_FROM_FULLNAME=$(hostname -s)
+MACHINE_HOST=$(hostname -d)
+EMAIL_FROM_FULLNAME=$(hostname -d)
 EMAIL_FROM_ADDRESS=$(hostname -s)@$(hostname -d)
 
 EMAIL_SMTP_SERVER_NAME=smtp.gmail.com
