@@ -64,9 +64,7 @@ $CONVERT_CMD -append $QRCODE_IMAGE_FILENAME_ANDROID $QRCODE_IMAGE_FILENAME_ANDRO
 
 display_auto_wifi_qrcode_4_android_ios () {
 # Display QR codes - Set display first for vlc
-export DISPLAY=:0.0 && cvlc -I dummy -V x11 --quiet --no-audio --width 320 --height 240 --loop --no-video-title $QRCODE_IMAGE_FILENAME_ANDROID_IOS &
-PID_AUTO_WIFI_QR="$!"
-export PID_AUTO_WIFI_QR
+export DISPLAY=:0.0 && cvlc -V x11 --quiet --no-audio --width 320 --height 240 --loop --no-video-title $QRCODE_IMAGE_FILENAME_ANDROID_IOS &
 }
 
 display_osd_message_4_auto_wifi_provisioning () {
@@ -75,7 +73,7 @@ cat > $AUTO_WIFI_OSD_TEMP_SCRIPT <<EOF
 #!/bin/sh
 
 # Check if QR code is being shown on screen
-ps auxw | grep `basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS` | grep $PID_AUTO_WIFI_QR > /dev/null
+ps auxw | grep -Ev grep | grep $(basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS) > /dev/null
 OSDEXITVAL=\$?
 
 # While waiting for user action
@@ -92,7 +90,7 @@ jambulatv-kodi-controller osd_long "$QRCODE_OSD_MSG_AUTO_WIFI_PROVISION" &
 sleep $PAUSE_OSD_AUTO_WIFI
 
 # Check if QR code is still being shown on screen
-ps auxw | grep `basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS` | grep $PID_AUTO_WIFI_QR > /dev/null
+ps auxw | grep -Ev grep | grep $(basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS) > /dev/null
 OSDEXITVAL=\$?
 
 done
@@ -104,7 +102,7 @@ EOF
 chmod 755 $AUTO_WIFI_OSD_TEMP_SCRIPT
 #
 # Remove any existing OSD notice
-EXISTING_OSD_PID=$(ps auxw | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
+EXISTING_OSD_PID=$(ps auxw | grep -Ev grep | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
 [ "x$EXISTING_OSD_PID" = "x" ] || kill -15 $EXISTING_OSD_PID
 #
 # Display OSD Message
@@ -112,13 +110,14 @@ EXISTING_OSD_PID=$(ps auxw | grep $(basename $OSD_CMD) | grep python | awk {'pri
 }
 
 kill_qrcode_process () {
+PID_AUTO_WIFI_QR=$(ps auxw | grep -Ev grep | grep $(basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS) | awk {'print $2'})
 [ "x$PID_AUTO_WIFI_QR" = "x" ] || kill -15 $PID_AUTO_WIFI_QR
 }
 
 kill_osd_process () {
 # PID variables
-OSD_SCRIPT_PID=$(ps auxw | grep $(basename $AUTO_WIFI_OSD_TEMP_SCRIPT) | awk {'print $2'})
-OSD_SLEEP_PID=$(ps auxw | grep "sleep $PAUSE_OSD_AUTO_WIFI" | awk {'print $2'})
+OSD_SCRIPT_PID=$(ps auxw | grep -Ev grep | grep $(basename $AUTO_WIFI_OSD_TEMP_SCRIPT) | awk {'print $2'})
+OSD_SLEEP_PID=$(ps auxw | grep -Ev grep | grep "sleep $PAUSE_OSD_AUTO_WIFI" | awk {'print $2'})
 #
 # Kill lingering OSD message scrolls
 [ "x$OSD_SCRIPT_PID" = "x" ] || kill -15 $OSD_SCRIPT_PID
