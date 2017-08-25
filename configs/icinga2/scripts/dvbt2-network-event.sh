@@ -29,12 +29,13 @@ DVBT_NETWORK_CONFIG_FILE=$DVBT_NETWORK_CONFIG_DIR/$DVBT_NETWORK_UUID/config
 #  PVR Status Query  #
 ######################
 # Run command
-$PVR_STATUS_CMD
+$PVR_STATUS_CMD > /dev/null 2>&1
 # Pull Status
 . $PVR_STATUS_FILE
 
+
 # Quit if Kodi PVR Manager is not enabled
-[ "$PVR_HTS_STATUS" != "false" ] || exit 0
+[ "$ADDON_STATUS" = "true" ] || exit 0
 
 
 
