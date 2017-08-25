@@ -61,6 +61,8 @@ JAMBULATV_SETUP_DB_USER=jambula_setup
 JAMBULATV_SETUP_DB_PASS=eng8Na
 JAMBULATV_SETUP_DB_TABLE=setup
 
+PVR_STATUS_FILE=$(grep ^PVR_STATUS_FILE $(which jambulatv-kodi-controller) | cut -d '=' -f2 | head -1 | awk {'print $1'})
+
 
 
 ###############
@@ -81,7 +83,7 @@ sudo systemctl restart nginx.service
 
 remove_previous_osd_message () {
 # Kill any lingering OSD message scrolls
-OSD_PID=$(ps auxw | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
+OSD_PID=$(ps auxw | grep -Ev grep | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
 [ "x$OSD_PID" = "x" ] || kill -15 $OSD_PID
 # Remove OSD run file if it exists
 [ ! -e $OSDRUNFILE ] || rm -f $OSDRUNFILE
@@ -89,7 +91,7 @@ OSD_PID=$(ps auxw | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
 
 remove_previous_qrcode () {
 # Kill existing QR Code/VLC process
-QRCODE_VLC_PID=$(ps auxw | grep vlc | grep qrcodes/setup_url.png | awk {'print $2'})
+QRCODE_VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep qrcodes/setup_url.png | awk {'print $2'})
 [ "x$QRCODE_VLC_PID" != "x" ] && kill $QRCODE_VLC_PID
 }
 
@@ -137,7 +139,7 @@ done
 # Configure internet based on device type selected
 case $TYPE in
 3_4g_dongle)
-sudo chown $MULTIMEDIA_USER $SETUP_3_4G_DONGLE_FILE
+[ -e $SETUP_3_4G_DONGLE_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_3_4G_DONGLE_FILE
 cat > $SETUP_3_4G_DONGLE_FILE <<EOF
 TYPE='3_4g_dongle'
 ISP_NAME=$ISP_NAME
@@ -149,7 +151,7 @@ EOF
 sudo jambulatv-ppp-dialer $ISP_NAME $USERNAME $PASSWORD 1 &
 ;;
 mifi_router)
-sudo chown $MULTIMEDIA_USER $SETUP_MIFI_ROUTER_FILE
+[ -e $SETUP_MIFI_ROUTER_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_MIFI_ROUTER_FILE
 cat > $SETUP_MIFI_ROUTER_FILE <<EOF
 ISP_NAME=$ISP_NAME
 SSID="$WIFI_SSID"
@@ -159,7 +161,7 @@ EOF
 sudo jambulatv-connect-2-wifi-ap UP &
 ;;
 lan_dhcp)
-sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
+[ -e $SETUP_LAN_SYSCONFIG_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
 cat > $SETUP_LAN_SYSCONFIG_FILE <<EOF
 # IP/DNS settings for ${SETUP_LAN_DEVICE}
 DEVICE="${SETUP_LAN_DEVICE}"
@@ -172,7 +174,7 @@ EOF
 sudo systemctl restart network.service
 ;;
 lan_static)
-sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
+[ -e $SETUP_LAN_SYSCONFIG_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
 cat > $SETUP_LAN_SYSCONFIG_FILE <<EOF
 # IP/DNS settings for ${SETUP_LAN_DEVICE}
 DEVICE="${SETUP_LAN_DEVICE}"
@@ -204,7 +206,7 @@ do
 sleep 1
 done
 # Change permissions so we can write to My WiFi devices file
-sudo chown $MULTIMEDIA_USER $SETUP_WIFI_DEVICES_FILE
+[ -e $SETUP_WIFI_DEVICES_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_WIFI_DEVICES_FILE
 # Copy MAC Addresses to JambulaTV WiFi devices file
 cat $SETUP_MAC_ADDRESSES_FILE | while read LINE 
 do
@@ -217,7 +219,7 @@ then
 echo "$MAC_DASHED | $NICKNAME | no" >> $SETUP_WIFI_DEVICES_FILE
 #
 # Change permissions so we can write to icinga2 hosts file
-sudo chown $MULTIMEDIA_USER $ICINGA2_JAMBULATV_HOSTS_FILE
+[ -e $ICINGA2_JAMBULATV_HOSTS_FILE ] && sudo chown $MULTIMEDIA_USER $ICINGA2_JAMBULATV_HOSTS_FILE
 # Add to icinga2 hosts file
 cat >> $ICINGA2_JAMBULATV_HOSTS_FILE <<EOF
 
@@ -255,20 +257,40 @@ done
 if [ ! -e $TVHEADEND_CONFIG_DIR/.dvbt_configured ] && \
 	[ "$TVH_DVBT_CONFIG_REQUESTED" = "y" ];
 then
-# dvbt_configure 
-set_variables 
-# dvbt_configure if dvbt tuner is detected
-[ -d /dev/dvb ] && tvheadend_dvbt_configure
-fi
 
-# Since DVBT configure was requested, perform kodi pvr setups anyway
-if [ "$TVH_DVBT_CONFIG_REQUESTED" = "y" ];
-then
-# toggle pvr.hts to on
-jambulatv-kodi-controller addon_switch pvr.hts
+# Source Live TV variables
+set_variables 
+
+# Configure and setup DVB-T2 in TVHeadend server
+# ----------------------------------------------
 #
-# Enable pvrmanager = true
-xmlstarlet ed -L -u '/settings/pvrmanager/enabled' -v "true" $KODI_GUI_SETTINGS
+# DVB-T configure if dvbt tuner is detected
+[ -d /dev/dvb/adapter${DVBT_TUNER_NO} ] && tvheadend_dvbt_configure
+# Map DVB-T channels
+[ -d /dev/dvb/adapter${DVBT_TUNER_NO} ] && jambulatv-tvheadend-controller dvb map
+
+# Since DVBT configure was requested, enable PVR functions in kodi 
+# ----------------------------------------------------------------
+#
+# 1) Check status of pvr.hts addon, and enable it if false
+jambulatv-kodi-controller addon_status pvr.hts > /dev/null 2>&1
+# Source PVR status temp file
+[ -e $PVR_STATUS_FILE ] && . $PVR_STATUS_FILE
+# If status is disabled - Enable it! i.e. Toggle to true
+[ "$ADDON_STATUS" = "true" ] || jambulatv-kodi-controller addon_switch pvr.hts > /dev/null 2>&1
+# Let other runs know, we did this already
+touch $KODI_USER_DATA/.pvrmanager_enabled 
+
+# 2) Add Jambula customized guisettings file with support for Live TV - Overrides previous install setting
+KODI_GUISETTINGS_FILE=$PROJECT_CONFIGS_DIR/kodi/guisettings.with.pvr.xml
+#
+cat $KODI_GUISETTINGS_FILE | \
+	sed -e "s:KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
+   	sed -e "s:KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
+	sed -e "s:KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
+   	sed -e "s:SMB_WORKGROUP:$SMB_WORKGROUP:g" \
+	> $KODI_USER_DATA/guisettings.xml
+
 fi
 }
 
@@ -280,7 +302,7 @@ sleep 1
 echo "Waiting for Setup to complete"
 done
 # Remove QR Code since setup completed
-QRCODE_PID=$(ps auxw | grep $QRCODE_FILE | awk {'print $2'})
+QRCODE_PID=$(ps auxw | grep -Ev grep | grep $QRCODE_FILE | awk {'print $2'})
 kill -15 $QRCODE_PID || kill -9 $QRCODE_PID
 }
 
@@ -341,7 +363,7 @@ NEWS_SOURCES=$(query_mysql_db news_sources | sed 's:,: :g')
 }
 
 gmail_smtp_setup () {
-sudo chown $MULTIMEDIA_USER $EMAIL_GMAIL_CONFIG
+[ -e $EMAIL_GMAIL_CONFIG ] && sudo chown $MULTIMEDIA_USER $EMAIL_GMAIL_CONFIG
 # Add usernames, passwords credentials to Gmail config
 cat >> $EMAIL_GMAIL_CONFIG << EOF
 # GMail username and password
@@ -352,7 +374,7 @@ EOF
 
 email_messaging_setup () {
 [ -e $EMAIL_CREDENTIALS_CONFIG ] || sudo touch $EMAIL_CREDENTIALS_CONFIG
-sudo chown $MULTIMEDIA_USER $EMAIL_CREDENTIALS_CONFIG
+[ -e $EMAIL_CREDENTIALS_CONFIG ] && sudo chown $MULTIMEDIA_USER $EMAIL_CREDENTIALS_CONFIG
 cat > $EMAIL_CREDENTIALS_CONFIG << EOF
 EMAIL_TO_ADDRESS="$NOTIFICATION_EMAIL_ADDRESS"
 EMAIL_CC_ADDRESS=""
@@ -360,7 +382,7 @@ EOF
 }
 
 telegram_messaging_setup () {
-sudo chown $MULTIMEDIA_USER $TELEGRAM_CREDENTIALS_CONFIG
+[ -e $TELEGRAM_CREDENTIALS_CONFIG ] && sudo chown $MULTIMEDIA_USER $TELEGRAM_CREDENTIALS_CONFIG
 cat >> $TELEGRAM_CREDENTIALS_CONFIG << EOF
 TELEGRAM_API_BOT="$TELEGRAM_BOT_ID"
 TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
@@ -369,7 +391,7 @@ EOF
 }
 
 whatsapp_messaging_setup () {
-sudo chown $MULTIMEDIA_USER $WHATSAPP_CREDENTIALS_CONFIG
+[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && sudo chown $MULTIMEDIA_USER $WHATSAPP_CREDENTIALS_CONFIG
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
 # TIP: Run the script $WHATSAPP_SCRIPT to generate the rest of whatsapp settings
 WHATSAPP_SCRIPT=$WHATSAPP_SCRIPT
@@ -445,8 +467,11 @@ news_headlines_setup() {
 # Extract variables from mysql
 extract_setup_variables
 
-# Backup/rename existing rss file
-[ -e $SETUP_NEWS_RSS_FILE ] && sudo mv -v $SETUP_NEWS_RSS_FILE $SETUP_NEWS_RSS_FILE-old
+# Change permissions of RSS file if one already exists
+[ -e $SETUP_NEWS_RSS_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_NEWS_RSS_FILE
+
+# Empty existing file
+echo "" > $SETUP_NEWS_RSS_FILE
 
 # Cycle through user chosen sources
 for SOURCE in $NEWS_SOURCES;
@@ -510,8 +535,6 @@ FEEDS
 esac
 
 done
-# Change permissions of RSS file
-sudo chown $MULTIMEDIA_USER $SETUP_NEWS_RSS_FILE
 }
 
 reset_system_password () {
@@ -522,9 +545,11 @@ echo "$MULTIMEDIA_USER:$SYSTEM_PASSWORD" | sudo /usr/sbin/chpasswd
 }
 
 email_system_info () {
+# Extract variables from mysql
+extract_setup_variables
+
 # Email system info and passwords for storage
-jambulatv-email $CONTACT_EMAIL "[JambulaTV] Setup completed" "$(cat <<EOF
-Dear $CONTACT_NAME, 
+jambulatv-email $CONTACT_EMAIL "[JambulaTV] Setup completed" "Dear $CONTACT_NAME, 
 
 Congratulations! The initial setup of your JambulaTV completed successfully.
 
@@ -536,10 +561,15 @@ Product:	$PRODUCT
 Version:	$VERSION
 Serial No:	$SERIAL
 
-root:	$SYSTEM_PASSWORD
-$MULTIMEDIA_USER:	$SYSTEM_PASSWORD
+User credentials
+----------------
+[root]
+$SYSTEM_PASSWORD
 
-EOF)"
+[$MULTIMEDIA_USER]
+$SYSTEM_PASSWORD
+
+"
 }
 
 create_video_music_db () {
