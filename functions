@@ -220,6 +220,7 @@ KODI_SYSTEM_ADDONS=$KODI_SHARE_DIR/addons
 KODI_SYSTEM_SYS=$KODI_SHARE_DIR/system
 KODI_LOG_FILE=$KODI_CONFIG_DIR/temp/kodi.log
 KODI_STANDALONE_SCRIPT=$BINARY_PREFIX/kodi-standalone
+KODI_PVR_MANAGER_ENABLE_SCRIPT=$BINARY_PREFIX/jambulatv-kodi-pvr-hts-manager
 #
 KODI_DB_PREFIX=kodi
 KODI_DB_VIDEO=${KODI_DB_PREFIX}_video
@@ -2746,29 +2747,6 @@ systemctl enable tvheadend.service
 # Copy logrotate file to reduce size of tvheadend log
 cp -v $PROJECT_CONFIGS_DIR/logrotate/tvheadend $LOGROTATE_CONF_DIR/
 
-# Configure DVB-T2 network if requested
-# -------------------------------------
-if [ "$TVH_DVBT_CONFIG_REQUESTED" = "yes" ];
-then
-tvheadend_dvbt_configure 
-# Let other tools know, we already configured DVB-T
-touch $TVHEADEND_CONFIG_DIR/.dvbt_configured
-else
-# Remind to run manually in post install information, and output to final notice
-echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
-#
-#
-TVHeadend DVB-T Network
-========================
-% The DVB-T network was not configured during install.  Please run the following function:
-
-  tvheadend_dvbt_configure
-  
-TIP: Run initial-setup or just add it to testing.sh and run!  
-#
-EOF
-fi
-
 # Configure Timeshift i.e. Pausing of Live TV
 # -------------------------------------------
 cat > $TVHEADEND_TIMESHIFT_CONFIG_DIR/config << EOF
@@ -2877,6 +2855,71 @@ chmod 755 $BINARY_PREFIX/jambulatv-tvheadend-processor
 			> $BINARY_PREFIX/jambulatv-tvheadend-controller
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-tvheadend-controller
+
+# Configure DVB-T2 network if requested
+# -------------------------------------
+if [ "$TVH_DVBT_CONFIG_REQUESTED" = "yes" ];
+then
+
+# DVB-T configure if dvbt tuner is detected
+[ -d /dev/dvb/adapter${DVBT_TUNER_NO} ] && tvheadend_dvbt_configure 
+
+# Map DVB-T channels
+[ -d /dev/dvb/adapter${DVBT_TUNER_NO} ] && jambulatv-tvheadend-controller dvb map
+
+# create script which will enable kodi pvr.hts addon at next boot.  Can't do it here, since kodi still not alive
+cat > $KODI_PVR_MANAGER_ENABLE_SCRIPT <<EOF
+#!/bin/sh
+# Temporary script to enable PVR Manager in kodi after initial install
+#
+PVR_STATUS_FILE=\$(grep ^PVR_STATUS_FILE \$(which jambulatv-kodi-controller) | cut -d '=' -f2 | head -1 | awk {'print $1'})
+
+# Quit if PVR manager was already enabled
+[ -e $KODI_USER_DATA/.pvrmanager_enabled ] && exit
+# Quit if DVBT was never configured
+[ -e $TVHEADEND_CONFIG_DIR/.dvbt_configured ] || exit 
+
+# Check status of kodi pvr.hts addon, and enable it if false
+jambulatv-kodi-controller addon_status pvr.hts > /dev/null 2>&1
+# Source PVR status temp file
+[ -e \$PVR_STATUS_FILE ] && . \$PVR_STATUS_FILE
+# If status is disabled - Enable it! i.e. Toggle to true
+[ "\$ADDON_STATUS" = "true" ] || jambulatv-kodi-controller addon_switch pvr.hts > /dev/null 2>&1
+
+# Let other runs know, we did this already
+touch $KODI_USER_DATA/.pvrmanager_enabled 
+EOF
+# Copy autoexec.py startup file for kodi if non-existent
+[ -e $KODI_USER_DATA/autoexec.py ] || cp -v $PROJECT_CONFIGS_DIR/kodi/autoexec.py $KODI_USER_DATA
+# Append PVR Manager enable script to auto start file
+cat >> $KODI_USER_DATA/autoexec.py <<EOF
+
+# Enable PVR Manager if it was disabled and was requested for at setup
+subprocess.check_call("$KODI_PVR_MANAGER_ENABLE_SCRIPT")
+EOF
+# Make script executable
+chmod 755  $KODI_PVR_MANAGER_ENABLE_SCRIPT
+# Let other tools know, we already configured DVB-T
+touch $TVHEADEND_CONFIG_DIR/.dvbt_configured
+
+else
+# Remind to run manually in post install information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+TVHeadend DVB-T Network
+========================
+% The DVB-T network was not configured during install.  Please run the following function:
+
+  tvheadend_dvbt_configure and map channels using:
+
+  jambulatv-tvheadend-controller dvb map
+
+  
+TIP: Run initial-setup tool or just add it to testing.sh and run!  
+#
+EOF
+fi
 }
 
 fmtools_install () {
@@ -3546,11 +3589,16 @@ cat $PROJECT_CONFIGS_DIR/kodi/sources.xml | \
 #
 # Copy sources, rss xml file, autostart script
 for KODI_CONFIG in \
-	RssFeeds.xml \
-	autoexec.py
+	RssFeeds.xml
 do
 cp -v $PROJECT_CONFIGS_DIR/kodi/$KODI_CONFIG $KODI_USER_DATA/
 done
+#
+# Copy autoexec.py startup file for kodi if not already added elsewhere - keep this separate from above
+[ -e $KODI_USER_DATA/autoexec.py ] || cp -v $PROJECT_CONFIGS_DIR/kodi/autoexec.py $KODI_USER_DATA
+#
+# Make startup script executable
+chmod 755 $KODI_USER_DATA/autoexec.py
 #
 # Add Jambula customized advancedsettings file
 cat $PROJECT_CONFIGS_DIR/kodi/advancedsettings.xml | \
@@ -3559,8 +3607,15 @@ cat $PROJECT_CONFIGS_DIR/kodi/advancedsettings.xml | \
 	sed "s:KODI_DB_USER:$KODI_DB_USER:g" | \
 	sed "s:KODI_DB_PASS:$KODI_DB_PASS:g" \
 	> $KODI_USER_DATA/advancedsettings.xml
-# Add Jambula customized guisettings file
-cat $PROJECT_CONFIGS_DIR/kodi/guisettings.xml | \
+
+# Add Jambula customized guisettings file depending on weather Live TV setup has been requested for
+if [ "$TVH_DVBT_CONFIG_REQUESTED" = "yes" ];
+then
+KODI_GUISETTINGS_FILE=$PROJECT_CONFIGS_DIR/kodi/guisettings.with.pvr.xml
+else
+KODI_GUISETTINGS_FILE=$PROJECT_CONFIGS_DIR/kodi/guisettings.without.pvr.xml
+fi
+cat $KODI_GUISETTINGS_FILE | \
 	sed -e "s:KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
    	sed -e "s:KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
 	sed -e "s:KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
@@ -3568,8 +3623,6 @@ cat $PROJECT_CONFIGS_DIR/kodi/guisettings.xml | \
 	> $KODI_USER_DATA/guisettings.xml
 # Give permissions to multimedia user for config directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_CONFIG_DIR
-# Make startup script executable
-chmod 755 $KODI_USER_DATA/autoexec.py
 #
 # Create jambulatv log directory
 [ -d $PROJECT_SYSTEM_LOG_DIR ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR
@@ -9137,6 +9190,15 @@ cat $PROJECT_CUSTOMIZATION_DIR/setup/form_50.php | \
 	sed -e "s:JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
 	sed -e "s:JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
 	sed -e "s:JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" > $WWW_HTML_DIR/setup/form_50.php
+#
+# Copy autoexec.py startup file for kodi if non-existent
+[ -e $KODI_USER_DATA/autoexec.py ] || cp -v $PROJECT_CONFIGS_DIR/kodi/autoexec.py $KODI_USER_DATA
+# Append PVR Manager enable script to auto start file
+cat >> $KODI_USER_DATA/autoexec.py <<EOF
+
+# If not yet done, run initial setup tool at next boot
+subprocess.check_call("$BINARY_PREFIX/jambulatv-initial-setup")
+EOF
 }
 
 auto_updates_configure () {
