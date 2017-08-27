@@ -20,12 +20,24 @@ NTV_UGANDA_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/ntvuganda | grep -i "NTV Ugand
 # Spark TV Uganda
 SPARK_TV_UGANDA_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/ntvuganda | grep -i "Spark TV Live Stream" | grep -oP '(?<=href="/watch).+?(?=">Spark TV Live Stream</a>)' | sed "s:?v=::g" | uniq)
 
+# Bukedde TV Uganda
+BUKEDDE_TV_UGANDA_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/bukeddetv | grep -i "Bukedde TV Live Stream" | grep -oP '(?<=href="/watch).+?(?=">Bukedde TV Live Stream</a>)' | sed "s:?v=::g" | uniq)
+
 # KTN Kenya (Nairobi Kenya)
 KTN_KENYA_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/standardgroupkenya | grep -i "KTN News Live Stream" | grep -oP '(?<=href="/watch).+?(?=">KTN News Live Stream \(Nairobi Kenya\)</a>)' | sed "s:?v=::g" | uniq)
 
 # NTV Kenya
 NTV_KENYA_LIVE_CHANNEL_PAGE_ID=$($CURL_CMD $YOUTUBE_USER_URL/qtvkenya/channels | awk -F: '/title="Live"/ { print $0 }' | grep -oP '(?<=href="/channel/).+?(?=">Live</a>)' | uniq)
 NTV_KENYA_VIDEO_ID=$($CURL_CMD $YOUTUBE_CHANNEL_URL/$NTV_KENYA_LIVE_CHANNEL_PAGE_ID | grep "NTV Kenya Live Stream" | grep -oP '(?<=href="/watch).+?(?=">NTV Kenya Live Stream</a>)' | sed "s:?v=::g")
+
+# TVC News Nigeria
+TVC_NEWS_NIGERIA_VIDEO_ID=$($CURL_CMD $YOUTUBE_CHANNEL_URL/UCgp4A6I8LCWrhUzn-5SbKvA | awk -F: '/title="TVC News Nigeria Live"/ { print $0 }' | grep -oP '(?<=href="/watch).+?(?=">TVC News Nigeria Live</a>)' | uniq | sed "s:?v=::g")
+
+# CNN
+CNN_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/wuchst/feed | grep -i "CNN Live Stream" | grep -oP '(?<=href="/watch).+?(?=">CNN Live Stream</a>)' | sed "s:?v=::g" | uniq)
+
+# Fox News
+FOX_NEWS_VIDEO_ID=$($CURL_CMD $YOUTUBE_CHANNEL_URL/UCEwvI5DyrSEUvOtWGOze9cQ | awk -F: '/title="Fox News Live Stream ▪ HD"/ { print $0 }' | grep -oP '(?<=href="/watch).+?(?=">Fox News Live Stream ▪ HD</a>)' | uniq | sed "s:?v=::g")
 
 
 
@@ -46,6 +58,10 @@ YOUTUBE_VIDEO_ID=$NTV_UGANDA_VIDEO_ID
 [Ss][Pp][Aa][Rr][Kk]*[Uu][Gg][Aa][Nn][Dd][Aa]|[Ss][Pp][Aa][Rr][Kk])
 YOUTUBE_VIDEO_ID=$SPARK_TV_UGANDA_VIDEO_ID
 ;;
+# BUKEDDE_TV_UGANDA
+[Bb][Uu][Kk][Ee][Dd][Dd][Ee][Tt][Vv])
+YOUTUBE_VIDEO_ID=$BUKEDDE_TV_UGANDA_VIDEO_ID
+;;
 # KTN Kenya | KTN
 [Kk][Tt][Nn]*[Kk][Ee][Nn][Yy][Aa]|[Kk][Tt][Nn])
 YOUTUBE_VIDEO_ID=$KTN_KENYA_VIDEO_ID
@@ -53,6 +69,18 @@ YOUTUBE_VIDEO_ID=$KTN_KENYA_VIDEO_ID
 # NTV Kenya | NTVK
 [Nn][Tt][Vv]*[Kk][Ee][Nn][Yy][Aa]|[Nn][Tt][Vv][Kk])
 YOUTUBE_VIDEO_ID=$NTV_KENYA_VIDEO_ID
+;;
+# TVC_NEWS_NIGERIA
+[Tt][Vv][Cc][Nn][Ee][Ww][Ss])
+YOUTUBE_VIDEO_ID=$TVC_NEWS_NIGERIA_VIDEO_ID
+;;
+# CNN
+[Cc][Nn][Nn])
+YOUTUBE_VIDEO_ID=$CNN_VIDEO_ID
+;;
+# Fox News
+[Ff][Oo][Xx]*[Nn][Ee][Ww][Ss])
+YOUTUBE_VIDEO_ID=$FOX_NEWS_VIDEO_ID
 ;;
 *)
 YOUTUBE_VIDEO_ID="$CHANNEL"
