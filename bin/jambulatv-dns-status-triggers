@@ -18,6 +18,7 @@ MULTIMEDIA_USER=jambula
 BEEP_SOUNDS_SCRIPT=/usr/bin/jambulatv-sounds
 SPEED_TEST_SCRIPT=/usr/bin/jambulatv-speed-test
 
+INTERNET_OFF_FILE=/etc/dnsmasq.d/dns_off.conf
 DEBUG_FILE=/tmp/internet_status.log
 DNS_STATUS=$1
 LAST_DNS_STATUS=$2
@@ -154,7 +155,7 @@ echo "$(date): New State = Up | Old State = Down" >> $DEBUG_FILE
 update_dns_servers
 
 # Remove dnsmasq entries for local resolution
-[ ! -e /etc/dnsmasq.d/dns_off.conf ] || rm -f /etc/dnsmasq.d/dns_off.conf
+[ ! -e $INTERNET_OFF_FILE ] || rm -f $INTERNET_OFF_FILE
 # Restart dnsmasq.service
 systemctl restart dnsmasq.service
 
@@ -211,7 +212,7 @@ echo "$(date): New State = Down | Old State = Up" >> $DEBUG_FILE
 # Add entries to dnsmasq for local resolution
 # --------------------------------------------
 echo "address=/#/$COOVA_SERVER_IP
-address=/#/$NETWORK_IP_ADDRESS" > /etc/dnsmasq.d/dns_off.conf
+address=/#/$NETWORK_IP_ADDRESS" > $INTERNET_OFF_FILE
 # Restart dnsmasq.service
 systemctl restart dnsmasq.service
 
@@ -240,6 +241,14 @@ EOF
 else
 # Debug
 echo "$(date): Unknown - New State = [$DNS_STATUS] | Old State = [$LAST_DNS_STATUS]" >> $DEBUG_FILE
+
+# Add entries to dnsmasq for local resolution
+# --------------------------------------------
+echo "address=/#/$COOVA_SERVER_IP
+address=/#/$NETWORK_IP_ADDRESS" > $INTERNET_OFF_FILE
+# Restart dnsmasq.service
+systemctl restart dnsmasq.service
+
 # Quit
 exit
 
