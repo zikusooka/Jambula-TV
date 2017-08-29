@@ -75,6 +75,7 @@ templates:
     domain_delay:
       bt-chat.com: 5 seconds
     magnets: no
+    torrent_alive: yes
     email:
       from: '{{secrets.email.from}}'
       to: '{{secrets.email.to}}'
@@ -453,10 +454,7 @@ tasks:
     priority: 97 # Make top priority over move_movies
     disable:
       - retry_failed
-      - seen
-      - email
       - regexp
-
     thetvdb_lookup: yes
     # Specify TVDB ID for badly named series
     if:
@@ -522,8 +520,6 @@ tasks:
     priority: 99
     disable:
       - retry_failed
-      - seen
-      - email
       - regexp
     accept_all: yes
     seen: local

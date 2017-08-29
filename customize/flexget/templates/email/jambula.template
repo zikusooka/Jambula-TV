@@ -1,15 +1,25 @@
-{% if task.accepted -%}
+{% if task.accepted %}
 Hi there!
-
 {%- for group in task.accepted|groupby('task') %}
-
-This is the automated downloads service at your JambulaTV.  I have queued *{{group.list|length}}* new download(s) from the task *{{group.grouper}}* as follows:
-
+{% if task.name == "tv_shows" %}
+The following TV Episode(s) have been queued for download:
+{% elif task.name == "movies" %}
+The following Movie(s) have been queued for download:
+{% elif task.name == "internet_tv" %}
+The following podcast(s) have been queued for download:
+{% elif task.name == "move_tv_shows" %}
+The following TV Series Episode(s) were successfully downloaded. You may find them under 'TV Shows' on your JambulaTV or using the file path listed:
+{% elif task.name == "move_movies" %}
+The following movie(s) were successfully downloaded. You may find them under 'Movies' on your JambulaTV or using the file path listed:
+{% else %}
+The following item(s) were queued from the {{task.name|replace("_", "-")}} task:
+{% endif %}
   {%- for entry in group.list %}
-
 - {{entry.title}} ({{entry.url}}){% if entry.output|d(false) %} => {{entry.output}}{% endif %}
   {% endfor %}
+Total Entries: {{group.list|length}}
 {% endfor %}
+
 ----------------
 This message was sent using your JambulaTV, a product of
                             
@@ -19,5 +29,5 @@ This message was sent using your JambulaTV, a product of
 	  ▐ ▗▀▜ ▐▐▐ ▐ ▐ ▐ ▐  ▐  ▗▀▜     ▐   ▗▀▜ ▐ ▐  ▀▚ 
 	▝▄▞ ▝▄▜ ▐▐▐ ▐▙▛ ▝▄▜  ▝▄ ▝▄▜     ▐▄▄▖▝▄▜ ▐▙▛ ▝▄▞ 
 
-	    ©2016-2017 Jambula Labs All Rights Reserved.
-{% endif -%}
+	    ©2017-2018 Jambula Labs All Rights Reserved.
+{% endif %}
