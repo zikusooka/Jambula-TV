@@ -2675,8 +2675,9 @@ tvheadend_configure () {
 # ------------------
 # Create picons directory if it does not exist
 [ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
-# Copy Live TV picons e.g. logos to JambulaTV share directory
-rsync -av $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET/ $PROJECT_SYSTEM_ICONS_DIR/$TV_MARKET/
+# Copy Live TV picons e.g. logos to JambulaTV share directory if it exists for requested TV market
+[ -e $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET ] && \
+	rsync -av $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET/ $PROJECT_SYSTEM_ICONS_DIR/$TV_MARKET/
 # Give permissons to TV Icons
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_ICONS_DIR/$TV_MARKET
 
