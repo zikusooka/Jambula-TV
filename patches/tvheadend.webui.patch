@@ -1,0 +1,11 @@
+--- src/webui/webui.c	2017-09-06 13:28:16.661769342 +0300
++++ /tmp/webui.c	2017-09-06 13:45:52.154536948 +0300
+@@ -385,7 +385,7 @@
+   int run = 1, started = 0;
+   streaming_queue_t *sq = &prch->prch_sq;
+   muxer_t *mux = prch->prch_muxer;
+-  int ptimeout, grace = 20, r;
++  int ptimeout, grace = 60, r;
+   struct timeval tp;
+   streaming_start_t *ss_copy;
+   int64_t lastpkt, mono;
