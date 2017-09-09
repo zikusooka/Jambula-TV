@@ -1,111 +1,194 @@
 #!/bin/sh
-# This script is used to extract manifest URLs from youtube videos using CLI.
-# Use it to for example:
+# This script is used to extract manifest URLs from youtube videos using CLI. Use it to for example:
 # - Play videos using kodi youtube addon
 # - Add TV channels in IPTV m3u8 playlists
+#
 # Jambula Labs @copyright 2017-2018 All rights reserved
 
 # Variables
 YOUTUBE_USER_URL="https://www.youtube.com/user"
 YOUTUBE_CHANNEL_URL="https://www.youtube.com/channel"
+YOUTUBE_WATCH_URL="https://www.youtube.com/watch?v"
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
+YOUTUBE_DL_OPTS="-q -4 --prefer-insecure --no-check-certificate --geo-bypass"
 YOUTUBE_VARIABLES_TEMP_FILE="/tmp/youtube_variables"
-CURL_CMD="/usr/bin/curl -s"
 
-# Favorite youtube video IDs
-# --------------------------
-# NTV Uganda
-NTV_UGANDA_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/ntvuganda | grep -i "NTV Uganda Livestream" | grep -oP '(?<=href="/watch).+?(?=">NTV Uganda Livestream</a>)' | sed "s:?v=::g" | uniq)
+# Video Format to use depending on connection
+YOUTUBE_VIDEO_FORMAT=93
+# Video Quality definitions according to format selected 
+case $YOUTUBE_VIDEO_FORMAT in
+91)
+YOUTUBE_VIDEO_QUALITY="mp4   256x144   HLS   197k    avc1.4d400c   mp4a.40.5@ 48k   (91)"
+;;
+92)
+YOUTUBE_VIDEO_QUALITY="mp4   426x240   HLS   338k    avc1.4d4015   mp4a.40.5@ 48k   (92)"
+;;
+93)
+YOUTUBE_VIDEO_QUALITY="mp4   640x360   HLS   829k    avc1.4d401e   mp4a.40.2@128k   (93)"
+;;
+94)
+YOUTUBE_VIDEO_QUALITY="mp4   854x480   HLS   1380k   avc1.4d401f   mp4a.40.2@128k   (94)"
+;;
+esac
 
-# Spark TV Uganda
-SPARK_TV_UGANDA_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/ntvuganda | grep -i "Spark TV Live Stream" | grep -oP '(?<=href="/watch).+?(?=">Spark TV Live Stream</a>)' | sed "s:?v=::g" | uniq)
+CURL_CMD="/usr/bin/curl"
+CURL_OPTS="-s -S -G -L -m 60"
 
-# Bukedde TV Uganda
-BUKEDDE_TV_UGANDA_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/bukeddetv | grep -i "Bukedde TV Live Stream" | grep -oP '(?<=href="/watch).+?(?=">Bukedde TV Live Stream</a>)' | sed "s:?v=::g" | uniq)
+HTTP_BROWSER_USERAGENT="Mozilla/5.0" #IMPORTANT: Do Not change this to typical user agent string.  Won't work!
+HTTP_BROWSER_COMMAND="$CURL_CMD $CURL_OPTS -A '$HTTP_BROWSER_USERAGENT'"
 
-# KTN Kenya (Nairobi Kenya)
-KTN_KENYA_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/standardgroupkenya | grep -i "KTN News Live Stream" | grep -oP '(?<=href="/watch).+?(?=">KTN News Live Stream \(Nairobi Kenya\)</a>)' | sed "s:?v=::g" | uniq)
+STREAM_NAME=$(echo $@ | sed 's:"::g')
 
-# NTV Kenya
-NTV_KENYA_LIVE_CHANNEL_PAGE_ID=$($CURL_CMD $YOUTUBE_USER_URL/qtvkenya/channels | awk -F: '/title="Live"/ { print $0 }' | grep -oP '(?<=href="/channel/).+?(?=">Live</a>)' | uniq)
-NTV_KENYA_VIDEO_ID=$($CURL_CMD $YOUTUBE_CHANNEL_URL/$NTV_KENYA_LIVE_CHANNEL_PAGE_ID | grep "NTV Kenya Live Stream" | grep -oP '(?<=href="/watch).+?(?=">NTV Kenya Live Stream</a>)' | sed "s:?v=::g")
 
-# TVC News Nigeria
-TVC_NEWS_NIGERIA_VIDEO_ID=$($CURL_CMD $YOUTUBE_CHANNEL_URL/UCgp4A6I8LCWrhUzn-5SbKvA | awk -F: '/title="TVC News Nigeria Live"/ { print $0 }' | grep -oP '(?<=href="/watch).+?(?=">TVC News Nigeria Live</a>)' | uniq | sed "s:?v=::g")
 
-# CNN
-CNN_VIDEO_ID=$($CURL_CMD $YOUTUBE_USER_URL/wuchst/feed | grep -i "CNN Live Stream" | grep -oP '(?<=href="/watch).+?(?=">CNN Live Stream</a>)' | sed "s:?v=::g" | uniq)
+###############
+#  FUNCTIONS  #
+###############
+# Usage
+usage () {
+if [ "x$STREAM_NAME" = "x" ];
+then
+clear
+cat <<EOF
+Usage:  $(basename $0) [STREAM NAME] 
 
-# Fox News
-FOX_NEWS_VIDEO_ID=$($CURL_CMD $YOUTUBE_CHANNEL_URL/UCEwvI5DyrSEUvOtWGOze9cQ | awk -F: '/title="Fox News Live Stream ▪ HD"/ { print $0 }' | grep -oP '(?<=href="/watch).+?(?=">Fox News Live Stream ▪ HD</a>)' | uniq | sed "s:?v=::g")
+Supported Youtube streams:
+--------------------------
+ntv uganda
+sparktv uganda
+bukeddetv uganda
+ktn kenya
+ntv kenya
+tvc news nigeria
+fox news
+cnn
+
+EOF
+exit 1
+fi
+}
+
+# Search for Youtube IDs
+youtube_search_video_id () {
+#
+# Youtube search variables
+YOUTUBE_SEARCH_URL=https://www.youtube.com/results
+YOUTUBE_SEARCH_PHRASE="$@"
+YOUTUBE_SEARCH_TEXT="$(echo "$YOUTUBE_SEARCH_PHRASE" | sed -s "s: :+:g")"
+YOUTUBE_SEARCH_FILTER="CAMSBAgCQAFQFA%253D%253D"
+YOUTUBE_SEARCH_OUTPUT_FILE=/tmp/youtube_search_results
+YOUTUBE_SEARCH_SITE_LINKS_FILE=/tmp/youtube_links_found
+#
+# Youtube Search with filters: Live, Today, View Count
+$HTTP_BROWSER_COMMAND -o $YOUTUBE_SEARCH_OUTPUT_FILE \
+	${YOUTUBE_SEARCH_URL}?q=$YOUTUBE_SEARCH_TEXT -d sp="$YOUTUBE_SEARCH_FILTER"
+#
+# Filter out HTML tags from search output. Strip out Youtube links
+YOUTUBE_VIDEO_ID=$(grep -i "$YOUTUBE_SEARCH_PHRASE" $YOUTUBE_SEARCH_OUTPUT_FILE | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#
+# Export Youtube ID
+export YOUTUBE_VIDEO_ID
+}
+
+# Youtube Video IDs
+youtube_video_id_ntv_uganda () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i "NTV Uganda Livestream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_sparktv_uganda () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i "Spark TV Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_bukeddetv_uganda () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/bukeddetv | grep -i "Bukedde TV Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_ktn_kenya () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/standardgroupkenya | grep -i "KTN News Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_ntv_kenya () {
+YOUTUBE_LIVE_CHANNEL_PAGE_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/qtvkenya/channels | awk -F: '/title="Live"/ { print $0 }' | grep -oP '(?<=href="/channel/).+?(?=">Live)' | uniq)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | grep "NTV Kenya Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_tvc_news_nigeria () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/UCgp4A6I8LCWrhUzn-5SbKvA | awk -F: '/title="TVC News Nigeria Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_fox_news () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/UCEwvI5DyrSEUvOtWGOze9cQ | awk -F: '/title="Fox News Live Stream ▪ HD"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_cnn () {
+youtube_search_video_id "CNN Live Stream"
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
+}
 
 
 
 #################
 #  MAIN SCRIPT  #
 #################
-#
-# Set Channel
-CHANNEL=$(echo $@ | sed 's:"::g')
-#
+# Usage
+usage
+
 # Set Youtube Video ID
-case "$CHANNEL" in
+case "$STREAM_NAME" in
 # NTV Uganda | NTVU
-[Nn][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa]|[Nn][Tt][Vv][Uu])
-YOUTUBE_VIDEO_ID=$NTV_UGANDA_VIDEO_ID
+[Nn][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa])
+youtube_video_id_ntv_uganda
 ;;
 # Spark Uganda | Spark
-[Ss][Pp][Aa][Rr][Kk]*[Uu][Gg][Aa][Nn][Dd][Aa]|[Ss][Pp][Aa][Rr][Kk])
-YOUTUBE_VIDEO_ID=$SPARK_TV_UGANDA_VIDEO_ID
+[Ss][Pp][Aa][Rr][Kk][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa])
+youtube_video_id_sparktv_uganda
 ;;
 # BUKEDDE_TV_UGANDA
-[Bb][Uu][Kk][Ee][Dd][Dd][Ee][Tt][Vv])
-YOUTUBE_VIDEO_ID=$BUKEDDE_TV_UGANDA_VIDEO_ID
+[Bb][Uu][Kk][Ee][Dd][Dd][Ee][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa])
+youtube_video_id_bukeddetv_uganda
 ;;
 # KTN Kenya | KTN
-[Kk][Tt][Nn]*[Kk][Ee][Nn][Yy][Aa]|[Kk][Tt][Nn])
-YOUTUBE_VIDEO_ID=$KTN_KENYA_VIDEO_ID
+[Kk][Tt][Nn]*[Kk][Ee][Nn][Yy][Aa])
+youtube_video_id_ktn_kenya
 ;;
 # NTV Kenya | NTVK
-[Nn][Tt][Vv]*[Kk][Ee][Nn][Yy][Aa]|[Nn][Tt][Vv][Kk])
-YOUTUBE_VIDEO_ID=$NTV_KENYA_VIDEO_ID
+[Nn][Tt][Vv]*[Kk][Ee][Nn][Yy][Aa])
+youtube_video_id_ntv_kenya
 ;;
 # TVC_NEWS_NIGERIA
-[Tt][Vv][Cc][Nn][Ee][Ww][Ss])
-YOUTUBE_VIDEO_ID=$TVC_NEWS_NIGERIA_VIDEO_ID
-;;
-# CNN
-[Cc][Nn][Nn])
-YOUTUBE_VIDEO_ID=$CNN_VIDEO_ID
+[Tt][Vv][Cc]*[Nn][Ee][Ww][Ss]*[Nn][Ii][Gg][Ee][Rr][Ii][Aa])
+youtube_video_id_tvc_news_nigeria
 ;;
 # Fox News
 [Ff][Oo][Xx]*[Nn][Ee][Ww][Ss])
-YOUTUBE_VIDEO_ID=$FOX_NEWS_VIDEO_ID
+youtube_video_id_fox_news
 ;;
-*)
-YOUTUBE_VIDEO_ID="$CHANNEL"
+# CNN
+[Cc][Nn][Nn])
+youtube_video_id_cnn
+;;
 esac
 
 # Quit if no Youtube ID is found 
-$YOUTUBE_DL_CMD --get-id $YOUTUBE_VIDEO_ID > /dev/null 2>&1
-YTEXITVAL=$?
-if [ "$YTEXITVAL" != "0" ];
+if [ "x$YOUTUBE_VIDEO_ID" = "x" ];
 then
-echo "Error: No Youtube ID was found for $CHANNEL, quitting ..."
-exit 0
+logger -s -t $(basename $0) "Error: No Youtube ID was found for $STREAM_NAME, quitting ..."
+exit 1
 fi
 
-# Youtube Manifest URL
-YOUTUBE_MANIFEST_URL=$($YOUTUBE_DL_CMD -g $YOUTUBE_VIDEO_ID | grep http | head -1)
+# Get Youtube Manifest URL
+YOUTUBE_MANIFEST_URL=$($YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_VIDEO_FORMAT -g --youtube-skip-dash-manifest $YOUTUBE_VIDEO_ID | grep http | head -1)
 
 # Remove Youtube variables temp file if it exists
-[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && rm -f $YOUTUBE_VARIABLES_TEMP_FILE
+[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
 
 # Create a Youtube variables temp file for other tools to use
 cat > $YOUTUBE_VARIABLES_TEMP_FILE <<EOF
-YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
-YOUTUBE_MANIFEST_URL=$YOUTUBE_MANIFEST_URL
+YOUTUBE_VIDEO_ID=${YOUTUBE_VIDEO_ID}
+YOUTUBE_VIDEO_URL=${YOUTUBE_WATCH_URL}=${YOUTUBE_VIDEO_ID}
+YOUTUBE_VIDEO_QUALITY=${YOUTUBE_VIDEO_QUALITY}
+YOUTUBE_MANIFEST_URL=${YOUTUBE_MANIFEST_URL}
 EOF
 
 # Export set Youtube variables
-export YOUTUBE_VIDEO_ID YOUTUBE_MANIFEST_URL
+export YOUTUBE_VIDEO_ID YOUTUBE_VIDEO_URL YOUTUBE_VIDEO_QUALITY YOUTUBE_MANIFEST_URL 
