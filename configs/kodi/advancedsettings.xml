@@ -146,7 +146,7 @@
     <curlclienttimeout>60</curlclienttimeout>
     <curllowspeedtime>240</curllowspeedtime>
     <curlretries>2</curlretries>
-    <cachemembuffersize>1073741824</cachemembuffersize> <!-- 1GB video buffer, Kodi recommends setting the buffer to max 1/4 of total memory -->
+    <cachemembuffersize>1824260096</cachemembuffersize> <!-- 1GB video buffer, Kodi recommends setting the buffer to max 1/4 of total memory -->
     <buffermode>1</buffermode> <!-- 1=All 2=internet 3=No 0=like 2 plus more Internet -->
     <readbufferfactor>10</readbufferfactor> <!-- increases the speed at which the buffer is filled -->
   </network>
@@ -169,8 +169,8 @@
 
 <!-- PVR (Live TV) -->
   <hideconnectionlostwarning>true</hideconnectionlostwarning> <!-- PVR Connections lost -->
-  <minvideocachelevel>5</minvideocachelevel> <!-- Cache up to this level in the video buffer buffer before resuming playback if the buffers run dry. -->
-  <minaudiocachelevel>20</minaudiocachelevel> <!-- Cache up to this level in the audio buffer before resuming playback if the buffers run dry. -->
+  <minvideocachelevel>90</minvideocachelevel> <!-- Cache up to this level in the video buffer buffer before resuming playback if the buffers run dry. -->
+  <minaudiocachelevel>90</minaudiocachelevel> <!-- Cache up to this level in the audio buffer before resuming playback if the buffers run dry. -->
   <cacheindvdplayer>true</cacheindvdplayer> <!-- Cache PVR stream in DVDPlayer. -->
 
 <!-- LOGGING -->
