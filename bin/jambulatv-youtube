@@ -57,9 +57,12 @@ Supported Youtube streams:
 ntv uganda
 sparktv uganda
 bukeddetv uganda
+citizentv kenya 
 ktn kenya
 ntv kenya
 tvc news nigeria
+cnbc africa
+bloomberg
 fox news
 cnn
 
@@ -103,6 +106,10 @@ youtube_video_id_bukeddetv_uganda () {
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/bukeddetv | grep -i "Bukedde TV Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
+youtube_video_id_citizentv_kenya () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/kenyacitizentv | grep -i "Citizen TV Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
 youtube_video_id_ktn_kenya () {
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/standardgroupkenya | grep -i "KTN News Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
@@ -114,6 +121,14 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHAN
 
 youtube_video_id_tvc_news_nigeria () {
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/UCgp4A6I8LCWrhUzn-5SbKvA | awk -F: '/title="TVC News Nigeria Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_cnbc_africa () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ABNDigital | grep -i "Africa Business News - Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_bloomberg () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/Bloomberg | grep -i "Bloomberg TV LIVE" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_fox_news () {
@@ -135,29 +150,41 @@ usage
 
 # Set Youtube Video ID
 case "$STREAM_NAME" in
-# NTV Uganda | NTVU
+# NTV Uganda
 [Nn][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa])
 youtube_video_id_ntv_uganda
 ;;
-# Spark Uganda | Spark
+# SparkTV Uganda
 [Ss][Pp][Aa][Rr][Kk][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa])
 youtube_video_id_sparktv_uganda
 ;;
-# BUKEDDE_TV_UGANDA
+# BukeddeTV Uganda
 [Bb][Uu][Kk][Ee][Dd][Dd][Ee][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa])
 youtube_video_id_bukeddetv_uganda
 ;;
-# KTN Kenya | KTN
+# CitizenTV Kenya 
+[Cc][Ii][Tt][Ii][Zz][Ee][Nn][Tt][Vv]*[Kk][Ee][Nn][Yy][Aa])
+youtube_video_id_citizentv_kenya
+;;
+# KTN Kenya 
 [Kk][Tt][Nn]*[Kk][Ee][Nn][Yy][Aa])
 youtube_video_id_ktn_kenya
 ;;
-# NTV Kenya | NTVK
+# NTV Kenya 
 [Nn][Tt][Vv]*[Kk][Ee][Nn][Yy][Aa])
 youtube_video_id_ntv_kenya
 ;;
-# TVC_NEWS_NIGERIA
+# TVC News Nigeria
 [Tt][Vv][Cc]*[Nn][Ee][Ww][Ss]*[Nn][Ii][Gg][Ee][Rr][Ii][Aa])
 youtube_video_id_tvc_news_nigeria
+;;
+# CNBC Africa
+[Cc][Nn][Bb][Cc]*[Aa][Ff][Rr][Ii][Cc][Aa])
+youtube_video_id_cnbc_africa
+;;
+# Bloomberg
+[Bb][Ll][Oo][Oo][Mm][Bb][Ee][Rr][Gg])
+youtube_video_id_bloomberg
 ;;
 # Fox News
 [Ff][Oo][Xx]*[Nn][Ee][Ww][Ss])
