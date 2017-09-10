@@ -43,14 +43,10 @@ method.set_key = event.download.finished,move_complete,"d.directory.set=$d.get_f
 # Remove .torrent file in watch folder
 # -------------------------------------
 method.set_key = event.download.finished,remove_torrent,"execute=rm,$d.tied_to_file="
-#
-# Notify via email on complete
-# -----------------------------
-method.set_key = event.download.finished, notify_via_email, "execute = /usr/bin/jambulatv-email, RTORRENT_NOTIFICATION_EMAIL, \"Torrent Download Complete\", \"$d.name=\""
-#
-# Move tasks on complete and Notify via Telegram
-# ----------------------------------------------
-method.set_key = event.download.finished, run_flexget_move_tasks, "execute = /usr/bin/flexget, -c, PROJECT_SYSTEM_CONF_DIR/flexget/config.yml, --logfile, PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log, execute, --now, --tasks, move_tv_shows, move_movies"
+
+# Run post download actions e.g. send email, move torrent
+# -------------------------------------------------------
+method.set_key=event.download.finished,torrent_processer, "execute = { \"jambulatv-rtorrent-processor\", \"$d.base_path=\", \"$d.name=\", \"$d.custom1=\", \"$convert.date=$system.time=\" }"
 
 # The ip address reported to the tracker.
 #ip = rakshasa

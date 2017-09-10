@@ -1,0 +1,57 @@
+#!/bin/sh
+# This script is used to process and run tasks after rtorrent finishes downloading files
+# Jambula Labs @copyright 2017-2018 All rights reserved
+
+# Variables
+RTORRENT_PATH=$1
+RTORRENT_NAME=$2
+RTORRENT_LABEL=$(echo $3 | sed "s:[_-]: :g")
+RTORRENT_TIME=$4
+
+JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
+JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
+JAMBULATV_SETUP_DB_PASS=MY_JAMBULATV_SETUP_DB_PASS
+JAMBULATV_SETUP_DB_TABLE=MY_JAMBULATV_SETUP_DB_TABLE
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+query_mysql_db () {
+mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} << EOF
+USE ${JAMBULATV_SETUP_DB_NAME};
+SELECT $@ FROM ${JAMBULATV_SETUP_DB_TABLE} WHERE id = (SELECT MAX(id) FROM ${JAMBULATV_SETUP_DB_TABLE});
+EOF
+}
+
+rtorrent_send_email () {
+# Query DB for custom variables
+CONTACT_NAME=$(echo "$(query_mysql_db contact_name)" | awk {'print $1'})
+NOTIFICATION_EMAIL_ADDRESS=$(query_mysql_db notification_email_address)
+#
+# Send email
+jambulatv-email $NOTIFICATION_EMAIL_ADDRESS "[JambulaTV] Download of your ${RTORRENT_LABEL} file completed" "Dear $CONTACT_NAME!
+
+I have successfully downloaded your requested torrent named:
+
+${RTORRENT_NAME}.  This file was added on: ${RTORRENT_TIME}
+
+You may find it under ${RTORRENT_LABEL} on your JambulaTV.  Enjoy!
+
+"
+}
+
+rtorrent_move_file () {
+/usr/bin/flexget -c /etc/JambulaTV/flexget/config.yml --logfile /var/log/JambulaTV/flexget/flexget.log execute --now --tasks move_tv_shows move_movies
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+rtorrent_send_email
+
+rtorrent_move_file

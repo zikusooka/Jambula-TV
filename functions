@@ -5258,12 +5258,23 @@ cat $PROJECT_CONFIGS_DIR/rtorrent.rc.template | \
    sed -e "s:TORRENTS_COMPLETED_DIRECTORY:$TORRENTS_COMPLETED_DIRECTORY:g" | \
    sed -e "s:RTORRENT_SESSIONS_DIR:$RTORRENT_SESSIONS_DIR:g" | \
    sed -e "s:PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" | \
-   sed -e "s:PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
    sed -e "s:RTORRENT_LOG_DIR:$RTORRENT_LOG_DIR:g" \
 > $MULTIMEDIA_USER_HOME_DIR/.rtorrent.rc
 # Change permissions
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $MULTIMEDIA_USER_HOME_DIR/.rtorrent.rc
 fi
+#
+# Add jambulatv rtorrent (post/pre) processor tool to bin directory if it does not exist
+[ -e $BINARY_PREFIX/jambulatv-rtorrent-processor ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-rtorrent-processor | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" \
+			> $BINARY_PREFIX/jambulatv-rtorrent-processor 
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-rtorrent-processor 
+#
 # Create torrents directories if they do not exist
 for DIR in \
 $TORRENTS_DIRECTORY \

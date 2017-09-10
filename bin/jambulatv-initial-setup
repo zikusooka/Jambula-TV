@@ -448,13 +448,6 @@ cat $FLEXGET_CONFIG_DIR/variables.yml.b4.setup | \
 sudo systemctl restart flexget.service
 }
 
-rtorrent_event_setup () {
-# Extract variables from mysql
-extract_setup_variables
-# rTorrent event.download.finished notify_via_email address
-sed -i "s:RTORRENT_NOTIFICATION_EMAIL:$NOTIFICATION_EMAIL_ADDRESS:g" $MULTIMEDIA_USER_HOME_DIR/.rtorrent.rc
-}
-
 asterisk_google_xmpp_setup() {
 # Extract variables from mysql
 extract_setup_variables
@@ -608,7 +601,6 @@ remove_current_qrcode
 
 messaging_services_setup
 flexget_secrets_setup
-rtorrent_event_setup
 asterisk_google_xmpp_setup
 
 news_headlines_setup
