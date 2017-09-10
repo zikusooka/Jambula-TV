@@ -9165,7 +9165,15 @@ chmod 755 $BINARY_PREFIX/jambulatv-weather-api
 
 initial_setup_configure () {
 # Copy jambulatv-initial-setup, if none exists in bin directory
-[ -e $BINARY_PREFIX/jambulatv-initial-setup ] || cp -v $PROJECT_BIN_DIR/jambulatv-initial-setup $BINARY_PREFIX/
+[ -e $BINARY_PREFIX/jambulatv-initial-setup ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-initial-setup | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" \
+			> $BINARY_PREFIX/jambulatv-initial-setup 
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-initial-setup 
 # Get WWW User and Group
 set_www_user_group
 # Add Setup Web files
