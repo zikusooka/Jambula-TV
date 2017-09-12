@@ -770,6 +770,8 @@ HTTP_BROWSER_USERAGENT_MAC="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) Appl
 HTTP_BROWSER_USERAGENT_LINUX="Mozilla/5.0 (X11; Linux x86_64; rv\:54.0) Gecko/20100101 Firefox/54.0"
 # Windows
 HTTP_BROWSER_USERAGENT_WINDOWS="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36"
+# Youtube
+HTTP_BROWSER_USERAGENT_YOUTUBE="Mozilla/5.0"
 # Youtube-DL
 HTTP_BROWSER_USERAGENT_YOUTUBE_DL="Mozilla/5.0 (X11; Linux x86_64; rv\:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
 
@@ -6193,10 +6195,13 @@ python setup.py install
 }
 
 youtube_setup () {
-# Copy jambulatv-youtube script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-youtube ] || cp -v $PROJECT_BIN_DIR/jambulatv-youtube $BINARY_PREFIX/
+# Copy jambulatv-youtube script, if it does not exist in bin directory and add User-Agent string
+[ -e $BINARY_PREFIX/jambulatv-youtube ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-youtube | \
+		sed -e "s:MY_USER_AGENT:$HTTP_BROWSER_USERAGENT_YOUTUBE:g" \
+			> $BINARY_PREFIX/jambulatv-youtube 
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-youtube
+chmod 755 $BINARY_PREFIX/jambulatv-youtube 
 }
 
 gstreamer_install () {

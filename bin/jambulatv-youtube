@@ -34,8 +34,8 @@ esac
 CURL_CMD="/usr/bin/curl"
 CURL_OPTS="-s -S -G -L -m 60"
 
-HTTP_BROWSER_USERAGENT="Mozilla/5.0" #IMPORTANT: Do Not change this to typical user agent string.  Won't work!
-HTTP_BROWSER_COMMAND="$CURL_CMD $CURL_OPTS -A '$HTTP_BROWSER_USERAGENT'"
+HTTP_BROWSER_USERAGENT="MY_USER_AGENT"
+HTTP_BROWSER_COMMAND="$CURL_CMD $CURL_OPTS"
 
 STREAM_NAME=$(echo $@ | sed 's:"::g')
 
@@ -83,7 +83,7 @@ YOUTUBE_SEARCH_OUTPUT_FILE=/tmp/youtube_search_results
 YOUTUBE_SEARCH_SITE_LINKS_FILE=/tmp/youtube_links_found
 #
 # Youtube Search with filters: Live, Today, View Count
-$HTTP_BROWSER_COMMAND -o $YOUTUBE_SEARCH_OUTPUT_FILE \
+$HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE \
 	${YOUTUBE_SEARCH_URL}?q=$YOUTUBE_SEARCH_TEXT -d sp="$YOUTUBE_SEARCH_FILTER"
 #
 # Filter out HTML tags from search output. Strip out Youtube links
