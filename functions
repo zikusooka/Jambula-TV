@@ -773,6 +773,9 @@ HTTP_BROWSER_USERAGENT_WINDOWS="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleW
 # Youtube-DL
 HTTP_BROWSER_USERAGENT_YOUTUBE_DL="Mozilla/5.0 (X11; Linux x86_64; rv\:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
 
+# Default User-Agent
+DEFAULT_USER_AGENT=$HTTP_BROWSER_USERAGENT_LINUX
+
 
 
 ######################
@@ -9183,7 +9186,8 @@ weather_api () {
 		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
-		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" | \
+		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" \
 			> $BINARY_PREFIX/jambulatv-weather-api 
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-weather-api 
