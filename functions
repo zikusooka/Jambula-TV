@@ -4585,8 +4585,14 @@ motd_configure () {
 cat > $CONFDIR/cron.d/motd << EOF
 @daily root $BINARY_PREFIX/jambulatv-sysinfo > $CONFDIR/motd
 EOF
-# Copy jambulatv-sysinfo script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-sysinfo ] || cp -v $PROJECT_BIN_DIR/jambulatv-sysinfo $BINARY_PREFIX/
+# Copy jambulatv-sysinfo script, if it does not exist in bin directory and Add User-Agents too
+[ -e $BINARY_PREFIX/jambulatv-sysinfo ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-sysinfo | \
+		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" \
+			> $BINARY_PREFIX/jambulatv-sysinfo 
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-sysinfo 
+#
 # Remove ssh lastlog
 sed -i 's:#PrintLastLog yes:PrintLastLog no:' $CONFDIR/ssh/sshd_config
 }

@@ -16,7 +16,8 @@ b=$(tput bold)
 n=$(tput sgr0)
 fi
 INSTALL_DATE=$(ls -dlct --time-style="+%d %B %Y" "/lost+found" | awk '{printf $9 " " $6 " "$7 " " $8}' | sed 's:/lost+found ::g')
-HTTP_USER_AGENT="Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)"
+HTTP_USER_AGENT="MY_USER_AGENT"
+
 # IP Settings
 # ***********
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
