@@ -6106,7 +6106,15 @@ EOF
 
 internet_connectivity_monitoring () {
 [ -e $BINARY_PREFIX/jambulatv-dns-status-triggers ] || \
-	cp -v $PROJECT_BIN_DIR/jambulatv-dns-status-triggers $BINARY_PREFIX/
+	cat $PROJECT_BIN_DIR/jambulatv-dns-status-triggers | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" | \
+		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" \
+			> $BINARY_PREFIX/jambulatv-dns-status-triggers 
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-dns-status-triggers 
 #
 # Copy jambulatv-speed-test helper script
 [ -e $BINARY_PREFIX/jambulatv-speed-test ] || \
