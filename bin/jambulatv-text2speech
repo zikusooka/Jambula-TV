@@ -25,6 +25,11 @@ SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep $(basename $SOUND_
 
 MULTIMEDIA_USER=jambula
 
+USER_AGENT="MY_USER_AGENT"
+
+CURL_CMD="/usr/bin/curl"
+CURL_OPTS="-s -S -L -m 60"
+
 
 
 ###############
@@ -75,7 +80,7 @@ text2speech_pico () {
 }
 
 text2speech_acapela () {
-/usr/bin/curl -s $(/usr/bin/curl -sS -m 60 -X POST -A "Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)" \
+$CURL_CMD $CURL_OPTS $($CURL_CMD $CURL_OPTS -A "$USER_AGENT" \
 	-d MyLanguages=sonid10 \
 	-d MySelectedVoice=Sharon \
 	-d MyTextForTTS="$(echo "$@" | sed -e "s: :%20:g" | sed -e "s:'::g")" \
@@ -85,7 +90,7 @@ text2speech_acapela () {
 }
 
 text2speech_watson () {
-/usr/bin/curl -sS -m 60 -X POST -A "Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)" \
+$CURL_CMD $CURL_OPTS -A "$USER_AGENT" \
 	-u "6aa3bbba-a513-42fe-954a-f6c23b7a5f8e":"DNAjnRVn5btV" \
 	-H "Content-Type: application/json" \
 	-H "Accept: audio/wav" \
@@ -95,7 +100,7 @@ text2speech_watson () {
 }
 
 text2speech_google () {
-/usr/bin/curl -sS -m 60 -A "Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)" -o $TTS_OUTPUT_FILE "http://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q="$(echo "$@" | sed -e "s: :%20:g" | sed -e "s:'::g")"&tl=En-us"
+$CURL_CMD $CURL_OPTS -A "$USER_AGENT" -o $TTS_OUTPUT_FILE "http://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q="$(echo "$@" | sed -e "s: :%20:g" | sed -e "s:'::g")"&tl=En-us"
 }
 
 query_text2speech_engine () {
