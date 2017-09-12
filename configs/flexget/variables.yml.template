@@ -1,6 +1,11 @@
 webui:
   port: FLEXGET_PORT
 
+headers:
+  user_agent_mac: "MY_HTTP_BROWSER_USERAGENT_MAC"
+  user_agent_linux: "MY_HTTP_BROWSER_USERAGENT_LINUX"
+  user_agent_windows: "MY_HTTP_BROWSER_USERAGENT_WINDOWS"
+
 trakt:
   username: TRAKT_USERNAME
   watchlist: TRAKT_WATCHLIST

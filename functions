@@ -762,6 +762,17 @@ ASTERISK_DIAL_OUT_NUMBER_1=""
 # OSD
 OSD_SCRIPT=$BINARY_PREFIX/jambulatv-osd
 
+# HTTP Headers
+# -----------
+# MacOS
+HTTP_BROWSER_USERAGENT_MAC="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8"
+# Linux
+HTTP_BROWSER_USERAGENT_LINUX="Mozilla/5.0 (X11; Linux x86_64; rv\:54.0) Gecko/20100101 Firefox/54.0"
+# Windows
+HTTP_BROWSER_USERAGENT_WINDOWS="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36"
+# Youtube-DL
+HTTP_BROWSER_USERAGENT_YOUTUBE_DL="Mozilla/5.0 (X11; Linux x86_64; rv\:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
+
 
 
 ######################
@@ -5109,6 +5120,10 @@ cp -v $PROJECT_CONFIGS_DIR/flexget/*.yml $FLEXGET_CONFIG_DIR/
 if [ ! -e $FLEXGET_CONFIG_DIR/variables.yml ];
 then
 cat $PROJECT_CONFIGS_DIR/flexget/variables.yml.template | \
+   sed -e "s:MY_HTTP_BROWSER_USERAGENT_MAC:$HTTP_BROWSER_USERAGENT_MAC:g" | \
+   sed -e "s:MY_HTTP_BROWSER_USERAGENT_LINUX:$HTTP_BROWSER_USERAGENT_LINUX:g" | \
+   sed -e "s:MY_HTTP_BROWSER_USERAGENT_WINDOWS:$HTTP_BROWSER_USERAGENT_WINDOWS:g" | \
+   sed -e "s:MY_HTTP_BROWSER_USERAGENT_YOUTUBE_DL:$HTTP_BROWSER_USERAGENT_YOUTUBE_DL:g" | \
    sed -e "s:FLEXGET_CONFIG_DIR:$FLEXGET_CONFIG_DIR:g" | \
    sed -e "s:PROJECT_PARTITION:$PROJECT_PARTITION:g" | \
    sed -e "s:PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
