@@ -61,6 +61,7 @@ citizentv kenya
 ktn kenya
 ntv kenya
 tvc news nigeria
+africanews
 cnbc africa
 bloomberg
 fox news
@@ -123,6 +124,10 @@ youtube_video_id_tvc_news_nigeria () {
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/UCgp4A6I8LCWrhUzn-5SbKvA | awk -F: '/title="TVC News Nigeria Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
+youtube_video_id_africanews () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/UC1_E8NeF5QHY2dtdLRBCCLA | grep "africanews Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
 youtube_video_id_cnbc_africa () {
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ABNDigital | grep -i "Africa Business News - Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
@@ -177,6 +182,10 @@ youtube_video_id_ntv_kenya
 # TVC News Nigeria
 [Tt][Vv][Cc]*[Nn][Ee][Ww][Ss]*[Nn][Ii][Gg][Ee][Rr][Ii][Aa])
 youtube_video_id_tvc_news_nigeria
+;;
+# Africanews
+[Aa][Ff][Rr][Ii][Cc][Aa][Nn][Ee][Ww][Ss])
+youtube_video_id_africanews 
 ;;
 # CNBC Africa
 [Cc][Nn][Bb][Cc]*[Aa][Ff][Rr][Ii][Cc][Aa])
