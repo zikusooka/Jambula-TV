@@ -58,9 +58,11 @@ ntv uganda
 sparktv uganda
 bukeddetv uganda
 citizentv kenya 
-ktn kenya
+ktn news kenya
+ktn home kenya
 ntv kenya
 tvc news nigeria
+ann7 south africa
 africanews
 cnbc africa
 bloomberg
@@ -111,8 +113,12 @@ youtube_video_id_citizentv_kenya () {
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/kenyacitizentv | grep -i "Citizen TV Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
-youtube_video_id_ktn_kenya () {
+youtube_video_id_ktn_news_kenya () {
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/standardgroupkenya | grep -i "KTN News Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_ktn_home_kenya () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/KTNClassics | grep -i "KTN Home Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_ntv_kenya () {
@@ -122,6 +128,11 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHAN
 
 youtube_video_id_tvc_news_nigeria () {
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/UCgp4A6I8LCWrhUzn-5SbKvA | awk -F: '/title="TVC News Nigeria Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_ann7_south_africa () {
+YOUTUBE_LIVE_CHANNEL_PAGE_ID=UC6gciFMFztxlRrO5f4K1xbQ
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | grep -B20 -i "LIVE NOW" | grep -i "ANN7 TV Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_africanews () {
@@ -137,7 +148,8 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/Bloomberg | grep -i "
 }
 
 youtube_video_id_fox_news () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/UCEwvI5DyrSEUvOtWGOze9cQ | awk -F: '/title="Fox News Live Stream ▪ HD"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+youtube_search_video_id "Fox News Live Stream"
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_cnn () {
@@ -171,9 +183,13 @@ youtube_video_id_bukeddetv_uganda
 [Cc][Ii][Tt][Ii][Zz][Ee][Nn][Tt][Vv]*[Kk][Ee][Nn][Yy][Aa])
 youtube_video_id_citizentv_kenya
 ;;
-# KTN Kenya 
-[Kk][Tt][Nn]*[Kk][Ee][Nn][Yy][Aa])
-youtube_video_id_ktn_kenya
+# KTN News Kenya 
+[Kk][Tt][Nn]*[Nn][Ee][Ww][Ss]*[Kk][Ee][Nn][Yy][Aa])
+youtube_video_id_ktn_news_kenya
+;;
+# KTN Home Kenya 
+[Kk][Tt][Nn]*[Hh][Oo][Mm][Ee]*[Kk][Ee][Nn][Yy][Aa])
+youtube_video_id_ktn_home_kenya
 ;;
 # NTV Kenya 
 [Nn][Tt][Vv]*[Kk][Ee][Nn][Yy][Aa])
@@ -182,6 +198,10 @@ youtube_video_id_ntv_kenya
 # TVC News Nigeria
 [Tt][Vv][Cc]*[Nn][Ee][Ww][Ss]*[Nn][Ii][Gg][Ee][Rr][Ii][Aa])
 youtube_video_id_tvc_news_nigeria
+;;
+# ANN7 South Africa
+[Aa][Nn][Nn][7]*[Ss][Oo][Uu][Tt][Hh]*[Aa][Ff][Rr][Ii][Cc][Aa])
+youtube_video_id_ann7_south_africa
 ;;
 # Africanews
 [Aa][Ff][Rr][Ii][Cc][Aa][Nn][Ee][Ww][Ss])
