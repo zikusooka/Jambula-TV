@@ -3442,7 +3442,7 @@ cat > $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config << 
 	"skipinitscan": true,
 	"idlescan": false,
 	"sid_chnum": false,
-	"ignore_chnum": true,
+	"ignore_chnum": false,
 	"satip_source": 0,
 	"localtime": 180,
 	"wizard": false

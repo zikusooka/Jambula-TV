@@ -7,16 +7,23 @@
 # Variables
 CURL_CMD="/usr/bin/curl -s"
 OSD_CMD="/usr/bin/jambulatv-osd"
-TIMEOUT_PROBE="60s"
+TIMEOUT_PROBE="80s"
 TIMEOUT_CMD="/usr/bin/timeout $TIMEOUT_PROBE"
 FFPROBE_CMD="$TIMEOUT_CMD /usr/bin/ffprobe"
 FFPROBE_OPTS="-hide_banner"
 YOUTUBE_CMD="/usr/bin/jambulatv-youtube"
 YOUTUBE_VARIABLES_TEMP_FILE=$(grep ^YOUTUBE_VARIABLES_TEMP_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g')
 
+# Product Identification
+RELEASE_FILE=/etc/JambulaTV/release
+PRODUCT=$(grep -i Product $RELEASE_FILE | cut -d : -f2)
+VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
+SERIAL=$(grep -i Serial $RELEASE_FILE | cut -d : -f2)
+
 # Email
+EMAIL_ADDRESS_SUPPORT=errors@jambulatv.com
 EMAIL_CREDENTIALS_CONFIG=MY_EMAIL_CREDENTIALS_CONFIG
-EMAIL_NOTIFICATION_ADDRESS=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
+EMAIL_ADDRESS_USER=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 EMAIL_SCRIPT="MY_EMAIL_VIA_GMAIL_CMD"
 
 PING_COUNT=1 #9
@@ -51,6 +58,9 @@ DVBT_PNETWORK_NAME=$DVBT_NETWORK_NAME
 MULTIMEDIA_USER=MY_MULTIMEDIA_USER
 
 INTERNET_GATEWAY_IP=$(ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')
+
+IPTV_BUILDER_BASE_DIR=/opt/jambula-iptv-builder
+IPTV_BUILDER_GROUPS_DIR=$IPTV_BUILDER_BASE_DIR/groups
 
 TV_TYPE=$1
 TV_TASK=$2
@@ -161,14 +171,24 @@ chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 refresh_tvheadend
 }
 
-scan_osd_notice () {
+scan_osd_notice_started () {
 # Display notice
 $OSD_CMD -m "Scanning of $1 network started. This will take some time, please be patient ..." > /dev/null 2>&1 &
 }
 
+map_osd_notice_started () {
+# Display notice
+$OSD_CMD -m "Mapping of $1 network started. Please be patient while mapping of your Live TV channels takes place ..." > /dev/null 2>&1 &
+}
+
+map_osd_notice_completed () {
+# Display notice
+$OSD_CMD -m "Mapping of $1 network completed. You may now resume watching Live TV ..." > /dev/null 2>&1 &
+}
+
 email_failed_iptv_notice () {
 # Email notice regarding failed IPTV streams
-$EMAIL_SCRIPT $EMAIL_NOTIFICATION_ADDRESS "[JambulaTV]: IPTV services failed" "The following IPTV streams are no longer working.  Please notify the support team immediately" $TVHEADEND_IPTV_FAILED_LOG_FILE
+$EMAIL_SCRIPT $EMAIL_ADDRESS_SUPPORT "[JambulaTV]: IPTV services failed" "The following IPTV streams are no longer working at the following JambulaTV user: Serial No. $SERIAL" $TVHEADEND_IPTV_FAILED_LOG_FILE
 }
 
 zap_dead_services () { 
@@ -182,6 +202,14 @@ $CURL_CMD $TVHEADEND_API_URL/channel/grid?limit=100000 | jq '.entries[] | select
 do
 rm -f $TVHEADEND_CHANNELS_CONFIG_DIR/$DEAD_CHANNEL_UUID
 done
+
+# Remove previously added channels that no longer have services associated to them i.e. Don't play anymore. 
+#$CURL_CMD $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[] |.name,.services,.uuid' | grep -B1 -A1 "\[\]" | grep -Ev "(--|\[\])" 
+$CURL_CMD $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[] |.name,.services,.uuid' | grep -A1 "\[\]" | grep -Ev "(--|\[\])" | while read DEAD_CHANNEL_UUID
+do
+rm -f $TVHEADEND_CHANNELS_CONFIG_DIR/$DEAD_CHANNEL_UUID
+done
+
 # Refresh TVH
 refresh_tvheadend
 }
@@ -284,6 +312,9 @@ refresh_tvheadend
 }
 
 dvb_map_services_2_channels () {
+# OSD notify of map started
+map_osd_notice_started $TVHEADEND_IPTV_NETWORK_NAME
+
 # Remove dead channels
 zap_dead_channels
 # Remove dead services
@@ -334,6 +365,9 @@ EOF
 #
 let "DIGIT = $CHANNEL_NUMBER + 1"
 done
+
+# OSD notify of map completion
+map_osd_notice_completed $TVHEADEND_IPTV_NETWORK_NAME
 }
 
 
@@ -346,7 +380,7 @@ configure_iptv_network () {
 if [ "x$TVHEADEND_IPTV_NETWORK_UUID" != "x" ];
 then
 # Proceed if there's already an IPTV network
-echo "Error: $TVHEADEND_IPTV_NETWORK_NAME network already exists.  Proceeding ..."
+echo "$(basename $0): $TVHEADEND_IPTV_NETWORK_NAME network already exists.  Proceeding ..."
 continue
 
 else
@@ -385,7 +419,7 @@ cat > $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config << 
 	"skipinitscan": true,
 	"idlescan": false,
 	"sid_chnum": false,
-	"ignore_chnum": true,
+	"ignore_chnum": false,
 	"satip_source": 0,
 	"localtime": 180,
 	"wizard": false
@@ -415,7 +449,6 @@ JambulaTV: Testing IPTV stream: [$SERVICE_NAME], please wait ...
 *******************************************************************************
 
 EOF
-
 # Probe remote stream using ffprobe i.e. play mux briefly to add service
 $FFPROBE_CMD $FFPROBE_OPTS $MUX_URL 2>&1 | tee -a $TVHEADEND_IPTV_FULL_LOG_FILE > $TVHEADEND_IPTV_SERVICE_LOG_FILE
 
@@ -454,8 +487,8 @@ log_file
 # Remove dead services
 zap_dead_services
 #
-# OSD otify of scan
-scan_osd_notice $TVHEADEND_IPTV_NETWORK_NAME
+# OSD notify of scan
+scan_osd_notice_started $TVHEADEND_IPTV_NETWORK_NAME
 #
 # ----------------------------------------------------------
 # Cycle through all IPTV MUX IDs and test to create services
@@ -508,16 +541,53 @@ email_failed_iptv_notice
 # ----------------------------------------------------------
 }
 
+get_channel_number_using_iptv_builder () {
+#
+# Variables
+CHANNEL_NUMBER_TEMP_FILE=/tmp/chan_number
+CHANNEL_COUNT=$(grep -iEw "${CHANNEL_NAME}" -d skip $IPTV_BUILDER_GROUPS_DIR/* | cut -d '|' -f2 | sed 's: ::g' | wc -l)
+# Remove existing file
+[ -e $CHANNEL_NUMBER_TEMP_FILE ] && rm -f $CHANNEL_NUMBER_TEMP_FILE
+# Find channel number, if more than one match
+if [ "$CHANNEL_COUNT" -gt "1" ];
+then
+
+grep -iEw "${CHANNEL_NAME}" -d skip $IPTV_BUILDER_GROUPS_DIR/* | while read LINE
+do
+COL1=$(echo $LINE | cut -d ':' -f2 | cut -d '|' -f1 | sed 's/ $//')
+COL2=$(echo $LINE | cut -d ':' -f2 | cut -d '|' -f2 | sed 's/ //g')
+if [ "$COL1" = "$CHANNEL_NAME" ];
+then
+# Set channel number
+echo "CHANNEL_NUMBER=$COL2" > $CHANNEL_NUMBER_TEMP_FILE
+fi
+break
+done 
+
+else
+# Find channel number, if only one match
+CHANNEL_NUMBER=$(grep -iEw "${CHANNEL_NAME}" -d skip $IPTV_BUILDER_GROUPS_DIR/* | cut -d '|' -f2 | sed 's: ::g' | head -1)
+fi
+# Source temp channel number file i.e. Get channel number
+[ -e $CHANNEL_NUMBER_TEMP_FILE ] && . $CHANNEL_NUMBER_TEMP_FILE
+# Export
+export CHANNEL_NUMBER
+}
+
 iptv_map_services_2_channels () {
+# OSD notify of map started
+map_osd_notice_started $TVHEADEND_IPTV_NETWORK_NAME
+
 # Remove dead channels
 zap_dead_channels
 #
 $CURL_CMD $TVHEADEND_API_URL/service/list?limit=100000 | jq '.entries[] | select(.text | contains("'${TVHEADEND_IPTV_NETWORK_NAME}'")).uuid' | sed 's:"::g' > $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
-DIGIT=$TVHEADEND_IPTV_FIRST_CHANNEL_NUMBER
 cat $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE | while read SERVICE_UUID
 do
-CHANNEL_NUMBER=$DIGIT
 CHANNEL_NAME=$($CURL_CMD $TVHEADEND_API_URL/service/list?limit=100000 | jq '.entries[] | select(.uuid=="'$SERVICE_UUID'") | .text' | sed "s:$TVHEADEND_IPTV_NETWORK_NAME/$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g"| cut -d / -f2- | sed 's:"::g')
+# Extract channel number from iptv group files
+get_channel_number_using_iptv_builder
+#
 CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:upper:] [:lower:]| sed 's: :_:g').png
 CHANNEL_UUID=$(uuidgen -t | sed 's:-::g')
 CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_IPTV_WORLD_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
@@ -555,9 +625,11 @@ cat > $TVHEADEND_CHANNELS_CONFIG_DIR/$CHANNEL_UUID <<EOF
 	"bouquet": ""
 }
 EOF
-#
-let "DIGIT = $CHANNEL_NUMBER + 1"
+
 done
+
+# OSD notify of map completion
+map_osd_notice_completed $TVHEADEND_IPTV_NETWORK_NAME
 }
 
 iptv_add_channel_tags () {
