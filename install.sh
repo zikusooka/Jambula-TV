@@ -215,6 +215,7 @@ playlists_configure
 # IPTV
 iptv_tvheadend_configure
 iptv_icons_add 
+iptv_builder_install
 
 # EPG
 epg_tvheadend_configure

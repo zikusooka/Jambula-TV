@@ -3491,6 +3491,13 @@ rsync -av $PROJECT_CONTRIB_DIR/tv/picons/IPTV $PROJECT_SYSTEM_ICONS_DIR/
 chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/IPTV
 }
 
+iptv_builder_install () {
+# Unpack sources
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/jambula-iptv-builder $SOURCESDIR/
+# Change iptv-builder directory permissions to multimedia user
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $MULTIMEDIA_USER_HOME_DIR/.xmltv
+}
+
 epg_tvheadend_configure () {
 # Create XMLTV directory in multimedia user's home directory
 [ -d $MULTIMEDIA_USER_HOME_DIR/.xmltv ] || mkdir -p $MULTIMEDIA_USER_HOME_DIR/.xmltv
