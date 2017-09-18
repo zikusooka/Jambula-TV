@@ -247,7 +247,7 @@ KODI_ADDONS_SPORTS="plugin.video.castaway plugin.video.prosport plugin.video.spo
 # Games
 KODI_ADDONS_GAMES="script.game.connect4 script.game.2048 plugin.game.blackjack plugin.game.match.cards plugin.game.tankshot"
 # Jambula Custom
-KODI_ADDONS_JAMBULA="plugin.video.jambulaIPTV script.doorbell script.service.kodi.callbacks script.service.pcmode"
+KODI_ADDONS_JAMBULA="plugin.video.jambula.live.events plugin.video.jambulaIPTV script.doorbell script.service.kodi.callbacks script.service.pcmode"
 # Miscellaneous
 KODI_ADDONS_MISC="script.xbmc.unpausejumpback"
 #
@@ -6427,6 +6427,10 @@ ls $PROJECT_CONTRIB_DIR/tv/digital/*.m3u* > /dev/null 2>&1 && \
 # Add World IP TV playlists if any
 ls $PROJECT_CONTRIB_DIR/tv/iptv/*.m3u* > /dev/null 2>&1 && \
 	cp -v $PROJECT_CONTRIB_DIR/tv/iptv/*.m3u* $PLAYLISTS_DIRECTORY
+
+# Add Live Events Playlist Menu used by plugin.video.jambula.live.events
+cp -v $PROJECT_CONFIGS_DIR/kodi/live-events.xml $PLAYLISTS_DIRECTORY
+
 # Change playlist directory permissions: IMPORTANT: User='Web User' Group='Multimedia User'
 chown -R $WWW_USER:$MULTIMEDIA_USER $PLAYLISTS_DIRECTORY
 chmod -R 775 $PLAYLISTS_DIRECTORY
