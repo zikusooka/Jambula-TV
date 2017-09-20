@@ -1,0 +1,14 @@
+diff --git a/src/htsp_server.c b/src/htsp_server.c
+index 2f6febd59..3b596ccac 100644
+--- a/src/htsp_server.c
++++ b/src/htsp_server.c
+@@ -945,7 +945,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
+           dvr_entry_get_removal_days(de) : dvr_entry_get_retention_days(de));
+
+     htsmsg_add_u32(out, "removal",     dvr_entry_get_removal_days(de));
+-    htsmsg_add_u32(out, "priority",    de->de_pri);
++    htsmsg_add_u32(out, "priority",    (de->de_pri != DVR_PRIO_DEFAULT) ? de->de_pri : DVR_PRIO_NORMAL);
+     htsmsg_add_u32(out, "contentType", de->de_content_type);
+
+     if (de->de_sched_state == DVR_RECORDING || de->de_sched_state == DVR_COMPLETED) {
+

@@ -2564,8 +2564,12 @@ tvheadend_install () {
 rsync -avz $PROJECT_GITHUB_DIR/tvheadend/ $INSTALL_SRC_DIR/tvheadend/
 # Change to tvheadend directory
 cd $INSTALL_SRC_DIR/tvheadend
+#
 # Patch: Increase timeout when playing IPTV muxes for slow Internet connections
 patch -p1 $INSTALL_SRC_DIR/tvheadend/src/webui/webui.c < $PROJECT_PATCHES_DIR/tvheadend.webui.patch
+# Patch: Fix issue where TV recordings do not show up in Kodi 'Live TV Recordings' directory
+patch -p1 $INSTALL_SRC_DIR/tvheadend/src/htsp_server.c < $PROJECT_PATCHES_DIR/tvheadend.htsp.server.patch
+#
 # configure tvheadend
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --mandir=$MANDIR1 --disable-ffmpeg_static \
 	--disable-libav --disable-dvbscan --disable-hdhomerun_static --enable-imagecache
