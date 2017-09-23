@@ -39,6 +39,11 @@ HTTP_BROWSER_COMMAND="$CURL_CMD $CURL_OPTS"
 
 STREAM_NAME=$(echo $@ | sed 's:"::g')
 
+JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
+JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
+JAMBULATV_SETUP_DB_PASS=MY_JAMBULATV_SETUP_DB_PASS
+JAMBULATV_SETUP_DB_TABLE=MY_JAMBULATV_SETUP_DB_TABLE
+
 
 
 ###############
@@ -74,9 +79,61 @@ exit 1
 fi
 }
 
-# Search for Youtube IDs
-youtube_search_video_id () {
+query_mysql_db () {
+mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} << EOF
+USE ${JAMBULATV_SETUP_DB_NAME};
+SELECT $@ FROM ${JAMBULATV_SETUP_DB_TABLE} WHERE id = (SELECT MAX(id) FROM ${JAMBULATV_SETUP_DB_TABLE});
+EOF
+}
+
+query_db_4_youtube_api () {
+# Query DB for custom variables
+GOOGLE_YOUTUBE_API_KEY=$(query_mysql_db youtube_api_key)
+GOOGLE_YOUTUBE_CLIENT_ID=$(query_mysql_db youtube_client_id)
+GOOGLE_YOUTUBE_CLIENT_SECRET=$(query_mysql_db youtube_client_secret)
+}
+
+set_youtube_search_method () {
+query_db_4_youtube_api 
 #
+# Method of search depending on availability of Youtube API Key
+if [ "x$GOOGLE_YOUTUBE_API_KEY" != "x" ];
+then
+# API available
+youtube_search_method=youtube_search_video_id_via_api
+else
+# No API
+youtube_search_method=youtube_search_video_id_via_scraper
+fi
+}
+
+youtube_search_video_id_via_api () {
+# Youtube search variables
+YOUTUBE_SEARCH_URL=https://www.googleapis.com/youtube/v3/search
+YOUTUBE_API_KEY="$GOOGLE_YOUTUBE_API_KEY"
+YOUTUBE_SEARCH_PHRASE="$@"
+YOUTUBE_SEARCH_TEXT="$(echo "$YOUTUBE_SEARCH_PHRASE" | sed -s "s: :+:g")"
+YOUTUBE_MAX_RESULTS=3
+YOUTUBE_SEARCH_OUTPUT_FILE=/tmp/youtube_search_results
+YOUTUBE_PLAYLIST_FILE=/tmp/youtube_video_ids_found
+#
+# Search for Youtube IDs using API
+$HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE ${YOUTUBE_SEARCH_URL} \
+	-d part="snippet" -d sp="$YOUTUBE_SEARCH_FILTER" -d key="$YOUTUBE_API_KEY" \
+	-d type="video" -d maxResults=$YOUTUBE_MAX_RESULTS \
+	-d q="$YOUTUBE_SEARCH_TEXT"
+#
+# Generate Youtube playlist containing video Ids
+cat $YOUTUBE_SEARCH_OUTPUT_FILE | jq -r '.items[]' | grep videoId | awk {'print $2'} | sed 's:["|,]::g' > $YOUTUBE_PLAYLIST_FILE
+#
+# Filter out HTML tags from search output. Strip out Youtube links
+YOUTUBE_VIDEO_ID=$(head -1 $YOUTUBE_PLAYLIST_FILE)
+#
+# Export Youtube ID
+export YOUTUBE_VIDEO_ID
+}
+
+youtube_search_video_id_via_scraper () {
 # Youtube search variables
 YOUTUBE_SEARCH_URL=https://www.youtube.com/results
 YOUTUBE_SEARCH_PHRASE="$@"
@@ -85,7 +142,7 @@ YOUTUBE_SEARCH_FILTER="CAMSBAgCQAFQFA%253D%253D"
 YOUTUBE_SEARCH_OUTPUT_FILE=/tmp/youtube_search_results
 YOUTUBE_SEARCH_SITE_LINKS_FILE=/tmp/youtube_links_found
 #
-# Youtube Search with filters: Live, Today, View Count
+# Search for Youtube IDs using scraped data with filters: Live, Today, View Count
 $HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE \
 	${YOUTUBE_SEARCH_URL}?q=$YOUTUBE_SEARCH_TEXT -d sp="$YOUTUBE_SEARCH_FILTER"
 #
@@ -148,12 +205,12 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/Bloomberg | grep -i "
 }
 
 youtube_video_id_fox_news () {
-youtube_search_video_id "Fox News Live Stream"
+$youtube_search_method "Fox News Live Stream"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_cnn () {
-youtube_search_video_id "CNN Live Stream"
+$youtube_search_method "CNN Live Stream"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
@@ -164,6 +221,9 @@ YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 #################
 # Usage
 usage
+
+# Set search method
+set_youtube_search_method
 
 # Set Youtube Video ID
 case "$STREAM_NAME" in
@@ -222,6 +282,11 @@ youtube_video_id_fox_news
 # CNN
 [Cc][Nn][Nn])
 youtube_video_id_cnn
+;;
+# Other search phrases
+*)
+$youtube_search_method "$@"
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 ;;
 esac
 

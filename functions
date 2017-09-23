@@ -3436,7 +3436,7 @@ cat > $KODI_ADDON_DATA_DIR/plugin.video.youtube/settings.xml <<EOF
     <setting id="kodion.subtitle.language" value="0" />
     <setting id="kodion.support.alternative_player" value="false" />
     <setting id="kodion.thumbnail.size" value="1" />
-    <setting id="kodion.video.quality" value="3" />
+    <setting id="kodion.video.quality" value="2" />
     <setting id="kodion.video.quality.ask" value="false" />
     <setting id="kodion.video.quality.mpd" value="false" />
     <setting id="kodion.video.support.mpd.addon" value="false" />
@@ -6284,7 +6284,11 @@ youtube_setup () {
 # Copy jambulatv-youtube script, if it does not exist in bin directory and add User-Agent string
 [ -e $BINARY_PREFIX/jambulatv-youtube ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-youtube | \
-		sed -e "s:MY_USER_AGENT:$HTTP_BROWSER_USERAGENT_YOUTUBE:g" \
+		sed -e "s:MY_USER_AGENT:$HTTP_BROWSER_USERAGENT_YOUTUBE:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" \
 			> $BINARY_PREFIX/jambulatv-youtube 
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-youtube 
