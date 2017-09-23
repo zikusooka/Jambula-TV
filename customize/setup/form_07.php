@@ -12,6 +12,24 @@ session_start();
  <title>JambulaTV Setup</title>
  <meta name="viewport" content="width=device-width, initial-scale=0.84">
  <link rel="stylesheet" href="css/style.css" />
+
+<!-- Check to see if passwords match-->
+ <script src="jquery.min.js"></script>
+ <script>
+$(document).ready(function () {
+   $("#txtConfirmPassword").keyup(checkPasswordMatch);
+});
+function checkPasswordMatch() {
+    var password = $("#txtNewPassword").val();
+    var confirmPassword = $("#txtConfirmPassword").val();
+
+    if (password != confirmPassword)
+        $("#divCheckPasswordMatch").html("Passwords do not match!");
+    else
+        $("#divCheckPasswordMatch").html("Passwords match.");
+}
+ </script>
+
  </head>
  <body>
  <div class="container">
@@ -20,9 +38,9 @@ session_start();
  <span id="error">
 <?php
 // To show error of last form 
-if (!empty($_SESSION['error_form_04'])) {
- echo $_SESSION['error_form_04'];
- unset($_SESSION['error_form_04']);
+if (!empty($_SESSION['error_form_06'])) {
+ echo $_SESSION['error_form_06'];
+ unset($_SESSION['error_form_06']);
 }
 ?>
  </span>
@@ -66,8 +84,10 @@ To setup your telegram bot, please start <a href="tg://resolve?domain=botfather"
  <label>GMail Address :</label><br />
  <input name="gmail_address" id="gmail_address" type="text" value="" >
  <label>GMail Password :</label><br />
- <input name="gmail_password" id="gmail_password" type="text" value="" >
- 
+ <input name="gmail_password" id="txtNewPassword" type="password" placeholder="Enter Password" required/>
+ <input name="gmail_password" id="txtConfirmPassword" type="password" onkeyup="checkPasswordMatch();" placeholder="Confirm Password" required/>
+ <div class="registrationFormAlert" id="divCheckPasswordMatch">
+ </div>
 
 <hr/>
 

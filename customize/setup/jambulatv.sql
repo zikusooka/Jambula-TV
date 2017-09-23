@@ -49,5 +49,9 @@ notification_email_address VARCHAR(255) NOT NULL,
 gmail_address VARCHAR(255) NOT NULL,
 gmail_password VARCHAR(255) NOT NULL,
 news_sources VARCHAR(255) NOT NULL,
+youtube_api_key VARCHAR(255) NOT NULL,
+youtube_client_id VARCHAR(255) NOT NULL,
+youtube_client_secret VARCHAR(255) NOT NULL,
+darksky_api_key VARCHAR(255) NOT NULL,
 PRIMARY KEY (id)
 )

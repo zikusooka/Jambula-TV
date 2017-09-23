@@ -42,7 +42,7 @@ if (!empty($_SESSION['error_form_02'])) {
 <hr></hr>
 <p>
 
- <label>Enter device Nickname and MAC Addresses of your Wireless devices :</label>
+ <label>Enter first name of person and the MAC Address of their WiFi device :</label>
  
    <table style="width: 100%;" border="0"><tbody>
 <!-- Row 1 -->
