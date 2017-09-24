@@ -7,9 +7,12 @@
 FAVORITE_TV_CHANNEL="NBS TV"
 FAVORITE_VIDEO="MY_USER_TV_SHOWS_DIR/Arrow/Season_05/Arrow.S05E04.Penance.HDTV.H264.mkv"
 MUSIC_DIR="MY_USER_MUSIC_DIR"
+PICTURES_DIR="MY_USER_PICTURES_DIR"
 TV_RECORD_STATUS_FILE=MY_TMPDIR/tv_record_status # Must be same as in kodi-controller!
 DOMOTICZ_LAMP_NAME="Living Room"
-TTS_OUTPUT_FILE=/var/tmp/tts_output.wav # IMPORTANT: Must be on 'ext4' partition i.e. /var
+TEXT2SPEECH_TOOL=jambulatv-text2speech
+TTS_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $(which $TEXT2SPEECH_TOOL) | cut -d '=' -f2 | head -1 | awk {'print $1'}) # IMPORTANT: Must be on 'ext4' partition i.e. /var
+TTS_PLAY_TOOL=$(basename $(grep ^TTS_PLAY_CMD $(which $TEXT2SPEECH_TOOL) | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed "s:\"::g"))
 
 
 
@@ -189,6 +192,22 @@ skill_video_play_stop () {
 /usr/bin/jambulatv-kodi-controller video_play_stop
 }
 
+skill_youtube_search_start () {
+/usr/bin/jambulatv-kodi-controller addon_play_youtube "$@"
+}
+
+skill_youtube_search_stop () {
+/usr/bin/jambulatv-kodi-controller video_play_stop
+}
+
+skill_pictures_slideshow_all_start () {
+/usr/bin/jambulatv-kodi-controller pictures_play_start $PICTURES_DIR
+}
+
+skill_pictures_slideshow_stop () {
+/usr/bin/jambulatv-kodi-controller pictures_play_stop
+}
+
 skill_music_start () {
 # Music playlists using categories
 MUSIC_CATEGORY="$@"
@@ -271,6 +290,10 @@ skill_music_play_stop () {
 /usr/bin/jambulatv-kodi-controller music_play_stop
 }
 
+skill_go_home () {
+/usr/bin/jambulatv-kodi-controller navigate_home
+}
+
 skill_connect_2_hotspot () {
 sudo /usr/bin/jambulatv-auto-wifi-provision &
 $TEXT_2_SPEECH_TOOL_PATH custom "Please scan the QR Code displayed on the TV Screen to get the Wifi password.  For Android devices, you may connect automatically"
@@ -279,6 +302,12 @@ $TEXT_2_SPEECH_TOOL_PATH custom "Please scan the QR Code displayed on the TV Scr
 skill_power_off () {
 $TEXT_2_SPEECH_TOOL_PATH custom "Turning off system"
 systemctl poweroff -i
+}
+
+skill_stop_running_skill () {
+# Get PID of TTS audio
+TTS_PID=$(ps auxw | grep -Ev grep | grep $TTS_PLAY_TOOL | grep $TEXT_2_SPEECH_OUTPUT_FILE | awk {'print $2'})
+kill $TTS_PID
 }
 
 skill_mute_speech_recognition () {
