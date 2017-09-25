@@ -119,7 +119,7 @@ skill_time
 # Weather
 elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER" ];
 then
-skill_weather
+skill_weather &
 
 # Headlines (Start)
 elif [ "$DETECTED_PATTERN" = "WHAT ARE THE HEADLINES" ];
@@ -139,27 +139,27 @@ skill_reminders &
 # Calendar Events - Today
 elif [ "$DETECTED_PATTERN" = "WHAT EVENTS ARE SCHEDULED FOR TODAY" ];
 then
-skill_calendar_events today today "TODAY"
+skill_calendar_events today today "TODAY" &
 
 # Calendar Events - Tomorrow
 elif [ "$DETECTED_PATTERN" = "WHAT EVENTS ARE SCHEDULED FOR TOMORROW" ];
 then
-skill_calendar_events tomorrow tomorrow "TOMORROW"
+skill_calendar_events tomorrow tomorrow "TOMORROW" &
 
 # Calendar Events - This week
 elif [ "$DETECTED_PATTERN" = "WHAT EVENTS ARE SCHEDULED FOR THIS WEEK" ];
 then
-skill_calendar_events today one_week "THIS WEEK"
+skill_calendar_events today one_week "THIS WEEK" &
 
 # MOTD or Today's scripture
 elif [ "$DETECTED_PATTERN" = "MESSAGE OF THE DAY" ];
 then
-skill_motd
+skill_motd &
 
 # Flash Briefing
 elif [ "$DETECTED_PATTERN" = "READ MY FLASH BRIEFING" ];
 then
-skill_flash_briefing
+skill_flash_briefing &
 
 # Lights on
 elif [ "$DETECTED_PATTERN" = "TURN ON LIGHTS" ];
@@ -251,6 +251,28 @@ elif [ "$DETECTED_PATTERN" = "STOP PLAYING VIDEO" ];
 then
 skill_video_play_stop
 
+# Start Youtube search
+elif [[ "$DETECTED_PATTERN" =~ "SHOW YOUTUBE VIDEO" ]];
+then
+YOUTUBE_SEARCH_PHRASE=$(echo $DETECTED_PATTERN | sed "s:SHOW YOUTUBE VIDEO::g" | sed "s:^ ::g")
+
+skill_youtube_search_start "$YOUTUBE_SEARCH_PHRASE" &
+
+# Stop Youtube video
+elif [ "$DETECTED_PATTERN" = "STOP YOUTUBE VIDEO" ];
+then
+skill_youtube_search_stop
+
+# Start pictures slideshow
+elif [ "$DETECTED_PATTERN" = "START SHOWING PICTURES" ];
+then
+skill_pictures_slideshow_all_start &
+
+# Stop pictures slideshow
+elif [ "$DETECTED_PATTERN" = "STOP SHOWING PICTURES" ];
+then
+skill_pictures_slideshow_stop
+
 # Start music -Any
 elif [ "$DETECTED_PATTERN" = "START PLAYING MUSIC" ];
 then
@@ -316,6 +338,11 @@ elif [ "$DETECTED_PATTERN" = "STOP PLAYING MUSIC" ];
 then
 skill_music_play_stop
 
+# Go Home
+elif [ "$DETECTED_PATTERN" = "GO HOME" ];
+then
+skill_go_home 
+
 # Auto WiFi provision
 elif [ "$DETECTED_PATTERN" = "I WANT TO CONNECT TO THE HOTSPOT" ];
 then
@@ -325,6 +352,11 @@ skill_connect_2_hotspot
 elif [ "$DETECTED_PATTERN" = "TURN OFF JAMB BOO LA TV" ];
 then
 skill_power_off
+
+# Stop currently running skill
+elif [ "$DETECTED_PATTERN" = "QUIT DOING THAT" ];
+then
+skill_stop_running_skill
 
 # Take speech recognition offline
 elif [ "$DETECTED_PATTERN" = "KEEP QUIET NOW" ];
