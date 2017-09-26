@@ -5020,13 +5020,20 @@ $CHRONYC_PASSWD
 EOF
 }
 
-beep_spkr_configure () {
+system_sounds_configure () {
 # Enable speaker beeps
 echo "alias platform:pcspkr pcspkr" > $MODPROBE_DIR/beep.conf
 # Set suid bit for beep in order to allow use by non-root users
 chmod 4755 $BINARY_PREFIX/beep
 # Copy jambulatv-sounds script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-sounds ] || cp -v $PROJECT_BIN_DIR/jambulatv-sounds $BINARY_PREFIX/
+#
+# Create sounds directory if no-existent
+[ -d $PROJECT_SYSTEM_SHARE_DIR/sounds ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/sounds
+# Copy sound files
+cp -rv $PROJECT_CONTRIB_DIR/sounds/system/* $PROJECT_SYSTEM_SHARE_DIR/sounds/
+# Change ownership of sounds directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/sounds
 }
 
 beep2_install () {
@@ -7835,17 +7842,11 @@ text2speech_setup () {
 # Copy jambulatv-text2speech script, if it does not exist in bin directory and add custom User-Agent string
 [ -e $BINARY_PREFIX/jambulatv-text2speech ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-text2speech | \
-		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" \
+		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" | \
+		sed "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
 			> $BINARY_PREFIX/jambulatv-text2speech 
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-text2speech 
-#
-# Create sounds directory if no-existent
-[ -d $PROJECT_SYSTEM_SHARE_DIR/sounds ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/sounds
-# Copy beep2 sound files
-cp -rv $PROJECT_CONTRIB_DIR/sounds/text2speech $PROJECT_SYSTEM_SHARE_DIR/sounds/
-# Change ownership of text2speech sounds directory
-chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/sounds
 }
 
 boost_install () {

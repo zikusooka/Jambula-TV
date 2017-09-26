@@ -142,7 +142,7 @@ wireless_drivers_support
 wireless_interfaces_configure
 openssl_configure
 wol_configure 
-beep_spkr_configure
+system_sounds_configure
 optical_disc_drive_configure
 # Run these before icinga configure
 chrony_configure

@@ -19,11 +19,11 @@ PING_TIMEOUT=2 #9
 PING_IP_ADDRESS=8.8.8.8
 
 JAMBULATV_SOUNDS_DIR="/usr/share/JambulaTV/sounds"
-SOUND_EFFECTS_WAITING="$JAMBULATV_SOUNDS_DIR/text2speech/beep-waiting-01.wav"
+SOUND_EFFECTS_WAITING="$JAMBULATV_SOUNDS_DIR/waiting-4-online-response.wav"
 SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
 SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep $(basename $SOUND_EFFECTS_WAITING) | awk {'print $2'})
 
-MULTIMEDIA_USER=jambula
+MULTIMEDIA_USER=MY_MULTIMEDIA_USER
 
 USER_AGENT="MY_USER_AGENT"
 
@@ -59,19 +59,9 @@ export INTERNET_ALIVE
 tts_waiting_sound_effects () {
 # Add bogus sound effects file to stop beep if No action specified
 [ "x$TTS_ACTION" = "x" ] && touch $TTS_OUTPUT_FILE
-[ -e $SOUND_EFFECTS_TEMP_SCRIPT ] && sudo chown $MULTIMEDIA_USER $SOUND_EFFECTS_TEMP_SCRIPT
-cat > $SOUND_EFFECTS_TEMP_SCRIPT <<EOF
-#!/bin/sh
-while [ ! -e $TTS_OUTPUT_FILE ];
-do
-/usr/bin/mplayer -novideo $SOUND_EFFECTS_WAITING
-sleep 2
-done
-EOF
-# Make script executable
-chmod 755 $SOUND_EFFECTS_TEMP_SCRIPT
-# Run script
-at -f $SOUND_EFFECTS_TEMP_SCRIPT now
+#
+# Play waiting for api sound effects
+jambulatv-sounds api $TTS_OUTPUT_FILE
 }
 
 text2speech_pico () {

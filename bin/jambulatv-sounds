@@ -1,41 +1,109 @@
 #!/bin/sh
+#
+# This is a general helper script used by other tools to generate sounds at certain points of processing
+# Jambula Labs @copyright 2017-2018 All rights reserved
+
+# Variables
+JAMBULATV_SOUNDS_DIR="/usr/share/JambulaTV/sounds"
+SOUND_EFFECTS_WAITING="$JAMBULATV_SOUNDS_DIR/waiting-4-online-response.wav"
+
+SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
+SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep $(basename $SOUND_EFFECTS_WAITING) | awk {'print $2'}
+)
+SOUND_PLAYER_CMD="/usr/bin/mplayer"
+SOUND_PLAYER_OPTS="-novideo"
+
 BEEP_CMD=/usr/bin/beep
 
+MULTIMEDIA_USER=jambula
 
+
+
+###############
+#  FUNCTIONS  #
+###############
+waiting_4_online_response () {
+if [ "x$1" = "x" ];
+then
+clear
+cat <<EOF
+Usage: $(basename $0) [PATH_2_FILE_YOU_ARE_WAITING_FOR]
+
+Note: Sounds will stop when that file is detected.
+
+EOF
+exit 1
+fi
+# Change permissions of sound effects script file
+[ -e $SOUND_EFFECTS_TEMP_SCRIPT ] && sudo chown $MULTIMEDIA_USER $SOUND_EFFECTS_TEMP_SCRIPT
+#
+# Generate sound effects script file
+cat > $SOUND_EFFECTS_TEMP_SCRIPT <<EOF
+#!/bin/sh
+# File to wait for before quiting sound
+WAITED_FOR_FILE=$1
+# Remove previous file
+[ -e \$WAITED_FOR_FILE ] && sudo rm -f \$WAITED_FOR_FILE
+# Play sound while waiting
+while [ ! -e \$WAITED_FOR_FILE ];
+do
+$SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $SOUND_EFFECTS_WAITING
+sleep 2
+done
+# Remove waited for temp file
+[ -e \$WAITED_FOR_FILE ] && sudo rm -f \$WAITED_FOR_FILE
+EOF
+# Make script executable
+chmod 755 $SOUND_EFFECTS_TEMP_SCRIPT
+# Run script
+$SOUND_EFFECTS_TEMP_SCRIPT > /dev/null 2>&1 &
+}
+
+check_for_beep_command () {
 # Quit if no beep
 [ -e $BEEP_CMD ] || exit 0
+}
 
-
-case $@ in
+case $1 in
 
 online)
+check_for_beep_command
 $BEEP_CMD -f 500 -l 155 -n -f 400 -l 155 -n -f 600 -l 155 -n -f 800 -l 155 -n -f 800 -l 1
 ;;
 
 offline)
+check_for_beep_command
 #$BEEP_CMD -f 330 -l 137 -n -f 330 -l 275 -n -f 330 -l 137 -d 137 -n -f 262 -l 137 -n -f 330 -l 275
 $BEEP_CMD -f 500 -n -f 500 -n -f 500 -n -f 500 -n -f 500 -n -f 500
 ;;
 
 beethoven)
+check_for_beep_command
 $BEEP_CMD -f 659 -l 460 -n -f 784 -l 340 -n -f 659 -l 230 -n -f 659 -l 110 -n -f 880 -l 230 -n -f 659 -l 230 -n -f 587 -l 230 -n -f 659 -l 460 -n -f 988 -l 340 -n -f 659 -l 230 -n -f 659 -l 110 -n -f 1047-l 230 -n -f 988 -l 230 -n -f 784 -l 230 -n -f 659 -l 230 -n -f 988 -l 230 -n -f 1318 -l 230 -n -f 659 -l 110 -n -f 587 -l 230 -n -f 587 -l 110 -n -f 494 -l 230 -n -f 740 -l 230 -n -f 659 -l 460
 ;;
 
 start)
+check_for_beep_command
 $BEEP_CMD -f 65.4064 -l 100 -n -f 130.813 -l 100 -n -f 261.626 -l 100 -n -f 523.2
 ;;
 
 stop)
+check_for_beep_command
 $BEEP_CMD -f 523.251 -l 100 -D 100 -n -f 391.995 -l 100 -D 100 -n -f 329.628 -l 10
 ;;
 
 misc)
+check_for_beep_command
 $BEEP_CMD -f 600 -l 155 -n -f 800 -l 155 -n -f 500 -l 155 -n -f 400 -l 155 -n -f 400 -l 1
+;;
+
+api)
+waiting_4_online_response $2
 ;;
 
 *)
 
 clear
-echo "Usage: `basename $0` [online|offline|start|stop|misc|beethoven]"
+echo "Usage: `basename $0` [online|offline|start|stop|misc|beethoven|api]"
 ;;
 esac
