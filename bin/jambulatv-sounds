@@ -42,8 +42,6 @@ cat > $SOUND_EFFECTS_TEMP_SCRIPT <<EOF
 #!/bin/sh
 # File to wait for before quiting sound
 WAITED_FOR_FILE=$1
-# Remove previous file
-[ -e \$WAITED_FOR_FILE ] && sudo rm -f \$WAITED_FOR_FILE
 # Play sound while waiting
 while [ ! -e \$WAITED_FOR_FILE ];
 do
