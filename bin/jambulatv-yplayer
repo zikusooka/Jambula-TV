@@ -1,49 +1,41 @@
 #!/bin/sh
-# This is a wrapper to  allow playing Youtube based IPTV streams using TVHeadend 
+# This is a wrapper to allow playing Youtube based IPTV streams using TVHeadend 
+# NOTE: This utility relies heavily on the jambulatv-youtube tool
 # Jambula Labs @copyright 2017-2018 All rights reserved
 
 # Variables
 FFMPEG_CMD=/usr/bin/ffmpeg
 
-YOUTUBE_CMD=/usr/bin/jambulatv-youtube
+YOUTUBE_TOOL=jambulatv-youtube
+YOUTUBE_CMD=$(which $YOUTUBE_TOOL)
 YOUTUBE_VARIABLES_TEMP_FILE=$(grep ^YOUTUBE_VARIABLES_TEMP_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g')
 YOUTUBE_DEBUG_LOG_FILE=/tmp/youtube-debug.log
 
-IPTV_SERVICE_PROVIDER=JambulaIPTV
+IPTV_SERVICE_PROVIDER=MY_IPTV_SERVICE_PROVIDER
 IPTV_USER_AGENT="MY_USER_AGENT"
 IPTV_SERVICE_NAME="$(echo $@ | sed 's:"::g')"
-IPTV_SERVICE_PRETTY_NAME=$(echo $IPTV_SERVICE_NAME | tr '[:lower:]' '[:upper:]')
-
-TVHEADEND_LOG_FILE=/var/log/JambulaTV/tvheadend.log
 
 
 
-#################
-#  MAIN SCRIPT  #
-#################
+###############
+#  FUNCTIONS  #
+###############
 
-# Check if Kodi called me
-[ -e $TVHEADEND_LOG_FILE ] && \
-tail -38 $TVHEADEND_LOG_FILE | grep -m 1 -i "subscribe to $IPTV_SERVICE_NAME using profile htsp" > /dev/null 2>&1
-CALLED_BY_KODI=$?
-
-# Start notification on OSD while we wait IF script was called by kodi
-[ "$CALLED_BY_KODI" = "0" ] && \
-jambulatv-osd -m "$IPTV_SERVICE_PRETTY_NAME  ::  Please wait while I fetch and buffer this stream" &
-
+youtube_query_video () {
 # Run jambulatv-youtube command
 $YOUTUBE_CMD "$IPTV_SERVICE_NAME" > /dev/null 2>&1
-
+#
+# Quit if no variables file was created i.e. No Youtube Video ID
+[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] || exit 0
+#
 # Source Youtube video ID, URL, and Manifest variables
 YOUTUBE_VIDEO_ID="$(grep YOUTUBE_VIDEO_ID $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
 YOUTUBE_VIDEO_URL="$(grep YOUTUBE_VIDEO_URL $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
 YOUTUBE_VIDEO_QUALITY="$(grep YOUTUBE_VIDEO_QUALITY $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
 YOUTUBE_MANIFEST_URL="$(grep YOUTUBE_MANIFEST_URL $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
+}
 
-
-# Debugging
-# ---------
-#
+youtube_debugging () {
 # Change log file ownership to multimedia user or person running this tool
 [ -e $YOUTUBE_DEBUG_LOG_FILE ] && sudo chown $(whoami) $YOUTUBE_DEBUG_LOG_FILE
 #
@@ -63,14 +55,27 @@ Youtube Manifest URL
 $FFMPEG_CMD -nostats -loglevel fatal -user-agent "$IPTV_USER_AGENT" -i $YOUTUBE_MANIFEST_URL -codec copy -bsf:v h264_mp4toannexb,dump_extra -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name="$IPTV_SERVICE_NAME" -tune zerolatency -f mpegts pipe:1
 
 EOF
+}
 
-
-# End notification on OSD IF script was called by kodi
-[ "$CALLED_BY_KODI" = "0" ] && \
-jambulatv-osd -m "$IPTV_SERVICE_PRETTY_NAME  ::  Streaming" &
-
+youtube_stream_url () {
 # Remove Youtube temp variables file in case of next run
 [ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && rm -f $YOUTUBE_VARIABLES_TEMP_FILE
-
+#
 # Run stream via Ffmpeg Pipe
 $FFMPEG_CMD -nostats -loglevel fatal -user-agent "$IPTV_USER_AGENT" -i $YOUTUBE_MANIFEST_URL -codec copy -bsf:v h264_mp4toannexb,dump_extra -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name="$IPTV_SERVICE_NAME" -tune zerolatency -f mpegts pipe:1
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Query Youtube for video parameters like ID, URL etc
+youtube_query_video
+
+# Debugging
+youtube_debugging # <- Optional
+
+# Start streaming video
+youtube_stream_url
