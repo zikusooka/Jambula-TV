@@ -12,6 +12,7 @@ YOUTUBE_WATCH_URL="https://www.youtube.com/watch?v"
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
 YOUTUBE_DL_OPTS="-q -4 --prefer-insecure --no-check-certificate --geo-bypass"
 YOUTUBE_VARIABLES_TEMP_FILE="/tmp/youtube_variables"
+YOUTUBE_FETCH_IN_PROGRESS_FILE="/tmp/youtube_fetch_in_progress"
 
 # Video Format to use depending on connection
 YOUTUBE_VIDEO_FORMAT=93
@@ -79,6 +80,11 @@ exit 1
 fi
 }
 
+search_waiting_sound_effects () {
+# Play waiting for search results sound effects
+jambulatv-sounds api $YOUTUBE_FETCH_IN_PROGRESS_FILE 
+}
+
 query_mysql_db () {
 mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} << EOF
 USE ${JAMBULATV_SETUP_DB_NAME};
@@ -117,6 +123,11 @@ YOUTUBE_MAX_RESULTS=3
 YOUTUBE_SEARCH_OUTPUT_FILE=/tmp/youtube_search_results
 YOUTUBE_PLAYLIST_FILE=/tmp/youtube_video_ids_found
 #
+# Remove previous youtube search results
+[ -e $YOUTUBE_SEARCH_OUTPUT_FILE ] && sudo rm -f $YOUTUBE_SEARCH_OUTPUT_FILE
+# Remove previous youtube playlist file
+[ -e $YOUTUBE_PLAYLIST_FILE ] && sudo rm -f $YOUTUBE_PLAYLIST_FILE
+#
 # Search for Youtube IDs using API
 $HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE ${YOUTUBE_SEARCH_URL} \
 	-d part="snippet" -d sp="$YOUTUBE_SEARCH_FILTER" -d key="$YOUTUBE_API_KEY" \
@@ -141,6 +152,9 @@ YOUTUBE_SEARCH_TEXT="$(echo "$YOUTUBE_SEARCH_PHRASE" | sed -s "s: :+:g")"
 YOUTUBE_SEARCH_FILTER="CAMSBAgCQAFQFA%253D%253D"
 YOUTUBE_SEARCH_OUTPUT_FILE=/tmp/youtube_search_results
 YOUTUBE_SEARCH_SITE_LINKS_FILE=/tmp/youtube_links_found
+#
+# Remove previous youtube search results
+[ -e $YOUTUBE_SEARCH_OUTPUT_FILE ] && sudo rm -f $YOUTUBE_SEARCH_OUTPUT_FILE
 #
 # Search for Youtube IDs using scraped data with filters: Live, Today, View Count
 $HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE \
@@ -222,6 +236,9 @@ YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 # Usage
 usage
 
+# Play waiting sound effects i.e. beeps 
+search_waiting_sound_effects 
+
 # Set search method
 set_youtube_search_method
 
@@ -299,6 +316,9 @@ fi
 
 # Get Youtube Manifest URL
 YOUTUBE_MANIFEST_URL=$($YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_VIDEO_FORMAT -g --youtube-skip-dash-manifest $YOUTUBE_VIDEO_ID | grep http | head -1)
+
+# Add Youtube fetch-in-progress temp file - Stop waiting sounds effect
+touch $YOUTUBE_FETCH_IN_PROGRESS_FILE
 
 # Remove Youtube variables temp file if it exists
 [ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
