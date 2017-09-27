@@ -18,7 +18,6 @@ import threading
 # Variables
 JAMBULATV_VIRTUAL_TERMINAL = 'tty7'
 KODI_GUI_SETTINGS = '/JambulaTV/.kodi/userdata/guisettings.xml'
-TIME = 35000  # ms
 ICON = '/usr/share/kodi/addons/Aeon-Nox/media/DefaultIconInfo.png'
 OSDRUNFILE = '/tmp/osd_process_running' 
 
@@ -28,11 +27,17 @@ __author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2017-2018 All rights re
 # Parse arguments/ message
 parser = argparse.ArgumentParser(description='Display Announcements on JambulaTV Screen')
 parser.add_argument('-m','--message', help='The message you want displayed.  Wrap it in quotes',required=True)
+parser.add_argument('-t','--duration', help='How long in milliseconds you want the message displayed',type=int,required=False)
 args = parser.parse_args()
 
 MESSAGE = args.message
 XMPP_USERNAME = 'USER_001_XMPP_USERNAME'
 XMPP_PASSWORD   = 'USER_001_XMPP_PASSWORD'
+# Set duration
+if args.duration is None:
+    TIME = 35000
+else:
+    TIME = args.duration
 
 
 
@@ -122,7 +127,6 @@ def xbmc_poke_screen(xbmc_host, xbmc_port=xbmc_port):
 def xbmc_osd_message(xbmc_host, xbmc_port=xbmc_port):
     for x in range(0, len(xbmc_host)):
         result = send_json_command(xbmc_host[x], xbmc_port, 'GUI.ShowNotification', params={'title':xbmc_title, 'message':MESSAGE, 'displaytime':TIME, 'image':ICON})
-
 
 # Poke screen if screensaver is active
 xbmc_poke_screen(xbmc_host)
