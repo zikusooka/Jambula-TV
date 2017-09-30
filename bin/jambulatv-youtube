@@ -13,8 +13,6 @@ YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
 YOUTUBE_DL_OPTS="-q -4 --prefer-insecure --no-check-certificate --geo-bypass"
 YOUTUBE_VARIABLES_TEMP_FILE="/tmp/youtube_variables"
 YOUTUBE_FETCH_IN_PROGRESS_FILE="/tmp/youtube_fetch_in_progress"
-
-# Video Format to use depending on connection
 YOUTUBE_VIDEO_FORMAT=93
 # Video Quality definitions according to format selected 
 case $YOUTUBE_VIDEO_FORMAT in
@@ -32,6 +30,10 @@ YOUTUBE_VIDEO_QUALITY="mp4   854x480   HLS   1380k   avc1.4d401f   mp4a.40.2@128
 ;;
 esac
 
+TVHEADEND_LOG_FILE=MY_TVHEADEND_LOG_FILE
+KODI_LOG_FILE=MY_KODI_LOG_FILE
+OSDRUNFILE=$(grep ^OSDRUNFILE $(which jambulatv-osd) | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed "s/[\"|']//g")
+
 CURL_CMD="/usr/bin/curl"
 CURL_OPTS="-s -S -G -L -m 60"
 
@@ -39,6 +41,7 @@ HTTP_BROWSER_USERAGENT="MY_USER_AGENT"
 HTTP_BROWSER_COMMAND="$CURL_CMD $CURL_OPTS"
 
 STREAM_NAME=$(echo $@ | sed 's:"::g')
+STREAM_PRETTY_NAME=$(echo $STREAM_NAME | tr '[:lower:]' '[:upper:]')
 
 JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
 JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
@@ -80,9 +83,65 @@ exit 1
 fi
 }
 
+check_who_called_tool () {
+# Check if an HTSP client called me
+[ -e $TVHEADEND_LOG_FILE ] && \
+tail -38 $TVHEADEND_LOG_FILE | grep -m 1 "$STREAM_NAME" | grep "profile=\"htsp\"" > /dev/null 2>&1
+CALLED_BY_HTSP=$?
+#
+# Check if Kodi API called me
+[ -e $KODI_LOG_FILE ] && \
+tail -1 $KODI_LOG_FILE | grep -m 1 "webserver: request received for /jsonrpc" > /dev/null 2>&1
+CALLED_BY_JSONRPC=$?
+}
+
+remove_previous_osd_message () {
+# Kill any lingering OSD message scrolls
+OSD_PID=$(ps auxw | grep -Ev grep | grep jambulatv-osd | grep python | awk {'print $2'})
+[ "x$OSD_PID" = "x" ] || kill -15 $OSD_PID
+# Remove OSD run file if it exists
+[ ! -e $OSDRUNFILE ] || rm -f $OSDRUNFILE
+}
+
+osd_notification_fetching () {
+# Kill any lingering OSD message scrolls
+remove_previous_osd_message
+#
+# OSD notification if called by htsp client or jsonrpc
+if [ "$CALLED_BY_HTSP" = "0" ] || [ "$CALLED_BY_JSONRPC" = "0" ];
+then
+jambulatv-osd -m "$STREAM_PRETTY_NAME  ::  Please wait while I fetch and buffer this stream" -t 20000 &
+fi
+}
+
+osd_notification_streaming () {
+# Kill any lingering OSD message scrolls
+remove_previous_osd_message
+#
+# OSD notification if called by htsp client or jsonrpc
+if [ "$CALLED_BY_HTSP" = "0" ] || [ "$CALLED_BY_JSONRPC" = "0" ];
+then
+jambulatv-osd -m "$STREAM_PRETTY_NAME  ::  Streaming" -t 7000 &
+fi
+}
+
+osd_notification_failed () {
+# Kill any lingering OSD message scrolls
+remove_previous_osd_message
+#
+# OSD notification if called by htsp client or jsonrpc
+if [ "$CALLED_BY_HTSP" = "0" ] || [ "$CALLED_BY_JSONRPC" = "0" ];
+then
+jambulatv-osd -m "$STREAM_PRETTY_NAME  ::  Am sorry this stream was not found.  Please try again later" -t 10000 &
+fi
+}
+
 search_waiting_sound_effects () {
-# Play waiting for search results sound effects
-jambulatv-sounds api $YOUTUBE_FETCH_IN_PROGRESS_FILE 
+# Play waiting for search results sound effects but only if called by Kodi
+if [ "$CALLED_BY_HTSP" = "0" ] || [ "$CALLED_BY_JSONRPC" = "0" ];
+then
+jambulatv-sounds api $YOUTUBE_FETCH_IN_PROGRESS_FILE
+fi
 }
 
 query_mysql_db () {
@@ -97,20 +156,6 @@ query_db_4_youtube_api () {
 GOOGLE_YOUTUBE_API_KEY=$(query_mysql_db youtube_api_key)
 GOOGLE_YOUTUBE_CLIENT_ID=$(query_mysql_db youtube_client_id)
 GOOGLE_YOUTUBE_CLIENT_SECRET=$(query_mysql_db youtube_client_secret)
-}
-
-set_youtube_search_method () {
-query_db_4_youtube_api 
-#
-# Method of search depending on availability of Youtube API Key
-if [ "x$GOOGLE_YOUTUBE_API_KEY" != "x" ];
-then
-# API available
-youtube_search_method=youtube_search_video_id_via_api
-else
-# No API
-youtube_search_method=youtube_search_video_id_via_scraper
-fi
 }
 
 youtube_search_video_id_via_api () {
@@ -137,7 +182,7 @@ $HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FIL
 # Generate Youtube playlist containing video Ids
 cat $YOUTUBE_SEARCH_OUTPUT_FILE | jq -r '.items[]' | grep videoId | awk {'print $2'} | sed 's:["|,]::g' > $YOUTUBE_PLAYLIST_FILE
 #
-# Filter out HTML tags from search output. Strip out Youtube links
+# Get the first Youtube ID from the playlist
 YOUTUBE_VIDEO_ID=$(head -1 $YOUTUBE_PLAYLIST_FILE)
 #
 # Export Youtube ID
@@ -167,7 +212,23 @@ YOUTUBE_VIDEO_ID=$(grep -i "$YOUTUBE_SEARCH_PHRASE" $YOUTUBE_SEARCH_OUTPUT_FILE 
 export YOUTUBE_VIDEO_ID
 }
 
-# Youtube Video IDs
+set_youtube_search_method () {
+query_db_4_youtube_api 
+#
+# Method of search depending on availability of Youtube API Key
+if [ "x$GOOGLE_YOUTUBE_API_KEY" != "x" ];
+then
+# API available
+youtube_search_method=youtube_search_video_id_via_api
+else
+# No API
+youtube_search_method=youtube_search_video_id_via_scraper
+fi
+}
+
+# -----------------------------------------------------------
+# a) PRE-DEFINED CHANNELS: Extract and Set Youtube video IDs
+# -----------------------------------------------------------
 youtube_video_id_ntv_uganda () {
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i "NTV Uganda Livestream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
@@ -224,25 +285,14 @@ YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_cnn () {
-$youtube_search_method "CNN Live Stream"
+$youtube_search_method "CNN Live Stream News HD"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
-
-
-#################
-#  MAIN SCRIPT  #
-#################
-# Usage
-usage
-
-# Play waiting sound effects i.e. beeps 
-search_waiting_sound_effects 
-
-# Set search method
-set_youtube_search_method
-
-# Set Youtube Video ID
+# -------------------------------------------------------------------------
+# b) PRE-DEFINED CHANNELS: Match Youtube video IDs based on user's request
+# -------------------------------------------------------------------------
+set_youtube_video_id () {
 case "$STREAM_NAME" in
 # NTV Uganda
 [Nn][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa])
@@ -302,27 +352,54 @@ youtube_video_id_cnn
 ;;
 # Other search phrases
 *)
-$youtube_search_method "$@"
+IS_NOT_PREDEFINED_TV_CHANNEL=y
+$youtube_search_method "$STREAM_NAME"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 ;;
 esac
+}
 
-# Quit if no Youtube ID is found 
-if [ "x$YOUTUBE_VIDEO_ID" = "x" ];
-then
-logger -s -t $(basename $0) "Error: No Youtube ID was found for $STREAM_NAME, quitting ..."
-exit 1
-fi
+stop_waiting_sound_effects () {
+sudo touch $YOUTUBE_FETCH_IN_PROGRESS_FILE
+}
 
-# Get Youtube Manifest URL
+get_youtube_manifest () {
 YOUTUBE_MANIFEST_URL=$($YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_VIDEO_FORMAT -g --youtube-skip-dash-manifest $YOUTUBE_VIDEO_ID | grep http | head -1)
+}
 
+youtube_failed_actions () {
 # Add Youtube fetch-in-progress temp file - Stop waiting sounds effect
-touch $YOUTUBE_FETCH_IN_PROGRESS_FILE
+stop_waiting_sound_effects
+# Failure notification on OSD IF script was called by htsp client
+osd_notification_failed
+# Pause a bit - really needed, for beeps to stop
+sleep 2
+# Stop video player
+jambulatv-kodi-controller video_play_stop &
+# Remove Youtube temp variables file in case of next run
+[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
+# Add log message to systemd journal
+logger -s -t $(basename $0) "Error: No Youtube ID was found for $STREAM_NAME, quitting ..."
+# Quit
+exit 1
+}
 
+quit_if_no_video_id_or_manifest_is_found () {
+# If No Manifest URL and this tool was called for the purpose of watching predefined Youtube video i.e. Live TV
+if [[ "x$YOUTUBE_MANIFEST_URL" = "x" && "$IS_NOT_PREDEFINED_TV_CHANNEL" != "y" ]];
+then
+youtube_failed_actions
+# If No Video ID and this tool was called for the purpose of watching NON-predefined Youtube video i.e. Videos
+elif [[ "x$YOUTUBE_VIDEO_ID" = "x" && "$IS_NOT_PREDEFINED_TV_CHANNEL" = "y" ]];
+then
+youtube_failed_actions
+fi
+}
+
+save_youtube_variables () {
 # Remove Youtube variables temp file if it exists
 [ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
-
+#
 # Create a Youtube variables temp file for other tools to use
 cat > $YOUTUBE_VARIABLES_TEMP_FILE <<EOF
 YOUTUBE_VIDEO_ID=${YOUTUBE_VIDEO_ID}
@@ -330,6 +407,45 @@ YOUTUBE_VIDEO_URL=${YOUTUBE_WATCH_URL}=${YOUTUBE_VIDEO_ID}
 YOUTUBE_VIDEO_QUALITY=${YOUTUBE_VIDEO_QUALITY}
 YOUTUBE_MANIFEST_URL=${YOUTUBE_MANIFEST_URL}
 EOF
-
+#
 # Export set Youtube variables
-export YOUTUBE_VIDEO_ID YOUTUBE_VIDEO_URL YOUTUBE_VIDEO_QUALITY YOUTUBE_MANIFEST_URL 
+export YOUTUBE_VIDEO_ID YOUTUBE_VIDEO_URL YOUTUBE_VIDEO_QUALITY YOUTUBE_MANIFEST_URL
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+# Usage
+usage
+
+# Check if an HTSP client or Kodi API called me
+check_who_called_tool
+
+# Fetching notification on OSD while we wait IF script was called by htsp client
+osd_notification_fetching
+
+# Play waiting sound effects i.e. beeps 
+search_waiting_sound_effects 
+
+# Set search method
+set_youtube_search_method
+
+# Set Youtube Video ID
+set_youtube_video_id
+
+# Get Youtube Manifest URL
+get_youtube_manifest
+
+# Quit if no Youtube ID is found 
+quit_if_no_video_id_or_manifest_is_found
+
+# Add Youtube fetch-in-progress temp file - Stop waiting sounds effect
+stop_waiting_sound_effects 
+
+# Save Youtube variables
+save_youtube_variables
+
+# Streaming notification on OSD while we wait IF script was called by htsp client
+osd_notification_streaming 

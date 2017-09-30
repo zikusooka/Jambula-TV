@@ -6295,7 +6295,9 @@ youtube_setup () {
 		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
-		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" | \
+		sed -e "s:MY_TVHEADEND_LOG_FILE:$TVHEADEND_LOG_FILE:g" | \
+		sed -e "s:MY_KODI_LOG_FILE:$KODI_LOG_FILE:g" \
 			> $BINARY_PREFIX/jambulatv-youtube 
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-youtube 
