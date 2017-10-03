@@ -5,10 +5,18 @@
 
 # Variables
 JAMBULATV_SOUNDS_DIR="/usr/share/JambulaTV/sounds"
-SOUND_EFFECTS_WAITING="$JAMBULATV_SOUNDS_DIR/waiting-4-online-response.wav"
-
+DEFAULT_SOUND_EFFECTS_FILE="waiting-4-online-response.wav"
+#
+# If third CLI argument is used, set it as sound effects file.  For others, use default sound effects file
+if [ "x$3" = "x" ] || [ ! -e "$JAMBULATV_SOUNDS_DIR/$3" ];
+then
+SOUND_EFFECTS_WAITING_PATH="$JAMBULATV_SOUNDS_DIR/$DEFAULT_SOUND_EFFECTS_FILE"
+else
+SOUND_EFFECTS_WAITING_PATH="$JAMBULATV_SOUNDS_DIR/$3"
+fi
+#
 SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
-SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep $(basename $SOUND_EFFECTS_WAITING) | awk {'print $2'}
+SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep $(basename $SOUND_EFFECTS_WAITING_PATH) | awk {'print $2'}
 )
 SOUND_PLAYER_CMD="/usr/bin/mplayer"
 SOUND_PLAYER_OPTS="-novideo"
@@ -27,7 +35,7 @@ if [ "x$1" = "x" ];
 then
 clear
 cat <<EOF
-Usage: $(basename $0) [PATH_2_FILE_YOU_ARE_WAITING_FOR]
+Usage: $(basename $0) [PATH_2_FILE_YOU_ARE_WAITING_FOR] [SOUND_EFFECTS_FILE e.g. waiting-4-online-response-003.wav(optional)]
 
 Note: Sounds will stop when that file is detected.
 
@@ -47,7 +55,7 @@ WAITED_FOR_FILE=$1
 # Play sound while waiting
 while [ ! -e \$WAITED_FOR_FILE ];
 do
-$SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $SOUND_EFFECTS_WAITING
+$SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $SOUND_EFFECTS_WAITING_PATH
 sleep 2
 done
 # Remove waited for temp file
