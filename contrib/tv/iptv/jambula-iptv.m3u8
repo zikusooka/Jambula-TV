@@ -1,809 +1,516 @@
 #EXTM3U
-# 20170706-0000
-
-##########
-#  NEWS  #
-##########
-# --------
-# BBC NEWS
-# --------
-#EXTINF:0 tvg-id="id1" tvg-name="BBC NEWS" tvg-logo="bbc_news.png" group-title="News",BBC NEWS
-http://hlslive.lcdn.une.net.co/v1/AUTH_HLSLIVE/BBCW/tu1_1.m3u8
-# --------
-# SKY NEWS
-# --------
-#EXTINF:0 tvg-id="id2" tvg-name="SKY NEWS" tvg-logo="sky_news.png" group-title="News",SKY NEWS
-http://skydvn-nowtv-atv-prod.skydvn.com/atv/skynews/1404/live/04.m3u8
-# ---
-# CNN
-# ---
-#EXTINF:0 tvg-id="id3" tvg-name="CNN" tvg-logo="cnn.png" group-title="News",CNN
-pipe:///usr/bin/jambulatv-rtmplayer rtmp://d.cdn.newschat.tv/edge cnn_live http://www.newsviews.tv/player.swf http://www.newsviews.tv/news-views-video-six
-# ---------
-# ALJAZEERA
-# ---------
-#EXTINF:0 tvg-id="id4" tvg-name="ALJAZEERA" tvg-logo="aljazeera.png" group-title="News",ALJAZEERA
-http://aljazeera-eng-hd-live.hls.adaptive.level3.net/aljazeera/english2/index255.m3u8
-#pipe:///usr/bin/jambulatv-rtmplayer rtmp://aljazeeraflashlivefs.fplive.net/aljazeeraflashlive-live aljazeera_eng_high http://static.ls-cdn.com/player/5.10/livestation-player.swf
-# --------
-# FOX NEWS
-# --------
-#EXTINF:0 tvg-id="id5" tvg-name="FOX NEWS" tvg-logo="fox_news.png" group-title="News",FOX NEWS
-http://cmghlslive-i.akamaihd.net/hls/live/224709/KOKI/904k/prog.m3u8
-# -----
-# MSNBC
-# -----
-#EXTINF:0 tvg-id="id6" tvg-name="MSNBC" tvg-logo="msnbc.png" group-title="News",MSNBC
-http://tvemsnbc-lh.akamaihd.net/i/nbcmsnbc_1@122532/master.m3u8
-# ---------
-# FRANCE 24
-# ---------
-#EXTINF:0 tvg-id="id7" tvg-name="FRANCE 24" tvg-logo="france_24.png" group-title="News",FRANCE 24
-http://f24hls-i.akamaihd.net/hls/live/221193/F24_EN_LO_HLS/master.m3u8
-#http://static.france24.com/live/F24_EN_LO_HLS/live_web.m3u8
-# --------
-# EURONEWS
-# --------
-#EXTINF:0 tvg-id="id8" tvg-name="EURONEWS" tvg-logo="euronews.png" group-title="News",EURONEWS
-http://fr-par-iphone-2.cdn.hexaglobe.net/streaming/euronews_ewns/ipad_en.m3u8
-#rtsp://ewns-hls-b-stream.hexaglobe.net/rtpeuronewslive/en_vidan750_rtp.sdp
-# --
-# RT
-# --
-#EXTINF:0 tvg-id="id9" tvg-name="RT" tvg-logo="rt.png" group-title="News",RT
-http://rt.ashttp14.visionip.tv/live/rt-global-live-HD/playlist.m3u8
-# -------
-# REUTERS
-# -------
-#EXTINF:0 tvg-id="id10" tvg-name="REUTERS" tvg-logo="reuters.png" group-title="News",REUTERS
-http://37.58.85.156/rlo001/ngrp:rlo001.stream_all/playlist.m3u8
-# ----
-# CGTN
-# ----
-#EXTINF:0 tvg-id="id11" tvg-name="CGTN" tvg-logo="cctv.png" group-title="News",CGTN
-http://pro213.com/live/Mohaammed/12MAlQubtan/3723.m3u8
-# --------
-# PRESS TV
-# --------
-#EXTINF:0 tvg-id="id12" tvg-name="PRESS TV" tvg-logo="presstv.png" group-title="News",PRESS TV
-http://178.32.255.199:1935/live/ptven/playlist.m3u8
-# -----------
-# VOA ENGLISH
-# -----------
-#EXTINF:0 tvg-id="id12" tvg-name="VOA ENGLISH" tvg-logo="voa.png" group-title="News",VOA ENGLISH
-https://edge-823-ch-gv.filmon.com/live/2996.low.stream/playlist.m3u8?id=0ad5aac39bb13fbebdf49131353a56e36e0bde7295747a0ea0738b6d08603d92e7cb6f0b655257303d04ce0335edffa27f083188fe276034e941eeea9ed1eb7a6bcef6a7b6ec97d7d8cd0b3f762f144b92a7d7796b00a2e3472a6624733d5cc71ec6eb6d1e1d2b149d2ecbb3eca111e97270e29d719ab181178b406dfb1ef7c54c2b5dee0367de2b89f1d0f4efcfa8459a14b06c714eb114
-# --------
-# CBS NEWS
-# --------
-#EXTINF:0 tvg-id="id13" tvg-name="CBS NEWS" tvg-logo="cbs_news.png" group-title="News",CBS NEWS
-http://cbsNEWShd-lh.akamaihd.net/i/CBSNHD_7@199302/index_700_av-p.m3u8
-# --------
-# ABC NEWS
-# --------
-#EXTINF:0 tvg-id="id14" tvg-name="ABC NEWS" tvg-logo="abc_news.png" group-title="News",ABC NEWS
-http://abclive.abcnews.com/i/abc_live4@136330/master.m3u8?b=500,300,700,900,1200
-# -----------
-# WGN CHICAGO
-# -----------
-#EXTINF:0 tvg-id="id15" tvg-name="WGN" tvg-logo="wgn.png" group-title="News",WGN
-http://wgntribune-lh.akamaihd.net/i/WGNPrimary_1@304622/master.m3u8
-# -----------
-# TVC NIGERIA
-# -----------
-#EXTINF:0 tvg-id="id15" tvg-name="TVC NIGERIA" tvg-logo="tvc_nigeria.png" group-title="News",TVC NIGERIA
-http://77.92.76.135:1935/tvcnews/livestream/playlist.m3u8
-
-##############
-#  BUSINESS  #
-##############
-# ---------
-# BLOOMBERG
-# ---------
-#EXTINF:0 tvg-id="id16" tvg-name="BLOOMBERG" tvg-logo="bloomberg.png" group-title="Business",BLOOMBERG
-http://cdn3.videos.bloomberg.com/btv/us/master.m3u8?b?b*t$
-#http://cdn3.videos.bloomberg.com/btv/us/master.m3u8
-# ----
-# CNBC
-# ----
-#EXTINF:0 tvg-id="id17" tvg-name="CNBC" tvg-logo="cnbc.png" group-title="Business",CNBC
-http://iudtv.org:8000/live/190001993192162/190001993192162/466.ts
-
-###############
-#  EDUCATION  #
-###############
-# -------
-# HISTORY
-# -------
-#EXTINF:0 tvg-id="id18" tvg-name="HISTORY" tvg-logo="history.png" group-title="Learning",HISTORY
-http://iudtv.org:8000/live/190001993192162/190001993192162/496.ts
-# --
-# H2
-# --
-#EXTINF:0 tvg-id="id19" tvg-name="H2" tvg-logo="h2.png" group-title="Learning",H2
-http://iudtv.org:8000/live/190001993192162/190001993192162/452.ts
-# ------------
-# DISCOVERY +1
-# ------------
-#EXTINF:0 tvg-id="id20" tvg-name="DISCOVERY +1" tvg-logo="discovery_+1.png" group-title="Learning",DISCOVERY +1
-http://iudtv.org:8000/live/190001993192162/190001993192162/464.ts
-# -----------------
-# DISCOVERY HISTORY
-# -----------------
-#EXTINF:0 tvg-id="id21" tvg-name="DISCOVERY HISTORY" tvg-logo="discovery_history.png" group-title="Learning",DISCOVERY HISTORY
-http://iudtv.org:8000/live/190001993192162/190001993192162/491.ts
-#http://iudtv.org:8000/live/190001993192162/190001993192162/514.ts
-# -----------------
-# DISCOVERY SCIENCE
-# -----------------
-#EXTINF:0 tvg-id="id22" tvg-name="DISCOVERY SCIENCE" tvg-logo="discovery_science.png" group-title="Learning",DISCOVERY SCIENCE
-http://iudtv.org:8000/live/190001993192162/190001993192162/526.ts
 # -----------------------
-# DISCOVERY INVESTIGATION
+# BBC Two
 # -----------------------
-#EXTINF:0 tvg-id="id23" tvg-name="DISCOVERY INVESTIGATION" tvg-logo="discovery_investigation.png" group-title="Learning",DISCOVERY INVESTIGATION
-http://pro213.com/live/Mohaammed/12MAlQubtan/3712.ts
-# ---------------
-# DISCOVERY TURBO
-# ---------------
-#EXTINF:0 tvg-id="id24" tvg-name="DISCOVERY TURBO" tvg-logo="discovery_turbo.png" group-title="Learning",DISCOVERY TURBO
-http://iudtv.org:8000/live/190001993192162/190001993192162/465.ts
-# --------------
-# DISCOVERY SHED
-# --------------
-#EXTINF:0 tvg-id="id25" tvg-name="DISCOVERY SHED" tvg-logo="discovery_shed.png" group-title="Learning",DISCOVERY SHED
-http://iudtv.org:8000/live/190001993192162/190001993192162/445.ts
-# -------
-# NASA TV
-# -------
-#EXTINF:0 tvg-id="id26" tvg-name="NASA TV" tvg-logo="nasa_tv.png" group-title="Learning",NASA TV
-http://nasatv-lh.akamaihd.net/i/NASA_101@319270/master.m3u8
-# -------
-# TWIT TV
-# -------
-#EXTINF:0 tvg-id="id27" tvg-name="TWIT LIVE" tvg-logo="twit.png" group-title="Learning",TWIT
-http://iphone-streaming.ustream.tv/uhls/1524/streams/live/iphone/playlist.m3u8
-
-############
-#  NATURE  #
-############
-# -------------
-# ANIMAL PLANET
-# -------------
-#EXTINF:0 tvg-id="id28" tvg-name="ANIMAL PLANET" tvg-logo="animal_planet.png" group-title="Nature",ANIMAL PLANET
-http://iudtv.org:8000/live/190001993192162/190001993192162/497.ts
-# ------------
-# NAT GEO WILD
-# ------------
-#EXTINF:0 tvg-id="id29" tvg-name="NAT GEO WILD" tvg-logo="nat_geo_wild.png" group-title="Nature",NAT GEO WILD
-http://iudtv.org:8000/live/190001993192162/190001993192162/498.ts
-# -------------------
-# NATIONAL GEOGRAPHIC
-# -------------------
-#EXTINF:0 tvg-id="id30" tvg-name="NATIONAL GEOGRAPHIC" tvg-logo="national_geographic.png" group-title="Nature",NATIONAL GEOGRAPHIC
-http://iudtv.org:8000/live/190001993192162/190001993192162/499.ts
-# ---------------
-# WEATHER CHANNEL
-# ---------------
-#EXTINF:0 tvg-id="id31" tvg-name="WEATHER CHANNEL" tvg-logo="weather_channel.png" group-title="Nature",WEATHER CHANNEL
-http://cdnapi.kaltura.com/p/931702/sp/93170200/playManifest/entryId/1_oorxcge2/format/applehttp/protocol/http/uiConfId/28428751/a.m3u8
-
-############
-#  SPORTS  #
-############
-# ------------
-# SKY SPORTS 1
-# ------------
-#EXTINF:0 tvg-id="id32" tvg-name="SKY SPORTS 1" tvg-logo="sky_sports_1.png" group-title="Sports",SKY SPORTS 1
-http://iudtv.org:8000/live/190001993192162/190001993192162/533.ts
-# ------------
-# SKY SPORTS 2
-# ------------
-#EXTINF:0 tvg-id="id33" tvg-name="SKY SPORTS 2" tvg-logo="sky_sports_2.png" group-title="Sports",SKY SPORTS 2
-http://iudtv.org:8000/live/190001993192162/190001993192162/532.ts
-# ------------
-# SKY SPORTS 3
-# ------------
-#EXTINF:0 tvg-id="id34" tvg-name="SKY SPORTS 3" tvg-logo="sky_sports_3.png" group-title="Sports",SKY SPORTS 3
-http://iudtv.org:8000/live/190001993192162/190001993192162/531.ts
-# ------------
-# SKY SPORTS 4
-# ------------
-#EXTINF:0 tvg-id="id35" tvg-name="SKY SPORTS 4" tvg-logo="sky_sports_4.png" group-title="Sports",SKY SPORTS 4
-http://iudtv.org:8000/live/190001993192162/190001993192162/545.ts
-#http://iudtv.org:8000/live/190001993192162/190001993192162/530.ts
-# ------------
-# SKY SPORTS 5
-# ------------
-#EXTINF:0 tvg-id="id36" tvg-name="SKY SPORTS 5" tvg-logo="sky_sports_5.png" group-title="Sports",SKY SPORTS 5
-http://iudtv.org:8000/live/190001993192162/190001993192162/529.ts
-#http://iudtv.org:8000/live/190001993192162/190001993192162/544.ts
-# -------------
-# SKY SPORTS F1
-# -------------
-#EXTINF:0 tvg-id="id37" tvg-name="SKY SPORTS F1" tvg-logo="sky_sports_f1.png" group-title="Sports",SKY SPORTS F1
-http://iudtv.org:8000/live/190001993192162/190001993192162/539.ts
-# ----------------
-# SKY AT THE RACES
-# ----------------
-#EXTINF:0 tvg-id="id38" tvg-name="SKY AT THE RACES" tvg-logo="sky_at_the_races.png" group-title="Sports",SKY AT THE RACES
-http://iudtv.org:8000/live/190001993192162/190001993192162/461.ts
-# ---------------
-# SKY SPORTS NEWS
-# ---------------
-#EXTINF:0 tvg-id="id39" tvg-name="SKY SPORTS NEWS" tvg-logo="sky_sports_news.png" group-title="Sports",SKY SPORTS NEWS
-http://iudtv.org:8000/live/190001993192162/190001993192162/549.ts
-# --------------
-# PREMIER SPORTS
-# --------------
-#EXTINF:0 tvg-id="id40" tvg-name="PREMIER SPORTS" tvg-logo="premier_sports.png" group-title="Sports",PREMIER SPORTS
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3321.ts
-# ----------
-# BOX NATION
-# ----------
-#EXTINF:0 tvg-id="id41" tvg-name="BOX NATION" tvg-logo="box_nation.png" group-title="Sports",BOX NATION
-http://iudtv.org:8000/live/190001993192162/190001993192162/490.ts
-# ---------
-# RACING UK
-# ---------
-#EXTINF:0 tvg-id="id42" tvg-name="RACING UK" tvg-logo="racing_uk.png" group-title="Sports",RACING UK
-http://iudtv.org:8000/live/190001993192162/190001993192162/458.ts
-# ----------
-# BT SPORT 1
-# ----------
-#EXTINF:0 tvg-id="id43" tvg-name="BT SPORT 1" tvg-logo="bt_sport_1.png" group-title="Sports",BT SPORT 1
-http://iudtv.org:8000/live/190001993192162/190001993192162/543.ts
-#-----------
-# BT SPORT 2
-# ----------
-#EXTINF:0 tvg-id="id44" tvg-name="BT SPORT 2" tvg-logo="bt_sport_2.png" group-title="Sports",BT SPORT 2
-http://iudtv.org:8000/live/190001993192162/190001993192162/542.ts
-#http://iudtv.org:8000/live/190001993192162/190001993192162/527.ts
-# ----------
-# BT SPORT 3
-# ----------
-#EXTINF:0 tvg-id="id45" tvg-name="BT SPORT 3" tvg-logo="bt_sport_3.png" group-title="Sports",BT SPORT 3
-http://iudtv.org:8000/live/190001993192162/190001993192162/453.ts
-#http://iudtv.org:8000/live/190001993192162/190001993192162/528.ts
-# --------------
-# BT SPORT EXTRA
-# --------------
-#EXTINF:0 tvg-id="id46" tvg-name="BT SPORT EXTRA" tvg-logo="bt_sport_extra.png" group-title="Sports",BT SPORT EXTRA
-http://iudtv.org:8000/live/190001993192162/190001993192162/479.ts
-# ---------
-# EIR SPORT
-# ---------
-#EXTINF:0 tvg-id="id47" tvg-name="EIR SPORT" tvg-logo="eir_sport.png" group-title="Sports",EIR SPORT
-http://iudtv.org:8000/live/190001993192162/190001993192162/484.ts
-# -----------
-# EUROSPORT 1
-# -----------
-#EXTINF:0 tvg-id="id48" tvg-name="EUROSPORT 1" tvg-logo="eurosport_1.png" group-title="Sports",EUROSPORT 1
-http://esioslive6-i.akamaihd.net/hls/live/202874/AL_P_ESP1_INTER_ENG/playlist_1800.m3u8
-# -----------
-# EUROSPORT 2
-# -----------
-#EXTINF:0 tvg-id="id49" tvg-name="EUROSPORT 2" tvg-logo="eurosport_2.png" group-title="Sports",EUROSPORT 2
-http://iudtv.org:8000/live/190001993192162/190001993192162/540.ts
-# ------------
-# FOX SPORTS 1
-# ------------
-#EXTINF:0 tvg-id="id50" tvg-name="FOX SPORTS 1" tvg-logo="fox_sports_1.png" group-title="Sports",FOX SPORTS 1 
-http://iudtv.org:8000/live/190001993192162/190001993192162/710.ts
-# ------------
-# FOX SPORTS 2
-# ------------
-#EXTINF:0 tvg-id="id51" tvg-name="FOX SPORTS 2" tvg-logo="fox_sports_2.png" group-title="Sports",FOX SPORTS 2
-http://iudtv.org:8000/live/190001993192162/190001993192162/711.ts
-# ------------
-# FOX SPORTS 3
-# ------------
-#EXTINF:0 tvg-id="id52" tvg-name="FOX SPORTS 3" tvg-logo="fox_sports_3.png" group-title="Sports",FOX SPORTS 3
-http://iudtv.org:8000/live/190001993192162/190001993192162/712.ts
-# ------------
-# FOX SPORTS 4
-# ------------
-#EXTINF:0 tvg-id="id53" tvg-name="FOX SPORTS 4" tvg-logo="fox_sports_4.png" group-title="Sports",FOX SPORTS 4
-http://iudtv.org:8000/live/190001993192162/190001993192162/713.ts
-# ------------
-# FOX SPORTS 5
-# ------------
-#EXTINF:0 tvg-id="id54" tvg-name="FOX SPORTS 5" tvg-logo="fox_sports_5.png" group-title="Sports",FOX SPORTS 5
-http://iudtv.org:8000/live/190001993192162/190001993192162/714.ts
-# ------
-# ESPN 1
-# ------
-#EXTINF:0 tvg-id="id55" tvg-name="ESPN 1" tvg-logo="espn_1.png" group-title="Sports",ESPN
-http://pac12hd2-lh.akamaihd.net/i/p12wash_delivery@132841/index_4728_av-p.m3u8
-# -------------
-# BT-SPORT ESPN 
-# -------------
-#EXTINF:0 tvg-id="id56" tvg-name="ESPN 2" tvg-logo="espn_2.png" group-title="Sports",ESPN 2
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3320.ts
-# ------
-# NBA TV
-# ------
-#EXTINF:0 tvg-id="id57" tvg-name="NBA TV" tvg-logo="nba_tv.png" group-title="Sports",NBA TV
-http://79.137.3.186:8000/live/Tomaso3/Tomaso3/21981.ts
-#http://iudtv.org:8000/live/190001993192162/190001993192162/1174.ts
-# -----
-# TSN 1
-# -----
-#EXTINF:0 tvg-id="id58" tvg-name="TSN 1" tvg-logo="tsn_1.png" group-title="Sports",TSN 1
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3536.ts
-# -----
-# TSN 2
-# -----
-#EXTINF:0 tvg-id="id59" tvg-name="TSN 2" tvg-logo="tsn_2.png" group-title="Sports",TSN 2
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3537.ts
-# -----
-# TSN 3
-# -----
-#EXTINF:0 tvg-id="id60" tvg-name="TSN 3" tvg-logo="tsn_3.png" group-title="Sports",TSN 3
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3538.ts
-# -----
-# TSN 4
-# -----
-#EXTINF:0 tvg-id="id61" tvg-name="TSN 4" tvg-logo="tsn_4.png" group-title="Sports",TSN 4
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3539.ts
-# -----
-# TSN 5
-# -----
-#EXTINF:0 tvg-id="id62" tvg-name="TSN 5" tvg-logo="tsn_5.png" group-title="Sports",TSN 5
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3540.ts
-# ----
-# MUTV
-# ----
-#EXTINF:0 tvg-id="id63" tvg-name="MUTV" tvg-logo="mutv.png" group-title="Sports",MUTV
-http://iudtv.org:8000/live/190001993192162/190001993192162/535.ts
-# ------
-# LFC TV
-# ------
-#EXTINF:0 tvg-id="id64" tvg-name="LFC TV" tvg-logo="lfc_tv.png" group-title="Sports",LFC TV
-http://iudtv.org:8000/live/190001993192162/190001993192162/536.ts
-# ----------
-# CHELSEA TV
-# ----------
-#EXTINF:0 tvg-id="id65" tvg-name="CHELSEA TV" tvg-logo="chelsea_tv.png" group-title="Sports",CHELSEA TV
-http://iudtv.org:8000/live/190001993192162/190001993192162/537.ts
-
-##############
-#  CARTOONS  #
-##############
-# ---------------
-# CARTOON NETWORK
-# ---------------
-#EXTINF:0 tvg-id="id66" tvg-name="CARTOON NETWORK" tvg-logo="cartoon_network.png" group-title="Cartoons",CARTOON NETWORK
-http://iudtv.org:8000/live/190001993192162/190001993192162/522.ts
-# ---------
-# BOOMERANG
-# ---------
-#EXTINF:0 tvg-id="id67" tvg-name="BOOMERANG" tvg-logo="boomerang.png" group-title="Cartoons",BOOMERANG
-http://iudtv.org:8000/live/190001993192162/190001993192162/444.ts
-# -----------
-# NICKELODEON
-# -----------
-#EXTINF:0 tvg-id="id68" tvg-name="NICKELODEON" tvg-logo="nickelodeon.png" group-title="Cartoons",NICKELODEON
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3392.ts
-# ---------
-# NICKTOONS
-# ---------
-#EXTINF:0 tvg-id="id69" tvg-name="NICKTOONS" tvg-logo="nicktoons.png" group-title="Cartoons",NICKTOONS
-http://iudtv.org:8000/live/190001993192162/190001993192162/446.ts
-# -------
-# NICK JR
-# -------
-#EXTINF:0 tvg-id="id70" tvg-name="NICK JR" tvg-logo="nick_jr.png" group-title="Cartoons",NICK JR
-http://iudtv.org:8000/live/190001993192162/190001993192162/503.ts
-# --------------
-# DISNEY CHANNEL
-# --------------
-#EXTINF:0 tvg-id="id71" tvg-name="DISNEY CHANNEL" tvg-logo="disney_channel.png" group-title="Cartoons",DISNEY CHANNEL
-http://iudtv.org:8000/live/190001993192162/190001993192162/492.ts
-# ---------
-# DISNEY JR
-# ---------
-#EXTINF:0 tvg-id="id72" tvg-name="DISNEY JR" tvg-logo="disney_jr.png" group-title="Cartoons",DISNEY JR
-http://iudtv.org:8000/live/190001993192162/190001993192162/494.ts
-# ---------
-# DISNEY XD
-# ---------
-#EXTINF:0 tvg-id="id73" tvg-name="DISNEY XD" tvg-logo="disney_xd.png" group-title="Cartoons",DISNEY XD
-http://iudtv.org:8000/live/190001993192162/190001993192162/493.ts
-# -----------
-# NICK JR TOO
-# -----------
-#EXTINF:0 tvg-id="id74" tvg-name="NICK JR TOO" tvg-logo="nick_jr.png" group-title="Cartoons",NICK JR TOO
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3389.ts
-# ------------
-# CBEEBIES BBC
-# ------------
-#EXTINF:0 tvg-id="id75" tvg-name="CBEEBIES" tvg-logo="cbeebies.png" group-title="Cartoons",CBEEBIES BBC
-http://iudtv.org:8000/live/190001993192162/190001993192162/485.ts
-
-###########
-#  MUSIC  #
-###########
-# ---
-# MTV
-# ---
-#EXTINF:0 tvg-id="id76" tvg-name="MTV" tvg-logo="mtv.png" group-title="Music",MTV
-http://iudtv.org:8000/live/190001993192162/190001993192162/439.ts
-# --------
-# MTV BASE
-# --------
-#EXTINF:0 tvg-id="id77" tvg-name="MTV BASE" tvg-logo="mtv_base.png" group-title="Music",MTV BASE
-http://iudtv.org:8000/live/190001993192162/190001993192162/440.ts
-# --------
-# MTV CLASSIC
-# --------
-#EXTINF:0 tvg-id="id78" tvg-name="MTV CLASSIC" tvg-logo="mtv_classic.png" group-title="Music",MTV CLASSIC
-http://iudtv.org:8000/live/190001993192162/190001993192162/500.ts
-# --------
-# MTV HITS
-# --------
-#EXTINF:0 tvg-id="id79" tvg-name="MTV HITS" tvg-logo="mtv_hits.png" group-title="Music",MTV HITS
-http://iudtv.org:8000/live/190001993192162/190001993192162/443.ts
-# ---------
-# MTV ROCKS
-# ---------
-#EXTINF:0 tvg-id="id80" tvg-name="MTV ROCKS" tvg-logo="mtv_rocks.png" group-title="Music",MTV ROCKS
-http://iudtv.org:8000/live/190001993192162/190001993192162/450.ts
-#http://iudtv.org:8000/live/190001993192162/190001993192162/442.ts
-# ---
-# VH1
-# ---
-#EXTINF:0 tvg-id="id81" tvg-name="VH1" tvg-logo="mtv_music.png" group-title="Music",VH1
-http://iudtv.org:8000/live/190001993192162/190001993192162/449.ts
-
-###############
-#  LIFESTYLE  #
-###############
-# ------------
-# FOOD NETWORK
-# ------------
-#EXTINF:0 tvg-id="id82" tvg-name="FOOD NETWORK" tvg-logo="food_network.png" group-title="Lifestyle",FOOD NETWORK
-http://iudtv.org:8000/live/190001993192162/190001993192162/495.ts
-# ---------
-# GOOD FOOD
-# ---------
-#EXTINF:0 tvg-id="id83" tvg-name="GOOD_FOOD" tvg-logo="good_food.png" group-title="Lifestyle",GOOD FOOD
-http://iudtv.org:8000/live/190001993192162/190001993192162/501.ts
-# --------------
-# TRAVEL CHANNEL
-# --------------
-#EXTINF:0 tvg-id="id84" tvg-name="TRAVEL CHANNEL" tvg-logo="travel_channel.png" group-title="Learning",TRAVEL CHANNEL
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3369.ts
-# -----------
-# FINE LIVING
-# -----------
-#EXTINF:0 tvg-id="id85" tvg-name="FINE LIVING" tvg-logo="fine_living.png" group-title="Learning",FINE LIVING
-http://iudtv.org:8000/live/190001993192162/190001993192162/502.ts
-
-#############
-#  AFRICAN  #
-#############
-# ---------
-# MAISHA TV
-# ---------
-#EXTINF:0 tvg-id="id86" tvg-name="MAISHA TV" tvg-logo="maisha_tv.png" group-title="Africa",MAISHA TV
-http://iudtv.org:8000/live/190001993192162/190001993192162/941.ts
-# -----------------
-# ANN7 SOUTH AFRICA
-# -----------------
-#EXTINF:0 tvg-id="id87" tvg-name="ANN7 SOUTH AFRICA" tvg-logo="ann7_south_africa.png" group-title="Africa",ANN7 SOUTH AFRICA
-http://iudtv.org:8000/live/190001993192162/190001993192162/948.ts
-# ----------------------
-# CINESTREAM TV BARBADOS
-# ----------------------
-#EXTINF:0 tvg-id="id88" tvg-name="CINESTREAM TV BARBADOS" tvg-logo="cinestream_tv_barbados.png" group-title="Africa",CINESTREAM TV BARBADOS
-http://iudtv.org:8000/live/190001993192162/190001993192162/983.ts
-# ----------
-# RTV RWANDA
-# ----------
-#EXTINF:0 tvg-id="id89" tvg-name="RTV RWANDA" tvg-logo="rtv_rwanda.png" group-title="Africa",RTV RWANDA
-http://iudtv.org:8000/live/190001993192162/190001993192162/977.ts
-# ---------
-# GHANALIVE
-# ---------
-#EXTINF:0 tvg-id="id90" tvg-name="GHANALIVE" tvg-logo="ghanalive.png" group-title="Africa",GHANALIVE
-http://iudtv.org:8000/live/190001993192162/190001993192162/978.ts
-# ----
-# RTI1
-# ----
-#EXTINF:0 tvg-id="id91" tvg-name="RTI1" tvg-logo="rti1.png" group-title="Africa",RTI1
-http://iudtv.org:8000/live/190001993192162/190001993192162/952.ts
-# ------------
-# LOVEWORLDSAT
-# ------------
-#EXTINF:0 tvg-id="id92" tvg-name="LOVEWORLDSAT" tvg-logo="loveworldsat.png" group-title="Africa",LOVEWORLDSAT
-http://iudtv.org:8000/live/190001993192162/190001993192162/951.ts
-# ----------
-# NBS UGANDA
-# -----------
-#EXTINF:0 tvg-id="id93" tvg-name="NBS UGANDA" tvg-logo="nbs_uganda.png" group-title="News",NBS UGANDA
-http://iudtv.org:8000/live/190001993192162/190001993192162/963.ts
-# ----------
-# NTV UGANDA
-# -----------
-#EXTINF:0 tvg-id="id94" tvg-name="NTV UGANDA" tvg-logo="ntv_uganda.png" group-title="News",NTV UGANDA
-pipe:///usr/bin/jambulatv-yplayer ntvuganda
-# --------------
-# BUKEDDE UGANDA
-# --------------
-#EXTINF:0 tvg-id="id95" tvg-name="BUKEDDE UGANDA" tvg-logo="bukedde_uganda.png" group-title="News",BUKEDDE UGANDA
-pipe:///usr/bin/jambulatv-yplayer bukedde
-
-##############
-#  RELIGION  #
-##############
-# ---
-# TBN
-# ---
-#EXTINF:0 tvg-id="id96" tvg-name="TBN" tvg-logo="tbn.png" group-title="Religion",TBN
-http://acaooyalahd2-lh.akamaihd.net/i/TBN01_delivery@186239/master.m3u8
-
-###################
-#  ENTERTAINMENT  #
-###################
-# -------
-# BBC ONE
-# -------
-#EXTINF:0 tvg-id="id97" tvg-name="BBC ONE" tvg-logo="bbc_one.png" group-title="Entertainment",BBC ONE
-http://iudtv.org:8000/live/190001993192162/190001993192162/488.ts
-# -------
-# BBC TWO
-# -------
-#EXTINF:0 tvg-id="id98" tvg-name="BBC TWO" tvg-logo="bbc_two.png" group-title="Entertainment",BBC TWO
-http://iudtv.org:8000/live/190001993192162/190001993192162/487.ts
-# ---------
-# BBC THREE
-# ---------
-#EXTINF:0 tvg-id="id99" tvg-name="BBC THREE" tvg-logo="bbc_three.png" group-title="Entertainment",BBC THREE
-http://iudtv.org:8000/live/190001993192162/190001993192162/485.ts
-# --------
-# BBC FOUR
-# --------
-#EXTINF:0 tvg-id="id100" tvg-name="BBC FOUR" tvg-logo="bbc_four.png" group-title="Entertainment",BBC FOUR
-http://79.137.3.186:8000/live/Tomaso3/Tomaso3/691.ts
-# ----
-# CBBC
-# ----
-#EXTINF:0 tvg-id="id101" tvg-name="CBBC" tvg-logo="cbbc.png" group-title="Entertainment",CBBC
-http://iudtv.org:8000/live/190001993192162/190001993192162/486.ts
-# -----
-# ITV 1
-# -----
-#EXTINF:0 tvg-id="id102" tvg-name="ITV 1" tvg-logo="itv_1.png" group-title="Entertainment",ITV 1
-http://iudtv.org:8000/live/190001993192162/190001993192162/471.ts
-# -----
-# ITV 2
-# -----
-#EXTINF:0 tvg-id="id103" tvg-name="ITV 2" tvg-logo="itv_2.png" group-title="Entertainment",ITV 2
-http://iudtv.org:8000/live/190001993192162/190001993192162/470.ts
-# -----
-# ITV 3
-# -----
-#EXTINF:0 tvg-id="id104" tvg-name="ITV 3" tvg-logo="itv_3.png" group-title="Entertainment",ITV 3
-http://iudtv.org:8000/live/190001993192162/190001993192162/469.ts
-# -----
-# ITV 4
-# -----
-#EXTINF:0 tvg-id="id105" tvg-name="ITV 4" tvg-logo="itv_4.png" group-title="Entertainment",ITV 4
-http://iudtv.org:8000/live/190001993192162/190001993192162/468.ts
-# ----------
-# ITV ENCORE
-# ----------
-#EXTINF:0 tvg-id="id106" tvg-name="ITV 4" tvg-logo="itv_4.png" group-title="Entertainment",ITV 4
-http://iudtv.org:8000/live/190001993192162/190001993192162/467.ts
-# ---------
-# CHANNEL 4
-# ---------
-#EXTINF:0 tvg-id="id107" tvg-name="CHANNEL 4" tvg-logo="channel_4.png" group-title="Entertainment",CHANNEL 4
-http://iudtv.org:8000/live/190001993192162/190001993192162/451.ts
-# ---------
-# CHANNEL 5
-# ---------
-#EXTINF:0 tvg-id="id108" tvg-name="CHANNEL 5" tvg-logo="channel_5.png" group-title="Entertainment",CHANNEL 5
-http://iudtv.org:8000/live/190001993192162/190001993192162/473.ts
-# ----
-# DMAX
-# ----
-#EXTINF:0 tvg-id="id109" tvg-name="DMAX" tvg-logo="dmax.png" group-title="Entertainment",DMAX
-http://iudtv.org:8000/live/190001993192162/190001993192162/456.ts
-# -----
-# 5 USA
-# -----
-#EXTINF:0 tvg-id="id110" tvg-name="5 USA" tvg-logo="5_usa.png" group-title="Entertainment",5 USA
-http://iudtv.org:8000/live/190001993192162/190001993192162/480.ts
-# -----
-# 5STAR
-# -----
-#EXTINF:0 tvg-id="id111" tvg-name="5STAR" tvg-logo="5star.png" group-title="Entertainment",5STAR
-http://iudtv.org:8000/live/190001993192162/190001993192162/477.ts
-# -------
-# RTE ONE
-# -------
-#EXTINF:0 tvg-id="id112" tvg-name="RTE ONE" tvg-logo="rte_one.png" group-title="Entertainment",RTE ONE
-http://iudtv.org:8000/live/190001993192162/190001993192162/474.ts
-# -------
-# RTE TWO
-# -------
-#EXTINF:0 tvg-id="id113" tvg-name="RTE TWO" tvg-logo="rte_two.png" group-title="Entertainment",RTE TWO
-http://iudtv.org:8000/live/190001993192162/190001993192162/478.ts
-# ---
+#EXTINF:-1 tvg-id="idsouth.bbc2.bbc.co.uk" tvg-name="BBC Two" tvg-logo="bbc_two.png" tvh-chnum="703" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",BBC Two
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/121.ts
+# -----------------------
+# BBC Four
+# -----------------------
+#EXTINF:-1 tvg-id="idbbc4.bbc.co.uk" tvg-name="BBC Four" tvg-logo="bbc_four.png" tvh-chnum="707" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",BBC Four
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/122.ts
+# -----------------------
+# Channel 5
+# -----------------------
+#EXTINF:-1 tvg-id="idchannel5.co.uk" tvg-name="Channel 5" tvg-logo="channel_5.png" tvh-chnum="710" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",Channel 5
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/111.ts
+# -----------------------
+# ITV1
+# -----------------------
+#EXTINF:-1 tvg-id="id712" tvg-name="ITV1" tvg-logo="itv_1.png" tvh-chnum="712" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",ITV1
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/87.ts
+# -----------------------
+# ITV2
+# -----------------------
+#EXTINF:-1 tvg-id="id713" tvg-name="ITV2" tvg-logo="itv_2.png" tvh-chnum="713" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",ITV2
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/86.ts
+# -----------------------
+# ITV3
+# -----------------------
+#EXTINF:-1 tvg-id="id714" tvg-name="ITV3" tvg-logo="itv_3.png" tvh-chnum="714" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",ITV3
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/85.ts
+# -----------------------
+# ITV4
+# -----------------------
+#EXTINF:-1 tvg-id="id715" tvg-name="ITV4" tvg-logo="itv_4.png" tvh-chnum="715" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",ITV4
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/84.ts
+# -----------------------
+# ITV Encore
+# -----------------------
+#EXTINF:-1 tvg-id="id717" tvg-name="iTV Encore" tvg-logo="iptv _encore.png" tvh-chnum="717" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",ITV Encore
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/88.ts
+# -----------------------
+# Spike
+# -----------------------
+#EXTINF:-1 tvg-id="id721" tvg-name="Spike" tvg-logo="spike.png" tvh-chnum="721" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",Spike
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/35.ts
+# -----------------------
+# Sky 1
+# -----------------------
+#EXTINF:-1 tvg-id="idsky-one.sky.com" tvg-name="Sky 1" tvg-logo="sky_1.png" tvh-chnum="722" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",Sky 1
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/59.ts
+# -----------------------
+# Sky 2
+# -----------------------
+#EXTINF:-1 tvg-id="idsky_two" tvg-name="Sky 2" tvg-logo="sky_2.png" tvh-chnum="724" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",Sky 2
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/58.ts
+# -----------------------
+# RTE One
+# -----------------------
+#EXTINF:-1 tvg-id="id726" tvg-name="RTE One" tvg-logo="rte_one.png" tvh-chnum="726" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",RTE One
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/62.ts
+# -----------------------
+# RTE Two
+# -----------------------
+#EXTINF:-1 tvg-id="id727" tvg-name="RTE Two" tvg-logo="rte_two.png" tvh-chnum="727" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",RTE Two
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/61.ts
+# -----------------------
+# TV3
+# -----------------------
+#EXTINF:-1 tvg-id="id728" tvg-name="TV3" tvg-logo="tv3.png" tvh-chnum="728" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",TV3
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/85.ts
+# -----------------------
+# Really
+# -----------------------
+#EXTINF:-1 tvg-id="id733" tvg-name="Really" tvg-logo="really.png" tvh-chnum="733" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",Really
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/64.ts
+# -----------------------
 # STV
-# ---
-#EXTINF:0 tvg-id="id114" tvg-name="STV" tvg-logo="stv.png" group-title="Entertainment",STV
-http://iudtv.org:8000/live/190001993192162/190001993192162/448.ts
-# --------------
-# COMEDY CENTRAL
-# --------------
-#EXTINF:0 tvg-id="id115" tvg-name="COMEDY CENTRAL" tvg-logo="comedy_central.png" group-title="Entertainment",COMEDY CENTRAL
-http://iudtv.org:8000/live/190001993192162/190001993192162/463.ts
-# --------------------
-# COMEDY CENTRAL EXTRA
-# --------------------
-#EXTINF:0 tvg-id="id116" tvg-name="COMEDY CENTRAL EXTRA" tvg-logo="comedy_central_extra.png" group-title="Entertainment",COMEDY CENTRAL EXTRA
-http://iudtv.org:8000/live/190001993192162/190001993192162/462.ts
-# -----------
-# TRUE MOVIES
-# -----------
-#EXTINF:0 tvg-id="id117" tvg-name="TRUE MOVIES" tvg-logo="true_movies.png" group-title="Entertainment",TRUE MOVIES
-http://iudtv.org:8000/live/190001993192162/190001993192162/472.ts
-# --------------
-# TRUE MOVIES +1
-# --------------
-#EXTINF:0 tvg-id="id118" tvg-name="TRUE MOVIES +1" tvg-logo="true_movies_+1.png" group-title="Entertainment",TRUE MOVIES +1
-http://iudtv.org:8000/live/190001993192162/190001993192162/534.ts
-# -----
-# SKY 1
-# -----
-#EXTINF:0 tvg-id="id119" tvg-name="SKY 1" tvg-logo="sky_1.png" group-title="Entertainment",SKY 1
-http://iudtv.org:8000/live/190001993192162/190001993192162/475.ts
-# ------------
-# SKY ATLANTIC
-# ------------
-#EXTINF:0 tvg-id="id120" tvg-name="SKY ATLANTIC" tvg-logo="sky_atlantic.png" group-title="Entertainment",SKY ATLANTIC
-http://iudtv.org:8000/live/190001993192162/190001993192162/483.ts
-# --------------------------
-# SKY CINEMA DRAMA & ROMANCE
-# --------------------------
-#EXTINF:0 tvg-id="id121" tvg-name="SKY CINEMA DRAMA ROMANCE" tvg-logo="sky_cinema_drama_romance.png" group-title="Entertainment",SKY CINEMA DRAMA & ROMANCE
-http://iudtv.org:8000/live/190001993192162/190001993192162/521.ts
-# -------------------
-# SKY MOVIES SHOWCASE
-# -------------------
-#EXTINF:0 tvg-id="id122" tvg-name="SKY MOVIES SHOWCASE" tvg-logo="sky_movies_showcase.png" group-title="Entertainment",SKY MOVIES SHOWCASE
-http://iudtv.org:8000/live/190001993192162/190001993192162/519.ts
-# -----------------
-# SKY CINEMA ACTION
-# -----------------
-#EXTINF:0 tvg-id="id123" tvg-name="SKY CINEMA ACTION" tvg-logo="sky_cinema_action.png" group-title="Entertainment",SKY CINEMA ACTION
-http://iudtv.org:8000/live/190001993192162/190001993192162/511.ts
-# -----------------
-# SKY CINEMA COMEDY
-# -----------------
-#EXTINF:0 tvg-id="id124" tvg-name="SKY CINEMA COMEDY" tvg-logo="sky_cinema_comedy.png" group-title="Entertainment",SKY CINEMA COMEDY
-http://iudtv.org:8000/live/190001993192162/190001993192162/524.ts
-# -----------------
-# SKY CINEMA FAMILY
-# -----------------
-#EXTINF:0 tvg-id="id125" tvg-name="SKY CINEMA FAMILY" tvg-logo="sky_cinema_family.png" group-title="Entertainment",SKY CINEMA FAMILY
-http://iudtv.org:8000/live/190001993192162/190001993192162/520.ts
-# ---------------------------
-# SKY CINEMA CRIME & THRILLER
-# ---------------------------
-#EXTINF:0 tvg-id="id126" tvg-name="SKY CINEMA CRIME & THRILLER" tvg-logo="sky_cinema_crime_&_thriller.png" group-title="Entertainment",SKY CINEMA CRIME & THRILLER
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3344.ts
-# Increase timeout - http://iudtv.org:8000/live/190001993192162/190001993192162/512.ts
-# -----------------
-# SKY MOVIES GREATS
-# -----------------
-#EXTINF:0 tvg-id="id127" tvg-name="SKY MOVIES GREATS" tvg-logo="sky_movies_greats.png" group-title="Entertainment",SKY MOVIES GREATS
-http://iudtv.org:8000/live/190001993192162/190001993192162/518.ts
-# --------
-# SKY ARTS
-# --------
-#EXTINF:0 tvg-id="id128" tvg-name="SKY ARTS" tvg-logo="sky_arts.png" group-title="Entertainment",SKY ARTS
-http://iudtv.org:8000/live/190001993192162/190001993192162/489.ts
-# ----
-# GOLD
-# ----
-#EXTINF:0 tvg-id="id129" tvg-name="GOLD" tvg-logo="gold.png" group-title="Entertainment",GOLD
-http://iudtv.org:8000/live/190001993192162/190001993192162/508.ts
-# -----------
-# CBS REALITY
-# -----------
-#EXTINF:0 tvg-id="id130" tvg-name="CBS REALITY" tvg-logo="cbs_reality.png" group-title="Entertainment",CBS REALITY
-http://iudtv.org:8000/live/190001993192162/190001993192162/510.ts
-# ----------
-# CBS ACTION
-# ----------
-#EXTINF:0 tvg-id="id131" tvg-name="CBS ACTION" tvg-logo="cbs_action.png" group-title="Entertainment",CBS ACTION
-http://iudtv.org:8000/live/190001993192162/190001993192162/481.ts
-# ---------
-# CBS DRAMA
-# ---------
-#EXTINF:0 tvg-id="id132" tvg-name="CBS DRAMA" tvg-logo="cbs_drama.png" group-title="Entertainment",CBS DRAMA
-http://iudtv.org:8000/live/190001993192162/190001993192162/482.ts
-# -----------
-# FOX NETWORK
-# -----------
-#EXTINF:0 tvg-id="id133" tvg-name="FOX NETWORK" tvg-logo="fox_network" group-title="Entertainment",FOX NETWORK
-http://iudtv.org:8000/live/190001993192162/190001993192162/249.ts
-# ---
+# -----------------------
+#EXTINF:-1 tvg-id="id734" tvg-name="STV" tvg-logo="stv.png" tvh-chnum="734" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",STV
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/34.ts
+# -----------------------
+# W
+# -----------------------
+#EXTINF:-1 tvg-id="id738" tvg-name="W" tvg-logo="w.png" tvh-chnum="738" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",W
+http://dwstream4-lh.akamaihd.net/i/dwstream4_live@131329/master.m3u8
+# -----------------------
 # TLC
-# ---
-#EXTINF:0 tvg-id="id134" tvg-name="TLC" tvg-logo="tlc.png" group-title="Entertainment",TLC
-http://iudtv.org:8000/live/190001993192162/190001993192162/455.ts
-# ---
-# HBO
-# ---
-#EXTINF:0 tvg-id="id135" tvg-name="HBO" tvg-logo="hbo.png" group-title="Entertainment",HBO
-http://hdlivetv.de:8000/live/Tomaso3/Tomaso3/22031.ts
-# ---
-# TCM
-# ---
-#EXTINF:0 tvg-id="id136" tvg-name="TCM" tvg-logo="tcm.png" group-title="Entertainment",TCM
-http://iudtv.org:8000/live/190001993192162/190001993192162/459.ts
-# --------
-# LIFETIME
-# --------
-#EXTINF:0 tvg-id="id137" tvg-name="LIFETIME" tvg-logo="lifetime.png" group-title="Entertainment",LIFETIME
-http://iudtv.org:8000/live/190001993192162/190001993192162/476.ts
-# --
-# E!
-# --
-#EXTINF:0 tvg-id="id138" tvg-name="E!" tvg-logo="e.png" group-title="Entertainment",E!
-http://iudtv.org:8000/live/190001993192162/190001993192162/447.ts
-# -----------
-# SONY MOVIES
-# -----------
-#EXTINF:0 tvg-id="id139" tvg-name="SONY MOVIES" tvg-logo="sony_movies.png" group-title="Entertainment",SONY MOVIES
-http://libero333.ddns.me:22333/live/senkron24/kiwehrfuefhw/3412.ts
-# -----
-# MORE4
-# -----
-#EXTINF:0 tvg-id="id140" tvg-name="MORE4" tvg-logo="more4.png" group-title="Entertainment",MORE4
-http://iudtv.org:8000/live/190001993192162/190001993192162/504.ts
-# ----
-# DAVE
-# ----
-#EXTINF:0 tvg-id="id141" tvg-name="DAVE" tvg-logo="dave.png" group-title="Entertainment",DAVE
-http://iudtv.org:8000/live/190001993192162/190001993192162/506.ts
-# -----
-# ALIBI
-# -----
-#EXTINF:0 tvg-id="id142" tvg-name="ALIBI" tvg-logo="alibi.png" group-title="Entertainment",ALIBI
-http://iudtv.org:8000/live/190001993192162/190001993192162/509.ts
-# ----
+# -----------------------
+#EXTINF:-1 tvg-id="id749" tvg-name="YCL" tvg-logo="tlc.png" tvh-chnum="749" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",TLC
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/33.ts
+# -----------------------
+# Gold
+# -----------------------
+#EXTINF:-1 tvg-id="iduk-gold.flextech.telewest.co.uk" tvg-name="Gold" tvg-logo="gold.png" tvh-chnum="755" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",Gold
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/96.ts
+# -----------------------
+# Comedy Central
+# -----------------------
+#EXTINF:-1 tvg-id="id756" tvg-name="Comedy Central" tvg-logo="comedy_central.png" tvh-chnum="756" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",Comedy Central
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/109.ts
+# -----------------------
+# TLC
+# -----------------------
+#EXTINF:-1 tvg-id="id762" tvg-name="TLC" tvg-logo="tlc.png" tvh-chnum="762" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",TLC
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/33.ts
+# -----------------------
+# AMC
+# -----------------------
+#EXTINF:-1 tvg-id="id796" tvg-name="AMC" tvg-logo="amc.png" tvh-chnum="796" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",AMC
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/126.ts
+# -----------------------
 # SYFY
-# ----
-#EXTINF:0 tvg-id="id143" tvg-name="SYFY" tvg-logo="syfy.png" group-title="Entertainment",SYFY
-http://iudtv.org:8000/live/190001993192162/190001993192162/515.ts
-#http://iudtv.org:8000/live/190001993192162/190001993192162/538.ts
-# ----------
-# FOX MOVIES
-# ----------
-#EXTINF:0 tvg-id="id144" tvg-name="FOX MOVIES" tvg-logo="fox_movies.png" group-title="Entertainment",FOX MOVIES
-http://iudtv.org:8000/live/190001993192162/190001993192162/460.ts
-# ---------
-# FOX CRIME
-# ---------
-#EXTINF:0 tvg-id="id145" tvg-name="FOX CRIME" tvg-logo="fox_crime.png" group-title="Entertainment",FOX CRIME
-http://iudtv.org:8000/live/190001993192162/190001993192162/247.ts
-# --------
-# FOX LIFE
-# --------
-#EXTINF:0 tvg-id="id146" tvg-name="FOX LIFE" tvg-logo="fox_life.png" group-title="Entertainment",FOX LIFE
-http://iudtv.org:8000/live/190001993192162/190001993192162/248.ts
-# -----------------
-# UNIVERSAL CHANNEL
-# -----------------
-#EXTINF:0 tvg-id="id147" tvg-name="UNIVERSAL CHANNEL" tvg-logo="universal_channel.png" group-title="Entertainment",UNIVERSAL CHANNEL
-http://iudtv.org:8000/live/190001993192162/190001993192162/523.ts
-# --
-# E4
-# --
-#EXTINF:0 tvg-id="id148" tvg-name="E4" tvg-logo="e4.png" group-title="Entertainment",E4
-http://iudtv.org:8000/live/190001993192162/190001993192162/525.ts
+# -----------------------
+#EXTINF:-1 tvg-id="iduk.scifi.com" tvg-name="SyFy" tvg-logo="syfy.png" tvh-chnum="799" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",SYFY
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/142.ts
+# -----------------------
+# CBBC
+# -----------------------
+#EXTINF:-1 tvg-id="idcbbc.bbc.co.uk" tvg-name="CBBC" tvg-logo="cbbc.png" tvh-chnum="804" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",CBBC
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/112.ts
+# -----------------------
+# TVNZ 3
+# -----------------------
+#EXTINF:-1 tvg-id="id822" tvg-name="TVNZ 3" tvg-logo="tvnz3.png" tvh-chnum="822" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",TVNZ 3
+http://mediaworks-i.akamaihd.net/hls/live/220435/3812193411001/3news_live/master.m3u8
+# -----------------------
+# Telemundo
+# -----------------------
+#EXTINF:-1 tvg-id="id824" tvg-name="TELEMUNDO" tvg-logo="telemundo.png" tvh-chnum="824" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",Telemundo
+http://server.poweriptv.cl:25461/live/orlando/orlando/416.ts
+# -----------------------
+# LONDON LIVE
+# -----------------------
+#EXTINF:-1 tvg-id="id825" tvg-name="LONDON LIVE" tvg-logo="london_live.png" tvh-chnum="825" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",LONDON LIVE
+http://bcoveliveios-i.akamaihd.net/hls/live/217434/3083279840001/master.m3u8
+# -----------------------
+# iFilm
+# -----------------------
+#EXTINF:-1 tvg-id="id826" tvg-name="iFilm" tvg-logo="ifilm.png" tvh-chnum="826" tvh-epg=0 tvh-tags=Entertainment group-title="Entertainment",iFilm
+http://178.32.255.199:1935/live/ifilmen/playlist.m3u8
+# -----------------------
+# Al Jazeera
+# -----------------------
+#EXTINF:-1 tvg-id="id50" tvg-name="Al Jazeera" tvg-logo="al_jazeera.png" tvh-chnum="50" tvh-epg=0 tvh-tags=News group-title="News",Al Jazeera
+http://aljazeera-eng-hd-live.hls.adaptive.level3.net/aljazeera/english2/index255.m3u8
+# -----------------------
+# Sky News
+# -----------------------
+#EXTINF:-1 tvg-id="id51" tvg-name="Sky News" tvg-logo="sky_news" tvh-chnum="51" tvh-epg=0 tvh-tags=News group-title="News",Sky News
+http://skydvn-nowtv-atv-prod.skydvn.com/atv/skynews/1404/live/04.m3u8
+# -----------------------
+# BBC News
+# -----------------------
+#EXTINF:-1 tvg-id="idnews-24.bbc.co.uk" tvg-name="BBC News" tvg-logo="bbc_news.png" tvh-chnum="52" tvh-epg=0 tvh-tags=News group-title="News",BBC News
+http://hlslive.lcdn.une.net.co/v1/AUTH_HLSLIVE/BBCW/tu1_1.m3u8
+# -----------------------
+# CNN
+# -----------------------
+#EXTINF:-1 tvg-id="id56" tvg-name="CNN" tvg-logo="cnn.png" tvh-chnum="56" tvh-epg=0 tvh-tags=News group-title="News",CNN
+pipe:///usr/bin/jambulatv-yplayer cnn
+# -----------------------
+# Sky News
+# -----------------------
+#EXTINF:-1 tvg-id="idsky-news.sky.com" tvg-name="Sky News" tvg-logo="sky_news.png" tvh-chnum="58" tvh-epg=0 tvh-tags=News group-title="News",Sky News
+http://skydvn-nowtv-atv-prod.skydvn.com/atv/skynews/1404/live/04.m3u8
+# -----------------------
+# Fox News
+# -----------------------
+#EXTINF:-1 tvg-id="id59" tvg-name="Fox News" tvg-logo="fox_news.png" tvh-chnum="59" tvh-epg=0 tvh-tags=News group-title="News",Fox News
+pipe:///usr/bin/jambulatv-yplayer fox news
+# -----------------------
+# MSNBC
+# -----------------------
+#EXTINF:-1 tvg-id="id60" tvg-name="MSNBC" tvg-logo="msnbc.png" tvh-chnum="60" tvh-epg=0 tvh-tags=News group-title="News",MSNBC
+http://tvemsnbc-lh.akamaihd.net/i/nbcmsnbc_1@122532/index_1296_av-p.m3u8?sd=10
+# -----------------------
+# France 24
+# -----------------------
+#EXTINF:-1 tvg-id="id61" tvg-name="France 24" tvg-logo="france_24.png" tvh-chnum="61" tvh-epg=0 tvh-tags=News group-title="News",France 24
+http://static.france24.com/live/F24_EN_LO_HLS/live_web.m3u8
+# -----------------------
+# RT
+# -----------------------
+#EXTINF:-1 tvg-id="id62" tvg-name="RT" tvg-logo="rt.png" tvh-chnum="62" tvh-epg=0 tvh-tags=News group-title="News",RT
+http://rt.ashttp14.visionip.tv/live/rt-global-live-HD/playlist.m3u8
+# -----------------------
+# CGTN
+# -----------------------
+#EXTINF:-1 tvg-id="id64" tvg-name="CGTN" tvg-logo="cgtn.png" tvh-chnum="64" tvh-epg=0 tvh-tags=News group-title="News",CGTN
+http://live.cgtn.com/manifest.m3u8
+# -----------------------
+# Press TV
+# -----------------------
+#EXTINF:-1 tvg-id="id65" tvg-name="Press TV" tvg-logo="press_tv.png" tvh-chnum="65" tvh-epg=0 tvh-tags=News group-title="News",Press TV
+http://178.32.255.199:1935/live/ptven/playlist.m3u8
+# -----------------------
+# CBS News
+# -----------------------
+#EXTINF:-1 tvg-id="id67" tvg-name="CBS News" tvg-logo="cbs_news.png" tvh-chnum="67" tvh-epg=0 tvh-tags=News group-title="News",CBS News
+http://cbsNEWShd-lh.akamaihd.net/i/CBSNHD_7@199302/index_700_av-p.m3u8
+# -----------------------
+# ABC News
+# -----------------------
+#EXTINF:-1 tvg-id="id68" tvg-name="ABC News" tvg-logo="abc_news" tvh-chnum="68" tvh-epg=0 tvh-tags=News group-title="News",ABC News
+http://abclive.abcnews.com/i/abc_live4@136330/master.m3u8?b*t$
+# -----------------------
+# WGN
+# -----------------------
+#EXTINF:-1 tvg-id="id69" tvg-name="WGN" tvg-logo="wgn.png" tvh-chnum="69" tvh-epg=0 tvh-tags=News group-title="News",WGN
+http://wgntribune-lh.akamaihd.net/i/WGNPrimary_1@304622/master.m3u8
+# -----------------------
+# C-SPAN1
+# -----------------------
+#EXTINF:-1 tvg-id="id70" tvg-name="C-SPAN1" tvg-logo="c_span.png" tvh-chnum="70" tvh-epg=0 tvh-tags=News group-title="News",C-SPAN1
+http://cspan1-lh.akamaihd.net/i/cspan1_1@304727/index_1000_av-p.m3u8
+# -----------------------
+# C-SPAN2
+# -----------------------
+#EXTINF:-1 tvg-id="id71" tvg-name="C-SPAN2" tvg-logo="c_span2.png" tvh-chnum="71" tvh-epg=0 tvh-tags=News group-title="News",C-SPAN2
+http://cspan2-lh.akamaihd.net/i/cspan2_1@304728/index_1000_av-p.m3u8
+# -----------------------
+# C-SPAN3
+# -----------------------
+#EXTINF:-1 tvg-id="id72" tvg-name="C-SPAN3" tvg-logo="c_span3.png" tvh-chnum="72" tvh-epg=0 tvh-tags=News group-title="News",C-SPAN3
+http://cspan3-lh.akamaihd.net/i/cspan3_1@304729/index_1000_av-p.m3u8
+# -----------------------
+# CTV NEWS
+# -----------------------
+#EXTINF:-1 tvg-id="id74" tvg-name="CTV NEWS" tvg-logo="ctv.png" tvh-chnum="74" tvh-epg=0 tvh-tags=News group-title="News",CTV NEWS
+http://ams-lp10.9c9media.com/hls-live/livepkgr/_definst_/liveNews/News18.m3u8
+# -----------------------
+# DW
+# -----------------------
+#EXTINF:-1 tvg-id="id77" tvg-name="DW" tvg-logo="dw.png" tvh-chnum="77" tvh-epg=0 tvh-tags=News group-title="News",DW
+http://dwstream4-lh.akamaihd.net/i/dwstream4_live@131329/master.m3u8
+# -----------------------
+# TRTWORLD
+# -----------------------
+#EXTINF:-1 tvg-id="id78" tvg-name="TRTWORLD" tvg-logo="arirang.png" tvh-chnum="78" tvh-epg=0 tvh-tags=News group-title="News",TRTWORLD
+http://trtcanlitv-lh.akamaihd.net/i/TRTWORLD_1@321783/master.m3u8
+# -----------------------
+# Animal Planet
+# -----------------------
+#EXTINF:-1 tvg-id="id500" tvg-name="Animal Planet" tvg-logo="animal_planet.png" tvh-chnum="500" tvh-epg=0 tvh-tags=Nature group-title="Nature",Animal Planet
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/125.ts
+# -----------------------
+# National Geographic
+# -----------------------
+#EXTINF:-1 tvg-id="id501" tvg-name="National Geographic" tvg-logo="national_geographic.png" tvh-chnum="501" tvh-epg=0 tvh-tags=Nature group-title="Nature",National Geographic
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/160.ts
+# -----------------------
+# Sky sports News
+# -----------------------
+#EXTINF:-1 tvg-id="idsky_sports_news" tvg-name="Sky Sports News HQ" tvg-logo="sky_sports_news.png" tvh-chnum="300" tvh-epg=0 tvh-tags=Sports group-title="Sports",Sky sports News
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/37.ts
+# -----------------------
+# BT Sports ESPN
+# -----------------------
+#EXTINF:-1 tvg-id="id321" tvg-name="BT Sports ESPN" tvg-logo="bt_sport_espn.png" tvh-chnum="321" tvh-epg=0 tvh-tags=Sports group-title="Sports",BT Sports ESPN
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/114.ts
+# -----------------------
+# Chelsea TV
+# -----------------------
+#EXTINF:-1 tvg-id="id328" tvg-name="Chelsea TV" tvg-logo="chelsea_tv.png" tvh-chnum="328" tvh-epg=0 tvh-tags=Sports group-title="Sports",Chelsea TV
+http://ooyalahd2-f.akamaihd.net/i/chelsea02_delivery@145821/master.m3u8
+# -----------------------
+# LFC TV
+# -----------------------
+#EXTINF:-1 tvg-id="id330" tvg-name="LFC TV" tvg-logo="lfc_tv.png" tvh-chnum="330" tvh-epg=0 tvh-tags=Sports group-title="Sports",LFC TV
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/83.ts
+# -----------------------
+# Eir Sport 1
+# -----------------------
+#EXTINF:-1 tvg-id="id334" tvg-name="Eir Sport 1" tvg-logo="eir_sport_1.png" tvh-chnum="334" tvh-epg=0 tvh-tags=Sports group-title="Sports",Eir Sport 1
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/27.ts
+# -----------------------
+# Eir Sport 2
+# -----------------------
+#EXTINF:-1 tvg-id="id335" tvg-name="Eir sport 2" tvg-logo="eri_sport_2.png" tvh-chnum="335" tvh-epg=0 tvh-tags=Sports group-title="Sports",Eir Sport 2
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/26.ts
+# -----------------------
+# EuroSport 1
+# -----------------------
+#EXTINF:-1 tvg-id="id359" tvg-name="EuroSport 1" tvg-logo="eurosport_1.png" tvh-chnum="359" tvh-epg=0 tvh-tags=Sports group-title="Sports",EuroSport 1
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/188.ts
+# -----------------------
+# EuroSport 2
+# -----------------------
+#EXTINF:-1 tvg-id="id360" tvg-name="EuroSport 2" tvg-logo="eurosport_2.png" tvh-chnum="360" tvh-epg=0 tvh-tags=Sports group-title="Sports",EuroSport 2
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/187.ts
+# -----------------------
+# MLB Network
+# -----------------------
+#EXTINF:-1 tvg-id="id364" tvg-name="MLB Network" tvg-logo="mlb_network.png" tvh-chnum="364" tvh-epg=0 tvh-tags=Sports group-title="Sports",MLB Network
+http://mlblive-akc.mlb.com/ls01/mlbam/mlb_network/NETWORK_LINEAR_1/master_wired.m3u8
+# -----------------------
+# Sky Living
+# -----------------------
+#EXTINF:-1 tvg-id="idliving_tv" tvg-name="Sky Living" tvg-logo="sky_living.png" tvh-chnum="400" tvh-epg=0 tvh-tags=Lifestyle group-title="Lifestyle",Sky Living
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/47.ts
+# -----------------------
+# Travel Channel
+# -----------------------
+#EXTINF:-1 tvg-id="id403" tvg-name="Travel Channel" tvg-logo="travel_channel.png" tvh-chnum="403" tvh-epg=0 tvh-tags=Lifestyle group-title="Lifestyle",Travel Channel
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/32.ts
+# -----------------------
+# TSC
+# -----------------------
+#EXTINF:-1 tvg-id="id407" tvg-name="TSC" tvg-logo="tsc.png" tvh-chnum="407" tvh-epg=0 tvh-tags=Lifestyle group-title="Lifestyle",TSC
+http://tscstreaming-lh.akamaihd.net/i/TSCLiveStreaming_1@91031/index_3_av-p.m3u8
+# -----------------------
+# QVC
+# -----------------------
+#EXTINF:-1 tvg-id="idqvcuk.com" tvg-name="QVC" tvg-logo="qvc.png" tvh-chnum="408" tvh-epg=0 tvh-tags=Lifestyle group-title="Lifestyle",QVC
+http://qvclvp2.mmdlive.lldns.net/qvclvp2/cd5bfeab75a34ba18301490388fd4daa/manifest.m3u8
+# -----------------------
+# Disney Junior
+# -----------------------
+#EXTINF:-1 tvg-id="id600" tvg-name="Disney" tvg-logo="disney_jr.png" tvh-chnum="600" tvh-epg=0 tvh-tags=Cartoons group-title="Cartoons",Disney Junior
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/193.ts
+# -----------------------
+# Cartoon Network
+# -----------------------
+#EXTINF:-1 tvg-id="iduk.cartoonnetwork.com" tvg-name="Cartoon Network" tvg-logo="cartoon_network.png" tvh-chnum="604" tvh-epg=0 tvh-tags=Cartoons group-title="Cartoons",Cartoon Network
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/210.ts
+# -----------------------
+# Nickelodeon
+# -----------------------
+#EXTINF:-1 tvg-id="idnickelodeon.co.uk" tvg-name="Nickelodeon" tvg-logo="nickelodeon.png" tvh-chnum="606" tvh-epg=0 tvh-tags=Cartoons group-title="Cartoons",Nickelodeon
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/159.ts
+# -----------------------
+# Boomerang
+# -----------------------
+#EXTINF:-1 tvg-id="idboomerang.cartoonnetwork.com" tvg-name="Boomerang" tvg-logo="boomerang.png" tvh-chnum="608" tvh-epg=0 tvh-tags=Cartoons group-title="Cartoons",Boomerang
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/220.ts
+# -----------------------
+# Disney
+# -----------------------
+#EXTINF:-1 tvg-id="id612" tvg-name="Disney XD" tvg-logo="disney_xd.png" tvh-chnum="612" tvh-epg=0 tvh-tags=Cartoons group-title="Cartoons",Disney
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/54.ts
+# -----------------------
+# Disney Channel
+# -----------------------
+#EXTINF:-1 tvg-id="iddisney" tvg-name="Disney" tvg-logo="disney_channel.png" tvh-chnum="618" tvh-epg=0 tvh-tags=Cartoons group-title="Cartoons",Disney Channel
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/195.ts
+# -----------------------
+# Heart TV
+# -----------------------
+#EXTINF:-1 tvg-id="id901" tvg-name="Heart TV" tvg-logo="heart_tv.png" tvh-chnum="901" tvh-epg=0 tvh-tags=Music group-title="Music",Heart TV
+http://ooyalahd2-f.akamaihd.net/i/globalradio02_delivery@156522/index_398_av-p.m3u8?sd=10
+# -----------------------
+# MTV Base
+# -----------------------
+#EXTINF:-1 tvg-id="id903" tvg-name="MTV Base" tvg-logo="mtv_base.png" tvh-chnum="903" tvh-epg=0 tvh-tags=Music group-title="Music",MTV Base
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/78.ts
+# -----------------------
+# MTV Classic
+# -----------------------
+#EXTINF:-1 tvg-id="id904" tvg-name="MTV Classic" tvg-logo="mtv_classic.png" tvh-chnum="904" tvh-epg=0 tvh-tags=Music group-title="Music",MTV Classic
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/77.ts
+# -----------------------
+# MTV Hits
+# -----------------------
+#EXTINF:-1 tvg-id="id905" tvg-name="NTV Hits" tvg-logo="mtv_hits.png" tvh-chnum="905" tvh-epg=0 tvh-tags=Music group-title="Music",MTV Hits
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/76.ts
+# -----------------------
+# MTV Live
+# -----------------------
+#EXTINF:-1 tvg-id="id906" tvg-name="MTV Live" tvg-logo="mtv_live.png" tvh-chnum="906" tvh-epg=0 tvh-tags=Music group-title="Music",MTV Live
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/75.ts
+# -----------------------
+# MTV Rocks
+# -----------------------
+#EXTINF:-1 tvg-id="id907" tvg-name="MTV Rocks" tvg-logo="mtv_rocks.png" tvh-chnum="907" tvh-epg=0 tvh-tags=Music group-title="Music",MTV Rocks
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/74.ts
+# -----------------------
+# RAP RESURRECTION
+# -----------------------
+#EXTINF:-1 tvg-id="id915" tvg-name="RAP RESURRECTION" tvg-logo="rap_resurrection.png" tvh-chnum="915" tvh-epg=0 tvh-tags=Music group-title="Music",RAP RESURRECTION
+http://edge2.tikilive.com:1935/unrestricted_tikilive/36008/amlst:amKEQ2Y2gYN4/playlist.m3u8
+# -----------------------
+# CMC
+# -----------------------
+#EXTINF:-1 tvg-id="id916" tvg-name="CMC" tvg-logo="cmc.png" tvh-chnum="916" tvh-epg=0 tvh-tags=Music group-title="Music",CMC
+http://cmctv.ios.internapcdn.net/cmctv_vitalstream_com/live_1/CMCUSA/CCURstream0.m3u8
+# -----------------------
+# TCN
+# -----------------------
+#EXTINF:-1 tvg-id="id917" tvg-name="TCN" tvg-logo="tcn.png" tvh-chnum="917" tvh-epg=0 tvh-tags=Music group-title="Music",TCN
+https://dcunilive2-lh.akamaihd.net/i/dclive_1@390829/master.m3u8
+# -----------------------
+# CAPITAL TV
+# -----------------------
+#EXTINF:-1 tvg-id="id918" tvg-name="CAPITAL TV" tvg-logo="capital_tv.png" tvh-chnum="918" tvh-epg=0 tvh-tags=Music group-title="Music",CAPITAL TV
+http://ooyalahd2-f.akamaihd.net/i/globalradio01_delivery@156521/index_656_av-b.m3u8?sd=10
+# -----------------------
+# TIGO MUSIC
+# -----------------------
+#EXTINF:-1 tvg-id="id919" tvg-name="TIGO MUSIC" tvg-logo="tigo_music.png" tvh-chnum="919" tvh-epg=0 tvh-tags=Music group-title="Music",TIGO MUSIC
+http://hlslive.lcdn.une.net.co/v1/AUTH_HLSLIVE/MESH/tu1_1.m3u8
+# -----------------------
+# ID
+# -----------------------
+#EXTINF:-1 tvg-id="id650" tvg-name="ID" tvg-logo="id.png" tvh-chnum="650" tvh-epg=0 tvh-tags=Learning group-title="Learning",ID
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/91.ts
+# -----------------------
+# Discovery
+# -----------------------
+#EXTINF:-1 tvg-id="iddiscoveryeurope.com" tvg-name="DISCOVERY" tvg-logo="discovery.png" tvh-chnum="651" tvh-epg=0 tvh-tags=Learning group-title="Learning",Discovery
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/197.ts
+# -----------------------
+# Discovery Science
+# -----------------------
+#EXTINF:-1 tvg-id="id656" tvg-name="Discovery Science" tvg-logo="discovery_science.png" tvh-chnum="656" tvh-epg=0 tvh-tags=Learning group-title="Learning",Discovery Science
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/196.ts
+# -----------------------
+# History
+# -----------------------
+#EXTINF:-1 tvg-id="id660" tvg-name="Histroy" tvg-logo="history.png" tvh-chnum="660" tvh-epg=0 tvh-tags=Learning group-title="Learning",History
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/94.ts
+# -----------------------
+# H2
+# -----------------------
+#EXTINF:-1 tvg-id="id661" tvg-name="H2" tvg-logo="h2.png" tvh-chnum="661" tvh-epg=0 tvh-tags=Learning group-title="Learning",H2
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/95.ts
+# -----------------------
+# CI
+# -----------------------
+#EXTINF:-1 tvg-id="id667" tvg-name="CI" tvg-logo="ci.png" tvh-chnum="667" tvh-epg=0 tvh-tags=Learning group-title="Learning",CI
+http://major2.ipfox.co:8080/live/winsor_ZdtMSC/GhAUwb3w/152.ts
+# -----------------------
+# Bloomberg
+# -----------------------
+#EXTINF:-1 tvg-id="id150" tvg-name="Bloomberg" tvg-logo="bloomberg.png" tvh-chnum="150" tvh-epg=0 tvh-tags=Business group-title="Business",Bloomberg
+http://live-bloomberg-us-east.global.ssl.fastly.net/us/us3_live.m3u8
+# -----------------------
+# TBN
+# -----------------------
+#EXTINF:-1 tvg-id="id550" tvg-name="TBN" tvg-logo="tbn.png" tvh-chnum="550" tvh-epg=0 tvh-tags=Religion group-title="Religion",TBN
+http://acaooyalahd2-lh.akamaihd.net/i/TBN01_delivery@186239/index_2528_av-p.m3u8?sd=10
+# -----------------------
+# JUCE TV
+# -----------------------
+#EXTINF:-1 tvg-id="id551" tvg-name="JUCE" tvg-logo="juce_tv.png" tvh-chnum="551" tvh-epg=0 tvh-tags=Religion group-title="Religion",JUCE TV
+http://acaooyalahd2-lh.akamaihd.net/i/TBN03_delivery@186241/master.m3u8
+# -----------------------
+# SMILE
+# -----------------------
+#EXTINF:-1 tvg-id="id552" tvg-name="SMILE" tvg-logo="smile.png" tvh-chnum="552" tvh-epg=0 tvh-tags=Religion group-title="Religion",SMILE
+http://acaooyalahd2-lh.akamaihd.net/i/TBN04_delivery@186242/master.m3u8
+# -----------------------
+# CBN
+# -----------------------
+#EXTINF:-1 tvg-id="id553" tvg-name="CBN" tvg-logo="cbn.png" tvh-chnum="553" tvh-epg=0 tvh-tags=Religion group-title="Religion",CBN
+http://bcliveuniv-lh.akamaihd.net/i/iptv1_1@194050/master.m3u8?playerId=2196082720001
+# -----------------------
+# HILLSONG CHANNEL
+# -----------------------
+#EXTINF:-1 tvg-id="id554" tvg-name="HILLSONG CHANNEL" tvg-logo="cbn.png" tvh-chnum="554" tvh-epg=0 tvh-tags=Religion group-title="Religion",HILLSONG CHANNEL
+http://acaooyalahd2-lh.akamaihd.net/i/TBN20_delivery@394530/index_1728_av-p.m3u8?sd=10
+# -----------------------
+# AFTV
+# -----------------------
+#EXTINF:-1 tvg-id="id556" tvg-name="AFTV" tvg-logo="aftv.png" tvh-chnum="556" tvh-epg=0 tvh-tags=Religion group-title="Religion",AFTV
+http://amazingfacts.live-s.cdn.bitgravity.com/cdn-live/_definst_/amazingfacts/live/feed01/chunklist_w1921345467.m3u8
+# -----------------------
+# KTN News Kenya
+# -----------------------
+#EXTINF:-1 tvg-id="id200" tvg-name="KTN News Kenya" tvg-logo="ktn_news_kenya.png" tvh-chnum="200" tvh-epg=0 tvh-tags=Africa group-title="Africa",KTN News Kenya
+pipe:///usr/bin/jambulatv-yplayer ktn news kenya
+# -----------------------
+# KTN Home Kenya
+# -----------------------
+#EXTINF:-1 tvg-id="id201" tvg-name="KTV Home Kenya" tvg-logo="ktn_home_kenya.png" tvh-chnum="201" tvh-epg=0 tvh-tags=Africa group-title="Africa",KTN Home Kenya
+pipe:///usr/bin/jambulatv-yplayer ktn home kenya
+# -----------------------
+# NBS TV Uganda
+# -----------------------
+#EXTINF:-1 tvg-id="id202" tvg-name="NBS TV Uganda" tvg-logo="nbstv_uganda.png" tvh-chnum="202" tvh-epg=0 tvh-tags=Africa group-title="Africa",NBS TV Uganda
+http://174.138.84.246:1935/live/myStream/playlist.m3u8
+# -----------------------
+# NTV Uganda
+# -----------------------
+#EXTINF:-1 tvg-id="id203" tvg-name="NTV Uganda" tvg-logo="ntv_uganda.png" tvh-chnum="203" tvh-epg=0 tvh-tags=Africa group-title="Africa",NTV Uganda
+pipe:///usr/bin/jambulatv-yplayer ntv uganda
+# -----------------------
+# Spark TV Uganda
+# -----------------------
+#EXTINF:-1 tvg-id="id204" tvg-name="Spark TV Uganda" tvg-logo="sparktv_uganda.png" tvh-chnum="204" tvh-epg=0 tvh-tags=Africa group-title="Africa",Spark TV Uganda
+pipe:///usr/bin/jambulatv-yplayer sparktv uganda
+# -----------------------
+# Bukedde TV Uganda
+# -----------------------
+#EXTINF:-1 tvg-id="id205" tvg-name="Bukedde TV Uganda" tvg-logo="bukeddetv_uganda.png" tvh-chnum="205" tvh-epg=0 tvh-tags=Africa group-title="Africa",Bukedde TV Uganda
+pipe:///usr/bin/jambulatv-yplayer bukeddetv uganda
+# -----------------------
+# NTV Kenya
+# -----------------------
+#EXTINF:-1 tvg-id="id206" tvg-name="NTV Kenya" tvg-logo="ntv_kenya.png" tvh-chnum="206" tvh-epg=0 tvh-tags=Africa group-title="Africa",NTV Kenya
+pipe:///usr/bin/jambulatv-yplayer ntv kenya
+# -----------------------
+# Ann7 South Africa
+# -----------------------
+#EXTINF:-1 tvg-id="id210" tvg-name="Ann7 South Africa" tvg-logo="ann7_south_africa.png" tvh-chnum="210" tvh-epg=0 tvh-tags=Africa group-title="Africa",Ann7 South Africa
+http://46.4.25.213:1935/live-ann7/ann7-hi.stream/playlist.m3u8
+# -----------------------
+# AfricaNews
+# -----------------------
+#EXTINF:-1 tvg-id="id214" tvg-name="AFRICANEWS" tvg-logo="africanews.png" tvh-chnum="214" tvh-epg=0 tvh-tags=Africa group-title="Africa",AfricaNews
+pipe:///usr/bin/jambulatv-yplayer africanews
+# -----------------------
+# CitizenTV Kenya
+# -----------------------
+#EXTINF:-1 tvg-id="id215" tvg-name="CitizenTV Kenya" tvg-logo="citizentv_kenya.png" tvh-chnum="215" tvh-epg=0 tvh-tags=Africa group-title="Africa",CitizenTV Kenya
+pipe:///usr/bin/jambulatv-yplayer citizentv kenya

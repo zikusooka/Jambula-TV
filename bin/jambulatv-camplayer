@@ -1,0 +1,54 @@
+#!/bin/sh
+# This is a wrapper to allow playing web based Camera streams using TVHeadend 
+# Jambula Labs @copyright 2017-2018 All rights reserved
+
+# Variables
+FFMPEG_CMD=/usr/bin/ffmpeg
+
+CAMERA_IP_ADDRESS=http://127.0.0.1
+CAMERA_PORT_NUMBER=8520
+CAMERA_MODE=jpeg
+CAMERA_SCALE=100
+CAMERA_MAX_FPS=5
+CAMERA_BUFFER=1000
+CAMERA_CONNKEY=652590
+CAMERA_RAND=1507501065
+CAMERA_NUMBER=$1
+CAMERA_NAME=CAMERA-$CAMERA_NUMBER
+#
+CAMERA_STREAM_URL="$CAMERA_IP_ADDRESS:$CAMERA_PORT_NUMBER/zms-inetd?mode=$CAMERA_MODE&scale=$CAMERA_SCALE&maxfps=$CAMERA_MAX_FPS&buffer=$CAMERA_BUFFER&monitor=$CAMERA_NUMBER&connkey=$CAMERA_CONNKEY&rand=$CAMERA_RAND"
+CAMERA_SERVICE_PROVIDER=jambulaTV
+CAMERA_USER_AGENT="Mozilla/5.0 (X11; Linux x86_64; rv:54.0) Gecko/20100101 Firefox/54.0"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+usage () {
+if [ "x$CAMERA_NUMBER" = "x" ];
+then
+cat <<EOF
+Usage: $(basename $0) [CAMERA NUMBER]
+EOF
+exit 1
+fi
+}
+
+camera_stream_url () {
+# Run stream via Ffmpeg Pipe
+$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$CAMERA_USER_AGENT" -i "$CAMERA_STREAM_URL" -metadata service_provider=$CAMERA_SERVICE_PROVIDER -metadata service_name="$CAMERA_NAME" -tune zerolatency -f mpegts pipe:1
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Usage
+usage
+
+# Start streaming camera
+camera_stream_url

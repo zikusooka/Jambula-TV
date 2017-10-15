@@ -1,0 +1,13 @@
+#EXTM3U
+#
+# --------
+# CAMERA-1
+# --------
+#EXTINF:-1 tvg-id="id980" tvg-name="CAMERA-1" tvg-logo="camera01.png" tvh-chnum="980" tvh-epg=0 tvh-tags=Cameras group-title="Cameras",CAMERA-1
+pipe:///usr/bin/jambulatv-camplayer 1
+#
+# --------
+# CAMERA-2
+# --------
+#EXTINF:-1 tvg-id="id981" tvg-name="CAMERA-2" tvg-logo="camera02.png" tvh-chnum="981" tvh-epg=0 tvh-tags=Cameras group-title="Cameras",CAMERA-2
+pipe:///usr/bin/jambulatv-camplayer 2

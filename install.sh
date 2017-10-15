@@ -349,6 +349,10 @@ zoneminder_pre_install
 zoneminder_130_install
 zoneminder_configure 
 zoneminder_zms_inetd
+#
+# Cameras via TVHeadend
+cameras_tvheadend_configure
+cameras_icons_add
 
 # ----------------
 # Administration 
@@ -398,6 +402,12 @@ initial_setup_configure
 # Updates
 # -------
 auto_updates_configure
+
+# ---------
+# Functions
+# ---------
+# Copy functions file to project config directory i.e. /etc/JambulaTV
+cp -v $PROJECT_BASE_DIR/functions $PROJECT_SYSTEM_CONF_DIR
 
 # -----
 # Timer
