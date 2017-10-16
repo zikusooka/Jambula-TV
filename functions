@@ -818,17 +818,25 @@ check_internet_connectivity_ping () {
 REMOTE_HOST_NAME="4.4.4.4"
 PING_COUNT=3
 PING_TIMEOUT=3
+# Set exit value specified on command line
+if [ "x$1" = "x" ];
+then
+EXIT_VALUE=0
+else
+EXIT_VALUE=$1
+fi
+# Ping
 ping -c $PING_COUNT -W $PING_TIMEOUT $REMOTE_HOST_NAME > /dev/null 2>&1
 INTERNET_STATUS_VAL=$?
 #
 # Notify and quit when there's NO Internet 
 if [ "$INTERNET_STATUS_VAL" != "0" ];
 then
-logger "$NO_INTERNET_NOTIFICATION_MESSAGE"
-echo "$NO_INTERNET_NOTIFICATION_MESSAGE"
-$OSD_SCRIPT -m "$NO_INTERNET_NOTIFICATION_MESSAGE"
-# Quit script, since there's no internet.  Leave exit status at 0 so systemd service works
-exit 0
+logger "$NO_INTERNET_NOTIFICATION_MESSAGE {Error $EXIT_VALUE}"
+echo "$NO_INTERNET_NOTIFICATION_MESSAGE {Error $EXIT_VALUE}"
+$OSD_SCRIPT -m "$NO_INTERNET_NOTIFICATION_MESSAGE {Error $EXIT_VALUE}"
+# Quit script, since there's no internet
+exit $EXIT_VALUE
 fi
 }
 
@@ -836,7 +844,7 @@ download_asterisk_deps () {
 # Download updated asterisk sounds
 # ---------------------------------
 # Check Internet connectivity
-check_internet_connectivity_ping 
+check_internet_connectivity_ping 1
 #
 # Make temporary backup folder
 [ ! -d $TMPDIR/asterisk_deps ] || rm -rf $TMPDIR/asterisk_deps
@@ -871,7 +879,7 @@ download_flexget_deps () {
 # Download fresh and updated flexget dependencies
 # ------------------------------------------------
 # Check Internet connectivity
-check_internet_connectivity_ping 
+check_internet_connectivity_ping 1
 #
 # Make temporary backup folder
 [ ! -d $TMPDIR/flexget_deps ] || rm -rf $TMPDIR/flexget_deps
@@ -3615,9 +3623,10 @@ iptv_tvheadend_network_add
 chmod 755 $BINARY_PREFIX/jambulatv-yplayer 
 #
 # Add iptv services scanning to schedule
-# Copy reminder .timer and .service files
-cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-iptv.{timer,service} $SYSTEMD_UNITS_DIR_USER/
-systemctl enable jambulatv-iptv.timer
+# Copy jambulatv-iptv-scan-map-channels .timer and .service files
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-iptv-scan-map-channels.{timer,service} $SYSTEMD_UNITS_DIR_USER/
+systemctl enable jambulatv-iptv-scan-map-channels.timer
+systemctl start jambulatv-iptv-scan-map-channels.timer
 }
 
 iptv_icons_add () {
@@ -3744,12 +3753,14 @@ cp -rv $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE $PLAYLISTS
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PLAYLISTS_DIRECTORY
 fi
 #
-# Remove default gateway so TVH service can restart
-#ip route del default
 # Restart TVHeadend - So Scan is done
 sudo systemctl restart tvheadend.service
-# Restore Internet default route
-#ip route add default via $NETWORK_GATEWAY_ADDRESS
+
+# Add cameras services scanning to schedule
+# Copy jambulatv-cameras-scan-map-channels .timer and .service files
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-cameras-scan-map-channels.{timer,service} $SYSTEMD_UNITS_DIR_USER/
+systemctl enable jambulatv-cameras-scan-map-channels.timer
+systemctl start jambulatv-cameras-scan-map-channels.timer
 }
 
 cameras_tvheadend_configure () {
@@ -7614,9 +7625,19 @@ cd $INSTALL_SRC_DIR/freepbx
 # Install
 ./install -f --dbengine="mysql" --dbname="$ASTERISK_DB_NAME" --cdrdbname="$ASTERISK_CDR_DB_NAME" --dbuser="$ASTERISK_DB_USER" --dbpass="$ASTERISK_DB_PASS" --user="$ASTERISK_FILES_USER" --group="$WWW_USER" --webroot="$WWW_HTML_DIR/freepbx" --ampcgibin="$WWW_CGI_DIR" --astetcdir="$FREEPBX_CONF_DIR" --no-interaction
 #
+
+
+
+_install_pause_check_4_errors_
+
+
 # Run retrieve_conf again
 $VARLIBDIR/asterisk/bin/retrieve_conf
 #
+
+
+_install_pause_check_4_errors_
+
 # Set ownership on FreePBX config directory
 chown -R $ASTERISK_FILES_USER:$WWW_USER $FREEPBX_CONF_DIR
 # Set ownership/permissions on nginx folders
@@ -7726,7 +7747,7 @@ sed -i '/\[options\]/a execincludes = yes' $CONFDIR/asterisk/asterisk.conf
 
 # Add SIP providers files
 [ -e $PROJECT_CONFIGS_DIR/asterisk/sip_providers.config ] && \
-cp -v $PROJECT_CONFIGS_DIR/asterisk/sip_providers.config $FREEPBX_CONF_DIR
+cp -v $PROJECT_CONFIGS_DIR/asterisk/sip_providers.config $FREEPBX_CONF_DIR/
 
 # Setup SSL for Asterisk
 [ -d $FREEPBX_CONF_DIR/ssl ] || mkdir $FREEPBX_CONF_DIR/ssl
@@ -9577,7 +9598,7 @@ EOF
 # FTP Downloads
 ftp_connect_get_file () {
 # Check Internet connectivity
-check_internet_connectivity_ping 
+check_internet_connectivity_ping 0
 
 # Set ftp file paths
 FTP_REMOTE_DIR=$1

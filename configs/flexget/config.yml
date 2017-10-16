@@ -597,10 +597,6 @@ tasks:
       - /usr/bin/rsync -qavz --delay-updates '{{secrets.ftp.dir_temp}}/{{filename}}' '{{secrets.iptv.lists_dir}}'/
       # Remove temp m3u8 files
       - /bin/rm '{{secrets.ftp.dir_temp}}/{{filename}}'
-      # Refresh IPTV services i.e. add services if non-existent
-      - /usr/bin/jambulatv-tvheadend-controller iptv scan
-      # Map new IPTV services to channels if non-existent
-      - /usr/bin/echo "/usr/bin/jambulatv-tvheadend-controller iptv map" | /usr/bin/at now + 5 min
 
 
 

@@ -38,12 +38,13 @@ TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=/tmp/iptv_service_uuid.txt
 TVHEADEND_LAST_CHANNEL_NUMBER=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq '.entries[] | .number' | sort -n | tail -1)
 let "TVHEADEND_DVB_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
 let "TVHEADEND_IPTV_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
-TVHEADEND_IPTV_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/scan-full.$(date +%Y%m%d%H%M).log
-TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/scan-error.$(date +%Y%m%d%H%M).log
+TVHEADEND_IPTV_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-full.$(date +%Y%m%d%H%M).log
+TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-error.$(date +%Y%m%d%H%M).log
 TVHEADEND_IPTV_SERVICE_LOG_FILE=/tmp/iptv_service_output.log
 TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE=/tmp/iptv_scanning_in_progress
 TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE=/tmp/iptv_mapping_in_progress
 #
+TVHEADEND_CAMERAS_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/cameras-scan-full.$(date +%Y%m%d%H%M).log
 TVHEADEND_CAMERAS_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$TVHEADEND_CAMERAS_NETWORK_NAME"'") | .uuid' | sed 's:"::g')
 TVHEADEND_CAMERAS_SERVICE_UUIDS_RAW_FILE=/tmp/cameras_service_uuid.txt
 
@@ -116,7 +117,7 @@ CURRENT_CHANNELS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions 
 if [ "x$CURRENT_CHANNELS" != "x" ] || [ "x$CURRENT_PROFILES" != "x" ];
 then
 echo "JambulaTV Error:  The TV Server is currently in use, please pick another convenient time to perform this task"
-exit 0
+exit 1
 fi
 }
 
@@ -444,9 +445,6 @@ fi
 }
 
 iptv_scan_add_services () {
-# Check for Internet connectivity 
-check_internet_connectivity_ping
-#
 # timestamp log file
 log_file
 #
@@ -482,7 +480,8 @@ case $1 in
 
 incremental)
 # Play mux i.e. Add service if no service is found or force if it is a Youtube pipe
-if [ "$SERVICE_ADDED" = "0" ] || [ "$IS_YPIPE" = "0" ];
+# NOTE: Exit value of 1 means service was found
+if [ "$SERVICE_ADDED" != "1" ] || [ "$IS_YPIPE" = "0" ];
 then
 iptv_test_stream
 fi
@@ -496,7 +495,8 @@ iptv_test_stream
 *)
 # Assume this is incremental
 # Play mux i.e. Add service if no service is found or force if it is a Youtube pipe
-if [ "$SERVICE_ADDED" = "0" ] || [ "$IS_YPIPE" = "0" ];
+# NOTE: Exit value of 1 means service was found
+if [ "$SERVICE_ADDED" != "1" ] || [ "$IS_YPIPE" = "0" ];
 then
 iptv_test_stream
 fi
@@ -701,11 +701,12 @@ done
 cameras_map_services_2_channels () {
 # OSD notify of map started
 map_osd_notice_started $TVHEADEND_CAMERAS_NETWORK_NAME
-
+#
 # Remove dead channels
 zap_dead_channels
 #
 $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq '.entries[] | select(.text | contains("'${TVHEADEND_CAMERAS_NETWORK_NAME}'")).uuid' | sed 's:"::g' > $TVHEADEND_CAMERAS_SERVICE_UUIDS_RAW_FILE
+#
 cat $TVHEADEND_CAMERAS_SERVICE_UUIDS_RAW_FILE | while read SERVICE_UUID
 do
 CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq '.entries[] | select(.uuid=="'$SERVICE_UUID'") | .text' | sed "s:$TVHEADEND_CAMERAS_NETWORK_NAME/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE - ::g"| cut -d / -f2- | sed 's:"::g')
@@ -761,10 +762,16 @@ map_osd_notice_completed $TVHEADEND_CAMERAS_NETWORK_NAME
 #  MAIN SCRIPT  #
 #################
 
-# Pre-run checks
+# Check to see if TVHeadend server is in use
 check_if_in_use 
+
+# If IPTV specified, check for Internet connectivity before proceeding
+[[ "$TV_TYPE" = "iptv" ]] && check_internet_connectivity_ping 1
+
+# Pre-run checks
 pre_config
 
+# Run tasks based on type specified
 case $TV_TYPE in
 dvb)
 # Usage
@@ -833,7 +840,7 @@ usage_cameras
 # Add cameras network
 configure_cameras_network
 
-# Scan - using force method NOTE: restart tvheadend to get same effect
+# Scan - using force method NOTE: restart tvheadend to get same effect i.e. refresh_tvheadend
 [[ "$TV_TASK" = "scan" ]] && \
 	cameras_scan_add_muxes 
 
