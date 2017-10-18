@@ -137,11 +137,13 @@ fi
 }
 
 search_waiting_sound_effects () {
-# Play waiting for search results sound effects but only if called by Kodi
-if [ "$CALLED_BY_HTSP" = "0" ] || [ "$CALLED_BY_JSONRPC" = "0" ];
-then
-jambulatv-sounds api $YOUTUBE_FETCH_IN_PROGRESS_FILE
-fi
+# Dont play sound effects if tvheadend iptv {scan|map} running. Play if called by HTSP or json RPC calls
+[[ -e $TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE || -e $TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE ]] && \
+	export CALLED_BY_JSONRPC=1
+#
+# Play sound effects if tool was called by HTSP or json RPC calls
+[[ "$CALLED_BY_HTSP" = "0" || "$CALLED_BY_JSONRPC" = "0" ]] && \
+	jambulatv-sounds api $YOUTUBE_FETCH_IN_PROGRESS_FILE
 }
 
 query_mysql_db () {
