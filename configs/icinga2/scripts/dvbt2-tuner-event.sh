@@ -11,6 +11,9 @@
 #  MAIN SCRIPT  #
 #################
 
+#Play sound effects of dying hardware
+mplayer -ao pulse -novideo  /usr/share/JambulaTV/sounds/on_life_support.mp3
+
 # Stop tvheadend server
 sudo systemctl stop tvheadend.service
 
