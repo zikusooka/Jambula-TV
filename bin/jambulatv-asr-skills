@@ -294,6 +294,14 @@ skill_go_home () {
 /usr/bin/jambulatv-kodi-controller navigate_home
 }
 
+skill_web_camera_view_play () {
+/usr/bin/jambulatv-camplayer play $1 ffplay
+}
+
+skill_web_camera_view_stop () {
+/usr/bin/jambulatv-camplayer stop
+}
+
 skill_connect_2_hotspot () {
 sudo /usr/bin/jambulatv-auto-wifi-provision &
 $TEXT_2_SPEECH_TOOL_PATH custom "Please scan the QR Code displayed on the TV Screen to get the Wifi password.  For Android devices, you may connect automatically"

@@ -343,6 +343,17 @@ elif [ "$DETECTED_PATTERN" = "GO HOME" ];
 then
 skill_go_home 
 
+# Display web-based cameras - Start
+elif [[ "$DETECTED_PATTERN" =~ "SHOW CAMERA" ]];
+then
+CAMERA_NUMBER=$(echo $DETECTED_PATTERN | sed "s:SHOW CAMERA::g" | sed "s:^ ::g")
+skill_web_camera_view_start $CAMERA_NUMBER
+
+# Display web-based cameras - Start
+elif [ "$DETECTED_PATTERN" = "STOP CAMERA" ];
+then
+skill_web_camera_view_stop
+
 # Auto WiFi provision
 elif [ "$DETECTED_PATTERN" = "I WANT TO CONNECT TO THE HOTSPOT" ];
 then
