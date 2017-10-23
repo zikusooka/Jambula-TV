@@ -139,7 +139,7 @@ fi
 search_waiting_sound_effects () {
 # Dont play sound effects if tvheadend iptv {scan|map} running. Play if called by HTSP or json RPC calls
 [[ -e $TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE || -e $TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE ]] && \
-	export CALLED_BY_JSONRPC=1
+	export CALLED_BY_JSONRPC=1 CALLED_BY_HTSP=1 
 #
 # Play sound effects if tool was called by HTSP or json RPC calls
 [[ "$CALLED_BY_HTSP" = "0" || "$CALLED_BY_JSONRPC" = "0" ]] && \
@@ -376,8 +376,12 @@ stop_waiting_sound_effects
 osd_notification_failed
 # Pause a bit - really needed, for beeps to stop
 sleep 2
-# Stop video player
-jambulatv-kodi-controller video_play_stop &
+#
+# Check if there is an active video player
+VIDEO_IS_PLAYING=$(/usr/bin/jambulatv-kodi-controller video_play_type | cut -d '=' -f2 | awk {'print $1'} | sed "s:\[::g" | sed "s:\]::g")
+# Stop player if there is no video player already active
+[[ "$VIDEO_IS_PLAYING" = "no" ]] && jambulatv-kodi-controller video_play_stop &
+#
 # Remove Youtube temp variables file in case of next run
 [ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
 # Add log message to systemd journal
