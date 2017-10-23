@@ -112,8 +112,8 @@ fi
 check_if_in_use () {
 CURRENT_PROFILES=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq '.entries[] | .profile' | sed 's:null::g')
 CURRENT_CHANNELS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq '.entries[] | .channel' | sed 's:null::g')
-
-# Quit if TVH Server is being used
+#
+# Quit if TVH Server is being used i.e. Playing TV
 if [ "x$CURRENT_CHANNELS" != "x" ] || [ "x$CURRENT_PROFILES" != "x" ];
 then
 echo "JambulaTV Error:  The TV Server is currently in use, please pick another convenient time to perform this task"
@@ -762,8 +762,8 @@ map_osd_notice_completed $TVHEADEND_CAMERAS_NETWORK_NAME
 #  MAIN SCRIPT  #
 #################
 
-# Check to see if TVHeadend server is in use
-check_if_in_use 
+# Check to see if TVHeadend server is in use and when NOT controlling cameras
+[[ "$TV_TYPE" != "cameras" ]] && check_if_in_use 
 
 # If IPTV specified, check for Internet connectivity before proceeding
 [[ "$TV_TYPE" = "iptv" ]] && check_internet_connectivity_ping 1
