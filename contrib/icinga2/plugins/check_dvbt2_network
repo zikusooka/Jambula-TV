@@ -1,18 +1,47 @@
 #!/bin/sh
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+PROJECT_DVBT_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/dvbt-settings.cfg
 
-# Set to y if DVB-T is enabled 
-[ -d /dev/dvb ] && DVBT2_ENABLED=y
-# Query channel list
-wget -q -O - localhost:9981/api/channel/list | jq . | grep \"val\" | awk {'print $2'} | sed 's:[{|}|"|,]::g' | grep 'name-not-set' > /dev/null 2>&1
-VALUE=$?
+# Source DVBT settings file
+. $PROJECT_DVBT_SETTINGS_FILE
 
-if [ "$VALUE" = "0" ] || [ "$DVBT2_ENABLED" != "y" ];
+# DVB-T Tuner node
+TVHEADEND_DVBT_TUNER_NODE=/dev/dvb/adapter$DVBT_TUNER_NO
+# See if DVBT network UUID exists
+TVHEADEND_DVBT_NETWORK_UUID=$(curl -s http://127.0.0.1:9981/api/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$DVBT_NETWORK_NAME"'") |.uuid' | sed 's:"::g')
+# Check for non-set-channels
+curl -s http://127.0.0.1:9981/api/channel/list?limit=10000 | jq '.entries[]' | grep 'name-not-set' > /dev/null 2>&1
+NONE_SET_CHANNELS_FOUND=$?
+
+# Icinga2 Notices
+if [[ ! -e "$TVHEADEND_DVBT_TUNER_NODE" ]];
 then
-echo "CRITICAL - Channels list is corrupted, possibly due to a bad shutdown.  Please setup network and scan channels. You may also need to power off and on" 
+# Notice when no DVB-T Tuner is found
+ICINGA2_NOTICE_CRITICAL="CRITICAL - DVB-T2 adapter was not detected. {Error: $TVHEADEND_DVBT_TUNER_NODE - No such file or directory}"
+else
+# Notice when no DVB-T Network is found
+ICINGA2_NOTICE_CRITICAL="CRITICAL - DVB-T2 channels corrupted. {Error: $DVBT_NETWORK_NAME is missing}"
+fi
+# Notice when all is OK
+ICINGA2_NOTICE_OK="OK - Channels list is fine"
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+# Run test to see if DVBT-Network was accidentally wiped out
+if [[ "$NONE_SET_CHANNELS_FOUND" = "0" && "x$TVHEADEND_DVBT_NETWORK_UUID" = "x" || \
+	! -e "$TVHEADEND_DVBT_TUNER_NODE" ]];
+then
+echo "$ICINGA2_NOTICE_CRITICAL"
 exit 2
 
 else
-echo "OK - Channels list is fine"
+echo "$ICINGA2_NOTICE_OK"
 exit 0
 
 fi
