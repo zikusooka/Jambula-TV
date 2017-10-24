@@ -2,8 +2,12 @@
 # This is the speech-to-text tool used for JambulaTV services.
 # Use it to detect requested phrases for read time, weather, etc
 # Jambula Labs @copyright 2017-2018 All rights reserved
-
-
+#
+# Variables
+WATCH_CMD="/usr/bin/tail"
+WATCH_INTERVAL="1.0"
+WATCH_OPTS="-n 0 -F -s $WATCH_INTERVAL"
+#
 # Mic Sources
 # -----------
 # Run the following command to find your default source
@@ -32,7 +36,7 @@ PS_KEYPHRASE_LIST=$PS_DATA_DIR/keyphrase.list
 #PS_KEYPHRASE="OKAY JAMB BOO LA"
 PS_NOISE_SILENCE_THRESHOLD="4.0"
 PS_SAMPRATE="16000/8000/48000"
-PS_OLD_TAIL_PID=$(ps auxw | grep -v grep | grep 'tail -n 0 -F' | awk {'print $2'} | head -1)
+PS_OLD_TAIL_PID=$(ps auxw | grep -v grep | grep "$WATCH_CMD $WATCH_OPTS" | awk {'print $2'} | head -1)
 PS_OLD_CONTINUOUS_PID=$(ps auxw | grep -v grep | grep 'pocketsphinx_continuous' | awk {'print $2'} | head -1)
 TEXT_2_SPEECH_TOOL_PATH=/usr/bin/jambulatv-text2speech
 TEXT_2_SPEECH_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $TEXT_2_SPEECH_TOOL_PATH | cut -d '=' -f2 | head -1 | awk {'print $1'})
@@ -93,12 +97,12 @@ run_speech2text_engine () {
 pocketsphinx_continuous -hmm $PS_ACOUSTIC_MODEL_DIR -adcdev $PS_MIC_SOURCE -inmic yes \
 	-lm $PS_LANGUAGE_MODEL_FILE -dict $PS_DICTIONARY_FILE -kws "$PS_KEYPHRASE_LIST" \
 	-vad_threshold $PS_NOISE_SILENCE_THRESHOLD -samprate $PS_SAMPRATE \
-	-logfn $PS_LOG_FILE | tee $PS_OUTPUT_FILE &
+	-logfn $PS_LOG_FILE | tee -a $PS_OUTPUT_FILE &
 #
 # Using one keyphrase
 #pocketsphinx_continuous -hmm $PS_ACOUSTIC_MODEL_DIR -adcdev $PS_MIC_SOURCE -inmic yes \
 #	-lm $PS_LANGUAGE_MODEL_FILE -dict $PS_DICTIONARY_FILE -keyphrase "$PS_KEYPHRASE" \
-#	-kws_threshold 1e-20 -logfn $PS_LOG_FILE | tee $PS_OUTPUT_FILE &
+#	-kws_threshold 1e-20 -logfn $PS_LOG_FILE | tee -a $PS_OUTPUT_FILE &
 }
 
 detect_triggers_and_activate_text2speech () {
@@ -106,7 +110,8 @@ detect_triggers_and_activate_text2speech () {
 . $JAMBULATV_SKILLS_FILE
 
 # Detect phrase mentioned
-tail -n 0 -F $PS_OUTPUT_FILE | \
+$WATCH_CMD $WATCH_OPTS $PS_OUTPUT_FILE | \
+
 # Look for exact matching patterns
 while read DETECTED_PATTERN
 do
@@ -347,7 +352,7 @@ skill_go_home
 elif [[ "$DETECTED_PATTERN" =~ "SHOW CAMERA" ]];
 then
 CAMERA_NUMBER=$(echo $DETECTED_PATTERN | sed "s:SHOW CAMERA::g" | sed "s:^ ::g")
-skill_web_camera_view_start $CAMERA_NUMBER
+skill_web_camera_view_play $CAMERA_NUMBER
 
 # Display web-based cameras - Start
 elif [ "$DETECTED_PATTERN" = "STOP CAMERA" ];
