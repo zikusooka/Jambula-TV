@@ -22,7 +22,7 @@ KODI_ADDON="$2"
 PING_TIMEOUT=3 #9
 PING_IP_ADDRESS=8.8.8.8
 
-PVR_GROUP=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannelGroups", "params": {"channeltype":"tv"}, "id": 1}' "http://127.0.0.1:8510/jsonrpc" | jq '.result.channelgroups[] | select(.label=="All channels") | .channelgroupid')
+PVR_GROUP=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannelGroups", "params": {"channeltype":"tv"}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq '.result.channelgroups[] | select(.label=="All channels") | .channelgroupid')
 PVR_STOP_REC_SCRIPT=MY_TMPDIR/.stop_recording_tv_channel.sh
 PVR_STATUS_FILE=MY_TMPDIR/pvr_status
 TV_RECORD_STATUS_FILE=MY_TMPDIR/tv_record_status
@@ -43,7 +43,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|video_play_type|video_play_pause|video_play_next|video_play_previous|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_type|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_start|tv_record_stop|tv_record_instant_start|tv_record_instant_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|video_play_type|video_play_pause|video_play_next|video_play_previous|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_type|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_start|tv_record_stop|tv_record_instant_start|tv_record_instant_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home|fullscreen_toggle)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -101,15 +101,15 @@ export INTERNET_ALIVE
 }
 
 osd_notification_short () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "GUI.ShowNotification", "params": {"message":"'"$1"'", "title":"'"$2"'", "displaytime":2000}}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "GUI.ShowNotification", "params": {"message":"'"$1"'", "title":"'"$2"'", "displaytime":2000}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 osd_notification_long () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "GUI.ShowNotification", "params": {"message":"'"$1"'", "title":"'"$2"'", "displaytime":30000}}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "GUI.ShowNotification", "params": {"message":"'"$1"'", "title":"'"$2"'", "displaytime":30000}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 type_of_player () {
-ACTIVE_PLAYER_TYPE=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GetActivePlayers", "id": 1}' "http://127.0.0.1:8510/jsonrpc" | jq ".result[] | .type" | sed 's:[,|"]::g')
+ACTIVE_PLAYER_TYPE=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GetActivePlayers", "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq ".result[] | .type" | sed 's:[,|"]::g')
 # See if video is active i.e. running
 if [ "$ACTIVE_PLAYER_TYPE" = "video" ];
 then
@@ -121,7 +121,7 @@ echo "TYPE OF ACTIVE PLAYER = [$VIDEO_IS_PLAYING]"
 }
 
 stop_player () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Stop", "params": {"playerid":1}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Stop", "params": {"playerid":1}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 pause_player () {
@@ -131,63 +131,67 @@ type_of_player
 if [ "$1" = "noreplay" ];
 then
 # No replay/toggle
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.PlayPause", "params": {"playerid":1, "play":false}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.PlayPause", "params": {"playerid":1, "play":false}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 else
 # replay/toggle
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.PlayPause", "params": {"playerid":1, "play":true}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.PlayPause", "params": {"playerid":1, "play":true}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 fi
 }
 
 start_player_video () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Open", "params":{"item":{"file":"'"$1"'"}}}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Open", "params":{"item":{"file":"'"$1"'"}}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 start_pictures_play () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Open", "params":{"item":{"path":"'"$1"'"}}}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Open", "params":{"item":{"path":"'"$1"'"}}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 start_player_music_offline () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '[{"id": 1,"jsonrpc": "2.0", "method": "Playlist.Clear", "params":{"playlistid":1}},{"id":1,"jsonrpc":"2.0","method":"Playlist.Add","params":{"item":{"directory":"'"$1"'"},"playlistid":1}},{"jsonrpc": "2.0", "method": "Player.Open", "params": { "item": { "playlistid": 1, "position": 0 } }, "id": 1}]' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '[{"id": 1,"jsonrpc": "2.0", "method": "Playlist.Clear", "params":{"playlistid":1}},{"id":1,"jsonrpc":"2.0","method":"Playlist.Add","params":{"item":{"directory":"'"$1"'"},"playlistid":1}},{"jsonrpc": "2.0", "method": "Player.Open", "params": { "item": { "playlistid": 1, "position": 0 } }, "id": 1}]' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 start_player_music_online () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '[{"id": 1,"jsonrpc": "2.0", "method": "Playlist.Clear", "params":{"playlistid":1}},{"id":1,"jsonrpc":"2.0","method":"Playlist.Add","params":{"item":{"file":"'"$1"'"},"playlistid":1}},{"jsonrpc": "2.0", "method": "Player.Open", "params": { "item": { "playlistid": 1, "position": 0 } }, "id": 1}]' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '[{"id": 1,"jsonrpc": "2.0", "method": "Playlist.Clear", "params":{"playlistid":1}},{"id":1,"jsonrpc":"2.0","method":"Playlist.Add","params":{"item":{"file":"'"$1"'"},"playlistid":1}},{"jsonrpc": "2.0", "method": "Player.Open", "params": { "item": { "playlistid": 1, "position": 0 } }, "id": 1}]' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 player_next () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GoTo", "params":{"playerid":1,"to": "next"},"id":1}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GoTo", "params":{"playerid":1,"to": "next"},"id":1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 player_previous () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GoTo", "params":{"playerid":1,"to": "previous"},"id":1}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GoTo", "params":{"playerid":1,"to": "previous"},"id":1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 player_volume_up () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Application.SetVolume", "params":{"volume":80},"id":1}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Application.SetVolume", "params":{"volume":80},"id":1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 player_volume_down () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Application.SetVolume", "params":{"volume":50},"id":1}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Application.SetVolume", "params":{"volume":50},"id":1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 mute_player () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Application.SetMute", "params": {"mute":"toggle"}, "id": 1}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Application.SetMute", "params": {"mute":"toggle"}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 input_up () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Up", "id":"up"}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Up", "id":"up"}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 input_down () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Down", "id":"down"}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Down", "id":"down"}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 input_select () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Select", "id":"select"}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Select", "id":"select"}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 input_home () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Home", "id":"home"}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.Home", "id":"home"}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
+}
+
+input_fullscreen_toggle () {
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.ExecuteAction", "params": {"action":"togglefullscreen"}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 list_tv_channels () {
@@ -198,15 +202,15 @@ curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/channel/grid?limi
 }
 
 get_tv_channel_id () {
-CHANNELID=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannels", "params": {"channelgroupid":'$PVR_GROUP'}, "id": 1}' "http://127.0.0.1:8510/jsonrpc" | jq . | grep -A1 -i "$TV_CHANNEL"  | grep channelid | awk {'print $2'}| head -1)
+CHANNELID=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannels", "params": {"channelgroupid":'$PVR_GROUP'}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq . | grep -A1 -i "$TV_CHANNEL"  | grep channelid | awk {'print $2'}| head -1)
 }
 
 play_tv_channel () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Open", "params":{"item":{"channelid":'$CHANNELID'}}}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Open", "params":{"item":{"channelid":'$CHANNELID'}}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 record_tv_channel_current_status () {
-TV_RECORDING_CURRENT_STATUS=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetProperties", "params": { "properties": [ "recording" ] }, "id": 1}' "http://127.0.0.1:8510/jsonrpc" | jq ".result[]")
+TV_RECORDING_CURRENT_STATUS=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetProperties", "params": { "properties": [ "recording" ] }, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq ".result[]")
 # Remove old state temp file
 [ -e $TV_RECORD_STATUS_FILE ] && echo > $TV_RECORD_STATUS_FILE
 # Save state to temp file - neeed by other tools
@@ -218,7 +222,7 @@ echo $TV_RECORDING_CURRENT_STATUS
 }
 
 record_tv_channel_scheduled_start () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle", "channel":'$CHANNELID'}}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle", "channel":'$CHANNELID'}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 
 # Create timer script to stop recording after duration has elapsed
 cat > $PVR_STOP_REC_SCRIPT << EOF
@@ -244,7 +248,7 @@ echo "/bin/sh $PVR_STOP_REC_SCRIPT" | /usr/bin/at now
 }
 
 record_tv_channel_instant_start () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle"}}' "http://127.0.0.1:8510/jsonrpc"
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle"}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 get_last_recorded_tv_channel () {
@@ -261,12 +265,12 @@ curl -X POST -H "text/x-json" -d uuid="%5B%22$UUID%22%5D" http://${TVHEADEND_HTT
 
 record_tv_channel_instant_start () {
 record_tv_channel_current_status
-[ "$TV_RECORDING_CURRENT_STATUS" = "false" ] && curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle"}}' "http://127.0.0.1:8510/jsonrpc"
+[ "$TV_RECORDING_CURRENT_STATUS" = "false" ] && curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle"}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 record_tv_channel_instant_stop () {
 record_tv_channel_current_status
-[ "$TV_RECORDING_CURRENT_STATUS" = "true" ] && curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle"}}' "http://127.0.0.1:8510/jsonrpc"
+[ "$TV_RECORDING_CURRENT_STATUS" = "true" ] && curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle"}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 # -----------
@@ -297,11 +301,11 @@ curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_
 }
 
 kodi_addon_toggle () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"Addons.SetAddonEnabled","params":{"addonid":"'"$1"'","enabled":"toggle"},"id":1}' http://127.0.0.1:8510/jsonrpc
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"Addons.SetAddonEnabled","params":{"addonid":"'"$1"'","enabled":"toggle"},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
 }
 
 check_addon_status () {
-ADDON_STATUS=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"Addons.GetAddonDetails","params":{"addonid":"'"$1"'","properties":["enabled"]},"id":1}' http://127.0.0.1:8510/jsonrpc | egrep -o 'true|false')
+ADDON_STATUS=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"Addons.GetAddonDetails","params":{"addonid":"'"$1"'","properties":["enabled"]},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc | egrep -o 'true|false')
 # Export variable
 cat > $PVR_STATUS_FILE << EOF
 ADDON_STATUS=$ADDON_STATUS
@@ -494,6 +498,10 @@ input_select
 
 navigate_home)
 input_home
+;;
+
+fullscreen_toggle)
+input_fullscreen_toggle
 ;;
 
 tv_record_status) 
