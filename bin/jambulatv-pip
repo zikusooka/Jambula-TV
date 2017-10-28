@@ -1,127 +1,252 @@
 #!/bin/sh
-# Display Picture-in-Picture(PIP) of your favorite TV channels at JambulaTV
-# (@) 2015-2016 Jambula Labs:  Allrights reserved
-# TODO: - Switching on Different muxes
+# Display Picture-in-Picture (PIP) of your favorite TV channels at JambulaTV
+# Jambula Labs @copyright 2017-2018 All rights reserved
 
 # Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
 PIP_ACTION=$@
-PIP_WIDTH=320
-PIP_HEIGHT=240
-PIP_PLAYLIST=/var/tmp/pip_playlist
-PIP_STATE_FILE=/var/tmp/pip_state
-PIP_LOGFILE=/var/log/JambulaTV/pip-vlc.log
-PIP_SOCKET=/run/pip-vlc.socket
-PIP_PLAYER_CMD="/usr/bin/cvlc"
-PIP_PLAYER_OPTIONS="-I oldrc --rc-fake-tty --rc-unix $PIP_SOCKET --file-logging --logfile=$PIP_LOGFILE --verbose=2 --no-audio --video-wallpaper --video-on-top --no-embedded-video --width $PIP_WIDTH --height $PIP_HEIGHT --video-y 250 --video-x 700 --video-title-position 4 --video-title-timeout 20000"
+PIP_WIDTH=$(echo "$(xrandr -q | grep Screen | grep current | cut -d , -f2 | awk {'print $2'})/2" | bc)
+PIP_HEIGHT=$(echo "$(xrandr -q | grep Screen | grep current | cut -d , -f2 | awk {'print $4'})/2.7" | bc)
+PIP_X_COORDINATE="100%"
+PIP_Y_COORDINATE="100%"
+PIP_ASPECT_RATIO="16:9" #4:3
+PIP_PLAYLIST=$STATEDIR/tmp/pip_playlist
+PIP_STATE_FILE=$STATEDIR/tmp/pip_status
+PIP_FIFO_FILE=$TMPDIR/picture_in_picture_fifo
+PIP_LOGFILE=$PROJECT_SYSTEM_LOG_DIR/pip-vlc.log
+PIP_PLAYER_CMD=/usr/bin/mplayer
+PIP_PLAYER_OPTIONS="-benchmark -slave -input file=$PIP_FIFO_FILE -framedrop -autoq 100 -autosync 100 -display $DISPLAY -ontop -noconfig all -really-quiet -nocache -nolirc -prefer-ipv4 -vo x11 -nosound -ao null -zoom -x $PIP_WIDTH -y $PIP_HEIGHT -geometry $PIP_X_COORDINATE:$PIP_Y_COORDINATE -aspect $PIP_ASPECT_RATIO"
 
-KODI_FAVOURITES=/JambulaTV/.kodi/userdata/favourites.xml
-TVHEADEND_ACCESS_URL=http://127.0.0.1:9981
-TVHEADEND_CHANNELS_URL=$TVHEADEND_ACCESS_URL/api/channel/list
-TVHEADEND_CHANNELS_RAW_FILE=/tmp/tvheadend_channel_list
-TVHEADEND_SUBSCRIPTIONS_URL=$TVHEADEND_ACCESS_URL/api/status/subscriptions
-TVHEADEND_SUBSCRIPTIONS_RAW_FILE=/tmp/tvheadend_subscribed
+# Notices
+OSD_NOTICE_TIMEOUT=9000
+OSD_NOTICE_PIP_ACTIVATED="Picture in Picture :: Player activated"
+OSD_NOTICE_PIP_DEACTIVATED="Picture in Picture :: Player deactivated"
+OSD_NOTICE_PIP_ALREADY_ON="Picture in Picture :: Player is already active"
+OSD_NOTICE_PIP_NEXT="Picture in Picture :: Next item in playlist selected"
+OSD_NOTICE_PIP_PREVIOUS="Picture in Picture :: Previous item in playlist selected"
+OSD_NOTICE_PIP_PAUSED="Picture in Picture :: Player paused"
+OSD_NOTICE_PIP_UNPAUSED="Picture in Picture :: Player resumed"
+OSD_NOTICE_PIP_STATUS="Picture in Picture :: Current status is: "
+OSD_NOTICE_PIP_PLAYLIST_NOT_FOUND="Picture in Picture :: Playlist file not found.  For this feature to work, please add some channels to FAVOURITES"
 
-OSD_SCRIPT=/usr/bin/jambulatv-osd
-OSD_WAIT=15
+TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
+TVHEADEND_PLAY_STREAM_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/play/stream"
+TVHEADEND_CHANNELS_URL=$TVHEADEND_API_URL/channel/list
+TVHEADEND_SUBSCRIPTIONS_URL=$TVHEADEND_API_URL/status/subscriptions
+TVHEADEND_CHANNELS_RAW_FILE=$TMPDIR/tvheadend_channel_list
+TVHEADEND_SUBSCRIPTIONS_RAW_FILE=$TMPDIR/tvheadend_subscribed
+
+KODI_FAVOURITES=$KODI_USER_DATA/favourites.xml
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+pip_notices () {
+# Notices - OSD
+$OSD_SCRIPT -m "$@" -t $OSD_NOTICE_TIMEOUT
+# Notices - CLI
+logger "$(basename $0): $@"
+clear && echo "$@"
+}
+
+pip_status () {
+# Ensure status file exists, and its size is greater than 0 
+[ -s "$PIP_STATE_FILE" ] || echo -n "OFF" > $PIP_STATE_FILE
+# Set current state variable                                                
+PIP_STATE=$(cat $PIP_STATE_FILE)
+}
+
+pip_toggle_fullscreen () {
+# Get PIP status
+pip_status 
+# Toggle to Window or Fullscreen modes depending on PIP status
+[[ "$PIP_STATE" = "ON" ]] && jambulatv-kodi-controller fullscreen_toggle
+}
+
+get_current_live_tv_channel () {
+CURRENT_TV_CHANNEL=$(curl -sS $TVHEADEND_SUBSCRIPTIONS_URL | jq '.entries[] |.channel' | sed -e "s:\"::g" | tail -1)
+}
+
+display_osd_current_channel () {
+# Wait for channel change to occur
+sleep 5
+# Query TVHeadend server for name of Live TV channel currently playing
+get_current_live_tv_channel
+# Display channel name on OSD screen
+echo "osd_show_text '$CURRENT_TV_CHANNEL' 10000 0" > $PIP_FIFO_FILE &
+}
+
+pip_generate_playlist_live_tv () {
+# Remove existing playlist
+[ ! -f $PIP_PLAYLIST ] || sudo rm -f $PIP_PLAYLIST
+# Query TVHeadend server for name of Live TV channel currently playing
+get_current_live_tv_channel
+# Query Kodi favourites list
+grep -i pvr $KODI_FAVOURITES | grep favourite | while read FAVORITE
+do
+#
+# Set channel variables
+CHANNEL_NAME="$(echo $FAVORITE | cut -d '"' -f2)"
+CHANNEL_UUID=$(curl -sS $TVHEADEND_CHANNELS_URL | jq '.entries[] | select(.val=="'"$CHANNEL_NAME"'") | .key' | sed 's:"::g' | tail -1)
+CHANNEL_URL="$TVHEADEND_PLAY_STREAM_URL/channel/$CHANNEL_UUID?title=$CHANNEL_NAME"
+#
+# If TV channel matches the one running now or does not have a UUID i.e. No channel - SKIP
+if [[ $CHANNEL_NAME = $CURRENT_TV_CHANNEL || "x$CHANNEL_UUID" = "x" ]];
+then
+# Exclude currently playing TV channel OR Non-Existent channels
+continue
+else
+# Add all favorite channels to playlist
+echo "$CHANNEL_URL" >> $PIP_PLAYLIST
+fi
+#
+done
+
+# Test if PIP playlist is valid i.e. not blank.  If not found or blank, QUIT
+if [[ ! -s $PIP_PLAYLIST ]];
+then
+pip_notices "$OSD_NOTICE_PIP_PLAYLIST_NOT_FOUND"
+exit 1
+fi
+}
+
+pip_play () {
+# Get PIP status
+pip_status 
+# Quit if PIP is already running
+if [[ "$PIP_STATE" != "OFF" ]];
+then
+# Notices 
+pip_notices "$OSD_NOTICE_PIP_ALREADY_ON"
+# Quit
+exit 1
+fi
+#
+# Generate playlist - Live TV
+pip_generate_playlist_live_tv
+#
+# Create PIP status file and set to 'ON'
+echo -n "ON" > $PIP_STATE_FILE
+# Notices 
+pip_notices "$OSD_NOTICE_PIP_ACTIVATED"
+# Make FiFo file if it does not exist
+[[ -e $PIP_FIFO_FILE ]] || mkfifo $PIP_FIFO_FILE
+# PiP player
+$PIP_PLAYER_CMD $PIP_PLAYER_OPTIONS -playlist $PIP_PLAYLIST > /dev/null 2>&1 &
+# Display channel name on OSD screen
+display_osd_current_channel
+# Toggle full screen to windowed mode
+pip_toggle_fullscreen
+}
+
+pip_stop () {
+# Get PIP status
+pip_status 
+# Kill PIP player process
+PID_PIP_PLAYER=$(ps auxw | grep -Ev grep | grep `basename $PIP_PLAYER_CMD` | grep picture_in_picture | awk {'print $2'})
+[ "x$PID_PIP_PLAYER" = "x" ] || kill -15 $PID_PIP_PLAYER
+# Toggle full screen to fullscreen mode
+pip_toggle_fullscreen
+# Notices
+[[ "$PIP_STATE" = "ON" ]] && pip_notices "$OSD_NOTICE_PIP_DEACTIVATED"
+# Create PIP status file
+echo -n "OFF" > $PIP_STATE_FILE
+}
+
+pip_pause () {
+# Get PIP status
+pip_status 
+# Pause
+[[ "$PIP_STATE" = "ON" ]] && echo "pause" > $PIP_FIFO_FILE
+# Notices
+[[ "$PIP_STATE" = "ON" ]] && pip_notices "$OSD_NOTICE_PIP_PAUSED"
+}
+
+pip_unpause () {
+# Get PIP status
+pip_status 
+# Pause
+[[ "$PIP_STATE" = "ON" ]] && echo "pause" > $PIP_FIFO_FILE
+# Notices
+[[ "$PIP_STATE" = "ON" ]] && pip_notices "$OSD_NOTICE_PIP_UNPAUSED"
+}
+
+pip_next () {
+# Get PIP status
+pip_status 
+# Next 
+[[ "$PIP_STATE" = "ON" ]] && echo "pt_step 1" > $PIP_FIFO_FILE
+# Display channel name on OSD screen
+display_osd_current_channel
+# Notices
+[[ "$PIP_STATE" = "ON" ]] && pip_notices "$OSD_NOTICE_PIP_NEXT"
+}
+
+pip_previous () {
+# Get PIP status
+pip_status 
+# Previous 
+[[ "$PIP_STATE" = "ON" ]] && echo "pt_step -1" > $PIP_FIFO_FILE
+# Display channel name on OSD screen
+display_osd_current_channel
+# Notices
+[[ "$PIP_STATE" = "ON" ]] && pip_notices "$OSD_NOTICE_PIP_PREVIOUS"
+}
+
+pip_display_status () {
+# Get PIP status
+pip_status 
+# Notices
+pip_notices "$OSD_NOTICE_PIP_STATUS $PIP_STATE"
+}
 
 
 
 #################
 #  MAIN SCRIPT  #
 #################
-
-case $PIP_ACTION in
-
-toggle-switch)
-
-# Ensure status file exists, and its size is greater than 0 
-[ -s "$PIP_STATE_FILE" ] || echo -n "OFF" > $PIP_STATE_FILE
-# Set current state variable                                                
-PIP_STATE=`cat $PIP_STATE_FILE`
-
-# If PIP is off
-# -------------
-if [ "$PIP_STATE" = "OFF" ];
-then
-# Create status file
-echo -n "ON" > $PIP_STATE_FILE
-#
-# Remove existing playlist
-[ ! -f $PIP_PLAYLIST ] || rm -f $PIP_PLAYLIST
-
-# Generate raw file listing TVHeadend channels, prepare it for parsing
-curl -sS $TVHEADEND_CHANNELS_URL | jq '[.entries]' | awk '{$1=""; print $0}' | sed 's/"//g' | sed 's/,//g' | sed -e '/^$/d' | paste -s -d",\n" > $TVHEADEND_CHANNELS_RAW_FILE
-
-# Query TVHeadend server for current Live TV channel playing
-curl -sS $TVHEADEND_SUBSCRIPTIONS_URL -o $TVHEADEND_SUBSCRIPTIONS_RAW_FILE
-# Get current TV channel name
-CURRENT_TV_CHANNEL=$(cat $TVHEADEND_SUBSCRIPTIONS_RAW_FILE | cut -d ':' -f10 | cut -d ',' -f1 | sed -e "s:\"::g")
-
-# Query Kodi favourites list
-grep -i pvr $KODI_FAVOURITES | grep favourite | while read FAVORITE
-do
-
-# Set channel variables
-CHANNEL_NAME="$(echo $FAVORITE | cut -d '"' -f2)"
-CHANNEL_URL="$TVHEADEND_ACCESS_URL/play/stream/channel/$(grep "$CHANNEL_NAME" $TVHEADEND_CHANNELS_RAW_FILE | cut -d ',' -f2 | sed 's/ //g')?title=$CHANNEL_NAME"
-
-# No Live TV channel is running
-# ---
-if [ "x$CURRENT_TV_CHANNEL" = "x" ]; 
-then 
-# Add all favorite channels to playlist
-echo "$CHANNEL_URL" >> $PIP_PLAYLIST
-
-# There's a Live TV channel running
-# ---
-# Exclude currently playing TV channel
-elif [[ $CHANNEL_NAME = $CURRENT_TV_CHANNEL ]]; 
-then
-# Don't add this channel
-continue
-
-# Valid TV channel choices for PIP
-else
-# Add other favorite channels to playlist
-echo "$CHANNEL_URL" >> $PIP_PLAYLIST
-fi
-
-done
-
-# ------------
-# Turn On PIP
-# ------------
-# OSD
-$OSD_SCRIPT -m "Picture in Picture (PIP) Activated"
-# VLC
-$PIP_PLAYER_CMD $PIP_PLAYER_OPTIONS $PIP_PLAYLIST 2>/dev/null &
-
-fi
-
-
-# If PIP is on
-# ------------
-
-if [ "$PIP_STATE" = "ON" ];
-then
-# Create status file
-echo -n "OFF" > $PIP_STATE_FILE
-# Kill VLC process
-VLC_PID=$(ps auxw | grep "rc-fake-tty" | grep "rc-unix $PIP_SOCKET" | awk {'print $2'})
-kill $VLC_PID
-
-fi
+case $1 in
+start)
+pip_play
 ;;
 
-change-channels)
-# Skip to next channel
-echo -n  "next" | /usr/bin/nc -U $PIP_SOCKET
+stop)
+pip_stop
+;;
+
+pause)
+pip_pause
+;;
+
+unpause)
+pip_unpause
+;;
+
+next)
+pip_next
+;;
+
+previous)
+pip_previous
+;;
+
+status)
+pip_display_status
 ;;
 
 *)
-clear
-echo "$(basename $0): [toggle-switch|change-channels]"
+cat <<EOF
+Usage: $(basename $0) [start|stop|pause|unpause|next|previous|status]
+EOF
 exit 1
-
 ;;
 esac

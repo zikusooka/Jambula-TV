@@ -319,6 +319,11 @@ XORG_CONF_DIR=$XORG_DIR/xorg.conf.d
 XORG_CONF_NEW=/root/xorg.conf.new
 XORG_CONF_DISPLAY=1
 
+# Set display and terminal for multimedia players like MPlayer
+DISPLAY=":0.0"
+TERM="xterm"
+export DISPLAY TERM 
+
 XSET_CMD=$BINARY_PREFIX/xset 
 
 LXDE_DM_DIR=/etc/lxdm
@@ -2572,7 +2577,7 @@ mv -v ffmpeg* ffmpeg
 # Compile
 ./configure --prefix=$PREFIX --confdir=$CONFDIR --libdir=$LIBDIR --enable-xv \
   --enable-sdl --enable-radio --enable-radio-capture --enable-radio-v4l2 \
-  --enable-tv-v4l2 --enable-pvr --enable-dvb --enable-pulse
+  --enable-tv-v4l2 --enable-pvr --enable-dvb --enable-pulse --enable-menu
 make_install_jambulatv
 # Clean up - saves upto 90MB
 make clean

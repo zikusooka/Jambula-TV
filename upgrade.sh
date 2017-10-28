@@ -152,6 +152,12 @@ uninstall_src_pkgs vlc
 vlc_install
 }
 
+upgrade_mplayer () {
+uninstall_src_pkgs mplayer
+mplayer_install
+}
+
+
 upgrade_firefox () {
 uninstall_firefox
 firefox_install
@@ -225,6 +231,8 @@ netdata_configure
 #upgrade_ffmpeg
 
 #upgrade_vlc
+
+#upgrade_mplayer
 
 #upgrade_firefox 
 
