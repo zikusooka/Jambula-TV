@@ -256,6 +256,36 @@ elif [ "$DETECTED_PATTERN" = "STOP PLAYING VIDEO" ];
 then
 skill_video_play_stop
 
+# Start Picture-in-Picture
+elif [ "$DETECTED_PATTERN" = "START SHOWING WHATS ON LIVE TV" ];
+then
+skill_picture_in_picture_start
+
+# Next Picture-in-Picture
+elif [ "$DETECTED_PATTERN" = "SHOW NEXT CHANNEL ON LIVE TV" ];
+then
+skill_picture_in_picture_next
+
+# Previous Picture-in-Picture
+elif [ "$DETECTED_PATTERN" = "SHOW PREVIOUS CHANNEL ON LIVE TV" ];
+then
+skill_picture_in_picture_previous
+
+# Pause Picture-in-Picture
+elif [ "$DETECTED_PATTERN" = "PAUSE CHANNEL ON LIVE TV" ];
+then
+skill_picture_in_picture_pause
+
+# Unpause Picture-in-Picture
+elif [ "$DETECTED_PATTERN" = "RESUME CHANNEL ON LIVE TV" ];
+then
+skill_picture_in_picture_unpause
+
+# Stop Picture-in-Picture
+elif [ "$DETECTED_PATTERN" = "STOP SHOWING WHATS ON LIVE TV" ];
+then
+skill_picture_in_picture_stop
+
 # Start Youtube search
 elif [[ "$DETECTED_PATTERN" =~ "SHOW YOUTUBE VIDEO" ]];
 then

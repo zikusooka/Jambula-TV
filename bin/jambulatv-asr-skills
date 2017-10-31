@@ -192,6 +192,30 @@ skill_video_play_stop () {
 /usr/bin/jambulatv-kodi-controller video_play_stop
 }
 
+skill_picture_in_picture_start () {
+/usr/bin/jambulatv-pip start
+}
+
+skill_picture_in_picture_next () {
+/usr/bin/jambulatv-pip next
+}
+
+skill_picture_in_picture_previous () {
+/usr/bin/jambulatv-pip previous
+}
+
+skill_picture_in_picture_pause () {
+/usr/bin/jambulatv-pip pause
+}
+
+skill_picture_in_picture_unpause () {
+/usr/bin/jambulatv-pip unpause
+}
+
+skill_picture_in_picture_stop () {
+/usr/bin/jambulatv-pip stop
+}
+
 skill_youtube_search_start () {
 /usr/bin/jambulatv-kodi-controller addon_play_youtube "$@"
 }
