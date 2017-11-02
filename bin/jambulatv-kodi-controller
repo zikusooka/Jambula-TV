@@ -43,7 +43,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|video_play_type|video_play_pause|video_play_next|video_play_previous|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_type|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_start|tv_record_stop|tv_record_instant_start|tv_record_instant_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home|fullscreen_toggle)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|video_play_type|video_play_pause|video_play_next|video_play_previous|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_type|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_timer_start|tv_record_timer_stop|tv_record_instant_start|tv_record_instant_stop|tv_record_schedule_create|tv_record_schedule_cancel|tv_record_schedule_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home|fullscreen_toggle)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -221,7 +221,7 @@ echo "TV_RECORDING_CURRENT_STATUS=$TV_RECORDING_CURRENT_STATUS" > $TV_RECORD_STA
 echo $TV_RECORDING_CURRENT_STATUS
 }
 
-record_tv_channel_scheduled_start () {
+record_tv_channel_by_timer_start () {
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle", "channel":'$CHANNELID'}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 
 # Create timer script to stop recording after duration has elapsed
@@ -247,15 +247,11 @@ chmod 755 $PVR_STOP_REC_SCRIPT
 echo "/bin/sh $PVR_STOP_REC_SCRIPT" | /usr/bin/at now
 }
 
-record_tv_channel_instant_start () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle"}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
-}
-
 get_last_recorded_tv_channel () {
 CURRENT_CHANNELID=$(grep -ai "state:recording" $KODI_LOG | tail -1 | cut -d , -f3 | cut -d : -f2)
 }
 
-record_tv_channel_stop () {
+record_tv_channel_timer_stop () {
 # Get UUID of current recording
 UUID=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/dvr/entry/grid_upcoming | jq .entries[] | grep -iw 'uuid' | awk {'print $2'} | sed 's:["|,]::g')
 #
@@ -271,6 +267,143 @@ record_tv_channel_current_status
 record_tv_channel_instant_stop () {
 record_tv_channel_current_status
 [ "$TV_RECORDING_CURRENT_STATUS" = "true" ] && curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.Record", "params": {"record":"toggle"}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
+}
+
+record_tv_channel_by_schedule_create () {
+# Scheduled TV recording variables
+TV_CHANNEL=$(echo $1 | tr '[:lower:]' '[:upper:]')
+DAY=$2
+HOUR_START=$3
+MINUTE_START=$4
+TIME_OF_DAY=$5
+DURATION_AMOUNT=$6
+DURATION_UNIT=$7
+TV_PROGRAMME_TITLE=$8
+TV_PROGRAMME_SUBTITLE=$9
+START_TIME_EPOC=$(date -d "${HOUR_START}:${MINUTE_START}${TIME_OF_DAY} ${DAY}" +'%s')
+END_TIME_EPOC=$(date -d "${HOUR_START}:${MINUTE_START}${TIME_OF_DAY} ${DAY} + ${DURATION_AMOUNT} ${DURATION_UNIT}" +'%s')
+START_TIME_HUMAN=$(date --date="@$START_TIME_EPOC")
+END_TIME_HUMAN=$(date --date="@$END_TIME_EPOC")
+TV_RECORDING_DETAILS_FILE=/tmp/"tv-recording-details-$TV_CHANNEL-$START_TIME_EPOC"
+
+# Print usage, and quit if mandatory arguments are not specified
+if [[ "x$TV_CHANNEL" = "x" || "x$DAY" = "x" || "x$HOUR_START" = "x" || "x$MINUTE_START" = "x" || "x$TIME_OF_DAY" = "x" || "x$DURATION_AMOUNT" = "x" || "x$DURATION_UNIT" = "x" || "x$TV_PROGRAMME_TITLE" = "x" ]];
+then
+clear
+cat <<EOF
+Usage: $(basename $0) [TV_CHANNEL] [DAY] [HOUR_START] [MINUTE_START] [TIME_OF_DAY] [DURATION_AMOUNT] [DURATION_UNIT] [TV_PROGRAMME_TITLE [TV_PROGRAMME_SUBTITLE(Optional)]
+EOF
+exit 1
+fi
+#
+# Schedule TV recording
+curl -s --data 'conf={"enabled": true, "start": "'"$START_TIME_EPOC"'", "stop": "'"$END_TIME_EPOC"'", "channelname": "'"$TV_CHANNEL"'", "title": {"eng": "'"$TV_PROGRAMME_TITLE"'"}, "subtitle": {"eng":"'"$TV_PROGRAMME_SUBTITLE"'"}}' "http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/dvr/entry/create" | jq '. |.uuid' | sed "s:\"::g" > $TV_RECORDING_DETAILS_FILE 2>&1
+#
+# OSD notice
+cat <<EOF
+The following TV recording has been scheduled:
+
+Channel:	$TV_CHANNEL
+Starts:		$START_TIME_HUMAN
+Ends:		$END_TIME_HUMAN
+
+Programme:	$TV_PROGRAMME_TITLE
+
+EOF
+}
+
+record_tv_channel_by_schedule_cancel () {
+# Scheduled TV recording variables
+TV_CHANNEL=$(echo $1 | tr '[:lower:]' '[:upper:]')
+DAY=$2
+HOUR_START=$3
+MINUTE_START=$4
+TIME_OF_DAY=$5
+START_TIME_EPOC=$(date -d "${HOUR_START}:${MINUTE_START}${TIME_OF_DAY} ${DAY}" +'%s')
+START_TIME_HUMAN=$(date --date="@$START_TIME_EPOC")
+TV_RECORDING_DETAILS_FILE=/tmp/"tv-recording-details-$TV_CHANNEL-$START_TIME_EPOC"
+UUID=$([[ -e "$TV_RECORDING_DETAILS_FILE" ]] && cat "$TV_RECORDING_DETAILS_FILE")
+#
+# Print usage, and quit if mandatory arguments are not specified
+if [[ "x$TV_CHANNEL" = "x" || "x$DAY" = "x" || "x$HOUR_START" = "x" || "x$MINUTE_START" = "x" || "x$TIME_OF_DAY" = "x" ]];
+then
+clear
+cat <<EOF
+Usage: $(basename $0) [TV_CHANNEL] [DAY] [HOUR_START] [MINUTE_START] [TIME_OF_DAY]
+EOF
+exit 1
+fi
+#
+# Quit if no recording UUID file is found
+if [[ ! -e "$TV_RECORDING_DETAILS_FILE" ]];
+then
+echo "Error: No TV recording with specified attributes was found"
+exit 1
+fi
+#
+# OSD notice
+cat <<EOF
+The following TV recording has been cancelled:
+
+Channel:	$TV_CHANNEL
+Day:		$DAY
+Time:		$HOUR_START:$MINUTE_START $TIME_OF_DAY
+
+UUID:		$UUID
+EOF
+#
+# Cancel TV scheduled recording 
+curl -s --data "uuid=$UUID" "http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/dvr/entry/cancel" > /dev/null 2>&1
+#
+# Remove recordings detail temp file
+sudo rm -f "$TV_RECORDING_DETAILS_FILE"
+}
+
+record_tv_channel_by_schedule_stop () {
+# Scheduled TV recording variables
+TV_CHANNEL=$(echo $1 | tr '[:lower:]' '[:upper:]')
+DAY=$2
+HOUR_START=$3
+MINUTE_START=$4
+TIME_OF_DAY=$5
+START_TIME_EPOC=$(date -d "${HOUR_START}:${MINUTE_START}${TIME_OF_DAY} ${DAY}" +'%s')
+START_TIME_HUMAN=$(date --date="@$START_TIME_EPOC")
+TV_RECORDING_DETAILS_FILE=/tmp/"tv-recording-details-$TV_CHANNEL-$START_TIME_EPOC"
+UUID=$([[ -e "$TV_RECORDING_DETAILS_FILE" ]] && cat "$TV_RECORDING_DETAILS_FILE")
+#
+# Print usage, and quit if mandatory arguments are not specified
+if [[ "x$TV_CHANNEL" = "x" || "x$DAY" = "x" || "x$HOUR_START" = "x" || "x$MINUTE_START" = "x" || "x$TIME_OF_DAY" = "x" ]];
+then
+clear
+cat <<EOF
+Usage: $(basename $0) [TV_CHANNEL] [DAY] [HOUR_START] [MINUTE_START] [TIME_OF_DAY]
+EOF
+exit 1
+fi
+#
+# Quit if no recording UUID file is found
+if [[ ! -e "$TV_RECORDING_DETAILS_FILE" ]];
+then
+echo "Error: No TV recording with specified attributes was found"
+exit 1
+fi
+#
+# OSD notice
+cat <<EOF
+The following TV recording has been stopped:
+
+Channel:	$TV_CHANNEL
+Day:		$DAY
+Time:		$HOUR_START:$MINUTE_START $TIME_OF_DAY
+
+UUID:		$UUID
+EOF
+#
+# Cancel TV scheduled recording 
+curl -s --data "uuid=$UUID" "http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/dvr/entry/stop" > /dev/null 2>&1
+#
+# Remove recordings detail temp file
+sudo rm -f "$TV_RECORDING_DETAILS_FILE"
 }
 
 # -----------
@@ -508,12 +641,12 @@ tv_record_status)
 record_tv_channel_current_status
 ;;
 
-tv_record_start) 
-record_tv_channel_scheduled_start
+tv_record_timer_start) 
+record_tv_channel_by_timer_start
 ;;
 
-tv_record_stop) 
-record_tv_channel_stop
+tv_record_timer_stop) 
+record_tv_channel_timer_stop
 ;;
 
 tv_record_instant_start)
@@ -522,6 +655,18 @@ record_tv_channel_instant_start
 
 tv_record_instant_stop)
 record_tv_channel_instant_stop
+;;
+
+tv_record_schedule_create)
+record_tv_channel_by_schedule_create "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9"
+;;
+
+tv_record_schedule_cancel)
+record_tv_channel_by_schedule_cancel "$2" "$3" "$4" "$5" "$6"
+;;
+
+tv_record_schedule_stop)
+record_tv_channel_by_schedule_stop "$2" "$3" "$4" "$5" "$6"
 ;;
 
 scan_video)
