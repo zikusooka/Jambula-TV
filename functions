@@ -17,7 +17,7 @@ KERNEL_VERSION="4.4.83"
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
-AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer, /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd, /usr/bin/chattr"
+AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer, /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd, /usr/bin/chattr, /usr/sbin/asterisk"
 MULTIMEDIA_USER=$AUTOLOGIN_USER
 MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
 BACKUPS_DIR=$ROOT_DIR/Backups
@@ -7292,6 +7292,8 @@ ldconfig
 # Add asterisk group and user 
 groupadd -r asterisk
 useradd -r -M -c "Asterisk PBX User" -d $SPOOLDIR/asterisk -g asterisk asterisk -s /sbin/nologin
+# Give asterisk user access to audio devices and pulse access
+usermod -a -G audio,pulse,pulse-access asterisk
 }
 
 asterisk_configure () {
