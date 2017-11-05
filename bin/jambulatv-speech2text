@@ -389,6 +389,17 @@ elif [ "$DETECTED_PATTERN" = "STOP CAMERA" ];
 then
 skill_web_camera_view_stop
 
+# Make phone call
+elif [[ "$DETECTED_PATTERN" =~ "MAKE A PHONE CALL TO" ]];
+then
+PHONE_NAME=$(echo $DETECTED_PATTERN | sed "s:MAKE A PHONE CALL TO::g" | sed "s:^ ::g")
+phone_call_dial "$PHONE_NAME"
+
+# Hangup phone call
+elif [ "$DETECTED_PATTERN" = "HANG UP PHONE CALL" ];
+then
+phone_call_hangup
+
 # Auto WiFi provision
 elif [ "$DETECTED_PATTERN" = "I WANT TO CONNECT TO THE HOTSPOT" ];
 then

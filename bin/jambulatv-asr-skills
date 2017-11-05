@@ -326,6 +326,22 @@ skill_web_camera_view_stop () {
 /usr/bin/jambulatv-camplayer stop
 }
 
+phone_call_dial () {
+# Set phone number variables
+PHONE_ENTRY="$1"
+PHONE_NUMBER=$(sudo asterisk -x "database show" | grep -w "$PHONE_ENTRY" | awk {'print $1'} | cut -d / -f3 | sed "s:-::g" | sed "s:+::g"| uniq | head -1)
+# Set to number if blank
+[[ "x$PHONE_NUMBER" = "x" ]] && PHONE_NUMBER=$1
+# Ensure phone number is valid i.e. numeric not letters
+[[ "$PHONE_NUMBER" =~ ^[0-9]+$ ]] || $TEXT2SPEECH_TOOL custom "I did not find a valid phone number"
+# Dial Number
+sudo asterisk -rx "console dial $PHONE_NUMBER"
+}
+
+phone_call_hangup () {
+sudo asterisk -rx "console hangup"
+}
+
 skill_connect_2_hotspot () {
 sudo /usr/bin/jambulatv-auto-wifi-provision &
 $TEXT_2_SPEECH_TOOL_PATH custom "Please scan the QR Code displayed on the TV Screen to get the Wifi password.  For Android devices, you may connect automatically"
