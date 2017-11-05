@@ -7604,8 +7604,7 @@ chown -R $ASTERISK_FILES_USER:$WWW_USER $CONFDIR/asterisk/manager.conf
 # Set ownership/permissions on asterisk /var/lib directories - AST Start fails if not set
 chown -R $ASTERISK_FILES_USER:$WWW_USER $VARLIBDIR/asterisk
 chmod -R 764 $VARLIBDIR/asterisk
-# Restart asterisk service
-systemctl restart asterisk.service
+/usr/sbin/safe_asterisk -U asterisk -G asterisk
 # Wait for Asterisk to start fully
 echo
 echo "Waiting for Asterisk to start fully ..."
@@ -7632,19 +7631,9 @@ cd $INSTALL_SRC_DIR/freepbx
 # Install
 ./install -f --dbengine="mysql" --dbname="$ASTERISK_DB_NAME" --cdrdbname="$ASTERISK_CDR_DB_NAME" --dbuser="$ASTERISK_DB_USER" --dbpass="$ASTERISK_DB_PASS" --user="$ASTERISK_FILES_USER" --group="$WWW_USER" --webroot="$WWW_HTML_DIR/freepbx" --ampcgibin="$WWW_CGI_DIR" --astetcdir="$FREEPBX_CONF_DIR" --no-interaction
 #
-
-
-
-_install_pause_check_4_errors_
-
-
 # Run retrieve_conf again
 $VARLIBDIR/asterisk/bin/retrieve_conf
 #
-
-
-_install_pause_check_4_errors_
-
 # Set ownership on FreePBX config directory
 chown -R $ASTERISK_FILES_USER:$WWW_USER $FREEPBX_CONF_DIR
 # Set ownership/permissions on nginx folders
@@ -7684,7 +7673,7 @@ sed -i "/\[default\]/a $FREEPBX_EXTENSION_000 => $FREEPBX_EXTENSION_000_PASS,$FR
 
 # Add jambula extensions to sip_custom config
 cat > $FREEPBX_CONF_DIR/sip_custom.conf << EOF
-; @ Jambula Labs, Copyright (c) 2016-2017. All Rights Reserved.
+; $COPYRIGHT_NOTICE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Jambula-PBX SIP Settings
 
@@ -7803,6 +7792,8 @@ $SBINARY_PREFIX/fwconsole ma installlocal phonebook
 #
 #
 #
+# Restart asterisk service
+systemctl restart asterisk.service
 #
 # Display freepbx usage information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF

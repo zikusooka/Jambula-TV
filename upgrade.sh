@@ -91,8 +91,17 @@ uninstall_src_pkgs tvheadend
 tvheadend_install
 }
 
+uninstall_freepbx_if_installed () {
+# Remove FreePBX if installed
+[[ -x /usr/sbin/fwconsole ]] && uninstall_freepbx
+# Remove FreePBX sources if they exist
+[[ -d $INSTALL_SRC_DIR/freepbx ]] && rm -rf $INSTALL_SRC_DIR/freepbx
+# Remove FreePBX/Asterisk configs if they exist
+[[ -d $PROJECT_SYSTEM_CONF_DIR/asterisk.nofreepbx ]] && rm -rf $PROJECT_SYSTEM_CONF_DIR/asterisk.nofreepbx
+}
+
 upgrade_freepbx () {
-uninstall_freepbx
+uninstall_freepbx_if_installed
 freepbx_preinstall
 freepbx_install
 freepbx_configure
@@ -106,8 +115,12 @@ uninstall_dahdi
 uninstall_libpri
 dahdi_install
 libpri_install
-asterisk_install 
+asterisk_install
 asterisk_configure 
+}
+
+upgrade_asterisk_and_freepbx () {
+upgrade_asterisk
 upgrade_freepbx
 }
 
@@ -156,7 +169,6 @@ upgrade_mplayer () {
 uninstall_src_pkgs mplayer
 mplayer_install
 }
-
 
 upgrade_firefox () {
 uninstall_firefox
@@ -214,6 +226,8 @@ netdata_configure
 #upgrade_hostapd
 
 #upgrade_tvheadend
+
+#upgrade_asterisk_and_freepbx
 
 #upgrade_freepbx
 
