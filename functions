@@ -3,6 +3,7 @@ PROJECT_NAME=JambulaTV
 PROJECT_URL="http://www.jambulatv.com"
 PROJECT_DOMAINS="jambulatv.com, jambula.co, jambula.net, jambula.xyz" 
 COMPANY_NAME="Jambula Labs"
+COMPANY_URL="http://www.jambulalabs.com"
 COMPANY_WORKGROUP="JAMBULA"
 COPYRIGHT_YEAR_START=$(date '+%Y')
 COPYRIGHT_YEAR_END=$(date '+%Y' --date='12 months')
@@ -12,7 +13,11 @@ EMAIL_ADDRESS_ERRORS=errors@jambulatv.com
 
 KERNEL_NAME="$PROJECT_NAME"
 KERNEL_VERSION="4.4.96"
-#KERNEL_VERSION="4.9.43"
+
+PRODUCT_MODEL_NAME="$PROJECT_NAME"
+PRODUCT_DISK_SIZE=$(journalctl -b -o cat --no-pager | grep sda | grep logical | awk {'print $8'} | sed 's:(::')
+PRODUCT_MODEL_NUMBER=$(echo JTV$KERNEL_VERSION-$PRODUCT_DISK_SIZE | sed "s/\.//g")
+PRODUCT_SERIAL_NUMBER=$(uuid | cut -d - -f5)
 
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
@@ -4807,10 +4812,11 @@ chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/.profile
 release_info_configure () {
 # Add release info
 cat > $PROJECT_RELEASE_FILE <<EOF
-Product:$PROJECT_NAME
+Product:$PRODUCT_MODEL_NAME
 Version:$PROJECT_VERSION
 
-Serial:jTV$SYSTEM_IDENTIFIER
+Model: $PRODUCT_MODEL_NUMBER
+Serial:$PRODUCT_SERIAL_NUMBER
 EOF
 # Change issue/issue.net files
 for ISSUEFILE in issue issue.net
@@ -6566,14 +6572,25 @@ cd $INSTALL_SRC_DIR && mv -v minidlna* minidlna
 # Patches
 patch -p1 $INSTALL_SRC_DIR/minidlna/upnpglobalvars.h < $PROJECT_PATCHES_DIR/minidlna.upnpglobalvars.patch
 patch -p1 $INSTALL_SRC_DIR/minidlna/upnpsoap.h < $PROJECT_PATCHES_DIR/minidlna.upnpsoap.patch
+#
 # copy icons.c file
 cp -fv $PROJECT_IMAGES_DIR/minidlna.logo $INSTALL_SRC_DIR/minidlna/icons.c
+#
+# Customize configure script for our project
+cp -v $INSTALL_SRC_DIR/minidlna/configure $INSTALL_SRC_DIR/minidlna/configure.orig
+cat $INSTALL_SRC_DIR/minidlna/configure.orig | \
+	sed -e "s:#define ROOTDEV_MANUFACTURER \"NETGEAR\":#define ROOTDEV_MANUFACTURER \"$COMPANY_NAME\":g" | \
+	sed -e "s|#define ROOTDEV_MANUFACTURERURL \"http\://www.netgear.com/\"|#define ROOTDEV_MANUFACTURERURL \"$COMPANY_URL\"|g" | \
+	sed -e "s:#define ROOTDEV_MODELNAME \"Windows Media Connect compatible (ReadyDLNA)\":#define ROOTDEV_MODELNAME \"$PRODUCT_MODEL_NAME (ReadyDLNA Compatible)\":g" | \
+	sed -e "s:#define ROOTDEV_MODELDESCRIPTION \"ReadyDLNA\":#define ROOTDEV_MODELDESCRIPTION \"$PROJECT_NAME Multimedia and Home Automation Hub\":g" | \
+	sed -e "s|#define ROOTDEV_MODELURL OS_URL|#define ROOTDEV_MODELURL \"$PROJECT_URL\"|g" \
+		> $INSTALL_SRC_DIR/minidlna/configure
 # Configure
 cd $INSTALL_SRC_DIR/minidlna
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --localstatedir=$STATEDIR \
-   --sysconfdir=$PROJECT_SYSTEM_CONF_DIR --enable-tivo \
-   --enable-netgear --enable-readynas --with-os-name=$PROJECT_NAME \
-   --with-os-version=$PROJECT_VERSION --with-os-url=$PROJECT_URL
+	--sysconfdir=$PROJECT_SYSTEM_CONF_DIR --enable-tivo \
+	--enable-netgear --enable-readynas --with-os-name=$PROJECT_NAME \
+	--with-os-version=$PROJECT_VERSION --with-os-url=$PROJECT_URL
 make_install_jambulatv
 #
 # Add minidlna group and user
@@ -6590,7 +6607,10 @@ cat $PROJECT_CONFIGS_DIR/minidlna.conf.sample | \
 	sed -e "s:USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" | \
 	sed -e "s:USER_MOVIES_DIR:$USER_MOVIES_DIR:g" | \
 	sed -e "s:USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
-	sed -e "s:USER_PICTURES_DIR:$USER_PICTURES_DIR:g" > $PROJECT_SYSTEM_CONF_DIR/minidlna.conf
+	sed -e "s:PODCASTS_DIRECTORY:$PODCASTS_DIRECTORY:g" | \
+	sed -e "s:USER_PICTURES_DIR:$USER_PICTURES_DIR:g" | \
+	sed -e "s:MODEL_NUMBER:$PRODUCT_MODEL_NUMBER:g" | \
+	sed -e "s:SERIAL_NUMBER:$PRODUCT_SERIAL_NUMBER:g" > $PROJECT_SYSTEM_CONF_DIR/minidlna.conf
 fi
 # Change permissions of config directory to owner
 chown -R minidlna:minidlna $PROJECT_SYSTEM_CONF_DIR/minidlna.conf
