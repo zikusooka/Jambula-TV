@@ -6657,6 +6657,7 @@ then
 cat $PROJECT_CONFIGS_DIR/minidlna.conf.sample | \
 	sed -e "s:USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" | \
 	sed -e "s:USER_MOVIES_DIR:$USER_MOVIES_DIR:g" | \
+	sed -e "s:USER_TV_RECORDINGS_DIR:$USER_TV_RECORDINGS_DIR:g" | \
 	sed -e "s:USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
 	sed -e "s:PODCASTS_DIRECTORY:$PODCASTS_DIRECTORY:g" | \
 	sed -e "s:USER_PICTURES_DIR:$USER_PICTURES_DIR:g" | \
