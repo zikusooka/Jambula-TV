@@ -1,6 +1,6 @@
---- /usr/src/jambulatv/hostap/hostapd/defconfig.orig	2016-04-20 13:55:20.062636099 +0300
-+++ /usr/src/jambulatv/hostap/hostapd/.config	2016-07-22 13:33:56.714026656 +0300
-@@ -114,9 +114,9 @@
+--- defconfig.orig	2017-11-09 15:46:32.281775537 +0300
++++ defconfig	2017-11-09 16:59:28.854628338 +0300
+@@ -111,9 +111,9 @@
  #CONFIG_EAP_FAST=y
  
  # Wi-Fi Protected Setup (WPS)
@@ -12,7 +12,7 @@
  # Enable WPS support with NFC config method
  #CONFIG_WPS_NFC=y
  
-@@ -138,7 +138,7 @@
+@@ -135,7 +135,7 @@
  #CONFIG_RADIUS_SERVER=y
  
  # Build IPv6 support for RADIUS operations
@@ -21,7 +21,7 @@
  
  # IEEE Std 802.11r-2008 (Fast BSS Transition)
  #CONFIG_IEEE80211R=y
-@@ -148,14 +148,14 @@
+@@ -145,14 +145,14 @@
  #CONFIG_DRIVER_RADIUS_ACL=y
  
  # IEEE 802.11n (High Throughput) support
@@ -37,18 +37,18 @@
 -#CONFIG_IEEE80211AC=y
 +CONFIG_IEEE80211AC=y
  
- # Remove debugging code that is printing out debug messages to stdout.
- # This can be used to reduce the size of the hostapd considerably if debugging
-@@ -164,7 +164,7 @@
+ # IEEE 802.11ax HE support
+ # Note: This is experimental and work in progress. The definitions are still
+@@ -167,7 +167,7 @@
  
  # Add support for writing debug log to a file: -f /tmp/hostapd.log
  # Disabled by default.
 -#CONFIG_DEBUG_FILE=y
 +CONFIG_DEBUG_FILE=y
  
- # Add support for sending all debug messages (regardless of debug verbosity)
- # to the Linux kernel tracing facility. This helps debug the entire stack by
-@@ -290,7 +290,7 @@
+ # Send debug messages to syslog instead of stdout
+ #CONFIG_DEBUG_SYSLOG=y
+@@ -301,7 +301,7 @@
  #CONFIG_INTERWORKING=y
  
  # Hotspot 2.0
@@ -57,7 +57,7 @@
  
  # Enable SQLite database support in hlr_auc_gw, EAP-SIM DB, and eap_user_file
  #CONFIG_SQLITE=y
-@@ -331,9 +331,9 @@
+@@ -342,12 +342,12 @@
  # For more details refer to:
  # http://wireless.kernel.org/en/users/Documentation/acs
  #
@@ -69,3 +69,6 @@
  # available to the AP and the devices that may associate with it.
 -#CONFIG_MBO=y
 +CONFIG_MBO=y
+ 
+ # Client Taxonomy
+ # Has the AP retain the Probe Request and (Re)Association Request frames from

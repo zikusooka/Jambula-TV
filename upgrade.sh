@@ -79,10 +79,23 @@ coova_chilli_configure
 coova_chilli_customization
 }
 
+upgrade_wpa_supplicant () {
+uninstall_wpa_supplicant
+wpa_supplicant_install
+wpa_supplicant_configure
+}
+
 upgrade_hostapd () {
 uninstall_hostapd
 hostapd_install
 hostapd_configure 
+}
+
+upgrade_hostapd_and_wpa_supplicant () {
+uninstall_wpa_supplicant && uninstall_hostapd
+[[ -d $INSTALL_SRC_DIR/hostap ]] && rm -rf $INSTALL_SRC_DIR/hostap
+upgrade_hostapd
+upgrade_wpa_supplicant
 }
 
 upgrade_tvheadend () {
@@ -223,7 +236,11 @@ netdata_configure
 
 #upgrade_coova_chilli
 
+#upgrade_wpa_supplicant 
+
 #upgrade_hostapd
+
+upgrade_hostapd_and_wpa_supplicant
 
 #upgrade_tvheadend
 

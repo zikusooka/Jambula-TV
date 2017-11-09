@@ -542,7 +542,8 @@ IR_REPEAT_PERIOD=400
 
 WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
-WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
+WIFI_WPA_CONFIG_DIR=/etc/wpa_supplicant
+WIFI_WPA_CONFIG_FILE=$WIFI_WPA_CONFIG_DIR/wpa_supplicant.conf
 WIFI_INTERFACES_AVAILABLE=$(iw dev |grep Interface |wc -l)
 # Virtual wifi interfaces support 
 #lsmod | grep mac80211 | grep 'ath9k' > /dev/null 2>&1
@@ -1450,15 +1451,28 @@ uninstall_src_pkgs libdvbpsi
 uninstall_live555
 }
 
-uninstall_hostapd () {
-systemctl stop hostapd.service
-rm -f /usr/sbin/{hostapd,hostapd_cli}
-mv -v $CONFDIR/hostapd $CONFDIR/hostapd.$(date +%Y%m%d)
+uninstall_wpa_supplicant () {
+killall wpa_supplicant > /dev/null 2>&1
+rm -f /usr/sbin/{wpa_supplicant,wpa_cli,wpa_passphrase}
+# Backup old configs
+[[ -e $CONFDIR/wpa_supplicant ]] && mv -v $CONFDIR/wpa_supplicant $CONFDIR/wpa_supplicant.$(date +%Y%m%d)
 # Remove systemd files
-rm -f $SYSTEMD_UNITS_DIR_USER/hostapd.service
+[ -e $SYSTEMD_UNITS_DIR_USER/wpa_supplicant.service ] && rm -f $SYSTEMD_UNITS_DIR_USER/wpa_supplicant.service
 systemctl --system daemon-reload
 # Remove source files
-rm -rf $INSTALL_SRC_DIR/hostap*
+rm -rf $INSTALL_SRC_DIR/hostap/wpa_supplicant
+}
+
+uninstall_hostapd () {
+systemctl stop hostapd.service > /dev/null 2>&1
+rm -f /usr/sbin/{hostapd,hostapd_cli}
+# Backup old configs
+[[ -e $CONFDIR/hostapd ]] && mv -v $CONFDIR/hostapd $CONFDIR/hostapd.$(date +%Y%m%d)
+# Remove systemd files
+[ -e $SYSTEMD_UNITS_DIR_USER/hostapd.service ] && rm -f $SYSTEMD_UNITS_DIR_USER/hostapd.service
+systemctl --system daemon-reload
+# Remove source files
+rm -rf $INSTALL_SRC_DIR/hostapd
 }
 
 # Uninstall pocketsphinx
@@ -6385,12 +6399,20 @@ chmod 755 $BINARY_PREFIX/jambulatv-dns-status-triggers
 }
 
 hostapd_install () {
-# Unpack hostapd 
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/hostap/ $INSTALL_SRC_DIR/hostap/
+# sync hostapd sources excluding wpa_supplicant
+rsync -avz --exclude=wpa_supplicant --delete-after $PROJECT_GITHUB_DIR/hostap/ $INSTALL_SRC_DIR/hostap/
+# Patch Makefile: change bin,lib,include locations
+cp -v $INSTALL_SRC_DIR/hostap/hostapd/Makefile $INSTALL_SRC_DIR/hostap/hostapd/Makefile.orig
+cat $INSTALL_SRC_DIR/hostap/hostapd/Makefile.orig | \
+	sed -e "s:/usr/local/lib/:$LIBDIR/:g" | \
+	sed -e "s:/usr/local/include/:$INCDIR/:g" | \
+	sed -e "s:/usr/local/bin/:$SBINARY_PREFIX/:g" \
+		> $INSTALL_SRC_DIR/hostap/hostapd/Makefile
+# Patch config file
+cp -v $INSTALL_SRC_DIR/hostap/hostapd/defconfig $INSTALL_SRC_DIR/hostap/hostapd/defconfig.orig 
+patch -p1 $INSTALL_SRC_DIR/hostap/hostapd/defconfig < $PROJECT_PATCHES_DIR/hostapd.defconfig.patch
+# Compile latest hostapd from sources
 cd $INSTALL_SRC_DIR/hostap/hostapd
-patch -p1 Makefile < $PROJECT_PATCHES_DIR/hostapd.makefile.patch
-cp -v defconfig defconfig.orig
-patch -p1 defconfig < $PROJECT_PATCHES_DIR/hostapd.defconfig.patch
 cp -v defconfig .config
 make_install_jambulatv
 # Copy hostapd systemd file 
@@ -6446,6 +6468,35 @@ WiFi HotSpot
 NOTE:  There is also an auto WiFi provisioning tool - use it during initial setup!
 #
 EOF
+}
+
+wpa_supplicant_install () {
+# Sync wpa_supplicant sources excluding hostapd
+rsync -avz --exclude=hostapd --delete-after $PROJECT_GITHUB_DIR/hostap/ $INSTALL_SRC_DIR/hostap/
+#
+# Remove existing wpa_supplicant rpm package
+rpm -q wpa_supplicant > /dev/null 2>&1 && rpm -e --nodeps wpa_supplicant
+[ -d $WIFI_WPA_CONFIG_DIR ] && rm -rf $WIFI_WPA_CONFIG_DIR
+#
+# Patch Makefile: change bin,lib,include locations
+cp -v $INSTALL_SRC_DIR/hostap/wpa_supplicant/Makefile $INSTALL_SRC_DIR/hostap/wpa_supplicant/Makefile.orig
+cat $INSTALL_SRC_DIR/hostap/wpa_supplicant/Makefile.orig | \
+	sed -e "s:/usr/local/lib/:$LIBDIR/:g" | \
+	sed -e "s:/usr/local/include/:$INCDIR/:g" | \
+	sed -e "s:/usr/local/sbin/:$SBINARY_PREFIX/:g" \
+		> $INSTALL_SRC_DIR/hostap/wpa_supplicant/Makefile
+# Patch config file
+cp -v $INSTALL_SRC_DIR/hostap/wpa_supplicant/defconfig $INSTALL_SRC_DIR/hostap/wpa_supplicant/defconfig.orig 
+patch -p1 $INSTALL_SRC_DIR/hostap/wpa_supplicant/defconfig < $PROJECT_PATCHES_DIR/wpa_supplicant.defconfig.patch
+# Compile latest wpa_supplicant from sources
+cd $INSTALL_SRC_DIR/hostap/wpa_supplicant
+cp -v defconfig .config
+make_install_jambulatv
+}
+
+wpa_supplicant_configure () {
+# Create WPA supplicant directory if non-existent
+[ -d $WIFI_WPA_CONFIG_DIR ] || mkdir -p $WIFI_WPA_CONFIG_DIR
 }
 
 youtube_dl_install () {

@@ -322,6 +322,8 @@ coova_chilli_configure
 coova_chilli_customization
 hostapd_install
 hostapd_configure
+wpa_supplicant_install
+wpa_supplicant_configure
 
 #------------------
 # System Monitoring
