@@ -130,6 +130,13 @@ dahdi_install
 libpri_install
 asterisk_install
 asterisk_configure 
+#
+chan_mobile_configure
+chan_motif_configure
+asterisk_agi_scripts_install
+#
+google_tts_configure
+picotts_asterisk_configure
 }
 
 upgrade_asterisk_and_freepbx () {

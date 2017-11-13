@@ -728,6 +728,7 @@ FREEPBX_EXTENSION_WEBRTC_001_PASS="ellis2012"
 FREEPBX_DIALPLAN_NAME=office04
 
 # Chan_mobile Phone
+BLUEZ_DEVICE_HCI=hci0
 BLUEZ_PHONE_0_ADDR="30:D7:4F:3B:66:22"
 
 # Samba
@@ -7499,7 +7500,7 @@ make_install_jambulatv
 
 chan_mobile_configure () {
 # Get bluetooth MAC Address
-BLUEZ_ADAPTER_0_ADDR=$(hciconfig hci0 | grep 'BD Address' | awk {'print $3'})
+BLUEZ_ADAPTER_0_ADDR=$(hciconfig $BLUEZ_DEVICE_HCI | grep 'BD Address' | awk {'print $3'})
 # Modify chan_mobile config file - Add custom bluez adapter and phone(s)
 cat $PROJECT_CONFIGS_DIR/asterisk/chan_mobile.conf | \
 	sed -e "s/BLUEZ_ADAPTER_0_ADDR/$BLUEZ_ADAPTER_0_ADDR/g" | \
