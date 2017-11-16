@@ -258,6 +258,7 @@ reverse_ssh_configure
 rtl_sdr_install
 TermFeed_install
 usbreset_install
+screen_resolution_configure
 
 # ----------------
 # Communications 

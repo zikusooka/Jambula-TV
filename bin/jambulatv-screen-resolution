@@ -1,0 +1,35 @@
+#!/bin/sh
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+# Other variables
+X_RES="$(echo $PREFERRED_TV_RESOLUTION | cut -d x -f1)"
+Y_RES="$(echo $PREFERRED_TV_RESOLUTION | cut -d x -f2)"
+HZ="60.00"
+NEW_MODE_NAME="${X_RES}x${Y_RES}_${HZ}"
+GTF_OUTPUT=$(gtf $X_RES $Y_RES $HZ | grep Modeline | sed "s/\"//g" | sed "s/$NEW_MODE_NAME //g" | sed "s/Modeline //g" | sed "s/^  //g")
+CONNECTED_PORT=$(xrandr -q | grep -w connected | awk {'print $1'})
+
+
+
+cat <<EOF
+NEW_MODE_NAME=[$NEW_MODE_NAME]
+GTF_OUTPUT=[$GTF_OUTPUT]
+CONNECTED_PORT=[$CONNECTED_PORT]
+
+
+EOF
+
+
+xrandr --newmode "$NEW_MODE_NAME" $GTF_OUTPUT
+
+xrandr --addmode "$CONNECTED_PORT" "$NEW_MODE_NAME"
+
+xrandr --output "$CONNECTED_PORT" --mode "$NEW_MODE_NAME"
+
+xrandr -q

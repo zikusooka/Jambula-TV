@@ -6831,6 +6831,12 @@ cd $INSTALL_SRC_DIR/usbreset && \
 	cp -v $PROJECT_BIN_DIR/jambulatv-usb-device $BINARY_PREFIX/
 }
 
+screen_resolution_configure () {
+# Copy jambulatv-screen-resolution-reset script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-screen-resolution ] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-screen-resolution $BINARY_PREFIX/
+}
+
 iptv_support () {
 # Copy IPTV xml files to html directory
 cp -rv $PROJECT_CONTRIB_DIR/iptv $WWW_HTML_DIR
