@@ -2074,6 +2074,7 @@ tar jxvf $PROJECT_TARBALLS_DIR/alsa-plugins-$ALSA_PLUGINS_VERSION.tar.bz2 -C $IN
 cd $INSTALL_SRC_DIR && mv -v alsa-plugins-* alsa-plugins
 # Compile
 cd $INSTALL_SRC_DIR/alsa-plugins && ./configure --prefix=/usr \
+--disable-avcodec \
 --libdir=$LIBDIR PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
 make_install_jambulatv
 }

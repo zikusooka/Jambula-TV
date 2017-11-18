@@ -219,6 +219,16 @@ netdata_install
 netdata_configure
 }
 
+upgrade_pulseaudio () {
+uninstall_python_pkgs pyalsaaudio
+uninstall_src_pkgs alsa-plugins
+uninstall_src_pkgs pulseaudio 
+#
+pulseaudio_install
+alsa_plugins_install
+pyalsaaudio_install
+}
+
 
 
 #################
@@ -281,3 +291,5 @@ upgrade_hostapd_and_wpa_supplicant
 #upgrade_yowsup
 
 #upgrade_netdata 
+
+#upgrade_pulseaudio
