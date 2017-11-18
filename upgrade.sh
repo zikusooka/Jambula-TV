@@ -257,7 +257,7 @@ pyalsaaudio_install
 
 #upgrade_hostapd
 
-upgrade_hostapd_and_wpa_supplicant
+#upgrade_hostapd_and_wpa_supplicant
 
 #upgrade_tvheadend
 
