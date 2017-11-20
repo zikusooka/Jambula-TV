@@ -109,6 +109,8 @@ uninstall_freepbx_if_installed () {
 [[ -x /usr/sbin/fwconsole ]] && uninstall_freepbx
 # Remove FreePBX sources if they exist
 [[ -d $INSTALL_SRC_DIR/freepbx ]] && rm -rf $INSTALL_SRC_DIR/freepbx
+# Remove FreePBX HTML files
+[[ -d $WWW_HTML_DIR/freepbx ]] && rm -rf $WWW_HTML_DIR/freepbx
 # Remove FreePBX/Asterisk configs if they exist
 [[ -d $PROJECT_SYSTEM_CONF_DIR/asterisk.nofreepbx ]] && rm -rf $PROJECT_SYSTEM_CONF_DIR/asterisk.nofreepbx
 }

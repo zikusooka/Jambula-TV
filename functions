@@ -33,6 +33,8 @@ CONFDIR=/etc
 STATEDIR=/var
 RUNDIR=/run
 TMPDIR=/tmp
+DATAROOTDIR=$PREFIX/share
+DOCSDIR=$DATAROOTDIR/doc
 SOURCESDIR=/opt
 KERNELS_SRC_DIR=/usr/src/kernels
 SPOOLDIR=$STATEDIR/spool
@@ -54,9 +56,9 @@ LIBDIR=$PREFIX/lib
 esac
 INCDIR=$PREFIX/include
 CRONTABS_DIR=$SPOOLDIR/cron
-MANDIR1=$PREFIX/share/man/man1
-MANDIR3=$PREFIX/share/man/man3
-MANDIR8=$PREFIX/share/man/man8
+MANDIR1=$DATAROOTDIR/man/man1
+MANDIR3=$DATAROOTDIR/man/man3
+MANDIR8=$DATAROOTDIR/man/man8
 SYSCTL_DIR=$CONFDIR/sysctl.d
 UDEV_RULES_DIR=/etc/udev/rules.d
 LOGROTATE_CONF_DIR=$CONFDIR/logrotate.d
@@ -84,7 +86,7 @@ PROJECT_DEBS_DIR=$PROJECT_SRC_DIR/debs
 # System directories
 PROJECT_SYSTEM_ARCH=`uname -m`
 PROJECT_SYSTEM_CONF_DIR=$CONFDIR/$PROJECT_NAME
-PROJECT_SYSTEM_SHARE_DIR=$PREFIX/share/$PROJECT_NAME
+PROJECT_SYSTEM_SHARE_DIR=$DATAROOTDIR/$PROJECT_NAME
 PROJECT_SYSTEM_LOG_DIR=$LOGDIR/$PROJECT_NAME
 PROJECT_SYSTEM_LIB_DIR=$STATEDIR/lib/$PROJECT_NAME
 PROJECT_SYSTEM_CACHE_DIR=$STATEDIR/cache/$PROJECT_NAME
@@ -226,7 +228,7 @@ KODI_TAG=$KODI_VERSION-$KODI_BRANCH
 KODI_DEFAULT_SKIN=confluence
 KODI_PREFERRED_SKIN=aeonmq6 #$KODI_DEFAULT_SKIN #Aeon-Nox
 KODI_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.kodi
-KODI_SHARE_DIR=$PREFIX/share/kodi
+KODI_SHARE_DIR=$DATAROOTDIR/kodi
 KODI_USER_DATA=$KODI_CONFIG_DIR/userdata
 KODI_USER_ADDONS=$KODI_CONFIG_DIR/addons
 KODI_ADDON_DATA_DIR=$KODI_USER_DATA/addon_data
@@ -373,7 +375,7 @@ PLYMOUTH_SET_CMD=/usr/sbin/plymouth-set-default-theme
 SYSTEMD_UNITS_DIR_SYSTEM=/usr/lib/systemd/system
 SYSTEMD_UNITS_DIR_USER=/etc/systemd/system
 
-DBUS_SYSTEM_SERVICES_DIR=/usr/share/dbus-1/system-services
+DBUS_SYSTEM_SERVICES_DIR=$DATAROOTDIR/dbus-1/system-services
 
 SYSCONFIG_DIR=/etc/sysconfig
 SYSCONFIG_DESKTOP_FILE=$SYSCONFIG_DIR/desktop
@@ -462,7 +464,7 @@ IPTABLES_CMD=/usr/sbin/iptables
 JABBERD_CONF_DIR=$CONFDIR/jabberd
 JABBERD_ROUTER_USERS_FILE=$JABBERD_CONF_DIR/router-users.xml
 JABBERD_TEMPLATES_DIR=$JABBERD_CONF_DIR/templates
-JABBERD_DB_CREATE=/usr/share/jabberd/db-setup.mysql
+JABBERD_DB_CREATE=$DATAROOTDIR/jabberd/db-setup.mysql
 JABBERD_PASSWORD=$(sudo grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //')
 JABBERD_RESOURCE=Home
 
@@ -657,7 +659,7 @@ OPENVPN_CLIENT_CONFIG_FILE=$OPENVPN_CLIENT_CONFIG_DIR/client.conf
 OPENVPN_CLIENT_PROTOCOL=tcp #udp
 OPENVPN_SERVER_IP=[REMOTE-VPN-SERVER]
 OPENVPN_SERVER_PORT=[REMOTE-VPN-PORT:11945]
-OPENVPN_SAMPLE_KEYS_DIR=$(find /usr/share/doc/openvpn* -iname 'sample-keys')
+OPENVPN_SAMPLE_KEYS_DIR=$(find $DOCSDIR/openvpn* -iname 'sample-keys')
 
 # DNS2TCP
 DNS2TCP_DOMAIN=t1.soroti.com
@@ -1233,8 +1235,8 @@ systemctl --system daemon-reload
 rm -f $PREFIX/sbin/icinga2*
 rm -rf $LIBDIR/icinga2
 rm -rf $PREFIX/lib/icinga2
-rm -rf $PREFIX/share/doc/icinga2
-rm -rf $PREFIX/share/icinga2*
+rm -rf $DOCSDIR/icinga2
+rm -rf $DATAROOTDIR/icinga2*
 rm -f $MANDIR8/icinga2*
 rm -rf $INSTALL_SRC_DIR/icinga2
 }
@@ -1268,9 +1270,9 @@ cd $INSTALL_SRC_DIR/ZoneMinder && make uninstall
 # Uninstall ZoneMinder
 #uninstall_src_pkgs zoneminder
 rm -rf $INSTALL_SRC_DIR/ZoneMinder
-rm -rf $PREFIX/share/zoneminder
+rm -rf $DATAROOTDIR/zoneminder
 rm -rf $PROJECT_SYSTEM_CONF_DIR/zoneminder/
-rm -rf /usr/share/perl5/vendor_perl/ZoneMinder
+rm -rf $DATAROOTDIR/perl5/vendor_perl/ZoneMinder
 rm -rf /usr/lib/perl5/vendor_perl/auto/ZoneMinder
 rm -f $MANDIR3/ZoneMinder.3pm
 rm -rf $RUNDIR/zm
@@ -1614,7 +1616,7 @@ read
 
 update_dtv_scan_tables () {
 # Update dtv scan tables
-rsync -avz $PROJECT_GITHUB_DIR/dtv-scan-tables/ $PREFIX/share/dvb/
+rsync -avz $PROJECT_GITHUB_DIR/dtv-scan-tables/ $DATAROOTDIR/dvb/
 }
 
 ask_4_variables () {
@@ -1724,7 +1726,7 @@ export IR_REMOTE
 # ----------
 # TV Market
 # ----------
-DVBT_NETWORK_NAME=$(basename $(find $PREFIX/share/dvb/dvb-t -maxdepth 1 -iname "$TV_MARKET"))
+DVBT_NETWORK_NAME=$(basename $(find $DATAROOTDIR/dvb/dvb-t -maxdepth 1 -iname "$TV_MARKET"))
 case $TV_MARKET in
 [Uu][Gg]-[Kk][Aa][Mm][Pp][Aa][Ll][Aa])
 DVBT_PNETWORK_NAME="UBC TX2"
@@ -2131,7 +2133,7 @@ load-module module-stream-restore
 load-module module-card-restore
 
 ### Automatically augment property information from .desktop files
-### stored in /usr/share/application
+### stored in $DATAROOTDIR/application
 load-module module-augment-properties
 
 ### Should be after module-*-restore but before module-*-detect
@@ -4385,7 +4387,7 @@ rpm -Uvh --oldpackage --nodeps --force $RPMBUILD_DIR/RPMS/$(uname -m)/plymouth-*
 [ -d $RPMBUILD_DIR ] && rm -rf $RPMBUILD_DIR
 #
 # Update System Logo for use with Plymouth themes # Do this before Update
-cp -fv $PROJECT_IMAGES_DIR/jambula-labs.png /usr/share/pixmaps/
+cp -fv $PROJECT_IMAGES_DIR/jambula-labs.png $DATAROOTDIR/pixmaps/
 # Change to / dir - otherwise error: "shell-init: error retrieving current directory ..."
 cd /
 # Select Plymouth Theme & Rebuild initrd
@@ -4936,8 +4938,8 @@ cp -v $INSTALL_SRC_DIR/cutter/cutter $BINARY_PREFIX/
 
 vcfconvert_install () {
 # Copy vcfconvert php files, and link executable to php folder
-rsync -avz $PROJECT_GITHUB_DIR/vcfconvert/ $PREFIX/share/php/vcfconvert/
-ln -s $PREFIX/share/php/vcfconvert/vcfconvert.sh $BINARY_PREFIX/vcfconvert
+rsync -avz $PROJECT_GITHUB_DIR/vcfconvert/ $DATAROOTDIR/php/vcfconvert/
+ln -s $DATAROOTDIR/php/vcfconvert/vcfconvert.sh $BINARY_PREFIX/vcfconvert
 }
 
 dnsmasq_configure () {
@@ -5072,7 +5074,7 @@ tar zxvf $PROJECT_TARBALLS_DIR/dns2tcp-$DNS2TCP_VERSION*.tar.gz -C $INSTALL_SRC_
 cd $INSTALL_SRC_DIR 
 mv -v dns2tcp-$DNS2TCP_VERSION dns2tcp 
 cd $INSTALL_SRC_DIR/dns2tcp 
-./configure --prefix=/usr --mandir=/usr/share/man
+./configure --prefix=/usr --mandir=$DATAROOTDIR/man
 make_install_jambulatv
 }
 
@@ -7249,9 +7251,7 @@ cd $INSTALL_SRC_DIR && mv -v asterisk-11* asterisk
 tar zxvf $PROJECT_TARBALLS_DIR/mp3-decoder.tgz -C $INSTALL_SRC_DIR/asterisk/addons/
 # Change to asterisk directory
 cd $INSTALL_SRC_DIR/asterisk
-./configure --prefix=$PREFIX --libdir=$LIBDIR \
-	--with-ssl=$INCDIR/openssl \
-	--with-srtp=$INCDIR/srtp 
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-ssl=$INCDIR/openssl --with-srtp=$INCDIR/srtp 
 # Generate menuselect.makeopts file
 cat > menuselect.makeopts <<EOF
 MENUSELECT_ADDONS=chan_ooh323 app_mysql app_saycountpl cdr_mysql 
@@ -7366,6 +7366,8 @@ cd $INSTALL_SRC_DIR/asterisk
 make_install_jambulatv
 # Generate sample configs
 make samples
+# Generate documentation
+#make progdocs
 # Cache recently shared libraries 
 ldconfig
 #
@@ -7386,11 +7388,11 @@ chown -R $ASTERISK_FILES_USER:$WWW_USER $STATEDIR/run/asterisk
 chown -R $ASTERISK_FILES_USER:$WWW_USER $SPOOLDIR/asterisk/
 chown -R $ASTERISK_FILES_USER:$WWW_USER $STATEDIR/log/asterisk
 # Set permissions on asterisk directories
-chmod -R 764 $CONFDIR/asterisk
-chmod -R 764 $VARLIBDIR/asterisk
-chmod -R 764 $STATEDIR/run/asterisk
-chmod -R 764 $SPOOLDIR/asterisk/
-chmod -R 764 $STATEDIR/log/asterisk
+chmod -R 754 $CONFDIR/asterisk
+chmod -R 754 $VARLIBDIR/asterisk
+chmod -R 754 $STATEDIR/run/asterisk
+chmod -R 754 $SPOOLDIR/asterisk/
+chmod -R 754 $STATEDIR/log/asterisk
 #
 # Systemctl start script
 cp -v $PROJECT_INIT_SCRIPTS_DIR/asterisk.service $SYSTEMD_UNITS_DIR_USER/
@@ -7491,7 +7493,7 @@ chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/jssip
 #
 # Set ownership/permissions on asterisk custom directory
 chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_CONF_DIR
-chmod -R 764 $ASTERISK_CONF_DIR
+chmod -R 754 $ASTERISK_CONF_DIR
 }
 
 chan_dongle_install () {
@@ -7569,7 +7571,7 @@ cp -v $PROJECT_CONFIGS_DIR/asterisk/dongle.conf $ASTERISK_CONF_DIR/dongle.conf
 echo "#include $ASTERISK_CONF_DIR/dongle.conf" > $ASTERISK_CONF_DIR/dongle.conf
 # Set ownership/permissions on asterisk custom directory
 chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_CONF_DIR
-chmod -R 764 $ASTERISK_CONF_DIR
+chmod -R 754 $ASTERISK_CONF_DIR
 #
 # If FreePBX installed
 elif [ -d $FREEPBX_CONF_DIR ];
@@ -7582,7 +7584,7 @@ cp -v $PROJECT_CONFIGS_DIR/freepbx/dongle.conf $FREEPBX_CONF_DIR/dongle.conf
 echo "#include $FREEPBX_CONF_DIR/dongle.conf" > $FREEPBX_CONF_DIR/dongle.conf
 # Set ownership/permissions on freepbx custom directory
 chown -R $ASTERISK_FILES_USER:$WWW_USER $FREEPBX_CONF_DIR
-chmod -R 764 $FREEPBX_CONF_DIR
+chmod -R 754 $FREEPBX_CONF_DIR
 fi
 }
 
@@ -7683,7 +7685,7 @@ chown -R $ASTERISK_FILES_USER:$WWW_USER $CONFDIR/asterisk/manager.conf
 #
 # Set ownership/permissions on asterisk /var/lib directories - AST Start fails if not set
 chown -R $ASTERISK_FILES_USER:$WWW_USER $VARLIBDIR/asterisk
-chmod -R 764 $VARLIBDIR/asterisk
+chmod -R 754 $VARLIBDIR/asterisk
 /usr/sbin/safe_asterisk -U asterisk -G asterisk
 # Wait for Asterisk to start fully
 echo
@@ -7718,11 +7720,11 @@ $VARLIBDIR/asterisk/bin/retrieve_conf
 chown -R $ASTERISK_FILES_USER:$WWW_USER $FREEPBX_CONF_DIR
 # Set ownership/permissions on nginx folders
 chown -R $ASTERISK_FILES_USER:$WWW_USER $PROJECT_SYSTEM_SHARE_DIR/fastcgi_temp
-chmod -R 764 $PROJECT_SYSTEM_SHARE_DIR/fastcgi_temp
+chmod -R 754 $PROJECT_SYSTEM_SHARE_DIR/fastcgi_temp
 #
 # Set ownership/permissions on php session directories
 chown -R $ASTERISK_FILES_USER:$WWW_USER $STATEDIR/lib/php/session
-chmod -R 764 $STATEDIR/lib/php/session
+chmod -R 754 $STATEDIR/lib/php/session
 #
 # Add FreePBX Admin User
 # User/Pass
@@ -8066,9 +8068,9 @@ mv -v "libttspico/usr/lib/"*-linux-gnu/* "libttspico/usr/lib"
 rmdir "libttspico/usr/lib/"*-linux-gnu
 mv -v libttspico/usr/bin/* $BINARY_PREFIX/
 mv -v libttspico/usr/lib/* $LIBDIR
-mv -v libttspico/usr/share/pico $PREFIX/share/
-mv -v libttspico/usr/share/doc/* $PREFIX/share/doc/
-mv -v libttspico/usr/share/man/man1/* $MANDIR1/
+mv -v libttspico$DATAROOTDIR/pico $DATAROOTDIR/
+mv -v libttspico$DATAROOTDIR/doc/* $DOCSDIR/
+mv -v libttspico$DATAROOTDIR/man/man1/* $MANDIR1/
 #
 # Install picospeaker
 rsync -avz $PROJECT_GITHUB_DIR/picospeaker/ $INSTALL_SRC_DIR/picospeaker/
@@ -8822,7 +8824,7 @@ mysqladmin -p$MYSQL_ROOT_PASSWORD create $ICINGA_DB_NAME
 # Set privileges on icinga database
 echo "GRANT ALL PRIVILEGES ON $ICINGA_DB_NAME.* to '$ICINGA_DB_USER'@'localhost' IDENTIFIED by '$ICINGA_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
 # Populate icinga database tables using ido MySQL schema
-mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $PREFIX/share/icinga2-ido-mysql/schema/mysql.sql
+mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $DATAROOTDIR/icinga2-ido-mysql/schema/mysql.sql
 #
 # Add MySQL DB login credentials to ido-mysql.conf
 cat > $ICINGA2_FEATURES_AVAIL_DIR/ido-mysql.conf << EOF
@@ -8873,8 +8875,8 @@ chown -R $ICINGA_USER:$ICINGA_GROUP $ICINGA2_CONFIG_DIR
 chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/lib/icinga2
 # /usr/lib/icinga2
 chown -R $ICINGA_USER:$ICINGA_GROUP $LIBDIR/icinga2
-# /usr/share/icinga2
-chown -R $ICINGA_USER:$ICINGA_GROUP $PREFIX/share/icinga2
+# $DATAROOTDIR/icinga2
+chown -R $ICINGA_USER:$ICINGA_GROUP $DATAROOTDIR/icinga2
 # /var/log/icinga2
 chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/log/icinga2
 # /var/cache/icinga2
@@ -9238,7 +9240,7 @@ chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/.config/lxpane
 [ -d $AUTOLOGIN_USER_HOME_DIR/.cache/menus ] && find $AUTOLOGIN_USER_HOME_DIR/.cache/menus -name '*' -type f -print0 | xargs -0 rm
 #
 # Add desktop entry for JambulaTV
-cat > /usr/share/applications/JambulaTV.desktop << EOF
+cat > $DATAROOTDIR/applications/JambulaTV.desktop << EOF
 [Desktop Entry]
 Version=1.0
 Name=JambulaTV
@@ -9260,7 +9262,7 @@ EOF
 # Create Desktop Directory
 [ -d $AUTOLOGIN_USER_HOME_DIR/Desktop ] || mkdir -p $AUTOLOGIN_USER_HOME_DIR/Desktop
 # Copy to Desktop directory
-cp -v /usr/share/applications/JambulaTV.desktop $AUTOLOGIN_USER_HOME_DIR/Desktop/
+cp -v $DATAROOTDIR/applications/JambulaTV.desktop $AUTOLOGIN_USER_HOME_DIR/Desktop/
 # Change permissions
 chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/Desktop
 # Copy jambulatv-computer-mode script, if it does not exist in bin directory
@@ -9284,7 +9286,7 @@ esac
 # Create link
 ln -s $INSTALL_SRC_DIR/firefox/firefox-bin $BINARY_PREFIX/firefox
 # Add desktop entry
-cat > $PREFIX/share/applications/firefox.desktop << EOF
+cat > $DATAROOTDIR/applications/firefox.desktop << EOF
 [Desktop Entry]
 Version=1.0
 Name=Firefox
@@ -9306,7 +9308,7 @@ libreoffice_install () {
 # Install LibreOffice
 rpm -Uvh $PROJECT_RPMS_DIR/LibreOffice_*_Linux_x86-64_rpm/RPMS/*.rpm
 # Add .desktop files
-cp -v /opt/libreoffice*/share/xdg/*.desktop $PREFIX/share/applications
+cp -v /opt/libreoffice*/share/xdg/*.desktop $DATAROOTDIR/applications
 }
 
 minisapserver_install () {
