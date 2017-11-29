@@ -1,0 +1,116 @@
+#!/bin/sh
+# This script startsup rtl_fm using SDR dongle, and streams it using vlc
+# You need: vlc, rtl_fm
+#
+# Copyright (C) 2017-2018 Joseph Zikusooka.
+#
+# Contact me at: joseph AT zikusooka.com
+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+#
+# Variables
+RTL_FM_CMD=/usr/bin/rtl_fm
+RTL_FM_DEV=0
+FFMPEG_CMD=/usr/bin/ffmpeg
+VLC_CMD=/usr/bin/cvlc
+
+FMRADIO_STREAMER_TASK=$1
+FMRADIO_STREAMER_STATION=$2
+FMRADIO_STREAMER_PORT=MY_FMRADIO_STREAMER_PORT
+FMRADIO_STREAMER_PID_FILE=MY_TMPDIR/fmradio_process_ids
+FMRADIO_STREAMER_LOG_FILE=MY_PROJECT_SYSTEM_LOG_DIR/fmradio-streamer.log
+FMRADIO_STREAMER_MEDIA_INFO="title='JambulaTV-FM-Radio',author=$FMRADIO_STREAMER_STATION-FM,copyright=2017-2018-Jambula-Labs-All-rights-reserved,comment=Broadcasting-Live-FM-Radio-using-JambulaTV,rating=PG14"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage_all () {
+clear
+cat <<EOF
+Usage: ./$(basename $0) [start|stop|restart] [FM_STATION e.g. 93.3]
+EOF
+exit 1
+}
+
+usage_start () {
+if [ "x$FMRADIO_STREAMER_STATION" = "x" ];
+then
+clear
+cat <<EOF
+Usage: ./$(basename $0) $FMRADIO_STREAMER_TASK [FM_STATION e.g. 93.3]
+EOF
+exit 1
+fi
+}
+
+stream_start () {
+$RTL_FM_CMD -d $RTL_FM_DEV -f ${FMRADIO_STREAMER_STATION}M -M fm -s 170k -A std  -l 0 -E deemp -r 44.1k  | $FFMPEG_CMD -nostats -loglevel fatal -f s16le -ac 1 -i pipe:0 -acodec libmp3lame -ab 128k -f mpegts pipe:1 | $VLC_CMD - --sout '#standard{access=http,mux='asf'{'$FMRADIO_STREAMER_MEDIA_INFO'},dst=:'$FMRADIO_STREAMER_PORT'}' > ${FMRADIO_STREAMER_LOG_FILE} 2>&1 &
+#
+# Pause a bit to allow radio to settle
+sleep 3
+#
+VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep "sout=#http{mux=ffmpeg{mux=" | awk {'print $2'})
+FFMPEG_PID=$(ps auxw | grep -Ev grep | grep ffmpeg | grep "f s16le -ac 1 -i pipe:0 -acodec libmp3lame -ab 128k -f mpegts" | awk {'print $2'})
+RTLFM_PID=$(ps auxw | grep -Ev grep | grep rtl_fm | grep "M fm -s 170k -A std -l 0 -E deemp -r 44.1k" | awk {'print $2'})
+#
+# Add PIDs for stopping processes
+cat > $FMRADIO_STREAMER_PID_FILE <<EOF
+$VLC_PID $FFMPEG_PID $RTLFM_PID
+EOF
+}
+
+stream_stop () {
+# Kill streamer processes
+[[ -e $FMRADIO_STREAMER_PID_FILE ]] && sudo kill -15 $(cat $FMRADIO_STREAMER_PID_FILE) > /dev/null 2>&1 &
+# Remove PIDs file
+[[ -e $FMRADIO_STREAMER_PID_FILE ]] && sudo rm -f $FMRADIO_STREAMER_PID_FILE
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+case $FMRADIO_STREAMER_TASK in
+
+start)
+usage_start
+# Start streaming
+stream_start
+;;
+
+stop)
+# Stop streaming 
+stream_stop
+;;
+
+restart)
+usage_start
+# Stop previous station
+$0 stop
+# Pause a bit to allow radio to settle
+sleep 3
+# Stream new station
+$0 start $FMRADIO_STREAMER_STATION
+;;
+
+*)
+usage_all
+;;
+
+esac
