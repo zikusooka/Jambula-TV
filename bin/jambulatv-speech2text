@@ -373,6 +373,18 @@ elif [ "$DETECTED_PATTERN" = "STOP PLAYING MUSIC" ];
 then
 skill_music_play_stop
 
+# Start FM Radio
+elif [[ "$DETECTED_PATTERN" =~ "PLAY FM RADIO" ]];
+then
+FM_RADIO_STATION=$(echo $DETECTED_PATTERN | sed "s:PLAY FM RADIO::g" | sed "s:^ ::g")
+
+skill_fmradio_start "$FM_RADIO_STATION" &
+
+# Stop FM Radio
+elif [ "$DETECTED_PATTERN" = "STOP FM RADIO" ];
+then
+skill_fmradio_stop
+
 # Go Home
 elif [ "$DETECTED_PATTERN" = "GO HOME" ];
 then

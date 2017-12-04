@@ -300,6 +300,17 @@ skill_music_unpause () {
 /usr/bin/jambulatv-kodi-controller music_play_pause
 }
 
+skill_fmradio_start () {
+# Change FM radio station
+jambulatv-fmradio-streamer restart "$@"
+# Stream FM radio
+/usr/bin/jambulatv-kodi-controller addon_play_fmradio 
+}
+
+skill_fmradio_stop () {
+/usr/bin/jambulatv-kodi-controller audio_play_stop
+}
+
 skill_music_play_next () {
 /usr/bin/jambulatv-kodi-controller navigate_down
 /usr/bin/jambulatv-kodi-controller navigate_select
