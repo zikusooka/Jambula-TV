@@ -378,9 +378,9 @@ osd_notification_failed
 sleep 2
 #
 # Check if there is an active video player
-VIDEO_IS_PLAYING=$(/usr/bin/jambulatv-kodi-controller video_play_type | cut -d '=' -f2 | awk {'print $1'} | sed "s:\[::g" | sed "s:\]::g")
+VIDEO_IS_PLAYING=$(/usr/bin/jambulatv-kodi-controller active_player_type | cut -d '=' -f2 | awk {'print $1'} | sed "s:\[::g" | sed "s:\]::g")
 # Stop player if there is no video player already active
-[[ "$VIDEO_IS_PLAYING" = "no" ]] && jambulatv-kodi-controller video_play_stop &
+[[ "$VIDEO_IS_PLAYING" = "yes" ]] || jambulatv-kodi-controller video_play_stop &
 #
 # Remove Youtube temp variables file in case of next run
 [ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE

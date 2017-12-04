@@ -43,7 +43,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|video_play_type|video_play_pause|video_play_next|video_play_previous|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_type|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_timer_start|tv_record_timer_stop|tv_record_instant_start|tv_record_instant_stop|tv_record_schedule_create|tv_record_schedule_cancel|tv_record_schedule_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home|fullscreen_toggle)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|active_player_type|video_play_pause|video_play_next|video_play_previous|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_type|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_timer_start|tv_record_timer_stop|tv_record_instant_start|tv_record_instant_stop|tv_record_schedule_create|tv_record_schedule_cancel|tv_record_schedule_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home|fullscreen_toggle)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -549,7 +549,7 @@ video_play_start)
 start_player_video "$2"
 ;;
 
-video_play_type)
+active_player_type)
 type_of_player
 ;;
 
