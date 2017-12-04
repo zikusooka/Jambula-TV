@@ -43,7 +43,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|active_player_type|video_play_pause|video_play_next|video_play_previous|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_type|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_timer_start|tv_record_timer_stop|tv_record_instant_start|tv_record_instant_stop|tv_record_schedule_create|tv_record_schedule_cancel|tv_record_schedule_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home|fullscreen_toggle)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_fmradio|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|active_player_type|active_player_id|video_play_pause|video_play_next|video_play_previous|audio_play_stop|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_timer_start|tv_record_timer_stop|tv_record_instant_start|tv_record_instant_stop|tv_record_schedule_create|tv_record_schedule_cancel|tv_record_schedule_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home|fullscreen_toggle)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -110,18 +110,33 @@ curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: applicatio
 
 type_of_player () {
 ACTIVE_PLAYER_TYPE=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GetActivePlayers", "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq ".result[] | .type" | sed 's:[,|"]::g')
-# See if video is active i.e. running
-if [ "$ACTIVE_PLAYER_TYPE" = "video" ];
-then
+# See if video/audio player is active
+case "$ACTIVE_PLAYER_TYPE" in
+video)
 export VIDEO_IS_PLAYING=yes
-else
-export VIDEO_IS_PLAYING=no
-fi
-echo "TYPE OF ACTIVE PLAYER = [$VIDEO_IS_PLAYING]"
+;;
+audio)
+export AUDIO_IS_PLAYING=yes
+;;
+esac
+# Print name of active player
+echo "TYPE OF ACTIVE PLAYER = [$ACTIVE_PLAYER_TYPE]"
+}
+
+id_of_player () {
+type_of_player
+ACTIVE_PLAYER_ID=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GetActivePlayers", "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq ".result[] | .playerid" | sed 's:[,|"]::g')
+# Export ID of active player
+export ACTIVE_PLAYER_ID=$ACTIVE_PLAYER_ID
+# Print ID of active player
+echo "ID OF ACTIVE PLAYER = [$ACTIVE_PLAYER_ID]"
 }
 
 stop_player () {
-curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Stop", "params": {"playerid":1}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
+# Get id of active player
+id_of_player
+# Stop active player
+curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.Stop", "params": {"playerid":'$ACTIVE_PLAYER_ID'}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
 pause_player () {
@@ -409,6 +424,10 @@ sudo rm -f "$TV_RECORDING_DETAILS_FILE"
 # -----------
 # Play Addons
 # -----------
+play_fmradio_plugin () {
+curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"id":1,"jsonrpc":"2.0","method":"Player.Open","params":{"item":{"file":"plugin:\/\/plugin.audio.fmradio\/?path=addons:\/\/sources/audio"}}}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+}
+
 play_youtube_plugin () {
 # Source Youtube video ID from JambulaTV's youtube command
 . $YOUTUBE_CMD "$@"
@@ -525,6 +544,11 @@ addon_status)
 check_addon_status "$2"
 ;;
 
+addon_play_fmradio)
+input_home
+play_fmradio_plugin "${@:2}"
+;;
+
 addon_play_youtube)
 play_youtube_plugin "${@:2}"
 ;;
@@ -551,6 +575,10 @@ start_player_video "$2"
 
 active_player_type)
 type_of_player
+;;
+
+active_player_id)
+id_of_player
 ;;
 
 video_play_pause)
@@ -585,10 +613,6 @@ music_play_online_start)
 start_player_music_online "$2"
 ;;
 
-music_play_type)
-type_of_player
-;;
-
 music_play_pause)
 pause_player "$2"
 ;;
@@ -602,6 +626,10 @@ player_previous
 ;;
 
 music_play_stop)
+stop_player
+;;
+
+audio_play_stop)
 stop_player
 ;;
 
