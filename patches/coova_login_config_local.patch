@@ -30,7 +30,7 @@
 +/usr/bin/journalctl -r -o cat --no-pager | grep -m 1 -i User-Agent | while read LINE
 +do
 +	case $LINE in
-+		(*iPhone*|*iPad*|*iPod*)
++		*iPhone*|*iPad*|*iPod*)
 +		USER_AGENT="iOS"
 +		;;
 +		*Version*Chrome*)
