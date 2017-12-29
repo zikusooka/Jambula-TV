@@ -8111,6 +8111,17 @@ text2speech_setup () {
 chmod 755 $BINARY_PREFIX/jambulatv-text2speech 
 }
 
+cmake_install () {
+# Unpack 
+#tar zxvf $PROJECT_TARBALLS_DIR/cmake-*.tar.gz -C $INSTALL_SRC_DIR
+#cd $INSTALL_SRC_DIR && mv -v cmake-* cmake 
+cd $INSTALL_SRC_DIR/cmake
+# Configure
+#./configure --prefix=$PREFIX
+# make install
+make_install_jambulatv
+}
+
 boost_install () {
 # Remove existing boost rpm packages
 rpm -e --nodeps boost-chrono boost-filesystem boost-regex boost-system boost-iostreams boost-signals boost-python boost-thread boost-program-options boost-date-time boost-locale

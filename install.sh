@@ -53,6 +53,8 @@ echo "Using default X11 driver ..."
 ;;
 esac
 
+# Cmake - using sources
+cmake_install
 # Boost - using sources
 boost_install
 
