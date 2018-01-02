@@ -221,12 +221,16 @@ TVHEADEND_TV_MARKET=UG-Kampala
 PLATFORM_TAG=1.0.10
 LIBCEC_TAG=libcec-2.2.0
 
-KODI_VERSION=15.2 
-#
-KODI_BRANCH=Isengard
-KODI_TAG=$KODI_VERSION-$KODI_BRANCH
-KODI_DEFAULT_SKIN=confluence
-KODI_PREFERRED_SKIN=aeonmq6 #$KODI_DEFAULT_SKIN #Aeon-Nox
+#KODI_VERSION=15.2 
+#KODI_CODENAME=Isengard
+#KODI_SOURCES_TYPE=git
+
+KODI_VERSION=17.6
+KODI_CODENAME=Krypton
+KODI_SOURCES_TYPE=tarball 
+
+KODI_PACKAGE_NAME=$KODI_VERSION-$KODI_CODENAME
+
 KODI_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.kodi
 KODI_SHARE_DIR=$DATAROOTDIR/kodi
 KODI_USER_DATA=$KODI_CONFIG_DIR/userdata
@@ -254,7 +258,7 @@ KODI_HTTP_PASS=jambulatv
 # Repositories
 KODI_ADDONS_REPOSITORIES="repository.xbmc.org repository.metalkettle repository.xbmchub repository.podgod repository.Kinkin repo.natko1412 repository.Goliath repository.shaneyrepos pakistani-repository.shani"
 # Required
-KODI_ADDONS_REQUIRED="metadata.album.universal metadata.common.theaudiodb.com metadata.artists.universal script.module.simplejson service.library.data.provider metadata.artists.universal metadata.common.allmusic.com metadata.common.fanart.tv metadata.common.htbackdrops.com metadata.common.imdb.com metadata.common.musicbrainz.org metadata.common.themoviedb.org metadata.themoviedb.org metadata.tvdb.com plugin.program.rtorrent script.module.addon.signals script.module.beautifulsoup script.module.requests script.module.youtube.dl service.xbmc.versioncheck plugin.video.youtube script.common.plugin.cache script.module.addon.common script.module.beautifulsoup4 script.module.httplib2 script.module.liveresolver script.module.mechanize script.module.parsedom script.module.simple.downloader script.module.urlresolver script.module.metahandler script.video.F4mProxy script.module.t0mm0.common"
+KODI_ADDONS_REQUIRED="metadata.album.universal metadata.common.theaudiodb.com metadata.artists.universal script.module.simplejson service.library.data.provider metadata.artists.universal metadata.common.allmusic.com metadata.common.fanart.tv metadata.common.htbackdrops.com metadata.common.imdb.com metadata.common.musicbrainz.org metadata.common.themoviedb.org metadata.themoviedb.org metadata.tvdb.com plugin.program.rtorrent script.module.addon.signals script.module.beautifulsoup script.module.requests script.module.youtube.dl service.xbmc.versioncheck script.common.plugin.cache script.module.addon.common script.module.beautifulsoup4 script.module.httplib2 script.module.liveresolver script.module.mechanize script.module.parsedom script.module.simple.downloader script.module.urlresolver script.module.metahandler script.video.F4mProxy script.module.t0mm0.common"
 # Live TV
 KODI_ADDONS_LIVETV="plugin.video.livemix plugin.video.uktvnow plugin.video.ukturk plugin.video.ustvnow.tva plugin.video.phstreams plugin.video.ccloudtv plugin.video.channelpear plugin.video.F.T.V plugin.video.f4mTester plugin.video.srtv plugin.video.ustvnow-1 plugin.video.cartoons8 plugin.video.netflixbmc plugin.video.uiptv plugin.video.rt plugin.video.aljazeera plugin.video.world.news.live plugin.video.itbn_org plugin.video.fox.news plugin.video.twit plugin.video.LiveIPTV plugin.video.NJMSoccer plugin.video.watchcartoononline plugin.video.MaverickTV plugin.video.FMG plugin.video.sportsaccess plugin.video.echostreams plugin.video.sportie plugin.video.teevie plugin.video.echoplayer plugin.video.gobble plugin.video.specialistss plugin.video.amanda plugin.video.dreamfilm plugin.video.veetle plugin.video.HalowTV plugin.video.wildside plugin.video.Rising.Tides"
 # Music
@@ -264,7 +268,7 @@ KODI_ADDONS_SPORTS="plugin.video.castaway plugin.video.prosport plugin.video.spo
 # Games
 KODI_ADDONS_GAMES="script.game.connect4 script.game.2048 plugin.game.blackjack plugin.game.match.cards plugin.game.tankshot"
 # Jambula Custom
-KODI_ADDONS_JAMBULA="plugin.audio.jambula.fmradio plugin.video.jambula.live.events plugin.video.jambulaIPTV script.doorbell script.service.kodi.callbacks script.service.pcmode"
+KODI_ADDONS_JAMBULA="plugin.audio.jambulaFMRadio plugin.video.jambulaLiveEvents plugin.video.jambulaIPTV plugin.video.youtube script.doorbell script.service.kodi.callbacks script.service.pcmode"
 # Miscellaneous
 KODI_ADDONS_MISC="script.xbmc.unpausejumpback"
 #
@@ -2656,6 +2660,16 @@ patch -p1 $INSTALL_SRC_DIR/tvheadend/src/htsp_server.c < $PROJECT_PATCHES_DIR/tv
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --mandir=$MANDIR1 --disable-ffmpeg_static \
 	--disable-libav --disable-dvbscan --disable-hdhomerun_static --enable-imagecache
 make_install_jambulatv
+
+# Configure Systemd service file
+cat $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service | \
+	sed "s:TVHEADEND_LOG_FILE:$TVHEADEND_LOG_FILE:g" \
+		> $SYSTEMD_UNITS_DIR_USER/tvheadend.service
+# Enable tvheadend
+systemctl enable tvheadend.service
+
+# Copy logrotate file to reduce size of tvheadend log
+cp -v $PROJECT_CONFIGS_DIR/logrotate/tvheadend $LOGROTATE_CONF_DIR/
 }
 
 dvb_tvheadend_network_add () {
@@ -2873,18 +2887,6 @@ EOF
 # Give multimedia user permission to access tvheadend main config file
 # --------------------------------------------------------------------
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
-
-# Tvheadend systemd unit
-# ----------------------
-# Configure Systemd service file
-cat $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service | \
-	sed "s:TVHEADEND_LOG_FILE:$TVHEADEND_LOG_FILE:g" \
-		> $SYSTEMD_UNITS_DIR_USER/tvheadend.service
-# Enable tvheadend
-systemctl enable tvheadend.service
-
-# Copy logrotate file to reduce size of tvheadend log
-cp -v $PROJECT_CONFIGS_DIR/logrotate/tvheadend $LOGROTATE_CONF_DIR/
 
 # Configure Timeshift i.e. Pausing of Live TV
 # -------------------------------------------
@@ -3269,24 +3271,15 @@ platform_install
 libcec_install
 }
 
-kodi_install () {
-# Archive and Unpack specified kodi Tag
-# -------------------------------------
+kodi_unpack_git () {
 # Change to Github sources
-cd $PROJECT_GITHUB_DIR/kodi-$KODI_BRANCH
-# Unpack desired git branch/tag
-case $KODI_TAG in
-master)
-# master branch i.e. HEAD
-git archive --format tar.gz --prefix=kodi/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
-;;
-*)
+cd $PROJECT_GITHUB_DIR/kodi-$KODI_CODENAME
 # Check to see if desired branch/tag exists
-git tag -l | grep -x $KODI_TAG > /dev/null 2>&1
+git tag -l | grep -x $KODI_PACKAGE_NAME > /dev/null 2>&1
 TAG_EXISTS=$?
 if [ "$TAG_EXISTS" = "0" ];
 then
-git archive --format tar.gz --prefix=kodi/ $KODI_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=kodi/ $KODI_PACKAGE_NAME | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 else
 git archive --format tar.gz --prefix=kodi/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 # Display Kodi's post install/configuration information, and output to final notice
@@ -3300,16 +3293,40 @@ KODI Version
 #
 EOF
 fi
-;;
-esac
 #
 # Set FFmpeg version for kodi
-# ----------------------------
-KODI_FFMPEG_VERSION=$(grep VERSION $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/FFMPEG-VERSION | grep Isengard | cut -d "=" -f2)
-cd $PROJECT_GITHUB_DIR/kodi-FFmpeg
-# Archive to kodi ffmpeg target folders directory
-git archive -o $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/ffmpeg-$KODI_FFMPEG_VERSION.tar.gz --prefix=ffmpeg-$KODI_FFMPEG_VERSION/ $KODI_FFMPEG_VERSION
+KODI_FFMPEG_VERSION=$(grep VERSION $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/FFMPEG-VERSION | grep $KODI_CODENAME | cut -d "=" -f2)
 #
+# Archive to kodi ffmpeg target folders directory
+cd $PROJECT_GITHUB_DIR/kodi-FFmpeg
+git archive -o $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/ffmpeg-$KODI_FFMPEG_VERSION.tar.gz --prefix=ffmpeg-$KODI_FFMPEG_VERSION/ $KODI_FFMPEG_VERSION
+}
+
+kodi_unpack_tarball () {
+tar zxvf $PROJECT_TARBALLS_DIR/xbmc-$KODI_PACKAGE_NAME*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v xbmc-$KODI_PACKAGE_NAME* kodi
+cd $INSTALL_SRC_DIR/kodi
+#
+# Set FFmpeg version for kodi
+KODI_FFMPEG_VERSION=$(grep VERSION $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/FFMPEG-VERSION | grep $KODI_CODENAME | cut -d "=" -f2)
+#
+# Copy to kodi ffmpeg target folders directory
+cp -v $PROJECT_TARBALLS_DIR/ffmpeg-$KODI_FFMPEG_VERSION.tar.gz $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/
+}
+
+kodi_install () {
+# Unpack sources depending on type of sources
+case $KODI_SOURCES_TYPE in
+git)
+# Unpack kodi
+kodi_unpack_git
+;;
+tarball)
+# Unpack kodi
+kodi_unpack_tarball
+;;
+esac
+
 # JsonSchemaBuilder
 # -----------------
 if [ ! -x $BINARY_PREFIX/JsonSchemaBuilder ];
@@ -3319,21 +3336,46 @@ make -C $INSTALL_SRC_DIR/kodi/tools/depends/native/JsonSchemaBuilder/
 cp -v $INSTALL_SRC_DIR/kodi/tools/depends/native/JsonSchemaBuilder/bin/JsonSchemaBuilder $BINARY_PREFIX
 chmod 775 $BINARY_PREFIX/JsonSchemaBuilder
 fi
-#
+
+# CrossGuid
+# ---------
+# Copy tarball to kodi target directories
+cp -v $PROJECT_TARBALLS_DIR/crossguid-*.tar.gz $INSTALL_SRC_DIR/kodi/tools/depends/target/crossguid
+# Build
+make -C $INSTALL_SRC_DIR/kodi/tools/depends/target/crossguid PREFIX=/usr
+
+# Copy libdvdcss, libdvread, libdvdnav tarballs to kodi target directories
+for LIBDVDPKG in \
+libdvdcss \
+libdvdread \
+libdvdnav
+do
+cp -v $PROJECT_TARBALLS_DIR/$LIBDVDPKG-*.tar.gz $INSTALL_SRC_DIR/kodi/tools/depends/target/$LIBDVDPKG
+done
+
 # Apply patches
 # -------------
 # Change uPnP device names from kodi to ours - useful in discovery Apps
-patch -p1 $INSTALL_SRC_DIR/kodi/xbmc/network/upnp/UPnP.cpp < $PROJECT_PATCHES_DIR/kodi.UPnP.cpp.patch
+cp -v $INSTALL_SRC_DIR/kodi/xbmc/network/upnp/UPnP.cpp \
+	$INSTALL_SRC_DIR/kodi/xbmc/network/upnp/UPnP.cpp.orig
 #
+cat $INSTALL_SRC_DIR/kodi/xbmc/network/upnp/UPnP.cpp.orig | \
+	sed "s|device->m_ModelName        = \"Kodi\";|device->m_ModelName        = \"$PROJECT_NAME\";|g" | \
+	sed "s|device->m_ModelDescription = \"Kodi - Media Server\";|device->m_ModelDescription = \"$PROJECT_NAME - Media Renderer\";|g" | \
+	sed "s|device->m_ModelURL         = \"http://kodi.tv/\";|device->m_ModelURL         = \"$PROJECT_URL\";|g" | \
+	sed "s|device->m_Manufacturer     = \"XBMC Foundation\";|device->m_Manufacturer     = \"$COMPANY_NAME\";|g" | \
+	sed "s|device->m_ManufacturerURL  = \"http://kodi.tv/\";|device->m_ManufacturerURL  = \"$COMPANY_URL\";|g" \
+		> $INSTALL_SRC_DIR/kodi/xbmc/network/upnp/UPnP.cpp
+
 # Compile
 # -------
 cd $INSTALL_SRC_DIR/kodi
 ./bootstrap
-./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-pulse --enable-dvdcss --enable-udev --enable-libusb --enable-libbluray 
-#--enable-player=mplayer,ffplay,cvlc,jambulatv-dvbplayer
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-pulse --enable-udev --enable-libusb --enable-libbluray --enable-player=mplayer,ffplay,cvlc,jambulatv-dvbplayer
 #
 cd $INSTALL_SRC_DIR/kodi
 [ ! -d $INCDIR/afpfs-ng ] || ln -s -f $INCDIR/afpfs-ng/* $INCDIR/
+#
 # Make Install
 make_install_jambulatv
 # Clean up - saves upto 1.5GB
@@ -3341,7 +3383,12 @@ make clean
 }
 
 kodi_platform_install () {
-rsync -av $PROJECT_GITHUB_DIR/kodi-platform/ $INSTALL_SRC_DIR/kodi-platform/
+# Install p8-platform for kodi versions above Isengard.  Also needed for pvr addons
+[[ "$KODI_CODENAME" = "Isengard" ]] || \
+        PLATFORM_TAG=platform-2.1.0 && platform_install
+#
+# Install kodi-platform - specific to specified kodi branch
+rsync -av $PROJECT_GITHUB_DIR/kodi-platform-$KODI_CODENAME/ $INSTALL_SRC_DIR/kodi-platform/
 cd $INSTALL_SRC_DIR/kodi-platform
 # Log to build file
 cmake_build_log
@@ -3351,7 +3398,7 @@ make_install_jambulatv
 }
 
 kodi_pvr_hts_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts-$KODI_BRANCH/ $INSTALL_SRC_DIR/kodi-pvr.hts/
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts-$KODI_CODENAME/ $INSTALL_SRC_DIR/kodi-pvr.hts/
 cd $INSTALL_SRC_DIR/kodi-pvr.hts
 # Log to build file
 cmake_build_log
@@ -3361,7 +3408,7 @@ make_install_jambulatv
 }
 
 kodi_pvr_iptvsimple_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.iptvsimple-$KODI_BRANCH/ $INSTALL_SRC_DIR/kodi-pvr.iptvsimple/
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.iptvsimple-$KODI_CODENAME/ $INSTALL_SRC_DIR/kodi-pvr.iptvsimple/
 cd $INSTALL_SRC_DIR/kodi-pvr.iptvsimple
 # Log to build file
 cmake_build_log
@@ -3371,9 +3418,6 @@ make_install_jambulatv
 }
 
 kodi_pvr_rtl_radiofm_install () {
-# Install p8-platform - dependency
-PLATFORM_TAG=platform-2.1.0 && platform_install
-#
 # Unpack pvr.rtl.radiofm sources
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.rtl.radiofm/ $INSTALL_SRC_DIR/pvr.rtl.radiofm/
 # configure
@@ -3431,7 +3475,7 @@ fi
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_SYSTEM_ADDONS
 }
 
-kodi_addons_install() {
+kodi_addons_4_Isengard() {
 for KODI_ADDON in \
 $KODI_ADDONS_REPOSITORIES \
 $KODI_ADDONS_REQUIRED \
@@ -3440,10 +3484,32 @@ $KODI_ADDONS_MUSIC \
 $KODI_ADDONS_SPORTS \
 $KODI_ADDONS_GAMES \
 $KODI_ADDONS_JAMBULA \
-$KODI_ADDONS_MISC;
+$KODI_ADDONS_MISC
 do
 kodi_addons_unpack
 done
+}
+
+kodi_addons_4_Krypton() {
+for KODI_ADDON in \
+$KODI_ADDONS_JAMBULA 
+do
+# Unpack addon
+kodi_addons_unpack
+# Enable addon
+sqlite3 $KODI_USER_DATA/Database/Addons27.db 'update installed set enabled=1 where addonid=='"'$KODI_ADDON'"';'
+done
+}
+
+kodi_addons_install () {
+case $KODI_CODENAME in
+Isengard)
+kodi_addons_4_Isengard
+;;
+Krypton)
+kodi_addons_4_Krypton
+;;
+esac
 }
 
 kodi_addons_configure() {
@@ -3490,30 +3556,30 @@ cat > $KODI_ADDON_DATA_DIR/pvr.hts/settings.xml << EOF
 EOF
 
 # pvr.iptvsimple 
-[ -d $KODI_ADDON_DATA_DIR/pvr.iptvsimple ] || mkdir -p $KODI_ADDON_DATA_DIR/pvr.iptvsimple
+#[ -d $KODI_ADDON_DATA_DIR/pvr.iptvsimple ] || mkdir -p $KODI_ADDON_DATA_DIR/pvr.iptvsimple
 # Change from true to false
-cat > $KODI_ADDON_DATA_DIR/pvr.iptvsimple/settings.xml << EOF
-<settings>
-    <setting id="epgCache" value="true" />
-    <setting id="epgPath" value="" />
-    <setting id="epgPathType" value="1" />
-    <setting id="epgTSOverride" value="false" />
-    <setting id="epgTimeShift" value="0.000000" />
-    <setting id="epgUrl" value="" />
-    <setting id="logoBaseUrl" value="" />
-    <setting id="logoFromEpg" value="0" />
-    <setting id="logoPath" value="$PROJECT_SYSTEM_ICONS_DIR/IPTV/" />
-    <setting id="logoPathType" value="0" />
-    <setting id="m3uCache" value="true" />
-    <setting id="m3uPath" value="" />
-    <setting id="m3uPathType" value="1" />
-    <setting id="m3uUrl" value="http://127.0.0.1:$PLAYLISTS_PORT/$PLAYLISTS_IPTV_WORLD_M3U_FILE" />
-    <setting id="sep1" value="" />
-    <setting id="sep2" value="" />
-    <setting id="sep3" value="" />
-    <setting id="startNum" value="30" />
-</settings>
-EOF
+#cat > $KODI_ADDON_DATA_DIR/pvr.iptvsimple/settings.xml << EOF
+#<settings>
+#    <setting id="epgCache" value="true" />
+#    <setting id="epgPath" value="" />
+#    <setting id="epgPathType" value="1" />
+#    <setting id="epgTSOverride" value="false" />
+#    <setting id="epgTimeShift" value="0.000000" />
+#    <setting id="epgUrl" value="" />
+#    <setting id="logoBaseUrl" value="" />
+#    <setting id="logoFromEpg" value="0" />
+#    <setting id="logoPath" value="$PROJECT_SYSTEM_ICONS_DIR/IPTV/" />
+#    <setting id="logoPathType" value="0" />
+#    <setting id="m3uCache" value="true" />
+#    <setting id="m3uPath" value="" />
+#    <setting id="m3uPathType" value="1" />
+#    <setting id="m3uUrl" value="http://127.0.0.1:$PLAYLISTS_PORT/$PLAYLISTS_IPTV_WORLD_M3U_FILE" />
+#    <setting id="sep1" value="" />
+#    <setting id="sep2" value="" />
+#    <setting id="sep3" value="" />
+#    <setting id="startNum" value="30" />
+#</settings>
+#EOF
 
 # plugin.video.youtube
 [ -d $KODI_ADDON_DATA_DIR/plugin.video.youtube ] || mkdir -p $KODI_ADDON_DATA_DIR/plugin.video.youtube
@@ -3893,7 +3959,7 @@ done
 chmod 755 $KODI_USER_DATA/autoexec.py
 #
 # Add Jambula customized advancedsettings file
-cat $PROJECT_CONFIGS_DIR/kodi/advancedsettings.xml | \
+cat $PROJECT_CONFIGS_DIR/kodi/skin.$KODI_PREFERRED_SKIN/advancedsettings.xml | \
 	sed "s:KODI_DB_VIDEO:$KODI_DB_VIDEO:g" | \
 	sed "s:KODI_DB_MUSIC:$KODI_DB_MUSIC:g" | \
 	sed "s:KODI_DB_USER:$KODI_DB_USER:g" | \
@@ -3903,9 +3969,9 @@ cat $PROJECT_CONFIGS_DIR/kodi/advancedsettings.xml | \
 # Add Jambula customized guisettings file depending on weather Live TV setup has been requested for
 if [ "$TVH_DVBT_CONFIG_REQUESTED" = "yes" ];
 then
-KODI_GUISETTINGS_FILE=$PROJECT_CONFIGS_DIR/kodi/guisettings.with.pvr.xml
+KODI_GUISETTINGS_FILE=$PROJECT_CONFIGS_DIR/kodi/skin.$KODI_PREFERRED_SKIN/guisettings.with.pvr.xml
 else
-KODI_GUISETTINGS_FILE=$PROJECT_CONFIGS_DIR/kodi/guisettings.without.pvr.xml
+KODI_GUISETTINGS_FILE=$PROJECT_CONFIGS_DIR/kodi/skin.$KODI_PREFERRED_SKIN/guisettings.without.pvr.xml
 fi
 cat $KODI_GUISETTINGS_FILE | \
 	sed -e "s:KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
@@ -3932,29 +3998,35 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $FOLDER
 done
 }
 
-kodi_customization () {
-# Create backgrounds directory if it does not exist
+kodi_skin_customization () {
+# Preferred kodi skin configuration
+case $KODI_CODENAME in
+Isengard)
+KODI_PREFERRED_SKIN=aeonmq6
+;;
+Krypton)
+KODI_PREFERRED_SKIN=titan
+;;
+confluence)
+KODI_PREFERRED_SKIN=confluence
+;;
+estuary)
+KODI_PREFERRED_SKIN=estuary
+esac
+#
+case $KODI_PREFERRED_SKIN in
+confluence)
+# Create backgrounds directory if it does not exist for preferred skin
 [ -d $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds ] || \
 	mkdir -p $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds
-# Default skin configuration i.e. confluence
+# Copy default background for preferred skin
 cp -fv $PROJECT_IMAGES_DIR/kodi/backgrounds/default_bg.jpg \
 	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/SKINDEFAULT.jpg
-# Change top left logo at Home screen 
+# Change top left logo at Home screen of default skin i.e. confluence
 sed -i "s:<texture>kodi-logo.png</texture>:<texture>jambulatv-logo.png</texture>:" \
-	$KODI_SYSTEM_ADDONS/skin.$KODI_DEFAULT_SKIN/720p/Home.xml
-#
-# Preferred skin configuration
-case $KODI_PREFERRED_SKIN in
-Aeon-Nox)
-# Copy preferred skin files to addons directory
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/$KODI_PREFERRED_SKIN/ \
-	$KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/
-# Copy original default_bg image
-cp -v $KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg \
-	$KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.orig.jpg
-# Change default background for preferred skin
-cp -fv $PROJECT_IMAGES_DIR/kodi/backgrounds/default_bg.jpg $KODI_SYSTEM_ADDONS/$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg
+	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/720p/Home.xml
 ;;
+
 aeonmq6)
 # Unzip skin files to addons directory
 for SKIN_ADDON in \
@@ -3966,56 +4038,60 @@ skin.aeonmq6
 do
 unzip -o -d $KODI_SYSTEM_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
 done
-# Change default background for preferred skin
-cp -fv $PROJECT_IMAGES_DIR/kodi/backgrounds/default_bg.jpg $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/default_bg.jpg
+# Add custom backgrounds for this preferred skin
+rsync -av $PROJECT_IMAGES_DIR/kodi/backgrounds/skin.$KODI_PREFERRED_SKIN/ \
+	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/
+;;
+
+titan)
+# Copy preferred skin files to addons directory
+rsync -av --delete-after $PROJECT_GITHUB_DIR/kodi-addons/skin.$KODI_PREFERRED_SKIN \
+$KODI_USER_ADDONS/
+
+# Unzip skin related files to addons directory
+for SKIN_ADDON in \
+resource.images.skinbackgrounds.titanium \
+resource.images.skinicons.wide \
+resource.uisounds.titan.modern
+do
+unzip -o -d $KODI_USER_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
+done
+
+# Add custom backgrounds for this preferred skin
+rsync -av $PROJECT_IMAGES_DIR/kodi/backgrounds/skin.$KODI_PREFERRED_SKIN/ \
+	$KODI_USER_ADDONS/resource.images.skinicons.wide/resources/
+
+# Adjust custom Logo image dimensions
+rsync -av $PROJECT_CONFIGS_DIR/kodi/skin.titan/IncludesHeader.xml \
+	$KODI_USER_ADDONS/skin.$KODI_PREFERRED_SKIN/1080i/
+
+# Skin Settings
+[ -d $KODI_ADDON_DATA_DIR/skin.$KODI_PREFERRED_SKIN ] || mkdir -p $KODI_ADDON_DATA_DIR/skin.$KODI_PREFERRED_SKIN
+# Copy custom skin settings
+rsync -av $PROJECT_CONFIGS_DIR/kodi/addon_data/skin.$KODI_PREFERRED_SKIN/settings.xml \
+	$KODI_ADDON_DATA_DIR/skin.$KODI_PREFERRED_SKIN/
+
+# Give permissions to multimedia user for skin addon_data directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_ADDON_DATA_DIR/skin.$KODI_PREFERRED_SKIN
 ;;
 esac
-#
-# Add custom backgrounds like apps.jpg
-# ---
-rsync -av $PROJECT_IMAGES_DIR/kodi/backgrounds/ $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/
-#
-# Replace some background images like tvshows, movies, and extras
-# ---
-# 1st copy to temp folder
-rsync -av $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/ $TMPDIR/skin.${KODI_PREFERRED_SKIN}/
-# TV Shows
-mv -v $TMPDIR/skin.${KODI_PREFERRED_SKIN}/extras/settings_movies.jpg \
-	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/tvshows.jpg
-# Movies
-mv -v $TMPDIR/skin.${KODI_PREFERRED_SKIN}/extras.jpg \
-	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/movies.jpg
-# Music
-mv -v $TMPDIR/skin.${KODI_PREFERRED_SKIN}/concerts.jpg \
-	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/music.jpg
-# Pictures
-mv -v $TMPDIR/skin.${KODI_PREFERRED_SKIN}/extras/settings_weather.jpg \
-	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/pictures.jpg
-# Favourites
-mv -v $TMPDIR/skin.${KODI_PREFERRED_SKIN}/movies.jpg \
-	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/favourites.jpg
-# Extras
-mv -v $TMPDIR/skin.${KODI_PREFERRED_SKIN}/tvshows.jpg \
-	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/extras.jpg
-# Shutdown
-mv -v $TMPDIR/skin.${KODI_PREFERRED_SKIN}/extras/curtains.jpg \
-	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/shutdown.jpg
-# Settings
-mv -v $TMPDIR/skin.${KODI_PREFERRED_SKIN}/extras/settings_system.jpg \
-	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/settings.jpg
 
-#
 # Copy custom top left logo icon
-cp -fv $PROJECT_IMAGES_DIR/kodi/top-left.png \
-	$KODI_SYSTEM_ADDONS/skin.$KODI_DEFAULT_SKIN/media/jambulatv-logo.png
-# Copy Splash image for startup
-cp -fv $PROJECT_IMAGES_DIR/kodi/splash.png $KODI_SHARE_DIR/media/Splash.png
-
-# Fix Shutdown Main Menu Button
-sed -i "s:XBMC.ShutDown():System.Exec(systemctl poweroff):g" $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/720p/DialogButtonMenu.xml
+cp -fv $PROJECT_IMAGES_DIR/kodi/logos/skin.$KODI_PREFERRED_SKIN/top-left.png \
+	$KODI_SHARE_DIR/media/jambulatv-logo.png
 #
+# Copy Splash image for startup
+cp -fv $PROJECT_IMAGES_DIR/kodi/logos/skin.$KODI_PREFERRED_SKIN/Splash.png $KODI_SHARE_DIR/media/
+
 # Customize strings.po for JambulaTV
 patch -p1 $KODI_SYSTEM_ADDONS/resource.language.en_gb/resources/strings.po < $PROJECT_PATCHES_DIR/kodi.strings_po.patch
+
+# Fix Shutdown Main Menu Button bug, if running kodi 15
+[[ "$KODI_CODENAME" = "Isengard" ]] && \
+sed -i "s:XBMC.ShutDown():System.Exec(systemctl poweroff):g" $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/720p/DialogButtonMenu.xml
+
+# Give permissions to multimedia user for config directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_CONFIG_DIR
 }
 
 kodi_scripts () {
@@ -8113,11 +8189,11 @@ chmod 755 $BINARY_PREFIX/jambulatv-text2speech
 
 cmake_install () {
 # Unpack 
-#tar zxvf $PROJECT_TARBALLS_DIR/cmake-*.tar.gz -C $INSTALL_SRC_DIR
-#cd $INSTALL_SRC_DIR && mv -v cmake-* cmake 
+tar zxvf $PROJECT_TARBALLS_DIR/cmake-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v cmake-* cmake 
 cd $INSTALL_SRC_DIR/cmake
 # Configure
-#./configure --prefix=$PREFIX
+./configure --prefix=$PREFIX
 # make install
 make_install_jambulatv
 }
