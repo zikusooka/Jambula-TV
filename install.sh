@@ -18,6 +18,9 @@ kernel_install
 # Info banner
 about_install
 
+# Create installation directory
+install_dir_create
+
 # Update dtv scan tables
 update_dtv_scan_tables
 
@@ -27,9 +30,6 @@ set_variables
 
 # Non-Interactive install starts here i.e. Start logging to file 
 exec 2> $BUILD_LOG
-
-# Create installation directory
-install_dir_create
 
 # Install images and icons
 images_add
