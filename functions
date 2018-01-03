@@ -2095,6 +2095,32 @@ PULSE_DEFAULT_SINK=$(su -l $MULTIMEDIA_USER -c "pactl list sinks short" | awk {'
 PULSE_DEFAULT_SOURCE=$(su -l $MULTIMEDIA_USER -c "pactl list sources short" | grep monitor | grep analog | head -1 | awk {'print $2'})
 # V4L TV Card Loopback device
 TV_AUDIO_SOURCE=$(su -l $MULTIMEDIA_USER -c "pactl list" | grep -B1 'SAA713' | grep alsa_input | cut -d : -f2 | sed 's/ //g')
+
+# Notify of missing sinks or sources
+if [[ "x$PULSE_DEFAULT_SINK" = "x" || "x$PULSE_DEFAULT_SOURCE" = "x" ]];
+then
+# Force error to be displayed in log
+su -l $MULTIMEDIA_USER -c "pactl list sinks short" && \
+	su -l $MULTIMEDIA_USER -c "pactl list sources short"
+# Add error to post install notes
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+Pulseaudio Sinks/Sources not configured
+=======================================
+% Error: Please note that no pulseaudio sinks/sources were configured
+         You will need to edit the following files with the right
+	 devices:
+
+  $PULSE_DEFAULT_CONFIG
+ 
+% TIP: Ensure pulseaudio is running first and then execute the following commands:
+
+  pactl list sinks short; pactl list sources short  
+
+#
+EOF
+fi
 }
 
 pulseaudio_configure () {
