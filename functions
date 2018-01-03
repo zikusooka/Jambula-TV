@@ -2091,13 +2091,13 @@ PULSEAUDIO_STATE=$?
 [ "$PULSEAUDIO_STATE" = "0" ] || $BINARY_PREFIX/pulseaudio --system --disallow-module-loading --disallow-exit -D > /dev/null 2>&1
 #
 # Default sink
-PULSE_DEFAULT_SINK=$(su -l $MULTIMEDIA_USER -c "pactl list sinks short" | awk {'print $2'} | grep analog | head -1)
-PULSE_DEFAULT_SOURCE=$(su -l $MULTIMEDIA_USER -c "pactl list sources short" | grep monitor | grep analog | head -1 | awk {'print $2'})
+PULSE_DEFAULT_SINK=$(su -l $MULTIMEDIA_USER -c "pactl list sinks short" | awk {'print $2'} | head -1)
+PULSE_DEFAULT_SOURCE=$(su -l $MULTIMEDIA_USER -c "pactl list sources short" | grep monitor | head -1 | awk {'print $2'})
 # V4L TV Card Loopback device
 TV_AUDIO_SOURCE=$(su -l $MULTIMEDIA_USER -c "pactl list" | grep -B1 'SAA713' | grep alsa_input | cut -d : -f2 | sed 's/ //g')
 
 # Notify of missing sinks or sources
-if [[ "x$PULSE_DEFAULT_SINK" = "x" || "x$PULSE_DEFAULT_SOURCE" = "x" ]];
+if [[ "x$PULSE_DEFAULT_SINK" = "x" ]] || [[ "x$PULSE_DEFAULT_SOURCE" = "x" ]];
 then
 # Force error to be displayed in log
 su -l $MULTIMEDIA_USER -c "pactl list sinks short" && \
