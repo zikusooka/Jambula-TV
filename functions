@@ -346,18 +346,11 @@ GRUB2_BOOT_DIR=/boot/grub2
 GRUB2_BOOT_FILE=$GRUB2_BOOT_DIR/grub.cfg
 GRUB2_CONFIG_DIR=/etc/grub.d
 GRUB2_DEFAULT_FILE=/etc/default/grub
-#
+
 #GRUB2_CMD_OPTIONS="acpi=off noapic"
-# See if Radeon GPU exists
-/usr/sbin/lspci -mm | awk -F '\\"|\\" \\"' '/"Display|"3D|"VGA/' | grep -i radeon > /dev/null 2>&1
-RADEON_EXISTS=$?
-if [ "$RADEON_EXISTS" = "0" ];
-then
-GRUB2_CMD_OPTIONS="radeon.modeset=0"
-else
+#GRUB2_CMD_OPTIONS="radeon.modeset=0"
 GRUB2_CMD_OPTIONS=""
-fi
-#
+
 GRUB2_VIDEO_RESOLUTION=${RES1}x${DEPTH1}
 GRUB2_BEEP_SOUND="480 440 1"
 
