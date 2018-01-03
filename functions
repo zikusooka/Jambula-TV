@@ -4268,6 +4268,7 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 # Copy sources 
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/livestreamer/ $INSTALL_SRC_DIR/livestreamer/
 cd $INSTALL_SRC_DIR/livestreamer
+#NOTE: Install after FlexGet which pulls latest dependencies like requests
 python setup.py install
 }
 

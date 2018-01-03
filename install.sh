@@ -116,7 +116,6 @@ kodi_scripts
 kodi_remote_configure
 kodi_osd_configure 
 remind_configure 
-livestreamer_install
 
 # X11 setup
 x11_superuser_permissions_configure
@@ -244,6 +243,7 @@ samba_configure
 # -----------------
 youtube_dl_install
 youtube_setup
+livestreamer_install
 vcfconvert_install
 cutter_install 
 rtmpdump_install
