@@ -22,6 +22,13 @@
 #
 #
 # Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
 RTL_FM_CMD=/usr/bin/rtl_fm
 RTL_FM_DEV=0
 FFMPEG_CMD=/usr/bin/ffmpeg
@@ -29,6 +36,7 @@ VLC_CMD=/usr/bin/cvlc
 
 FMRADIO_STREAMER_TASK=$1
 FMRADIO_STREAMER_STATION=$2
+FMRADIO_STREAMER_CLIENT_LOCATION=$3 
 FMRADIO_STREAMER_PORT=MY_FMRADIO_STREAMER_PORT
 FMRADIO_STREAMER_PID_FILE=MY_TMPDIR/fmradio_process_ids
 FMRADIO_STREAMER_LOG_FILE=MY_PROJECT_SYSTEM_LOG_DIR/fmradio-streamer.log
@@ -42,7 +50,7 @@ FMRADIO_STREAMER_MEDIA_INFO="title='JambulaTV-FM-Radio',author=$FMRADIO_STREAMER
 usage_all () {
 clear
 cat <<EOF
-Usage: ./$(basename $0) [start|stop|restart] [FM_STATION e.g. 93.3]
+Usage: ./$(basename $0) [start|stop|restart] [FM_STATION e.g. 93.3] [local (Optional)]
 EOF
 exit 1
 }
@@ -52,13 +60,25 @@ if [ "x$FMRADIO_STREAMER_STATION" = "x" ];
 then
 clear
 cat <<EOF
-Usage: ./$(basename $0) $FMRADIO_STREAMER_TASK [FM_STATION e.g. 93.3]
+Usage: ./$(basename $0) $FMRADIO_STREAMER_TASK [FM_STATION e.g. 93.3] [local (Optional)]
 EOF
 exit 1
 fi
 }
 
+stream_local () {
+# Play locally if requested
+if [[ "$FMRADIO_STREAMER_CLIENT_LOCATION" = "local" ]]
+then
+PULSEAUDIO_USER=$MULTIMEDIA_USER && \
+	/usr/bin/mplayer -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 http://127.0.0.1:8543 > /dev/null &
+fi
+}
+
 stream_start () {
+# Usage
+usage_start
+#
 $RTL_FM_CMD -d $RTL_FM_DEV -f ${FMRADIO_STREAMER_STATION}M -M fm -s 170k -A std  -l 0 -E deemp -r 44.1k  | $FFMPEG_CMD -nostats -loglevel fatal -f s16le -ac 1 -i pipe:0 -acodec libmp3lame -ab 128k -f mpegts pipe:1 | $VLC_CMD - --sout '#standard{access=http,mux='asf'{'$FMRADIO_STREAMER_MEDIA_INFO'},dst=:'$FMRADIO_STREAMER_PORT'}' > ${FMRADIO_STREAMER_LOG_FILE} 2>&1 &
 #
 # Pause a bit to allow radio to settle
@@ -72,6 +92,9 @@ RTLFM_PID=$(ps auxw | grep -Ev grep | grep rtl_fm | grep "M fm -s 170k -A std -l
 cat > $FMRADIO_STREAMER_PID_FILE <<EOF
 $VLC_PID $FFMPEG_PID $RTLFM_PID
 EOF
+#
+# Stream locally if user requested
+stream_local
 }
 
 stream_stop () {
@@ -79,6 +102,19 @@ stream_stop () {
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && sudo kill -15 $(cat $FMRADIO_STREAMER_PID_FILE) > /dev/null 2>&1 &
 # Remove PIDs file
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && sudo rm -f $FMRADIO_STREAMER_PID_FILE
+}
+
+stream_restart () {
+usage_start
+# Stop previous station
+$0 stop
+# Pause a bit to allow radio to settle
+sleep 3
+# Stream new station
+$0 start $FMRADIO_STREAMER_STATION $FMRADIO_STREAMER_CLIENT_LOCATION
+#
+# Stream locally if user requested
+stream_local
 }
 
 
@@ -89,24 +125,15 @@ stream_stop () {
 case $FMRADIO_STREAMER_TASK in
 
 start)
-usage_start
-# Start streaming
 stream_start
 ;;
 
 stop)
-# Stop streaming 
 stream_stop
 ;;
 
 restart)
-usage_start
-# Stop previous station
-$0 stop
-# Pause a bit to allow radio to settle
-sleep 3
-# Stream new station
-$0 start $FMRADIO_STREAMER_STATION
+stream_restart
 ;;
 
 *)
