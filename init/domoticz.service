@@ -4,10 +4,11 @@ After=network.target
 
 [Service]
 User=DOMOTICZ_USER
-ExecStart=/usr/bin/domoticz -verbose -daemon -www DOMOTICZ_WWW_PORT -wwwroot DOMOTICZ_HTML_DIR -dbase DOMOTICZ_HOME_DIR/domoticz.db -userdata DOMOTICZ_HOME_DIR/ -log DOMOTICZ_LOG_FILE -loglevel 0
-KillMode=process
-Restart=on-failure
-StandardOutput=null
+Type=forking
+PIDFile=DOMOTICZ_PID_FILE
+ExecStartPre=/bin/sudo /bin/touch DOMOTICZ_PID_FILE
+ExecStartPre=/bin/sudo /bin/chown DOMOTICZ_USER:DOMOTICZ_USER DOMOTICZ_PID_FILE
+ExecStart=/usr/bin/domoticz -verbose -daemon -www DOMOTICZ_WWW_PORT -wwwroot DOMOTICZ_HTML_DIR -dbase DOMOTICZ_HOME_DIR/domoticz.db -userdata DOMOTICZ_HOME_DIR/ -log DOMOTICZ_LOG_FILE -loglevel 0 -pidfile DOMOTICZ_PID_FILE
 
 [Install]
 WantedBy=multi-user.target

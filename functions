@@ -471,6 +471,7 @@ DOMOTICZ_GROUP=$MULTIMEDIA_USER
 DOMOTICZ_HOME_DIR=$MULTIMEDIA_USER_HOME_DIR/.domoticz
 DOMOTICZ_HTML_DIR=$WWW_HTML_DIR/domoticz
 DOMOTICZ_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/domoticz.log
+DOMOTICZ_PID_FILE=$RUNDIR/domoticz.pid
 DOMOTICZ_WWW_PORT=$(grep -i 'domoticz$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # ZM Database Variables
@@ -8173,7 +8174,8 @@ cd $INSTALL_SRC_DIR/domoticz
 # Log to build file
 cmake_build_log
 # cMake
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX -DUSE_PYTHON_PLUGINS=NO
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX -DUSE_PYTHON=NO
+#-DUSE_PYTHON_PLUGINS=NO
 make -j$SYSTEM_CPU_CORES
 #
 # Post-install actions - Not done by compile
@@ -8205,7 +8207,8 @@ cat $PROJECT_INIT_SCRIPTS_DIR/domoticz.service | \
 	sed "s:DOMOTICZ_WWW_PORT:$DOMOTICZ_WWW_PORT:g" | \
 	sed "s:DOMOTICZ_HTML_DIR:$DOMOTICZ_HTML_DIR:g" | \
 	sed "s:DOMOTICZ_HOME_DIR:$DOMOTICZ_HOME_DIR:g" | \
-	sed "s:DOMOTICZ_LOG_FILE:$DOMOTICZ_LOG_FILE:g" \
+	sed "s:DOMOTICZ_LOG_FILE:$DOMOTICZ_LOG_FILE:g" | \
+	sed "s:DOMOTICZ_PID_FILE:$DOMOTICZ_PID_FILE:g" \
 		> $SYSTEMD_UNITS_DIR_USER/domoticz.service
 # Enable domoticz if needed
 systemctl enable domoticz.service
