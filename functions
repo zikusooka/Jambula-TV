@@ -12,7 +12,7 @@ EMAIL_ADDRESS_SUPPORT=support@jambulatv.com
 EMAIL_ADDRESS_ERRORS=errors@jambulatv.com
 
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.4.109"
+KERNEL_VERSION="4.4.111"
 
 PRODUCT_MODEL_NAME="$PROJECT_NAME"
 PRODUCT_DISK_SIZE=$(journalctl -b -o cat --no-pager | grep sda | grep logical | awk {'print $8'} | sed 's:(::')
@@ -979,6 +979,8 @@ fi
 }
 
 kernel_patches () {
+# Change to kernel sources root directory
+cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 # USB Core messages
 patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel.usb_core.message.patch
 # DVB Core Frontend - Set dvb_powerdown_on_sleep = 0
@@ -1047,7 +1049,21 @@ cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 # Apply patches
 kernel_patches
 #
+
+cat <<EOF
+
+WARNING!!!!
+BEFORE PROCEEDING, CHECK TO SEE IF PATCHES ARE INSTALLED INPROPER LOCATION AND NOT UNDER
+
+$KERNELS_SRC_DIR/drivers
+
+
+EOF
+
 _install_pause_check_4_errors_
+
+# Change to kernel sources root directory
+cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 #
 # Remove stale .o files and dependencies lying around
 make mrproper
