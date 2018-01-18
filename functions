@@ -474,6 +474,15 @@ DOMOTICZ_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/domoticz.log
 DOMOTICZ_PID_FILE=$RUNDIR/domoticz.pid
 DOMOTICZ_WWW_PORT=$(grep -i 'domoticz$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
+# Mosquitto - MQTT
+MOSQUITTO_USER=mosquitto
+MOSQUITTO_GROUP=mosquitto
+MOSQUITTO_PORT=$(grep -i 'mosquitto$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+MOSQUITTO_SSL_PORT=$(grep -i 'mosquitto ssl$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+
+MOSQUITTO_CONFIG_DIR=/etc/mosquitto
+MOSQUITTO_CONFIG_CERTS_DIR=$MOSQUITTO_CONFIG_DIR/ssl
+
 # ZM Database Variables
 ZONEMINDER_DB_HOST=localhost
 ZONEMINDER_DB_NAME=zm
@@ -1809,7 +1818,34 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/images
 
 ssl_cert_key_generate () {
 # ssl_cert_key_generate [CERT_FILE_PATH] [KEY_FILE_PATH] [DAYS]
-openssl req -new -x509 -nodes -out $1 -keyout $2 -days $3 -subj "/CN=$PROJECT_NAME.$SYSTEM_IDENTIFIER.localhost /O=$PROJECT_NAME /OU=$COMPANY_NAME"
+openssl req -new -x509 -nodes -out $1 -keyout $2 -days $3 -subj "/CN=${SYSTEM_IDENTIFIER}.${PROJECT_NAME} /O=$PROJECT_NAME /OU=$COMPANY_NAME"
+}
+
+tls_ca_server_cert_key_generate () {
+# Arguments
+CERTIFICATES_DIR=$1
+CA_KEY_FILE=$CERTIFICATES_DIR/$2
+CA_CERT_FILE=$CERTIFICATES_DIR/$3
+SERVER_KEY_FILE=$CERTIFICATES_DIR/$4
+SERVER_CSR_FILE=$CERTIFICATES_DIR/$5
+SERVER_CERT_FILE=$CERTIFICATES_DIR/$6
+CERTIFICATES_DAYS=$7
+#
+# CA Key
+openssl genrsa -out $CA_KEY_FILE 2048 
+# CA Cert
+openssl req -new -x509 -key $CA_KEY_FILE -out $CA_CERT_FILE -days $CERTIFICATES_DAYS \
+  -subj "/CN=${SYSTEM_IDENTIFIER}.${PROJECT_NAME} /O=$PROJECT_NAME /OU=$COMPANY_NAME"
+#
+# Server Key
+openssl genrsa -out $SERVER_KEY_FILE 2048
+# Server Certificate
+openssl req -new -key $SERVER_KEY_FILE -out $SERVER_CSR_FILE \
+  -subj "/CN=${SYSTEM_IDENTIFIER}.${PROJECT_NAME} /O=$PROJECT_NAME /OU=$COMPANY_NAME"
+#
+# Sign Cert
+openssl x509 -req -in $SERVER_CSR_FILE -CA $CA_CERT_FILE -CAkey $CA_KEY_FILE \
+  -CAcreateserial -out $SERVER_CERT_FILE -days $CERTIFICATES_DAYS
 }
 
 intel_x11_driver_install () {
@@ -5795,6 +5831,83 @@ EOF
 # Add table of MCC and MNC codes for providers from allover the world
 cp -v $PROJECT_CONTRIB_DIR/mobile_providers/mcc-mnc-table.csv \
 	$PROJECT_SYSTEM_SHARE_DIR/mobile_providers
+}
+
+mosquitto_install () {
+# Remove RPM based package if installed
+rpm -q mosquitto > /dev/null 2>&1 && rpm -e --nodeps mosquitto
+#
+# sync mosquitto sources excluding wpa_supplicant
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/mosquitto/ $INSTALL_SRC_DIR/mosquitto/
+# Patch config.mk: change bin,lib,include locations
+cp -v $INSTALL_SRC_DIR/mosquitto/config.mk $INSTALL_SRC_DIR/mosquitto/config.mk.orig
+cat $INSTALL_SRC_DIR/mosquitto/config.mk.orig | \
+	sed -e "s:WITH_DOCS\:=yes:WITH_DOCS\:=no:g" | \
+	sed -e "s:prefix=/usr/local:prefix=$PREFIX:g" \
+		> $INSTALL_SRC_DIR/mosquitto/config.mk
+# Compile latest mosquitto from sources
+cd $INSTALL_SRC_DIR/mosquitto
+#
+make_install_jambulatv
+# Cache recently shared libraries 
+ldconfig
+# Add mosquitto group and user
+groupadd -r mosquitto
+useradd -r -M -c "Mosquitto MQTT broker" -g $MOSQUITTO_USER $MOSQUITTO_GROUP -s /sbin/nologin
+}
+
+mosquitto_configure () {
+# Setup mosquitto.conf file
+cat $PROJECT_CONFIGS_DIR/mosquitto.conf.template | \
+	sed "s:MOSQUITTO_CONFIG_DIR:$MOSQUITTO_CONFIG_DIR:g" | \
+	sed "s:MOSQUITTO_CONFIG_CERTS_DIR:$MOSQUITTO_CONFIG_CERTS_DIR:g" | \
+	sed "s:MOSQUITTO_USER:$MOSQUITTO_USER:g" | \
+	sed "s:MOSQUITTO_PORT:$MOSQUITTO_PORT:g" | \
+	sed "s:MOSQUITTO_SSL_PORT:$MOSQUITTO_SSL_PORT:g" \
+		> $MOSQUITTO_CONFIG_DIR/mosquitto.conf
+#
+# Setup TLS/SSL for mosquitto
+[ -d $MOSQUITTO_CONFIG_CERTS_DIR ] || mkdir $MOSQUITTO_CONFIG_CERTS_DIR
+# Create TLS/SSL CA, Server Keys and Certs
+tls_ca_server_cert_key_generate \
+	$MOSQUITTO_CONFIG_CERTS_DIR \
+	mosquitto-ca.key \
+	mosquitto-ca.cert \
+	mosquitto-server.key \
+	mosquitto-server.csr \
+	mosquitto-server.cert \
+	7300
+# Change permissons of TLS/SSL directory containing keys/certs
+chmod -R 700 $MOSQUITTO_CONFIG_CERTS_DIR
+chown -R $MOSQUITTO_USER:$MOSQUITTO_USER $MOSQUITTO_CONFIG_CERTS_DIR
+#
+# Configure Systemd service file
+cat $PROJECT_INIT_SCRIPTS_DIR/mosquitto.service | \
+	sed "s:MOSQUITTO_CONFIG_DIR:$MOSQUITTO_CONFIG_DIR:g" | \
+	sed "s:MOSQUITTO_USER:$MOSQUITTO_USER:g" | \
+	sed "s:MOSQUITTO_PORT:$MOSQUITTO_PORT:g" | \
+	sed "s:MOSQUITTO_SSL_PORT:$MOSQUITTO_SSL_PORT:g" \
+		> $SYSTEMD_UNITS_DIR_USER/mosquitto.service
+# Enable mosquitto service if needed
+systemctl enable mosquitto.service
+# Start mosquitto service if needed
+systemctl start mosquitto.service
+#
+# Display mosquitto debugging/testing information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+
+Mosquitto (MQTT) debugging using TLS
+====================================
+% Run the following commands to test MQTT subscription and publishing:
+
+mosquitto_sub -d -p $MOSQUITTO_SSL_PORT --insecure --cafile $MOSQUITTO_CONFIG_CERTS_DIR/mosquitto-server.cert -t "JambulaTV/presence/wifi"
+
+mosquitto_pub -p $MOSQUITTO_SSL_PORT --insecure --cafile $MOSQUITTO_CONFIG_CERTS_DIR/mosquitto-server.cert -t "JambulaTV/presence/wifi" -m "User has arrived home" 
+
+#
+EOF
 }
 
 sleekxmpp_install () {
