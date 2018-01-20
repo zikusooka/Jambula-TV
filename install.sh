@@ -34,6 +34,9 @@ exec 2> $BUILD_LOG
 # Install images and icons
 images_add
 
+# Install Python 3
+python3_install
+
 # pick desired X11 video driver
 case $X11_DRIVER in
 intel)
