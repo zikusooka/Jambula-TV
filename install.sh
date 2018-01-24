@@ -34,10 +34,13 @@ exec 2> $BUILD_LOG
 # Install images and icons
 images_add
 
-# Install Python 3
+# Install python3
 python3_install
 
-# pick desired X11 video driver
+# Install commonly used python3 modules
+python3_common_modules_install
+
+# Pick desired X11 video driver
 case $X11_DRIVER in
 intel)
 intel_x11_driver_install
@@ -372,9 +375,6 @@ nextcloud_configure
 # ----------------
 # Home Automation 
 # ----------------
-# Open-ZWave
-open_zwave_install
-#
 # Domoticz
 domoticz_install # ~ 70mins
 domoticz_configure
@@ -383,6 +383,10 @@ domoticz_configure
 #openhab_install
 #openhab_configure
 home_automation_scripts
+#
+# HomeAssistant
+homeassistant_install
+homeassistant_configure
 
 # ------------------------
 # Notifications/ Messaging

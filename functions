@@ -83,6 +83,8 @@ PROJECT_GITHUB_DIR=$PROJECT_SRC_DIR/github
 PROJECT_RPMS_DIR=$PROJECT_SRC_DIR/rpms
 PROJECT_ZIPS_DIR=$PROJECT_SRC_DIR/zips
 PROJECT_DEBS_DIR=$PROJECT_SRC_DIR/debs
+PROJECT_PIPS_DIR=$PROJECT_SRC_DIR/pips
+PROJECT_PIPS_REQUIRES_DIR=$PROJECT_PIPS_DIR/requirements
 # System directories
 PROJECT_SYSTEM_ARCH=`uname -m`
 PROJECT_SYSTEM_CONF_DIR=$CONFDIR/$PROJECT_NAME
@@ -1867,6 +1869,44 @@ ln -s -f $PREFIX/local/bin/python3.6 $PREFIX/local/bin/python3
 # Create symlinks to pip binaries
 ln -s -f $PREFIX/local/bin/pip3.6 $PREFIX/local/bin/pip
 ln -s -f $PREFIX/local/bin/pip3.6 $PREFIX/local/bin/pip3
+}
+
+python3_common_modules_install () {
+# pytz
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR pytz
+#
+# setuptools_scm
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR setuptools_scm
+#
+# pytest-runner
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR pytest-runner
+#
+# beautifulsoup4
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR beautifulsoup4
+#
+# pbr
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR pbr
+#
+# pycodestyle
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR pycodestyle
+#
+# incremental
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR incremental
+#
+# vcversioner
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR vcversioner
+#
+# sqlalchemy
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR sqlalchemy==1.1.15
+#
+# chardet
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR chardet==3.0.4
+#
+# requests
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR requests==2.18.4
+#
+#httplib
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR httplib2
 }
 
 intel_x11_driver_install () {
@@ -8313,7 +8353,21 @@ make_install_jambulatv
 ln -s /usr/local/lib64/libopenzwave.so.1.4 $LIBDIR/libopenzwave.so.1.4
 }
 
+python_openzwave_install () {
+# Unpack runtime
+unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/python_openzwave-*.zip
+cd $INSTALL_SRC_DIR/python_openzwave
+# Remove external URL link to github for downloading embedded version of openzwave
+# i.e. it is vailable locally
+sed -i "s|def get_openzwave(self, url='https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/archives/open-zwave-master-{0}.zip'|def get_openzwave(self, url='file:$PROJECT_PIPS_DIR/openzwave-embed/open-zwave.zip'|g" $INSTALL_SRC_DIR/python_openzwave/pyozw_setup.py
+# compile
+python setup.py install
+}
+
 domoticz_install () {
+# Install open-zwave first
+open_zwave_install
+#
 # Get WWW User and Group
 set_www_user_group
 rsync -avz $PROJECT_GITHUB_DIR/domoticz/ $INSTALL_SRC_DIR/domoticz/
@@ -8364,6 +8418,42 @@ cat $PROJECT_INIT_SCRIPTS_DIR/domoticz.service | \
 systemctl enable domoticz.service
 # Start domoticz if needed
 systemctl start domoticz.service
+}
+
+homeassistant_install () {
+# Install open-zwave first
+python_openzwave_install
+
+# Dependencies for Homeassistant - Install locally using wheels specified in requirements
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/homeassistant-requirements.txt
+
+# Unpack Home-Assistant using github sources
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/home-assistant/ $INSTALL_SRC_DIR/home-assistant/
+#
+# Force our requirements
+cp -v $PROJECT_PIPS_REQUIRES_DIR/homeassistant-requirements.txt \
+	$INSTALL_SRC_DIR/home-assistant/requirements_all.txt
+# Force SQLAlchemy 1.1.15 in recorder
+sed -i "s:sqlalchemy==1.2.2:sqlalchemy==1.1.15:g" $INSTALL_SRC_DIR/home-assistant/homeassistant/components/recorder/__init__.py
+#
+# Install
+cd $INSTALL_SRC_DIR/home-assistant
+python3 setup.py install
+#
+# Create symbolic link
+[ -x $BINARY_PREFIX/homeassistant ] || ln -s $PREIFX/local/bin/homeassistant $BINARY_PREFIX/homeassistant
+}
+
+homeassistant_configure () {
+
+# configuration.yaml
+
+# Add Home assistant user to dialout so they can access ZWave stick
+usermod -a -G dialout $HOMEASSISTANT_USER
+
+# Port Number 8123
+
+# systemd file
 }
 
 home_automation_scripts () {
