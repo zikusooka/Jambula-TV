@@ -226,8 +226,9 @@ iptv_builder_install
 epg_tvheadend_configure
 
 # Auto download of TV Shows, Movies, and Podcasts
-flexget_deps_install
-flexget_install
+#flexget_deps_install
+#flexget_install
+flexget_python3_install 
 flexget_configure
 
 # Torrents

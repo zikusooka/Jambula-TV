@@ -62,7 +62,15 @@ MANDIR8=$DATAROOTDIR/man/man8
 SYSCTL_DIR=$CONFDIR/sysctl.d
 UDEV_RULES_DIR=/etc/udev/rules.d
 LOGROTATE_CONF_DIR=$CONFDIR/logrotate.d
-PYTHON_SITEDIR=$LIBDIR/python2.7/site-packages
+PYTHON_VERSION=$(python -V)
+PYTHON_FULL_VERSION_NUMBER=$(echo $PYTHON_VERSION | awk {'print $2'})
+PYTHON_MAJOR_VERSION_NUMBER=$(echo $PYTHON_FULL_VERSION_NUMBER | cut -d '.' -f1)
+PYTHON_MINOR_VERSION_NUMBER=$(echo $PYTHON_FULL_VERSION_NUMBER | cut -d '.' -f1-2)
+PYTHON2_SITEDIR=$LIBDIR/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
+PYTHON3_SITEDIR=$PREFIX/local/lib/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
+# Set Python site directories depending on version in use
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && PYTHON_SITEDIR=$PYTHON2_SITEDIR
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && PYTHON_SITEDIR=$PYTHON3_SITEDIR
 FIRMWARE_DIR=$PREFIX/lib/firmware
 POST_INSTALL_NOTES=$ROOT_DIR/post_install_notes
 # Source directories
@@ -5514,6 +5522,30 @@ echo
 done
 }
 
+flexget_python3_install () {
+# Dependencies for Flexget - Install locally using wheels/pips specified in requirements
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt
+
+# Flexget (Python3)
+# -----------------
+# IMPORTANT: Don't use pip due to requirements set for common python 3 modules used by
+#            other packages
+#
+# Install python modules
+echo "Installing FlexGet ..."
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/Flexget-current/ $INSTALL_SRC_DIR/Flexget/
+# Force our requirements
+cp -v $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt \
+	$INSTALL_SRC_DIR/Flexget/requirements.txt
+patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT_PATCHES_DIR/flexget.plugin.include.python3.patch
+# Install
+cd $INSTALL_SRC_DIR/Flexget
+python3 setup.py install
+
+# Create symbolic link
+[ -x $BINARY_PREFIX/flexget ] || ln -s $PREIFX/local/bin/flexget $BINARY_PREFIX/flexget
+}
+
 flexget_install () {
 # Remove any existing modules
 [ ! -d $INSTALL_SRC_DIR/FlexGet* ] || rm -rf $INSTALL_SRC_DIR/FlexGet*
@@ -5539,13 +5571,25 @@ touch $PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $FLEXGET_CONFIG_DIR
 # Change flexget log directory to multimedia user
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/flexget
-# Copy copy config .yml files
-cp -v $PROJECT_CONFIGS_DIR/flexget/*.yml $FLEXGET_CONFIG_DIR/
 #
-# Variables file
+# Copy config .yml files depending on python version in use
+# Python 2
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
+	cp -v $PROJECT_CONFIGS_DIR/flexget/*.yml $FLEXGET_CONFIG_DIR/
+# Python 3
+echo "Using Python 3 ..."
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
+	cp -v $PROJECT_CONFIGS_DIR/flexget_python3/*.yml $FLEXGET_CONFIG_DIR/
+#
+# Copy variables .yml files depending on python version in use
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
+	FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget/variables.yml.template
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
+	FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget_python3/variables.yml.template
+#
 if [ ! -e $FLEXGET_CONFIG_DIR/variables.yml ];
 then
-cat $PROJECT_CONFIGS_DIR/flexget/variables.yml.template | \
+cat $FLEXGET_VARIABLES_TEMPLATE  | \
    sed -e "s:MY_HTTP_BROWSER_USERAGENT_MAC:$HTTP_BROWSER_USERAGENT_MAC:g" | \
    sed -e "s:MY_HTTP_BROWSER_USERAGENT_LINUX:$HTTP_BROWSER_USERAGENT_LINUX:g" | \
    sed -e "s:MY_HTTP_BROWSER_USERAGENT_WINDOWS:$HTTP_BROWSER_USERAGENT_WINDOWS:g" | \
@@ -5619,8 +5663,10 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $FLEXGET_CONFIG_DIR
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/flexget
 #
 # Copy email templates
-cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
-	$INSTALL_SRC_DIR/Flexget/flexget/templates/email/
+# Python 2
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
+	cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
+		$INSTALL_SRC_DIR/Flexget/flexget/templates/email/
 #
 # Add Environment file for Systemd
 cat > $SYSCONFIG_DIR/flexget <<EOF

@@ -1,0 +1,103 @@
+webui:
+  port: FLEXGET_PORT
+
+headers:
+  user_agent_mac: "MY_HTTP_BROWSER_USERAGENT_MAC"
+  user_agent_linux: "MY_HTTP_BROWSER_USERAGENT_LINUX"
+  user_agent_windows: "MY_HTTP_BROWSER_USERAGENT_WINDOWS"
+
+trakt:
+  username: TRAKT_USERNAME
+  watchlist: TRAKT_WATCHLIST
+
+email:
+  from: downloads@TORRENTS_DOMAIN_NAME
+  to: EMAIL_TO_ADDRESS
+  smtp_username: GOOGLE_SERVICES_USERNAME
+  smtp_password: GOOGLE_SERVICES_PASSWORD
+
+telegram:
+  bot_token: "TELEGRAM_API_BOT"
+  username: TELEGRAM_USERNAME
+  first_name: 
+  sur_name:
+
+whatsapp:
+  send_script: /usr/bin/jambulatv-whatsapp
+
+kodi:
+  url: "http://127.0.0.1"
+  port: KODI_HTTP_PORT
+  username: KODI_HTTP_USER
+  password: KODI_HTTP_PASS
+
+tv:
+  path: PROJECT_PARTITION # TV path for free space calculations
+  exists_series: TORRENTS_COMPLETED_DIRECTORY
+  include: FLEXGET_CONFIG_DIR/tvseries.yml
+  download: TORRENTS_WATCH_DIRECTORY/TORRENTS_LABEL_TVSHOWS
+  series_completed_dir: JambulaTV/Torrents/completed/TORRENTS_LABEL_TVSHOWS
+  series_jambulatv_dir: JambulaTV/Videos/TV_Shows
+  series_rename_script: usr/bin/jambulatv-rename-tvshows
+  day_of_week: sun,mon,tue,wed,thu,fri,sat
+  hour: FLEXGET_SCHEDULE_TVSHOWS_HR
+  minute: FLEXGET_SCHEDULE_TVSHOWS_MIN
+
+movies:
+  path: PROJECT_PARTITION # Movies path for free space calculations
+  exists_movie: TORRENTS_COMPLETED_DIRECTORY
+  download: TORRENTS_WATCH_DIRECTORY/TORRENTS_LABEL_MOVIES
+  movies_completed_dir: JambulaTV/Torrents/completed/TORRENTS_LABEL_MOVIES
+  movies_jambulatv_dir: JambulaTV/Videos/Movies
+  day_of_week: sun,mon,tue,wed,thu,fri,sat
+  hour: FLEXGET_SCHEDULE_MOVIES_HR
+  minute: FLEXGET_SCHEDULE_MOVIES_MIN
+
+podcasts:
+  path: PROJECT_PARTITION # Podcasts path for free space calculations
+  exists: PROJECT_PARTITION
+  include: FLEXGET_CONFIG_DIR/podcasts.yml
+  download_dir: PODCASTS_DIRECTORY
+  spool_dir: PODCASTS_DIRECTORY/spool
+  download_log: PROJECT_SYSTEM_LOG_DIR/flexget/podcasts.log
+  download_script: /usr/bin/jambulatv-fetch-podcasts
+  day_of_week: sun,mon,tue,wed,thu,fri,sat
+  hour: FLEXGET_SCHEDULE_PODCASTS_HR
+  minute: FLEXGET_SCHEDULE_PODCASTS_MIN
+
+iptv:
+  lists_dir: PLAYLISTS_DIRECTORY
+  day_of_week: "*"
+  hour: "FLEXGET_SCHEDULE_IPTV_LISTS_HR"
+  minute: "FLEXGET_SCHEDULE_IPTV_LISTS_MIN"
+
+wget:
+  wget_log: PROJECT_SYSTEM_LOG_DIR/flexget/wget.log
+  limit_rate: 14k
+
+ftp:
+  host: JAMBULATV_FTP_SERVER
+  user: JAMBULATV_FTP_USER
+  pass: JAMBULATV_FTP_PASS
+  port: 21
+  dir_remote: JambulaTV
+  dir_temp:  TMPDIR
+
+tv_feeds:
+  rarbg: "https://rarbg.to/rssdd.php?category=18"
+  ezrss: "https://eztv.ag/ezrss.xml"
+  torlock: "http://www.torlock.com/television/rss.xml"
+  mininova: "http://www.mininova.org/rss.xml?cat=8"
+  limetorrents: "https://www.limetorrents.cc/rss/20"
+  torrentdownloads: "http://www.torrentdownloads.me/rss.xml?cid=8"
+  demonoid: "https://www.demonoid.pw/rss/3.xml"
+  seedpeer: "http://www.seedpeer.eu/rss/cat/451.xml"
+
+movie_feeds:
+  rarbg: "https://rarbg.to/rssdd.php?category=movies"
+  torlock: "http://www.torlock.com/movies/rss.xml"
+  mininova: "http://www.mininova.org/rss.xml?cat=4"
+  limetorrents: "https://www.limetorrents.cc/rss/16"
+  torrentdownloads: "http://www.torrentdownloads.me/rss.xml?cid=4"
+  demonoid: "https://www.demonoid.pw/rss/1.xml"
+  btscene: "http://www.btstorrent.cc/rss.php?type=catmain&x=1"
