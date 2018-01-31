@@ -5543,7 +5543,7 @@ cd $INSTALL_SRC_DIR/Flexget
 python3 setup.py install
 
 # Create symbolic link
-[ -x $BINARY_PREFIX/flexget ] || ln -s $PREIFX/local/bin/flexget $BINARY_PREFIX/flexget
+[ -x $BINARY_PREFIX/flexget ] || ln -s $PREFIX/local/bin/flexget $BINARY_PREFIX/flexget
 }
 
 flexget_install () {
@@ -5924,7 +5924,7 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 yowsup2_python3_install () {
 # Dependencies for yowsup - Install locally using wheels specified in requirements
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/yowsup-requirements.txt
-
+#
 # Using yowsup github branch by AragurDEV
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup-AragurDEV/ $INSTALL_SRC_DIR/yowsup/
 # Install
@@ -5932,7 +5932,7 @@ cd $INSTALL_SRC_DIR/yowsup
 python3 setup.py install
 #
 # Create symbolic link
-[ -x $BINARY_PREFIX/yowsup ] || ln -s $PREIFX/local/bin/yowsup $BINARY_PREFIX/yowsup
+[ -x $BINARY_PREFIX/yowsup-cli ] || ln -s $PREFIX/local/bin/yowsup-cli $BINARY_PREFIX/yowsup-cli
 }
 
 whatsapp_messaging_configure () {
@@ -8501,7 +8501,7 @@ cd $INSTALL_SRC_DIR/home-assistant
 python3 setup.py install
 #
 # Create symbolic link
-[ -x $BINARY_PREFIX/homeassistant ] || ln -s $PREIFX/local/bin/homeassistant $BINARY_PREFIX/homeassistant
+[ -x $BINARY_PREFIX/hass ] || ln -s $PREFIX/local/bin/hass $BINARY_PREFIX/hass
 }
 
 homeassistant_configure () {
