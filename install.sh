@@ -394,7 +394,7 @@ homeassistant_configure
 # ------------------------
 mosquitto_install
 mosquitto_configure
-sleekxmpp_install 
+#sleekxmpp_install 
 python_telegram_bot_install
 telegram_messaging_configure
 #yowsup2_deps_install

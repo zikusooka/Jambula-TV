@@ -1915,6 +1915,12 @@ pip3 install --no-index --find-links $PROJECT_PIPS_DIR requests==2.18.4
 #
 #httplib
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR httplib2
+#
+#pyxmpp2
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR pyxmpp2
+#
+#sleekxmpp
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR sleekxmpp
 }
 
 intel_x11_driver_install () {
