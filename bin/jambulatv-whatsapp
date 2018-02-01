@@ -10,6 +10,7 @@ WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
 WHATSAPP_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-whatsapp.cfg
 WHATSAPP_METHOD_NAME=$1
 WHATSAPP_TEXT_MESSAGE="$2"
+WHATSAPP_IMAGE_PATH="$2"
 WHATSAPP_PHONE_NUMBER_RECIPIENT=$3
 WHATSAPP_REGISTRATION_METHOD=sms
 
@@ -25,7 +26,7 @@ usage () {
 clear
 if [ "x$WHATSAPP_METHOD_NAME" = "x" ];
 then
-echo "Usage:  ./`basename $0` [register]|[sendmessage]
+echo "Usage:  ./`basename $0` [register]|[sendmessage]|[sendimage]
 "
 exit 1
 fi
@@ -42,6 +43,19 @@ echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_TEXT_MESSAGE] [WHA
 exit 1
 fi
 ;;
+
+[Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee])
+# Source settings file
+[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+# Test for blank message or recipient phone number
+if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_IMAGE_PATH" = "x" ];
+then
+echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_IMAGE_PATH] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
+"
+exit 1
+fi
+;;
+
 esac
 }
 
@@ -199,8 +213,19 @@ TELEPHONE_COUNTRY_CODE=$TELEPHONE_COUNTRY_CODE
 MOBILE_COUNTRY_CODE=$MOBILE_COUNTRY_CODE
 MOBILE_NETWORK_CODE=$MOBILE_NETWORK_CODE
 EOF
+
 # Request for PIN code using SMS
-yowsup-cli registration -d -E android -m $MOBILE_COUNTRY_CODE -n $MOBILE_NETWORK_CODE -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -r $WHATSAPP_REGISTRATION_METHOD
+yowsup-cli registration -d -E android -m $MOBILE_COUNTRY_CODE -n $MOBILE_NETWORK_CODE -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -r $WHATSAPP_REGISTRATION_METHOD 2>&1 | grep -i "status: fail" 
+REQUEST_CODE_STATUS=$?
+if [[ "$REQUEST_CODE_STATUS" = "0" ]];
+then
+# Notify of failure and quit
+cat <<EOF
+echo "$(basename $0): Failed to get registration code.  Please check for actual Yowsup error message"
+logger "$(basename $0): Failed to get registration code.  Please check for actual Yowsup error message"
+EOF
+exit 1
+fi
 }
 
 registration_confirm () {
@@ -218,7 +243,7 @@ fi
 yowsup-cli registration -d -E android -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -R $WHATSAPP_REGISTRATION_CODE
 }
 
-send_message () {
+send_pre_check () {
 # Source settings file
 . $WHATSAPP_CREDENTIALS_CONFIG
 
@@ -232,13 +257,44 @@ clear;
 echo "Error:  Please register this device for whatsapp first before you can send"
 exit 1
 fi
+}
 
+send_message () {
+# Pre-checks before sending
+send_pre_check
 # Send message to Whatsapp recipient
 yowsup-cli demos -d -l "$WHATSAPP_PHONE_NUMBER_SENDER:$WHATSAPP_ENCRYPTED_PASSWORD" -s $WHATSAPP_PHONE_NUMBER_RECIPIENT "$WHATSAPP_TEXT_MESSAGE"
 }
 
+send_image () {
+# Pre-checks before sending
+send_pre_check
+# Send image to Whatsapp recipient
+/usr/bin/expect -c "
+spawn yowsup-cli demos -y -d -l \"$WHATSAPP_PHONE_NUMBER_SENDER:$WHATSAPP_ENCRYPTED_PASSWORD\"; 
+expect \[offline\];
+
+# Connect/ Quick login
+send /L\n;
+expect eof;
+#
+send \"\n\";
+expect \[connected\];
+
+# Send image
+send -- \"/image send $WHATSAPP_PHONE_NUMBER_RECIPIENT $WHATSAPP_IMAGE_PATH\";
+send \"\n\";
+expect eof;
+
+# Disconnect
+send /disconnect\n;
+expect \[disconnected\];
+"
+}
+
 register_4_whatsapp  () {
 registration_request_code
+#
 # Ask for PIN Code
 clear
 read -p "An SMS message with a PIN Code has been sent to your phone number $WHATSAPP_PHONE_NUMBER_SENDER.  Please Enter it here now:
@@ -281,8 +337,12 @@ register_4_whatsapp
 send_message "$2" "$3"
 ;;
 
+[Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee])
+send_image "$2" "$3"
+;;
+
 *)
-echo "Usage:  ./`basename $0` [register]|[sendmessage]
+echo "Usage:  ./`basename $0` [register]|[sendmessage]|[sendimage]
 "
 exit 1
 ;;
