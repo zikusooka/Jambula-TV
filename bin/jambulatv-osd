@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python
 # Display Announcements on JambulaTV Screen
 #
 # Import modules
@@ -60,6 +60,8 @@ def wait_if_already_running ():
         while os.path.exists(OSDRUNFILE):
           print ("Another OSD process is running, please wait ...")
           time.sleep(60)
+	  # remove temp file after sleep time - process may be dead
+          os.remove(OSDRUNFILE)
 
 # Open, write, close a temporary file to prevent others from calling this script until done
 def create_run_file ():
