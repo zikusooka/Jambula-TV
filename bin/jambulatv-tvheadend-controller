@@ -35,7 +35,7 @@ TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
 TVHEADEND_PLAY_STREAM_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/play/stream"
 TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid' | sed 's:"::g')
 TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=/tmp/iptv_service_uuid.txt
-TVHEADEND_LAST_CHANNEL_NUMBER=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq '.entries[] | .number' | sort -n | tail -1)
+TVHEADEND_LAST_CHANNEL_NUMBER=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq '.entries[] | select(.name!="name-not-set") | .number'| sort -n | tail -1)
 let "TVHEADEND_DVB_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
 let "TVHEADEND_IPTV_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
 TVHEADEND_IPTV_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-full.$(date +%Y%m%d%H%M).log
@@ -116,7 +116,8 @@ CURRENT_CHANNELS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions 
 # Quit if TVH Server is being used i.e. Playing TV
 if [ "x$CURRENT_CHANNELS" != "x" ] || [ "x$CURRENT_PROFILES" != "x" ];
 then
-echo "JambulaTV Error:  The TV Server is currently in use, please pick another convenient time to perform this task"
+logger -s -t "$(basename $0): The TV Server is currently in use, please pick another convenient time to perform this task"
+$OSD_SCRIPT -m "$(basename $0): The TV Server is currently in use, please pick another convenient time to perform this task" > /dev/null 2>&1 &
 exit 1
 fi
 }
@@ -169,13 +170,13 @@ map_osd_notice_started () {
 # Display notice
 case $TV_TYPE in
 dvb)
-$OSD_SCRIPT -m "Mapping of $1 network started. Please be patient while mapping of your Live TV channels takes place ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "Mapping of your DVB-T2 network started. Please be patient while mapping of your Live TV channels takes place ..." > /dev/null 2>&1 &
 ;;
 iptv)
-$OSD_SCRIPT -m "Mapping of $1 network started. Please be patient while mapping of your IPTV channels takes place ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "Mapping of your IPTV network started. Please be patient while mapping of your IPTV channels takes place ..." > /dev/null 2>&1 &
 ;;
 cameras)
-$OSD_SCRIPT -m "Mapping of $1 network started. Please be patient while mapping of your Camera channel feeds takes place ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "Mapping of your CCTV network started. Please be patient while mapping of your Camera channel feeds takes place ..." > /dev/null 2>&1 &
 ;;
 esac
 }
@@ -183,13 +184,13 @@ esac
 map_osd_notice_completed () {
 case $TV_TYPE in
 dvb)
-$OSD_SCRIPT -m "Mapping of $1 network completed. You may now resume watching Live TV ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "Mapping of your DVB-T2 network completed. You may now resume watching Live TV ..." > /dev/null 2>&1 &
 ;;
 iptv)
-$OSD_SCRIPT -m "Mapping of $1 network completed. You may now resume watching IPTV ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "Mapping of your IPTV network completed. You may now resume watching IPTV ..." > /dev/null 2>&1 &
 ;;
 cameras)
-$OSD_SCRIPT -m "Mapping of $1 network completed. You may now resume watching Camera feeds ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "Mapping of your CCTV network completed. You may now resume watching Camera feeds ..." > /dev/null 2>&1 &
 ;;
 esac
 }
@@ -243,8 +244,13 @@ NUMBER_OF_DVB_NETWORKS=0
 fi
 #
 # See if DVB network is corrupted
+if [[ -d $TVHEADEND_NETWORK_CONFIG_DIR ]];
+then
 find $TVHEADEND_NETWORK_CONFIG_DIR -size 0 -type f -print | xargs ls | grep config > /dev/null 2>&1
 DVB_NETWORK_CORRUPTED=$?
+else
+DVB_NETWORK_CORRUPTED=255
+fi
 
 if [ "$DVB_NETWORK_CORRUPTED" = "0" ];
 then
@@ -314,12 +320,14 @@ zap_dead_channels
 zap_dead_services
 #
 # Set DIGIT i.e. First channel number
+#
 if [ "x$TVHEADEND_DVB_FIRST_CHANNEL_NUMBER" = "x" ];
 then
 DIGIT=1
 else
 DIGIT=$TVHEADEND_DVB_FIRST_CHANNEL_NUMBER
 fi
+#
 $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq .entries[] | grep "text\": \"$DVBT_NETWORK_NAME" | cut -d '/' -f3 | sed 's:["|,]::g' | sed 's:---::g' | grep -wEv TEST | grep -wEv '{PMT:0}' | sort -u | while read LINE
 do
 CHANNEL_NUMBER=$DIGIT
@@ -793,6 +801,7 @@ configure_dvb_network
 # All tasks {scan+map} 
 [[ "$TV_TASK" = "all" ]] && \
 	$(basename $0) dvb scan && \
+	sleep 45 && \
 	$(basename $0) dvb map
 ;;
 
