@@ -5027,6 +5027,7 @@ cat $PROJECT_CONFIGS_DIR/dnsmasq.conf.sample | \
    sed -e "s:NETWORK_IP_ADDRESS:$NETWORK_IP_ADDRESS:g" | \
    sed -e "s:WIFI_IP_ADDRESS:$COOVA_SERVER_IP:g" | \
    sed -e "s:NETWORK_DOMAIN:$NETWORK_DOMAIN:g" | \
+   sed -e "s:SRV_HOSTNAME:$PROJECT_NAME:g" | \
    sed -e "s:NETWORK_DHCP_RANGE:$NETWORK_DHCP_RANGE:g" \
 	> $CONFDIR/dnsmasq.conf
 # Make dnsmasq server as primary DNS server 

@@ -303,6 +303,8 @@ cache-size=150
 # ldapserver.example.com port 389
 #srv-host=_ldap._tcp.example.com,ldapserver.example.com,389
 
+srv-host=_xmpp-client._tcp.SRV_HOSTNAME
+
 # A SRV record sending LDAP for the example.com domain to
 # ldapserver.example.com port 389 (using domain=)
 #domain=example.com
