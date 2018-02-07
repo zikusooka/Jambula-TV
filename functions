@@ -800,8 +800,9 @@ TORRENTS_DOMAIN_NAME="MyJambulaTV"
 # Asterisk Credentials - Copy these to globals file
 ASTERISK_DIAL_OUT_NUMBER_1=""
 
-# OSD
+# OSD/XMPP
 OSD_SCRIPT=$BINARY_PREFIX/jambulatv-osd
+XMPP_SCRIPT=$BINARY_PREFIX/jambulatv-xmpp
 
 # HTTP Headers
 # -----------
@@ -4402,6 +4403,11 @@ kodi_osd_configure () {
 		> $OSD_SCRIPT
 # Make script executable
 chmod 755 $OSD_SCRIPT
+#
+# Copy jambulatv-xmpp script, if none exists in bin directory
+[ -e $XMPP_SCRIPT ] || cp -v $PROJECT_BIN_DIR/jambulatv-xmpp $XMPP_SCRIPT
+# Make script executable
+chmod 755 $XMPP_SCRIPT
 }
 
 livestreamer_install () {
