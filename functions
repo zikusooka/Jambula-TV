@@ -184,8 +184,8 @@ GENERATE_LOCAL_CONF_SCRIPT=$BINARY_PREFIX/jambulatv-generate-local-conf
 FREEVO_VERSION=svn
 
 # Flexget IPTV list download schedule
-FLEXGET_SCHEDULE_IPTV_LISTS_HR="*/24"
-FLEXGET_SCHEDULE_IPTV_LISTS_MIN="*/30"
+FLEXGET_SCHEDULE_IPTV_LISTS_HR=15
+FLEXGET_SCHEDULE_IPTV_LISTS_MIN=30
 # 
 FLEXGET_PORT=$(grep -i 'flexget$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
@@ -5537,7 +5537,7 @@ done
 flexget_python3_install () {
 # Dependencies for Flexget - Install locally using wheels/pips specified in requirements
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt
-
+#
 # Flexget (Python3)
 # -----------------
 # IMPORTANT: Don't use pip due to requirements set for common python 3 modules used by
@@ -5549,11 +5549,15 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/Flexget-current/ $INSTALL_SRC_DIR/
 # Force our requirements
 cp -v $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt \
 	$INSTALL_SRC_DIR/Flexget/requirements.txt
+# Apply Patches
+# -------------
+# include plugin
 patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT_PATCHES_DIR/flexget.plugin.include.python3.patch
+# notifiers plugin
+patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/notifiers/notify.py < $PROJECT_PATCHES_DIR/flexget.plugin.notifiers.python3.patch
 # Install
 cd $INSTALL_SRC_DIR/Flexget
 python3 setup.py install
-
 # Create symbolic link
 [ -x $BINARY_PREFIX/flexget ] || ln -s $PREFIX/local/bin/flexget $BINARY_PREFIX/flexget
 }
@@ -5565,7 +5569,7 @@ rm -rf $PYTHON_SITEDIR/FlexGet*
 # Install python modules
 echo "Installing FlexGet ..."
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/Flexget/ $INSTALL_SRC_DIR/Flexget/
-# Apply our patches
+# Apply our patches - include plugin
 patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT_PATCHES_DIR/flexget.plugin.include.patch
 # Install
 cd $INSTALL_SRC_DIR/Flexget
@@ -5679,6 +5683,11 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/flexget
 [[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
 	cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
 		$INSTALL_SRC_DIR/Flexget/flexget/templates/email/
+# Python 3
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
+	cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \
+		$PYTHON_SITEDIR/FlexGet-*.egg/flexget/templates/task/
+#
 #
 # Add Environment file for Systemd
 cat > $SYSCONFIG_DIR/flexget <<EOF

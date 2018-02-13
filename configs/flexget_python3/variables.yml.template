@@ -8,6 +8,7 @@ headers:
 
 trakt:
   username: TRAKT_USERNAME
+  account: TRAKT_USERNAME
   watchlist: TRAKT_WATCHLIST
 
 email:
@@ -19,7 +20,8 @@ email:
 telegram:
   bot_token: "TELEGRAM_API_BOT"
   username: TELEGRAM_USERNAME
-  first_name: 
+  first_name:
+  last_name:
   sur_name:
 
 whatsapp:
@@ -67,9 +69,9 @@ podcasts:
 
 iptv:
   lists_dir: PLAYLISTS_DIRECTORY
-  day_of_week: "*"
-  hour: "FLEXGET_SCHEDULE_IPTV_LISTS_HR"
-  minute: "FLEXGET_SCHEDULE_IPTV_LISTS_MIN"
+  day_of_week: sun,mon,tue,wed,thu,fri,sat
+  hour: FLEXGET_SCHEDULE_IPTV_LISTS_HR
+  minute: FLEXGET_SCHEDULE_IPTV_LISTS_MIN
 
 wget:
   wget_log: PROJECT_SYSTEM_LOG_DIR/flexget/wget.log
@@ -87,17 +89,13 @@ tv_feeds:
   rarbg: "https://rarbg.to/rssdd.php?category=18"
   ezrss: "https://eztv.ag/ezrss.xml"
   torlock: "http://www.torlock.com/television/rss.xml"
-  mininova: "http://www.mininova.org/rss.xml?cat=8"
   limetorrents: "https://www.limetorrents.cc/rss/20"
   torrentdownloads: "http://www.torrentdownloads.me/rss.xml?cid=8"
   demonoid: "https://www.demonoid.pw/rss/3.xml"
-  seedpeer: "http://www.seedpeer.eu/rss/cat/451.xml"
 
 movie_feeds:
   rarbg: "https://rarbg.to/rssdd.php?category=movies"
   torlock: "http://www.torlock.com/movies/rss.xml"
-  mininova: "http://www.mininova.org/rss.xml?cat=4"
   limetorrents: "https://www.limetorrents.cc/rss/16"
   torrentdownloads: "http://www.torrentdownloads.me/rss.xml?cid=4"
   demonoid: "https://www.demonoid.pw/rss/1.xml"
-  btscene: "http://www.btstorrent.cc/rss.php?type=catmain&x=1"
