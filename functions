@@ -500,11 +500,11 @@ ZONEMINDER_DB_SCHEMA=$INSTALL_SRC_DIR/ZoneMinder/db/zm_create.sql
 ZONEMINDER_DB_USER=jambulatv
 ZONEMINDER_DB_PASS=jambulatvzm3
 ZONEMINDER_WWW_PORT=$(grep -i 'ZoneMinder$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-
 ZONEMINDER_ZMS_INETD_SCRIPT=$BINARY_PREFIX/jambulatv-zms-inetd
 ZONEMINDER_ZMS_INETD_PORT=8521
-
 ZONEMINDER_EVENTS_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Camera-Events
+
+CCTV_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/cctv-settings.cfg
 
 # Motion Database Variables
 MOTION_DB_HOST=localhost
@@ -8804,6 +8804,20 @@ chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 			> $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
+#
+# Add CCTV settings file
+cat > $CCTV_SETTINGS_FILE <<EOF
+# Settings for CCTV camera alarms
+CCTV_ALL=1 # Must be set to 1 if you want any alert below to work
+
+CCTV_LIGHTS=1
+CCTV_TELEGRAM=1
+CCTV_WHATSAPP=1
+CCTV_KODI=1
+CCTV_CALL=1
+CCTV_OSD=1
+CCTV_EMAIL=1
+EOF
 #
 # Copy systemd script- this defers from source file to kill errors during start
 cp -v $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service $SYSTEMD_UNITS_DIR_USER/
