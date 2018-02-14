@@ -50,11 +50,7 @@ ping -c 3 -W 3 $MIDDLEMAN_SSH_SERVER > /dev/null 2>&1
 HOST_STATUS_VAL=$?
 if [ $HOST_STATUS_VAL != 0 ];
 then
-clear
-cat <<EOF
-Error: $(basename $0) Failed: Can not connect to $MIDDLEMAN_SSH_SERVER 
-EOF
-logger $(basename $0) Failed: Can not connect to $MIDDLEMAN_SSH_SERVER 
+logger -t $(basename $0) "Failed: Can not connect to $MIDDLEMAN_SSH_SERVER"
 exit 1
 fi
 }

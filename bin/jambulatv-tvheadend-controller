@@ -116,7 +116,7 @@ CURRENT_CHANNELS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions 
 # Quit if TVH Server is being used i.e. Playing TV
 if [ "x$CURRENT_CHANNELS" != "x" ] || [ "x$CURRENT_PROFILES" != "x" ];
 then
-logger -s -t "$(basename $0): The TV Server is currently in use, please pick another convenient time to perform this task"
+logger -s -t $(basename $0) "The TV Server is currently in use, please pick another convenient time to perform this task"
 $OSD_SCRIPT -m "$(basename $0): The TV Server is currently in use, please pick another convenient time to perform this task" > /dev/null 2>&1 &
 exit 1
 fi

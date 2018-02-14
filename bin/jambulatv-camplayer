@@ -107,8 +107,7 @@ export DISPLAY=:0.0 && \
 
 player_stop_command () {
 # Notify
-echo "$(basename $0): Stopping viewing of Camera $CAMERA_NUMBER"
-logger "$(basename $0): Stopping viewing of Camera $CAMERA_NUMBER"
+logger -s -t $(basename $0) "Stopping viewing of Camera $CAMERA_NUMBER"
 # Get current monitor view process ID
 PID_WEB_CAM_FFPLAY=$(ps auxw | grep -Ev grep | grep monitor=$1 | awk {'print $2'})
 PID_WEB_CAM_CAMPLAYER=$(ps auxw | grep -Ev grep | grep 'jambulatv-camplayer play' | awk {'print $2'})

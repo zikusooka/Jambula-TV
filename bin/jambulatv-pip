@@ -54,8 +54,7 @@ pip_notices () {
 # Notices - OSD
 $OSD_SCRIPT -m "$@" -t $OSD_NOTICE_TIMEOUT
 # Notices - CLI
-logger "$(basename $0): $@"
-clear && echo "$@"
+logger -t $(basename $0) "$@"
 }
 
 pip_status () {

@@ -582,7 +582,7 @@ sudo jambulatv-library scan
 check_if_setup_completed
 
 # Debug
-logger "JambulaTV Setup: START"
+logger -s -t $(basename $0) "JambulaTV Setup: START"
 
 clear_logfile
 remove_previous_osd_message
@@ -614,4 +614,4 @@ scan_video_music_db
 email_system_info
 
 # Debug
-logger "JambulaTV Setup: END"
+logger -s -t $(basename $0) "JambulaTV Setup: END"
