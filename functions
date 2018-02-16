@@ -12,7 +12,7 @@ EMAIL_ADDRESS_SUPPORT=support@jambulatv.com
 EMAIL_ADDRESS_ERRORS=errors@jambulatv.com
 
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.4.112"
+KERNEL_VERSION="4.4.116"
 
 PRODUCT_MODEL_NAME="$PROJECT_NAME"
 PRODUCT_DISK_SIZE=$(journalctl -b -o cat --no-pager | grep sda | grep logical | awk {'print $8'} | sed 's:(::')
@@ -997,7 +997,9 @@ patch -p1 ./drivers/media/dvb-core/dvb_frontend.c < $PROJECT_PATCHES_DIR/kernel.
 # Realtek WiFi
 #patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
 # USB TV Tuner - Gadmei
-patch -p1 ./drivers/media/usb/usbtv/usbtv-core.c < $PROJECT_PATCHES_DIR/kernel.usbtv_core.patch
+#patch -p1 ./drivers/media/usb/usbtv/usbtv-core.c < $PROJECT_PATCHES_DIR/kernel.usbtv_core.patch
+# si2168 driver - DVB-T/T2 autodetect
+patch -p1 ./drivers/media/dvb-frontends/si2168.c < $PROJECT_PATCHES_DIR/kernel.dvb.si2168.patch
 }
 
 kernel_install_notice () {

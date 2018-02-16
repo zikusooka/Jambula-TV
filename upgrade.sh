@@ -237,7 +237,7 @@ pyalsaaudio_install
 #  MAIN SCRIPT  #
 #################
 
-#upgrade_kernel 4.4.112
+#upgrade_kernel 4.4.116
 #upgrade_kernel 4.9.43
 
 #upgrade_kodi
