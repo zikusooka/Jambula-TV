@@ -1,18 +1,15 @@
 #!/bin/sh
 #
-#This script will scan for Free-to-Air Digital TV broadcasts in Uganda
+# This script will scan for Free-to-Air Digital TV broadcasts in your area
+# Use it to generate DVB-T/T2 initial data file
 #
-# NOTE: For this script you need to first install w_scan utility 
-# i.e. In Fedora/Red Hat:  yum -vy install w_scan
-
-# Copyright (C) 2011 Joseph Zikusooka.
-#
-# Contact me at: joseph AT zikusooka.com
+# Jambula Labs (c) Copyright 2018-2019 All rights reserved
 
 
 HOME_DIR=$HOME
 W_SCAN_CMD=`which w_scan`
-DVB_TYPE=t #(DVB-T)
+DVB_TYPE=t #(DVB-T/T2)
+RAW_CHANNELS_FILE=/tmp/dvbt-raw-channels
 
 APP_NUMBER=$1
 COUNTRY_CODE=$2
@@ -21,29 +18,33 @@ COUNTRY_CODE=$2
 if [ "x$APP_NUMBER" = "x" ];
 then
 clear
-echo "Usage: ./`basename $0` [Program_used_to_play_TV e.g. 1] [COUNTRY]
+echo "Usage: ./`basename $0` [Output_Format_used_to_play_TV e.g. 1] [COUNTRY]
 
-1. Xine
+1. Xine		- tzap/czap/xine output instead of vdr channels.conf
 
-2. VLC
+2. VLC		- generate VLC xspf playlist (experimental)
 
-3. Initial Tuning Data
+3. Initial	- generate initial tuning data for (dvb-)scan
 
-4. Mplayer
+4. Mplayer 	- mplayer output instead of vdr channels.conf
 
-5. Kaffeine
+5. GStreamer	- generate channels.conf for dvbsrc plugin
 
-6. Gstreamer
+6. XML		- generate w_scan XML tuning data
+
+7. VDR (2.1)	- VDR 2.1.x
+
+*. VDR (2.0)	- VDR 2.0.x (Default)
 "
 exit 1
 fi
 
 
+# Country code - Probably not needed
 if [ "x$COUNTRY_CODE" = "x" ];
 then
 COUNTRY_CODE=UG
 fi
-
 
 
 case $APP_NUMBER in
@@ -72,32 +73,37 @@ APP_CONFIG_DIR=$HOME_DIR/.mplayer
 CHANNELS_FILE=$APP_CONFIG_DIR/channels.conf
 ;;
 5)
-# Kaffeine
-CHANNELS_FILE_FORMAT=k
-APP_CONFIG_DIR=$HOME_DIR/.kaffeine
-CHANNELS_FILE=$APP_CONFIG_DIR/channels.conf
-;;
-6)
 # GStreamer
 CHANNELS_FILE_FORMAT=G
 APP_CONFIG_DIR=$HOME_DIR/.gstreamer*
 CHANNELS_FILE=$APP_CONFIG_DIR/channels.dvbsrc
 ;;
-*)
-# Others
-CHANNELS_FILE_FORMAT="o 6"
+6)
+# XML
+CHANNELS_FILE_FORMAT=Z
 APP_CONFIG_DIR=$HOME_DIR
-CHANNELS_FILE=$APP_CONFIG_DIR/channels.conf
+CHANNELS_FILE=$APP_CONFIG_DIR/xml-channels.conf
+;;
+7)
+# VDR-2.1.x
+CHANNELS_FILE_FORMAT="o 21" 
+APP_CONFIG_DIR=$HOME_DIR
+CHANNELS_FILE=$APP_CONFIG_DIR/vdr-2.1.x-channels.conf
+;;
+*)
+# VDR-2.0.x
+CHANNELS_FILE_FORMAT="o 2" #2= VDR-2.0.x (default) 21=VDR-2.1.x
+APP_CONFIG_DIR=$HOME_DIR
+CHANNELS_FILE=$APP_CONFIG_DIR/vdr-2.0.x-channels.conf
 ;;
 esac
-
-
 
 
 
 #################
 #  MAIN SCRIPT  #
 #################
+
 # Check who is running this script
 if [ "`whoami`" != "root" ];
 then
@@ -107,18 +113,23 @@ echo "ERROR: Incorrect user: You need to run this script as root!
 exit 1
 fi
 
+# Stop tvheadend if it is running
+systemctl -q is-active tvheadend.service && systemctl stop tvheadend.service && export RESTART_TVH=Y
 
 # Create App config directory if it does not exist
 [ -d $APP_CONFIG_DIR ] || mkdir -p $APP_CONFIG_DIR
 # Backup existing file
 [ ! -e $CHANNELS_FILE ] || mv -v $CHANNELS_FILE $CHANNELS_FILE.`date +%Y%m%d`
-
-# Scan
-#w_scan -f $DVB_TYPE -c $COUNTRY_CODE -$CHANNELS_FILE_FORMAT -E 0 > $CHANNELS_FILE
-w_scan -f $DVB_TYPE -c $COUNTRY_CODE -$CHANNELS_FILE_FORMAT -E 1 > $CHANNELS_FILE
+# Scan - skip encrypted
+w_scan -v -C 'UTF-8' -f $DVB_TYPE -c $COUNTRY_CODE -$CHANNELS_FILE_FORMAT -T 1 -R 1 -O 1 -E 0 > $RAW_CHANNELS_FILE
+# Convert to DVBV5 format
+dvb-format-convert -I CHANNEL -O DVBV5 $RAW_CHANNELS_FILE $CHANNELS_FILE
 
 # Location of channels.conf file
 clear
 echo "Your channels.conf file is located at:
 $CHANNELS_FILE
 "
+
+# Start tvheadend if it was running before
+[[ "$RESTART_TVH" = "Y" ]] && systemctl start tvheadend.service
