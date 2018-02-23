@@ -824,8 +824,8 @@ FMRADIO_STREAMER_PORT=$(grep -i 'fmradio streamer$' $PORTS_ASSIGNED_FILE | awk {
 #############
 #  NOTICES  #
 #############
-NO_INTERNET_NOTIFICATION_MESSAGE="$(basename $0) Error: I was unable to connect to the Internet.  Please try again later!"
-FTP_FAILED_NOTIFICATION_MESSAGE="$(basename $0) FTP Error: I failed to download the following file:"
+NO_INTERNET_NOTIFICATION_MESSAGE="Error: I was unable to connect to the Internet.  Please try again later!"
+FTP_FAILED_NOTIFICATION_MESSAGE="FTP Error: I failed to download the following file:"
 
 
 
@@ -851,8 +851,7 @@ INTERNET_STATUS_VAL=$?
 # Notify and quit when there's NO Internet 
 if [ "$INTERNET_STATUS_VAL" != "0" ];
 then
-logger "$NO_INTERNET_NOTIFICATION_MESSAGE {Error $EXIT_VALUE}"
-echo "$NO_INTERNET_NOTIFICATION_MESSAGE {Error $EXIT_VALUE}"
+logger -s -t $(basename $0) "$NO_INTERNET_NOTIFICATION_MESSAGE {Error $EXIT_VALUE}"
 $OSD_SCRIPT -m "$NO_INTERNET_NOTIFICATION_MESSAGE {Error $EXIT_VALUE}"
 # Quit script, since there's no internet
 exit $EXIT_VALUE
@@ -2805,9 +2804,8 @@ rsync -av $MUXES_DIR_4_TV_MARKET/ $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWO
 sudo systemctl restart tvheadend.service
 #
 # Notifications
-SCAN_NOTIFICATION_MESSAGE="$(basename $0): Scanning for DVB-T2 services, please wait ..."
-logger "$SCAN_NOTIFICATION_MESSAGE"
-echo "$SCAN_NOTIFICATION_MESSAGE"
+SCAN_NOTIFICATION_MESSAGE="Scanning for DVB-T2 services, please wait ..."
+logger -s -t $(basename $0) "$SCAN_NOTIFICATION_MESSAGE"
 $OSD_SCRIPT -m "$SCAN_NOTIFICATION_MESSAGE"
 #
 # Pause for a couple of minutes to allow all services to be added before proceeding to mapping of channels
@@ -9893,8 +9891,7 @@ MYFTP
 # See if FTP download succeeded.  Notify if it failed
 if [ ! -s $FTP_LOCAL_DIR/$FTP_REMOTE_FILE ];
 then
-logger "$FTP_FAILED_NOTIFICATION_MESSAGE $FTP_REMOTE_FILE" 
-echo "$FTP_FAILED_NOTIFICATION_MESSAGE $FTP_REMOTE_FILE"
+logger -s -t $(basename $0) "$FTP_FAILED_NOTIFICATION_MESSAGE $FTP_REMOTE_FILE" 
 $OSD_SCRIPT -m "$FTP_FAILED_NOTIFICATION_MESSAGE $FTP_REMOTE_FILE"
 fi
 }
