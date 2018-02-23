@@ -25,13 +25,13 @@ session_start();
  <body>
  <div class="container">
  <div class="main">
- <h2>5. TV Series, Movies, Music, and Podcasts</h2><hr/>
+ <h2>5. TV Series, Podcasts, Movies, and IPTV</h2><hr/>
  <span id="error">
 <?php
 // To show error of last form
-if (!empty($_SESSION['error_form_02'])) {
- echo $_SESSION['error_form_02'];
- unset($_SESSION['error_form_02']);
+if (!empty($_SESSION['error_form_05'])) {
+ echo $_SESSION['error_form_05'];
+ unset($_SESSION['error_form_05']);
 }
 ?>
  </span>
@@ -45,6 +45,9 @@ if (!empty($_SESSION['error_form_02'])) {
  <input name="schedule_podcasts" id="schedule_podcasts" type="text" value="0:45" size="15">
  <label>Movies :</label>
  <input name="schedule_movies" id="schedule_movies" type="text" value="2:00" size="15">
+ <label>IPTV (Refresh playlist) :</label>
+ <input name="schedule_iptv" id="schedule_iptv" type="text" value="15:30" size="15">
+
 
 <hr></hr>
 

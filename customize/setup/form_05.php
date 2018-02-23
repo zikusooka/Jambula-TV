@@ -4,6 +4,8 @@ session_start();
  foreach ($_POST as $key => $value) {
  $_SESSION['post'][$key] = $value;
  }
+
+ extract($_SESSION['post']); // Function to extract array.
 ?>
 
 <!DOCTYPE HTML>

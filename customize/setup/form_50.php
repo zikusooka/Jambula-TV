@@ -20,18 +20,18 @@
  extract($_SESSION['post']); // Function to extract array.
 
  // Initialize variables for pages that are skipped i.e. Internet device settings
- $network_apn = !empty($_POST['network_apn']) ? $_POST['network_apn'] : '';
- $mifi_ssid = !empty($_POST['mifi_ssid']) ? $_POST['mifi_ssid'] : '';
- $mifi_pass = !empty($_POST['mifi_pass']) ? $_POST['mifi_pass'] : '';
- $lan_ip_addr = !empty($_POST['lan_ip_addr']) ? $_POST['lan_ip_addr'] : '';
- $lan_ip_gate = !empty($_POST['lan_ip_gate']) ? $_POST['lan_ip_gate'] : '';
- $lan_dns_1 = !empty($_POST['lan_dns_1']) ? $_POST['lan_dns_1'] : '';
- $lan_dns_2 = !empty($_POST['lan_dns_2']) ? $_POST['lan_dns_2'] : '';
+ //$network_apn = !empty($_POST['network_apn']) ? $_POST['network_apn'] : '';
+ //$mifi_ssid = !empty($_POST['mifi_ssid']) ? $_POST['mifi_ssid'] : '';
+ //$mifi_pass = !empty($_POST['mifi_pass']) ? $_POST['mifi_pass'] : '';
+ //$lan_ip_addr = !empty($_POST['lan_ip_addr']) ? $_POST['lan_ip_addr'] : '';
+ //$lan_ip_gate = !empty($_POST['lan_ip_gate']) ? $_POST['lan_ip_gate'] : '';
+ //$lan_dns_1 = !empty($_POST['lan_dns_1']) ? $_POST['lan_dns_1'] : '';
+ //$lan_dns_2 = !empty($_POST['lan_dns_2']) ? $_POST['lan_dns_2'] : '';
 
  // Connect to our MySQL Database
  $connection = mysql_connect("localhost", "JAMBULATV_SETUP_DB_USER", "JAMBULATV_SETUP_DB_PASS");
  $db = mysql_select_db("JAMBULATV_SETUP_DB_NAME", $connection); // Storing values in database. 
- $query = mysql_query("insert into setup (contact_name, contact_email, contact_phone, contact_birthday, contact_address1, contact_address2, contact_city, contact_country, system_password, isp_name, internet_device, wifi_nickname_1, wifi_mac_1, wifi_nickname_2, wifi_mac_2, wifi_nickname_3, wifi_mac_3, wifi_nickname_4, wifi_mac_4, wifi_nickname_5, wifi_mac_5, network_apn, mifi_ssid, mifi_pass, lan_ip_addr, lan_ip_gate, lan_dns_1, lan_dns_2, tvh_dvbt_config_requested, tv_market, dvbt_tuner_name, schedule_tvseries, schedule_podcasts, schedule_movies, traktv_username, traktv_watchlist, telegram_bot_id, telegram_chat_id, telegram_username, whatsapp_no_recipient, whatsapp_no_sender, notification_email_address, gmail_address, gmail_password, news_sources, youtube_api_key, youtube_client_id, youtube_client_secret, darksky_api_key) values('$contact_name', '$contact_email', '$contact_phone', '$contact_birthday', '$contact_address1', '$contact_address2', '$contact_city', '$contact_country', '$system_password', '$isp_name', '$internet_device', '$wifi_nickname_1', '$wifi_mac_1', '$wifi_nickname_2', '$wifi_mac_2', '$wifi_nickname_3', '$wifi_mac_3', '$wifi_nickname_4', '$wifi_mac_4', '$wifi_nickname_5', '$wifi_mac_5', '$network_apn', '$mifi_ssid', '$mifi_pass', '$lan_ip_addr', '$lan_ip_gate', '$lan_dns_1', '$lan_dns_2', '$tvh_dvbt_config_requested', '$tv_market', '$dvbt_tuner_name', '$schedule_tvseries', '$schedule_podcasts', '$schedule_movies', '$traktv_username', '$traktv_watchlist', '$telegram_bot_id', '$telegram_chat_id', '$telegram_username', '$whatsapp_no_recipient', '$whatsapp_no_sender', '$notification_email_address', '$gmail_address', '$gmail_password', '$news_sources', '$youtube_api_key', '$youtube_client_id', '$youtube_client_secret', '$darksky_api_key')", $connection);
+ $query = mysql_query("insert into setup (contact_name, contact_email, contact_phone, contact_birthday, contact_address1, contact_address2, contact_city, contact_country, system_password, isp_name, internet_device, wifi_nickname_1, wifi_mac_1, wifi_nickname_2, wifi_mac_2, wifi_nickname_3, wifi_mac_3, wifi_nickname_4, wifi_mac_4, wifi_nickname_5, wifi_mac_5, network_apn, mifi_ssid, mifi_pass, lan_ip_addr, lan_ip_gate, lan_dns_1, lan_dns_2, tvh_dvbt_config_requested, tv_market, dvbt_tuner_name, schedule_tvseries, schedule_podcasts, schedule_movies, schedule_iptv, traktv_username, traktv_watchlist, telegram_bot_id, telegram_chat_id, telegram_username, whatsapp_no_recipient, whatsapp_no_sender, notification_email_address, gmail_address, gmail_password, cctv_all, cctv_whatsapp, cctv_telegram, cctv_email, cctv_kodi, cctv_osd, cctv_call, cctv_lights, news_sources, youtube_api_key, youtube_client_id, youtube_client_secret, darksky_api_key) values('$contact_name', '$contact_email', '$contact_phone', '$contact_birthday', '$contact_address1', '$contact_address2', '$contact_city', '$contact_country', '$system_password', '$isp_name', '$internet_device', '$wifi_nickname_1', '$wifi_mac_1', '$wifi_nickname_2', '$wifi_mac_2', '$wifi_nickname_3', '$wifi_mac_3', '$wifi_nickname_4', '$wifi_mac_4', '$wifi_nickname_5', '$wifi_mac_5', '$network_apn', '$mifi_ssid', '$mifi_pass', '$lan_ip_addr', '$lan_ip_gate', '$lan_dns_1', '$lan_dns_2', '$tvh_dvbt_config_requested', '$tv_market', '$dvbt_tuner_name', '$schedule_tvseries', '$schedule_podcasts', '$schedule_movies', '$schedule_iptv', '$traktv_username', '$traktv_watchlist', '$telegram_bot_id', '$telegram_chat_id', '$telegram_username', '$whatsapp_no_recipient', '$whatsapp_no_sender', '$notification_email_address', '$gmail_address', '$gmail_password', '$cctv_all', '$cctv_whatsapp', '$cctv_telegram', '$cctv_email', '$cctv_kodi', '$cctv_osd', '$cctv_call', '$cctv_lights', '$news_sources', '$youtube_api_key', '$youtube_client_id', '$youtube_client_secret', '$darksky_api_key')", $connection);
 
  if ($query) {
  // Create file to indicate setup was completed
