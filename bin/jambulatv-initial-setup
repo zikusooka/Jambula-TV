@@ -34,12 +34,15 @@ SETUP_INTERNET_CONFIG_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.internet-settin
 SETUP_MAC_ADDRESSES_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.wifi_devices.txt
 SETUP_COMPLETED_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.initial-setup-completed
 SETUP_DVBT_CONFIG_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.dvbt-settings.txt
+CCTV_HTML_OUTPUT_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.cctv-settings.txt
 
 SETUP_LAN_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 SETUP_3_4G_DONGLE_FILE=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-usb.cfg
 SETUP_MIFI_ROUTER_FILE=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-wifi.cfg
 SETUP_WIFI_DEVICES_FILE=$PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg
 SETUP_NEWS_RSS_FILE=$PROJECT_SYSTEM_CONF_DIR/rss-feeds.cfg
+
+JAMBULATV_CCTV_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/cctv-settings.cfg
 
 EMAIL_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-email.cfg
 EMAIL_GMAIL_CONFIG=$PROJECT_SYSTEM_CONF_DIR/email-gmail.cfg
@@ -457,6 +460,26 @@ sudo sed -i "s:GOOGLE_SERVICES_USERNAME:$GMAIL_ADDRESS:g" $ASTERISK_AGI_BIN_DIR/
 sudo sed -i "s:GOOGLE_SERVICES_PASSWORD:$GMAIL_PASSWORD:g" $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 }
 
+cctv_alarm_setup () {
+# CCTV Alarm settings
+while [ ! -e $CCTV_HTML_OUTPUT_FILE ];
+do
+# Wait
+sleep 1
+done
+
+# Change permissions so we can write to JambulaTV CCTV settings file
+[ -e $JAMBULATV_CCTV_SETTINGS_FILE ] && sudo chown $MULTIMEDIA_USER $JAMBULATV_CCTV_SETTINGS_FILE
+# Copy CCTV HTML output to JambulaTV CCTV settings file
+cat $CCTV_HTML_OUTPUT_FILE > $JAMBULATV_CCTV_SETTINGS_FILE
+#
+# Change permissions to multimedia user
+sudo chown $MULTIMEDIA_USER $JAMBULATV_CCTV_SETTINGS_FILE
+#
+# Remove MAC set up file
+sudo rm -f $CCTV_HTML_OUTPUT_FILE
+}
+
 news_headlines_setup() {
 # Extract variables from mysql
 extract_setup_variables
@@ -603,6 +626,8 @@ remove_current_qrcode
 messaging_services_setup
 flexget_secrets_setup
 asterisk_google_xmpp_setup
+
+cctv_alarm_setup
 
 news_headlines_setup
 
