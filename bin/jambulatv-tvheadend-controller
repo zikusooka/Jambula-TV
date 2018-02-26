@@ -2,7 +2,7 @@
 # This script is used to create DVB-T and IPTV channels in TVHeadend using CLI.
 # Use it after services for both have been generated
 # Also used in forcing IPTV network to scan from the command line
-# Jambula Labs @copyright 2017-2018 All rights reserved
+# Jambula Labs @copyright 2018-2019 All rights reserved
 
 # Variables
 PROJECT_NAME=JambulaTV
@@ -31,13 +31,11 @@ EMAIL_ADDRESS_USER=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG | sed '/
 SERIAL=$(grep -i Serial $PROJECT_RELEASE_FILE | cut -d : -f2)
 
 # TVHeadend
+TVHEADEND_DVBT_TUNER_NODE=/dev/dvb/adapter$DVBT_TUNER_NO
 TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
 TVHEADEND_PLAY_STREAM_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/play/stream"
 TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid' | sed 's:"::g')
 TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=/tmp/iptv_service_uuid.txt
-TVHEADEND_LAST_CHANNEL_NUMBER=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq '.entries[] | select(.name!="name-not-set") | .number'| sort -n | tail -1)
-let "TVHEADEND_DVB_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
-let "TVHEADEND_IPTV_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
 TVHEADEND_IPTV_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-full.$(date +%Y%m%d%H%M).log
 TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-error.$(date +%Y%m%d%H%M).log
 TVHEADEND_IPTV_SERVICE_LOG_FILE=/tmp/iptv_service_output.log
@@ -64,6 +62,27 @@ TV_MEASURE=$3
 fi
 
 
+#############
+#  NOTICES  #
+#############
+OSD_NOTICE_NO_TUNER="Unable to detect the TV Tuner. This is most likely a hardware issue.  Please check your DVB-T2 tuner and ensure it is properly connected"
+OSD_NOTICE_NO_NETWORK="Your Live TV network and channels list is corrupted. Please wait while I attempt to repair it now"
+OSD_NOTICE_NETWORK_NOT_MATCHED="The Live TV network is not associated to your DVB-T/T2 tuner. I will attempt to repair it now, please be patient"
+OSD_NOTICE_REPAIR_STARTED="DVB-T/T2 Repair mode started ..."
+OSD_NOTICE_REPAIR_NETWORK="Restoring DVB-T/T2 network ..."
+OSD_NOTICE_ADD_NETWORK="Setting up a fresh DVB-T/T2 network"
+OSD_NOTICE_EXISTING_DVBT_NETWORK="DVB-T/T2 network already exists, proceeding"
+OSD_NOTICE_EXISTING_IPTV_NETWORK="IPTV network already exists, proceeding"
+OSD_NOTICE_EXISTING_CAMERA_NETWORK="Camera network already exists, proceeding"
+OSD_NOTICE_SCAN_NETWORK_STARTED="Scanning of $1 network started. This will take some time, please be patient ..."
+OSD_NOTICE_MAP_STARTED_DVBT="Mapping of your DVB-T/T2 network started"
+OSD_NOTICE_MAP_STARTED_IPTV="Mapping of your IPTV network started. Please be patient while mapping of your IPTV channels takes place ..."
+OSD_NOTICE_MAP_STARTED_CAMERA="Mapping of your CCTV network started. Please be patient while mapping of your Camera channel feeds takes place ..."
+OSD_NOTICE_MAP_COMPLETED_DVBT="Mapping of your DVB-T/T2 network completed. You may now resume watching Live TV ..."
+OSD_NOTICE_MAP_COMPLETED_IPTV="Mapping of your IPTV network completed. You may now resume watching IPTV ..."
+OSD_NOTICE_MAP_COMPLETED_CAMERA="Mapping of your CCTV network completed. You may now resume watching Camera feeds ..."
+
+
 
 ###############
 #  FUNCTIONS  #
@@ -83,7 +102,7 @@ usage_dvb () {
 if [ "x$TV_TASK" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` dvb [scan|map|all]
+echo "Usage:  ./`basename $0` dvb [scan|map|all|repair]
 "
 exit 1
 fi
@@ -117,7 +136,7 @@ CURRENT_CHANNELS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions 
 if [ "x$CURRENT_CHANNELS" != "x" ] || [ "x$CURRENT_PROFILES" != "x" ];
 then
 logger -s -t $(basename $0) "The TV Server is currently in use, please pick another convenient time to perform this task"
-$OSD_SCRIPT -m "$(basename $0): The TV Server is currently in use, please pick another convenient time to perform this task" > /dev/null 2>&1 &
+$OSD_SCRIPT -m "The TV Server is currently in use, please pick another convenient time to perform this task" > /dev/null 2>&1 &
 exit 1
 fi
 }
@@ -163,20 +182,20 @@ refresh_tvheadend
 
 scan_osd_notice_started () {
 # Display notice
-$OSD_SCRIPT -m "Scanning of $1 network started. This will take some time, please be patient ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "$OSD_NOTICE_SCAN_NETWORK_STARTED" > /dev/null 2>&1 &
 }
 
 map_osd_notice_started () {
 # Display notice
 case $TV_TYPE in
 dvb)
-$OSD_SCRIPT -m "Mapping of your DVB-T2 network started. Please be patient while mapping of your Live TV channels takes place ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "$OSD_NOTICE_MAP_STARTED_DVBT" > /dev/null 2>&1 &
 ;;
 iptv)
-$OSD_SCRIPT -m "Mapping of your IPTV network started. Please be patient while mapping of your IPTV channels takes place ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "$OSD_NOTICE_MAP_STARTED_IPTV" > /dev/null 2>&1 &
 ;;
 cameras)
-$OSD_SCRIPT -m "Mapping of your CCTV network started. Please be patient while mapping of your Camera channel feeds takes place ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "$OSD_NOTICE_MAP_STARTED_CAMERA" > /dev/null 2>&1 &
 ;;
 esac
 }
@@ -184,13 +203,13 @@ esac
 map_osd_notice_completed () {
 case $TV_TYPE in
 dvb)
-$OSD_SCRIPT -m "Mapping of your DVB-T2 network completed. You may now resume watching Live TV ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "$OSD_NOTICE_MAP_COMPLETED_DVBT" > /dev/null 2>&1 &
 ;;
 iptv)
-$OSD_SCRIPT -m "Mapping of your IPTV network completed. You may now resume watching IPTV ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "$OSD_NOTICE_MAP_COMPLETED_IPTV" > /dev/null 2>&1 &
 ;;
 cameras)
-$OSD_SCRIPT -m "Mapping of your CCTV network completed. You may now resume watching Camera feeds ..." > /dev/null 2>&1 &
+$OSD_SCRIPT -m "$OSD_NOTICE_MAP_COMPLETED_CAMERA" > /dev/null 2>&1 &
 ;;
 esac
 }
@@ -222,16 +241,14 @@ done
 refresh_tvheadend
 }
 
+get_tvheadend_last_channel_number () {
+TVHEADEND_LAST_CHANNEL_NUMBER=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq '.entries[] | select(.name!="name-not-set") | .number'| sort -n | tail -1)
+}
+
 
 ############
 #  DVB-T2  #
 ############
-# 
-dvb_network_add () {
-# Add DVB network
-dvb_tvheadend_network_add
-}
-
 configure_dvb_network () {
 # Get number of existing DVB networks
 ls $TVHEADEND_NETWORK_CONFIG_DIR/*/config > /dev/null 2>&1
@@ -246,7 +263,7 @@ fi
 # See if DVB network is corrupted
 if [[ -d $TVHEADEND_NETWORK_CONFIG_DIR ]];
 then
-find $TVHEADEND_NETWORK_CONFIG_DIR -size 0 -type f -print | xargs ls | grep config > /dev/null 2>&1
+find $TVHEADEND_NETWORK_CONFIG_DIR -size 0 -type f -exec ls {} \; | grep config > /dev/null 2>&1
 DVB_NETWORK_CORRUPTED=$?
 else
 DVB_NETWORK_CORRUPTED=255
@@ -254,23 +271,28 @@ fi
 
 if [ "$DVB_NETWORK_CORRUPTED" = "0" ];
 then
-echo "DVB network is corrupted.  Fixing ..."
+# Notify of network restoration
+logger -s -t $(basename $0) "$OSD_NOTICE_REPAIR_NETWORK"
+#
 # Get corrupted DVB network config file
-TVHEADEND_NETWORK_CONFIG_FILE=$(find $TVHEADEND_NETWORK_CONFIG_DIR -size 0 -type f -print | xargs ls | grep config)
+TVHEADEND_NETWORK_CONFIG_FILE=$(find $TVHEADEND_NETWORK_CONFIG_DIR -size 0 -type f -exec ls {} \; | grep config)
 # Add network
-dvb_network_add
+dvb_tvheadend_network_add
 
 elif [ "$NUMBER_OF_DVB_NETWORKS" = "0" ];
 then
-echo "Setting up a fresh DVB network"
+# Notify of fresh network addition
+logger -s -t $(basename $0) "$OSD_NOTICE_ADD_NETWORK"
+#
 # Set fresh DVB network config file
 TVHEADEND_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
 TVHEADEND_NETWORK_CONFIG_FILE=$TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/config
 # Add network
-dvb_network_add
+dvb_tvheadend_network_add
 
 else
-echo "DVB network already exists, proceeding"
+# Notify of network already exists and proceeding
+logger -s -t $(basename $0) "$OSD_NOTICE_EXISTING_NETWORK"
 break
 
 fi
@@ -319,14 +341,10 @@ zap_dead_channels
 # Remove dead services
 zap_dead_services
 #
-# Set DIGIT i.e. First channel number
-#
-if [ "x$TVHEADEND_DVB_FIRST_CHANNEL_NUMBER" = "x" ];
-then
-DIGIT=1
-else
+# Set starting channel number/digit
+get_tvheadend_last_channel_number
+let "TVHEADEND_DVB_FIRST_CHANNEL_NUMBER = $TVHEADEND_LAST_CHANNEL_NUMBER + 1"
 DIGIT=$TVHEADEND_DVB_FIRST_CHANNEL_NUMBER
-fi
 #
 $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq .entries[] | grep "text\": \"$DVBT_NETWORK_NAME" | cut -d '/' -f3 | sed 's:["|,]::g' | sed 's:---::g' | grep -wEv TEST | grep -wEv '{PMT:0}' | sort -u | while read LINE
 do
@@ -371,6 +389,77 @@ done
 map_osd_notice_completed $TVHEADEND_IPTV_NETWORK_NAME
 }
 
+dvb_tvheadend_network_repair () {
+# Quit if TVHeadend is NOT running because of other process like cameras being configured
+systemctl -q is-active tvheadend.service || exit
+
+# Notify start of repair process
+logger -s -t $(basename $0) "$OSD_NOTICE_REPAIR_STARTED"
+
+# See if DVBT network UUID exists
+TVHEADEND_DVBT_NETWORK_UUID=$(curl -s http://127.0.0.1:9981/api/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$DVBT_NETWORK_NAME"'") |.uuid' | sed 's:"::g')
+
+# 1) If no DVB-T2 tuner was found
+# -------------------------------
+if [[ ! -e "$TVHEADEND_DVBT_TUNER_NODE" ]];
+then
+# OSD notice
+sudo $OSD_SCRIPT -m "$OSD_NOTICE_NO_TUNER"
+# Journal & CLI notice
+logger -s -t $(basename $0) "$OSD_NOTICE_NO_TUNER"
+#
+# Quit
+exit 0
+fi
+
+# 2) If DVBT Network was accidentally wiped out
+# ---------------------------------------------
+if [[ "x$TVHEADEND_DVBT_NETWORK_UUID" = "x" ]];
+then
+# OSD notice
+sudo $OSD_SCRIPT -m "$OSD_NOTICE_NO_NETWORK"
+# Journal & CLI notice
+logger -s -t $(basename $0) "$OSD_NOTICE_NO_NETWORK"
+#
+# Restore DVB-T network i.e. Repair 
+sudo $(basename $0) dvb all
+fi
+
+# 3) If Network added, check if DVB network is correctly associated with the DVB-T2 tuner adapter
+# ------------------------------------------------------------------------------------------------
+if [[ "x$TVHEADEND_DVBT_NETWORK_UUID" != "x" ]];
+then
+
+sudo grep -rli $TVHEADEND_DVBT_NETWORK_UUID $TVHEADEND_ADAPTERS_CONFIG_DIR > /dev/null 2>&1
+DVBT_NETWORK_MATCHED_WITH_TUNER=$?
+
+while [[ "$DVBT_NETWORK_MATCHED_WITH_TUNER" != "0" ]];
+do
+# Journal & CLI notice
+logger -s -t $(basename $0) "$OSD_NOTICE_NETWORK_NOT_MATCHED"
+ 
+# Refresh tvheadend
+refresh_tvheadend
+
+TVHEADEND_ADAPTERS_CONFIG_FILE=$(sudo grep -rli "$DVBT_TUNER_NAME" $TVHEADEND_ADAPTERS_CONFIG_DIR | sudo xargs grep -l adapter${DVBT_TUNER_NO})
+BAD_DVBT_NETWORK_UUID=$(sudo grep -A1 -i "\"networks\": \[" $TVHEADEND_ADAPTERS_CONFIG_FILE | tail -1 | awk {'print $1'} | sed "s:\"::g" | sed "s:\]::g" | sed "s:,::g")
+#
+# Replace bad DVBT network UUID with current working one
+if [[ "x$BAD_DVBT_NETWORK_UUID" != "x" ]];
+then
+sudo sed -i "s:$BAD_DVBT_NETWORK_UUID:$TVHEADEND_DVBT_NETWORK_UUID:g" $TVHEADEND_ADAPTERS_CONFIG_FILE
+else
+# Replace blank/missing DVBT network UUID with current working one
+sudo sed -i "/\"networks\": \[/a \"$TVHEADEND_DVBT_NETWORK_UUID\"" $TVHEADEND_ADAPTERS_CONFIG_FILE
+fi
+#
+sudo grep -rli $TVHEADEND_DVBT_NETWORK_UUID $TVHEADEND_ADAPTERS_CONFIG_DIR > /dev/null 2>&1
+DVBT_NETWORK_MATCHED_WITH_TUNER=$?
+done
+
+fi
+}
+
 
 ##########
 #  IPTV  #
@@ -396,8 +485,8 @@ configure_iptv_network () {
 # Test for existing IPTV network
 if [ "x$TVHEADEND_IPTV_NETWORK_UUID" != "x" ];
 then
-# Proceed if there's already an IPTV network
-echo "$(basename $0): $TVHEADEND_IPTV_NETWORK_NAME network already exists.  Proceeding ..."
+# Notify of IPTV network already existing and proceed
+logger -s -t $(basename $0) "$TVHEADEND_IPTV_NETWORK_NAME $OSD_NOTICE_EXISTING_IPTV_NETWORK"
 
 else
 # Since this is new setup, generate UUID
@@ -658,8 +747,8 @@ configure_cameras_network () {
 # Test for existing IPTV network
 if [ "x$TVHEADEND_CAMERAS_NETWORK_UUID" != "x" ];
 then
-# Proceed if there's already an IPTV network
-echo "$(basename $0): $TVHEADEND_CAMERAS_NETWORK_NAME network already exists.  Proceeding ..."
+# Notify of camera network already existing and proceed
+logger -s -t $(basename $0) "$TVHEADEND_CAMERAS_NETWORK_NAME $OSD_NOTICE_EXISTING_CAMERA_NETWORK"
 
 else
 # Since this is new setup, generate UUID
@@ -776,8 +865,8 @@ map_osd_notice_completed $TVHEADEND_CAMERAS_NETWORK_NAME
 # If IPTV specified, check for Internet connectivity before proceeding
 [[ "$TV_TYPE" = "iptv" ]] && check_internet_connectivity_ping 1
 
-# Pre-run checks
-pre_config
+# Pre-run checks (if not repairing)
+[[ "$TV_TASK" = "repair" ]] || pre_config
 
 # Run tasks based on type specified
 case $TV_TYPE in
@@ -785,8 +874,8 @@ dvb)
 # Usage
 usage_dvb
 
-# Add DVB-T2 Network
-configure_dvb_network
+# Add DVB-T2 Network (if not repairing)
+[[ "$TV_TASK" = "repair" ]] || configure_dvb_network
 
 # Scan
 [[ "$TV_TASK" = "scan" ]] && \
@@ -803,6 +892,10 @@ configure_dvb_network
 	$(basename $0) dvb scan && \
 	sleep 45 && \
 	$(basename $0) dvb map
+
+# Repair damaged DVB-T/T2
+[[ "$TV_TASK" = "repair" ]] && \
+	dvb_tvheadend_network_repair
 ;;
 
 iptv)

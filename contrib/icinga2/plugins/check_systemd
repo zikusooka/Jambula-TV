@@ -31,6 +31,7 @@ UPTIME_SECS=$(cat /proc/uptime | awk {'print $1'} | cut -d . -f1)
 # Quit if system just booted.  Most times gives false positives
 if [ "$STARTUP_FINISHED" != "0" ] || [ "$UPTIME_SECS" -lt "180" ];
 then
+echo "Dont worry, Systemd just booted up.  Will clear this warning shortly"
 exit 1
 fi
 
