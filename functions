@@ -12,7 +12,7 @@ EMAIL_ADDRESS_SUPPORT=support@jambulatv.com
 EMAIL_ADDRESS_ERRORS=errors@jambulatv.com
 
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.4.116"
+KERNEL_VERSION="4.4.119"
 
 PRODUCT_MODEL_NAME="$PROJECT_NAME"
 PRODUCT_DISK_SIZE=$(journalctl -b -o cat --no-pager | grep sda | grep logical | awk {'print $8'} | sed 's:(::')
@@ -1020,7 +1020,7 @@ read
 # Pause and check for Errors
 _install_pause_check_4_errors_ () {
 # Notify at Remote workstation - gxmessage needed there
-if [ "x$1" != "x" ] && [ "x$1" != "x" ];
+if [ "x$1" != "x" ] && [ "x$2" != "x" ];
 then
 # Run only if remote station is up
 ping -c 3 -W 3 $2 > /dev/null 2>&1
