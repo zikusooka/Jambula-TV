@@ -1,0 +1,42 @@
+--- rss.py.orig	2018-02-28 01:29:51.827820375 +0300
++++ rss.py	2018-03-03 06:07:03.281904231 +0300
+@@ -23,6 +23,10 @@
+ from flexget.utils.tools import decode_html
+ from flexget.utils.pathscrub import pathscrub
+ 
++from bs4 import BeautifulSoup
++from urllib.request import urlopen
++from urllib.request import urlretrieve
++
+ log = logging.getLogger('rss')
+ feedparser.registerDateHandler(lambda date_string: dateutil.parser.parse(date_string).timetuple())
+ 
+@@ -209,6 +213,18 @@
+ 
+         log.debug('Requesting task `%s` url `%s`', task.name, config['url'])
+ 
++        #Jambula: Extract podcast poster URL from RSS feed
++        url = config['url'] 
++        # Set RSS feed page
++        rss_feed_page = urlopen(url)
++        # Extract image links using BeautifulSoup
++        soup = BeautifulSoup(rss_feed_page, "html5lib")
++        image_links = []
++        for img in soup.findAll(['itunes:image']):
++            image_links.append(img.get('href'))
++        # Get first poster image URL
++        podcast_poster_url = image_links[0]
++
+         # Used to identify which etag/modified to use
+         url_hash = str(hash(config['url']))
+ 
+@@ -377,6 +393,9 @@
+             # TODO: confusing? refactor into class member ...
+ 
+             def add_entry(ea):
++                # Add Jambula Fields 
++                ea['rss_poster_url'] = podcast_poster_url 
++
+                 ea['title'] = entry.title
+ 
+                 # fields dict may be modified during this loop, so loop over a copy (fields.items())

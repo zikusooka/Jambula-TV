@@ -5553,11 +5553,19 @@ cp -v $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt \
 patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT_PATCHES_DIR/flexget.plugin.include.python3.patch
 # notifiers plugin
 patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/notifiers/notify.py < $PROJECT_PATCHES_DIR/flexget.plugin.notifiers.python3.patch
+# rss plugin - extract podcast poster image URLs
+patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/input/rss.py < $PROJECT_PATCHES_DIR/flexget.plugin.input.rss.python3.patch
 # Install
 cd $INSTALL_SRC_DIR/Flexget
 python3 setup.py install
 # Create symbolic link
 [ -x $BINARY_PREFIX/flexget ] || ln -s $PREFIX/local/bin/flexget $BINARY_PREFIX/flexget
+#
+# Copy email templates
+# Python 3
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
+	cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \
+		$PYTHON_SITEDIR/FlexGet-*.egg/flexget/templates/task/
 }
 
 flexget_install () {
@@ -5572,6 +5580,12 @@ patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT
 # Install
 cd $INSTALL_SRC_DIR/Flexget
 pip install -e .
+#
+# Copy email templates
+# Python 2
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
+	cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
+		$INSTALL_SRC_DIR/Flexget/flexget/templates/email/
 }
 
 flexget_configure () {
@@ -5676,17 +5690,6 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $FLEXGET_CONFIG_DIR
 # Change flexget log directory to multimedia user
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/flexget
 #
-# Copy email templates
-# Python 2
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
-	cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
-		$INSTALL_SRC_DIR/Flexget/flexget/templates/email/
-# Python 3
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
-	cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \
-		$PYTHON_SITEDIR/FlexGet-*.egg/flexget/templates/task/
-#
-#
 # Add Environment file for Systemd
 cat > $SYSCONFIG_DIR/flexget <<EOF
 FLEXGET_CMD="$(which flexget)"
@@ -5711,6 +5714,9 @@ FLEXGET
 =======
 Edit the flexget variables file located at:
 $FLEXGET_CONFIG_DIR/variables.yml
+
+Run the following command to authorize flexget at trakt.tv site::
+flexget trakt auth [YOUR TRAKT ACCOUNT]
 #
 EOF
 }

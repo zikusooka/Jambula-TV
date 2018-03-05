@@ -11,21 +11,21 @@ templates:
 #############
 #  Anchors  # 
 #############
-
+#
 # Podcasts
 # --------
     _podcasts_file_info_variables: &podcasts_file_info_variables
-      podcast_meta_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}.meta
-      podcast_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}.info
-      podcast_image_url: '{{podcast_image_url}}'
-      podcast_image_file: '/tmp/{{podcast_info_file}}.jpg'
+      podcast_meta_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace('–', '_')|replace(',', '')}}.meta
+      podcast_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace('–', '_')|replace(',', '')}}.info
+      podcast_poster_url: "{{rss_poster_url|re_replace('.jpg?.*', '.jpg')|re_replace('.png?.*', '.png')}}"
+      podcast_poster_file: '/tmp/podcast_poster.jpg'
       podcasts_queued_message_subject: "*[JambulaTV] Podcast(s) Queued*\nThe following Podcast has been queued for download:\n"
 
 # TV Series
 # ---------
     _tv_series_file_info_variables: &tv_series_file_info_variables
       tv_series_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}.info
-      tv_series_details: Series *{{tvdb_series_name}}* | Airs *{{tvdb_airs_day_of_week}}*\nEpisode *{{tvdb_ep_id}}* | Title *{{tvdb_ep_name|d('')}}*\nRated *{{tvdb_ep_rating}}/10* | Aired *{{tvdb_ep_air_date|replace('00', '')|replace(':', '')|replace(' ', '')}}*\nTime *{{tvdb_runtime}} Mins* | Format *{{quality|d('')}}*\n![Image]({{tvmaze_series_medium_image|replace('_', '%5F')}})\n{{tvdb_ep_overview|striptags}}
+      tv_series_details: Series *{{tvdb_series_name}}* | Airs *{{tvdb_airs_day_of_week}}*\nEpisode *{{tvdb_ep_id}}* | Title *{{tvdb_ep_name|d('')}}*\nRated *{{tvdb_ep_rating}}/10* | Aired *{{tvdb_ep_air_date|replace('00', '')|replace(':', '')|replace(' ', '')}}*\nTime *{{tvdb_runtime}} Mins* | Format *{{quality|d('')}}*\n{{tvdb_ep_overview|striptags}}
       filename: "{{series_name|replace(' ','.')|replace('.htm.','.')}}.{{series_id}}.{{quality|upper|replace(' ','.')}}"
       content-disposition: no
       tv_series_image_url: '{{tvmaze_series_medium_image}}'
@@ -37,7 +37,7 @@ templates:
 # -------
     _movies_file_info_variables: &movies_file_info_variables
       movie_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}.info
-      movie_details: Movie *{{imdb_name}}* | Year *{{imdb_year}}*\nRating *{{imdb_score}}/10* | Votes *{{imdb_votes}} votes*\nGenres *{{imdb_genres|join(', ')|title}}*\nTime *{{tmdb_runtime}} Mins* | Format *{{quality|d('')}}*\n![Image]({{tmdb_posters[0]|replace('_', '%5F')}})\n{{imdb_plot_outline|striptags}}
+      movie_details: Movie *{{imdb_name}}* | Year *{{imdb_year}}*\nRating *{{imdb_score}}/10* | Votes *{{imdb_votes}} votes*\nGenres *{{imdb_genres|join(', ')|title}}*\nTime *{{tmdb_runtime}} Mins* | Format *{{quality|d('')}}*\n{{imdb_plot_outline|striptags}}
       filename: "{{title|replace('.torrent.htm','')|replace(' ', '-')|replace('[', '-')|replace(']', '-')}}.torrent"
       content-disposition: no
       movie_image_url: '{{tmdb_posters[0]}}'
@@ -83,6 +83,14 @@ templates:
       list: '{? trakt.watchlist ?}'
       type: movies
       strip_dates: yes
+
+# Telegram Credentials
+# --------------------
+    _telegram_credentials: &telegram_credentials
+      bot_token: '{? telegram.bot_token ?}'
+      parse_mode: markdown
+      recipients:
+        - username: '{? telegram.username ?}'
 
 
 
@@ -135,15 +143,15 @@ templates:
             <<: *podcasts_file_info_variables
             INFO_FILE: "/tmp/{{podcast_info_file}}"
             DETAILS_FILE: ""
-            IMAGE_FILE: "{{podcast_image_file}}"
-            IMAGE_URL: "{{podcast_image_url}}"
+            IMAGE_FILE: "{{podcast_poster_file}}"
+            IMAGE_URL: "{{podcast_poster_url}}"
             NOTIFICATION_SUBJECT: "{{podcasts_queued_message_subject}}"
 
     headers:
       User-Agent: '{? headers.user_agent_linux ?}'
     regexp:
       reject:
-        - \b(s|d)ub(s|bed)?\b: {from: title}  
+        - \b(s|d)ub(s|bed|lado)?\b: {from: title}
         - \b(duo|tri|quadri|tetra|penta)logy\b: {from: title}  
         - \b3-?D\b: {from: title}
         - \b(ita|ger|fra|spa|swe|nor|nordic|fr|kor|esp|nl|pl)\b: {from: title}
@@ -189,6 +197,7 @@ templates:
         - (?i)[ .]vostfr[ .]: {from: title}
         - (?i)[ .]web-dl[ .]: {from: title} 
         - (?i)[ .]webscr[ .]: {from: title}
+        - (?i)[ .]HC.HDRip[ .]: {from: title}
     content_filter:
       require:
         - '*.avi'
@@ -202,6 +211,7 @@ templates:
         - 'password.txt'
         - 'password.zip'
         - '*.wmv'
+        - '*.HC.HDRip.*'
     verify_ssl_certificates: no
     domain_delay:
       rarbg.to: 5 seconds
@@ -226,7 +236,7 @@ templates:
 
 # WhatsApp
 # --------
-  send_whatsapp_notification:
+  send_whatsapp_notification: 
   # Run on_output exec
     exec:
       allow_background: yes
@@ -236,36 +246,40 @@ templates:
           # Send text message of queued content via WhatsApp
           - /bin/sudo "{? whatsapp.send_script ?}" sendmessage "$(cat {{INFO_FILE}})" 
           # Download content poster
-          - /usr/bin/wget -O "{{IMAGE_FILE}}" "{{IMAGE_URL}}"
+          - /usr/bin/curl -s -o "{{IMAGE_FILE}}" "{{IMAGE_URL}}"
           # Send poster of queued content via WhatsApp
           - /bin/sudo "{? whatsapp.send_script ?}" sendimage "{{IMAGE_FILE}}" 
       on_exit:
         for_accepted: 
-          # Remove temp info and files
-          - /bin/rm "{{INFO_FILE}}" "{{IMAGE_FILE}}"
-
+          # Message sent notice
+          - /bin/echo "WhatsApp message(s) for {{title}} sent!"
+ 
 
 # Telegram
 # --------
   send_telegram_notification:
+    # Re-order exec and notify plugins
+    plugin_priority:
+      exec: 240
+      notify: 250
+
     notify:
       entries:
         message: |+
           {% if task == "tv_shows" %}*[JambulaTV] TV Show(s) Queued*
-          The following TV Episode has been queued for download:
+          The following TV Episode has been queued for download
           {% elif task == "movies" %}*[JambulaTV] Movie(s) Queued*
-          The following Movie has been queued for download:
+          The following Movie has been queued for download
           {% elif task == "internet_tv" %}*[JambulaTV] Podcast(s) Queued*
-          The following Podcast has been queued for download:
+          The following Podcast has been queued for download
 
-          *Episode* {{title}}
+          *Title* {{title}}
 
           {{description|striptags}}
 
-          *Category* {{category}}
-
           *Published* {{rss_pubdate}}
-          
+
+          [ ]({{IMAGE_URL|replace("_", "%5F")}})
           {% elif task == "move_tv_shows" %}*[JambulaTV] New TV Episode(s) Added*
           The following TV Series Episode was successfully downloaded. You may find it under 'TV Shows' on your JambulaTV. Enjoy!
           {% elif task == "move_movies" %}*[JambulaTV] New Movie(s) Added*
@@ -277,25 +291,21 @@ templates:
           Episode: *{{tvdb_ep_id}}* | Title: *{{tvdb_ep_name|d('')}}*
           Rated: *{{tvdb_ep_rating}}/10* | Aired: *{{tvdb_ep_air_date|replace("00", "")|replace(":", "")}}*
           Time: *{{tvdb_runtime}} Mins* | Format: *{{quality|d('')}}*
-          [Image]({{tvmaze_series_medium_image|replace("_", "%5F")}})
+
+          [Plot]({{tvmaze_series_medium_image|replace("_", "%5F")}})
           {{tvdb_ep_overview|striptags}}
           {% elif imdb_name is defined %}Movie: *{{imdb_name}}* | Year: *{{imdb_year}}* 
           Rating: *{{imdb_score}}/10* | Votes: *{{imdb_votes}} votes*
-          Genres: *{{imdb_genres|join(', ')|title}}* 
+          Genres: *{{imdb_genres|join(', ')|title}}*
           Time: *{{tmdb_runtime}} Mins* | Format: *{{quality|d('')}}*
-          [Image]({{tmdb_posters[0]|replace("_", "%5F")}})
+
+          [Plot]({{tmdb_posters[0]|replace("_", "%5F")}})
           {{imdb_plot_outline|striptags}}
           {% else %}
           {% endif %}
         via:
           - telegram:
-              bot_token: '{? telegram.bot_token ?}'
-              parse_mode: markdown
-              recipients:
-                - username: '{? telegram.username ?}'
-                #- fullname: 
-                #    first: '{? telegram.first_name ?}'
-                #    sur: '{? telegram.sur_name ?}'
+              <<: *telegram_credentials
 
 
 # Start task and generate info file
@@ -602,11 +612,11 @@ templates:
       on_output:
         for_accepted:
           # Extract podcast meta data and save to file in spool dir 
-          - echo -e "[URL]|{{url}}\n\n[TITLE]|{{title}}\n\n[DESCRIPTION]|{{description|striptags|replace('\"', '')}}\n\n[CATEGORY]|{{category}}\n\n[PUBLISHED]|{{rss_pubdate}}\n\n{{podcast_image_url}}" > "{? podcasts.spool_dir ?}/{{podcast_meta_file}}"
+          - echo -e "[URL]|{{url}}\n\n[TITLE]|{{title}}\n\n[DESCRIPTION]|{{description|striptags|replace('\"', '')}}\n\n[PUBLISHED]|{{rss_pubdate}}\n\n[IMAGE]|{{IMAGE_URL}}" > "{? podcasts.spool_dir ?}/{{podcast_meta_file}}"
           # Extract podcast info and save to file in spool dir 
-          - echo -e "{{podcasts_queued_message_subject}}\n*Episode* {{title}}\n\n{{description|striptags|replace('\"', '')}}\n\n*Category* {{category}}\n\n*Published* {{rss_pubdate}}\n\n{{podcast_image_url}}" > "{? podcasts.spool_dir ?}/{{podcast_info_file}}"
+          - echo -e "{{podcasts_queued_message_subject}}\n*Title* {{title}}\n\n{{description|striptags|replace('\"', '')}}\n\n*Published* {{rss_pubdate}}" > "{? podcasts.spool_dir ?}/{{podcast_info_file}}"
           # Make copy of info file and save it under /tmp.  This is so in order to 
-          # satisfy path in send_whatsapp template
+          # satisfy path in send_whatsapp template above
           - /bin/cp "{? podcasts.spool_dir ?}/{{podcast_info_file}}" /tmp/
       on_exit:
         for_accepted: 
@@ -614,17 +624,16 @@ templates:
           - echo "{{title}} - {{url}}" >> '{? podcasts.download_log ?}'
           # Add accepted entry to log file
           - /bin/sh '{? podcasts.download_script ?}' "{{podcast_meta_file}}" '{? podcasts.download_dir ?}' '{? podcasts.spool_dir ?}' '{? email.to ?}'
-    no_entries_ok: no
+          # Remove temp info and files
+          - /bin/rm "{{INFO_FILE}}" "{{IMAGE_FILE}}"
+
+    no_entries_ok: yes
     free_space:
       path: '{? podcasts.path ?}'
       space: 1000
     limit_new: 5
     priority: 5 
     include: [ '{? podcasts.include ?}' ]
-    manipulate:
-      - podcast_image_url:
-          from: description
-          extract: '<img[^>]+src="([^">]+)"'
     accept_all: yes
 
 
@@ -647,7 +656,7 @@ templates:
         - dirs
         - files
       recursion: yes
-      recursion_depth: 5
+      recursion_depth: 4
     accept_all: yes
     ftp_download:
       use-ssl: False
