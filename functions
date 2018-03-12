@@ -3367,11 +3367,12 @@ cat $INSTALL_SRC_DIR/kodi/xbmc/network/upnp/UPnP.cpp.orig | \
 	sed "s|device->m_ManufacturerURL  = \"http://kodi.tv/\";|device->m_ManufacturerURL  = \"$COMPANY_URL\";|g" \
 		> $INSTALL_SRC_DIR/kodi/xbmc/network/upnp/UPnP.cpp
 
-# Compile
-# -------
+# --------------------------------------------------------------------------------------------------
+# Compile - ONLY for kodi versions 17-Krypton and below.  For above 17, switch to cmake build system
+# --------------------------------------------------------------------------------------------------
 cd $INSTALL_SRC_DIR/kodi
 ./bootstrap
-./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-pulse --enable-udev --enable-libusb --enable-libbluray --enable-player=mplayer,ffplay,cvlc,jambulatv-dvbplayer
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-pulse --enable-udev --enable-libusb --enable-libbluray --enable-player=mplayer,ffplay,cvlc,jambulatv-dvbplayer PYTHON_VERSION=2.7
 #
 cd $INSTALL_SRC_DIR/kodi
 [ ! -d $INCDIR/afpfs-ng ] || ln -s -f $INCDIR/afpfs-ng/* $INCDIR/
