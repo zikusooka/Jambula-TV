@@ -32,4 +32,12 @@ server {
              mp4_max_buffer_size 5M;
     	 }
 
+	location /api/ {
+             alias		/usr/share/JambulaTV/html/zm/api;
+             rewrite ^/api(.+)$ /api/index.php?p=$1 last;
+
+             #rewrite ^/api(.+)$ /api/app/webroot/$1 break;
+             #try_files $uri $uri/ /api/app/webroot/index.php?$args;
+         }
+
        }
