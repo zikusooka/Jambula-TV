@@ -377,8 +377,8 @@ nextcloud_configure
 # Home Automation 
 # ----------------
 # Domoticz
-domoticz_install # ~ 70mins
-domoticz_configure
+#domoticz_install # ~ 70mins
+#domoticz_configure
 #
 # OpenHAB
 #openhab_install

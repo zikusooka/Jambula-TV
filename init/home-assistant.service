@@ -1,0 +1,11 @@
+[Unit]
+Description=Home Assistant
+After=network-online.target
+
+[Service]
+Type=simple
+User=jambula
+ExecStart=/usr/local/bin/hass -c "/etc/JambulaTV/homeassistant"
+
+[Install]
+WantedBy=multi-user.target

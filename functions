@@ -484,6 +484,9 @@ DOMOTICZ_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/domoticz.log
 DOMOTICZ_PID_FILE=$RUNDIR/domoticz.pid
 DOMOTICZ_WWW_PORT=$(grep -i 'domoticz$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
+# Home Assistant
+HOMEASSISTANT_USER=$MULTIMEDIA_USER
+
 # Mosquitto - MQTT
 MOSQUITTO_USER=mosquitto
 MOSQUITTO_GROUP=mosquitto
@@ -1918,7 +1921,7 @@ pip3 install --no-index --find-links $PROJECT_PIPS_DIR httplib2
 #pyxmpp2
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR pyxmpp2
 #
-#sleekxmpp
+# sleekxmpp
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR sleekxmpp
 }
 
@@ -8506,20 +8509,31 @@ systemctl start domoticz.service
 }
 
 homeassistant_install () {
-# Install open-zwave first
+# Dependencies for HASS - Install locally using wheels/pips specified in requirements
+# astral
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR astral
+# async_timeout
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR async_timeout
+# yarl
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR yarl
+# aiohttp
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR aiohttp
+#
+# open-zwave
 python_openzwave_install
-
-# Dependencies for Homeassistant - Install locally using wheels specified in requirements
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/homeassistant-requirements.txt
 
 # Unpack Home-Assistant using github sources
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/home-assistant/ $INSTALL_SRC_DIR/home-assistant/
 #
 # Force our requirements
-cp -v $PROJECT_PIPS_REQUIRES_DIR/homeassistant-requirements.txt \
-	$INSTALL_SRC_DIR/home-assistant/requirements_all.txt
+cat $PROJECT_PIPS_REQUIRES_DIR/homeassistant-requirements.txt | \
+	sed "s:MY_PROJECT_PIPS_DIR:$PROJECT_PIPS_DIR:g" \
+		> $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
 # Force SQLAlchemy 1.1.15 in recorder
 sed -i "s:sqlalchemy==1.2.2:sqlalchemy==1.1.15:g" $INSTALL_SRC_DIR/home-assistant/homeassistant/components/recorder/__init__.py
+#
+# Dependencies for Homeassistant - Install locally using pips specified in requirements
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
 #
 # Install
 cd $INSTALL_SRC_DIR/home-assistant
@@ -8527,18 +8541,23 @@ python3 setup.py install
 #
 # Create symbolic link
 [ -x $BINARY_PREFIX/hass ] || ln -s $PREFIX/local/bin/hass $BINARY_PREFIX/hass
-}
-
-homeassistant_configure () {
-
-# configuration.yaml
 
 # Add Home assistant user to dialout so they can access ZWave stick
 usermod -a -G dialout $HOMEASSISTANT_USER
+}
 
-# Port Number 8123
+homeassistant_configure () {
+# Copy hass configuration files
+rsync -av $PROJECT_CONFIGS_DIR/homeassistant/ $PROJECT_SYSTEM_CONF_DIR/homeassistant/
+# Change hass config directory permissions
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_CONF_DIR/homeassistant
 
-# systemd file
+# Customize secrets i.e. port etc.....
+
+# Copy home-assistant systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/home-assistant.service $SYSTEMD_UNITS_DIR_USER/
+# Enable and start home-assistant if needed
+systemctl enable home-assistant.service
 }
 
 home_automation_scripts () {

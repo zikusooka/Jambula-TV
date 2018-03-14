@@ -1,0 +1,15 @@
+- platform: time_date
+  display_options:
+      - 'date' 
+      - 'time'
+- platform: worldclock
+  time_zone: Etc/UTC
+  name: 'GMT'
+
+- platform: worldclock
+  time_zone: America/New_York
+  name: 'New York'
+
+- platform: worldclock
+  time_zone: America/Chicago
+  name: 'Chicago'

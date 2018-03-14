@@ -1,0 +1,59 @@
+# Play
+- alias: "Media player playing"
+  trigger:
+    - platform: state
+      entity_id: media_player.jambulatv_living_room
+      to: 'playing'
+      from: 'idle'
+  condition:
+    - condition: state
+      entity_id: sun.sun
+      state: 'below_horizon'
+  action:
+      service: scene.turn_on
+      entity_id: scene.LivingRoom_Off
+
+# Pause
+- alias: "Media player paused"
+  trigger:
+    - platform: state
+      entity_id: media_player.jambulatv_living_room
+      from: 'playing'
+      to: 'paused'
+  condition:
+    - condition: state
+      entity_id: sun.sun
+      state: 'below_horizon'
+  action:
+      service: scene.turn_on
+      entity_id: scene.LivingRoom_Dim
+
+# UnPause
+- alias: "Media player unpaused"
+  trigger:
+    - platform: state
+      entity_id: media_player.jambulatv_living_room
+      from: 'paused'
+      to: 'playing'
+  condition:
+    - condition: state
+      entity_id: sun.sun
+      state: 'below_horizon'
+  action:
+      service: scene.turn_on
+      entity_id: scene.LivingRoom_Off
+
+# Stop
+- alias: "Media player stopped"
+  trigger:
+    - platform: state
+      entity_id: media_player.jambulatv_living_room
+      from: 'playing'
+      to: 'idle'
+  condition:
+    - condition: state
+      entity_id: sun.sun
+      state: 'below_horizon'
+  action:
+      service: scene.turn_on
+      entity_id: scene.LivingRoom_Normal

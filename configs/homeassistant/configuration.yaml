@@ -1,0 +1,96 @@
+homeassistant:
+  # Name of the location where Home Assistant is running
+  name: !secret homeassistant_name
+  # Location required to calculate the time the sun rises and sets
+  latitude: !secret homeassistant_latitude
+  longitude: !secret homeassistant_longitude
+  # Impacts weather/sunrise data (altitude above sea level in meters)
+  elevation: !secret homeassistant_elevation
+  # metric for Metric, imperial for Imperial
+  unit_system: !secret homeassistant_unit_system
+  # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time_zone: !secret homeassistant_time_zone
+  # Customization file
+  customize: !include_dir_merge_named JambulaTV/customize
+
+frontend:
+
+config:
+
+http:
+  #base_url: !secret http_base_url
+  server_port: !secret http_port
+  #api_password: !secret http_api_password
+  #ssl_certificate: !secret ssl_certificate
+  #ssl_key: !secret ssl_key
+  #trusted_networks:
+  #  - 192.168.0.0/24
+  #  - !secret external_ip
+  #ip_ban_enabled: True
+  #login_attempts_threshold: 3
+
+discovery:
+
+conversation:
+
+history:
+
+sun:
+
+tts:
+  - platform: google
+
+
+
+###########INCLUDES#####
+
+
+alert: !include_dir_merge_named JambulaTV/alerts/
+
+automation: !include_dir_merge_list JambulaTV/automation
+
+binary_sensor: !include_dir_list JambulaTV/binary_sensor
+
+calendar: !include_dir_merge_list JambulaTV/calendar
+
+#camera: !include_dir_merge_named JambulaTV/camera
+#camera: !include_dir_list JambulaTV/camera
+camera: !include JambulaTV/camera/zoneminder.yaml
+
+cover: !include_dir_list JambulaTV/cover
+
+device_tracker: !include_dir_merge_list JambulaTV/device_tracker
+
+group: !include_dir_merge_named JambulaTV/group
+
+#input_boolean: !include_dir_merge_named JambulaTV/input_boolean
+#input_select: !include JambulaTV/input_select.yaml
+#input_slider: !include JambulaTV/input_slider.yaml
+
+light: !include JambulaTV/light/zwave.yaml
+
+media_player: !include_dir_merge_list JambulaTV/media_player
+
+mqtt: !include_dir_merge_named JambulaTV/mqtt
+
+notify: !include_dir_merge_list JambulaTV/notify
+
+scene: !include_dir_merge_list JambulaTV/scene
+
+script: !include_dir_merge_named JambulaTV/script
+
+sensor: !include_dir_merge_list JambulaTV/sensor
+
+shell_command: !include_dir_merge_named JambulaTV/shell_command
+
+switch: !include_dir_merge_list JambulaTV/switch
+
+weather: !include_dir_merge_list JambulaTV/weather
+
+weblink: !include_dir_merge_named JambulaTV/weblink
+
+zone: !include_dir_list JambulaTV/zone
+
+zoneminder: !include JambulaTV/zoneminder/zm_cameras.yaml
+
+zwave: !include_dir_merge_named JambulaTV/zwave
