@@ -29,7 +29,7 @@ ask_4_variables
 set_variables
 
 # Non-Interactive install starts here i.e. Start logging to file 
-exec 2> $BUILD_LOG
+exec 2>> $BUILD_LOG
 
 # Install images and icons
 images_add

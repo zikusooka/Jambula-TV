@@ -949,7 +949,7 @@ EOF
 }
 
 make_install_jambulatv () {
-PACKAGE=$(basename $(pwd))
+PACKAGE=$(basename $(pwd | sed "s:/build::g"))
 # Log to build file
 make_build_log
 # Run make silently
@@ -2857,11 +2857,11 @@ dvb_tvheadend_network_add
 dvb_icons_add () {
 # Source DVBT settings file
 . $PROJECT_DVBT_SETTINGS_FILE
+# Create picons directory if it does not exist
+[ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
 # Set chicon dir used in chiconpath
 TVHEADEND_CHICON_DIR=$(find $PROJECT_SYSTEM_ICONS_DIR -maxdepth 1 -iname "$TV_MARKET")
 #
-# Get WWW User and Group
-set_www_user_group
 # Create picons directory if it does not exist
 [ -d $TVHEADEND_CHICON_DIR ] || mkdir -p $TVHEADEND_CHICON_DIR
 # Copy Live TV picons e.g. logos to JambulaTV share directory if it exists for requested TV market
@@ -3734,7 +3734,7 @@ systemctl start jambulatv-iptv-scan-map-channels.timer
 iptv_icons_add () {
 # Get WWW User and Group
 set_www_user_group
-# Clean picons directory if it does not exist
+# Create picons directory if it does not exist
 [ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
 # Copy IP TV picons e.g. logos to JambulaTV share directory
 rsync -av $PROJECT_CONTRIB_DIR/tv/picons/IPTV $PROJECT_SYSTEM_ICONS_DIR/
@@ -3879,7 +3879,7 @@ chmod 755 $BINARY_PREFIX/jambulatv-camplayer
 cameras_icons_add () {
 # Get WWW User and Group
 set_www_user_group
-# Clean picons directory if it does not exist
+# Create picons directory if it does not exist
 [ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
 # Copy camera picons e.g. logos to JambulaTV share directory
 rsync -av $PROJECT_CONTRIB_DIR/tv/picons/Cameras $PROJECT_SYSTEM_ICONS_DIR/
@@ -8442,9 +8442,9 @@ jabberd_configure () {
 for JABBERD_CONFIG in sm.xml c2s.xml s2s.xml router.xml;
 do
 # Make a copy of config
-cp -v $PROJECT_CONFIGS_DIR/jabberd/$JABBERD_CONFIG $PROJECT_CONFIGS_DIR/jabberd/${JABBERD_CONFIG}.orig
+cp -v $JABBERD_CONF_DIR/$JABBERD_CONFIG $JABBERD_CONF_DIR/${JABBERD_CONFIG}.orig
 # Change password while copying to /etc/jabberd directory
-cat $PROJECT_CONFIGS_DIR/jabberd/${JABBERD_CONFIG}.orig | sed -e "s:JABBERD_PASSWORD_CHANGE_ME:$JABBERD_PASSWORD:g" | sed -e "s:LIBDIR:$LIBDIR:g" > /etc/jabberd/$JABBERD_CONFIG
+cat $PROJECT_CONFIGS_DIR/jabberd/${JABBERD_CONFIG}.orig | sed -e "s:JABBERD_PASSWORD_CHANGE_ME:$JABBERD_PASSWORD:g" | sed -e "s:LIBDIR:$LIBDIR:g" > $JABBERD_CONF_DIR/$JABBERD_CONFIG
 done
 # Create jabberd logs directory
 [ -d $PROJECT_SYSTEM_LOG_DIR/jabberd ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/jabberd
