@@ -1882,47 +1882,28 @@ ln -s -f $PREFIX/local/bin/pip3.6 $PREFIX/local/bin/pip3
 }
 
 python3_common_modules_install () {
-# pytz
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR pytz
-#
-# setuptools_scm
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR setuptools_scm
-#
-# pytest-runner
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR pytest-runner
-#
-# beautifulsoup4
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR beautifulsoup4
-#
-# pbr
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR pbr
-#
-# pycodestyle
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR pycodestyle
-#
-# incremental
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR incremental
-#
-# vcversioner
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR vcversioner
-#
-# sqlalchemy
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR sqlalchemy==1.1.15
-#
-# chardet
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR chardet==3.0.4
-#
-# requests
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR requests==2.18.4
-#
-#httplib
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR httplib2
-#
-#pyxmpp2
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR pyxmpp2
-#
-# sleekxmpp
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR sleekxmpp
+for PYTHON_PACKAGE in \
+pytz==2017.2 \
+setuptools_scm \
+pytest-runner \
+beautifulsoup4 \
+pbr \
+pycodestyle \
+incremental \
+vcversioner \
+sqlalchemy==1.1.15 \
+chardet==3.0.4 \
+requests==2.18.4 \
+httplib2 \
+pyxmpp2 \
+sleekxmpp \
+jinja2==2.9.6 \
+certifi==2017.4.17 \
+six==1.10.0
+do
+# Install Python package
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_PACKAGE
+done
 }
 
 intel_x11_driver_install () {
@@ -8509,16 +8490,6 @@ systemctl start domoticz.service
 }
 
 homeassistant_install () {
-# Dependencies for HASS - Install locally using wheels/pips specified in requirements
-# astral
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR astral
-# async_timeout
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR async_timeout
-# yarl
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR yarl
-# aiohttp
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR aiohttp
-#
 # open-zwave
 python_openzwave_install
 
@@ -8531,7 +8502,7 @@ cat $PROJECT_PIPS_REQUIRES_DIR/homeassistant-requirements.txt | \
 		> $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
 # Force SQLAlchemy 1.1.15 in recorder
 sed -i "s:sqlalchemy==1.2.2:sqlalchemy==1.1.15:g" $INSTALL_SRC_DIR/home-assistant/homeassistant/components/recorder/__init__.py
-#
+
 # Dependencies for Homeassistant - Install locally using pips specified in requirements
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
 #
