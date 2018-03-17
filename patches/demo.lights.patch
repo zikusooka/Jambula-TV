@@ -1,8 +1,8 @@
---- /a jambulatv-lights	2017-04-05 14:17:22.747805739 +0300
-+++ /b jambulatv-lights	2017-04-06 13:06:50.550026975 +0300
-@@ -11,7 +11,7 @@
- DOMOTICZ_LAMP_ACTION=$2
- DOMOTICZ_LOG_NOTICE="[$(basename $0)]%20$DOMOTICZ_LAMP_NAME%20was%20turned"
+--- jambulatv-lights.a	2018-03-17 05:33:00.670565816 +0300
++++ jambulatv-lights.b	2018-03-17 07:07:59.717079493 +0300
+@@ -15,7 +15,7 @@
+ JAMBULATV_LIVING_ROOM_NAME="JambulaTV (Living Room)"
+ JAMBULATV_LIVING_ROOM_STATE_ON="playing"
  
 -MODE=$3
 +MODE=demo

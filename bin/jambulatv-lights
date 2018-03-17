@@ -1,19 +1,19 @@
 #!/bin/sh
 
-# Domoticz Settings
-DOMOTICZ_HOST_IP=127.0.0.1
-DOMOTICZ_WWW_PORT=8540
+# HASS Settings
+HASS_HOST_IP=127.0.0.1
+HASS_WWW_PORT=8505
+HASS_WWW_PASSWORD=""
 
 # Time of Day
-HOUR=`date +%H`
+SUN_POSTION=$(curl -s -X GET -H "x-ha-access: $HASS_WWW_PASSWORD"  -H "Content-Type: application/json"  http://$HASS_HOST_IP:$HASS_WWW_PORT/api/states | jq . | grep horizon  | grep state | awk {'print $2'} | head -1 | sed 's:"::g' | sed 's:,::g')
 
-DOMOTICZ_LAMP_NAME="$1"
-DOMOTICZ_LAMP_LIVING_ROOM_NAME="Living Room"
-DOMOTICZ_LAMP_ACTION=$2
-DOMOTICZ_LOG_NOTICE="[$(basename $0)]%20$DOMOTICZ_LAMP_NAME%20was%20turned"
+HASS_LAMP_NAME="$1"
+HASS_LAMP_LIVING_ROOM_NAME="Living Room"
+HASS_LAMP_ACTION=$2
 
 JAMBULATV_LIVING_ROOM_NAME="JambulaTV (Living Room)"
-JAMBULATV_LIVING_ROOM_STATE_ON="Video"
+JAMBULATV_LIVING_ROOM_STATE_ON="playing"
 
 MODE=$3
 
@@ -24,18 +24,29 @@ MODE=$3
 ###############
 usage () {
 # Device Name
-if [ "x$DOMOTICZ_LAMP_NAME" = "x" ];
+if [ "x$HASS_LAMP_NAME" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [DOMOTICZ_LAMP_NAME (Use Quotes for spaced names] [DOMOTICZ_LAMP_ACTION (on|off|toggle)] [demo (Optional)]
+echo "Usage:  ./`basename $0` [LAMP_NAME (Use Quotes for spaced names] [LAMP_ACTION (on|off|toggle)] [demo (Optional)]
 "
 exit 1
 fi
 # Device Action
-if [ "x$DOMOTICZ_LAMP_ACTION" = "x" ];
+if [ "x$HASS_LAMP_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` $DOMOTICZ_LAMP_NAME [DOMOTICZ_LAMP_ACTION (on|off|toggle)] [demo (Optional)]
+echo "Usage:  ./`basename $0` $HASS_LAMP_NAME [LAMP_ACTION (on|off|toggle)] [demo (Optional)]
+
+"
+exit 1
+fi
+# Check for Lamp name
+get_id_of_lamp
+#
+if [ "x$HASS_LAMP_ID" = "x" ];
+then
+clear
+echo "Error:  The Lamp [$HASS_LAMP_NAME] was not found. It is most likely not yet setup in JambulaTV
 
 "
 exit 1
@@ -44,7 +55,7 @@ fi
 
 darkness_or_light () {
 # Determine weather it is dark or not
-if [ "$HOUR" -ge "19" ] || [ "$HOUR" -le "6" ];
+if [ "$SUN_POSTION" = "below_horizon" ];
 then
 ITS_DARK=yes
 else
@@ -55,84 +66,79 @@ cat << EOF
 You are running this tool during day time.  If you want to overide default 
 i.e. run it anytime, add 'demo' to list of CLI arguments
 
-Usage:  ./`basename $0` $DOMOTICZ_LAMP_NAME $DOMOTICZ_LAMP_ACTION demo
+Usage:  ./`basename $0` $HASS_LAMP_NAME $HASS_LAMP_ACTION demo
 
 EOF
 #
 fi
 }
 
-# TV ID, Status, and Data
+# TV ID and Status
 get_id_of_tv () {
-DOMOTICZ_TV_ID=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=getlightswitches" | jq -c ".result[] | select(.Name == \"$JAMBULATV_LIVING_ROOM_NAME\") | .idx" | sed "s:\"::g")
+HASS_TV_ID=$(curl -s -X GET -H "x-ha-access: $HASS_WWW_PASSWORD"  -H "Content-Type: application/json"  http://$HASS_HOST_IP:$HASS_WWW_PORT/api/states | jq -r '. []' | grep -B12 "$JAMBULATV_LIVING_ROOM_NAME" | grep entity_id | awk {'print $2'} | sed 's:["|,]::g' | grep -Ev null)
 }
 
 status_of_tv () {
-get_id_of_tv
-DOMOTICZ_TV_STATUS=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=devices&rid=$DOMOTICZ_TV_ID" | jq '.result' | grep -i status | awk {'print $2'} | sed 's:["|,]::g')
+HASS_TV_STATUS=$(curl -s -X GET -H "x-ha-access: $HASS_WWW_PASSWORD"  -H "Content-Type: application/json"  http://$HASS_HOST_IP:$HASS_WWW_PORT/api/states | jq -r '. []' | grep -B12 "$JAMBULATV_LIVING_ROOM_NAME" | grep state | awk {'print $2'} | sed 's:["|,]::g' | grep -Ev null)
 }
-
-data_of_tv () {
-get_id_of_tv
-DOMOTICZ_TV_DATA=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=devices&rid=$DOMOTICZ_TV_ID" | jq '.result' | grep -i data | cut -d : -f 2- | sed 's:["|,]::g' | sed 's:^ ::')
-}
-
 
 # Lamp ID, and Status
 get_id_of_lamp () {
-DOMOTICZ_LAMP_ID=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=getlightswitches" | jq -c ".result[] | select(.Type == \"Light/Switch\") | select(.Name == \"$DOMOTICZ_LAMP_NAME\") | .idx" | sed "s:\"::g")
-export DOMOTICZ_LAMP_ID
+# Query HASS for entity_id of device
+HASS_LAMP_ID=$(curl -s -X GET -H "x-ha-access: $HASS_WWW_PASSWORD"  -H "Content-Type: application/json"  http://$HASS_HOST_IP:$HASS_WWW_PORT/api/states | jq -r '. [] | .attributes | select(.friendly_name=="'"$HASS_LAMP_NAME"'") | .new_entity_id' | grep -Ev null)
+HASS_NODE_ID=$(curl -s -X GET -H "x-ha-access: $HASS_WWW_PASSWORD"  -H "Content-Type: application/json"  http://$HASS_HOST_IP:$HASS_WWW_PORT/api/states | jq -r '. [] | .attributes | select(.friendly_name=="'"$HASS_LAMP_NAME"'") | .node_id' | grep -Ev null)
+#
+export HASS_LAMP_ID HASS_NODE_ID
 }
 
 type_of_lamp () {
 get_id_of_lamp
-DOMOTICZ_LAMP_TYPE=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=devices&rid=$DOMOTICZ_LAMP_ID" | jq '.result' | grep -iw 'SwitchType' | awk {'print $2'} | sed 's:["|,]::g')
+#
+# Set if lamp allows dimming
+curl -s -X GET -H "x-ha-access: $HASS_WWW_PASSWORD"  -H "Content-Type: application/json"  http://$HASS_HOST_IP:$HASS_WWW_PORT/api/states | jq -r '. [] ' | grep "$HASS_NODE_ID" | grep node_name | grep -i Dim > /dev/null 2>&1
+[ "$?" = "0" ] && HASS_LAMP_TYPE=Dimmer
 }
 
 status_of_lamp () {
 get_id_of_lamp
-# Check status of security light
-DOMOTICZ_LAMP_STATE=$(curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=devices&rid=$DOMOTICZ_LAMP_ID" | jq '.result' | grep -i status | awk {'print $2'} | sed 's:["|,]::g')
+# Check status of light
+HASS_LAMP_STATE=$(curl -s -X GET -H "x-ha-access: $HASS_WWW_PASSWORD"  -H "Content-Type: application/json"  http://$HASS_HOST_IP:$HASS_WWW_PORT/api/states/$HASS_LAMP_ID | jq . | grep state | awk {'print $2'} | head -1 | sed 's:"::g' | sed 's:,::g')
 }
 
 turn_on_lamp () {
 get_id_of_lamp
 type_of_lamp
-if [ "$DOMOTICZ_LAMP_TYPE" = "Dimmer" ];
+#
+if [ "$HASS_LAMP_TYPE" = "Dimmer" ];
 then
-# Dimmable
-# ---------
-# Turn On
-curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$DOMOTICZ_LAMP_ID&switchcmd=Set%20Level&level=100" > /dev/null 2>&1
-# Update DB
-curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=udevice&idx=$DOMOTICZ_LAMP_ID&nvalue=1&svalue=0" > /dev/null 2>&1
+# Dimmable (ON) - Added Brightness level
+curl -s -X POST -H "x-ha-access: $HASS_WWW_PASSWORD" -H "Content-Type: application/json" -d '{"entity_id": "'"$HASS_LAMP_ID"'", "brightness": 255}' http://$HASS_HOST_IP:$HASS_WWW_PORT/api/services/light/turn_on
+
 else
-# Non-Dimmable
-# ------------
-curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$DOMOTICZ_LAMP_ID&switchcmd=On" > /dev/null 2>&1
+# Non-Dimmable (ON)
+curl -s -X POST -H "x-ha-access: $HASS_WWW_PASSWORD" -H "Content-Type: application/json" -d '{"entity_id": "'"$HASS_LAMP_ID"'"}' http://$HASS_HOST_IP:$HASS_WWW_PORT/api/services/light/turn_on
 fi
+#
+# State
+curl -s -X POST -H "x-ha-access: $HASS_WWW_PASSWORD" -H "Content-Type: application/json" -d '{"state": "on"}' http://$HASS_HOST_IP:$HASS_WWW_PORT/api/states/$HASS_LAMP_ID
 }
 
 turn_off_lamp () {
 get_id_of_lamp
 type_of_lamp
-if [ "$DOMOTICZ_LAMP_TYPE" = "Dimmer" ];
+#
+if [ "$HASS_LAMP_TYPE" = "Dimmer" ];
 then
-# Dimmable
-# --------
-# Turn Off
-curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$DOMOTICZ_LAMP_ID&switchcmd=Set%20Level&level=0" > /dev/null 2>&1
-# Update DB
-curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=udevice&idx=$DOMOTICZ_LAMP_ID&nvalue=0&svalue=0" > /dev/null 2>&1
-else
-# Non-Dimmable
-# ------------
-curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=switchlight&idx=$DOMOTICZ_LAMP_ID&switchcmd=Off" > /dev/null 2>&1
-fi
-}
+# Dimmable (OFF) - Added Brightness level
+curl -s -X POST -H "x-ha-access: $HASS_WWW_PASSWORD" -H "Content-Type: application/json" -d '{"entity_id": "'"$HASS_LAMP_ID"'", "brightness": 0}' http://$HASS_HOST_IP:$HASS_WWW_PORT/api/services/light/turn_off
 
-log_event () {
-curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=addlogmessage&message=$@" > /dev/null 2>&1
+else
+# Non-Dimmable (OFF)
+curl -s -X POST -H "x-ha-access: $HASS_WWW_PASSWORD" -H "Content-Type: application/json" -d '{"entity_id": "'"$HASS_LAMP_ID"'"}' http://$HASS_HOST_IP:$HASS_WWW_PORT/api/services/light/turn_off
+fi
+
+# state
+curl -s -X POST -H "x-ha-access: $HASS_WWW_PASSWORD" -H "Content-Type: application/json" -d '{"state": "off"}' http://$HASS_HOST_IP:$HASS_WWW_PORT/api/states/$HASS_LAMP_ID
 }
 
 
@@ -141,29 +147,31 @@ curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param
 #  MAIN SCRIPT  #
 #################
 usage
+
 # Time of day
 darkness_or_light 
+
 # Get status of lamp
 status_of_lamp
+
 # Get status of tv
 status_of_tv
-case $DOMOTICZ_LAMP_ACTION in
+
+case $HASS_LAMP_ACTION in
 [Oo][Nn])
 # If in demo mode, continue out of 'if' statement
 if [ "$MODE" = "demo" ];
 then
 continue
 # Exit == Don't turn on Light if its in the Living Room and Video is playing
-elif [ "$DOMOTICZ_TV_STATUS" = "$JAMBULATV_LIVING_ROOM_STATE_ON" ] && [ "$DOMOTICZ_LAMP_NAME" = "$DOMOTICZ_LAMP_LIVING_ROOM_NAME" ];
+elif [ "$HASS_TV_STATUS" = "playing" ] && [ "$HASS_LAMP_NAME" = "$HASS_LAMP_LIVING_ROOM_NAME" ];
 then
 exit 0
 fi
 # Turn on security Light if it is not on and its dark or during demo mode
-
 if [ "$ITS_DARK" = "yes" ] || [ "$MODE" = "demo" ];
 then
 turn_on_lamp
-log_event $DOMOTICZ_LOG_NOTICE:%20On
 fi
 ;;
 
@@ -172,20 +180,18 @@ fi
 if [ "$ITS_DARK" = "yes" ] || [ "$MODE" = "demo" ];
 then
 turn_off_lamp
-log_event $DOMOTICZ_LOG_NOTICE:%20Off
 fi
 ;;
 
 [Tt][Oo][Gg][Gg][Ll][Ee])
-# Turn on
-[ "$DOMOTICZ_LAMP_STATE" = "On" ] || turn_on_lamp
-# Turn off
-[ "$DOMOTICZ_LAMP_STATE" = "Off" ] || turn_off_lamp
-log_event $DOMOTICZ_LOG_NOTICE:%20Toggle
+# If in off state, Turn on
+[ "$HASS_LAMP_STATE" = "off" ] && turn_on_lamp
+# If on off state, Turn off
+[ "$HASS_LAMP_STATE" = "on" ] && turn_off_lamp
 ;;
 
 *)
 clear
-echo "Usage:  ./`basename $0` [DOMOTICZ_LAMP_NAME (Use Quotes for spaced names] [DOMOTICZ_LAMP_ACTION (on|off|toggle)] [demo (Optional)]
+echo "Usage:  ./`basename $0` [LAMP_NAME (Use Quotes for spaced names] [LAMP_ACTION (on|off|toggle)] [demo (Optional)]
 "
 esac

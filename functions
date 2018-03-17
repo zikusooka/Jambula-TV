@@ -471,6 +471,10 @@ JABBERD_DB_CREATE=$DATAROOTDIR/jabberd/db-setup.mysql
 JABBERD_PASSWORD=$(sudo grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //')
 JABBERD_RESOURCE=Home
 
+# Smart Home - Generic settings
+SMARTHOME_HUB_APP=homeassistant
+SMARTHOME_HUB_WWW_PORT=$(grep -i "$SMARTHOME_HUB_APP$" $PORTS_ASSIGNED_FILE | awk {'print $1'})
+
 # OpenHAB
 OPENHAB_HTTP_PORT=$(grep -i 'openhab$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 OPENHAB_HTTPS_PORT=$(grep -i 'openhab ssl$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -8783,7 +8787,7 @@ chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 	cat $PROJECT_BIN_DIR/jambulatv-zm-alarm-all-notifications | \
 		sed -e "s:ZONEMINDER_DB_HOST:$ZONEMINDER_DB_HOST:g" | \
 		sed -e "s:ZONEMINDER_WWW_PORT:$ZONEMINDER_WWW_PORT:g" | \
-		sed -e "s:MY_DOMOTICZ_WWW_PORT:$DOMOTICZ_WWW_PORT:g" | \
+		sed -e "s:MY_SMARTHOME_HUB_WWW_PORT:$SMARTHOME_HUB_WWW_PORT:g" | \
 		sed -e "s:MY_TELEGRAM_CREDENTIALS_CONFIG:$TELEGRAM_CREDENTIALS_CONFIG:g" | \
 		sed -e "s:MY_WHATSAPP_CREDENTIALS_CONFIG:$WHATSAPP_CREDENTIALS_CONFIG:g" | \
 		sed -e "s:MY_WHATSAPP_SCRIPT:$WHATSAPP_SCRIPT:g" | \

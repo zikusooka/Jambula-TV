@@ -16,11 +16,11 @@ ZM_WATCH_URL="$ZM_ROOT_URL_LOCAL/jpeg.cgi?mode=single&monitor=${ZM_CAMERA_ID}&sc
 # CCTV alert settings
 CCTV_SETTINGS_FILE=/etc/JambulaTV/cctv-settings.cfg
 
-# Domoticz stuff
-DOMOTICZ_HOST_IP=jambulatv
-DOMOTICZ_WWW_PORT=MY_DOMOTICZ_WWW_PORT
-DOMOTICZ_SECURITY_LAMP_NAME="Living Room"
-DOMOTICZ_SECURITY_LAMP_DURATION=60
+# Smart Home stuff
+SMARTHOME_HUB_HOST_IP=jambulatv
+SMARTHOME_HUB_WWW_PORT=MY_SMARTHOME_HUB_WWW_PORT
+SMARTHOME_HUB_SECURITY_LAMP_NAME="Living Room"
+SMARTHOME_HUB_SECURITY_LAMP_DURATION=60
 
 # Edit Notification message templates here
 NOTIFICATION_SUBJECT="*[JambulaTV] CCTV Security Alert: Motion Detected on $ZM_CAMERA_NAME Camera*"
@@ -101,10 +101,6 @@ $NOTIFICATION_MESSAGE
 EOF
 }
 
-log_event () {
-curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=addlogmessage&message=$@" > /dev/null 2>&1
-}
-
 kodi_screensaver_status () {
 KODI_SCREENSAVER_STATUS=$(curl -s -X POST -H "Content-Type: application/json" -u $KODI_HTTP_USER:$KODI_HTTP_PASS -d '{"jsonrpc": "2.0", "method": "XBMC.GetInfoBooleans", "params":{"booleans":["System.ScreenSaverActive"]},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc | jq .result[])
 }
@@ -179,8 +175,7 @@ capture_motion_event
 # Turn on security Light and log event
 if [[ "$CCTV_LIGHTS" = "1" ]];
 then
-$LIGHTS_CMD "$DOMOTICZ_SECURITY_LAMP_NAME" on
-log_event $NOTIFICATION_MESSAGE
+$LIGHTS_CMD "$SMARTHOME_HUB_SECURITY_LAMP_NAME" on
 fi
 
 
@@ -249,7 +244,6 @@ $EMAIL_SCRIPT $EMAIL_NOTIFICATION_ADDRESS "$NOTIFICATION_SUBJECT" "$NOTIFICATION
 # Switch off security Light if it was turned on after desired period e.g. 60 minutes
 if [[ "$CCTV_LIGHTS" = "1" ]];
 then
-sleep $DOMOTICZ_SECURITY_LAMP_DURATION
-$LIGHTS_CMD "$DOMOTICZ_SECURITY_LAMP_NAME" off
-log_event $NOTIFICATION_MESSAGE
+sleep $SMARTHOME_HUB_SECURITY_LAMP_DURATION
+$LIGHTS_CMD "$SMARTHOME_HUB_SECURITY_LAMP_NAME" off
 fi
