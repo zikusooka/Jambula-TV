@@ -8538,11 +8538,16 @@ systemctl enable home-assistant.service
 home_automation_scripts () {
 for SCRIPT in \
 jambulatv-lights \
-jambulatv-presence-detection
+jambulatv-presence-detection-via-hostapd
 do
 # Copy script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX/
 done
+
+# Add systemd service for presence detection which uses hostapd
+cp -v $PROJECT_INIT_SCRIPTS_DIR/presence-detection.service $SYSTEMD_UNITS_DIR_USER/
+# Enable and start presence-detection if needed
+systemctl enable presence-detection.service
 } 
 
 openhab_install () {

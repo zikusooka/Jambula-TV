@@ -1,0 +1,72 @@
+#!/bin/sh
+# This is used to alert when a user or client connects to JambulaTV WiFi access point i.e.
+# Presence detection.  Use MQTT to notify smart home hub
+# Jambula Labs @copyright 2018-2019 All rights reserved
+
+
+# Variables
+MY_WIFI_DEVICES_FILE=/etc/JambulaTV/my-wifi-devices.cfg
+HUB_WLAN_SSID=$(/usr/sbin/iw dev | grep ssid | awk {'print $2'})
+
+# MQTT
+MQTT_PUBLISH_CMD=/usr/bin/mosquitto_pub
+MQTT_BROKER_IP=127.0.0.1
+MQTT_BROKER_PORT=8552
+MQTT_TOPIC_2_PUBLISH_TO="JambulaTV/house/presence/family"
+
+# Notices
+CONNECTED_TO_AP_NOTIFICATION_MESSAGE="has connected to $HUB_WLAN_SSID"
+DISCONNECTED_FROM_AP_NOTIFICATION_MESSAGE="has disconnected from $HUB_WLAN_SSID"
+SMARTHOME_PRESENCE_IN_MESSAGE="Home"
+SMARTHOME_PRESENCE_OUT_MESSAGE="Away"
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Select only users with monitor flag set to 'yes'
+awk '$5 == "yes" {print $0}' $MY_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' | while read LINE
+do
+# Set user's WiFi MAC Address and Name
+WIFI_USER_MAC=$(echo $LINE | cut -d '|' -f1 | sed 's/-/:/g'| sed 's:^ ::' | sed 's: *$::g' | tr [A-Z] [a-z])
+WIFI_USER_NAME="$(echo $LINE | cut -d '|' -f2 | sed 's:^ ::' | sed 's: *$::g')"
+
+
+# Connections to AP
+# -----------------
+if [[ $2 == "AP-STA-CONNECTED" && $3 == "$WIFI_USER_MAC" ]];
+then
+
+# Publish to MQTT topic - Implement case transformations
+for MAC_ADDRESS in ${3,,} ${3^^};
+do
+$MQTT_PUBLISH_CMD -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT -t "$MQTT_TOPIC_2_PUBLISH_TO/$MAC_ADDRESS" -m "$SMARTHOME_PRESENCE_IN_MESSAGE"
+done
+
+# Notices
+logger -s -t $(basename $0) "$WIFI_USER_NAME $CONNECTED_TO_AP_NOTIFICATION_MESSAGE"
+jambulatv-osd -m "$WIFI_USER_NAME $CONNECTED_TO_AP_NOTIFICATION_MESSAGE"
+
+fi
+
+
+# Disconnections from AP
+# ----------------------
+if [[ $2 == "AP-STA-DISCONNECTED" && $3 == "$WIFI_USER_MAC" ]];
+then
+
+# Publish to MQTT topic - Implement case transformations
+for MAC_ADDRESS in ${3,,} ${3^^};
+do
+$MQTT_PUBLISH_CMD -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT -t "$MQTT_TOPIC_2_PUBLISH_TO/$MAC_ADDRESS" -m "$SMARTHOME_PRESENCE_OUT_MESSAGE"
+done
+
+# Notices
+logger -s -t $(basename $0) "$WIFI_USER_NAME $DISCONNECTED_FROM_AP_NOTIFICATION_MESSAGE"
+jambulatv-osd -m "$WIFI_USER_NAME $DISCONNECTED_FROM_AP_NOTIFICATION_MESSAGE"
+
+fi
+
+done

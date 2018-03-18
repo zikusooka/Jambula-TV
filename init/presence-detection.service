@@ -1,0 +1,10 @@
+[Unit]
+Description=Home Automation Presence Detection
+After=hostapd.service
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/hostapd_cli -B -a /usr/bin/jambulatv-presence-detection-via-hostapd
+
+[Install]
+WantedBy=multi-user.target
