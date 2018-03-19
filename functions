@@ -9077,8 +9077,8 @@ icinga2 daemon -C || \
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
 #
-Icing2
-======
+Icinga2
+=======
 % Error: There is a problem with your icinga2 configuration.  Please check files at:
 
   $ICINGA2_CONFIG_DIR
@@ -9112,13 +9112,13 @@ then
 git archive --format tar.gz --prefix=icingaweb2/ $ICINGAWEB2_TAG | (cd $WWW_HTML_DIR/ && tar zxvf -)
 else
 git archive --format tar.gz --prefix=icingaweb2/ HEAD | (cd $WWW_HTML_DIR/ && tar zxvf -)
-# Display Kodi's post install/configuration information, and output to final notice
+# Display icinga2's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
 #
-ICINGAWEB2 Version
-==================
-% The Kodi branch you specified, does not exist, so I used master/ HEAD instead
+Icingaweb2 Version
+===================
+% The icingaweb2 branch you specified, does not exist, so I used master/ HEAD instead
 
 #
 EOF
@@ -9296,6 +9296,14 @@ password            = "$ICINGAWEB2_ADMIN_PASS"
 NOTE: In case you need to do setup manually,
 $(cat $ICINGA2_WEB_TOKEN_FILE)
 #
+
+Experts Only
+============
+% If you want to use icinga2 hosts for user presence detection (experimental), set the following
+  variable in the tool: jambulatv-initial-setup
+
+  SETUP_ICINGA2_PRESENCE_HOSTS=yes
+
 EOF
 # Restart nginx
 systemctl restart nginx.service

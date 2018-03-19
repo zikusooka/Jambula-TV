@@ -58,6 +58,7 @@ OSD_CMD="/usr/bin/jambulatv-osd -m"
 
 QRCODE_OSD_MSG_4_SETUP="Please connect to $JAMBULATV_SSID first, then use the QR Code Reader App on your WiFi device to scan this code.  This QR code will only be removed once setup has been completed."
 
+SETUP_ICINGA2_PRESENCE_HOSTS=no #yes
 ICINGA2_JAMBULATV_HOSTS_FILE=/etc/icinga2/conf.d/JambulaTV/hosts.conf
 
 JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
@@ -202,6 +203,24 @@ esac
 sudo rm -f $SETUP_INTERNET_CONFIG_FILE
 }
 
+configure_icinga2_presence_detection () {
+# Change permissions so we can write to icinga2 hosts file
+[ -e $ICINGA2_JAMBULATV_HOSTS_FILE ] && sudo chown $MULTIMEDIA_USER $ICINGA2_JAMBULATV_HOSTS_FILE
+# Add to icinga2 hosts file
+cat >> $ICINGA2_JAMBULATV_HOSTS_FILE <<EOF
+
+/** 
+* Detect presence of $NICKNAME
+*/
+object Host "$NICKNAME" {
+  import "jambula-01-wifi-device"
+  vars.macaddress="$MAC_DOTTED"
+}
+EOF
+# Restart icinga2 service
+sudo systemctl restart icinga2.service
+}
+
 configure_wifi_mac_addresses () {
 # MAC Addresses
 while [ ! -e $SETUP_MAC_ADDRESSES_FILE ];
@@ -222,21 +241,8 @@ then
 # Add to My-WiFi devices file
 echo "$MAC_DASHED | $NICKNAME | no" >> $SETUP_WIFI_DEVICES_FILE
 #
-# Change permissions so we can write to icinga2 hosts file
-[ -e $ICINGA2_JAMBULATV_HOSTS_FILE ] && sudo chown $MULTIMEDIA_USER $ICINGA2_JAMBULATV_HOSTS_FILE
-# Add to icinga2 hosts file
-cat >> $ICINGA2_JAMBULATV_HOSTS_FILE <<EOF
-
-/** 
-* Detect presence of $NICKNAME
-*/
-object Host "$NICKNAME" {
-  import "jambula-01-wifi-device"
-  vars.macaddress="$MAC_DOTTED"
-}
-EOF
-# Restart icinga2 service
-sudo systemctl restart icinga2.service
+# Set up icinga2 hosts for user presence detections if requested
+[ "$SETUP_ICINGA2_PRESENCE_HOSTS" = "yes" ] && configure_icinga2_presence_detection
 # 
 else
 break
