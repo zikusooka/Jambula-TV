@@ -6,6 +6,7 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 PROJECT_DVBT_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/dvbt-settings.cfg
 TVHEADEND_CONFIG_DIR=/JambulaTV/.hts/tvheadend
 TVHEADEND_ADAPTERS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/linuxdvb/adapters
+TVHEADEND_REPAIR_TOOL=jambulatv-tvheadend-controller
 
 # Source DVBT settings file
 . $PROJECT_DVBT_SETTINGS_FILE
@@ -35,6 +36,7 @@ ICINGA2_NOTICE_CRITICAL_NETWORK_NOT_ATTACHED="CRITICAL - DVB-T2 network not assi
 ICINGA2_NOTICE_OK="OK - DVB-T2 network and Channels list are fine"
 # TVHeadend not active
 ICINGA2_NOTICE_TVH_NOT_ACTIVE="The TVHeadend server is not running"
+ICINGA2_NOTICE_REPAIR_TOOL_IN_USE="Another process is using the repair tool: $TVHEADEND_REPAIR_TOOL"
 
 
 
@@ -46,7 +48,16 @@ ICINGA2_NOTICE_TVH_NOT_ACTIVE="The TVHeadend server is not running"
 if [[ "$(systemctl is-active tvheadend.service)" != "active" ]];
 then
 echo "$ICINGA2_NOTICE_TVH_NOT_ACTIVE"
-exit 3
+exit 1
+fi
+
+# Quit if repair tool is being used by another process
+ps auxw | grep -Ev grep | grep $TVHEADEND_REPAIR_TOOL > /dev/null 2>&1
+TVHEADEND_REPAIR_TOOL_IS_RUNNING=$?
+if [[ "$TVHEADEND_REPAIR_TOOL_IS_RUNNING" = "0" ]];
+then
+echo "$ICINGA2_NOTICE_REPAIR_TOOL_IN_USE"
+exit 1
 fi
 
 # No tuner found

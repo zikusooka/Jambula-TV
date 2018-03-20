@@ -34,7 +34,7 @@ SERIAL=$(grep -i Serial $PROJECT_RELEASE_FILE | cut -d : -f2)
 TVHEADEND_DVBT_TUNER_NODE=/dev/dvb/adapter$DVBT_TUNER_NO
 TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
 TVHEADEND_PLAY_STREAM_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/play/stream"
-TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid' | sed 's:"::g')
+TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid')
 TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=/tmp/iptv_service_uuid.txt
 TVHEADEND_IPTV_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-full.$(date +%Y%m%d%H%M).log
 TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-error.$(date +%Y%m%d%H%M).log
@@ -43,7 +43,7 @@ TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE=/tmp/iptv_scanning_in_progress
 TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE=/tmp/iptv_mapping_in_progress
 #
 TVHEADEND_CAMERAS_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/cameras-scan-full.$(date +%Y%m%d%H%M).log
-TVHEADEND_CAMERAS_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$TVHEADEND_CAMERAS_NETWORK_NAME"'") | .uuid' | sed 's:"::g')
+TVHEADEND_CAMERAS_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_CAMERAS_NETWORK_NAME"'") | .uuid')
 TVHEADEND_CAMERAS_SERVICE_UUIDS_RAW_FILE=/tmp/cameras_service_uuid.txt
 
 PLAYLISTS_PORT=MY_PLAYLISTS_PORT
@@ -60,6 +60,9 @@ TV_MEASURE="incremental"
 else
 TV_MEASURE=$3
 fi
+
+# Generate log file
+DEBUG_LOG=no
 
 
 #############
@@ -126,6 +129,16 @@ echo "Usage:  ./`basename $0` cameras [scan|map|all]
 "
 exit 1
 fi
+}
+
+generate_debug_log () {
+cat >> $PROJECT_SYSTEM_LOG_DIR/$(basename $0).log <<EOT
+
+$(date)
+-----------------------------------------------------------
+EOT
+
+exec 2>> $PROJECT_SYSTEM_LOG_DIR/$(basename $0).log
 }
 
 check_if_in_use () {
@@ -216,7 +229,8 @@ esac
 
 email_failed_iptv_notice () {
 # Email notice regarding failed IPTV streams
-$EMAIL_VIA_GMAIL_CMD $EMAIL_ADDRESS_ERRORS "[JambulaTV]: IPTV services failed" "The following IPTV streams are no longer working at the following JambulaTV user: Serial No. $SERIAL" $TVHEADEND_IPTV_FAILED_LOG_FILE
+[ -e "$TVHEADEND_IPTV_FAILED_LOG_FILE" ] && \
+	$EMAIL_VIA_GMAIL_CMD $EMAIL_ADDRESS_ERRORS "[JambulaTV]: IPTV services failed" "The following IPTV streams are no longer working at the following JambulaTV user: Serial No. $SERIAL" $TVHEADEND_IPTV_FAILED_LOG_FILE
 }
 
 zap_dead_services () { 
@@ -308,9 +322,13 @@ do
 
 TAG_UUID=$(uuidgen -t | sed 's:-::g')
 TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | sed 's:"::g' | head -1)
+TAG_EXISTS_COUNT=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | wc -l)
 #
-# Test for existence of channel tag
-if [ "$TAG_EXISTS" != "true" ];
+# Refresh tvheadend
+refresh_tvheadend
+#
+# Test for existence of channel tag and ensure no duplicates are created
+if [[ "$TAG_EXISTS" != "true" || "$TAG_EXISTS_COUNT" = "0" ]];
 then
 # Create channel tag(s)
 cat > $TVHEADEND_CHANNELS_TAGS_DIR/$TAG_UUID <<EOF
@@ -328,8 +346,6 @@ EOF
 fi
 
 done
-# Refresh tvheadend
-refresh_tvheadend
 }
 
 dvb_map_services_2_channels () {
@@ -482,8 +498,11 @@ $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/scan -d uuid=$TVHEADEND_I
 }
 
 configure_iptv_network () {
+# See IPTV network similar to what we want already exists
+SIMILAR_IPTV_NETWORK_FOUND=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") |.networkname')
+#
 # Test for existing IPTV network
-if [ "x$TVHEADEND_IPTV_NETWORK_UUID" != "x" ];
+if [[ "x$TVHEADEND_IPTV_NETWORK_UUID" != "x" || "x$SIMILAR_IPTV_NETWORK_FOUND" != "x" ]];
 then
 # Notify of IPTV network already existing and proceed
 logger -s -t $(basename $0) "$TVHEADEND_IPTV_NETWORK_NAME $OSD_NOTICE_EXISTING_IPTV_NETWORK"
@@ -576,9 +595,11 @@ IS_YPIPE=$?
 case $1 in
 
 incremental)
-# Play mux i.e. Add service if no service is found or force if it is a Youtube pipe
-# NOTE: Exit value of 1 means service was found
-if [ "$SERVICE_ADDED" != "1" ] || [ "$IS_YPIPE" = "0" ];
+# Add service if none existent (i.e. playmux).  Skip Youtube pipes
+# ................................................................
+# SERVICE_ADDED=1 means service was found
+# IS_YPIPE=0 means URL is a Youtube pipe
+if [[ "$SERVICE_ADDED" != "1" || "$IS_YPIPE" != "0" ]];
 then
 iptv_test_stream
 fi
@@ -591,9 +612,11 @@ iptv_test_stream
 
 *)
 # Assume this is incremental
-# Play mux i.e. Add service if no service is found or force if it is a Youtube pipe
-# NOTE: Exit value of 1 means service was found
-if [ "$SERVICE_ADDED" != "1" ] || [ "$IS_YPIPE" = "0" ];
+# ..........................
+# Add service if none existent (i.e. playmux).  Skip Youtube pipes
+# SERVICE_ADDED=1 means service was found
+# IS_YPIPE=0 means URL is a Youtube pipe
+if [[ "$SERVICE_ADDED" != "1" || "$IS_YPIPE" != "0" ]];
 then
 iptv_test_stream
 fi
@@ -713,12 +736,13 @@ do
 TAG_NAME=$IPTV_CHANNEL 
 TAG_UUID=$(uuidgen -t | sed 's:-::g')
 TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | sed 's:"::g' | head -1)
+TAG_EXISTS_COUNT=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | wc -l)
 #
 # Refresh tvheadend
 refresh_tvheadend
 #
-# Test for existence of channel tag
-if [ "$TAG_EXISTS" != "true" ];
+# Test for existence of channel tag and ensure no duplicates are created
+if [[ "$TAG_EXISTS" != "true" || "$TAG_EXISTS_COUNT" = "0" ]];
 then
 # Create channel tag(s)
 cat > $TVHEADEND_CHANNELS_TAGS_DIR/$TAG_UUID <<EOF
@@ -744,8 +768,11 @@ done
 #############
 #
 configure_cameras_network () {
-# Test for existing IPTV network
-if [ "x$TVHEADEND_CAMERAS_NETWORK_UUID" != "x" ];
+# See CAMERAS network similar to what we want already exists
+SIMILAR_CAMERAS_NETWORK_FOUND=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_CAMERAS_NETWORK_NAME"'") |.networkname')
+#
+# Test for existing Cameras network
+if [[ "x$TVHEADEND_CAMERAS_NETWORK_UUID" != "x" || "x$SIMILAR_CAMERAS_NETWORK_FOUND" != "x" ]];
 then
 # Notify of camera network already existing and proceed
 logger -s -t $(basename $0) "$TVHEADEND_CAMERAS_NETWORK_NAME $OSD_NOTICE_EXISTING_CAMERA_NETWORK"
@@ -770,12 +797,13 @@ do
 TAG_NAME=$CAMERA_CHANNEL 
 TAG_UUID=$(uuidgen -t | sed 's:-::g')
 TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | sed 's:"::g' | head -1)
+TAG_EXISTS_COUNT=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | wc -l)
 #
 # Refresh tvheadend
 refresh_tvheadend
 #
-# Test for existence of channel tag
-if [ "$TAG_EXISTS" != "true" ];
+# Test for existence of channel tag and ensure no duplicates are created
+if [[ "$TAG_EXISTS" != "true" || "$TAG_EXISTS_COUNT" = "0" ]];
 then
 # Create channel tag(s)
 cat > $TVHEADEND_CHANNELS_TAGS_DIR/$TAG_UUID <<EOF
@@ -858,6 +886,9 @@ map_osd_notice_completed $TVHEADEND_CAMERAS_NETWORK_NAME
 #################
 #  MAIN SCRIPT  #
 #################
+
+# Generate debug log for this tool runs
+[[ "$DEBUG_LOG" = "yes" ]] && generate_debug_log
 
 # Check to see if TVHeadend server is in use and when NOT controlling cameras
 [[ "$TV_TYPE" != "cameras" ]] && check_if_in_use 
