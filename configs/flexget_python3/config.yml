@@ -15,8 +15,8 @@ templates:
 # Podcasts
 # --------
     _podcasts_file_info_variables: &podcasts_file_info_variables
-      podcast_meta_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace('–', '_')|replace(',', '')}}.meta
-      podcast_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace('–', '_')|replace(',', '')}}.info
+      podcast_meta_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace('–', '_')|replace(',', '')|replace('{', '_')|replace('}', '_')}}.meta
+      podcast_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace('–', '_')|replace(',', '')|replace('{', '_')|replace('}', '_')}}.info
       podcast_poster_url: "{{rss_poster_url|re_replace('.jpg?.*', '.jpg')|re_replace('.png?.*', '.png')}}"
       podcast_poster_file: '/tmp/podcast_poster.jpg'
       podcasts_queued_message_subject: "*[JambulaTV] Podcast(s) Queued*\nThe following Podcast has been queued for download:\n"
@@ -24,7 +24,7 @@ templates:
 # TV Series
 # ---------
     _tv_series_file_info_variables: &tv_series_file_info_variables
-      tv_series_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}.info
+      tv_series_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')|replace('{', '_')|replace('}', '_')}}.info
       tv_series_details: Series *{{tvdb_series_name}}* | Airs *{{tvdb_airs_day_of_week}}*\nEpisode *{{tvdb_ep_id}}* | Title *{{tvdb_ep_name|d('')}}*\nRated *{{tvdb_ep_rating}}/10* | Aired *{{tvdb_ep_air_date|replace('00', '')|replace(':', '')|replace(' ', '')}}*\nTime *{{tvdb_runtime}} Mins* | Format *{{quality|d('')}}*\n{{tvdb_ep_overview|striptags}}
       filename: "{{series_name|replace(' ','.')|replace('.htm.','.')}}.{{series_id}}.{{quality|upper|replace(' ','.')}}"
       content-disposition: no
@@ -36,7 +36,7 @@ templates:
 # Movies
 # -------
     _movies_file_info_variables: &movies_file_info_variables
-      movie_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')}}.info
+      movie_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')|replace('{', '_')|replace('}', '_')}}.info
       movie_details: Movie *{{imdb_name}}* | Year *{{imdb_year}}*\nRating *{{imdb_score}}/10* | Votes *{{imdb_votes}} votes*\nGenres *{{imdb_genres|join(', ')|title}}*\nTime *{{tmdb_runtime}} Mins* | Format *{{quality|d('')}}*\n{{imdb_plot_outline|striptags}}
       filename: "{{title|replace('.torrent.htm','')|replace(' ', '-')|replace('[', '-')|replace(']', '-')}}.torrent"
       content-disposition: no
@@ -273,7 +273,7 @@ templates:
           {% elif task == "internet_tv" %}*[JambulaTV] Podcast(s) Queued*
           The following Podcast has been queued for download
 
-          *Title* {{title}}
+          *Title* {{title|striptags}}
 
           {{description|striptags}}
 
@@ -289,14 +289,14 @@ templates:
           {% endif %}
           {% if series_name is defined %}Series: *{{tvdb_series_name}}* | Airs: *{{tvdb_airs_day_of_week}}*
           Episode: *{{tvdb_ep_id}}* | Title: *{{tvdb_ep_name|d('')}}*
-          Rated: *{{tvdb_ep_rating}}/10* | Aired: *{{tvdb_ep_air_date|replace("00", "")|replace(":", "")}}*
+          Rated: *{{tvdb_ep_rating}}/10* | Aired: *{{tvdb_ep_air_date|replace("00", "")|replace("\:", "")}}*
           Time: *{{tvdb_runtime}} Mins* | Format: *{{quality|d('')}}*
 
           [Plot]({{tvmaze_series_medium_image|replace("_", "%5F")}})
           {{tvdb_ep_overview|striptags}}
           {% elif imdb_name is defined %}Movie: *{{imdb_name}}* | Year: *{{imdb_year}}* 
           Rating: *{{imdb_score}}/10* | Votes: *{{imdb_votes}} votes*
-          Genres: *{{imdb_genres|join(', ')|title}}*
+          Genres: *{{imdb_genres|join(, )|title}}*
           Time: *{{tmdb_runtime}} Mins* | Format: *{{quality|d('')}}*
 
           [Plot]({{tmdb_posters[0]|replace("_", "%5F")}})
@@ -367,7 +367,7 @@ templates:
         trakt_list:
           <<: *trakt_for_series
     discover:
-      release_estimations: strict
+      release_estimations: ignore
       what: 
         - next_series_episodes:
             from_start: yes
@@ -491,7 +491,7 @@ templates:
           <<: *trakt_for_movies
       - movie_list: locally_added
     discover:
-      release_estimations: strict
+      release_estimations: ignore
       what:
         #- imdb_list:
         #    list: watchlist
