@@ -6794,6 +6794,8 @@ youtube_dl_install () {
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/youtube-dl/ $INSTALL_SRC_DIR/youtube-dl/
 cd $INSTALL_SRC_DIR/youtube-dl
 python setup.py install
+# Create symbolic link to youtube-dl binary in /usr/local/bin
+ln -s $PREFIX/local/bin/youtube-dl $BINARY_PREFIX/youtube-dl
 }
 
 youtube_setup () {
