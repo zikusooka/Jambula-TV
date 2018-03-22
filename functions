@@ -271,7 +271,22 @@ KODI_ADDONS_GAMES="script.game.connect4 script.game.2048 plugin.game.blackjack p
 KODI_ADDONS_JAMBULA="plugin.audio.jambulaFMRadio plugin.video.jambulaLiveEvents plugin.video.jambulaIPTV plugin.video.youtube script.doorbell script.service.kodi.callbacks script.service.pcmode"
 # Miscellaneous
 KODI_ADDONS_MISC="script.xbmc.unpausejumpback"
-#
+
+# Preferred kodi skin configuration
+case $KODI_CODENAME in
+Isengard)
+KODI_PREFERRED_SKIN=aeonmq6
+;;
+Krypton)
+KODI_PREFERRED_SKIN=titan
+;;
+confluence)
+KODI_PREFERRED_SKIN=confluence
+;;
+estuary)
+KODI_PREFERRED_SKIN=estuary
+esac
+
 X11_DRIVER="intel" # intel|nouveau|mga|openchrome
 INTEL_X11_DRIVER_VERSION=git
 NOUVEAU_X11_DRIVER_VERSION=git
@@ -4000,21 +4015,7 @@ done
 }
 
 kodi_skin_customization () {
-# Preferred kodi skin configuration
-case $KODI_CODENAME in
-Isengard)
-KODI_PREFERRED_SKIN=aeonmq6
-;;
-Krypton)
-KODI_PREFERRED_SKIN=titan
-;;
-confluence)
-KODI_PREFERRED_SKIN=confluence
-;;
-estuary)
-KODI_PREFERRED_SKIN=estuary
-esac
-#
+# Preferred Skin
 case $KODI_PREFERRED_SKIN in
 confluence)
 # Create backgrounds directory if it does not exist for preferred skin
