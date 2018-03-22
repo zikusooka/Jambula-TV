@@ -595,11 +595,11 @@ IS_YPIPE=$?
 case $1 in
 
 incremental)
-# Add service if none existent (i.e. playmux).  Skip Youtube pipes
-# ................................................................
+# Add service if none existent (i.e. play mux).  Force testing of Youtube pipes
+# .............................................................................
 # SERVICE_ADDED=1 means service was found
 # IS_YPIPE=0 means URL is a Youtube pipe
-if [[ "$SERVICE_ADDED" != "1" || "$IS_YPIPE" != "0" ]];
+if [[ "$SERVICE_ADDED" != "1" || "$IS_YPIPE" = "0" ]];
 then
 iptv_test_stream
 fi
@@ -611,12 +611,12 @@ iptv_test_stream
 ;;
 
 *)
-# Assume this is incremental
-# ..........................
-# Add service if none existent (i.e. playmux).  Skip Youtube pipes
+# Assume this is incremental:
+# Add service if none existent (i.e. play mux).  Force testing of Youtube pipes
+# .............................................................................
 # SERVICE_ADDED=1 means service was found
 # IS_YPIPE=0 means URL is a Youtube pipe
-if [[ "$SERVICE_ADDED" != "1" || "$IS_YPIPE" != "0" ]];
+if [[ "$SERVICE_ADDED" != "1" || "$IS_YPIPE" = "0" ]];
 then
 iptv_test_stream
 fi
