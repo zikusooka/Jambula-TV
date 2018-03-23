@@ -4106,6 +4106,13 @@ sed -i "s:XBMC.ShutDown():System.Exec(systemctl poweroff):g" $KODI_SYSTEM_ADDONS
 
 # Give permissions to multimedia user for config directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_CONFIG_DIR
+
+# Add enabling of default skin to jambula addons script that runs at startup
+cat >> $KODI_USER_DATA/Database/jambula_addons.sh <<EOT
+
+# Enable default skin
+sqlite3 $KODI_USER_DATA/Database/Addons27.db 'update installed set enabled=1 where addonid=='"'skin.$KODI_PREFERRED_SKIN'"';'
+EOT
 }
 
 kodi_scripts () {
