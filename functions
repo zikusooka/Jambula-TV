@@ -3512,9 +3512,21 @@ $KODI_ADDONS_JAMBULA
 do
 # Unpack addon
 kodi_addons_unpack
-# Enable addon
+#
+# Enable Addon during initial run of JambulaTV
+cat >> $TMP_DIR/jambula_addons2enable <<EOT
 sqlite3 $KODI_USER_DATA/Database/Addons27.db 'update installed set enabled=1 where addonid=='"'$KODI_ADDON'"';'
+EOT
 done
+
+# Create script that will run after this reboot and only once in a lifetime
+cat > $KODI_USER_DATA/Database/jambula_addons.sh <<EOT
+#!/bin/sh
+# Enable our favourite kodi addons
+$(cat $TMP_DIR/jambula_addons2enable)
+EOT
+# Make script executable
+chmod 755 $KODI_USER_DATA/Database/jambula_addons.sh
 }
 
 kodi_addons_install () {
