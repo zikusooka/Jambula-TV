@@ -7,7 +7,7 @@ HOSTSTATE=$1
 HOSTDISPLAYNAME=$2
 OSD_SCRIPT="sudo /usr/bin/jambulatv-osd"
 LIGHTS_CMD="/usr/bin/jambulatv-lights"
-DOMOTICZ_LAMP_NAME="Living Room"
+SMARTHOME_HUB_LAMP_NAME="Living Room"
 
 
 
@@ -19,14 +19,14 @@ zik_tasks_present () {
 # OSD Notice
 $OSD_SCRIPT -m "Looks like $HOSTDISPLAYNAME is around!"
 # Turn Off Lights
-$LIGHTS_CMD "$DOMOTICZ_LAMP_NAME" on
+$LIGHTS_CMD "$SMARTHOME_HUB_LAMP_NAME" on
 }
 
 zik_tasks_absent () {
 # OSD Notice
 $OSD_SCRIPT -m "Looks like $HOSTDISPLAYNAME is away ..."
 # Turn Off Lights
-$LIGHTS_CMD "$DOMOTICZ_LAMP_NAME" off
+$LIGHTS_CMD "$SMARTHOME_HUB_LAMP_NAME" off
 }
 
 # Others

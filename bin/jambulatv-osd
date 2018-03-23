@@ -1,19 +1,24 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python
 # Display Announcements on JambulaTV Screen
 #
 # Import modules
 import json
-import httplib
+import http.client
 import base64
 import sys
 import argparse
 import os
-import commands
-import warnings
+import subprocess
 import time
 import xml.etree.ElementTree as ET
-import xmpp
-import threading
+from pyxmpp2.simple import send_message
+from pyxmpp2.settings import XMPPSettings
+
+
+# Who called this script
+PID = os.getppid()
+CALLER = open('/proc/%d/cmdline' % PID).read().split('\x00', 1)[1]
+
 
 # Variables
 JAMBULATV_VIRTUAL_TERMINAL = 'tty7'
@@ -22,7 +27,7 @@ ICON = '/usr/share/kodi/addons/Aeon-Nox/media/DefaultIconInfo.png'
 OSDRUNFILE = '/tmp/osd_process_running' 
 
 # Copyright
-__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2017-2018 All rights reserved'
+__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2018-2019 All rights reserved'
 
 # Parse arguments/ message
 parser = argparse.ArgumentParser(description='Display Announcements on JambulaTV Screen')
@@ -31,8 +36,13 @@ parser.add_argument('-t','--duration', help='How long in milliseconds you want t
 args = parser.parse_args()
 
 MESSAGE = args.message
-XMPP_USERNAME = 'USER_001_XMPP_USERNAME'
-XMPP_PASSWORD   = 'USER_001_XMPP_PASSWORD'
+
+# XMPP credentials
+XMPP_SCRIPT = '/usr/bin/jambulatv-xmpp'
+XMPP_JID = 'USER_001_XMPP_USERNAME@USER_001_XMPP_HOST'
+XMPP_PASSWORD = 'USER_001_XMPP_PASSWORD'
+XMPP_RECIPIENT = XMPP_JID
+
 # Set duration
 if args.duration is None:
     TIME = 35000
@@ -46,28 +56,27 @@ else:
 #
 # Quit if active screen console is not running kodi
 def quit_if_screen_not_running ():
-	status, active_virtual_terminal = commands.getstatusoutput("cat /sys/class/tty/tty0/active")
-	if active_virtual_terminal != (JAMBULATV_VIRTUAL_TERMINAL):
-  	   sys.exit("Error: JambulaTV is not running on active terminal")
+        status, active_virtual_terminal = subprocess.getstatusoutput("cat /sys/class/tty/tty0/active")
+        if active_virtual_terminal != (JAMBULATV_VIRTUAL_TERMINAL):
+          sys.exit("Error: JambulaTV is not running on active terminal")
 
 # Wait to run this script if already running
 def wait_if_already_running ():
-	while os.path.exists(OSDRUNFILE):
-	   print "Another OSD process is running, please wait ..."
-	   time.sleep(60)
+        while os.path.exists(OSDRUNFILE):
+          print ("Another OSD process is running, please wait ...")
+          time.sleep(10)
+	  # remove temp file after sleep time - process may be dead
+          #os.remove(OSDRUNFILE)
 
 # Open, write, close a temporary file to prevent others from calling this script until done
 def create_run_file ():
-	processfile = open(OSDRUNFILE, 'w')
-	processfile.write('')
-	processfile.close()
+        processfile = open(OSDRUNFILE, 'w')
+        processfile.write(CALLER)
+        processfile.close()
 
 # Send xmpp message with notice
 def send_xmpp_message ():
-	chat = xmpp.Client('USER_001_XMPP_RESOURCE')
-	chat.connect( server=('USER_001_XMPP_HOST',5222) )
-	chat.auth(XMPP_USERNAME,XMPP_PASSWORD,'')
-	chat.send( xmpp.Message( "USER_001_XMPP_USERNAME@USER_001_XMPP_HOST" , "[JambulaTV] OSD Notice: " +MESSAGE ) )
+        subprocess.check_call([XMPP_SCRIPT, "-q", "-j", XMPP_JID, "-p", XMPP_PASSWORD, "-t", XMPP_RECIPIENT, "-m", "[JambulaTV] OSD Notice: " +MESSAGE])
 
 
 
@@ -91,7 +100,6 @@ for services in root.findall('services'):
    xbmc_host=['127.0.0.1']
 
 
-
 # Main Script 
 # -----------
 def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=username, password=password):
@@ -101,9 +109,11 @@ def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=
     payload.encode('utf-8')
     headers = {'Content-Type': 'application/json'}
     if password != '':
-        userpass = base64.encodestring('%s:%s' % (username, password))[:-1]
+        #userpass = base64.encodestring('%s:%s' % (username, password))[:-1] # Python2
+        userpass = base64.encodestring(('%s:%s' % (username,password)).encode()).decode().replace('\n', '')
         headers['Authorization'] = 'Basic %s' % userpass
-    conn = httplib.HTTPConnection(xbmc_host, xbmc_port)
+    #conn = httplib.HTTPConnection(xbmc_host, xbmc_port) # Python 2
+    conn = http.client.HTTPConnection(xbmc_host, xbmc_port)
     data = None
     try:
         conn.request('POST', '/jsonrpc', payload, headers)
@@ -118,10 +128,10 @@ def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=
 
 # De-activate screensaver
 def xbmc_poke_screen(xbmc_host, xbmc_port=xbmc_port):
-    for x in range(0, len(xbmc_host)):                                                  
-	screenSaverStatus = send_json_command(xbmc_host[x], xbmc_port, 'XBMC.GetInfoBooleans', params={'booleans':['System.ScreenSaverActive']})
+    for x in range(0, len(xbmc_host)):
+        screenSaverStatus = send_json_command(xbmc_host[x], xbmc_port, 'XBMC.GetInfoBooleans', params={'booleans':['System.ScreenSaverActive']})
         if screenSaverStatus == {u'System.ScreenSaverActive': True}:
-	  send_json_command(xbmc_host[x], xbmc_port, "Input.Select")
+          send_json_command(xbmc_host[x], xbmc_port, "Input.Select")
 
 # Display message on screen
 def xbmc_osd_message(xbmc_host, xbmc_port=xbmc_port):
@@ -135,9 +145,7 @@ xbmc_poke_screen(xbmc_host)
 xbmc_osd_message(xbmc_host)
 
 # Send XMPP message in background mode
-t1 = threading.Thread(target=send_xmpp_message)
-t1.start()
-t1.join()
+send_xmpp_message ()
 
 # Remove run file created earlier to prevent others from using me
 os.remove(OSDRUNFILE);

@@ -62,7 +62,15 @@ MANDIR8=$DATAROOTDIR/man/man8
 SYSCTL_DIR=$CONFDIR/sysctl.d
 UDEV_RULES_DIR=/etc/udev/rules.d
 LOGROTATE_CONF_DIR=$CONFDIR/logrotate.d
-PYTHON_SITEDIR=$LIBDIR/python2.7/site-packages
+PYTHON_VERSION=$(python -V)
+PYTHON_FULL_VERSION_NUMBER=$(echo $PYTHON_VERSION | awk {'print $2'})
+PYTHON_MAJOR_VERSION_NUMBER=$(echo $PYTHON_FULL_VERSION_NUMBER | cut -d '.' -f1)
+PYTHON_MINOR_VERSION_NUMBER=$(echo $PYTHON_FULL_VERSION_NUMBER | cut -d '.' -f1-2)
+PYTHON2_SITEDIR=$LIBDIR/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
+PYTHON3_SITEDIR=$PREFIX/local/lib/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
+# Set Python site directories depending on version in use
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && PYTHON_SITEDIR=$PYTHON2_SITEDIR
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && PYTHON_SITEDIR=$PYTHON3_SITEDIR
 FIRMWARE_DIR=$PREFIX/lib/firmware
 POST_INSTALL_NOTES=$ROOT_DIR/post_install_notes
 # Source directories
@@ -83,6 +91,8 @@ PROJECT_GITHUB_DIR=$PROJECT_SRC_DIR/github
 PROJECT_RPMS_DIR=$PROJECT_SRC_DIR/rpms
 PROJECT_ZIPS_DIR=$PROJECT_SRC_DIR/zips
 PROJECT_DEBS_DIR=$PROJECT_SRC_DIR/debs
+PROJECT_PIPS_DIR=$PROJECT_SRC_DIR/pips
+PROJECT_PIPS_REQUIRES_DIR=$PROJECT_PIPS_DIR/requirements
 # System directories
 PROJECT_SYSTEM_ARCH=`uname -m`
 PROJECT_SYSTEM_CONF_DIR=$CONFDIR/$PROJECT_NAME
@@ -174,8 +184,8 @@ GENERATE_LOCAL_CONF_SCRIPT=$BINARY_PREFIX/jambulatv-generate-local-conf
 FREEVO_VERSION=svn
 
 # Flexget IPTV list download schedule
-FLEXGET_SCHEDULE_IPTV_LISTS_HR="*/24"
-FLEXGET_SCHEDULE_IPTV_LISTS_MIN="*/30"
+FLEXGET_SCHEDULE_IPTV_LISTS_HR=15
+FLEXGET_SCHEDULE_IPTV_LISTS_MIN=30
 # 
 FLEXGET_PORT=$(grep -i 'flexget$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
@@ -480,6 +490,10 @@ JABBERD_DB_CREATE=$DATAROOTDIR/jabberd/db-setup.mysql
 JABBERD_PASSWORD=$(sudo grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //')
 JABBERD_RESOURCE=Home
 
+# Smart Home - Generic settings
+SMARTHOME_HUB_APP=homeassistant
+SMARTHOME_HUB_WWW_PORT=$(grep -i "$SMARTHOME_HUB_APP$" $PORTS_ASSIGNED_FILE | awk {'print $1'})
+
 # OpenHAB
 OPENHAB_HTTP_PORT=$(grep -i 'openhab$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 OPENHAB_HTTPS_PORT=$(grep -i 'openhab ssl$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -492,6 +506,9 @@ DOMOTICZ_HTML_DIR=$WWW_HTML_DIR/domoticz
 DOMOTICZ_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/domoticz.log
 DOMOTICZ_PID_FILE=$RUNDIR/domoticz.pid
 DOMOTICZ_WWW_PORT=$(grep -i 'domoticz$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+
+# Home Assistant
+HOMEASSISTANT_USER=$MULTIMEDIA_USER
 
 # Mosquitto - MQTT
 MOSQUITTO_USER=mosquitto
@@ -509,10 +526,8 @@ ZONEMINDER_DB_SCHEMA=$INSTALL_SRC_DIR/ZoneMinder/db/zm_create.sql
 ZONEMINDER_DB_USER=jambulatv
 ZONEMINDER_DB_PASS=jambulatvzm3
 ZONEMINDER_WWW_PORT=$(grep -i 'ZoneMinder$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-
 ZONEMINDER_ZMS_INETD_SCRIPT=$BINARY_PREFIX/jambulatv-zms-inetd
 ZONEMINDER_ZMS_INETD_PORT=8521
-
 ZONEMINDER_EVENTS_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Camera-Events
 
 # Motion Database Variables
@@ -809,8 +824,9 @@ TORRENTS_DOMAIN_NAME="MyJambulaTV"
 # Asterisk Credentials - Copy these to globals file
 ASTERISK_DIAL_OUT_NUMBER_1=""
 
-# OSD
+# OSD/XMPP
 OSD_SCRIPT=$BINARY_PREFIX/jambulatv-osd
+XMPP_SCRIPT=$BINARY_PREFIX/jambulatv-xmpp
 
 # HTTP Headers
 # -----------
@@ -1866,6 +1882,52 @@ openssl req -new -key $SERVER_KEY_FILE -out $SERVER_CSR_FILE \
 # Sign Cert
 openssl x509 -req -in $SERVER_CSR_FILE -CA $CA_CERT_FILE -CAkey $CA_KEY_FILE \
   -CAcreateserial -out $SERVER_CERT_FILE -days $CERTIFICATES_DAYS
+}
+
+python3_install () {
+# Remove existing python3 rpm based packages if any
+rpm -q python3-libs > /dev/null 2>&1 && rpm -e --nodeps python3-libs
+rpm -q python3 > /dev/null 2>&1 && rpm -e --nodeps python3
+#
+# Unpack Python 3 package
+tar xvf $PROJECT_TARBALLS_DIR/Python-3*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v Python-3* python3
+# Compile
+cd $INSTALL_SRC_DIR/python3 && ./configure --prefix=$PREFIX/local
+# make and install in alternate locations
+make && make altinstall
+#
+# Create symlinks to python binaries
+ln -s -f $PREFIX/local/bin/python3.6 $PREFIX/local/bin/python
+ln -s -f $PREFIX/local/bin/python3.6 $PREFIX/local/bin/python3
+# Create symlinks to pip binaries
+ln -s -f $PREFIX/local/bin/pip3.6 $PREFIX/local/bin/pip
+ln -s -f $PREFIX/local/bin/pip3.6 $PREFIX/local/bin/pip3
+}
+
+python3_common_modules_install () {
+for PYTHON_PACKAGE in \
+pytz==2017.2 \
+setuptools_scm \
+pytest-runner \
+beautifulsoup4 \
+pbr \
+pycodestyle \
+incremental \
+vcversioner \
+sqlalchemy==1.1.15 \
+chardet==3.0.4 \
+requests==2.18.4 \
+httplib2 \
+pyxmpp2 \
+sleekxmpp \
+jinja2==2.9.6 \
+certifi==2017.4.17 \
+six==1.10.0
+do
+# Install Python package
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_PACKAGE
+done
 }
 
 intel_x11_driver_install () {
@@ -4425,6 +4487,11 @@ kodi_osd_configure () {
 		> $OSD_SCRIPT
 # Make script executable
 chmod 755 $OSD_SCRIPT
+#
+# Copy jambulatv-xmpp script, if none exists in bin directory
+[ -e $XMPP_SCRIPT ] || cp -v $PROJECT_BIN_DIR/jambulatv-xmpp $XMPP_SCRIPT
+# Make script executable
+chmod 755 $XMPP_SCRIPT
 }
 
 livestreamer_install () {
@@ -5552,6 +5619,42 @@ echo
 done
 }
 
+flexget_python3_install () {
+# Dependencies for Flexget - Install locally using wheels/pips specified in requirements
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt
+#
+# Flexget (Python3)
+# -----------------
+# IMPORTANT: Don't use pip due to requirements set for common python 3 modules used by
+#            other packages
+#
+# Install python modules
+echo "Installing FlexGet ..."
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/Flexget-current/ $INSTALL_SRC_DIR/Flexget/
+# Force our requirements
+cp -v $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt \
+	$INSTALL_SRC_DIR/Flexget/requirements.txt
+# Apply Patches
+# -------------
+# include plugin
+patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT_PATCHES_DIR/flexget.plugin.include.python3.patch
+# notifiers plugin
+patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/notifiers/notify.py < $PROJECT_PATCHES_DIR/flexget.plugin.notifiers.python3.patch
+# rss plugin - extract podcast poster image URLs
+patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/input/rss.py < $PROJECT_PATCHES_DIR/flexget.plugin.input.rss.python3.patch
+# Install
+cd $INSTALL_SRC_DIR/Flexget
+python3 setup.py install
+# Create symbolic link
+[ -x $BINARY_PREFIX/flexget ] || ln -s $PREFIX/local/bin/flexget $BINARY_PREFIX/flexget
+#
+# Copy email templates
+# Python 3
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
+	cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \
+		$PYTHON_SITEDIR/FlexGet-*.egg/flexget/templates/task/
+}
+
 flexget_install () {
 # Remove any existing modules
 [ ! -d $INSTALL_SRC_DIR/FlexGet* ] || rm -rf $INSTALL_SRC_DIR/FlexGet*
@@ -5559,11 +5662,17 @@ rm -rf $PYTHON_SITEDIR/FlexGet*
 # Install python modules
 echo "Installing FlexGet ..."
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/Flexget/ $INSTALL_SRC_DIR/Flexget/
-# Apply our patches
+# Apply our patches - include plugin
 patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT_PATCHES_DIR/flexget.plugin.include.patch
 # Install
 cd $INSTALL_SRC_DIR/Flexget
 pip install -e .
+#
+# Copy email templates
+# Python 2
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
+	cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
+		$INSTALL_SRC_DIR/Flexget/flexget/templates/email/
 }
 
 flexget_configure () {
@@ -5577,13 +5686,25 @@ touch $PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $FLEXGET_CONFIG_DIR
 # Change flexget log directory to multimedia user
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/flexget
-# Copy copy config .yml files
-cp -v $PROJECT_CONFIGS_DIR/flexget/*.yml $FLEXGET_CONFIG_DIR/
 #
-# Variables file
+# Copy config .yml files depending on python version in use
+# Python 2
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
+	cp -v $PROJECT_CONFIGS_DIR/flexget/*.yml $FLEXGET_CONFIG_DIR/
+# Python 3
+echo "Using Python 3 ..."
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
+	cp -v $PROJECT_CONFIGS_DIR/flexget_python3/*.yml $FLEXGET_CONFIG_DIR/
+#
+# Copy variables .yml files depending on python version in use
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
+	FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget/variables.yml.template
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
+	FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget_python3/variables.yml.template
+#
 if [ ! -e $FLEXGET_CONFIG_DIR/variables.yml ];
 then
-cat $PROJECT_CONFIGS_DIR/flexget/variables.yml.template | \
+cat $FLEXGET_VARIABLES_TEMPLATE  | \
    sed -e "s:MY_HTTP_BROWSER_USERAGENT_MAC:$HTTP_BROWSER_USERAGENT_MAC:g" | \
    sed -e "s:MY_HTTP_BROWSER_USERAGENT_LINUX:$HTTP_BROWSER_USERAGENT_LINUX:g" | \
    sed -e "s:MY_HTTP_BROWSER_USERAGENT_WINDOWS:$HTTP_BROWSER_USERAGENT_WINDOWS:g" | \
@@ -5656,10 +5777,6 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $FLEXGET_CONFIG_DIR
 # Change flexget log directory to multimedia user
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/flexget
 #
-# Copy email templates
-cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
-	$INSTALL_SRC_DIR/Flexget/flexget/templates/email/
-#
 # Add Environment file for Systemd
 cat > $SYSCONFIG_DIR/flexget <<EOF
 FLEXGET_CMD="$(which flexget)"
@@ -5684,6 +5801,9 @@ FLEXGET
 =======
 Edit the flexget variables file located at:
 $FLEXGET_CONFIG_DIR/variables.yml
+
+Run the following command to authorize flexget at trakt.tv site::
+flexget trakt auth [YOUR TRAKT ACCOUNT]
 #
 EOF
 }
@@ -5911,6 +6031,20 @@ patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/env/env_android.py < $PROJECT_PATCHES_D
 # Compile
 cd $INSTALL_SRC_DIR/yowsup
 python setup.py install --install-lib=$PYTHON_SITEDIR
+}
+
+yowsup2_python3_install () {
+# Dependencies for yowsup - Install locally using wheels specified in requirements
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/yowsup-requirements.txt
+#
+# Using yowsup github branch by AragurDEV
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup-AragurDEV/ $INSTALL_SRC_DIR/yowsup/
+# Install
+cd $INSTALL_SRC_DIR/yowsup
+python3 setup.py install
+#
+# Create symbolic link
+[ -x $BINARY_PREFIX/yowsup-cli ] || ln -s $PREFIX/local/bin/yowsup-cli $BINARY_PREFIX/yowsup-cli
 }
 
 whatsapp_messaging_configure () {
@@ -6758,6 +6892,8 @@ youtube_dl_install () {
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/youtube-dl/ $INSTALL_SRC_DIR/youtube-dl/
 cd $INSTALL_SRC_DIR/youtube-dl
 python setup.py install
+# Create symbolic link to youtube-dl binary in /usr/local/bin
+ln -s $PREFIX/local/bin/youtube-dl $BINARY_PREFIX/youtube-dl
 }
 
 youtube_setup () {
@@ -8401,7 +8537,21 @@ make_install_jambulatv
 ln -s /usr/local/lib64/libopenzwave.so.1.4 $LIBDIR/libopenzwave.so.1.4
 }
 
+python_openzwave_install () {
+# Unpack runtime
+unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/python_openzwave-*.zip
+cd $INSTALL_SRC_DIR/python_openzwave
+# Remove external URL link to github for downloading embedded version of openzwave
+# i.e. it is vailable locally
+sed -i "s|def get_openzwave(self, url='https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/archives/open-zwave-master-{0}.zip'|def get_openzwave(self, url='file:$PROJECT_PIPS_DIR/openzwave-embed/open-zwave.zip'|g" $INSTALL_SRC_DIR/python_openzwave/pyozw_setup.py
+# compile
+python setup.py install
+}
+
 domoticz_install () {
+# Install open-zwave first
+open_zwave_install
+#
 # Get WWW User and Group
 set_www_user_group
 rsync -avz $PROJECT_GITHUB_DIR/domoticz/ $INSTALL_SRC_DIR/domoticz/
@@ -8454,14 +8604,61 @@ systemctl enable domoticz.service
 systemctl start domoticz.service
 }
 
+homeassistant_install () {
+# open-zwave
+python_openzwave_install
+
+# Unpack Home-Assistant using github sources
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/home-assistant/ $INSTALL_SRC_DIR/home-assistant/
+#
+# Force our requirements
+cat $PROJECT_PIPS_REQUIRES_DIR/homeassistant-requirements.txt | \
+	sed "s:MY_PROJECT_PIPS_DIR:$PROJECT_PIPS_DIR:g" \
+		> $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
+# Force SQLAlchemy 1.1.15 in recorder
+sed -i "s:sqlalchemy==1.2.2:sqlalchemy==1.1.15:g" $INSTALL_SRC_DIR/home-assistant/homeassistant/components/recorder/__init__.py
+
+# Dependencies for Homeassistant - Install locally using pips specified in requirements
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
+#
+# Install
+cd $INSTALL_SRC_DIR/home-assistant
+python3 setup.py install
+#
+# Create symbolic link
+[ -x $BINARY_PREFIX/hass ] || ln -s $PREFIX/local/bin/hass $BINARY_PREFIX/hass
+
+# Add Home assistant user to dialout so they can access ZWave stick
+usermod -a -G dialout $HOMEASSISTANT_USER
+}
+
+homeassistant_configure () {
+# Copy hass configuration files
+rsync -av $PROJECT_CONFIGS_DIR/homeassistant/ $PROJECT_SYSTEM_CONF_DIR/homeassistant/
+# Change hass config directory permissions
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_CONF_DIR/homeassistant
+
+# Customize secrets i.e. port etc.....
+
+# Copy home-assistant systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/home-assistant.service $SYSTEMD_UNITS_DIR_USER/
+# Enable and start home-assistant if needed
+systemctl enable home-assistant.service
+}
+
 home_automation_scripts () {
 for SCRIPT in \
 jambulatv-lights \
-jambulatv-presence-detection
+jambulatv-presence-detection-via-hostapd
 do
 # Copy script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX/
 done
+
+# Add systemd service for presence detection which uses hostapd
+cp -v $PROJECT_INIT_SCRIPTS_DIR/presence-detection.service $SYSTEMD_UNITS_DIR_USER/
+# Enable and start presence-detection if needed
+systemctl enable presence-detection.service
 } 
 
 openhab_install () {
@@ -8706,7 +8903,7 @@ chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 	cat $PROJECT_BIN_DIR/jambulatv-zm-alarm-all-notifications | \
 		sed -e "s:ZONEMINDER_DB_HOST:$ZONEMINDER_DB_HOST:g" | \
 		sed -e "s:ZONEMINDER_WWW_PORT:$ZONEMINDER_WWW_PORT:g" | \
-		sed -e "s:MY_DOMOTICZ_WWW_PORT:$DOMOTICZ_WWW_PORT:g" | \
+		sed -e "s:MY_SMARTHOME_HUB_WWW_PORT:$SMARTHOME_HUB_WWW_PORT:g" | \
 		sed -e "s:MY_TELEGRAM_CREDENTIALS_CONFIG:$TELEGRAM_CREDENTIALS_CONFIG:g" | \
 		sed -e "s:MY_WHATSAPP_CREDENTIALS_CONFIG:$WHATSAPP_CREDENTIALS_CONFIG:g" | \
 		sed -e "s:MY_WHATSAPP_SCRIPT:$WHATSAPP_SCRIPT:g" | \

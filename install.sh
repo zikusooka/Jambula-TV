@@ -34,7 +34,13 @@ exec 2>> $BUILD_LOG
 # Install images and icons
 images_add
 
-# pick desired X11 video driver
+# Install python3
+python3_install
+
+# Install commonly used python3 modules
+python3_common_modules_install
+
+# Pick desired X11 video driver
 case $X11_DRIVER in
 intel)
 intel_x11_driver_install
@@ -222,8 +228,9 @@ iptv_builder_install
 epg_tvheadend_configure
 
 # Auto download of TV Shows, Movies, and Podcasts
-flexget_deps_install
-flexget_install
+#flexget_deps_install
+#flexget_install
+flexget_python3_install 
 flexget_configure
 
 # Torrents
@@ -371,28 +378,31 @@ nextcloud_configure
 # ----------------
 # Home Automation 
 # ----------------
-# Open-ZWave
-open_zwave_install
-#
 # Domoticz
-domoticz_install # ~ 70mins
-domoticz_configure
+#domoticz_install # ~ 70mins
+#domoticz_configure
 #
 # OpenHAB
 #openhab_install
 #openhab_configure
 home_automation_scripts
+#
+# HomeAssistant
+homeassistant_install
+homeassistant_configure
 
 # ------------------------
 # Notifications/ Messaging
 # ------------------------
 mosquitto_install
 mosquitto_configure
-sleekxmpp_install 
+#sleekxmpp_install 
 python_telegram_bot_install
 telegram_messaging_configure
-yowsup2_deps_install
-yowsup2_install
+#yowsup2_deps_install
+#yowsup2_install
+yowsup2_python3_install
+
 whatsapp_messaging_configure
 
 # ---------------

@@ -9,7 +9,7 @@ FAVORITE_VIDEO="MY_USER_TV_SHOWS_DIR/Arrow/Season_05/Arrow.S05E04.Penance.HDTV.H
 MUSIC_DIR="MY_USER_MUSIC_DIR"
 PICTURES_DIR="MY_USER_PICTURES_DIR"
 TV_RECORD_STATUS_FILE=MY_TMPDIR/tv_record_status # Must be same as in kodi-controller!
-DOMOTICZ_LAMP_NAME="Living Room"
+SMARTHOME_HUB_LAMP_NAME="Living Room"
 TEXT2SPEECH_TOOL=jambulatv-text2speech
 TTS_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $(which $TEXT2SPEECH_TOOL) | cut -d '=' -f2 | head -1 | awk {'print $1'}) # IMPORTANT: Must be on 'ext4' partition i.e. /var
 TTS_PLAY_TOOL=$(basename $(grep ^TTS_PLAY_CMD $(which $TEXT2SPEECH_TOOL) | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed "s:\"::g"))
@@ -89,11 +89,11 @@ $TEXT_2_SPEECH_TOOL_PATH custom "Happy $(date "+%A")"
 }
 
 skill_lights_on () {
-/usr/bin/jambulatv-lights "$DOMOTICZ_LAMP_NAME" on demo
+/usr/bin/jambulatv-lights "$SMARTHOME_HUB_LAMP_NAME" on demo
 }
 
 skill_lights_off () {
-/usr/bin/jambulatv-lights "$DOMOTICZ_LAMP_NAME" off demo
+/usr/bin/jambulatv-lights "$SMARTHOME_HUB_LAMP_NAME" off demo
 }
 
 skill_tv_start () {

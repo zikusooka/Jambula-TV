@@ -1,5 +1,5 @@
 #!/bin/sh
-
+# Variables
 ZM_CAMERA_ID=$1
 ZM_CAMERA_NAME=$2
 ZM_CAMERA_EVENT_ID=$3
@@ -13,11 +13,14 @@ ZM_ROOT_URL_LOCAL="http://$ZM_HOST_LOCAL:$ZM_PORT"
 ZM_ROOT_URL_WIFI="http://$ZM_HOST_WIFI:$ZM_PORT"
 ZM_WATCH_URL="$ZM_ROOT_URL_LOCAL/jpeg.cgi?mode=single&monitor=${ZM_CAMERA_ID}&scale=100"
 
-# Domoticz stuff
-DOMOTICZ_HOST_IP=jambulatv
-DOMOTICZ_WWW_PORT=MY_DOMOTICZ_WWW_PORT
-DOMOTICZ_SECURITY_LAMP_NAME="Living Room"
-DOMOTICZ_SECURITY_LAMP_DURATION=60
+# CCTV alert settings
+CCTV_SETTINGS_FILE=/etc/JambulaTV/cctv-settings.cfg
+
+# Smart Home stuff
+SMARTHOME_HUB_HOST_IP=jambulatv
+SMARTHOME_HUB_WWW_PORT=MY_SMARTHOME_HUB_WWW_PORT
+SMARTHOME_HUB_SECURITY_LAMP_NAME="Living Room"
+SMARTHOME_HUB_SECURITY_LAMP_DURATION=60
 
 # Edit Notification message templates here
 NOTIFICATION_SUBJECT="*[JambulaTV] CCTV Security Alert: Motion Detected on $ZM_CAMERA_NAME Camera*"
@@ -57,6 +60,10 @@ LIGHTS_CMD=/usr/bin/jambulatv-lights
 ###############
 #  FUNCTIONS  #
 ###############
+
+# Source CCTV settings
+. $CCTV_SETTINGS_FILE
+
 usage () {
 # Camera ID
 if [ "x$ZM_CAMERA_ID" = "x" ];
@@ -81,8 +88,17 @@ exit 1
 fi
 }
 
-log_event () {
-curl -s "http://$DOMOTICZ_HOST_IP:$DOMOTICZ_WWW_PORT/json.htm?type=command&param=addlogmessage&message=$@" > /dev/null 2>&1
+capture_motion_event () {
+# Capture current camera view
+curl -G -s -o $ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg $ZM_WATCH_URL
+}
+
+generate_message_4_notice () {
+cat > $ZM_MESSAGE_FILE << EOF
+*$NOTIFICATION_SUBJECT*
+
+$NOTIFICATION_MESSAGE
+EOF
 }
 
 kodi_screensaver_status () {
@@ -145,77 +161,89 @@ mv -v /tmp/$ASTERISK_DIAL_OUT_SPOOL_FILE $ASTERISK_DIAL_OUT_SPOOL_DIR
 # Usage
 usage
 
+
+# Quit if all cctv settings are turned off
+[[ "$CCTV_ALL" = "1" ]] || exit 0
+
+
+# Capture event image - This has to be here i.e. early on
+capture_motion_event
+
+
 # LAMP
 # ----
 # Turn on security Light and log event
-$LIGHTS_CMD "$DOMOTICZ_SECURITY_LAMP_NAME" on && \
-log_event $NOTIFICATION_MESSAGE
-
-
-# Setup
-# -----
-# Capture current camera view
-curl -G -s -o $ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg $ZM_WATCH_URL
-
-# Generate message for Telegram and/or WhatsApp
-cat > $ZM_MESSAGE_FILE << EOF
-*$NOTIFICATION_SUBJECT*
-
-$NOTIFICATION_MESSAGE
-EOF
+if [[ "$CCTV_LIGHTS" = "1" ]];
+then
+$LIGHTS_CMD "$SMARTHOME_HUB_SECURITY_LAMP_NAME" on
+fi
 
 
 # Telegram
 # ---------
+if [[ "$CCTV_TELEGRAM" = "1" ]];
+then
 # Source Telegram credentials
 . $TELEGRAM_CREDENTIALS_CONFIG
+# Generate message for Telegram
+generate_message_4_notice
 # SendMesage
 $TELEGRAM_SCRIPT SendMessage "$(cat $ZM_MESSAGE_FILE). Also attached is a snapshot ..." &
 # SendPhoto
 $TELEGRAM_SCRIPT SendImageDisk  $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg &
+fi
 
 
 # WhatsApp
 # --------
+if [[ "$CCTV_WHATSAPP" = "1" ]];
+then
 # Source WhatsApp credentials
 . $WHATSAPP_CREDENTIALS_CONFIG
 # Check existence of command
-if [ "x$WHATSAPP_SCRIPT" = "x" ]; 
-then 
-WHATSAPP_SCRIPT=MY_WHATSAPP_SCRIPT
-fi
+[[ "x$WHATSAPP_SCRIPT" = "x" ]] && WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
+# Generate message for WhatsApp
+generate_message_4_notice
 # SendMesage
-$WHATSAPP_SCRIPT sendmessage $WHATSAPP_PHONE_NUMBER_RECIPIENT "$(cat $ZM_MESSAGE_FILE)." &
+$WHATSAPP_SCRIPT sendmessage "$(cat $ZM_MESSAGE_FILE)" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
 # SendPhoto
-#$WHATSAPP_SCRIPT sendmessage $WHATSAPP_PHONE_NUMBER_RECIPIENT $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg &
+$WHATSAPP_SCRIPT sendimage $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1
+fi
 
 
 # OSD Message using Doorbell plugin
 # ---------------------------------
+if [[ "$CCTV_KODI" = "1" ]];
+then
 kodi_screensaver_status
 kodi_screensaver_poke 
 kodi_addon_script_doorbell &
+fi
 
 
 # Call using Mobile Network
 # --------------------------
+[[ "$CCTV_CALL" = "1" ]] && \
 create_asterisk_call_file
 
 
 # OSD Message using jambulatv-osd script
 # --------------------------------------
+[[ "$CCTV_OSD" = "1" ]] && \
 $OSD_SCRIPT -m "$NOTIFICATION_MESSAGE"
 
 
 # Send Email (IMPORTANT:  Make this one the last notification to run)
 # --------------------------------------------------------------------
+[[ "$CCTV_EMAIL" = "1" ]] && \
 $EMAIL_SCRIPT $EMAIL_NOTIFICATION_ADDRESS "$NOTIFICATION_SUBJECT" "$NOTIFICATION_MESSAGE" "$ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg"
 
 
 # LAMP
 # -----
 # Switch off security Light if it was turned on after desired period e.g. 60 minutes
-sleep $DOMOTICZ_SECURITY_LAMP_DURATION
-
-$LIGHTS_CMD "$DOMOTICZ_SECURITY_LAMP_NAME" off && \
-log_event $NOTIFICATION_MESSAGE
+if [[ "$CCTV_LIGHTS" = "1" ]];
+then
+sleep $SMARTHOME_HUB_SECURITY_LAMP_DURATION
+$LIGHTS_CMD "$SMARTHOME_HUB_SECURITY_LAMP_NAME" off
+fi

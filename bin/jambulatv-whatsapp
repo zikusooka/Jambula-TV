@@ -8,24 +8,57 @@ COUNTRY_MCC_MNC_RAW_FILE=/tmp/mcc_mnc_raw.csv
 
 WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
 WHATSAPP_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-whatsapp.cfg
+WHATSAPP_CMD=$(which yowsup-cli)
+WHATSAPP_LOG_FILE=/var/log/JambulaTV/whatsapp.log
 WHATSAPP_METHOD_NAME=$1
 WHATSAPP_TEXT_MESSAGE="$2"
+WHATSAPP_IMAGE_PATH="$2"
 WHATSAPP_PHONE_NUMBER_RECIPIENT=$3
 WHATSAPP_REGISTRATION_METHOD=sms
 
 PING_TIMEOUT=3 #9
 PING_IP_ADDRESS=8.8.8.8
 
+ANOTHER_INSTANCE_TEMP_FILE=/tmp/whatapp_processes_running
+
 
 
 ###############
 #  FUNCTIONS  #
 ###############
+
+start_logging () {
+# Make log file writeable by all
+sudo chmod a+w $WHATSAPP_LOG_FILE
+# Start logging
+cat >> $WHATSAPP_LOG_FILE <<EOF
+
+------------------------------------
+Date:  $(date)
+------------------------------------
+EOF
+exec 2>> $WHATSAPP_LOG_FILE
+}
+
+check_if_root () {
+if [ "`whoami`" != "root" ];
+then
+clear
+logger -s -t $(basename $0) "Incorrect user! You need to run this tool as root. Try again using sudo" 
+tail -1 $WHATSAPP_LOG_FILE
+exit 1
+fi
+}
+
 usage () {
+# Check who is running this tool
+check_if_root
+
+# CLI arguments
 clear
 if [ "x$WHATSAPP_METHOD_NAME" = "x" ];
 then
-echo "Usage:  ./`basename $0` [register]|[sendmessage]
+echo "Usage:  ./`basename $0` [register]|[sendmessage]|[sendimage]
 "
 exit 1
 fi
@@ -42,6 +75,19 @@ echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_TEXT_MESSAGE] [WHA
 exit 1
 fi
 ;;
+
+[Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee])
+# Source settings file
+[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+# Test for blank message or recipient phone number
+if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_IMAGE_PATH" = "x" ];
+then
+echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_IMAGE_PATH] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
+"
+exit 1
+fi
+;;
+
 esac
 }
 
@@ -57,6 +103,27 @@ ERROR ($(basename $basename $0)): Unable to connect to WhatsApp. Check your Inte
 EOF
 exit 0
 fi
+}
+
+pre_start_tasks () {
+usage
+#
+check_internet_access
+#
+# Wait if another instance of me is running
+while [ -e "$ANOTHER_INSTANCE_TEMP_FILE" ];
+do
+logger -s -t $(basename $0) "Another WhatsApp instance is running, waiting a bit"
+sleep 10
+done
+#
+# Create temp file to prevent other WhatsApp instances from neing started while
+# this one is in progress
+[ -e "$ANOTHER_INSTANCE_TEMP_FILE" ] || touch $ANOTHER_INSTANCE_TEMP_FILE
+}
+
+post_clean_up_tasks () {
+[ -e "$ANOTHER_INSTANCE_TEMP_FILE" ] && rm -f $ANOTHER_INSTANCE_TEMP_FILE
 }
 
 registration_status () {
@@ -199,8 +266,18 @@ TELEPHONE_COUNTRY_CODE=$TELEPHONE_COUNTRY_CODE
 MOBILE_COUNTRY_CODE=$MOBILE_COUNTRY_CODE
 MOBILE_NETWORK_CODE=$MOBILE_NETWORK_CODE
 EOF
+
 # Request for PIN code using SMS
-yowsup-cli registration -d -E android -m $MOBILE_COUNTRY_CODE -n $MOBILE_NETWORK_CODE -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -r $WHATSAPP_REGISTRATION_METHOD
+$WHATSAPP_CMD registration -d -L $WHATSAPP_LOG_FILE -E android -m $MOBILE_COUNTRY_CODE -n $MOBILE_NETWORK_CODE -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -r $WHATSAPP_REGISTRATION_METHOD 2>&1 | grep -i "status: fail" 
+REQUEST_CODE_STATUS=$?
+if [[ "$REQUEST_CODE_STATUS" = "0" ]];
+then
+# Notify of failure and quit
+cat <<EOF
+logger -s -t $(basename $0) "Failed to get registration code.  Please check for actual Yowsup error message"
+EOF
+exit 1
+fi
 }
 
 registration_confirm () {
@@ -215,10 +292,10 @@ echo "Error:  Please register this device for whatsapp first before you can conf
 exit 1
 fi
 # Confirm using sent PIN code
-yowsup-cli registration -d -E android -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -R $WHATSAPP_REGISTRATION_CODE
+$WHATSAPP_CMD registration -d -L $WHATSAPP_LOG_FILE -E android -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -R $WHATSAPP_REGISTRATION_CODE
 }
 
-send_message () {
+send_pre_check () {
 # Source settings file
 . $WHATSAPP_CREDENTIALS_CONFIG
 
@@ -232,13 +309,46 @@ clear;
 echo "Error:  Please register this device for whatsapp first before you can send"
 exit 1
 fi
+}
 
+send_message () {
+# Pre-checks before sending
+send_pre_check
 # Send message to Whatsapp recipient
-yowsup-cli demos -d -l "$WHATSAPP_PHONE_NUMBER_SENDER:$WHATSAPP_ENCRYPTED_PASSWORD" -s $WHATSAPP_PHONE_NUMBER_RECIPIENT "$WHATSAPP_TEXT_MESSAGE"
+$WHATSAPP_CMD demos -d -L $WHATSAPP_LOG_FILE -l "$WHATSAPP_PHONE_NUMBER_SENDER:$WHATSAPP_ENCRYPTED_PASSWORD" -s $WHATSAPP_PHONE_NUMBER_RECIPIENT "$WHATSAPP_TEXT_MESSAGE"
+}
+
+send_image () {
+# Pre-checks before sending
+send_pre_check
+# Send image to Whatsapp recipient
+/usr/bin/expect -c "
+spawn $WHATSAPP_CMD demos -y -d -L $WHATSAPP_LOG_FILE -l \"$WHATSAPP_PHONE_NUMBER_SENDER:$WHATSAPP_ENCRYPTED_PASSWORD\"; 
+expect \[offline\];
+
+# Connect/ Quick login
+send /L\n;
+send /L\n;
+send /L\n;
+expect eof;
+#
+send \"\n\";
+expect \[connected\];
+
+# Send image
+send -- \"/image send $WHATSAPP_PHONE_NUMBER_RECIPIENT $WHATSAPP_IMAGE_PATH\";
+send \"\n\";
+expect eof;
+
+# Disconnect
+send /disconnect\n;
+expect \[disconnected\];
+"
 }
 
 register_4_whatsapp  () {
 registration_request_code
+#
 # Ask for PIN Code
 clear
 read -p "An SMS message with a PIN Code has been sent to your phone number $WHATSAPP_PHONE_NUMBER_SENDER.  Please Enter it here now:
@@ -268,9 +378,10 @@ EOF
 #################
 #  MAIN SCRIPT  #
 #################
-usage
 
-check_internet_access
+start_logging
+
+pre_start_tasks
 
 case $WHATSAPP_METHOD_NAME in
 [Rr][Ee][Gg][Ii][Ss][Tt][Ee][Rr])
@@ -281,9 +392,15 @@ register_4_whatsapp
 send_message "$2" "$3"
 ;;
 
+[Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee])
+send_image "$2" "$3"
+;;
+
 *)
-echo "Usage:  ./`basename $0` [register]|[sendmessage]
+echo "Usage:  ./`basename $0` [register]|[sendmessage]|[sendimage]
 "
 exit 1
 ;;
 esac
+
+post_clean_up_tasks

@@ -1,0 +1,772 @@
+variables: variables.yml
+
+web_server: 8532 # '{? webui.port ?}'
+
+templates:
+
+  anchors:
+
+
+
+#############
+#  Anchors  # 
+#############
+#
+# Podcasts
+# --------
+    _podcasts_file_info_variables: &podcasts_file_info_variables
+      podcast_meta_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace('–', '_')|replace(',', '')|replace('{', '_')|replace('}', '_')}}.meta
+      podcast_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace('–', '_')|replace(',', '')|replace('{', '_')|replace('}', '_')}}.info
+      podcast_poster_url: "{{rss_poster_url|re_replace('.jpg?.*', '.jpg')|re_replace('.png?.*', '.png')}}"
+      podcast_poster_file: '/tmp/podcast_poster.jpg'
+      podcasts_queued_message_subject: "*[JambulaTV] Podcast(s) Queued*\nThe following Podcast has been queued for download:\n"
+
+# TV Series
+# ---------
+    _tv_series_file_info_variables: &tv_series_file_info_variables
+      tv_series_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')|replace('{', '_')|replace('}', '_')}}.info
+      tv_series_details: Series *{{tvdb_series_name}}* | Airs *{{tvdb_airs_day_of_week}}*\nEpisode *{{tvdb_ep_id}}* | Title *{{tvdb_ep_name|d('')}}*\nRated *{{tvdb_ep_rating}}/10* | Aired *{{tvdb_ep_air_date|replace('00', '')|replace(':', '')|replace(' ', '')}}*\nTime *{{tvdb_runtime}} Mins* | Format *{{quality|d('')}}*\n{{tvdb_ep_overview|striptags}}
+      filename: "{{series_name|replace(' ','.')|replace('.htm.','.')}}.{{series_id}}.{{quality|upper|replace(' ','.')}}"
+      content-disposition: no
+      tv_series_image_url: '{{tvmaze_series_medium_image}}'
+      tv_series_image_file: '/tmp/{{tv_series_info_file}}.jpg'
+      tv_series_queued_message_subject: "*[JambulaTV] TV Show(s) Queued*\nThe following TV Episode has been queued for download\n"
+      tv_series_downloaded_message_subject: "*[JambulaTV] New TV Episode(s) Added*\nThe following TV Series Episode was successfully downloaded. You may find it under 'TV Shows' on your JambulaTV. Enjoy!\n"
+
+# Movies
+# -------
+    _movies_file_info_variables: &movies_file_info_variables
+      movie_info_file: .{{title|striptags|replace(' ', '_')|replace('\'', '')|replace(':', '')|replace('?', '')|replace('!', '_')|replace('[', '_')|replace(']', '_')|replace('/', '_')|replace('&', '')|replace('(', '')|replace(')', '')|replace('-', '')|replace(',', '')|replace('{', '_')|replace('}', '_')}}.info
+      movie_details: Movie *{{imdb_name}}* | Year *{{imdb_year}}*\nRating *{{imdb_score}}/10* | Votes *{{imdb_votes}} votes*\nGenres *{{imdb_genres|join(', ')|title}}*\nTime *{{tmdb_runtime}} Mins* | Format *{{quality|d('')}}*\n{{imdb_plot_outline|striptags}}
+      filename: "{{title|replace('.torrent.htm','')|replace(' ', '-')|replace('[', '-')|replace(']', '-')}}.torrent"
+      content-disposition: no
+      movie_image_url: '{{tmdb_posters[0]}}'
+      movie_image_file: '/tmp/{{movie_info_file}}.jpg'
+      movies_queued_message_subject: "*[JambulaTV] Movie(s) Queued*\nThe following Movie has been queued for download\n" 
+      movies_downloaded_message_subject: "*[JambulaTV] New Movie(s) Added*\nThe following movie was successfully downloaded. You may find it under 'Movies' on your JambulaTV. Enjoy!\n"
+
+# Settings - TV Series
+# ---------------------
+    _settings_for_series: &settings_for_series
+      quality: "h264 xvid !480p !720p !h265"
+      exact: yes
+      propers: no 
+      identified_by: ep
+      ep_regexp:
+        - s(\d+)e(\d+)
+        - s(\d+)ep(\d+)
+      tracking: backfill
+      timeframe: 6 hours
+      target: "h264"
+      upgrade: yes
+
+# Trakt Credentials
+# -----------------
+    _trakt_login_credentials: &trakt_login_credentials
+      username: '{? trakt.username ?}'
+      account: '{? trakt.account ?}'
+ 
+# Trakt - TV Series
+# -----------------
+    _trakt_for_series: &trakt_for_series
+      username: '{? trakt.username ?}'
+      account: '{? trakt.account ?}'
+      list: '{? trakt.watchlist ?}'
+      type: shows
+      strip_dates: yes
+
+# Trakt - Movies
+# ---------------
+    _trakt_for_movies: &trakt_for_movies
+      username: '{? trakt.username ?}'
+      account: '{? trakt.account ?}'
+      list: '{? trakt.watchlist ?}'
+      type: movies
+      strip_dates: yes
+
+# Telegram Credentials
+# --------------------
+    _telegram_credentials: &telegram_credentials
+      bot_token: '{? telegram.bot_token ?}'
+      parse_mode: markdown
+      recipients:
+        - username: '{? telegram.username ?}'
+
+
+
+##############
+#  Templates #
+##############
+
+  global:
+
+    # Set commonly used variables in flexget tasks
+    if:
+      - "task == 'tv_shows'":
+          set:
+            <<: *tv_series_file_info_variables
+            INFO_FILE: "/tmp/{{tv_series_info_file}}"
+            DETAILS_FILE: "{{tv_series_details}}"
+            IMAGE_FILE: "{{tv_series_image_file}}"
+            IMAGE_URL: "{{tv_series_image_url}}"
+            NOTIFICATION_SUBJECT: "{{tv_series_queued_message_subject}}"
+
+      - "task == 'move_tv_shows'":
+          set:
+            <<: *tv_series_file_info_variables
+            INFO_FILE: "/tmp/{{tv_series_info_file}}"
+            DETAILS_FILE: "{{tv_series_details}}"
+            IMAGE_FILE: "{{tv_series_image_file}}"
+            IMAGE_URL: "{{tv_series_image_url}}"
+            NOTIFICATION_SUBJECT: "{{tv_series_downloaded_message_subject}}"
+
+      - "task == 'movies'":
+          set:
+            <<: *movies_file_info_variables
+            INFO_FILE: "/tmp/{{movie_info_file}}"
+            DETAILS_FILE: "{{movie_details}}"
+            IMAGE_FILE: "{{movie_image_file}}"
+            IMAGE_URL: "{{movie_image_url}}"
+            NOTIFICATION_SUBJECT: "{{movies_queued_message_subject}}"
+      
+      - "task == 'move_movies'":
+          set:
+            <<: *movies_file_info_variables
+            INFO_FILE: "/tmp/{{movie_info_file}}"
+            DETAILS_FILE: "{{movie_details}}"
+            IMAGE_FILE: "{{movie_image_file}}"
+            IMAGE_URL: "{{movie_image_url}}"
+            NOTIFICATION_SUBJECT: "{{movies_downloaded_message_subject}}"
+      
+      - "task == 'internet_tv'":
+          set:
+            <<: *podcasts_file_info_variables
+            INFO_FILE: "/tmp/{{podcast_info_file}}"
+            DETAILS_FILE: ""
+            IMAGE_FILE: "{{podcast_poster_file}}"
+            IMAGE_URL: "{{podcast_poster_url}}"
+            NOTIFICATION_SUBJECT: "{{podcasts_queued_message_subject}}"
+
+    headers:
+      User-Agent: '{? headers.user_agent_linux ?}'
+    regexp:
+      reject:
+        - \b(s|d)ub(s|bed|lado)?\b: {from: title}
+        - \b(duo|tri|quadri|tetra|penta)logy\b: {from: title}  
+        - \b3-?D\b: {from: title}
+        - \b(ita|ger|fra|spa|swe|nor|nordic|fr|kor|esp|nl|pl)\b: {from: title}
+        - (?i)[ .]asap[ .]: {from: title}
+        - (?i)[ .]avc[ .]: {from: title}
+        - (?i)[ .]bdscr[ .]: {from: title}
+        - (?i)[ .]br5[ .]: {from: title}
+        - (?i)[ .]btrtd[ .]: {from: title}
+        - (?i)[ .]bts[ .]: {from: title}
+        - (?i)[ .]cam[ .]: {from: title}
+        - (?i)[ .]dual[ .]: {from: title}
+        - (?i)[ .]dutch[ .]: {from: title}
+        - (?i)[ .]dvdscr[ .]: {from: title}
+        - (?i)[ .]ecc[ .]: {from: title}
+        - (?i)[ .]facepalm[ .]: {from: title}
+        - (?i)[ .]fastsub[ .]: {from: title}
+        - (?i)[ .]french[ .]: {from: title}
+        - (?i)[ .]german[ .]: {from: title}
+        - (?i)[ .]hdcam[ .]: {from: title}
+        - (?i)[ .]hdtc[ .]: {from: title}
+        - (?i)[ .]hindi[ .]: {from: title}
+        - (?i)[ .]ipad[ .]: {from: title}
+        - (?i)[ .]italian[ .]: {from: title}
+        - (?i)[ .]japanese[ .]: {from: title}
+        - (?i)[ .]latin[ .]: {from: title}
+        - (?i)[ .]multi[ .]: {from: title}
+        - (?i)[ .]nordic[ .]: {from: title}
+        - (?i)[ .]preair[ .]: {from: title}
+        - (?i)[ .]ppvrip[ .]: {from: title}
+        - (?i)[ .]qebs[ .]: {from: title}
+        - (?i)[ .]r5[ .]: {from: title}
+        - (?i)[ .]r6[ .]: {from: title}
+        - (?i)[ .]scr[ .]: {from: title}
+        - (?i)[ .]screener[ .]: {from: title}
+        - (?i)[ .]spanish[ .]: {from: title}
+        - (?i)[ .]subtitulado[ .]: {from: title}
+        - (?i)[ .]swedish[ .]: {from: title}
+        - (?i)[ .]tc[ .]: {from: title}
+        - (?i)[ .]temporada[ .]: {from: title}
+        - (?i)[ .]tntvillage[ .]: {from: title}
+        - (?i)[ .]trailer[ .]: {from: title}
+        - (?i)[ .]ts[ .]: {from: title}
+        - (?i)[ .]vostfr[ .]: {from: title}
+        - (?i)[ .]web-dl[ .]: {from: title} 
+        - (?i)[ .]webscr[ .]: {from: title}
+        - (?i)[ .]HC.HDRip[ .]: {from: title}
+    content_filter:
+      require:
+        - '*.avi'
+        - '*.mkv'
+        - '*.mpg'
+        - '*.mpeg'
+        - '*.mp4'
+        - '*.r0*'
+        - '*.part0*'
+      reject: 
+        - 'password.txt'
+        - 'password.zip'
+        - '*.wmv'
+        - '*.HC.HDRip.*'
+    verify_ssl_certificates: no
+    domain_delay:
+      rarbg.to: 5 seconds
+    magnets: no
+    torrent_alive: yes
+    notify:
+      task: 
+        template: jambula.html
+        via:
+          - email:
+              # Change in variables - from: should have '@'
+              from: '{? email.from ?}'
+              to: 
+                - '{? email.to ?}'
+              smtp_host: smtp.gmail.com
+              smtp_port: 587
+              smtp_username: '{? email.smtp_username ?}'
+              smtp_password: '{? email.smtp_password ?}'
+              smtp_tls: yes
+              html: yes # To parse template as HTML
+
+
+# WhatsApp
+# --------
+  send_whatsapp_notification: 
+  # Run on_output exec
+    exec:
+      allow_background: yes
+      auto_escape: yes
+      on_output:
+        for_accepted:
+          # Send text message of queued content via WhatsApp
+          - /bin/sudo "{? whatsapp.send_script ?}" sendmessage "$(cat {{INFO_FILE}})" 
+          # Download content poster
+          - /usr/bin/curl -s -o "{{IMAGE_FILE}}" "{{IMAGE_URL}}"
+          # Send poster of queued content via WhatsApp
+          - /bin/sudo "{? whatsapp.send_script ?}" sendimage "{{IMAGE_FILE}}" 
+      on_exit:
+        for_accepted: 
+          # Message sent notice
+          - /bin/echo "WhatsApp message(s) for {{title}} sent!"
+ 
+
+# Telegram
+# --------
+  send_telegram_notification:
+    # Re-order exec and notify plugins
+    plugin_priority:
+      exec: 240
+      notify: 250
+
+    notify:
+      entries:
+        message: |+
+          {% if task == "tv_shows" %}*[JambulaTV] TV Show(s) Queued*
+          The following TV Episode has been queued for download
+          {% elif task == "movies" %}*[JambulaTV] Movie(s) Queued*
+          The following Movie has been queued for download
+          {% elif task == "internet_tv" %}*[JambulaTV] Podcast(s) Queued*
+          The following Podcast has been queued for download
+
+          *Title* {{title|striptags}}
+
+          {{description|striptags}}
+
+          *Published* {{rss_pubdate}}
+
+          [ ]({{IMAGE_URL|replace("_", "%5F")}})
+          {% elif task == "move_tv_shows" %}*[JambulaTV] New TV Episode(s) Added*
+          The following TV Series Episode was successfully downloaded. You may find it under 'TV Shows' on your JambulaTV. Enjoy!
+          {% elif task == "move_movies" %}*[JambulaTV] New Movie(s) Added*
+          The following movie was successfully downloaded. You may find it under 'Movies' on your JambulaTV. Enjoy!
+          {% else %}*[JambulaTV] Other Item(s) Added*
+          An item has been added from task: {{task|replace("_", "-")}}
+          {% endif %}
+          {% if series_name is defined %}Series: *{{tvdb_series_name}}* | Airs: *{{tvdb_airs_day_of_week}}*
+          Episode: *{{tvdb_ep_id}}* | Title: *{{tvdb_ep_name|d('')}}*
+          Rated: *{{tvdb_ep_rating}}/10* | Aired: *{{tvdb_ep_air_date|replace("00", "")|replace("\:", "")}}*
+          Time: *{{tvdb_runtime}} Mins* | Format: *{{quality|d('')}}*
+
+          [Plot]({{tvmaze_series_medium_image|replace("_", "%5F")}})
+          {{tvdb_ep_overview|striptags}}
+          {% elif imdb_name is defined %}Movie: *{{imdb_name}}* | Year: *{{imdb_year}}* 
+          Rating: *{{imdb_score}}/10* | Votes: *{{imdb_votes}} votes*
+          Genres: *{{imdb_genres|join(, )|title}}*
+          Time: *{{tmdb_runtime}} Mins* | Format: *{{quality|d('')}}*
+
+          [Plot]({{tmdb_posters[0]|replace("_", "%5F")}})
+          {{imdb_plot_outline|striptags}}
+          {% else %}
+          {% endif %}
+        via:
+          - telegram:
+              <<: *telegram_credentials
+
+
+# Start task and generate info file
+# ---------------------------------
+  start_task_and_generate_info_file:
+    exec:
+      allow_background: yes
+      auto_escape: yes    
+      on_start:
+        phase:
+          - echo "{{task}} started"      
+      on_output:
+        for_accepted:
+          # Generate info file and save it in tmp directory
+          - echo -e "{{NOTIFICATION_SUBJECT}}" > "{{INFO_FILE}}"
+          - echo -e "{{DETAILS_FILE}}" >> "{{INFO_FILE}}"
+
+
+# Kodi Library 
+# ------------
+  kodi_library_scan:
+    kodi_library:
+      action: scan
+      category: video
+      url: '{? kodi.url ?}'
+      port: 8510
+      #port: '{? kodi.port ?}'
+      username: '{? kodi.username ?}'
+      password: '{? kodi.password ?}'
+
+
+# TV Series
+# ---------
+  tv_series:
+    template:
+      - start_task_and_generate_info_file
+      - send_whatsapp_notification
+      - send_telegram_notification
+    priority: 10
+    thetvdb_lookup: yes
+    tvmaze_lookup: yes
+    content_size:
+      max: 490
+    free_space:
+      path: '{? tv.path ?}'
+      space: 1000
+    exists_series:
+      - '{? tv.exists_series ?}'
+    series:
+      settings:
+        group 1:
+          <<: *settings_for_series
+    include: [ '{? tv.include ?}' ]
+    download: '{? tv.download ?}'
+    configure_series:
+      settings:
+        <<: *settings_for_series
+      from:
+        trakt_list:
+          <<: *trakt_for_series
+    discover:
+      release_estimations: ignore
+      what: 
+        - next_series_episodes:
+            from_start: yes
+      from:
+        - piratebay:
+            category: video
+            sort_by: seeds
+        - rarbg:
+            category:
+              - HDTV
+              - x264 1080p
+              - XviD
+              - SDTV
+            sorted_by: seeders
+            use_tvdb: True
+        - 1337x:
+            order_by: seeders
+    max_reruns: 1
+
+
+# Move TV Series to Kodi
+# ----------------------
+  move_tv_series_2_kodi:
+    template:
+      - start_task_and_generate_info_file
+      - send_whatsapp_notification
+      - send_telegram_notification
+      - kodi_library_scan
+    exec:
+      allow_background: yes
+      auto_escape: yes
+      on_start:
+        phase:
+          # Rename completed torrent files into TV Series format SXXEYY
+          - /bin/sh '/{? tv.series_rename_script ?}'
+          # Create dummy 19M file
+          - truncate -s 19M '/{? tv.series_completed_dir ?}/DO.NOT.REMOVE.ME'
+    manual: yes
+    priority: 97 # Make top priority over move_movies
+    disable:
+      - retry_failed
+      - regexp
+    thetvdb_lookup: yes
+    # Specify TVDB ID for badly named series
+    if:
+      - "series_name == 'Power 2014'":
+          set:
+            tvdb_id: 276562
+      - "series_name == 'Scandal Us'":
+          set:
+            tvdb_id: 248841
+    tvmaze_lookup: yes
+    metainfo_series: yes
+    require_field: [tvdb_series_name, tvdb_season, tvdb_episode, tvdb_ep_id]
+    #require_field: [tvmaze_series_name, tvmaze_season, tvmaze_episode, tvmaze_episode_id]
+    accept_all: yes
+    seen: local
+    all_series:
+      parse_only: yes
+    filesystem:
+      path: 
+        - "/{? tv.series_completed_dir ?}"
+      recursive: yes
+      retrieve: 
+        - files
+        - dirs
+      regexp: '.*\.(avi|mkv|mp4|m4v|iso)$' 
+    move:
+      to: "/{? tv.series_jambulatv_dir ?}/{{tvdb_series_name|replace(' ', '_')|replace('(', '')|replace(')', '')}}/Season_{{'%02d'|format(tvdb_season)}}"
+      #to: "/{? tv.series_jambulatv_dir ?}/{{tvmaze_series_name|replace(' ', '_')|replace('(', '')|replace(')', '')}}/Season_{{'%02d'|format(tvmaze_season)}}"
+      rename: "{{tvdb_series_name|replace(' ', '.')|replace('(', '')|replace(')', '')}}.{{tvdb_ep_id}}.{{tvdb_ep_name|replace(' ', '.')}}.{{quality|upper|replace(' ', '.')}}"
+      #rename: "{{tvmaze_series_name|replace(' ', '.')|replace('(', '')|replace(')', '')}}.{{tvmaze_episode_id}}.{{tvmaze_episode_name|replace(' ', '.')}}.{{quality|upper|replace(' ', '.')}}"
+      clean_source: 18
+      along:
+        extensions:
+          - sub
+          - srt
+        subdirs:
+          - extrafanart
+          - Subs
+
+
+# Movies 
+#--------
+  movies:
+    template:
+      - start_task_and_generate_info_file
+      - send_whatsapp_notification
+      - send_telegram_notification
+    priority: 30
+    limit_new: 1
+    quality: "h264 xvid !h265 !720p !dts !cam !10bit"
+    content_size:
+      max: 1600
+      min: 200
+    free_space:
+      path: '{? movies.path ?}'
+      space: 1500
+    exists_movie:
+      - '{? movies.exists_movie ?}'
+    only_new: no
+    download: '{? movies.download ?}'
+    accept_all: yes # Uncomment if IMDB is not used
+    seen_movies:
+      matching: strict
+    tmdb_lookup: yes
+    imdb_lookup: yes
+#    imdb:
+      #min_score: 8.0
+      #min_votes: 60000
+      #min_year: 2001
+#      accept_languages:
+#        - english
+      #reject_genres:
+        #- adventure
+        #- animation
+        #- horror
+        #- musical       
+    list_add:
+      - trakt_list:
+          <<: *trakt_for_movies
+      - movie_list: locally_added
+    discover:
+      release_estimations: ignore
+      what:
+        #- imdb_list:
+        #    list: watchlist
+        - trakt_list:
+            <<: *trakt_for_movies
+        # locally requested
+        - movie_list: locally_added
+      from:
+        - piratebay:
+            category: video
+            sort_by: seeds
+        - rarbg:
+            category:
+              - HDTV
+              - x264 1080p
+              - XviD
+              - SDTV
+            sorted_by: seeders
+        - 1337x:
+            order_by: seeders
+      interval: 1 day
+    max_reruns: 1
+
+
+# Move Movies to Kodi
+# -------------------
+  move_movies_2_kodi:
+    template:
+      - start_task_and_generate_info_file
+      - kodi_library_scan
+      - send_whatsapp_notification
+      - send_telegram_notification
+    exec:
+      allow_background: yes
+      auto_escape: yes
+      on_start:
+        phase:
+          # Create dummy 19M file
+          - truncate -s 19M '/{? movies.movies_completed_dir ?}/DO.NOT.REMOVE.ME'
+    manual: yes
+    priority: 99
+    disable:
+      - retry_failed
+      - regexp
+    accept_all: yes
+    seen: local
+    imdb_lookup: yes
+    tmdb_lookup: yes
+    proper_movies: yes
+    #require_field: [movie_name, movie_year]
+    require_field: [tmdb_name, movie_year]
+    filesystem:
+      path: 
+        - "/{? movies.movies_completed_dir ?}"
+      recursive: yes
+      retrieve: 
+        - files
+        - dirs
+      regexp: '.*\.(avi|mkv|mp4|m4v|iso)$' 
+    move:
+      to: "/{? movies.movies_jambulatv_dir ?}"
+      rename: "{{movie_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')}}.({{movie_year}}){% if quality|default(False) %}: - {{quality}}{% endif %}"
+      #rename: "{{tmdb_name|replace(' ', '.')|replace('/', '_')|replace(':', ' -')|replace('(', '')|replace(')', '')}}.({{tmdb_year|replace('(', '')|replace(')', '')}})"
+      clean_source: 18
+      along:
+        extensions:
+          - sub
+          - srt
+        subdirs:
+          - extrafanart
+          - Subs
+
+
+# Trakt - Cleanup TV Series
+# -------------------------
+  clean_trakt_for_series:
+    priority: 110
+    disable: seen
+    trakt_list:
+      <<: *trakt_for_series
+    if:
+      - trakt_collected and (trakt_series_status in ('ended', 'cancelled')): accept
+    list_remove:
+      - trakt_list:
+          <<: *trakt_for_series
+
+
+# Trakt - Movies
+# --------------
+  clean_trakt_for_movies:
+    priority: 115
+    trakt_list:
+      <<: *trakt_for_movies
+    trakt_lookup:
+      <<: *trakt_login_credentials
+    disable: [seen, movie_queue]
+    if:
+      - trakt_collected: accept
+    list_remove:
+      - trakt_list:
+          <<: *trakt_for_movies
+
+
+# Podcasts 
+# --------
+  podcasts:
+    template:
+      - send_whatsapp_notification
+      - send_telegram_notification
+    exec:
+      allow_background: yes
+      auto_escape: yes
+      on_start:
+        phase:
+          - echo "----------------------" >> '{? podcasts.download_log ?}'
+          - echo "# $(date '+%F %H:%M'):" >> '{? podcasts.download_log ?}'
+          - echo "----------------------" >> '{? podcasts.download_log ?}'
+      on_output:
+        for_accepted:
+          # Extract podcast meta data and save to file in spool dir 
+          - echo -e "[URL]|{{url}}\n\n[TITLE]|{{title}}\n\n[DESCRIPTION]|{{description|striptags|replace('\"', '')}}\n\n[PUBLISHED]|{{rss_pubdate}}\n\n[IMAGE]|{{IMAGE_URL}}" > "{? podcasts.spool_dir ?}/{{podcast_meta_file}}"
+          # Extract podcast info and save to file in spool dir 
+          - echo -e "{{podcasts_queued_message_subject}}\n*Title* {{title}}\n\n{{description|striptags|replace('\"', '')}}\n\n*Published* {{rss_pubdate}}" > "{? podcasts.spool_dir ?}/{{podcast_info_file}}"
+          # Make copy of info file and save it under /tmp.  This is so in order to 
+          # satisfy path in send_whatsapp template above
+          - /bin/cp "{? podcasts.spool_dir ?}/{{podcast_info_file}}" /tmp/
+      on_exit:
+        for_accepted: 
+          # Fetch accepted entry
+          - echo "{{title}} - {{url}}" >> '{? podcasts.download_log ?}'
+          # Add accepted entry to log file
+          - /bin/sh '{? podcasts.download_script ?}' "{{podcast_meta_file}}" '{? podcasts.download_dir ?}' '{? podcasts.spool_dir ?}' '{? email.to ?}'
+          # Remove temp info and files
+          - /bin/rm "{{INFO_FILE}}" "{{IMAGE_FILE}}"
+
+    no_entries_ok: yes
+    free_space:
+      path: '{? podcasts.path ?}'
+      space: 1000
+    limit_new: 5
+    priority: 5 
+    include: [ '{? podcasts.include ?}' ]
+    accept_all: yes
+
+
+# Fetch fresh IPTV lists
+# ----------------------
+  fetch_iptv_lists:
+    disable:
+      - retry_failed
+      - seen
+      - email
+    ftp_list:
+      username: '{? ftp.user ?}'
+      password: '{? ftp.pass ?}'
+      host: '{? ftp.host ?}'
+      #port: '{? ftp.port ?}'
+      use_ssl: no
+      dirs: 
+        - '{? ftp.dir_remote ?}/iptv'
+      retrieve: 
+        - dirs
+        - files
+      recursion: yes
+      recursion_depth: 4
+    accept_all: yes
+    ftp_download:
+      use-ssl: False
+      ftp_tmp_path: '{? ftp.dir_temp ?}'
+      delete_origin: False
+      download_empty_dirs: False
+    exec:
+      # Add new IPTV m3u8 file to JambulaTV playlists directory
+      - /usr/bin/rsync -qavz --delay-updates '{? ftp.dir_temp ?}/{{filename}}' '{? iptv.lists_dir ?}'/
+      # Remove temp m3u8 files
+      - /bin/rm '{? ftp.dir_temp ?}/{{filename}}'
+
+
+
+###########
+#  TASKS  #
+###########
+
+tasks:
+
+# TV Shows
+# --------
+  tv_shows:
+    inputs:
+      - rss: { url: '{? tv_feeds.rarbg ?}', silent: yes }
+      - rss: { url: '{? tv_feeds.ezrss ?}', silent: yes }
+      - rss: { url: '{? tv_feeds.limetorrents ?}', silent: yes }
+      - rss: { url: '{? tv_feeds.torrentdownloads ?}', silent: yes }
+      - rss: { url: '{? tv_feeds.demonoid ?}', silent: yes }
+    template: 
+      - tv_series
+
+# Move TV Shows to Kodi directory
+# -------------------------------
+  move_tv_shows:
+    template:
+      - move_tv_series_2_kodi
+
+# Movies
+# ------
+  movies:
+    inputs:
+      - rss: { url: '{? movie_feeds.rarbg ?}', silent: yes }
+      - rss: { url: '{? movie_feeds.limetorrents ?}', silent: yes }
+      - rss: { url: '{? movie_feeds.torrentdownloads ?}', silent: yes }
+      - rss: { url: '{? movie_feeds.demonoid ?}', silent: yes }
+    template: 
+      - movies
+
+# Move Movies to Kodi directory
+# -------------------------------
+  move_movies:
+    template:
+      - move_movies_2_kodi
+
+# Podcasts
+# --------
+  internet_tv:
+    template:
+      - podcasts
+
+# IPTV lists
+# ----------
+  iptv_lists:
+    template:
+      - fetch_iptv_lists
+
+
+
+##############
+#  Scheduler #
+##############
+
+schedules:
+  - tasks: [tv_shows]
+    schedule:
+      day_of_week: '{? tv.day_of_week ?}'
+      hour: '{? tv.hour ?}'      
+      minute: '{? tv.minute ?}'
+      day: '*'
+      week: '*'
+      month: '*'
+      year: '*'
+
+  - tasks: [movies]
+    schedule:
+      day_of_week: '{? movies.day_of_week ?}'
+      hour: '{? movies.hour ?}'
+      minute: '{? movies.minute ?}'
+      day: '*'
+      week: '*'
+      month: '*'
+      year: '*'
+
+  - tasks: [internet_tv]
+    schedule:
+      day_of_week: '{? podcasts.day_of_week ?}'
+      hour: '{? podcasts.hour ?}'
+      minute: '{? podcasts.minute ?}'
+      day: '*'
+      week: '*'
+      month: '*'
+      year: '*'
+
+  - tasks: [iptv_lists]
+    schedule:
+      day_of_week: '{? iptv.day_of_week ?}'
+      hour: '{? iptv.hour ?}'
+      minute: '{? iptv.minute ?}'
+      day: '*'
+      week: '*'
+      month: '*'
+      year: '*'

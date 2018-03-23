@@ -1,0 +1,15 @@
+--- notify.py.orig	2018-02-13 05:53:16.842859545 +0300
++++ notify.py	2018-02-13 19:32:54.499763659 +0300
+@@ -62,9 +62,9 @@
+                         'type': 'string',
+                         'default': '{% if not task.failed and not task.accepted %} Task {{task.name}} did not'
+                                    ' produce any entries.'
+-                                   '{% else %} [FlexGet] {{task.name}}:'
+-                                   '{% if task.failed %} {{task.failed|length}} failed entries.{% endif %}'
+-                                   '{% if task.accepted %} {{task.accepted|length}} new entries downloaded.{% endif %}'
++                                   '{% else %} [JambulaTV] '
++                                   '{% if task.failed %} Download(s) Failed - {{task.failed|length}} Entries {% endif %}'
++                                   '{% if task.accepted %} Download(s) Queued - {{task.accepted|length}} Entries {% endif %}'
+                                    '{% endif %}'
+                     },
+                     'message': {'type': 'string'},

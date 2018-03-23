@@ -1,0 +1,26 @@
+  alias: Proactive Future Rain Notification
+  trigger:
+    platform: state
+    entity_id: binary_sensor.ecolink_doorwindow_sensor
+    to: 'on'
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: cover.MyGarageDoor
+        state: 'closed'
+        for:
+          seconds: 15
+      - condition: numeric_state
+        entity_id: sensor.dark_sky_nearest_storm_distance
+        below: 6
+  action:
+    service: notify.ios_myiPhone
+    data:
+      message: "It might rain soon! There's a storm less than 5 miles away"
+      data:
+        attachment:
+          url: https://radblast.wunderground.com/long/URL/To/NWS_Radar.gif
+          content-type: gif
+          hide-thumbnail: false
+

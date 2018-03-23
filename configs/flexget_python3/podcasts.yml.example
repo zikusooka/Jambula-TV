@@ -1,0 +1,37 @@
+inputs:
+
+# COMMAND LINE HEROES (RED HAT)
+  - rss: { url: 'https://feeds.pacific-content.com/commandlineheroes', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }
+
+# CORD KILLERS
+  - rss: { url: 'http://feeds.feedburner.com/VideoCordkillersPodcast', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }
+
+# FEDORA
+  - rss: { url: 'https://rss.simplecast.com/podcasts/4543/rss', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }
+
+# FLOSS WEEKLY
+  - rss: { url: 'http://feeds.twit.tv/floss_video_small.xml', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }
+
+# HAK5
+  - rss: { url: 'https://feeds2.feedburner.com/Hak5largeQuicktime', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }
+
+# HASS
+  - rss: { url: 'https://hasspodcast.io/feed/podcast', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }
+
+# IOT
+  - rss: { url: 'http://iotpodcast.com/feed/podcast', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }
+
+# TEKTHING
+  - rss: { url: 'https://feeds.feedburner.com/Tekthing', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }
+
+# THE NEW SCREEN SAVERS
+  - rss: { url: 'http://feeds.twit.tv/tnss_video_small.xml', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }
+
+# TECH NEWS WEEKLY
+  - rss: { url: 'http://feeds.twit.tv/tnw_video_small.xml', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }
+
+# TWICH
+  - rss: { url: 'http://feeds.twit.tv/twich_video_small.xml', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }
+
+# TWIT    
+  - rss: { url: 'http://feeds.twit.tv/twit_video_small.xml', other_fields: ['itunes:summary', 'itunes:subtitle', 'itunes:image', 'itunes:duration', 'itunes:episode', 'itunes:category', 'category', 'pubDate', 'lastBuildDate'], all_entries: no, silent: yes }

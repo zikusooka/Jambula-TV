@@ -1,0 +1,10 @@
+- platform: mqtt
+  name: "Living Room"
+  state_topic: "JambulaTV/Lights/living_room"
+  command_topic: "JambulaTV/Lights/living_room/set"
+  availability_topic: "JambulaTV/Lights/living_room/available"
+  payload_on: "ON"
+  payload_off: "OFF"
+  optimistic: false
+  qos: 0
+  retain: true
