@@ -1,6 +1,6 @@
 #!/bin/sh
 # This is the first time user setup tool for JambulaTV 
-# Jambula Labs @copyright 2017-2018 All rights reserved
+# Jambula Labs @copyright 2018-2019 All rights reserved
 #
 # Variables
 PROJECT_NAME=JambulaTV
@@ -77,6 +77,17 @@ PVR_STATUS_FILE=$(grep ^PVR_STATUS_FILE $(which jambulatv-kodi-controller) | cut
 check_if_setup_completed () {
 # Quit if setup completed
 [ -e $SETUP_COMPLETED_FILE ] && exit 0
+}
+
+jambula_addons_enable () {
+# Enable our addons
+if [[ ! -e $KODI_USER_DATA/Database/.jambula_addons_enabled && \
+	-x $KODI_USER_DATA/Database/jambula_addons.sh ]];
+then
+sh $KODI_USER_DATA/Database/jambula_addons.sh
+# Create enabled file, for query purposes later
+touch $KODI_USER_DATA/Database/.jambula_addons_enabled
+fi
 }
 
 clear_logfile () {
@@ -612,6 +623,9 @@ check_if_setup_completed
 
 # Debug
 logger -s -t $(basename $0) "JambulaTV Setup: START"
+
+# Enable custom addons
+jambula_addons_enable
 
 clear_logfile
 remove_previous_osd_message
