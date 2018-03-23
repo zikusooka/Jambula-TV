@@ -1,0 +1,180 @@
+<advancedsettings>
+
+
+<!-- JSON RPC -->
+  <jsonrpc>
+    <compactoutput>true</compactoutput>
+    <tcpport>9090</tcpport>
+  </jsonrpc>
+
+<!-- VIDEO EXTENSIONS -->
+  <videoextensions>
+    <add>.ts|.mkv</add>
+    <remove></remove>
+  </videoextensions>
+
+<!-- MUSIC EXTENSIONS -->
+  <musicextensions>
+    <add></add>
+    <remove></remove>
+  </musicextensions>
+
+<!-- PICTURE EXTENSIONS -->
+  <pictureextensions>
+    <add></add>
+    <remove></remove>
+  </pictureextensions>
+
+<!-- VIDEO DATABASE -->
+  <videodatabase>
+    <type>mysql</type>
+    <host>127.0.0.1</host>
+    <port>3306</port>
+    <name>KODI_DB_VIDEO</name>
+    <user>KODI_DB_USER</user>
+    <pass>KODI_DB_PASS</pass>
+  </videodatabase> 
+
+<!-- MUSIC DATABASE -->
+  <musicdatabase>
+    <type>mysql</type>
+    <host>127.0.0.1</host>
+    <port>3306</port>
+    <name>KODI_DB_MUSIC</name>
+    <user>KODI_DB_USER</user>
+    <pass>KODI_DB_PASS</pass>
+  </musicdatabase>
+
+<!-- VIDEO LIBRARY -->
+  <videolibrary>
+    <allitemsonbottom>false</allitemsonbottom> <!-- sorts the "*All" items at the bottom of the list when in Ascending order -->
+    <backgroundupdate>false</backgroundupdate> <!-- set to "true" to hide the video scanner dialog from the GUI -->
+    <hideemptyseries>true</hideemptyseries> <!-- empty TV show folders won't be displayed -->
+    <recentlyaddeditems>50</recentlyaddeditems> <!-- number of recently added items. Defaults to 25 -->
+  <importwatchedstate>true</importwatchedstate> <!-- import previously exported playdate and playcount from .nfo files. Defaults to false -->
+  <importresumepoint>true</importresumepoint> <!-- import previously exported resume point from .nfo files. Defaults to false -->
+  </videolibrary>
+
+<!-- MUSIC LIBRARY -->
+  <musiclibrary>
+    <allitemsonbottom>true</allitemsonbottom> <!-- sorts the "*All" items at the bottom of the list when in Ascending order -->
+    <backgroundupdate>true</backgroundupdate> <!-- set to hide the music scanner dialog from the gui -->
+    <recentlyaddeditems>50</recentlyaddeditems> <!-- number of recently added items. Defaults to 25 -->
+    <albumssortbyartistthenyear>true</albumssortbyartistthenyear>    <!-- at an albums listing, when you sort by artist, secondary sort will be year. -->
+    <albumformat>%B - %Y</albumformat>  <!-- album label template, default is "%B" -->
+    <albumformatright>%A</albumformatright>  <!-- album label template for right column, default is "%A" -->
+  </musiclibrary>
+
+<!-- VIDEO SCANNER -->
+  <videoscanner>
+    <ignoreerrors>true</ignoreerrors> <!-- Set to true to silently ignore errors while scanning videos. This prevents the error dialogue box, so you don't have to keep hitting "yes" to keep scanning.-->
+  </videoscanner>
+
+<!-- VIDEO -->
+  <video>
+   <usetimeseeking>true</usetimeseeking>  <!-- Whether to use time based or percentage based seeking. -->
+  <timeseekforwardbig>600</timeseekforwardbig>  <!-- Time to seek forward in seconds when doing a long seek.  Defaults to 600 (10 minutes). -->
+  <timeseekbackwardbig>-600</timeseekbackwardbig>  <!-- Time to seek forward in seconds when doing a long seek.  Defaults to -600 (10 minutes). -->
+  <percentseekforward>2</percentseekforward>  <!-- Amount to seek forward as a percentage, when doing a short seek.  Defaults to 2. -->
+  <percentseekbackward>-2</percentseekbackward>  <!-- Amount to seek backward as a percentage, when doing a short seek.  Defaults to -2. -->
+  <percentseekforwardbig>10</percentseekforwardbig>  <!-- Amount to seek forward as a percentage, when doing a long seek.  Defaults to 10. -->
+  <percentseekbackwardbig>-10</percentseekbackwardbig>  <!-- Amount to seek forward as a percentage, when doing a long seek.  Defaults to -10. -->
+  <fullscreenonmoviestart>true</fullscreenonmoviestart> <!-- Whether to go to fullscreen or not when starting a movie. Defaults to true. -->
+  <defaultplayer>dvdplayer</defaultplayer> <!-- Set the default video player: dvdplayer or extplayer. -->
+  <excludefromscan> <!-- Regular expressions that if evaluated to true won't be added to library. -->
+    <regexp>[-\._ ](sample|trailer)[-\._ ]</regexp>
+  </excludefromscan>
+  <excludefromlisting> <!-- Regular expressions that if evaluated to true won't be displayed in Files View -->
+    <regexp>[-\._ ](sample|trailer)[-\._ ]</regexp>
+  </excludefromlisting>
+  <playcountminimumpercent>95</playcountminimumpercent> <!--Minimum percentage that has to be played before it is marked as watched. Set to 101 to never auto-mark items as watched -->
+  <ignoresecondsatstart>180</ignoresecondsatstart> <!-- Number of seconds to ignore at video start after which a resume point is created -->
+  <ignorepercentatend>8</ignorepercentatend> <!-- percentage of video to ignore at the end. If you stop watching the video here no resume point is created. Set to 101 to never save a resume point. The video is already marked as watched at 90%, see above. -->
+  </video>
+
+<!-- AUDIO -->
+  <audio>
+    <defaultplayer>paplayer</defaultplayer>
+    <!-- Regular expressions that if evaluated to true won't be added to library. -->
+    <excludefromscan>
+      <regexp>[-\._ ](podcast)[-\._ ]</regexp>
+    </excludefromscan>
+    <!-- Regular expressions that if evaluated to true won't be displayed in Files View -->
+    <excludefromlisting>
+      <regexp>[-\._ ](podcast)[-\._ ]</regexp>
+    </excludefromlisting>
+  </audio>
+
+<!-- TV SHOW MATCHING -->
+  <tvshowmatching>
+    <regexp>s([0-9]+)[ ._x-]*e([0-9]+(?:(?:[a-i]|\\.[1-9])(?![0-9]))?)([^\\\\/]*)$</regexp>  <!-- foo.s01.e01, foo.s01_e01, S01E02 foo, S01 - E02, S01xE02 -->
+    <regexp>[\._ -]()[Ee][Pp]_?([0-9]+)([^\\/]*)$</regexp>  <!-- foo.ep01, foo.EP_01 -->
+    <regexp>([0-9]{4})[\.-]([0-9]{2})[\.-]([0-9]{2})</regexp>  <!-- foo.yyyy.mm.dd.* (byDate=true) -->
+    <regexp>([0-9]{2})[\.-]([0-9]{2})[\.-]([0-9]{4})</regexp>  <!-- foo.mm.dd.yyyy.* (byDate=true) -->
+    <regexp>[\\/\._ \[\(-]([0-9]+)x([0-9]+)([^\\/]*)$</regexp>  <!-- foo.1x09* or just /1x09* -->
+    <regexp>[\\/\._ -]([0-9]+)([0-9][0-9])([\._ -][^\\/]*)$</regexp>  <!-- foo.103*, 103 foo -->
+    <regexp>[\/._ -]p(?:ar)?t[_. -]()([ivx]+)([._ -][^\/]*)$</regexp>  <!-- Part I, Pt.VI -->
+    <regexp>[/\._ \-]()([0-9]+)(-[0-9]+)?</regexp> <!-- Episodes without a season in their file path -->
+  </tvshowmatching>
+
+  <pictureexcludes>  <!-- Regular expressions that if evaluated to true won't be displayed in My Pictures -->
+    <regexp>small</regexp>
+    <regexp>[-\._ ](sample|trailer)[-\._ ]</regexp>
+  </pictureexcludes>
+
+<!-- SLIDESHOW -->
+  <slideshow>
+    <!-- Amount to pan images as a percentage of the screen -->
+    <panamount>2.5</panamount>
+    <!-- Amount to zoom images as a percentage of the screen -->
+    <zoomamount>5.0</zoomamount>
+    <!-- Amount to compensate (zoom) images to attempt to reduce black bars. -->
+    <!-- Results in cropping of the longer length of the image in order to reduce the black bars on the shorter length of the image.  -->
+    <!-- Defaults to 20. -->
+    <blackbarcompensation>20</blackbarcompensation>  
+  </slideshow>
+
+<!-- SAMBA -->
+  <samba>
+    <doscodepage></doscodepage>  <!-- code page to use for filenames -->
+    <clienttimeout>10</clienttimeout>  <!-- timeout (in seconds) -->
+    <statfiles>false</statfiles>  <!-- Set to false to disable smb stat() on files to speed up listings of large directories (over slow links) -->
+  </samba>
+
+<!-- NETWORK -->
+  <network>
+    <curlclienttimeout>60</curlclienttimeout>
+    <curllowspeedtime>240</curllowspeedtime>
+    <curlretries>2</curlretries>
+    <cachemembuffersize>1824260096</cachemembuffersize> <!-- 1GB video buffer, Kodi recommends setting the buffer to max 1/4 of total memory -->
+    <buffermode>1</buffermode> <!-- 1=All 2=internet 3=No 0=like 2 plus more Internet -->
+    <readbufferfactor>10</readbufferfactor> <!-- increases the speed at which the buffer is filled -->
+  </network>
+
+<!-- REMOTE -->
+  <remotedelay>10</remotedelay> <!--The repeat delay for a LIRC remote control. A delay value between 1 and 20 before a remote button starts repeating on a long keypress (i.e. continuously sending button pushes while it's held down) -->
+  <remoterepeat>800</remoterepeat> <!-- The amount of time in milliseconds between repeated keystrokes. Used to prevent key-bounce, in other words prevents Kodi (lirc?) seeing one key press as multiple key presses with certain remotes -->
+
+<!-- GUI -->
+  <gui>
+    <algorithmdirtyregions>3</algorithmdirtyregions>
+    <nofliptimeout>0</nofliptimeout>
+  </gui>
+
+<!-- SYSTEM -->
+  <showexitbutton>false</showexitbutton> <!-- Show Exit button -->
+  <fullscreen>true</fullscreen> <!-- Start FullScreen -->
+  <splash>true</splash> <!-- Splash screen-->
+  <cputempcommand>sed -e 's/\([0-9]*\)[0-9]\{3\}.*/\1 C/' /sys/class/thermal/thermal_zone0/temp</cputempcommand> <!-- CPU command -->
+
+<!-- PVR (Live TV) -->
+  <hideconnectionlostwarning>true</hideconnectionlostwarning> <!-- PVR Connections lost -->
+  <minvideocachelevel>90</minvideocachelevel> <!-- Cache up to this level in the video buffer buffer before resuming playback if the buffers run dry. -->
+  <minaudiocachelevel>90</minaudiocachelevel> <!-- Cache up to this level in the audio buffer before resuming playback if the buffers run dry. -->
+  <cacheindvdplayer>true</cacheindvdplayer> <!-- Cache PVR stream in DVDPlayer. -->
+
+<!-- LOGGING -->
+  <loglevel>1</loglevel> <!-- Change this to "1" to hide the on-screen debug log text -->
+
+
+</advancedsettings>

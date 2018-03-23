@@ -23,8 +23,9 @@ uninstall_kodi
 kodi_install
 kodi_pvr_hts_install
 kodi_addons_install
-kodi_customization
+kodi_skin_customization
 kodi_scripts
+IR_REMOTE=
 kodi_lircmap_configure 
 }
 

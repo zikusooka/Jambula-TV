@@ -53,6 +53,8 @@ echo "Using default X11 driver ..."
 ;;
 esac
 
+# Cmake - using sources
+cmake_install
 # Boost - using sources
 boost_install
 
@@ -103,12 +105,12 @@ kodi_deps_install
 kodi_install # ~160 mins (107m on SSD)
 kodi_platform_install
 kodi_pvr_hts_install
-kodi_pvr_iptvsimple_install
+#kodi_pvr_iptvsimple_install
 #kodi_pvr_rtl_radiofm_install # ~ Not yet compiling 
 kodi_addons_install
 kodi_addons_configure
 kodi_configure
-kodi_customization
+kodi_skin_customization
 kodi_scripts
 
 # Tools used by Kodi
