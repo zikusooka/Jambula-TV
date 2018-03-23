@@ -2874,6 +2874,8 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_CHICON_DIR
 tvheadend_configure () {
 # Source DVBT settings file
 . $PROJECT_DVBT_SETTINGS_FILE
+# Create picons directory if it does not exist
+[ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
 # Set chicon dir used in chiconpath
 TVHEADEND_CHICON_DIR=$(find $PROJECT_SYSTEM_ICONS_DIR -maxdepth 1 -iname "$TV_MARKET")
 #
@@ -3742,6 +3744,8 @@ chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/IPTV
 iptv_builder_install () {
 # Unpack sources
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/jambula-iptv-builder $SOURCESDIR/
+# Create XMLTV directory in multimedia user's home directory
+[ -d $MULTIMEDIA_USER_HOME_DIR/.xmltv ] || mkdir -p $MULTIMEDIA_USER_HOME_DIR/.xmltv
 # Change iptv-builder directory permissions to multimedia user
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $MULTIMEDIA_USER_HOME_DIR/.xmltv
 }
@@ -6041,7 +6045,6 @@ cp -v $NGINX_CONF_DIR/nginx.conf $NGINX_CONF_DIR/nginx.conf.orig
 # Copy nginx.conf
 cp -v $PROJECT_CONFIGS_DIR/nginx/nginx.conf $NGINX_CONF_DIR/
 # Add config, includes and site files
-rsync -av $PROJECT_CONFIGS_DIR/nginx/conf.d/ $NGINX_CONF_DIR/conf.d/
 rsync -av $PROJECT_CONFIGS_DIR/nginx/includes/ $NGINX_CONF_DIR/includes/
 rsync -av $PROJECT_CONFIGS_DIR/nginx/sites-enabled/ $NGINX_CONF_DIR/sites-enabled/
 # Create SSL directory for certificates and keys

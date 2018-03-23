@@ -93,7 +93,6 @@ mplayer_install
 sox_install
 v4l_utils_install
 tvheadend_install
-tvheadend_configure
 dvb_drivers_support
 w_scan_install
 xmltv_install
@@ -211,7 +210,8 @@ video_on_demand_configure
 # Playlists
 playlists_configure
 
-# IPTV
+# Live TV Configuration DVB-T2 & IPTV
+tvheadend_configure
 iptv_tvheadend_configure
 iptv_icons_add 
 iptv_builder_install
