@@ -36,6 +36,7 @@ ICINGA2_NOTICE_CRITICAL_NETWORK_NOT_ATTACHED="CRITICAL - DVB-T2 network not assi
 ICINGA2_NOTICE_OK="OK - DVB-T2 network and Channels list are fine"
 # TVHeadend not active
 ICINGA2_NOTICE_TVH_NOT_ACTIVE="The TVHeadend server is not running"
+# Repair tool in use
 ICINGA2_NOTICE_REPAIR_TOOL_IN_USE="Another process is using the repair tool: $TVHEADEND_REPAIR_TOOL"
 
 
@@ -48,16 +49,16 @@ ICINGA2_NOTICE_REPAIR_TOOL_IN_USE="Another process is using the repair tool: $TV
 if [[ "$(systemctl is-active tvheadend.service)" != "active" ]];
 then
 echo "$ICINGA2_NOTICE_TVH_NOT_ACTIVE"
-exit 1
+exit 0
 fi
 
 # Quit if repair tool is being used by another process
-ps auxw | grep -Ev grep | grep $TVHEADEND_REPAIR_TOOL > /dev/null 2>&1
+ps auxw | grep -Ev grep | grep "$TVHEADEND_REPAIR_TOOL$" > /dev/null 2>&1
 TVHEADEND_REPAIR_TOOL_IS_RUNNING=$?
 if [[ "$TVHEADEND_REPAIR_TOOL_IS_RUNNING" = "0" ]];
 then
 echo "$ICINGA2_NOTICE_REPAIR_TOOL_IN_USE"
-exit 1
+exit 0
 fi
 
 # No tuner found
