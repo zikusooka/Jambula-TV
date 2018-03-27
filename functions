@@ -457,7 +457,7 @@ DHCLIENT_CONFIG_FILE=$DHCLIENT_CONFIG_DIR/dhclient.conf
 SYSTEM_UUID=$(uuid)
 SYSTEM_IDENTIFIER=$(echo $SYSTEM_UUID | cut -d - -f5)
 
-SYSTEM_CPU_CORES=$(grep -i 'cpu cores' /proc/cpuinfo | sort -u | cut -d : -f2 | sed 's/ //g')
+SYSTEM_CPU_CORES=$(cat /proc/cpuinfo | grep -i processor | wc -l)
 
 # Internet ISP settings
 INTERNET_USB_ISP_CONFIG=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-usb.cfg
@@ -1028,7 +1028,7 @@ PACKAGE=$(basename $(pwd | sed "s:/build::g"))
 # Log to build file
 make_build_log
 # Run make silently
-make > /dev/null 2>&1 # DONT use -j cores option
+make $@ > /dev/null 2>&1 # DONT use -j cores option (If you want, add it like: make_install_jambulatv -j4)
 MAKE_EXIT_STATUS=$?
 if [ "$MAKE_EXIT_STATUS" = "0" ];
 then
@@ -1045,7 +1045,6 @@ ERROR: Installation of package [$PACKAGE] failed.  Please fix!
 EOF
 fi
 }
-
 
 # Kernel functions for install & upgrades
 # ---------------------------------------
