@@ -4169,7 +4169,7 @@ done
 chmod 755 $KODI_USER_DATA/autoexec.py
 #
 # Add Jambula customized advancedsettings file
-cat $PROJECT_CONFIGS_DIR/kodi/skin.$KODI_PREFERRED_SKIN/advancedsettings.xml | \
+cat $PROJECT_CONFIGS_DIR/kodi/advancedsettings.xml | \
 	sed "s:KODI_DB_VIDEO:$KODI_DB_VIDEO:g" | \
 	sed "s:KODI_DB_MUSIC:$KODI_DB_MUSIC:g" | \
 	sed "s:KODI_DB_USER:$KODI_DB_USER:g" | \
