@@ -618,6 +618,7 @@ IR_DAEMON=inputlirc #lircd
 IR_PROTOCOLS="NEC,RC-5,RC-6"
 IR_REPEAT_DELAY=1200
 IR_REPEAT_PERIOD=400
+INPUTLIRC_REPEAT_RATE=400
 
 WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
@@ -4456,7 +4457,7 @@ esac
 #
 # Add Environment file for Systemd
 cat > $SYSCONFIG_DIR/inputlirc <<EOF
-LIRC_OPTIONS="-g -m 0 -c"
+LIRC_OPTIONS="-r $INPUTLIRC_REPEAT_RATE -g -m 0 -c"
 LIRC_DEVICE="/dev/input/jambulatv-remote0 /dev/input/jambulatv-remote1"
 IR_PROTOCOLS="$IR_PROTOCOLS"
 IR_REPEAT_DELAY=$IR_REPEAT_DELAY
