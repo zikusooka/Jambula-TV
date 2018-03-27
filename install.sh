@@ -113,9 +113,9 @@ kodi_platform_install
 kodi_pvr_hts_install
 #kodi_pvr_iptvsimple_install
 #kodi_pvr_rtl_radiofm_install # ~ Not yet compiling 
+kodi_configure
 kodi_addons_install
 kodi_addons_configure
-kodi_configure
 kodi_skin_customization
 kodi_scripts
 

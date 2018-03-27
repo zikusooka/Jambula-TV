@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<shortcuts>
+	<shortcut>
+		<defaultID>135</defaultID>
+		<label>$SKIN[31050|skin.titan|All Movies]</label>
+		<label2>Movies</label2>
+		<icon>$INFO[Window(Home).Property(SkinHelper.AllMoviesBackground)]</icon>
+		<thumb />
+		<action>ActivateWindow(10025,videodb://movies/titles/,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>All Files</label>
+		<label2>Video Source</label2>
+		<icon>$INFO[Window(Home).Property(SkinHelper.RecentVideosBackground)]</icon>
+		<thumb>$INFO[Window(Home).Property(SkinHelper.RecentVideosBackground)]</thumb>
+		<action>ActivateWindow(Videos,"/JambulaTV/Videos/Movies/",return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>135</defaultID>
+		<label>$SKIN[31127|skin.titan|Recently added]</label>
+		<label2>Movies</label2>
+		<icon>$INFO[Window(Home).Property(SkinHelper.RecentMoviesBackground)]</icon>
+		<thumb />
+		<action>ActivateWindow(10025,plugin://script.skin.helper.widgets/?action=recent&amp;mediatype=movies&amp;limit=250,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>135</defaultID>
+		<label>135</label>
+		<label2>Movies</label2>
+		<icon>$INFO[Window(Home).Property(SkinHelper.AllMoviesBackground)]</icon>
+		<thumb />
+		<action>ActivateWindow(10025,videodb://movies/genres/,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>135</defaultID>
+		<label>$SKIN[31035|skin.titan|Movies in progress]</label>
+		<label2>Movies</label2>
+		<icon>$INFO[Window(Home).Property(SkinHelper.InProgressMoviesBackground)]</icon>
+		<thumb />
+		<action>ActivateWindow(10025,plugin://script.skin.helper.widgets/?action=inprogress&amp;mediatype=movies&amp;limit=250,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>135</defaultID>
+		<label>16101</label>
+		<label2>Movies</label2>
+		<icon>$INFO[Window(Home).Property(SkinHelper.UnwatchedMoviesBackground)]</icon>
+		<thumb />
+		<action>ActivateWindow(10025,plugin://script.skin.helper.widgets/?action=unwatched&amp;mediatype=movies&amp;limit=2500,return)</action>
+	</shortcut>
+</shortcuts>

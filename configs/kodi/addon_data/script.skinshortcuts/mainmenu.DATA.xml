@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<shortcuts>
+	<shortcut>
+		<defaultID />
+		<label>TV Recordings</label>
+		<label2>Video Source</label2>
+		<icon>special://home/addons/resource.images.skinicons.wide/resources/tvrecordings.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/tvrecordings.png</thumb>
+		<action>ActivateWindow(Videos,"/JambulaTV/Videos/TV_Recordings/",return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>tvshows</defaultID>
+		<label>20343</label>
+		<label2>TV shows</label2>
+		<icon>resource://resource.images.skinicons.wide/titan.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/jambula-tvshows.png</thumb>
+		<action>ActivateWindow(10025,videodb://tvshows/titles/,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>livetv</defaultID>
+		<label>32022</label>
+		<label2>Live TV</label2>
+		<icon>resource://resource.images.skinicons.wide/livetv.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/jambula-livetv.png</thumb>
+		<action>ActivateWindow(TVGuide)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>plugin.audio.fmradio</defaultID>
+		<label>FM Radio</label>
+		<label2>Music Add-On</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/radio.png</thumb>
+		<action>ActivateWindow(Music,"plugin://plugin.audio.fmradio",return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>movies</defaultID>
+		<label>342</label>
+		<label2>Movies</label2>
+		<icon>resource://resource.images.skinicons.wide/titan.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/jambula-movies.png</thumb>
+		<action>ActivateWindow(10025,videodb://movies/titles/,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>music</defaultID>
+		<label>10005</label>
+		<label2>Music</label2>
+		<icon>resource://resource.images.skinicons.wide/music.png</icon>
+		<thumb>$INFO[Window(Home).Property(SkinHelper.AllMusicBackground)]</thumb>
+		<action>ActivateWindow(10502,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>musicvideos</defaultID>
+		<label>20389</label>
+		<label2>Music videos</label2>
+		<icon>resource://resource.images.skinbackgrounds.titanium/hover_my music.jpg</icon>
+		<thumb>$INFO[Window(Home).Property(SkinHelper.AllMusicVideosBackground)]</thumb>
+		<action>ActivateWindow(10025,videodb://musicvideos/titles/,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Podcasts</label>
+		<label2>Video Source</label2>
+		<icon>special://home/addons/resource.images.skinicons.wide/resources/videoaddons.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/jambula-podcasts.png</thumb>
+		<action>ActivateWindow(Videos,"/JambulaTV/Podcasts/",return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>pictures</defaultID>
+		<label>10002</label>
+		<label2>Pictures</label2>
+		<icon>resource://resource.images.skinicons.wide/pictures.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/pictures.png</thumb>
+		<action>ActivateWindow(pictures,return)</action>
+		<visible>!Skin.HasSetting(HomeMenuUsePlexforPictures)</visible>
+	</shortcut>
+	<shortcut>
+		<defaultID>weather</defaultID>
+		<label>12600</label>
+		<label2>Weather</label2>
+		<icon>resource://resource.images.skinicons.wide/weather.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/jambula-weather.png</thumb>
+		<action>ActivateWindow(Weather)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>10134</defaultID>
+		<label>10134</label>
+		<label2 />
+		<icon>resource://resource.images.skinicons.wide/favourites.png</icon>
+		<thumb />
+		<action>ActivateWindow(favourites)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>settings</defaultID>
+		<label>10004</label>
+		<label2>Settings</label2>
+		<icon>resource://resource.images.skinicons.wide/settings.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/jambula-settings.png</thumb>
+		<action>ActivateWindow(Settings)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>script.service.pcmode</defaultID>
+		<label>Computer</label>
+		<label2>Program</label2>
+		<icon>DefaultAddon.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/programs.png</thumb>
+		<action>RunAddOn(script.service.pcmode)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>10040</defaultID>
+		<label>10040</label>
+		<label2 />
+		<icon>resource://resource.images.skinicons.wide/addons.png</icon>
+		<thumb />
+		<action>ActivateWindow(Programs,Addons,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>13016</defaultID>
+		<label>13016</label>
+		<label2 />
+		<icon>common/shutdown1.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/shutdown.png</thumb>
+		<action>Powerdown</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>plugin.video.youtube</defaultID>
+		<label>YouTube</label>
+		<label2>Video Add-On</label2>
+		<icon>special://home/addons/resource.images.skinicons.wide/resources/youtube.png</icon>
+		<thumb>special://home/addons/resource.images.skinicons.wide/resources/youtube.png</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.youtube",return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>plugin.video.jambula.live.events</defaultID>
+		<label>Live Events</label>
+		<label2>Video Add-On</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb>image://%2fusr%2fshare%2fkodi%2faddons%2fplugin.video.jambulaLiveEvents%2ficon.png/</thumb>
+		<action>ActivateWindow(Videos,"plugin://plugin.video.jambulaLiveEvents",return)</action>
+	</shortcut>
+</shortcuts>

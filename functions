@@ -267,8 +267,48 @@ KODI_HTTP_PASS=jambulatv
 # -----------
 # Repositories
 KODI_ADDONS_REPOSITORIES="repository.xbmc.org repository.metalkettle repository.xbmchub repository.podgod repository.Kinkin repo.natko1412 repository.Goliath repository.shaneyrepos pakistani-repository.shani"
-# Required
-KODI_ADDONS_REQUIRED="metadata.album.universal metadata.common.theaudiodb.com metadata.artists.universal script.module.simplejson service.library.data.provider metadata.artists.universal metadata.common.allmusic.com metadata.common.fanart.tv metadata.common.htbackdrops.com metadata.common.imdb.com metadata.common.musicbrainz.org metadata.common.themoviedb.org metadata.themoviedb.org metadata.tvdb.com plugin.program.rtorrent script.module.addon.signals script.module.beautifulsoup script.module.requests script.module.youtube.dl service.xbmc.versioncheck script.common.plugin.cache script.module.addon.common script.module.beautifulsoup4 script.module.httplib2 script.module.liveresolver script.module.mechanize script.module.parsedom script.module.simple.downloader script.module.urlresolver script.module.metahandler script.video.F4mProxy script.module.t0mm0.common"
+# Required (Krypton)
+KODI_ADDONS_REQUIRED_KRYPTON="\
+metadata.album.universal \
+metadata.artists.universal \
+metadata.common.allmusic.com \
+metadata.common.fanart.tv \
+metadata.common.htbackdrops.com \
+metadata.common.imdb.com \
+metadata.common.musicbrainz.org \
+metadata.common.theaudiodb.com \
+metadata.common.themoviedb.org \
+metadata.themoviedb.org \
+metadata.tvdb.com \
+plugin.program.rtorrent \
+script.common.plugin.cache \
+script.module.arrow \
+script.module.addon.common \
+script.module.addon.signals \
+script.module.beautifulsoup \
+script.module.beautifulsoup4 \
+script.module.dateutil \
+script.module.httplib2 \
+script.module.liveresolver \
+script.module.mechanize \
+script.module.metadatautils \
+script.module.metahandler \
+script.module.musicbrainz \
+script.module.parsedom \
+script.module.requests \
+script.module.simplecache \
+script.module.simple.downloader \
+script.module.simplejson \
+script.module.t0mm0.common \
+script.module.thetvdb \
+script.module.unidecode \
+script.module.urlresolver \
+script.module.youtube.dl \
+script.video.F4mProxy \
+service.library.data.provider \
+service.xbmc.versioncheck"
+# Required (Isengard)
+KODI_ADDONS_REQUIRED_ISENGARD="metadata.album.universal metadata.common.theaudiodb.com metadata.artists.universal script.module.simplejson service.library.data.provider metadata.artists.universal metadata.common.allmusic.com metadata.common.fanart.tv metadata.common.htbackdrops.com metadata.common.imdb.com metadata.common.musicbrainz.org metadata.common.themoviedb.org metadata.themoviedb.org metadata.tvdb.com plugin.program.rtorrent script.module.addon.signals script.module.beautifulsoup script.module.requests script.module.youtube.dl service.xbmc.versioncheck script.common.plugin.cache script.module.addon.common script.module.beautifulsoup4 script.module.httplib2 script.module.liveresolver script.module.mechanize script.module.parsedom script.module.simple.downloader script.module.urlresolver script.module.metahandler script.video.F4mProxy script.module.t0mm0.common"
 # Live TV
 KODI_ADDONS_LIVETV="plugin.video.livemix plugin.video.uktvnow plugin.video.ukturk plugin.video.ustvnow.tva plugin.video.phstreams plugin.video.ccloudtv plugin.video.channelpear plugin.video.F.T.V plugin.video.f4mTester plugin.video.srtv plugin.video.ustvnow-1 plugin.video.cartoons8 plugin.video.netflixbmc plugin.video.uiptv plugin.video.rt plugin.video.aljazeera plugin.video.world.news.live plugin.video.itbn_org plugin.video.fox.news plugin.video.twit plugin.video.LiveIPTV plugin.video.NJMSoccer plugin.video.watchcartoononline plugin.video.MaverickTV plugin.video.FMG plugin.video.sportsaccess plugin.video.echostreams plugin.video.sportie plugin.video.teevie plugin.video.echoplayer plugin.video.gobble plugin.video.specialistss plugin.video.amanda plugin.video.dreamfilm plugin.video.veetle plugin.video.HalowTV plugin.video.wildside plugin.video.Rising.Tides"
 # Music
@@ -3592,11 +3632,11 @@ kodi_addons_unpack () {
 # script.module.beautifulsoup
 if [ "$KODI_ADDON" = "script.module.beautifulsoup" ];
 then
-unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/script.module.beautifulsoup-*.zip
+unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_CODENAME/script.module.beautifulsoup-*.zip
 # script.module.beautifulsoup4
 elif [ "$KODI_ADDON" = "script.module.beautifulsoup4" ];
 then
-unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/script.module.beautifulsoup4-*.zip
+unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_CODENAME/script.module.beautifulsoup4-*.zip
 # plugin.video.youtube
 elif [ "$KODI_ADDON" = "plugin.video.youtube" ];
 then
@@ -3620,8 +3660,13 @@ rsync -avz $PROJECT_GITHUB_DIR/kodi-addons/weather.yahoo/ \
 
 else
 # All others
-unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_ADDON*.zip
+unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_CODENAME/$KODI_ADDON*.zip
+
+# Debugging
+#echo
 #_install_pause_check_4_errors_
+#echo
+
 fi
 # Give permissions to multimedia user for addons system directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_SYSTEM_ADDONS
@@ -3630,7 +3675,7 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_SYSTEM_ADDONS
 kodi_addons_4_Isengard() {
 for KODI_ADDON in \
 $KODI_ADDONS_REPOSITORIES \
-$KODI_ADDONS_REQUIRED \
+$KODI_ADDONS_REQUIRED_ISENGARD \
 $KODI_ADDONS_LIVETV \
 $KODI_ADDONS_MUSIC \
 $KODI_ADDONS_SPORTS \
@@ -3644,6 +3689,7 @@ done
 
 kodi_addons_4_Krypton() {
 for KODI_ADDON in \
+$KODI_ADDONS_REQUIRED_KRYPTON \
 $KODI_ADDONS_JAMBULA 
 do
 # Unpack addon
@@ -3654,7 +3700,9 @@ cat >> $TMP_DIR/jambula_addons2enable <<EOT
 sqlite3 $KODI_USER_DATA/Database/Addons27.db 'update installed set enabled=1 where addonid=='"'$KODI_ADDON'"';'
 EOT
 done
-
+#
+# Create Database directory if non-existent
+[[ -d $KODI_USER_DATA/Database ]] || mkdir -p $KODI_USER_DATA/Database
 # Create script that will run after this reboot and only once in a lifetime
 cat > $KODI_USER_DATA/Database/jambula_addons.sh <<EOT
 #!/bin/sh
@@ -4185,7 +4233,7 @@ script.aeonmq6.extrapack \
 resource.uisounds.aeonmq6 \
 skin.aeonmq6
 do
-unzip -o -d $KODI_SYSTEM_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
+unzip -o -d $KODI_SYSTEM_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$KODI_CODENAME/skin.$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
 done
 # Add custom backgrounds for this preferred skin
 rsync -av $PROJECT_IMAGES_DIR/kodi/backgrounds/skin.$KODI_PREFERRED_SKIN/ \
@@ -4199,11 +4247,30 @@ $KODI_USER_ADDONS/
 
 # Unzip skin related files to addons directory
 for SKIN_ADDON in \
+resource.images.backgroundoverlays.basic \
 resource.images.skinbackgrounds.titanium \
 resource.images.skinicons.wide \
-resource.uisounds.titan.modern
+resource.uisounds.titan.modern \
+script.skin.helper.backgrounds \
+script.skin.helper.service \
+script.skin.helper.skinbackup \
+script.skin.helper.widgets \
+script.skinshortcuts
 do
-unzip -o -d $KODI_USER_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
+unzip -o -d $KODI_USER_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$KODI_CODENAME/skin.$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
+
+# Debugging
+#echo
+#_install_pause_check_4_errors_
+#echo
+
+# Add enabling of skin related addons to script that runs at startup
+cat >> $KODI_USER_DATA/Database/jambula_addons.sh <<EOT
+
+# Enable $SKIN_ADDON
+sqlite3 $KODI_USER_DATA/Database/Addons27.db 'update installed set enabled=1 where addonid=='"'$SKIN_ADDON'"';'
+EOT
+#
 done
 
 # Add custom backgrounds for this preferred skin
@@ -4219,7 +4286,9 @@ rsync -av $PROJECT_CONFIGS_DIR/kodi/skin.titan/IncludesHeader.xml \
 # Copy custom skin settings
 rsync -av $PROJECT_CONFIGS_DIR/kodi/addon_data/skin.$KODI_PREFERRED_SKIN/settings.xml \
 	$KODI_ADDON_DATA_DIR/skin.$KODI_PREFERRED_SKIN/
-
+# Skin shortcuts i.e. Custom menus
+rsync -av $PROJECT_CONFIGS_DIR/kodi/addon_data/script.skinshortcuts/ \
+	$KODI_ADDON_DATA_DIR/script.skinshortcuts/
 # Give permissions to multimedia user for skin addon_data directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_ADDON_DATA_DIR/skin.$KODI_PREFERRED_SKIN
 ;;
