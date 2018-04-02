@@ -86,6 +86,7 @@ ffmpeg_deps_install
 live555_install
 libdvdcss_install
 libdvbpsi_install
+libdvbcsa_install
 #
 # Install ffmpeg first without x264 - will be removed and re-installed shortly
 #ffmpeg_install && x264_install 
