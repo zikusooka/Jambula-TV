@@ -253,11 +253,32 @@ templates:
         for_accepted: 
           # Message sent notice
           - /bin/echo "WhatsApp message(s) for {{title}} sent!"
- 
+
 
 # Telegram
 # --------
-  send_telegram_notification:
+  send_telegram_notification: 
+  # Run on_output exec
+    exec:
+      allow_background: yes
+      auto_escape: yes
+      on_output:
+        for_accepted:
+          # Send text message of queued content via Telegram
+          - /bin/sudo "{? telegram.send_script ?}" sendmessage "$(cat {{INFO_FILE}})" 
+          # Download content poster
+          - /usr/bin/curl -s -o "{{IMAGE_FILE}}" "{{IMAGE_URL}}"
+          # Send poster of queued content via Telegram
+          - /bin/sudo "{? telegram.send_script ?}" sendimagedisk "{{IMAGE_FILE}}" 
+      on_exit:
+        for_accepted: 
+          # Message sent notice
+          - /bin/echo "Telegram message(s) for {{title}} sent!"
+
+
+# Telegram Bot (Not Used)
+# -----------------------
+  telegram_bot_send_notification:
     # Re-order exec and notify plugins
     plugin_priority:
       exec: 240
