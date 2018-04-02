@@ -46,7 +46,7 @@ flexget_deps_install
 upgrade_flexget () {
 uninstall_flexget
 #flexget_install
-flexget_python3_install 
+flexget_python3_install
 }
 
 upgrade_icinga2 () {
