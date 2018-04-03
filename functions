@@ -188,7 +188,12 @@ FLEXGET_SCHEDULE_IPTV_LISTS_HR=15
 FLEXGET_SCHEDULE_IPTV_LISTS_MIN=30
 # 
 FLEXGET_PORT=$(grep -i 'flexget$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-
+#
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
+FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget/variables.yml.template
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
+FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget_python3/variables.yml.template
+#
 TVHEADEND_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.hts/tvheadend
 TVHEADEND_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/tvheadend.log
 TVHEADEND_HTTP_IP=127.0.0.1
@@ -5768,16 +5773,9 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/flexget
 # Python 2
 [[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
 	cp -v $PROJECT_CONFIGS_DIR/flexget/*.yml $FLEXGET_CONFIG_DIR/
-# Python 3
-echo "Using Python 3 ..."
+
 [[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
 	cp -v $PROJECT_CONFIGS_DIR/flexget_python3/*.yml $FLEXGET_CONFIG_DIR/
-#
-# Copy variables .yml files depending on python version in use
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
-	FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget/variables.yml.template
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
-	FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget_python3/variables.yml.template
 #
 if [ ! -e $FLEXGET_CONFIG_DIR/variables.yml ];
 then
