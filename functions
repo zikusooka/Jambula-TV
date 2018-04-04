@@ -8822,9 +8822,9 @@ jabberd_configure () {
 for JABBERD_CONFIG in sm.xml c2s.xml s2s.xml router.xml;
 do
 # Make a copy of config
-cp -v $JABBERD_CONF_DIR/$JABBERD_CONFIG $JABBERD_CONF_DIR/${JABBERD_CONFIG}.orig
+cp -v $JABBERD_CONF_DIR/${JABBERD_CONFIG} $JABBERD_CONF_DIR/${JABBERD_CONFIG}.orig
 # Change password while copying to /etc/jabberd directory
-cat $PROJECT_CONFIGS_DIR/jabberd/${JABBERD_CONFIG}.orig | sed -e "s:JABBERD_PASSWORD_CHANGE_ME:$JABBERD_PASSWORD:g" | sed -e "s:LIBDIR:$LIBDIR:g" > $JABBERD_CONF_DIR/$JABBERD_CONFIG
+cat $JABBERD_CONF_DIR/${JABBERD_CONFIG}.orig | sed -e "s:JABBERD_PASSWORD_CHANGE_ME:$JABBERD_PASSWORD:g" | sed -e "s:LIBDIR:$LIBDIR:g" > $JABBERD_CONF_DIR/$JABBERD_CONFIG
 done
 # Create jabberd logs directory
 [ -d $PROJECT_SYSTEM_LOG_DIR/jabberd ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/jabberd
