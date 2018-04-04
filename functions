@@ -3001,28 +3001,31 @@ dvb_tvheadend_network_add
 dvb_icons_add () {
 # Source DVBT settings file
 . $PROJECT_DVBT_SETTINGS_FILE
-# Create picons directory if it does not exist
-[ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
-# Set chicon dir used in chiconpath
-TVHEADEND_CHICON_DIR=$(find $PROJECT_SYSTEM_ICONS_DIR -maxdepth 1 -iname "$TV_MARKET")
 #
 # Create picons directory if it does not exist
-[ -d $TVHEADEND_CHICON_DIR ] || mkdir -p $TVHEADEND_CHICON_DIR
-# Copy Live TV picons e.g. logos to JambulaTV share directory if it exists for requested TV market
-[ -e $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET ] && \
-	rsync -av $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET/ $TVHEADEND_CHICON_DIR/
+[ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
+#
+# Copy DVB icons to JambulaTV share directory if logos for requested TV market exist
+if [ -e $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET ];
+then
+# Set chicon dir used in chiconpath
+TVHEADEND_CHICON_DIR=$PROJECT_SYSTEM_ICONS_DIR/$TV_MARKET
+# Add DVB picons
+echo "Adding DVB TV picon images for $TV_MARKET"
+rsync -av $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET/ $TVHEADEND_CHICON_DIR/
 # Give permissons to TV Icons
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_CHICON_DIR
+
+else
+logger -s -t $(basename $0) "Error: DVB TV picon images for $TV_MARKET not found"
+fi
 }
 
 tvheadend_configure () {
-# Source DVBT settings file
-. $PROJECT_DVBT_SETTINGS_FILE
-# Create picons directory if it does not exist
-[ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
-# Set chicon dir used in chiconpath
-TVHEADEND_CHICON_DIR=$(find $PROJECT_SYSTEM_ICONS_DIR -maxdepth 1 -iname "$TV_MARKET")
-#
+# Add DVB TV Icons
+# ----------------
+dvb_icons_add
+
 # Create tvheadend directories if it does not exist
 # -------------------------------------------------
 [ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
@@ -3032,10 +3035,6 @@ TVHEADEND_CHICON_DIR=$(find $PROJECT_SYSTEM_ICONS_DIR -maxdepth 1 -iname "$TV_MA
 	mkdir -p $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID
 [ -d $TVHEADEND_ADAPTERS_CONFIG_DIR ] || mkdir -p $TVHEADEND_ADAPTERS_CONFIG_DIR
 [ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
-
-# Add DVB TV Icons
-# ----------------
-dvb_icons_add
 
 # Setup tvheadend main config file
 # --------------------------------
