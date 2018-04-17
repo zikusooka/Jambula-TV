@@ -258,7 +258,7 @@ fi
 # Run processes whenever there's a change in status i.e. UP or DOWN
 ###################################################################
 # 1) Restart coova-chilli in order to change default gateway device and DNS settings
-/usr/bin/jambulatv-chilli restart
+sudo /usr/bin/jambulatv-chilli restart
 #
 # 2) Restart wireless access point: hostapd
 #systemctl restart hostapd
