@@ -230,7 +230,7 @@ epg_tvheadend_configure
 
 # Auto download of TV Shows, Movies, and Podcasts
 #flexget_deps_install
-#flexget_install
+#flexget_python2_install 
 flexget_python3_install 
 flexget_configure
 

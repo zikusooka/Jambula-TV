@@ -186,13 +186,7 @@ FREEVO_VERSION=svn
 # Flexget IPTV list download schedule
 FLEXGET_SCHEDULE_IPTV_LISTS_HR=15
 FLEXGET_SCHEDULE_IPTV_LISTS_MIN=30
-# 
 FLEXGET_PORT=$(grep -i 'flexget$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-#
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
-FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget/variables.yml.template
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
-FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget_python3/variables.yml.template
 #
 TVHEADEND_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.hts/tvheadend
 TVHEADEND_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/tvheadend.log
@@ -5729,14 +5723,12 @@ python3 setup.py install
 # Create symbolic link
 [ -x $BINARY_PREFIX/flexget ] || ln -s $PREFIX/local/bin/flexget $BINARY_PREFIX/flexget
 #
-# Copy email templates
-# Python 3
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
-	cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \
-		$PYTHON_SITEDIR/FlexGet-*.egg/flexget/templates/task/
+# Copy email templates in Python 3 installs
+cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \
+	$PYTHON_SITEDIR/FlexGet-*.egg/flexget/templates/task/
 }
 
-flexget_install () {
+flexget_python2_install () {
 # Remove any existing modules
 [ ! -d $INSTALL_SRC_DIR/FlexGet* ] || rm -rf $INSTALL_SRC_DIR/FlexGet*
 rm -rf $PYTHON_SITEDIR/FlexGet* 
@@ -5749,11 +5741,9 @@ patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT
 cd $INSTALL_SRC_DIR/Flexget
 pip install -e .
 #
-# Copy email templates
-# Python 2
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
-	cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
-		$INSTALL_SRC_DIR/Flexget/flexget/templates/email/
+# Copy email templates # only in Python 2 install
+cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
+	$INSTALL_SRC_DIR/Flexget/flexget/templates/email/
 }
 
 flexget_configure () {
@@ -5769,13 +5759,42 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $FLEXGET_CONFIG_DIR
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/flexget
 #
 # Copy config .yml files depending on python version in use
+# .........................................................
 # Python 2
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
-	cp -v $PROJECT_CONFIGS_DIR/flexget/*.yml $FLEXGET_CONFIG_DIR/
+if [[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]];
+then
+# Copy flexget configs
+cp -v $PROJECT_CONFIGS_DIR/flexget/*.yml $FLEXGET_CONFIG_DIR/
+# Set variables template
+FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget/variables.yml.template
+export FLEXGET_VARIABLES_TEMPLATE
 
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
-	cp -v $PROJECT_CONFIGS_DIR/flexget_python3/*.yml $FLEXGET_CONFIG_DIR/
-#
+# Python 3
+elif [[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]];
+then
+cp -v $PROJECT_CONFIGS_DIR/flexget_python3/*.yml $FLEXGET_CONFIG_DIR/
+# Set variables template
+FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget_python3/variables.yml.template
+export FLEXGET_VARIABLES_TEMPLATE
+fi
+
+#DEBUGGING - Remove
+cat <<EOT
+$(date)
+
+Script has so far run for $SCRIPT_RUNTIME seconds
+
+
+PYTHON_VERSION=$PYTHON_VERSION
+PYTHON_FULL_VERSION_NUMBER=$PYTHON_FULL_VERSION_NUMBER
+PYTHON_MAJOR_VERSION_NUMBER=$PYTHON_MAJOR_VERSION_NUMBER
+PYTHON_MINOR_VERSION_NUMBER=$PYTHON_MINOR_VERSION_NUMBER
+PYTHON2_SITEDIR=$PYTHON2_SITEDIR
+PYTHON3_SITEDIR=$PYTHON3_SITEDIR
+
+EOT
+
+# Add custom variables to Flexget
 if [ ! -e $FLEXGET_CONFIG_DIR/variables.yml ];
 then
 cat $FLEXGET_VARIABLES_TEMPLATE  | \
