@@ -4,12 +4,18 @@
 # This was necessiated by very buggy August DVBT tuner frequently fails
 
 # Variables
+SERVICE_DESCRIPTION=$SERVICEDESC
+SERVICE_STATE=$SERVICESTATE
+SERVICE_DATE=$LONGDATETIME
+SERVICE_DISPLAY_NAME=$SERVICEDISPLAYNAME
 
 
 
 #################
 #  MAIN SCRIPT  #
 #################
+# Quit if service is OK
+[[ "$SERVICE_STATE" = "OK" ]] && exit 0
 
 #Play sound effects of dying hardware
 mplayer -ao pulse -novideo  /usr/share/JambulaTV/sounds/on_life_support.mp3

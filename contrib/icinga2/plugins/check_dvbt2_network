@@ -14,7 +14,7 @@ TVHEADEND_REPAIR_TOOL=jambulatv-tvheadend-controller
 # DVBT Adapter node
 TVHEADEND_DVBT_TUNER_NODE=/dev/dvb/adapter$DVBT_TUNER_NO
 # DVBT network UUID
-TVHEADEND_DVBT_NETWORK_UUID=$(curl -s http://127.0.0.1:9981/api/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$DVBT_NETWORK_NAME"'") |.uuid' | sed 's:"::g')
+TVHEADEND_DVBT_NETWORK_UUID=$(curl -s http://127.0.0.1:9981/api/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$DVBT_NETWORK_NAME"'") |.uuid' | head -1 | sed 's:"::g')
 
 # Check if DVB network is correctly associated with the DVB-T2 tuner adapter
 if [[ "x$TVHEADEND_DVBT_NETWORK_UUID" = "x" ]];
