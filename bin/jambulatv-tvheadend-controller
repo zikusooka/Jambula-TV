@@ -891,8 +891,8 @@ map_osd_notice_completed $TVHEADEND_CAMERAS_NETWORK_NAME
 # Generate debug log for this tool runs
 [[ "$DEBUG_LOG" = "yes" ]] && generate_debug_log
 
-# Check to see if TVHeadend server is in use and when NOT controlling cameras
-[[ "$TV_TYPE" != "cameras" ]] && check_if_in_use 
+# Check to see if TVHeadend server is in use
+check_if_in_use 
 
 # If IPTV specified, check for Internet connectivity before proceeding
 [[ "$TV_TYPE" = "iptv" ]] && check_internet_connectivity_ping 1
