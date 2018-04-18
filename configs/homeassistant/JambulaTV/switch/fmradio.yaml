@@ -1,0 +1,6 @@
+- platform: command_line
+  switches:
+    fmradio:
+      command_on: "/usr/bin/amixer -c 5 sset Master,0 100%,100% unmute"
+      command_off: "/usr/bin/amixer -c 5 sset Master,0 100%,100% mute"
+      friendly_name: "FM Radio (House)"

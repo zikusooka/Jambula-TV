@@ -40,14 +40,22 @@ sun:
 tts:
   - platform: google
 
+telegram_bot:
+  - platform: polling
+    api_key: !secret telegram_api_key
+    allowed_chat_ids:
+      - !secret telegram_chatid_1
+      - !secret telegram_chatid_2
 
+ 
 
 ###########INCLUDES#####
 
 
 alert: !include_dir_merge_named JambulaTV/alerts/
 
-automation: !include_dir_merge_list JambulaTV/automation
+#automation: !include_dir_merge_list JambulaTV/automation/
+automation: !include JambulaTV/automation/presence.yaml
 
 binary_sensor: !include_dir_list JambulaTV/binary_sensor
 
@@ -67,7 +75,7 @@ group: !include_dir_merge_named JambulaTV/group
 #input_select: !include JambulaTV/input_select.yaml
 #input_slider: !include JambulaTV/input_slider.yaml
 
-light: !include JambulaTV/light/zwave.yaml
+light: !include_dir_merge_named  JambulaTV/light
 
 media_player: !include_dir_merge_list JambulaTV/media_player
 

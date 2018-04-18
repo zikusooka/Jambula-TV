@@ -1,0 +1,3 @@
+- name: JambulaTV_Telegram
+  platform: command_line
+  command: jambulatv-telegram sendmessage $($cat)

@@ -11,6 +11,7 @@ default_view:
     - group.cameras
     - group.players
     - group.links
+    - group.switch
 
 family:
   name: Family
@@ -61,3 +62,9 @@ calendar:
   name: "Appointments"
   entities:
     - calendar.default
+
+switch:
+  name: "FM Radio"
+  icon: mdi:home
+  entities:
+    - switch.fmradio
