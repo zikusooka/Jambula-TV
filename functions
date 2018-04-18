@@ -4792,6 +4792,10 @@ cat $PROJECT_BIN_DIR/jambulatv-connect-2-wifi-ap | \
 		> $BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-connect-2-wifi-ap
+#
+# Add jambulatv-mifi-query tool - Get stats such as data balance, battery level, signal etc
+[ -e $BINARY_PREFIX/jambulatv-mifi-query ] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-mifi-query $BINARY_PREFIX
 }
 
 nfs_server_configure () {
