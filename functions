@@ -62,15 +62,6 @@ MANDIR8=$DATAROOTDIR/man/man8
 SYSCTL_DIR=$CONFDIR/sysctl.d
 UDEV_RULES_DIR=/etc/udev/rules.d
 LOGROTATE_CONF_DIR=$CONFDIR/logrotate.d
-PYTHON_VERSION=$(python -V)
-PYTHON_FULL_VERSION_NUMBER=$(echo $PYTHON_VERSION | awk {'print $2'})
-PYTHON_MAJOR_VERSION_NUMBER=$(echo $PYTHON_FULL_VERSION_NUMBER | cut -d '.' -f1)
-PYTHON_MINOR_VERSION_NUMBER=$(echo $PYTHON_FULL_VERSION_NUMBER | cut -d '.' -f1-2)
-PYTHON2_SITEDIR=$LIBDIR/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
-PYTHON3_SITEDIR=$PREFIX/local/lib/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
-# Set Python site directories depending on version in use
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && PYTHON_SITEDIR=$PYTHON2_SITEDIR
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && PYTHON_SITEDIR=$PYTHON3_SITEDIR
 FIRMWARE_DIR=$PREFIX/lib/firmware
 POST_INSTALL_NOTES=$ROOT_DIR/post_install_notes
 # Source directories
@@ -907,6 +898,21 @@ FTP_FAILED_NOTIFICATION_MESSAGE="FTP Error: I failed to download the following f
 ######################
 #  HELPER FUNCTIONS  #
 ######################
+# Get current Python version
+get_python_version () {
+PYTHON_VERSION=$(python -V)
+PYTHON_FULL_VERSION_NUMBER=$(echo $PYTHON_VERSION | awk {'print $2'})
+PYTHON_MAJOR_VERSION_NUMBER=$(echo $PYTHON_FULL_VERSION_NUMBER | cut -d '.' -f1)
+PYTHON_MINOR_VERSION_NUMBER=$(echo $PYTHON_FULL_VERSION_NUMBER | cut -d '.' -f1-2)
+PYTHON2_SITEDIR=$LIBDIR/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
+PYTHON3_SITEDIR=$PREFIX/local/lib/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
+# Set Python site directories depending on version in use
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && PYTHON_SITEDIR=$PYTHON2_SITEDIR
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && PYTHON_SITEDIR=$PYTHON3_SITEDIR
+# Export
+export PYTHON_VERSION PYTHON_FULL_VERSION_NUMBER PYTHON_MAJOR_VERSION_NUMBER PYTHON_MINOR_VERSION_NUMBER PYTHON_SITEDIR
+}
+
 check_internet_connectivity_ping () {
 # Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
 REMOTE_HOST_NAME="4.4.4.4"
@@ -1211,6 +1217,7 @@ PKG_LEFTOVERS_EXIST=$?
 }
 
 uninstall_python_pkgs () {
+get_python_version
 [ ! -d $PYTHON_SITEDIR/$1 ] || rm -rf $PYTHON_SITEDIR/$1
 [ -d $PYTHON_SITEDIR/$1*.egg ] && rm -rf $PYTHON_SITEDIR/$1*.egg
 whereis $1 > /dev/null
@@ -2251,6 +2258,7 @@ make_install_jambulatv
 }
 
 pyalsaaudio_install () {
+get_python_version
 tar zxvf $PROJECT_TARBALLS_DIR/pyalsaaudio-$PYALSAAUDIO_VERSION.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v pyalsaaudio-* pyalsaaudio
 # Compile
@@ -3274,6 +3282,7 @@ make_install_jambulatv
 }
 
 pydvbstreamer_install () {
+get_python_version
 # Unpack
 tar jxvf $PROJECT_TARBALLS_DIR/pydvbstreamer-$PYDVBSTREAMER_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v pydvbstreamer-* pydvbstreamer
@@ -3309,6 +3318,7 @@ livepause_install
 }
 
 pyosd_install () {
+get_python_version
 # Unpack
 tar xvf $PROJECT_TARBALLS_DIR/pyosd-$PYOSD_VERSION.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v pyosd-* pyosd
@@ -3320,6 +3330,7 @@ patch -p1 $PYTHON_SITEDIR/pyosd/__init__.py < $PROJECT_PATCHES_DIR/pyosd_font.pa
 }
 
 kaa_install () {
+get_python_version
 # Create kaa install directory
 [ -d $KAA_INSTALL_DIR ] || mkdir -p $KAA_INSTALL_DIR
 # Loop through all kaa-modules
@@ -3334,6 +3345,7 @@ done
 }
 
 freevo1_install () {
+get_python_version
 # Create freevo1 install directory
 [ -d $FREEVO_INSTALL_DIR ] || mkdir -p $FREEVO_INSTALL_DIR
 # Choose freevo verion
@@ -4547,6 +4559,7 @@ fi
 }
 
 python_xbmc_install () {
+get_python_version
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/python-xbmc/ $INSTALL_SRC_DIR/python-xbmc/
 cd $INSTALL_SRC_DIR/python-xbmc
 python setup.py install --install-lib=$PYTHON_SITEDIR
@@ -4570,6 +4583,7 @@ chmod 755 $XMPP_SCRIPT
 }
 
 livestreamer_install () {
+get_python_version
 # Install dependency: singledispatch
 tar zxvf $PROJECT_TARBALLS_DIR/singledispatch*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v singledispatch-* singledispatch
@@ -5651,6 +5665,7 @@ systemctl start ziproxy.service
 }
 
 flexget_deps_install () {
+get_python_version
 for PYTHON_MODULE in $FLEXGET_DEPENDENCIES
 do
 # Set module's package filename & strip version from it
@@ -5699,6 +5714,7 @@ done
 }
 
 flexget_python3_install () {
+get_python_version
 # Dependencies for Flexget - Install locally using wheels/pips specified in requirements
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt
 #
@@ -5733,6 +5749,7 @@ cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \
 }
 
 flexget_python2_install () {
+get_python_version
 # Remove any existing modules
 [ ! -d $INSTALL_SRC_DIR/FlexGet* ] || rm -rf $INSTALL_SRC_DIR/FlexGet*
 rm -rf $PYTHON_SITEDIR/FlexGet* 
@@ -5751,6 +5768,7 @@ cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
 }
 
 flexget_configure () {
+get_python_version
 # create flexget config directory
 [ -d $FLEXGET_CONFIG_DIR ] || mkdir -p $FLEXGET_CONFIG_DIR
 # Create flexget logs directory
@@ -6049,6 +6067,7 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/aria2.service $SYSTEMD_UNITS_DIR_USER/
 }
 
 python_telegram_bot_install () {
+get_python_version
 # future - dependency for python-telegram-bot
 tar zxvf $PROJECT_TARBALLS_DIR/future-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v future-* future
@@ -6076,6 +6095,7 @@ EOF
 }
 
 yowsup2_deps_install () {
+get_python_version
 for PYTHON_MODULE in \
 protobuf \
 python-axolotl-curve25519 \
@@ -6122,6 +6142,7 @@ done
 }
 
 yowsup2_install () {
+get_python_version
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup/ $INSTALL_SRC_DIR/yowsup/
 # Patch env_android
 patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/env/env_android.py < $PROJECT_PATCHES_DIR/yowsup.env.android.patch
@@ -6131,6 +6152,7 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 }
 
 yowsup2_python3_install () {
+get_python_version
 # Dependencies for yowsup - Install locally using wheels specified in requirements
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/yowsup-requirements.txt
 #
@@ -6241,6 +6263,7 @@ EOF
 }
 
 sleekxmpp_install () {
+get_python_version
 # dnspython - dependency for sleekxmpp
 unzip -d $INSTALL_SRC_DIR $PROJECT_TARBALLS_DIR/dnspython-*.zip
 cd $INSTALL_SRC_DIR && mv -v dnspython-* dnspython
@@ -7305,6 +7328,7 @@ chmod 755 $BINARY_PREFIX/jambulatv-fmradio-streamer
 }
 
 TermFeed_install () {
+get_python_version
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/TermFeed-*.tgz -C $INSTALL_SRC_DIR
 # Patch
@@ -9756,11 +9780,18 @@ EOF
 }
 
 gdata_install () {
+get_python_version
 #Remove gdata rpm
 [ rpm -q python-gdata > /dev/null 2>&1 ] && rpm -e --nodeps  python-gdata
-# Copy sources to project HTML directory
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/gdata-python-client/ $INSTALL_SRC_DIR/gdata-python-client/
-cd $INSTALL_SRC_DIR/gdata-python-client
+# Copy sources depending on python version
+# Python 2
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/gdata-python2/ $INSTALL_SRC_DIR/gdata-python/
+# Python 3
+[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/gdata-python3/ $INSTALL_SRC_DIR/gdata-python/
+#
+cd $INSTALL_SRC_DIR/gdata-python
 python setup.py install
 }
 
@@ -10009,6 +10040,7 @@ systemctl enable jambulatv-speech-recognition.service
 }
 
 SpeechRecognition_install () {
+get_python_version
 # PyAudio - Needed for Mic
 tar zxvf $PROJECT_TARBALLS_DIR/PyAudio-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v PyAudio-* PyAudio
