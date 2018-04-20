@@ -4832,7 +4832,7 @@ interface "$NETWORK_ETHERNET_DEVICE" {
            send host-name "$HOSTNAME";
            supersede domain-search $(for DOMAIN in $PROJECT_DOMAINS;do echo -n "\"$DOMAIN\", " | sed 's:,::';done);
            prepend domain-name-servers 127.0.0.1;
-           send dhcp-requested-address 192.168.0.249;
+           #send dhcp-requested-address 192.168.0.249;
        }
 EOF
 #
