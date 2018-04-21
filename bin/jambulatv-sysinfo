@@ -6,6 +6,7 @@ COPYRIGHT_NOTICE=" ©$COPYRIGHT_YEAR_START-$COPYRIGHT_YEAR_END $COMPANY_NAME All
 RELEASE_FILE=/etc/JambulaTV/release
 PRODUCT=$(grep -i Product $RELEASE_FILE | cut -d : -f2)
 VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
+MODEL=$(grep -i Model $RELEASE_FILE | cut -d : -f2)
 SERIAL=$(grep -i Serial $RELEASE_FILE | cut -d : -f2)
 HEADER=$(figlet $PRODUCT $VERSION)
 KERNEL=$(uname -r)
@@ -143,8 +144,9 @@ echo -e ""
 echo -e "\t\t${n}Internet Status:\t${b} $INTERNET_STATE"
 # Weather
 echo -e "\t\t${n}Current Weather:\t${b} ${CURRENT_TEMPERATURE}\xc2\xb0C${n}, ${b}$CURRENT_SUMMARY ${n}($CITY)"
-# Software/Updates/Serial No.
+# Software/Updates/Model/Serial No.
 echo -e "\t\t${n}Platform Software:\t${b} $VERSION ${n}($KERNEL) $UPDATES_AVAILABLE"
+echo -e "\t\t${n}Model Number:\t\t${b} $MODEL"
 echo -e "\t\t${n}Serial Number:\t\t${b} $SERIAL"
 echo -e "\t\t${n}Install Date:\t\t${b} $INSTALL_DATE"
 echo -e""
