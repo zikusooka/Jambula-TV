@@ -1,0 +1,63 @@
+#!/bin/bash
+# A small utility to find out the JambulaTV box you are using i.e. whoami
+COMPANY_NAME="Jambula Labs"
+COPYRIGHT_YEAR_START=$(date '+%Y')
+COPYRIGHT_YEAR_END=$(date '+%Y' --date='12 months')
+COPYRIGHT_NOTICE="©$COPYRIGHT_YEAR_START-$COPYRIGHT_YEAR_END $COMPANY_NAME All Rights Reserved."
+RELEASE_FILE=/etc/JambulaTV/release
+PRODUCT=$(grep -i Product $RELEASE_FILE | cut -d : -f2)
+VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
+SERIAL=$(grep -i Serial $RELEASE_FILE | cut -d : -f2)
+MODEL=$(grep -i Model $RELEASE_FILE | cut -d : -f2)
+HEADER=$(figlet $PRODUCT $VERSION)
+KERNEL=$(uname -r)
+
+JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
+JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
+JAMBULATV_SETUP_DB_PASS=MY_JAMBULATV_SETUP_DB_PASS
+JAMBULATV_SETUP_DB_TABLE=MY_JAMBULATV_SETUP_DB_TABLE
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+query_mysql_db () {
+mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} << EOF
+USE ${JAMBULATV_SETUP_DB_NAME};
+SELECT $@ FROM ${JAMBULATV_SETUP_DB_TABLE} WHERE id = (SELECT MAX(id) FROM ${JAMBULATV_SETUP_DB_TABLE});
+EOF
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+CONTACT_NAME=$(query_mysql_db contact_name)
+CONTACT_CITY=$(query_mysql_db contact_city)
+
+
+clear
+
+cat <<EOF
+
+$HEADER
+	$COPYRIGHT_NOTICE
+-------------------------------------------------------------------------------
+
+	Version:		$VERSION
+
+	Model:			$MODEL
+	Serial:			$SERIAL
+
+
+	Owner:			$CONTACT_NAME ($CONTACT_CITY)
+
+-------------------------------------------------------------------------------
+
+EOF
+
+# Export variables for use in other tools
+export PRODUCT VERSION SERIAL MODEL HEADER KERNEL CONTACT_NAME CONTACT_CITY

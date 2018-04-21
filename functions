@@ -5176,6 +5176,17 @@ cat > $CONFDIR/$ISSUEFILE <<EOF
 $(figlet $PROJECT_NAME $PROJECT_VERSION)
 EOF
 done
+
+# Add jambulatv whoami tool to bin directory if it does not exist
+[ -e $BINARY_PREFIX/jambulatv-whoami ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-whoami | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" \
+			> $BINARY_PREFIX/jambulatv-whoami 
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-whoami 
 }
 
 updates_server_info_configure () {
