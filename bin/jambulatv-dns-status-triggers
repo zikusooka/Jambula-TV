@@ -211,8 +211,12 @@ echo "$(date): New State = Down | Old State = Up" >> $DEBUG_FILE
 #
 # Add entries to dnsmasq for local resolution
 # --------------------------------------------
-echo "address=/#/$COOVA_SERVER_IP
-address=/#/$NETWORK_IP_ADDRESS" > $INTERNET_OFF_FILE
+cat > $INTERNET_OFF_FILE <<EOT
+address=/#/$COOVA_SERVER_IP
+EOT
+# Add Wired ethernet IP address if link is UP
+[[ "x$NETWORK_IP_ADDRESS" = "x" ]] || \
+	echo "address=/#/$NETWORK_IP_ADDRESS" >> $INTERNET_OFF_FILE
 # Restart dnsmasq.service
 systemctl restart dnsmasq.service
 
@@ -244,8 +248,13 @@ echo "$(date): Unknown - New State = [$DNS_STATUS] | Old State = [$LAST_DNS_STAT
 
 # Add entries to dnsmasq for local resolution
 # --------------------------------------------
-echo "address=/#/$COOVA_SERVER_IP
-address=/#/$NETWORK_IP_ADDRESS" > $INTERNET_OFF_FILE
+cat > $INTERNET_OFF_FILE <<EOT
+address=/#/$COOVA_SERVER_IP
+EOT
+# Add Wired ethernet IP address if link is UP
+[[ "x$NETWORK_IP_ADDRESS" = "x" ]] || \
+	echo "address=/#/$NETWORK_IP_ADDRESS" >> $INTERNET_OFF_FILE
+#
 # Restart dnsmasq.service
 systemctl restart dnsmasq.service
 
