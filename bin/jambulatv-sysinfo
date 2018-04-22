@@ -10,6 +10,8 @@ MODEL=$(grep -i Model $RELEASE_FILE | cut -d : -f2)
 SERIAL=$(grep -i Serial $RELEASE_FILE | cut -d : -f2)
 HEADER=$(figlet $PRODUCT $VERSION)
 KERNEL=$(uname -r)
+OUI_HWDATA_FILE=/usr/share/$PRODUCT/hwdata/oui.txt
+
 # TTY
 if tty -s
 then
@@ -48,8 +50,12 @@ else
 CURRENT_DNS2=$CURRENT_DNS1
 fi
 
+# WiFi AP and Client Chipsets
+WIFI_AP_CHIPSET=$(grep -i $(iw dev | grep -B2 -i 'type AP' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g') $OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
+WIFI_CLIENT_CHIPSET=$(grep -i $(iw dev | grep -i -B2 'type managed' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g') $OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
+
 # Check if Internet connection is up
-host -W 1 google.com 8.8.8.8 > /dev/null 2>&1
+host -W 1 google.com 1.0.0.1 > /dev/null 2>&1
 INTERNET_ALIVE=$?
 if [ "$INTERNET_ALIVE" = "0" ];
 then
@@ -57,9 +63,6 @@ INTERNET_STATE=UP↑
 # Public IP Address
 # -----------------
 PUBLIC_IP_ADDRESS=$(curl --get -sS -m 60  -A "$HTTP_USER_AGENT" https://api.ipify.org)
-
-# Source weather functions
-. /usr/bin/jambulatv-weather-api
 
 # See if update is available
 /usr/lib64/nagios/plugins/check_updates > /dev/null 2>&1
@@ -82,12 +85,9 @@ fi
 # ------------------
 # Hardware variables
 # ------------------
-MOBO_VENDOR=$(/usr/sbin/lshw -quiet -c system | grep vendor | cut -d : -f2 | sed 's:^ ::' | sed 's: Group::'
-)
-MOBO_MODEL=$(/usr/sbin/lshw -quiet -c system | grep product | cut -d : -f2 | sed 's:^ ::' | sed 's: (None)::')
-MOTHERBOARD_MAKE="$MOBO_VENDOR $MOBO_MODEL"
+#CPU_MODEL="$(cat /proc/cpuinfo | grep -i 'model name' | sort -u | cut -d ':' -f2)"
 CPU_MODEL=$(awk -F ': | @' '/model name|Processor|^cpu model|chip type|^cpu type/ {printf $2; exit}' /proc/cpuinfo | awk {'print $1FS$2FS$3'})
-CPU_SPEED=$(/usr/sbin/lshw -quiet -c processor | grep capacity | cut -d : -f2 | sed 's:^ ::')
+CPU_SPEED=$(awk -F ': | @' '/model name|Processor|^cpu model|chip type|^cpu type/ {printf $3; exit}' /proc/cpuinfo)
 CPUTIME=$(ps -eo pcpu | awk 'NR>1' | awk '{tot=tot+$1} END {print tot}')
 CPUCORES=$(cat /proc/cpuinfo | grep -c processor)
 CPU_USED=$(echo $CPUTIME / $CPUCORES | bc)%
@@ -95,39 +95,41 @@ CPU_LOAD=$(cat /proc/loadavg | cut -d' ' -f1-3)
 CPU_VAMPIRE=$()
 CPU_VAMPIRE_USAGE=$(ps --no-header -e -o pcpu,args --sort -pcpu | sed '/^ 0.0 /d' | head -1 | awk {'print $1'} | cut -d . -f1)%
 GPU_NAME=$(/usr/sbin/lspci -mm | awk -F '\\"|\\" \\"' '/"Display|"3D|"VGA/ {print $3 " "}')
-GPU_DRIVER=$(/usr/sbin/lshw -quiet -c video | grep configuration | awk {'print $2'} | cut -d = -f2)
+GPU_DRIVER=$(dmesg | grep -i '\[drm\] Initialized' | grep -i minor | awk {'print $5'})
 
 # Disks
 DISKS_INSTALLED=$(cat /proc/diskstats | awk {'print $3'} | cut -c2,1,3 | sort -u | wc -l)
 # Disk 1
-DISK1_MODEL=$(/usr/sbin/lshw -quiet -c disk | grep product | cut -d : -f2 | sed 's:^ ::' | head -1)
-DISK1_SIZE=$(/usr/sbin/lshw -quiet -c disk | grep size: | cut -d : -f2 | sed 's:^ ::' | head -1)
+DISK1_LOGICAL_NAME=/dev/sda
+DISK1_MODEL=$(parted -l | grep -B1 $DISK1_LOGICAL_NAME | grep -i Model | sed 's/Model: //' | sed 's/ATA //g' | sed 's/ (scsi)//g')
+DISK1_SIZE=$(parted -l | grep -B1 $DISK1_LOGICAL_NAME | grep $DISK1_LOGICAL_NAME | awk {'print $3'})
 DISK1_AVAIL_ROOT=$(df -h / | awk '{ a = $4 } END { print a }')
 DISK1_AVAIL_JAMBULA=$(df -h /JambulaTV | awk '{ a = $4 } END { print a }')
-DISK1_LOGICAL_NAME=$(/usr/sbin/lshw -quiet -c disk | grep 'logical name' | cut -d : -f2 | sed 's:^ ::' | head -1)
 DISK1_TEMP=$(/usr/sbin/hddtemp $DISK1_LOGICAL_NAME | cut -d : -f3 | sed 's: ::g')
 # Disk 2
-DISK2_MODEL=$(/usr/sbin/lshw -quiet -c disk | grep product | cut -d : -f2 | sed 's:^ ::' | tail -1)
-DISK2_SIZE=$(/usr/sbin/lshw -quiet -c disk | grep size: | cut -d : -f2 | sed 's:^ ::' | tail -1)
-DISK2_LOGICAL_NAME=$(/usr/sbin/lshw -quiet -c disk | grep 'logical name' | cut -d : -f2 | sed 's:^ ::' | tail -1)
+DISK2_LOGICAL_NAME=/dev/sdb
+DISK2_MODEL=$(parted -l | grep -B1 $DISK2_LOGICAL_NAME | grep -i Model | sed 's/Model: //' | sed 's/ATA //g' | sed 's/ (scsi)//g')
+DISK2_SIZE=$(parted -l | grep -B1 $DISK2_LOGICAL_NAME | grep $DISK2_LOGICAL_NAME | awk {'print $3'})
 DISK2_MNT_POINT=$(df -h ${DISK2_LOGICAL_NAME}1 | awk {'print $6'} | tail -1)
 DISK2_AVAIL=$(df -h $DISK2_MNT_POINT | awk '{ a = $4 } END { print a }')
 DISK2_TEMP=$(/usr/sbin/hddtemp $DISK2_LOGICAL_NAME | cut -d : -f3 | sed 's: ::g')
 
-MEMORY_SIZE_TOTAL=$(/usr/sbin/lshw -quiet -c memory | grep -A4 *-memory | grep size: | head -1 | cut -d : -f2 | sed 's:^ ::')
+MEMORY_SIZE_TOTAL=$(expr $(grep -i 'MemTotal' /proc/meminfo | awk {'print $2'}) / 1048576 | xargs printf '%.1f')GB
 # Memory Model
-MEMORY_MODEL_B0=$(/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:0 | grep product: | cut -d : -f2 | sed 's:^ ::')
-MEMORY_MODEL_B1=$(/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:1 | grep product: | cut -d : -f2 | sed 's:^ ::' | sed 's:Array1_PartNumber1:Not Installed:')
+MEMORY_VENDOR_0=$(dmidecode -t memory | grep -i Manufacturer | head -1 | awk {'print $2'} | sed 's/A0_Manufacturer0//')
+MEMORY_PART_NO_0=$(dmidecode -t memory | grep -i 'Part Number' | head -1 | awk {'print $3'} | sed 's/Array1_PartNumber1//g')
+MEMORY_CLOCK_SPEED_0=$(dmidecode -t memory | grep -i 'Configured Clock Speed' | head -1 | awk {'print $4 $5'})
+MEMORY_VENDOR_1=$(dmidecode -t memory | grep -i Manufacturer | tail -1 | awk {'print $2'} | sed 's/A1_Manufacturer1//')
+MEMORY_PART_NO_1=$(dmidecode -t memory | grep -i 'Part Number' | tail -1 | awk {'print $3'} | sed 's/Array1_PartNumber1//g')
+MEMORY_CLOCK_SPEED_1=$(dmidecode -t memory | grep -i 'Configured Clock Speed' | tail -1 | awk {'print $4 $5'})
+MEMORY_MODEL_B0="$MEMORY_VENDOR_0 $MEMORY_PART_NO_0"
+MEMORY_MODEL_B1="$MEMORY_VENDOR_1 $MEMORY_PART_NO_1"
 # Memory Size
-MEMORY_SIZE_B0=$(/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:0 | grep size: | cut -d : -f2 | sed 's:^ ::')
-# Test for existence of memory stick in second bank
-/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:1 | grep 'size' && FILL=$?
-if [ "$FILL" = "0" ];
-then
-MEMORY_SIZE_B1=$(/usr/sbin/lshw -quiet -c memory | grep -A7 *-bank:1 | grep size: | cut -d : -f2 | sed 's:^ ::')
-else
-MEMORY_SIZE_B1=0
-fi
+[[ "$(dmidecode -t memory | grep -i 'Size' | head -1 | awk {'print $2'})" = "No" ]] || \
+MEMORY_SIZE_B0=$(expr $(dmidecode -t memory | grep -i 'Size' | head -1 | awk {'print $2'}) / 1024 | xargs printf '%.1f')GB
+[[ "$(dmidecode -t memory | grep -i 'Size' | tail -1 | awk {'print $2'})" = "No" ]] || \
+MEMORY_SIZE_B1=$(expr $(dmidecode -t memory | grep -i 'Size' | tail -1 | awk {'print $2'}) / 1024 | xargs printf '%.1f')GB
+# Memory available
 MEMORY_AVAIL=$(free -m | grep Mem: | awk {'print $4'})
 SCREEN_RESOLUTION=$(export DISPLAY=:0.0 && /usr/bin/xrandr --nograb --current | awk 'match($0,/[0-9]*\.[0-9]*\*/) {printf $1 " "}')
 
@@ -142,8 +144,6 @@ echo -e "\t\e[32;5;196m\t$COPYRIGHT_NOTICE"
 echo -e ""
 # Internet
 echo -e "\t\t${n}Internet Status:\t${b} $INTERNET_STATE"
-# Weather
-echo -e "\t\t${n}Current Weather:\t${b} ${CURRENT_TEMPERATURE}\xc2\xb0C${n}, ${b}$CURRENT_SUMMARY ${n}($CITY)"
 # Software/Updates/Model/Serial No.
 echo -e "\t\t${n}Platform Software:\t${b} $VERSION ${n}($KERNEL) $UPDATES_AVAILABLE"
 echo -e "\t\t${n}Model Number:\t\t${b} $MODEL"
@@ -156,6 +156,9 @@ echo -e "${n}Date:${b} $(date +'%A, %d %b %Y') \t\t ${n}Time:${b} $(uptime | awk
 echo -e "${n}Private IP Address:${b} $NETWORK_IP_ADDRESS \t ${n}Public IP address:${b} $PUBLIC_IP_ADDRESS"
 echo -e "${n}Private IP Gateway:${b} $NETWORK_GATEWAY_ADDRESS \t ${n}DNS Address:${b} $CURRENT_DNS1"
 
+# WiFi AP and Client Chipsets
+echo -e "${n}WiFi AP:${b} $WIFI_AP_CHIPSET \t ${n}WiFi Client:${b} $WIFI_CLIENT_CHIPSET"
+
 # CPU
 echo -e "${n}CPU Model:${b} $CPU_MODEL \t ${n}CPU Speed:${b} $CPU_SPEED"
 #echo -e "${n}CPU Usage:${b} $CPU_USED \t\t\t ${n}CPU Load:${b} $CPU_LOAD"
@@ -166,30 +169,37 @@ echo -e "${n}GPU Name:${b} $GPU_NAME \t\t ${n}GPU Driver:${b} $GPU_DRIVER"
 
 # Memory
 echo -e "${n}Memory Size:${b} $MEMORY_SIZE_TOTAL \t\t\t ${n}Bank 0:${b} $MEMORY_MODEL_B0 ($MEMORY_SIZE_B0)"
+if [[ "x$MEMORY_SIZE_B1" = "x" ]];
+then
+echo -e "${n}Available Memory:${b} $MEMORY_AVAIL MB \t\t ${n}Bank 1:${b} None"
+else
 echo -e "${n}Available Memory:${b} $MEMORY_AVAIL MB \t\t ${n}Bank 1:${b} $MEMORY_MODEL_B1 ($MEMORY_SIZE_B1)"
+fi
 
 # Disks
 # -----
 # Number of disks installed and space left for root partition
 echo -e "${n}Disks installed:${b} $DISKS_INSTALLED \t\t\t ${n}Disk Space Left [System]: ${b}$DISK1_AVAIL_ROOT"
 
-# Disk 1
-echo -e "${n}Disk 1 Model:${b} $DISK1_MODEL \t\t ${n}Disk 1 Logical Name:${b} $DISK1_LOGICAL_NAME"
-echo -e "${n}Disk 1 Size:${b} $DISK1_SIZE \t\t ${n}Disk 1 Space Left [/JambulaTV]: ${b}$DISK1_AVAIL_JAMBULA"
-#
-if [ "$DISKS_INSTALLED" -gt "1" ];
+# Disk Model & Size
+echo -e "${n}Disk 1 Model:${b} $DISK1_MODEL \t\t ${n}Disk 1 Size:${b} $DISK1_SIZE"
+[[ "$DISKS_INSTALLED" -gt "1" ]] && \
+echo -e "${n}Disk 2 Model:${b} $DISK2_MODEL \t\t ${n}Disk 2 Size:${b} $DISK2_SIZE"
+
+# Disk Space left
+if [[ "$DISKS_INSTALLED" -gt "1" ]];
 then
-# Disk 2
-echo -e "${n}Disk 2 Model:${b} $DISK2_MODEL \t\t ${n}Disk 2 Logical Name:${b} $DISK2_LOGICAL_NAME"
-echo -e "${n}Disk 2 Size:${b} $DISK2_SIZE \t\t ${n}Disk 2 Space Left [$DISK2_MNT_POINT]: ${b}$DISK2_AVAIL"
-
-# Temperatures
-echo -e "${n}Disk Temperatures:${b} $DISK1_TEMP | $DISK2_TEMP \t\t ${n}Screen Resolution:${b} $SCREEN_RESOLUTION"
-
+echo -e "${n}Disk 1 Space Left [/JambulaTV]: ${b}$DISK1_AVAIL_JAMBULA \t ${n}Disk 2 Space Left [$DISK2_MNT_POINT]: ${b}$DISK2_AVAIL"
 else
+echo -e "${n}Disk 1 Space Left [/JambulaTV]: ${b}$DISK1_AVAIL_JAMBULA"
+fi
 
+# Disk Temperature(s)
+if [[ "$DISKS_INSTALLED" -gt "1" ]];
+then
+echo -e "${n}Disk Temperatures:${b} $DISK1_TEMP | $DISK2_TEMP \t\t ${n}Screen Resolution:${b} $SCREEN_RESOLUTION"
+else
 echo -e "${n}Disk Temperature:${b} $DISK1_TEMP \t\t\t ${n}Screen Resolution:${b} $SCREEN_RESOLUTION"
-
 fi
 
 echo -e "\e[0m"
