@@ -4867,6 +4867,8 @@ TYPE="Ethernet"
 BOOTPROTO="dhcp"
 ONBOOT="yes"
 NM_CONTROLLED="no"
+IPV4_FAILURE_FATAL="yes"
+IPV6INIT=no
 EOF
 #
 # BUG: Patch network rc.d init file i.e. delay start with something
