@@ -4829,6 +4829,14 @@ systemctl enable $NEEDED_SERVICE
 done
 }
 
+ieee_oui_configure () {
+# Create directory of hardware data
+[ -d $PROJECT_SYSTEM_SHARE_DIR/hwdata ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/hwdata
+# Copy oui.txt file containing OUI for all vendors - used in MAC addresses
+cp -v $PROJECT_CONTRIB_DIR/hwdata/oui.txt \
+	$PROJECT_SYSTEM_SHARE_DIR/hwdata
+}
+
 wired_interfaces_configure () {
 # Configure hostname
 HOSTNAME=$SYSTEM_IDENTIFIER.$PROJECT_NAME

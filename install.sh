@@ -144,6 +144,7 @@ release_info_configure
 updates_server_info_configure
 motd_configure
 nfs_server_configure
+ieee_oui_configure
 wired_interfaces_configure
 wireless_drivers_support
 wireless_interfaces_configure
