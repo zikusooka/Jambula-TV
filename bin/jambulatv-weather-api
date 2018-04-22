@@ -203,13 +203,9 @@ else
 AGE_OF_CURRENT_WEATHER_DATA=60
 fi
 
-# Dont fetch weather information if age is less than 15 minutes ago
-if [ "$AGE_OF_CURRENT_WEATHER_DATA" -le "15" ];
+# Fetch weather information only if age is more than 15 minutes ago
+if [ "$AGE_OF_CURRENT_WEATHER_DATA" -ge "15" ];
 then
-continue
-
-else
-
 # Fetch current weather information
 curl --get -sS -A "$HTTP_USER_AGENT" \
 	-d exclude=hourly,minutely,daily,alerts,flags \
