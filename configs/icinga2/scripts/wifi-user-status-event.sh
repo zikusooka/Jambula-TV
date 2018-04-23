@@ -17,4 +17,4 @@ $LONGDATETIME
 TEMPLATE
 )
 
-sudo /usr/bin/jambulatv-presence-detection $HOSTSTATE "$HOSTDISPLAYNAME"
+sudo jambulatv-presence-detection-via-icinga2 $HOSTSTATE "$HOSTDISPLAYNAME"
