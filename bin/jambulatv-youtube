@@ -77,6 +77,8 @@ cnbc africa
 bloomberg
 fox news
 cnn
+nbc2
+aljazeera
 
 EOF
 exit 1
@@ -282,12 +284,22 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/Bloomberg | grep -i -
 }
 
 youtube_video_id_fox_news () {
-$youtube_search_method "Fox News Live Stream"
+$youtube_search_method "Fox News Live"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_cnn () {
-$youtube_search_method "CNN Live Stream News HD"
+$youtube_search_method "CNN Live"
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
+}
+
+youtube_video_id_nbc2 () {
+$youtube_search_method "NBC2 Live"
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
+}
+
+youtube_video_id_aljazeera () {
+$youtube_search_method "Al Jazeera English"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
@@ -351,6 +363,14 @@ youtube_video_id_fox_news
 # CNN
 [Cc][Nn][Nn])
 youtube_video_id_cnn
+;;
+# NBC2
+[Nn][Bb][Cc]2)
+youtube_video_id_nbc2
+;;
+# Al Jazeera
+[Aa][Ll][Jj][Aa][Zz][Ee][Ee][Rr][Aa])
+youtube_video_id_aljazeera
 ;;
 # Other search phrases
 *)
