@@ -7063,7 +7063,14 @@ youtube_dl_install () {
 # Copy sources to install directory
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/youtube-dl/ $INSTALL_SRC_DIR/youtube-dl/
 cd $INSTALL_SRC_DIR/youtube-dl
-python setup.py install
+#python setup.py install
+#
+# Compile youtube-dl with lazy-extractors
+make lazy-extractors
+make youtube-dl
+#
+# Copy youtube-dl binary 
+cp -v $INSTALL_SRC_DIR/youtube-dl/youtube-dl $PREFIX/local/bin
 # Create symbolic link to youtube-dl binary in /usr/local/bin
 ln -s $PREFIX/local/bin/youtube-dl $BINARY_PREFIX/youtube-dl
 }
