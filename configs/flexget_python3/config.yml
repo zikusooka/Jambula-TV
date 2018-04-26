@@ -215,7 +215,8 @@ templates:
     verify_ssl_certificates: no
     domain_delay:
       rarbg.to: 5 seconds
-    magnets: no
+    magnets: yes
+    torrent_scrub: rtorrent
     torrent_alive: yes
     notify:
       task: 
@@ -380,7 +381,7 @@ templates:
         group 1:
           <<: *settings_for_series
     include: [ '{? tv.include ?}' ]
-    download: '{? tv.download ?}'
+    rtorrent_magnet: '{? tv.download ?}'
     configure_series:
       settings:
         <<: *settings_for_series
@@ -490,7 +491,7 @@ templates:
     exists_movie:
       - '{? movies.exists_movie ?}'
     only_new: no
-    download: '{? movies.download ?}'
+    rtorrent_magnet: '{? movies.download ?}'
     accept_all: yes # Uncomment if IMDB is not used
     seen_movies:
       matching: strict
