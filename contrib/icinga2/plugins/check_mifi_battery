@@ -1,0 +1,56 @@
+#!/bin/sh
+# This plugin will monitor the status of your MiFi's battery and
+# report if you are initially running low and finally when you
+# have run out of battery power
+# 
+# NOTE: You need to have your icinga environment properly setup
+#
+# Also you need the following tool:
+#
+# /usr/bin/jambulatv-mifi-query
+#
+# Copyright (C) 2018-2019 Joseph Zikusooka.
+#
+# Contact me at: joseph AT zikusooka.com
+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
+# Please change variables below
+MIFI_IP_ADDRESS=192.168.8.1
+MIFI_LOGIN_ADMIN_USER="admin"
+MIFI_LOGIN_ADMIN_PASSWORD="secret"
+
+# Other variables
+MIFI_QUERY_TOOL=/usr/bin/jambulatv-mifi-query
+
+# Source battery levels
+. $MIFI_QUERY_TOOL $MIFI_IP_ADDRESS $MIFI_LOGIN_ADMIN_USER $MIFI_LOGIN_ADMIN_PASSWORD battery > /dev/null 2>&1
+
+# Run certain actions based on battery states
+if [[ "$BATTERY_LEVEL" = "Warning" && $BATTERY_STATUS = "Not Charging" ]];
+then
+echo "The MiFi battery is running low (${BATTERY_PERCENT}%).  Please recharge as soon as possible"
+exit 1
+
+elif [[ "$BATTERY_LEVEL" = "Critical" && $BATTERY_STATUS = "Not Charging" ]];
+then
+echo "The MiFi battery is critical (${BATTERY_PERCENT}%). Please recharge immediately"
+exit 2
+
+else
+echo "The MiFi battery is $BATTERY_LEVEL (${BATTERY_PERCENT}%)"
+exit 0
+fi
