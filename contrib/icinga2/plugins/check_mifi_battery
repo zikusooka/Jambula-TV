@@ -50,6 +50,11 @@ then
 echo "The MiFi battery is critical (${BATTERY_PERCENT}%). Please recharge immediately"
 exit 2
 
+elif [[ "$BATTERY_LEVEL" = "Full" && $BATTERY_STATUS = "Not Charging" ]];
+then
+echo "The MiFi battery is fully charged (${BATTERY_PERCENT}%). Please unplug it immediately"
+exit 2
+
 else
 echo "The MiFi battery is $BATTERY_LEVEL (${BATTERY_PERCENT}%)"
 exit 0
