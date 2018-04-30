@@ -1,6 +1,6 @@
 #!/bin/sh
 # This is a general purpose script used in interacting with kodi API from the command line
-# Jambula Labs @copyright 2017-2018 All rights reserved
+# Jambula Labs @copyright 2018-2019 All rights reserved
 
 # Variables
 KODI_HTTP_IP=MY_KODI_HTTP_IP
@@ -43,7 +43,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_fmradio|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|active_player_type|active_player_id|video_play_pause|video_play_next|video_play_previous|audio_play_stop|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_timer_start|tv_record_timer_stop|tv_record_instant_start|tv_record_instant_stop|tv_record_schedule_create|tv_record_schedule_cancel|tv_record_schedule_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home|fullscreen_toggle)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_fmradio|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|active_player_type|active_player_id|active_video_type|video_play_pause|video_play_next|video_play_previous|audio_play_stop|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_timer_start|tv_record_timer_stop|tv_record_instant_start|tv_record_instant_stop|tv_record_schedule_create|tv_record_schedule_cancel|tv_record_schedule_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home|fullscreen_toggle)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -132,6 +132,34 @@ export ACTIVE_PLAYER_ID=$ACTIVE_PLAYER_ID
 echo "ID OF ACTIVE PLAYER = [$ACTIVE_PLAYER_ID]"
 }
 
+type_of_video () {
+type_of_player > /dev/null 2>&1
+if [[ "$ACTIVE_PLAYER_TYPE" = "video" ]];
+then
+ACTIVE_VIDEO_TYPE=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.GetItem", "params": { "properties": ["showtitle"], "playerid": 1}, "id": "VideoGetItem"}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq ".result[] | .type" | sed 's:[,|"]::g')
+# Set type of video currently playing
+case $ACTIVE_VIDEO_TYPE in
+episode)
+TYPE_OF_VIDEO_PLAYING="TV Series"
+;;
+channel)
+TYPE_OF_VIDEO_PLAYING="Live TV"
+;;
+unknown)
+TYPE_OF_VIDEO_PLAYING="Unknown"
+;;
+*)
+TYPE_OF_VIDEO_PLAYING="Movie"
+;;
+esac
+
+else
+TYPE_OF_VIDEO_PLAYING="None"
+fi
+#
+echo TYPE_OF_VIDEO_PLAYING = [$TYPE_OF_VIDEO_PLAYING]
+}
+
 stop_player () {
 # Get id of active player
 id_of_player
@@ -217,7 +245,7 @@ curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/channel/grid?limi
 }
 
 get_tv_channel_id () {
-CHANNELID=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannels", "params": {"channelgroupid":'$PVR_GROUP'}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq . | grep -A1 -i "$TV_CHANNEL"  | grep channelid | awk {'print $2'}| head -1)
+CHANNELID=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannels", "params": {"channelgroupid":'$PVR_GROUP'}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq '.result.channels[] | select(.label=="'"${TV_CHANNEL}"'") | .channelid')
 }
 
 play_tv_channel () {
@@ -579,6 +607,10 @@ type_of_player
 
 active_player_id)
 id_of_player
+;;
+
+active_video_type)
+type_of_video
 ;;
 
 video_play_pause)
