@@ -10,7 +10,7 @@ YOUTUBE_USER_URL="https://www.youtube.com/user"
 YOUTUBE_CHANNEL_URL="https://www.youtube.com/channel"
 YOUTUBE_WATCH_URL="https://www.youtube.com/watch?v"
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
-YOUTUBE_DL_OPTS="-q -4 --prefer-insecure --no-check-certificate --geo-bypass"
+YOUTUBE_DL_OPTS="-q -4 -i --ignore-config --prefer-insecure --no-check-certificate --geo-bypass --hls-prefer-ffmpeg"
 YOUTUBE_VARIABLES_TEMP_FILE="/tmp/youtube_variables"
 YOUTUBE_FETCH_IN_PROGRESS_FILE="/tmp/youtube_fetch_in_progress"
 YOUTUBE_VIDEO_FORMAT=93
@@ -70,6 +70,10 @@ citizentv kenya
 ktn news kenya
 ktn home kenya
 ntv kenya
+learn swahili 
+inooro tv kenya
+joy news ghana
+adom tv ghana
 tvc news nigeria
 ann7 south africa
 africanews
@@ -250,11 +254,11 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/kenyacitizentv | grep
 }
 
 youtube_video_id_ktn_news_kenya () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/KTNClassics | grep -i -e "KTN News Live Stream" -e "KTN Kenya Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/standardgroupkenya | grep -i -e "KTN News Live Stream (Nairobi Kenya)" -e "KTN News Live Stream" -e "KTN Kenya Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_ktn_home_kenya () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/KTNClassics | grep -i "KTN Home Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/KTNClassics | grep -i -e "KTN Home Livestream (Nairobi Kenya)" -e "KTN Home Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_ntv_kenya () {
@@ -262,8 +266,26 @@ YOUTUBE_LIVE_CHANNEL_PAGE_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/qtvkenya/
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | grep -i -e "NTV Kenya Live Stream" -e "shows Live on NTV Kenya" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
+youtube_video_id_learn_swahili () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/SwahiliPod101 | grep -i -e "Learn Swahili in 24 Hours with SwahiliPod101 TV" -e "Learn Swahili in 24 Hours" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_inooro_tv_kenya () {
+YOUTUBE_LIVE_CHANNEL_PAGE_ID=UCZlNMLTVNxzwB0axilK-rDw
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | awk -F: '/title="iNooro TV Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_joy_news_ghana () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/myjoyonlinetube | grep -i -e "Joy News live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_adom_tv_ghana () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/adomtvtube | grep -i -e "Adom TV Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
 youtube_video_id_tvc_news_nigeria () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/UCgp4A6I8LCWrhUzn-5SbKvA | awk -F: '/title="TVC News Nigeria Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_LIVE_CHANNEL_PAGE_ID=UCgp4A6I8LCWrhUzn-5SbKvA
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | awk -F: '/title="TVC News Nigeria Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_ann7_south_africa () {
@@ -336,6 +358,22 @@ youtube_video_id_ktn_home_kenya
 [Nn][Tt][Vv]*[Kk][Ee][Nn][Yy][Aa])
 youtube_video_id_ntv_kenya
 ;;
+# Learn Swahili in 24 Hours with SwahiliPod101 TV 
+[Ll][Ee][Aa][Rr][Nn]*[Ss][Ww][Aa][Hh][Ii][Ll][Ii])
+youtube_video_id_learn_swahili 
+;;
+# iNooro TV Live (Kenya - Kikuyu)
+[Ii][Nn][Oo][Oo][Rr][Oo]*[Tt][Vv]*[Kk][Ee][Nn][Yy][Aa])
+youtube_video_id_inooro_tv_kenya
+;;
+# Joy News live (Ghana)
+[Jj][Oo][Yy]*[Nn][Ee][Ww][Ss]*[Gg][Hh][Aa][Nn][Aa])
+youtube_video_joy_news_ghana
+;;
+# Adom TV Live (Ghana)
+[Aa][Dd][Oo][Mm]*[Tt][Vv]*[Gg][Hh][Aa][Nn][Aa])
+youtube_video_adom_tv_ghana
+;;
 # TVC News Nigeria
 [Tt][Vv][Cc]*[Nn][Ee][Ww][Ss]*[Nn][Ii][Gg][Ee][Rr][Ii][Aa])
 youtube_video_id_tvc_news_nigeria
@@ -397,10 +435,15 @@ osd_notification_failed
 # Pause a bit - really needed, for beeps to stop
 sleep 2
 #
-# Check if there is an active video player
-VIDEO_IS_PLAYING=$(/usr/bin/jambulatv-kodi-controller active_player_type | cut -d '=' -f2 | awk {'print $1'} | sed "s:\[::g" | sed "s:\]::g")
-# Stop player if there is no video player already active
-[[ "$VIDEO_IS_PLAYING" = "yes" ]] || jambulatv-kodi-controller video_play_stop &
+# Check if there is a Live TV channel playing
+TYPE_OF_VIDEO_PLAYING=$(/usr/bin/jambulatv-kodi-controller active_video_type | cut -d '=' -f2- | sed "s:^ ::g" | sed "s:\[::g" | sed "s:\]::g")
+# If there is a Live TV channel that is a) Active and b) was called by either
+# i)htsp client or ii) jsonrpc: STOP that channel
+if [[ "$TYPE_OF_VIDEO_PLAYING" = "Live TV" ]] && \
+	[[ "$CALLED_BY_HTSP" = "0" || "$CALLED_BY_JSONRPC" = "0" ]];
+	then
+	jambulatv-kodi-controller tv_play_stop &
+fi
 #
 # Remove Youtube temp variables file in case of next run
 [ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
@@ -474,4 +517,4 @@ stop_waiting_sound_effects
 save_youtube_variables
 
 # Streaming notification on OSD while we wait IF script was called by htsp client
-osd_notification_streaming 
+osd_notification_streaming
