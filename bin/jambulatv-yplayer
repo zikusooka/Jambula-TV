@@ -1,15 +1,27 @@
 #!/bin/sh
 # This is a wrapper to allow playing Youtube based IPTV streams using TVHeadend 
 # NOTE: This utility relies heavily on the jambulatv-youtube tool
-# Jambula Labs @copyright 2017-2018 All rights reserved
+# Jambula Labs @copyright 2018-2019 All rights reserved
 
 # Variables
+DEBUG_LOG=no #no|yes
+
 FFMPEG_CMD=/usr/bin/ffmpeg
+FFMPEG_FFLAGS="+nobuffer"
+FFMPEG_FLAGS="+low_delay"
+FFMPEG_PROBE_SIZE=2M
+FFMPEG_ANALYZE_DURATION=2M
+FFMPEG_CODECS=copy
+#FFMPEG_FILTERS="-bsf:v h264_mp4toannexb,dump_extra"
+FFMPEG_FILTERS="-bsf:v dump_extra"
+FFMPEG_FORMAT=mpegts 
+FFMPEG_OTHER_OPTS="-tune zerolatency -strict experimental" 
+FFMPEG_LOG_FILE=/tmp/ffmpeg-info.log
 
 YOUTUBE_TOOL=jambulatv-youtube
 YOUTUBE_CMD=$(which $YOUTUBE_TOOL)
 YOUTUBE_VARIABLES_TEMP_FILE=$(grep ^YOUTUBE_VARIABLES_TEMP_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g')
-YOUTUBE_DEBUG_LOG_FILE=/tmp/youtube-debug.log
+YOUTUBE_LOG_FILE=/tmp/youtube-info.log
 
 IPTV_SERVICE_PROVIDER=MY_IPTV_SERVICE_PROVIDER
 IPTV_USER_AGENT="MY_USER_AGENT"
@@ -21,26 +33,25 @@ IPTV_SERVICE_NAME="$(echo $@ | sed 's:"::g')"
 #  FUNCTIONS  #
 ###############
 
-youtube_query_video () {
-# Run jambulatv-youtube command
-$YOUTUBE_CMD "$IPTV_SERVICE_NAME" > /dev/null 2>&1
-#
-# Quit if no variables file was created i.e. No Youtube Video ID
-[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] || exit 0
-#
-# Source Youtube video ID, URL, and Manifest variables
-YOUTUBE_VIDEO_ID="$(grep YOUTUBE_VIDEO_ID $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
-YOUTUBE_VIDEO_URL="$(grep YOUTUBE_VIDEO_URL $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
-YOUTUBE_VIDEO_QUALITY="$(grep YOUTUBE_VIDEO_QUALITY $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
-YOUTUBE_MANIFEST_URL="$(grep YOUTUBE_MANIFEST_URL $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
+set_logging_level () {
+# Set the logging level number
+if [[ "$DEBUG_LOG" = "yes" ]];
+then
+# Debug
+LOG_LEVEL=56
+else
+# Fatal
+LOG_LEVEL=8
+fi
 }
 
-youtube_debugging () {
+add_youtube_ffmpeg_debugging_files () {
 # Change log file ownership to multimedia user or person running this tool
-[ -e $YOUTUBE_DEBUG_LOG_FILE ] && sudo chown $(whoami) $YOUTUBE_DEBUG_LOG_FILE
+[ -e $YOUTUBE_LOG_FILE ] && sudo chown $(whoami) $YOUTUBE_LOG_FILE
+[ -e $FFMPEG_LOG_FILE ] && sudo chown $(whoami) $FFMEPG_LOG_FILE
 #
-# Send debug details to log file
-cat >> $YOUTUBE_DEBUG_LOG_FILE <<EOF
+# Add Youtube info details to log file i.e. for debugging purposes
+cat >> $YOUTUBE_LOG_FILE <<EOF
 -------------------------------------------------------------------------------
 Youtube Channel:	[$IPTV_SERVICE_NAME] at $(date)
 -------------------------------------------------------------------------------
@@ -50,11 +61,38 @@ Youtube Video Quality:	[$YOUTUBE_VIDEO_QUALITY]
 
 Youtube Video URL:	[$YOUTUBE_VIDEO_URL]
 
-Youtube Manifest URL
-....................
-$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$IPTV_USER_AGENT" -i $YOUTUBE_MANIFEST_URL -codec copy -bsf:v h264_mp4toannexb,dump_extra -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name="$IPTV_SERVICE_NAME" -tune zerolatency -f mpegts pipe:1
+Youtube Manifest URL:	[$YOUTUBE_MANIFEST_URL]
 
 EOF
+#
+# Add FFmpeg info details to log file i.e. for debugging purposes
+cat >> $FFMPEG_LOG_FILE <<EOF
+-------------------------------------------------------------------------------
+FFmpeg Channel:	[$IPTV_SERVICE_NAME] at $(date)
+-------------------------------------------------------------------------------
+reset; clear; time $FFMPEG_FULL_COMMAND | ffplay -probesize $FFMPEG_PROBE_SIZE -
+
+EOF
+}
+
+youtube_query_video () {
+# Run jambulatv-youtube command
+$YOUTUBE_CMD "$IPTV_SERVICE_NAME" 
+#
+# Quit if no variables file was created i.e. No Youtube Video ID
+[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] || exit 0
+#
+# Source Youtube video ID, URL, and Manifest variables
+YOUTUBE_VIDEO_ID="$(grep YOUTUBE_VIDEO_ID $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
+YOUTUBE_VIDEO_URL="$(grep YOUTUBE_VIDEO_URL $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
+YOUTUBE_VIDEO_QUALITY="$(grep YOUTUBE_VIDEO_QUALITY $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
+YOUTUBE_MANIFEST_URL="$(grep YOUTUBE_MANIFEST_URL $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
+#
+# Set FFmpeg command for streaming
+###############################################################################
+FFMPEG_FULL_COMMAND="FFREPORT=file=$FFMPEG_LOG_FILE:level=$LOG_LEVEL $FFMPEG_CMD -loglevel $LOG_LEVEL -hide_banner -nostats -user_agent \"$IPTV_USER_AGENT\" -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -probesize $FFMPEG_PROBE_SIZE -analyzeduration $FFMPEG_ANALYZE_DURATION -i $YOUTUBE_MANIFEST_URL -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=\"$IPTV_SERVICE_NAME\" -codec $FFMPEG_CODECS $FFMPEG_FILTERS $FFMPEG_OTHER_OPTS -f $FFMPEG_FORMAT pipe:1"
+###############################################################################
+export FFMPEG_FULL_COMMAND
 }
 
 youtube_stream_url () {
@@ -62,7 +100,7 @@ youtube_stream_url () {
 [ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && rm -f $YOUTUBE_VARIABLES_TEMP_FILE
 #
 # Run stream via Ffmpeg Pipe
-$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$IPTV_USER_AGENT" -i $YOUTUBE_MANIFEST_URL -codec copy -bsf:v h264_mp4toannexb,dump_extra -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name="$IPTV_SERVICE_NAME" -tune zerolatency -f mpegts pipe:1
+$FFMPEG_FULL_COMMAND
 }
 
 
@@ -71,11 +109,14 @@ $FFMPEG_CMD -nostats -loglevel fatal -user-agent "$IPTV_USER_AGENT" -i $YOUTUBE_
 #  MAIN SCRIPT  #
 #################
 
+# Set logging level
+set_logging_level
+
 # Query Youtube for video parameters like ID, URL etc
 youtube_query_video
 
-# Debugging
-youtube_debugging # <- Optional
+# Add FFmpeg and Youtube information (variables) file if debugging is enabled
+[[ "$DEBUG_LOG" = "yes" ]] && add_youtube_ffmpeg_debugging_files 
 
 # Start streaming video
-youtube_stream_url
+[[ "$DEBUG_LOG" != "yes" ]] && youtube_stream_url
