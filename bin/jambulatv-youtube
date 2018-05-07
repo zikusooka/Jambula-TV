@@ -75,6 +75,7 @@ inooro tv kenya
 joy news ghana
 adom tv ghana
 tvc news nigeria
+channels tv nigeria
 ann7 south africa
 africanews
 cnbc africa
@@ -83,6 +84,7 @@ fox news
 cnn
 nbc2
 aljazeera
+twit live
 
 EOF
 exit 1
@@ -275,17 +277,21 @@ YOUTUBE_LIVE_CHANNEL_PAGE_ID=UCZlNMLTVNxzwB0axilK-rDw
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | awk -F: '/title="iNooro TV Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
-youtube_video_joy_news_ghana () {
+youtube_video_id_joy_news_ghana () {
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/myjoyonlinetube | grep -i -e "Joy News live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
-youtube_video_adom_tv_ghana () {
+youtube_video_id_adom_tv_ghana () {
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/adomtvtube | grep -i -e "Adom TV Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_tvc_news_nigeria () {
 YOUTUBE_LIVE_CHANNEL_PAGE_ID=UCgp4A6I8LCWrhUzn-5SbKvA
 YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | awk -F: '/title="TVC News Nigeria Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+}
+
+youtube_video_id_channels_tv_nigeria () {
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/channelsweb | grep -i -e "Channels Television - Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_ann7_south_africa () {
@@ -322,6 +328,11 @@ YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 
 youtube_video_id_aljazeera () {
 $youtube_search_method "Al Jazeera English"
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
+}
+
+youtube_video_id_twit_live () {
+$youtube_search_method "Twit Live"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
@@ -368,15 +379,19 @@ youtube_video_id_inooro_tv_kenya
 ;;
 # Joy News live (Ghana)
 [Jj][Oo][Yy]*[Nn][Ee][Ww][Ss]*[Gg][Hh][Aa][Nn][Aa])
-youtube_video_joy_news_ghana
+youtube_video_id_joy_news_ghana
 ;;
 # Adom TV Live (Ghana)
 [Aa][Dd][Oo][Mm]*[Tt][Vv]*[Gg][Hh][Aa][Nn][Aa])
-youtube_video_adom_tv_ghana
+youtube_video_id_adom_tv_ghana
 ;;
 # TVC News Nigeria
 [Tt][Vv][Cc]*[Nn][Ee][Ww][Ss]*[Nn][Ii][Gg][Ee][Rr][Ii][Aa])
 youtube_video_id_tvc_news_nigeria
+;;
+# Channels TV Nigeria
+[Cc][Hh][Aa][Nn][Nn][Ee][Ll][Ss]*[Tt][Vv]*[Nn][Ii][Gg][Ee][Rr][Ii][Aa])
+youtube_video_id_channels_tv_nigeria
 ;;
 # ANN7 South Africa
 [Aa][Nn][Nn][7]*[Ss][Oo][Uu][Tt][Hh]*[Aa][Ff][Rr][Ii][Cc][Aa])
@@ -409,6 +424,10 @@ youtube_video_id_nbc2
 # Al Jazeera
 [Aa][Ll][Jj][Aa][Zz][Ee][Ee][Rr][Aa])
 youtube_video_id_aljazeera
+;;
+# TWit
+[Tt][Ww][Ii][Tt]*[Ll][Ii][Vv][Ee])
+youtube_video_id_twit_live
 ;;
 # Other search phrases
 *)
