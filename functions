@@ -2967,7 +2967,7 @@ tvheadend_dvbt_configure () {
 . $PROJECT_DVBT_SETTINGS_FILE
 #
 # Start tvheadend if adapter has been inserted
-if [ ! -f /dev/dvb/adapter${DVBT_TUNER_NO} ];
+if [ ! -d /dev/dvb/adapter${DVBT_TUNER_NO} ];
 then
 beep
 clear
