@@ -61,6 +61,10 @@ cctv_lights INT(3) NOT NULL,
 youtube_api_key VARCHAR(255) NOT NULL,
 youtube_client_id VARCHAR(255) NOT NULL,
 youtube_client_secret VARCHAR(255) NOT NULL,
-darksky_api_key VARCHAR(255) NOT NULL,
+wunderground_api_key VARCHAR(255) NOT NULL,
+latitude_home DECIMAL(10, 8) NOT NULL,
+longitude_home DECIMAL(11, 8) NOT NULL,
+tts_api_key VARCHAR(255) NOT NULL,
+tts_api_id VARCHAR(255) NOT NULL,
 PRIMARY KEY (id)
 )

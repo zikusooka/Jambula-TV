@@ -16,7 +16,7 @@ session_start();
  <body>
  <div class="container">
  <div class="main">
- <h2>9. Service APIs (Optional)</h2><hr/>
+ <h2>9. On-line Services</h2><hr/>
  <span id="error">
 
 <?php
@@ -39,8 +39,8 @@ if (!empty($_SESSION['error_form_09'])) {
  </span>
  <form action="form_50.php" method="post">
 
- <h4>Google Youtube API</h4>
-While optional, we recommend that you setup your very own Youtube API credentials, as this will prevent you from running into Usage limits when playing content from Youtube.  Its Free!  <p>To setup your own Youtube API, make sure you have a gmail account and then visit:  <a href="https://console.developers.google.com/apis/" target="_blank">Google APIs</a> 
+ <h4>Youtube</h4>
+While optional, we recommend that you setup your very own Youtube API credentials, as this will prevent you from running into Usage limits when playing content from Youtube.  Its Free!  <p>To setup your own Youtube API, make sure you have a gmail account and then visit:  <br><a href="https://console.developers.google.com/apis/api/youtube/" target="_blank">Google APIs</a> 
 <p>
  <label>Youtube API Key :</label><br />
  <input name="youtube_api_key" id="youtube_api_key" type="text" value="" >
@@ -51,13 +51,35 @@ While optional, we recommend that you setup your very own Youtube API credential
 
 <hr/>
 
- <h4>Darksky Weather API</h4>
-To setup a darksky.net API key for weather reports, please visit:  <a href="https://darksky.net" target="_blank">DarkSky</a> 
+ <h4>Weather</h4>
+In order for JambulaTV to generate weather forecast reports for you, please create an API key using:  <br><a href="https://www.wunderground.com/weather/api" target="_blank">Weather Underground</a> 
 <p>
- <label>DarkSky API Key :</label><br />
- <input name="darksky_api_key" id="darksky_api_key" type="text" value="" >
+ <label>Weather API Key :</label><br />
+ <input name="wunderground_api_key" id="wunderground_api_key" type="text" value="" >
 
 <hr/>
+
+ <h4>Location</h4>
+For precise and reliable weather forecasts, please add your geolocation.  You can easily lookup your town's coordinates using:  <br><a href="https://gps-coordinates.org/my-location.php" target="_blank">GPS Coordinates</a> 
+<p>
+
+ <label>Latitude :</label>
+ <input name="latitude_home" id="latitude_home" type="text" size="25" required>
+ <label>Longitude :</label>
+ <input name="longitude_home" id="longitude_home" type="text" size="25" required>
+
+<hr/>
+
+ <h4>Text to Speech (Optional)</h4>
+In order to use the text-to-speech services provided by JambulaTV, please create an API key using: <br><a href="https://console.cloud.google.com/apis/api/texttospeech.googleapis.com" target="_blank">Google TTS</a>
+<p>
+ <label>TTS API Key :</label><br />
+ <input name="tts_api_key" id="tts_api_key" type="text" value="" >
+ <label>TTS API ID (If applicable) :</label><br />
+ <input name="tts_api_id" id="tts_api_id" type="text" value="" >
+
+<hr/>
+
 
  <input name="news_sources" type="hidden" value="<?php echo $news_sources?>">
 
