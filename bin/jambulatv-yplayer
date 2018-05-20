@@ -116,7 +116,14 @@ set_logging_level
 youtube_query_video
 
 # Add FFmpeg and Youtube information (variables) file if debugging is enabled
-[[ "$DEBUG_LOG" = "yes" ]] && add_youtube_ffmpeg_debugging_files 
+if [[ "$DEBUG_LOG" = "yes" ]];
+then
+add_youtube_ffmpeg_debugging_files 
+else
+# Add log file if debugging not enabled. Needed in ffmpeg command
+[[ -e $FFMPEG_LOG_FILE ]] || touch $FFMPEG_LOG_FILE
+fi
+
 
 # Start streaming video
 [[ "$DEBUG_LOG" != "yes" ]] && youtube_stream_url
