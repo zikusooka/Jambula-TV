@@ -96,7 +96,7 @@ OSDEXITVAL=\$?
 done
 
 # Allow OSD messages from showing again
-[ ! -e $OSDRUNFILE ] || rm -f $OSDRUNFILE
+[ ! -e $OSDRUNFILE ] || sudo rm -f $OSDRUNFILE
 EOF
 
 chmod 755 $AUTO_WIFI_OSD_TEMP_SCRIPT

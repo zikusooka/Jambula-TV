@@ -100,9 +100,9 @@ sudo systemctl restart nginx.service
 remove_previous_osd_message () {
 # Kill any lingering OSD message scrolls
 OSD_PID=$(ps auxw | grep -Ev grep | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
-[ "x$OSD_PID" = "x" ] || kill -15 $OSD_PID
+[ "x$OSD_PID" = "x" ] || sudo kill -15 $OSD_PID
 # Remove OSD run file if it exists
-[ ! -e $OSDRUNFILE ] || rm -f $OSDRUNFILE
+[ ! -e $OSDRUNFILE ] || sudo rm -f $OSDRUNFILE
 }
 
 remove_previous_qrcode () {
@@ -140,7 +140,7 @@ SERVER_ACCESSED=$?
 
 done
 # Allow OSD messages from showing again
-[ ! -e $OSDRUNFILE ] || rm -f $OSDRUNFILE
+[ ! -e $OSDRUNFILE ] || sudo rm -f $OSDRUNFILE
 }
 
 configure_internet_connection () {
