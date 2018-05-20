@@ -58,8 +58,6 @@ do
 $SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $SOUND_EFFECTS_WAITING_PATH
 sleep 2
 done
-# Remove waited for temp file
-[ -e \$WAITED_FOR_FILE ] && sudo rm -f \$WAITED_FOR_FILE
 EOF
 # Make script executable
 chmod 755 $SOUND_EFFECTS_TEMP_SCRIPT
