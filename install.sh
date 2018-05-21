@@ -410,6 +410,7 @@ whatsapp_messaging_configure
 # ---------------
 # API based tools
 # ---------------
+geolocation_api
 weather_api
 
 # --------------

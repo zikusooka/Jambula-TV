@@ -1,0 +1,417 @@
+#!/bin/sh
+# This is tool is used to determine where in the world the JambulaTV smart hub
+# is currently located i.e. Lookup the Country, City, and Neighborhood
+# Jambula Labs @copyright 2018-2019 All rights reserved
+#
+# Usage: jambulatv-whereami [LAT] [LONG] (optional)
+
+# Variables
+CURL_CMD="/usr/bin/curl"
+CURL_OPTS="-s -S -L -m 60 -k"
+HTTP_USER_AGENT="MY_USER_AGENT"
+
+JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
+JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
+JAMBULATV_SETUP_DB_PASS=MY_JAMBULATV_SETUP_DB_PASS
+JAMBULATV_SETUP_DB_TABLE=MY_JAMBULATV_SETUP_DB_TABLE
+
+# Requested location
+REQUESTED_LATITUDE=$1
+REQUESTED_LONGITUDE=$2
+
+# Saved Geo Location
+GEOLOCATION_FILE=/etc/JambulaTV/geolocation.txt
+GEOLOCATION_REFRESH_FILE=/tmp/geolocation_refresh
+GEOLOCATION_DATA_MISSING_TMP_FILE=/tmp/geolocation_data_missing
+MAXIMUM_AGE_OF_GEOLOCATION_DATA=43200 # 12 hours
+
+MOBILE_BTS_API_ENDPOINT="https://api.mylnikov.org/geolocation/cell"
+MOBILE_3G_MODEM_NODE=ttyUSB-3G-Mobile
+MOBILE_IMSI_TMP_FILE=/tmp/3g_network_imsi.tmp
+MOBILE_LAC_CID_TMP_FILE=/tmp/3g_network_lac_cid.tmp
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+check_internet_connectivity_ping () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+REMOTE_HOST_NAME="4.4.4.4"
+PING_COUNT=3
+PING_TIMEOUT=3
+# Set exit value specified on command line
+if [ "x$1" = "x" ];
+then
+EXIT_VALUE=0
+else
+EXIT_VALUE=$1
+fi
+# Ping
+ping -c $PING_COUNT -W $PING_TIMEOUT $REMOTE_HOST_NAME > /dev/null 2>&1
+INTERNET_STATUS_VAL=$?
+#
+# Alert if there is no Internet
+if [[ "$INTERNET_STATUS_VAL" != "0" ]];
+then
+logger -s -t $(basename $0) "Warning: Unable to connect to the Internet.  Geo Location data via Internet not possible"
+fi
+}
+
+detect_if_proxy_is_used () {
+# Detect if not using a Proxy
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" https://www.whatismyip.com/proxy-check/?iref=home | grep -i ">No Proxy Detected<" > /dev/null 2>&1
+PROXY_NOT_DETECTED=$?
+}
+
+query_and_set_freshness_of_geolocation_data_file () {
+# If Geo Location file exists, set variable to yes
+[[ -e "$GEOLOCATION_FILE" ]] && \
+	GEOLOCATION_FILE_IS_PRESENT=yes
+#
+# If Geo Location file is still fresh, set variable to yes
+[[ -e "$GEOLOCATION_FILE" && "$(date -d "now - $(stat -c "%Y" $GEOLOCATION_FILE) seconds" +%s)" -lt "$MAXIMUM_AGE_OF_GEOLOCATION_DATA" ]] && GEOLOCATION_FILE_IS_FRESH=yes
+#
+# If Geo Location file is exists, and is fresh; then check if an empty variable exists
+[[ "$GEOLOCATION_FILE_IS_PRESENT" = "yes" && "$GEOLOCATION_FILE_IS_FRESH" = "yes" ]] && \
+	cat $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2 | while read GEO_VARIABLE
+	do
+# Remove previous geolocation data missing temp file
+[ -e $GEOLOCATION_DATA_MISSING_TMP_FILE ] && sudo rm -f $GEOLOCATION_DATA_MISSING_TMP_FILE
+# Quit if there is missing variable i.e.
+# Check for null values of city, country, latitude, and longitude in geolocation file
+		if [[ "x$GEO_VARIABLE" = "x" || "$GEO_VARIABLE" = "null" ]];
+		then
+		# Add geolocation data missing temp file
+		touch $GEOLOCATION_DATA_MISSING_TMP_FILE
+		break
+		fi
+	done
+# Remove old refresh yes or no file
+sudo rm -f $GEOLOCATION_REFRESH_FILE
+#
+# set geolocation data missing variable
+[ -e $GEOLOCATION_DATA_MISSING_TMP_FILE ] && GEOLOCATION_DATA_MISSING=yes
+#
+# Indicate if refresh of Geo Location data is needed
+if [[ "$GEOLOCATION_FILE_IS_PRESENT" = "yes" && "$GEOLOCATION_FILE_IS_FRESH" = "yes" && \
+	"$GEOLOCATION_DATA_MISSING" != "yes" ]];
+	then
+	# Don't refresh
+	echo "FORCE_REFRESH=n" > $GEOLOCATION_REFRESH_FILE
+	else
+	# Refresh
+	echo "FORCE_REFRESH=y" > $GEOLOCATION_REFRESH_FILE
+fi
+# Source refresh yes or no file
+[ -e $GEOLOCATION_REFRESH_FILE ] && . $GEOLOCATION_REFRESH_FILE
+}
+
+get_public_ip () {
+# Get public IP address
+PUBLIC_IP_ADDRESS=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" https://api.ipify.org)
+export PUBLIC_IP_ADDRESS
+}
+
+get_city_using_ip () {
+# Get city using public IP address
+CITY=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ipinfo.io/$PUBLIC_IP_ADDRESS/city)
+export CITY
+}
+
+get_country_using_ip () {
+# Get country using public IP address
+COUNTRY=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ipinfo.io/$PUBLIC_IP_ADDRESS/region)
+export COUNTRY
+}
+
+get_isp_using_ip () {
+# Get ISP using public IP address
+ISP=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ipinfo.io/$PUBLIC_IP_ADDRESS/org | cut -d ' ' -f2-)
+export ISP
+}
+
+get_latitude_longitude () {
+LATITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq -r '.[0] | .lat' | tr -d '"')
+LONGITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq -r '.[0] | .lon' | tr -d '"')
+}
+
+get_city_using_coordinates () {
+CITY=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -G -d format=jsonv2 -d lat=$LATITUDE -d lon=$LONGITUDE https://nominatim.openstreetmap.org/reverse | jq -r '.address.suburb')
+}
+
+get_neighbourhood_using_coordinates () {
+NEIGHBOURHOOD=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -G -d format=jsonv2 -d lat=$LATITUDE -d lon=$LONGITUDE https://nominatim.openstreetmap.org/reverse | jq -r '.address.neighbourhood')
+}
+
+get_country_using_coordinates () {
+COUNTRY=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -G -d format=jsonv2 -d lat=$LATITUDE -d lon=$LONGITUDE https://nominatim.openstreetmap.org/reverse | jq -r '.address.country')
+}
+
+check_3g_mobile_device () {
+if [[ -c /dev/$MOBILE_3G_MODEM_NODE ]];
+then
+# Set exists
+export MOBILE_DEV_EXISTS=yes
+else
+# Alert - No mobile device node
+logger -s -t $(basename $0) "Warning: The mobile device node [$MOBILE_3G_MODEM_NODE] was not found"
+fi
+}
+
+reset_3g_mobile_device () {
+# Check to see if mobile device exists
+check_3g_mobile_device
+#
+# Reset modem
+[[ "$MOBILE_DEV_EXISTS" = "yes" ]] && \
+/usr/sbin/chat -EVv "" "ATZ" "OK" "" > /dev/$MOBILE_3G_MODEM_NODE < /dev/$MOBILE_3G_MODEM_NODE
+}
+
+get_imsi_3g_mobile_device () {
+# Check to see if mobile device exists
+check_3g_mobile_device
+#
+# Get MCC-MNC details
+[[ "$MOBILE_DEV_EXISTS" = "yes" ]] && \
+/usr/sbin/chat -t 1 -EVv "" "AT+CIMI" "OK" "" > /dev/$MOBILE_3G_MODEM_NODE < /dev/$MOBILE_3G_MODEM_NODE
+}
+
+get_creg_3g_mobile_device () {
+# Check to see if mobile device exists
+check_3g_mobile_device
+#
+# Get LAC-CID Details
+if [[ "$MOBILE_DEV_EXISTS" = "yes" ]];
+then
+/usr/sbin/chat -t 1 -EVv "" "AT+CREG=2" "OK" "" > /dev/$MOBILE_3G_MODEM_NODE < /dev/$MOBILE_3G_MODEM_NODE
+/usr/sbin/chat -S -t 1 -EVv "" "AT+CREG?" "OK" "" > /dev/$MOBILE_3G_MODEM_NODE < /dev/$MOBILE_3G_MODEM_NODE
+fi
+}
+
+query_mobile_network () {
+# Check to see if mobile device exists
+check_3g_mobile_device
+#
+# proceed to query mobile network to get cell tower location
+if [[ "$MOBILE_DEV_EXISTS" = "yes" ]];
+then
+# Remove old IMSI and LAC temp files
+sudo rm -f $MOBILE_IMSI_TMP_FILE $MOBILE_LAC_CID_TMP_FILE
+# Reset modem
+reset_3g_mobile_device > /dev/null 2>&1
+# Get network info using the IMSI
+get_imsi_3g_mobile_device > $MOBILE_IMSI_TMP_FILE 2>&1
+# Get network info such as LAC, CID
+get_creg_3g_mobile_device > $MOBILE_LAC_CID_TMP_FILE 2>&1
+#
+# Set Mobile variables
+MCC=$(grep -Ev 'OK' $MOBILE_IMSI_TMP_FILE | sed '/^$/d' | cut -c -3)
+MNC=$(grep -Ev 'OK' $MOBILE_IMSI_TMP_FILE | sed '/^$/d' | cut -c -3 | tail -c2)
+# Get raw Hex values for LAC and CID
+CREG1=$(grep -Ev 'OK' $MOBILE_LAC_CID_TMP_FILE | sed '/^$/d' | awk {'print $2'} | cut -d ',' -f3 | sed 's:"::g')
+CREG2=$(grep -Ev 'OK' $MOBILE_LAC_CID_TMP_FILE | sed '/^$/d' | awk {'print $2'} | cut -d ',' -f4 | sed 's:"::g')
+# Convert to Hex values for LAC and CID to Decimal
+LAC=$(echo "ibase=16; $CREG1" | bc)
+CID=$(echo "ibase=16; $CREG2" | bc)
+fi
+}
+
+query_mobile_bts_location_online () {
+# Query Mobile device/gateway e.g. 3G modem for MCC, MNC, LAC, CID
+query_mobile_network
+# Check for Internet connectivity
+check_internet_connectivity_ping 
+
+# If Internet is available plus mobile gateway device exists; then proceed to lookup
+# cell tower geo-coordinates
+if [[ "$INTERNET_STATUS_VAL" = "0" && "$MOBILE_DEV_EXISTS" = "yes" ]];
+then
+# Set geo-coordinates using cell tower
+LATITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" --ciphers ecdhe_ecdsa_aes_256_sha -d v=1.1 -d data=open -d mcc=$MCC -d mnc=$MNC -d lac=$LAC -d cellid=$CID $MOBILE_BTS_API_ENDPOINT | jq -r '.data.lat')
+echo
+LONGITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" --ciphers ecdhe_ecdsa_aes_256_sha -d v=1.1 -d data=open -d mcc=$MCC -d mnc=$MNC -d lac=$LAC -d cellid=$CID $MOBILE_BTS_API_ENDPOINT | jq -r '.data.lon')
+fi
+}
+
+query_mysql_db () {
+mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} 2> /dev/null << EOF
+USE ${JAMBULATV_SETUP_DB_NAME};
+SELECT $@ FROM ${JAMBULATV_SETUP_DB_TABLE} WHERE id = (SELECT MAX(id) FROM ${JAMBULATV_SETUP_DB_TABLE});
+EOF
+}
+
+# Check for existence of Latitude, Longitude, City, and Country
+check_lat_lon_city_country () {
+if [[ "x$LATITUDE" = "x" || "x$LONGITUDE" = "x" || "x$CITY" = "x" || "x$COUNTRY" = "x" || "$LATITUDE" = "null" || "$LONGITUDE" = "null" ]];
+then
+export GEOLOCATION_LOOKUP_IS_INCOMPLETE=yes
+else
+export GEOLOCATION_LOOKUP_IS_INCOMPLETE=no
+fi
+}
+
+generate_source_geolocation_file () {
+# Change ownership if file exists
+[[ -e $GEOLOCATION_FILE ]] && \
+	sudo chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $GEOLOCATION_FILE
+#
+# Create geolocation file
+cat > $GEOLOCATION_FILE <<EOF
+# -----------------------------------------------------------------------------
+#  Geolocation service was provided by $GEOLOCATION_SERVICE_NAME
+#
+#  $(date)
+# -----------------------------------------------------------------------------
+
+CITY=$CITY
+COUNTRY=$COUNTRY
+LATITUDE=$LATITUDE
+LONGITUDE=$LONGITUDE
+EOF
+}
+
+
+# --------------- 
+#  Lookup Types   
+# ---------------
+
+# 1. If there is a requested latitude and longitude specified on the CLI
+# ----------------------------------------------------------------------
+lookup_geolocation_data_using_cli_arguments () {
+# Geo-location service name
+GEOLOCATION_SERVICE_NAME="Request specified at the CLI"
+# Notify
+logger -s -t $(basename $0) "Trying to get Geolocation using $GEOLOCATION_SERVICE_NAME, please wait ..."
+# Check CLI arguments
+if [[ "x$REQUESTED_LATITUDE" != "x" && "x$REQUESTED_LONGITUDE" != "x" ]];
+then
+LATITUDE=$REQUESTED_LATITUDE
+LONGITUDE=$REQUESTED_LONGITUDE
+#
+# Look up City and Country using Internet
+get_city_using_coordinates
+get_neighbourhood_using_coordinates
+get_country_using_coordinates
+fi
+#
+check_lat_lon_city_country
+# Log if there's a missing variable for City or Country
+[[ "$GEOLOCATION_LOOKUP_IS_INCOMPLETE" = "yes" ]] && \
+	logger -s -t $(basename $0) "Warning: Geo-location lookup using $GEOLOCATION_SERVICE_NAME failed - Missing variable(s)"
+}
+
+
+# 2. Look up using Cell Tower data if available
+# ---------------------------------------------
+lookup_geolocation_data_using_mobile_bts () {
+# Geo-location service name
+GEOLOCATION_SERVICE_NAME="your mobile network BTS"
+# Notify
+logger -s -t $(basename $0) "Trying to get Geolocation using $GEOLOCATION_SERVICE_NAME, please wait ..."
+# Lookup Latitude and Longitude of Cell Tower using Online API
+query_mobile_bts_location_online
+#
+# Look up City and Country using Internet
+if [[ "x$LATITUDE" != "x" && "x$LONGITUDE" != "x" ]];
+then
+get_city_using_coordinates
+get_neighbourhood_using_coordinates
+get_country_using_coordinates
+fi
+#
+check_lat_lon_city_country
+# Log if there's a missing variable for City or Country
+[[ "$GEOLOCATION_LOOKUP_IS_INCOMPLETE" = "yes" ]] && \
+	logger -s -t $(basename $0) "Warning: Geo-location lookup using $GEOLOCATION_SERVICE_NAME failed - Missing variable(s)"
+}
+
+
+# 3. Look up using the ISP assigned IP Address
+# --------------------------------------------
+lookup_geolocation_data_using_internet () {
+GEOLOCATION_SERVICE_NAME="your public IP address"
+# Notify
+logger -s -t $(basename $0) "Trying to get Geolocation using $GEOLOCATION_SERVICE_NAME, please wait ..."
+# Check for Internet connectivity
+check_internet_connectivity_ping 
+# Lookup public IP address, city, country, and geo coordinates using iP 
+# if there's a direct connection to the Internet 
+if [[ "$INTERNET_STATUS_VAL" = "0" && "$PROXY_NOT_DETECTED" != "0" ]];
+then
+# Check for proxy in between connection
+detect_if_proxy_is_used
+#
+get_public_ip
+get_city_using_ip
+get_country_using_ip
+get_isp_using_ip
+get_latitude_longitude
+fi
+#
+check_lat_lon_city_country
+# Log if there's a missing variable from Internet lookup
+[[ "$GEOLOCATION_LOOKUP_IS_INCOMPLETE" = "yes" ]] && \
+	logger -s -t $(basename $0) "Warning: Geo-location lookup using $GEOLOCATION_SERVICE_NAME failed - Missing variable(s)"
+}
+
+
+# 4. If all fails, use our database
+# ----------------------------------
+lookup_geolocation_data_using_database () {
+GEOLOCATION_SERVICE_NAME="JambulaTV database"
+# Notify
+logger -s -t $(basename $0) "Resorted to getting Geolocation using $GEOLOCATION_SERVICE_NAME, please wait ..."
+#
+LATITUDE=$(query_mysql_db latitude_home)
+LONGITUDE=$(query_mysql_db longitude_home)
+CITY=$(query_mysql_db contact_city)
+COUNTRY=$(query_mysql_db contact_country)
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Check the freshness i.e. Age of Geo location file
+query_and_set_freshness_of_geolocation_data_file
+#
+# Force refresh of geolocation data
+if [[ "$FORCE_REFRESH" = "y" || "x$FORCE_REFRESH" = "x" ]];
+then
+# Notice - Started
+logger -s -t $(basename $0) "Updating Geo-location data for JambulaTV services, please wait ..."
+
+
+# Loop through all functions in order listed to get Geo-Coordinates
+# ------------------------------------------------------------------
+# 1. Requested on CLI
+# 2. Cell Tower if available
+# 3. Internet if available
+# 4. Fall back to registered
+#
+for LOOKUP_TYPE in \
+	lookup_geolocation_data_using_cli_arguments \
+	lookup_geolocation_data_using_mobile_bts \
+	lookup_geolocation_data_using_internet \
+	lookup_geolocation_data_using_database
+do
+$LOOKUP_TYPE
+[[ "$GEOLOCATION_LOOKUP_IS_INCOMPLETE" = "no" ]] && break
+done
+#
+# Generate/add geolocation data file and source it
+generate_source_geolocation_file
+
+else
+# Notice - Started
+logger -s -t $(basename $0) "Currently Geo-location data for JambulaTV services is up-to-date, proceeding ..."
+fi
+
+
+# Source geolocation variables from just refreshed file
+# -----------------------------------------------------
+[[ -e $GEOLOCATION_FILE ]] && . $GEOLOCATION_FILE

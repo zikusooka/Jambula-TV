@@ -10228,6 +10228,20 @@ systemctl --system daemon-reload
 systemctl restart avahi-daemon.service
 }
 
+geolocation_api () {
+# Add correct DB name, username and password credentials in geolocation-api tool
+[ -e $BINARY_PREFIX/jambulatv-whereami ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-whereami | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" | \
+		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" \
+			> $BINARY_PREFIX/jambulatv-whereami 
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-whereami 
+}
+
 weather_api () {
 # Add correct DB name, username and password credentials in weather-api tool
 [ -e $BINARY_PREFIX/jambulatv-weather-api ] || \
