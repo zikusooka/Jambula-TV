@@ -1,36 +1,72 @@
 #!/bin/sh
 # This is an API for JambulaTV weather requests
-# Jambula Labs @copyright 2017-2018 All rights reserved
+# Jambula Labs @copyright 2018-2019 All rights reserved
+#
+# Usage: jambulatv-weather-api [LAT] [LONG] [current|today|later] [API] [debug (optiona)]
 
-# API(s)
-# 1=darksky.net 2=openweathermap. #NOTE# OpenWeatherMap is broken, use darksky i.e. 1
-API=1
+# Database credentials
+JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
+JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
+JAMBULATV_SETUP_DB_PASS=MY_JAMBULATV_SETUP_DB_PASS
+JAMBULATV_SETUP_DB_TABLE=MY_JAMBULATV_SETUP_DB_TABLE
 
-# DarkSky.net
-# -----------
+# Arguments
+ARG1=$1 # Latitude
+ARG2=$2 # Longitude
+ARG3=$3 # Period
+ARG4=$4 # API #ARG4=1
+ARG5=$5 # Debug #ARG5=debug
+
+# ----------------
+#  Weather API(s)
+# ----------------
+#
+# 1. Weather Underground
+# -----------------------
+# Register: https://www.wunderground.com/weather/api
+# Docs: https://www.wunderground.com/weather/api/d/docs
+#
+# 2. OpenWeatherMap
+# -----------------
+# Register: api.openweathermap.org/data/2.5/weather
+#
+# 3. DarkSky.net
+# --------------
 # Register: https://darksky.net 
 # Docs: https://darksky.net/dev/docs/forecast
-# -------------------------------------------
+
+# Weather API Endpoints & Default API Keys
+# ----------------------------------------
+WUNDERGROUND_APIURL="http://api.wunderground.com/api"
 DARKSKY_APIURL="https://api.darksky.net/forecast"
-DARKSKY_APIKEY="e1b066fec8590435bc79b3dd735b380c"
+OWM_APIURL="api.openweathermap.org/data/2.5"
+# Weather API Keys
+DEFAULT_WUNDERGROUND_APIKEY="55ead5b104f5c88d"
+DEFAULT_DARKSKY_APIKEY="e1b066fec8590435bc79b3dd735b380c"
+DEFAULT_OWM_APIKEY="9141b00d5d6fcf3074a72efdb07d6135"
 
-# OpenWeatherMap
-# --------------
-# Register: api.openweathermap.org/data/2.5/weather
-# -------------------------------------------------
-OWM_APIKEY="9141b00d5d6fcf3074a72efdb07d6135"
-OWM_APIURL="api.openweathermap.org/data/2.5/weather"
+# Set default Weather API used
+# ----------------------------
+API_SERVICE=$ARG4
+if [[ "x$API_SERVICE" = "x" ]];
+then
+API=1
+else
+API=$API_SERVICE
+fi
 
-# Curl HTTP UA
+CURL_CMD="/usr/bin/curl"
 HTTP_USER_AGENT="MY_USER_AGENT"
 
 PING_TIMEOUT=3 #9
 PING_IP_ADDRESS=8.8.8.8
 
+TERM=xterm
+
 # Weather raw data files
-CURRENT_WEATHER_RAW_DATA_FILE=/tmp/current_weather.json
-HOURLY_WEATHER_RAW_DATA_FILE=/tmp/hourly_weather.json
-DAILY_WEATHER_RAW_DATA_FILE=/tmp/daily_weather.json
+CURRENT_WEATHER_RAW_DATA_FILE=/tmp/weather_current_api_${API}.json
+TODAY_WEATHER_RAW_DATA_FILE=/tmp/weather_today_api_${API}.json
+LATER_WEATHER_RAW_DATA_FILE=/tmp/weather_later_api_${API}.json
 
 # Weather Times
 HOUR_NOW=$(date +%H)
@@ -56,56 +92,75 @@ TIME_OF_DAY_CALL="This Afternoon"
 TIME_OF_DAY_CALL="This Evening"
 ;;
 2[0-3])
-TIME_OF_DAY_CALL="Tonght"
+TIME_OF_DAY_CALL="Tonight"
 ;;
 esac
-
-# Saved city and country names
-GEOLOCATION_FILE=/etc/JambulaTV/geolocation.txt
-REQUESTED_CITY=$1
-REQUESTED_COUNTRY=$2
-
-JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
-JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
-JAMBULATV_SETUP_DB_PASS=MY_JAMBULATV_SETUP_DB_PASS
-JAMBULATV_SETUP_DB_TABLE=MY_JAMBULATV_SETUP_DB_TABLE
 
 
 
 ###############
 #  FUNCTIONS  #
 ###############
+
+debugging () {
+DEBUG_REQUESTED=$ARG5
+# Debugging
+if [[ "$DEBUG_REQUESTED" = "debug" ]];
+then
+# What to do with null values in City, Neighbourhood, Country when using CLI argu,ents
+[[ "x$CITY" = "x" ]] && CITY_FOUND="Not found" || CITY_FOUND=$CITY
+[[ "x$COUNTRY" = "x" ]] && COUNTRY_FOUND="Not found" || COUNTRY_FOUND=$COUNTRY
+[[ "x$NEIGHBOURHOOD" = "x" ]] && NEIGHBOURHOOD_FOUND="Not found" || NEIGHBOURHOOD_FOUND=$CITY
+# Print summary
+clear
+cat <<EOT
+-------------------------------------------------------------------------------
+Weather Forecast:		$WEATHER_PERIOD	($WEATHER_API_NAME)
+-------------------------------------------------------------------------------
+CITY:				$CITY_FOUND
+NEIGHBOURHOOD:			$NEIGHBOURHOOD_FOUND
+COUNTRY:			$COUNTRY_FOUND
+LATITUDE:			$LATITUDE
+LONGITUDE:			$LONGITUDE
+-------------------------------------------------------------------------------
+
+$WEATHER_FORECAST_DESCRIPTION
+$WEATHER_VARIABLES
+
+EOT
+fi
+}
+
 query_mysql_db () {
-mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} << EOF
+mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} 2> /dev/null << EOF
 USE ${JAMBULATV_SETUP_DB_NAME};
 SELECT $@ FROM ${JAMBULATV_SETUP_DB_TABLE} WHERE id = (SELECT MAX(id) FROM ${JAMBULATV_SETUP_DB_TABLE});
 EOF
 }
 
-get_registered_city_country () {
-CONTACT_CITY=$(query_mysql_db contact_city)
-CONTACT_COUNTRY=$(query_mysql_db contact_country)
-# Test for existence of City or Country
-if [ "x$CONTACT_CITY" != "x" ] || [ "x$CONTACT_COUNTRY" != "x" ];
+set_geolocation_coordinates () {
+# If applicable, prefer to use geolocation coordinates that are specified on the CLI
+if [[ "x$ARG1" != "x" && "x$ARG2" != "x" ]]
 then
-REGISTERED_CITY=$CONTACT_CITY
-REGISTERED_COUNTRY=$CONTACT_COUNTRY
+LATITUDE=$ARG1
+LONGITUDE=$ARG2
+
 else
-REGISTERED_CITY=$REQUESTED_CITY
-REGISTERED_COUNTRY=$REQUESTED_COUNTRY
+# Source geolocation variables if no coordinates (LAT/LON) are specified on the CLI
+. /usr/bin/jambulatv-whereami
 fi
-export REGISTERED_CITY REGISTERED_COUNTRY
 }
 
 usage () {
-# Quit if city or country is not sprecified
-if [ "x$REGISTERED_CITY" = "x" ] || [ "x$REGISTERED_COUNTRY" = "x" ];
+# Quit if No LON/LAT cordinates or at least 2 arguments are not specified on CLI
+if [[ "x$LATITUDE" = "x" || "x$LONGITUDE" = "x" ]] && [[ "x$ARG1" = "x" || "x$ARG2" = "x" ]];
 then
 cat << EOF
-Usage: $(basename $0) [CITY] [COUNTRY]
+Usage: $(basename $0) [LATITUDE] [LONGITUDE] [current|today|later] [API] [debug (optiona)]
+
 EOF
 # TTS - Say error out loud
-/usr/bin/jambulatv-text2speech custom "To get the weather forecast, please first set your preferred city and country"
+/usr/bin/jambulatv-text2speech custom "To get the weather forecast, please first set your preferred location"
 # Exit
 exit 1
 fi
@@ -117,222 +172,399 @@ ping -w $PING_TIMEOUT $PING_IP_ADDRESS > /dev/null 2>&1
 INTERNET_ALIVE=$?
 if [ "$INTERNET_ALIVE" != "0" ];
 then
-#
-# Beep
-beep
+# Log error of no Internet
+logger -s -t $(basename $0) "Error: Could not check the weather since there's no Internet connectivity"
 # TTS - Say error out loud
-/usr/bin/jambulatv-text2speech custom "Am sorry I was unable to connect to the Internet"
+/usr/bin/jambulatv-text2speech custom "Am sorry I was unable to connect to the Internet" > /dev/null 2>&1
 # Quit script, since there's no internet.  Leave exit status at 0 so systemd service works
-#/usr/bin/jambulatv-osd -m "Error: Could not check the weather since there's no Internet connectivity"
 exit 0
-fi
-}
-
-get_public_ip () {
-# Get public IP address
-PUBLIC_IP_ADDRESS=$(curl --get -sS -m 60  -A "$HTTP_USER_AGENT" https://api.ipify.org)
-}
-
-get_city_using_ip () {
-# Get city using public IP address
-CITY_BY_IP=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.city' | sed 's:[,|"]::g')
-}
-
-geolocation_using_registered_data () {
-CITY=$REGISTERED_CITY
-COUNTRY=$REGISTERED_COUNTRY
-LATITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq '.[0] | .lat' | tr -d '"')
-LONGITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq '.[0] | .lon' | tr -d '"')
-}
-
-geolocation_using_internet_lookup () {
-LATITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.latitude')
-LONGITUDE=$(curl --get -sS -m 60 -A "$HTTP_USER_AGENT" http://freegeoip.net/json/$PUBLIC_IP_ADDRESS | jq '.longitude')
-CITY=$CITY_BY_IP
-}
-
-get_current_geolocation () {
-# See if geolocation file exists + get its age + if its 1 day or less source i.e. Use it!
-if [[ -e "$GEOLOCATION_FILE" && AGE_OF_GEOLOCATION_DATA=$(date -d "now - $(stat -c "%Y" $GEOLOCATION_FILE) seconds" +%s) && "$AGE_OF_GEOLOCATION_DATA" -lt "86400" ]];
-then 
-. $GEOLOCATION_FILE
-fi
-
-# Check for null city, latitude, and longitude values in geolocation file
-# -----------------------------------------------------------------------
-if [[ "x$CITY" != "x" || "$LATITUDE" != "null" || "$LONGITUDE" != "null" ]];
-then
-# Export Geolocation data
-export PUBLIC_IP_ADDRESS CITY LATITUDE LONGITUDE
 
 else
-
-# Go to Internet and pull geo-location data
-get_public_ip
-get_city_using_ip
-#
-# Detect if not using a Proxy
-curl --get -sS -m 60  -A "$HTTP_USER_AGENT" https://www.whatismyip.com/proxy-check/?iref=home | grep -i ">No Proxy Detected<" > /dev/null 2>&1
-PROXY_NOT_DETECTED=$?
-#
-# If using a VPN/Proxy or registered city name matches city by IP
-# ---------------------------------------------------------------
-if [ "$PROXY_NOT_DETECTED" != "0" ] || [ "$CITY_BY_IP" = "${REGISTERED_CITY^}" ];
-then 
-geolocation_using_registered_data
-# If connecting direct to the Internet and city by IP does NOT match registered city
-# ----------------------------------------------------------------------------------
-# 1. If using IP doesn't return city, then use registered city to find latitude/longitude
-elif [ "x$CITY_BY_IP" = "x" ];
-then
-geolocation_using_registered_data
-# 2. If using IP returns city, then query Internet for latitude/longitude
-else
-geolocation_using_internet_lookup
-fi
-
+# Notice - Started
+logger -s -t $(basename $0) "Fetching weather forecast using the coordinates $LATITUDE, $LONGITUDE, please wait ..."
 fi
 }
 
-weather_darksky_net () {
+check_age_of_weather_data_file () {
 # Age of current weatherdata
 if [ -e $CURRENT_WEATHER_RAW_DATA_FILE ];
 then
-AGE_OF_CURRENT_WEATHER_DATA=$(date -d "now - $(stat -c "%Y" $CURRENT_WEATHER_RAW_DATA_FILE) seconds" +%M)
+AGE_OF_CURRENT_WEATHER_DATA=$(date -d "now - $(stat -c "%Y" $CURRENT_WEATHER_RAW_DATA_FILE) seconds" +%s)
 else
-AGE_OF_CURRENT_WEATHER_DATA=60
+AGE_OF_CURRENT_WEATHER_DATA=3600
 fi
+}
 
-# Fetch weather information only if age is more than 15 minutes ago
-if [ "$AGE_OF_CURRENT_WEATHER_DATA" -ge "15" ];
-then
-# Fetch current weather information
-curl --get -sS -A "$HTTP_USER_AGENT" \
-	-d exclude=hourly,minutely,daily,alerts,flags \
-	-d units=uk2 \
-		$DARKSKY_APIURL/$DARKSKY_APIKEY/$LATITUDE,$LONGITUDE | \
-			jq . > $CURRENT_WEATHER_RAW_DATA_FILE
-# Fetch current weather information
-curl --get -sS -A "$HTTP_USER_AGENT" \
-	-d exclude=daily,currently,minutely,alerts,flags \
-	-d units=uk2 \
-		$DARKSKY_APIURL/$DARKSKY_APIKEY/$LATITUDE,$LONGITUDE | \
-			jq . > $HOURLY_WEATHER_RAW_DATA_FILE
-# Fetch daily weather information
-curl --get -sS -A "$HTTP_USER_AGENT" \
-	-d exclude=currently,hourly,minutely,alerts,flags \
-	-d units=uk2 \
-		$DARKSKY_APIURL/$DARKSKY_APIKEY/$LATITUDE,$LONGITUDE | \
-			jq . > $DAILY_WEATHER_RAW_DATA_FILE
-fi
+make_weather_data_file_writeable () {
+for DATA_FILE in \
+	$CURRENT_WEATHER_RAW_DATA_FILE \
+	$LATER_WEATHER_RAW_DATA_FILE \
+	$TODAY_WEATHER_RAW_DATA_FILE
+do
+chmod a+w $DATA_FILE
+done
+}
 
-# Set current weather variables
-CURRENT_SUMMARY=$(grep summary $CURRENT_WEATHER_RAW_DATA_FILE | cut -d : -f2 | cut -d\  -f2- | sed 's:[,|"]::g' | sed 's:\.::g')
-CURRENT_TEMPERATURE=$(grep temperature $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
-CURRENT_HUMIDITY=$(echo "$(grep humidity $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
-CURRENT_PRECIP_PROBABILITY=$(echo "$(grep precipProbability $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
-CURRENT_WIND_SPEED=$(grep windSpeed $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
-CURRENT_WIND_BEARING=$(grep windBearing $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
-CURRENT_CLOUD_COVER=$(echo "$(grep cloudCover $CURRENT_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
-#
-# Set hourly weather variables
-HOURLY_SUMMARY=$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .summary" | sed 's:[,|"]::g' | sed 's:\.::g')
-HOURLY_TEMPERATURE=$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .temperature" | sed 's:[,|"]::g' | xargs printf '%.0f')
-HOURLY_HUMIDITY=$(echo "$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .humidity" | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
-HOURLY_PRECIP_PROBABILITY=$(echo "$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .precipProbability" | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
-HOURLY_WIND_SPEED=$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .windSpeed" | sed 's:[,|"]::g' | xargs printf '%.0f')
-HOURLY_WIND_BEARING=$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .windBearing" | sed 's:[,|"]::g' | xargs printf '%.0f')
-HOURLY_CLOUD_COVER=$(echo "$(cat $HOURLY_WEATHER_RAW_DATA_FILE | jq ".hourly.data[] | select(.time==$EPOCH_TIME_DESIRED) | .cloudCover" | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
-#
-# Set current weather variables
-DAILY_SUMMARY=$(grep -m 1 summary $DAILY_WEATHER_RAW_DATA_FILE | cut -d : -f2 | cut -d\  -f2- | sed 's:[,|"]::g' | sed 's:\.::g' | head -1)
-DAILY_TEMPERATURE_MAX=$(grep -m 1 temperatureMax $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
-DAILY_TEMPERATURE_MIN=$(grep -m 1 temperatureMax $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
-DAILY_HUMIDITY=$(echo "$(grep -m 1 humidity $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
-DAILY_PRECIP_PROBABILITY=$(echo "$(grep -m 1 precipProbability $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
-DAILY_WIND_SPEED=$(grep -m 1 windSpeed $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
-DAILY_WIND_BEARING=$(grep -m 1 windBearing $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g' | xargs printf '%.0f')
-DAILY_CLOUD_COVER=$(echo "$(grep -m 1 cloudCover $DAILY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
-#
-# Hourly Wind direction
-case $HOURLY_WIND_BEARING in
+set_wind_direction_using_degrees () {
+case $WIND_BEARING in
 [0-9]|[1-3][0-9])
-HOURLY_WIND_DIRECTION="North"
+WIND_DIRECTION="North"
 ;;
 4[0-4])
-HOURLY_WIND_DIRECTION="North"
+WIND_DIRECTION="North"
 ;;
 4[5-9])
-HOURLY_WIND_DIRECTION="North East"
+WIND_DIRECTION="North East"
 ;;
 [6-8][0-9])
-HOURLY_WIND_DIRECTION="North East"
+WIND_DIRECTION="North East"
 ;;
 9[0-9])
-HOURLY_WIND_DIRECTION="East"
+WIND_DIRECTION="East"
 ;;
 1[0-2][0-9])
-HOURLY_WIND_DIRECTION="East"
+WIND_DIRECTION="East"
 ;;
 13[0-4])
-HOURLY_WIND_DIRECTION="East"
+WIND_DIRECTION="East"
 ;;
 13[5-9])
-HOURLY_WIND_DIRECTION="South East"
+WIND_DIRECTION="South East"
 ;;
 1[4-7][0-9])
-HOURLY_WIND_DIRECTION="South East"
+WIND_DIRECTION="South East"
 ;;
 1[8-9][0-9])
-HOURLY_WIND_DIRECTION="South"
+WIND_DIRECTION="South"
 ;;
 2[0-1][0-9])
-HOURLY_WIND_DIRECTION="South"
+WIND_DIRECTION="South"
 ;;
 22[0-4])
-HOURLY_WIND_DIRECTION="South"
+WIND_DIRECTION="South"
 ;;
 22[5-9])
-HOURLY_WIND_DIRECTION="South West"
+WIND_DIRECTION="South West"
 ;;
 2[3-6][0-9])
-HOURLY_WIND_DIRECTION="South West"
+WIND_DIRECTION="South West"
 ;;
 2[7-9][0-9])
-HOURLY_WIND_DIRECTION="West"
+WIND_DIRECTION="West"
 ;;
 30[0-9])
-HOURLY_WIND_DIRECTION="West"
+WIND_DIRECTION="West"
 ;;
 31[0-4])
-HOURLY_WIND_DIRECTION="West"
+WIND_DIRECTION="West"
 ;;
 31[5-9])
-HOURLY_WIND_DIRECTION="North West"
+WIND_DIRECTION="North West"
 ;;
 3[2-5][0-9])
-HOURLY_WIND_DIRECTION="North West"
+WIND_DIRECTION="North West"
 ;;
 360)
-HOURLY_WIND_DIRECTION="North"
+WIND_DIRECTION="North"
 ;;
 esac
 }
 
-weather_openweathermap () {
+# Set the full weather description
+set_full_description_for_weather_currently () {
+# Set weather forecast period
+WEATHER_PERIOD=Now
+# Set wind bearing
+WIND_BEARING=$CURRENT_WIND_BEARING
+# Set wind direction
+set_wind_direction_using_degrees
+# Set text message
+WEATHER_FORECAST_DESCRIPTION="Currently ${CURRENT_SUMMARY}.  The temperature is ${CURRENT_TEMPERATURE} degrees celcius.  Humidity is $CURRENT_HUMIDITY percent.  $WIND_DIRECTION winds are blowing at $CURRENT_WIND_SPEED kilometres per hour.  Later today ${LATER_SUMMARY}.  Data provided by $WEATHER_API_NAME"
+# Set weather variables for debugging purposes
+WEATHER_VARIABLES=$(echo "
+-------------------------------------------------------------------------------
+CURRENT_SUMMARY:		$CURRENT_SUMMARY
+CURRENT_TEMPERATURE:		$CURRENT_TEMPERATURE
+CURRENT_HUMIDITY:		$CURRENT_HUMIDITY
+CURRENT_WIND_SPEED:		$CURRENT_WIND_SPEED
+CURRENT_WIND_BEARING:		$CURRENT_WIND_BEARING
+
+LATER_SUMMARY:			$LATER_SUMMARY
+-------------------------------------------------------------------------------
+")
+}
+
+set_full_description_for_weather_today () {
+# Set weather forecast period
+WEATHER_PERIOD=Today
+# Set wind bearing
+WIND_BEARING=$TODAY_WIND_BEARING
+# Set wind direction
+set_wind_direction_using_degrees
+# Set text message
+WEATHER_FORECAST_DESCRIPTION="Today expect ${TODAY_SUMMARY}.  Temperatures will reach highs of $TODAY_TEMPERATURE_MAX and lows of $TODAY_TEMPERATURE_MIN degrees celsius. The chance of rain is $TODAY_PRECIP_PROBABILITY percent.  The humidity will be $TODAY_HUMIDITY percent.  $WIND_DIRECTION winds will be blowing at $TODAY_WIND_SPEED kilometres per hour.  Data provided by $WEATHER_API_NAME"
+# Set weather variables for debugging purposes
+WEATHER_VARIABLES=$(echo "
+-------------------------------------------------------------------------------
+TODAY_TITLE:			$TODAY_TITLE
+TODAY_SUMMARY:			$TODAY_SUMMARY
+TODAY_TEMPERATURE_MAX:		$TODAY_TEMPERATURE_MAX
+TODAY_TEMPERATURE_MIN:		$TODAY_TEMPERATURE_MIN
+TODAY_PRECIP_PROBABILITY:	$TODAY_PRECIP_PROBABILITY
+TODAY_HUMIDITY:			$TODAY_HUMIDITY
+TODAY_WIND_SPEED:		$TODAY_WIND_SPEED
+TODAY_WIND_BEARING:		$TODAY_WIND_BEARING
+-------------------------------------------------------------------------------
+")
+}
+
+set_full_description_for_weather_forecast () {
+# Set weather forecast period
+WEATHER_PERIOD=$LATER_TITLE
+# Set wind bearing
+WIND_BEARING=$LATER_WIND_BEARING
+# Set wind direction
+set_wind_direction_using_degrees
+# Set text message
+WEATHER_FORECAST_DESCRIPTION="Later today ${LATER_SUMMARY}.  Temperatures will reach highs of $LATER_TEMPERATURE_MAX and lows of $LATER_TEMPERATURE_MIN degrees celsius.  The chance of rain is $LATER_PRECIP_PROBABILITY percent.  Humidity will be $LATER_HUMIDITY percent.  $WIND_DIRECTION winds will be blowing at $LATER_WIND_SPEED kilometres per hour.  Data provided by $WEATHER_API_NAME"
+# Set weather variables for debugging purposes
+WEATHER_VARIABLES=$(echo "
+-------------------------------------------------------------------------------
+LATER_TITLE:			$LATER_TITLE
+LATER_SUMMARY:			$LATER_SUMMARY
+LATER_TEMPERATURE_MAX:		$LATER_TEMPERATURE_MAX
+LATER_TEMPERATURE_MIN:		$LATER_TEMPERATURE_MIN
+LATER_PRECIP_PROBABILITY:	$LATER_PRECIP_PROBABILITY
+LATER_HUMIDITY:			$LATER_HUMIDITY
+LATER_WIND_SPEED:		$LATER_WIND_SPEED
+LATER_WIND_BEARING:		$LATER_WIND_BEARING
+-------------------------------------------------------------------------------
+")
+}
+
+
+# --------------
+#  Weather APIs
+# --------------
+#
+weather_api_endpoints_and_keys () {
+# Query DB for weather API keys
+DB_WUNDERGROUND_APIKEY=$(query_mysql_db wunderground_api_key)
+DB_DARKSKY_APIKEY=$(query_mysql_db darksky_api_key)
+DB_OWM_APIKEY=$(query_mysql_db openweathermap_api_key)
+
+# Set weather API keys
+[[ "x$DB_WUNDERGROUND_APIKEY" != "x" ]] && WUNDERGROUND_APIKEY=$DB_WUNDERGROUND_APIKEY || \
+	WUNDERGROUND_APIKEY=$DEFAULT_WUNDERGROUND_APIKEY
+[[ "x$DB_DARKSKY_APIKEY" != "x" ]] && DARKSKY_APIKEY=$DB_DARKSKY_APIKEY || \
+	DARKSKY_APIKEY=$DEFAULT_DARKSKY_APIKEY
+[[ "x$DB_OWM_APIKEY" != "x" ]] && OWM_APIKEY=$DB_OWM_APIKEY || \
+	OWM_APIKEY=$DEFAULT_OWM_APIKEY
+}
+
+weather_underground () {
+# Curl options: Keep here
+CURL_OPTS="-G -s -S -L -m 60 -k"
+# Set API Name
+WEATHER_API_NAME="Weather Underground"
+# Set weather API key
+weather_api_endpoints_and_keys
+# Check age of previous weather data files
+check_age_of_weather_data_file
+
+# Fetch weather information only if age is more than 15 minutes ago
+if [ "$AGE_OF_CURRENT_WEATHER_DATA" -ge "900" ];
+then
 # Fetch current weather information
-curl --get -sS -m 60 -A "$HTTP_USER_AGENT" \
-	-d q=$CITY \
-	-d units=metric \
-	-d appid=$OWM_APIKEY \
-		$OWM_APIURL | \
-			jq . > $CURRENT_WEATHER_RAW_DATA_FILE
-# Set weather variables
-CURRENT_SUMMARY=$(cat $CURRENT_WEATHER_RAW_DATA_FILE | jq '.weather' | grep description | cut -d : -f2 | sed 's:"::g' | sed 's:^ ::' | sed 's:,::g')
-CURRENT_TEMPERATURE=$(cat $CURRENT_WEATHER_RAW_DATA_FILE | jq '.main' | grep temp | tail -1 | awk {'print $2'} | sed 's:,::g')
-CURRENT_HUMIDITY=$(cat $CURRENT_WEATHER_RAW_DATA_FILE | jq '.main' | grep humidity | tail -1 | awk {'print $2'} | sed 's:,::g') 
-CURRENT_PRECIP_PROBABILITY=?
-CURRENT_WIND_SPEED=$(cat $CURRENT_WEATHER_RAW_DATA_FILE | jq '.wind' | grep speed | tail -1 | awk {'print $2'} | sed 's:,::g')
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" $WUNDERGROUND_APIURL/$WUNDERGROUND_APIKEY/conditions/q/$LATITUDE,$LONGITUDE.json > $CURRENT_WEATHER_RAW_DATA_FILE
+# Fetch hourly weather information - Not included in Free API 
+#$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" $WUNDERGROUND_APIURL/$WUNDERGROUND_APIKEY/hourly/q/$LATITUDE,$LONGITUDE.json > $LATER_WEATHER_RAW_DATA_FILE
+# Fetch forecast weather information
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" $WUNDERGROUND_APIURL/$WUNDERGROUND_APIKEY/forecast/q/$LATITUDE,$LONGITUDE.json > $LATER_WEATHER_RAW_DATA_FILE
+# Fetch today weather information
+cp -v $LATER_WEATHER_RAW_DATA_FILE $TODAY_WEATHER_RAW_DATA_FILE
+# Make weather data files writeable
+make_weather_data_file_writeable
+fi
+
+# Set current weather variables
+CURRENT_SUMMARY=$(jq -r ".current_observation.weather" $CURRENT_WEATHER_RAW_DATA_FILE | sed 's:[,|"]::g' | sed 's:\.::g')
+CURRENT_TEMPERATURE=$(jq ".current_observation.temp_c" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+CURRENT_HUMIDITY=$(jq -r ".current_observation.relative_humidity" $CURRENT_WEATHER_RAW_DATA_FILE | sed 's:%::')
+CURRENT_WIND_SPEED=$(jq -r ".current_observation.wind_kph" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+CURRENT_WIND_BEARING=$(jq -r ".current_observation.wind_degrees" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+#
+# Set today weather variables
+TODAY_TITLE=$(jq -r ".forecast.txt_forecast.forecastday[0] | .title" $TODAY_WEATHER_RAW_DATA_FILE)
+# Metric not returning values consistently - issue is with wunderground API
+#TODAY_SUMMARY=$(jq -r ".forecast.txt_forecast.forecastday[0] | .fcttext_metric" $TODAY_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
+TODAY_SUMMARY=$(jq -r ".forecast.txt_forecast.forecastday[0] | .fcttext" $TODAY_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
+TODAY_TEMPERATURE_MAX=$(jq -r ".forecast.simpleforecast.forecastday[0].high | .celsius" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+TODAY_TEMPERATURE_MIN=$(jq -r ".forecast.simpleforecast.forecastday[0].low | .celsius" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+TODAY_HUMIDITY=$(jq -r ".forecast.simpleforecast.forecastday[0].avehumidity" $TODAY_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
+TODAY_PRECIP_PROBABILITY=$(jq -r ".forecast.simpleforecast.forecastday[0].pop" $TODAY_WEATHER_RAW_DATA_FILE)
+TODAY_WIND_SPEED=$(jq -r ".forecast.simpleforecast.forecastday[0].avewind | .kph" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+TODAY_WIND_BEARING=$(jq -r ".forecast.simpleforecast.forecastday[0].avewind | .degrees" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+#
+# Set later weather variables
+LATER_TITLE=$(jq -r ".forecast.txt_forecast.forecastday[1] | .title" $LATER_WEATHER_RAW_DATA_FILE)
+# Metric not returning values consistently - issue is with wunderground API
+#LATER_SUMMARY=$(jq -r ".forecast.txt_forecast.forecastday[1] | .fcttext_metric" $LATER_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
+LATER_SUMMARY=$(jq -r ".forecast.txt_forecast.forecastday[1] | .fcttext" $LATER_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
+LATER_TEMPERATURE_MAX=$(jq -r ".forecast.simpleforecast.forecastday[1].high | .celsius" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+LATER_TEMPERATURE_MIN=$(jq -r ".forecast.simpleforecast.forecastday[1].low | .celsius" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+LATER_HUMIDITY=$(jq -r ".forecast.simpleforecast.forecastday[1].avehumidity" $LATER_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
+LATER_PRECIP_PROBABILITY=$(jq -r ".forecast.simpleforecast.forecastday[1].pop" $TODAY_WEATHER_RAW_DATA_FILE)
+LATER_WIND_SPEED=$(jq -r ".forecast.simpleforecast.forecastday[1].avewind | .kph" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+LATER_WIND_BEARING=$(jq -r ".forecast.simpleforecast.forecastday[1].avewind | .degrees" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+}
+
+weather_openweathermap () {
+# Curl options: Keep here
+CURL_OPTS="-G -s -S -L -m 60 -k"
+# Set API Name
+WEATHER_API_NAME="OpenWeatherMap"
+# Set Latitude/Longitude
+LATITUDE=$(echo "$LATITUDE" | xargs printf '%.3f')
+LONGITUDE=$(echo "$LONGITUDE" | xargs printf '%.3f')
+# Set weather API key
+weather_api_endpoints_and_keys
+# Check age of previous weather data files
+check_age_of_weather_data_file
+
+# Fetch weather information only if age is more than 15 minutes ago
+if [ "$AGE_OF_CURRENT_WEATHER_DATA" -ge "900" ];
+then
+# Fetch current weather information
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d lat=$LATITUDE -d lon=$LONGITUDE -d units=metric -d appid=$OWM_APIKEY $OWM_APIURL/weather | jq . > $CURRENT_WEATHER_RAW_DATA_FILE
+# Fetch forecast weather information
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d lat=$LATITUDE -d lon=$LONGITUDE -d units=metric -d appid=$OWM_APIKEY $OWM_APIURL/forecast | jq . > $LATER_WEATHER_RAW_DATA_FILE
+# Fetch today weather information
+cp -v $LATER_WEATHER_RAW_DATA_FILE $TODAY_WEATHER_RAW_DATA_FILE
+# Make weather data files writeable
+make_weather_data_file_writeable
+fi
+
+# Set current weather variables
+CURRENT_SUMMARY=$(jq -r ".weather[0].description" $CURRENT_WEATHER_RAW_DATA_FILE)
+CURRENT_TEMPERATURE=$(jq ".main.temp" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+CURRENT_HUMIDITY=$(jq -r ".main.humidity" $CURRENT_WEATHER_RAW_DATA_FILE | sed 's:%::')
+CURRENT_WIND_SPEED=$(jq -r ".wind.speed" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+CURRENT_WIND_BEARING=$(jq -r ".wind.deg" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+#
+# Set today weather variables
+TODAY_PERIOD=3
+TODAY_TITLE=$(jq -r ".list[$TODAY_PERIOD].dt_txt" $TODAY_WEATHER_RAW_DATA_FILE)
+TODAY_SUMMARY=$(jq -r ".list[$TODAY_PERIOD].weather[0].description" $TODAY_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
+TODAY_TEMPERATURE_MAX=$(jq -r ".list[$TODAY_PERIOD].main.temp_max" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+TODAY_TEMPERATURE_MIN=$(jq -r ".list[$TODAY_PERIOD].main.temp_min" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+TODAY_HUMIDITY=$(jq -r ".list[$TODAY_PERIOD].main.humidity" $TODAY_WEATHER_RAW_DATA_FILE)
+
+# Fix! - Rain in mm
+#TODAY_PRECIP_PROBABILITY=$(echo "$(jq -r ".list[$TODAY_PERIOD].rain" $TODAY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
+
+TODAY_WIND_SPEED=$(jq -r ".list[$TODAY_PERIOD].wind.speed" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+TODAY_WIND_BEARING=$(jq -r ".list[$TODAY_PERIOD].wind.deg" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+#
+# Set later weather variables
+LATER_PERIOD=2
+LATER_TITLE=$(jq -r ".list[$LATER_PERIOD].dt_txt" $LATER_WEATHER_RAW_DATA_FILE)
+LATER_SUMMARY=$(jq -r ".list[$LATER_PERIOD].weather[0].description" $LATER_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
+LATER_TEMPERATURE_MAX=$(jq -r ".list[$LATER_PERIOD].main.temp_max" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+LATER_TEMPERATURE_MIN=$(jq -r ".list[$LATER_PERIOD].main.temp_min" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+LATER_HUMIDITY=$(jq -r ".list[$LATER_PERIOD].main.humidity" $LATER_WEATHER_RAW_DATA_FILE)
+
+# Fix! - Rain in mm
+#LATER_PRECIP_PROBABILITY=$(echo "$(jq -r ".list[$LATER_PERIOD].rain" $LATER_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 1" | bc | xargs printf '%.0f')
+# For now - rough estimates
+RAINFALL_AMOUNT=$(echo "$(jq -r ".list[$LATER_PERIOD].rain" $LATER_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 1" | bc | xargs printf '%.0f')
+#
+if [[ "$RAINFALL_AMOUNT" -lt "1" ]];
+then
+LATER_PRECIP_PROBABILITY=20
+elif [[ "$RAINFALL_AMOUNT" -gt "1" && "$RAINFALL_AMOUNT" -le "2" ]];
+then
+LATER_PRECIP_PROBABILITY=30
+elif [[ "$RAINFALL_AMOUNT" -gt "2" && "$RAINFALL_AMOUNT" -le "2" ]];
+then
+LATER_PRECIP_PROBABILITY=40
+elif [[ "$RAINFALL_AMOUNT" -gt "2" && "$RAINFALL_AMOUNT" -le "3" ]];
+then
+LATER_PRECIP_PROBABILITY=50
+elif [[ "$RAINFALL_AMOUNT" -gt "3" && "$RAINFALL_AMOUNT" -le "4" ]];
+then
+LATER_PRECIP_PROBABILITY=60
+
+elif [[ "$RAINFALL_AMOUNT" -gt "4" && "$RAINFALL_AMOUNT" -le "5" ]];
+then
+LATER_PRECIP_PROBABILITY=70
+elif [[ "$RAINFALL_AMOUNT" -gt "5" && "$RAINFALL_AMOUNT" -le "6" ]];
+then
+LATER_PRECIP_PROBABILITY=80
+elif [[ "$RAINFALL_AMOUNT" -gt "6" && "$RAINFALL_AMOUNT" -lt "7" ]];
+then
+LATER_PRECIP_PROBABILITY=90
+elif [[ "$RAINFALL_AMOUNT" -gt "7" ]];
+then
+LATER_PRECIP_PROBABILITY=100
+fi
+
+LATER_WIND_SPEED=$(jq -r ".list[$LATER_PERIOD].wind.speed" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+LATER_WIND_BEARING=$(jq -r ".list[$LATER_PERIOD].wind.deg" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+}
+
+weather_darksky_net () {
+# Curl options: Keep here 
+CURL_OPTS="-G -s -S -L -m 60 -k"
+# Set API Name
+WEATHER_API_NAME="Dark Sky"
+# Set weather API key
+weather_api_endpoints_and_keys
+# Check age of previous weather data files
+check_age_of_weather_data_file
+
+# Fetch weather information only if age is more than 15 minutes ago
+if [ "$AGE_OF_CURRENT_WEATHER_DATA" -ge "900" ];
+then
+# Fetch current weather information
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d exclude=hourly,minutely,daily,alerts,flags -d units=uk2 $DARKSKY_APIURL/$DARKSKY_APIKEY/$LATITUDE,$LONGITUDE | jq . > $CURRENT_WEATHER_RAW_DATA_FILE
+# Fetch hourly weather information
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d exclude=daily,currently,minutely,alerts,flags -d units=uk2 $DARKSKY_APIURL/$DARKSKY_APIKEY/$LATITUDE,$LONGITUDE | jq . > $LATER_WEATHER_RAW_DATA_FILE
+# Fetch daily weather information
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d exclude=currently,hourly,minutely,alerts,flags -d units=uk2 $DARKSKY_APIURL/$DARKSKY_APIKEY/$LATITUDE,$LONGITUDE | jq . > $TODAY_WEATHER_RAW_DATA_FILE
+# Make weather data files writeable
+make_weather_data_file_writeable
+fi
+
+# Set current weather variables
+CURRENT_SUMMARY=$(jq -r ".currently.summary" $CURRENT_WEATHER_RAW_DATA_FILE | sed 's:[,|"]::g' | sed 's:\.::g')
+CURRENT_TEMPERATURE=$(jq ".currently.temperature" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+CURRENT_HUMIDITY=$(echo "$(jq ".currently.humidity"  $CURRENT_WEATHER_RAW_DATA_FILE) * 100" | bc | xargs printf '%.0f')
+CURRENT_WIND_SPEED=$(jq -r ".currently.windSpeed" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+CURRENT_WIND_BEARING=$(jq -r ".currently.windBearing" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+#
+# Set today weather variables
+TODAY_TITLE=$(date -d "@$(jq -r ".daily.data[0].uvIndexTime" $TODAY_WEATHER_RAW_DATA_FILE)")
+TODAY_SUMMARY=$(jq -r ".daily.data[0].summary" $TODAY_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
+TODAY_TEMPERATURE_MAX=$(jq -r ".daily.data[0].temperatureMax" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+TODAY_TEMPERATURE_MIN=$(jq -r ".daily.data[0].temperatureMin" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+TODAY_HUMIDITY=$(echo "$(jq -r ".daily.data[0].humidity" $TODAY_WEATHER_RAW_DATA_FILE) * 100" | bc | xargs printf '%.0f')
+TODAY_PRECIP_PROBABILITY=$(echo "$(jq -r ".daily.data[0].precipProbability" $TODAY_WEATHER_RAW_DATA_FILE) * 100" | bc | xargs printf '%.0f')
+TODAY_WIND_SPEED=$(jq -r ".daily.data[0].windSpeed" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+TODAY_WIND_BEARING=$(jq -r ".daily.data[0].windBearing" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+#
+# Set later weather variables
+LATER_PERIOD=4
+LATER_TITLE=$(date -d "@$(jq -r ".hourly.data[$LATER_PERIOD].time" $LATER_WEATHER_RAW_DATA_FILE)")
+LATER_SUMMARY=$(jq -r ".hourly.data[$LATER_PERIOD].summary" $LATER_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
+LATER_TEMPERATURE_MAX=$(jq -r ".hourly.data[$LATER_PERIOD].temperature" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+
+LATER_TEMPERATURE_MIN=$(jq -r ".hourly.data[$LATER_PERIOD].temperature" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+
+LATER_HUMIDITY=$(echo "$(jq -r ".hourly.data[$LATER_PERIOD].humidity" $LATER_WEATHER_RAW_DATA_FILE) * 100" | bc | xargs printf '%.0f')
+LATER_PRECIP_PROBABILITY=$(echo "$(jq -r ".hourly.data[$LATER_PERIOD].precipProbability" $LATER_WEATHER_RAW_DATA_FILE) * 100" | bc | xargs printf '%.0f')
+LATER_WIND_SPEED=$(jq -r ".hourly.data[$LATER_PERIOD].windSpeed" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+LATER_WIND_BEARING=$(jq -r ".hourly.data[$LATER_PERIOD].windBearing" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 }
 
 
@@ -341,16 +573,46 @@ CURRENT_WIND_SPEED=$(cat $CURRENT_WEATHER_RAW_DATA_FILE | jq '.wind' | grep spee
 #  MAIN SCRIPT  #
 #################
 
-get_registered_city_country
+set_geolocation_coordinates
+
 usage
+
 check_internet_access
-get_current_geolocation
 
 case $API in
 1)
-weather_darksky_net
+weather_underground
 ;;
 2)
 weather_openweathermap
 ;;
+3)
+weather_darksky_net
+;;
 esac
+
+
+# ---------------------------------------------------------------------------- 
+# Set detailed weather forecast description for use in Text-To-Speech services
+# ----------------------------------------------------------------------------
+FORECAST_PERIOD=$ARG3
+case $FORECAST_PERIOD in
+current)
+set_full_description_for_weather_currently
+;;
+today)
+set_full_description_for_weather_today
+;;
+later)
+set_full_description_for_weather_forecast
+;;
+*)
+set_full_description_for_weather_currently
+;;
+esac
+
+
+# -----------------------------
+# Enable debugging if requested
+# -----------------------------
+debugging
