@@ -1,19 +1,17 @@
 #!/bin/sh
 # This is the text-to-speech tool used for JambulaTV services.
 # Use it to read time, weather, etc
-# Jambula Labs @copyright 2017-2018 All rights reserved
+# Jambula Labs @copyright 2018-2019 All rights reserved
 
 # Variables
-# API(s)
-# 0=pico(No Internet) 1=acapella 2=watson 3=google 
-API=1
-
 TTS_PLAY_CMD="/usr/bin/ffplay"
 TTS_QUIT_CMD=""
 TTS_PLAY_CMD_OPTS="-loglevel quiet -vn -nodisp -autoexit"
 
 TTS_OUTPUT_FILE=/var/tmp/tts_output.wav # IMPORTANT: Must be on 'ext4' partition i.e. /var
-TTS_ACTION=$1
+TTS_API=$1
+TTS_ACTION=$2
+TTS_CUSTOM_MESSAGE=$3
 
 PING_TIMEOUT=2 #9
 PING_IP_ADDRESS=8.8.8.8
@@ -28,7 +26,6 @@ MULTIMEDIA_USER=MY_MULTIMEDIA_USER
 USER_AGENT="MY_USER_AGENT"
 
 CURL_CMD="/usr/bin/curl"
-CURL_OPTS="-s -S -L -m 60"
 
 
 
@@ -37,12 +34,29 @@ CURL_OPTS="-s -S -L -m 60"
 ###############
 usage () {
 # TTS Action
-if [ "x$TTS_ACTION" = "x" ];
+if [[ "x$TTS_ACTION" = "x" ]];
+then
+
+clear
+cat <<EOT
+Usage:  
+./`basename $0` [Speech API] time
+./`basename $0` [Speech API] weather [Period] [Weather API] [Debugging]
+./`basename $0` [Speech API] custom [Message]
+
+EOT
+exit 1
+
+elif [[ "$TTS_ACTION" = "custom" && "x$TTS_CUSTOM_MESSAGE" = "x" ]];
 then
 clear
-echo "Usage:  ./`basename $0` [time|weather|custom]
-"
+cat <<EOT
+Usage:  
+./`basename $0` [Speech API] custom [Message]
+
+EOT
 exit 1
+
 fi
 }
 
@@ -70,27 +84,15 @@ text2speech_pico () {
 }
 
 text2speech_acapela () {
-$CURL_CMD $CURL_OPTS $($CURL_CMD $CURL_OPTS -A "$USER_AGENT" \
-	-d MyLanguages=sonid10 \
-	-d MySelectedVoice=Sharon \
-	-d MyTextForTTS="$(echo "$@" | sed -e "s: :%20:g" | sed -e "s:'::g")" \
-	-d t=1 \
-	-d SendToVaaS="" "http://www.acapela-group.com/demo-tts/DemoHTML5Form_V2.php" | \
-		grep -o "http.*mp3") > $TTS_OUTPUT_FILE
-}
-
-text2speech_watson () {
-$CURL_CMD $CURL_OPTS -A "$USER_AGENT" \
-	-u "6aa3bbba-a513-42fe-954a-f6c23b7a5f8e":"DNAjnRVn5btV" \
-	-H "Content-Type: application/json" \
-	-H "Accept: audio/wav" \
-	-d "{\"text\":\"$@\"}" \
-	-o $TTS_OUTPUT_FILE \
-"https://stream.watsonplatform.net/text-to-speech/api/v1/synthesize?voice=en-US_AllisonVoice"
+$CURL_CMD $CURL_OPTS $($CURL_CMD $CURL_OPTS -A "$USER_AGENT" -H "Keep-Alive:300" -H "Connection:keep-alive" -H "Content-type:application/x-www-form-urlencoded" -d MyLanguages=sonid10 -d MySelectedVoice=Sharon -d MyTextForTTS="$(echo "$1" | sed -e "s: :%20:g" | sed -e "s:'::g")" -d t=1 -d SendToVaaS="" "http://www.acapela-group.com/demo-tts/DemoHTML5Form_V2.php" | grep -o "http.*mp3") > $TTS_OUTPUT_FILE
 }
 
 text2speech_google () {
-$CURL_CMD $CURL_OPTS -A "$USER_AGENT" -o $TTS_OUTPUT_FILE "http://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q="$(echo "$@" | sed -e "s: :%20:g" | sed -e "s:'::g")"&tl=En-us"
+$CURL_CMD $CURL_OPTS -A "$USER_AGENT" -o $TTS_OUTPUT_FILE "http://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q="$(echo "$1" | sed -e "s: :%20:g" | sed -e "s:'::g")"&tl=En-us"
+}
+
+text2speech_watson () {
+$CURL_CMD $CURL_OPTS -A "$USER_AGENT" -u "6aa3bbba-a513-42fe-954a-f6c23b7a5f8e":"DNAjnRVn5btV" -H "Content-Type: application/json" -H "Accept: audio/wav" -d "{\"text\":\"$1\"}" -o $TTS_OUTPUT_FILE "https://stream.watsonplatform.net/text-to-speech/api/v1/synthesize?voice=en-US_AllisonVoice"
 }
 
 query_text2speech_engine () {
@@ -101,7 +103,19 @@ text2speech_pico "$TTS_TEXT_MESSAGE"
 
 else
 
-# Use Internet TTS services
+# Set default API used > 1=acapella 2=google 3=watson
+API_SERVICE=$TTS_API
+if [[ "x$API_SERVICE" = "x" ]];
+then
+API=1
+else
+API=$API_SERVICE
+fi
+
+# Set curl options - Keep here to avoid settings from sourced tools
+CURL_OPTS="-s -S -L -m 60"
+
+# Select Internet TTS service to use
 case $API in
 1)
 # TTS using acapela
@@ -109,16 +123,17 @@ text2speech_acapela "$TTS_TEXT_MESSAGE"
 ;;
 
 2)
-# TTS using watson
-text2speech_watson "$TTS_TEXT_MESSAGE"
+# TTS using google
+text2speech_google "$(echo $TTS_TEXT_MESSAGE | fold -s -w 200 | head -1)"
 ;;
 
 3)
-# TTS using google
-text2speech_google "$TTS_TEXT_MESSAGE"
+# TTS using watson
+text2speech_watson "$TTS_TEXT_MESSAGE" 
 ;;
 
 *)
+text2speech_acapela "$TTS_TEXT_MESSAGE"
 ;;
 esac
 
@@ -155,12 +170,26 @@ query_text2speech_engine
 # Tell-the-Weather
 # ----------------
 say_weather() {
+# weather variables
+#WEATHER_PERIOD=current #today #current #later
+#WEATHER_API=1 #1=WeatherUnderground #2=OpenWeatherMap #3=DarkSky
+#WEATHER_DEBUG= #debug 
+WEATHER_PERIOD=$3
+WEATHER_API=$4
+WEATHER_DEBUG=$5
+#
 # Source weather functions
-. /usr/bin/jambulatv-weather-api
-
+if [[ "$WEATHER_DEBUG" = "debug" ]];
+then
+# Debugging enabled
+. /usr/bin/jambulatv-weather-api "" "" $WEATHER_PERIOD $WEATHER_API debug
+else
+# Debugging disabled
+. /usr/bin/jambulatv-weather-api "" "" $WEATHER_PERIOD $WEATHER_API
+fi
+# 
 # TTS text message
-TTS_TEXT_MESSAGE="In $CITY, the current temperature is $CURRENT_TEMPERATURE degrees celcius with $CURRENT_SUMMARY conditions. $TIME_OF_DAY_CALL,  expect  $HOURLY_SUMMARY with a temperature of $HOURLY_TEMPERATURE degrees.  Theres a $HOURLY_PRECIP_PROBABILITY percent chance of rain with $HOURLY_WIND_DIRECTION winds blowing at $HOURLY_WIND_SPEED miles per hour"
-
+TTS_TEXT_MESSAGE=$WEATHER_FORECAST_DESCRIPTION
 # convert text to audio speech
 query_text2speech_engine
 }
@@ -169,7 +198,7 @@ query_text2speech_engine
 # Tell-the-Custom-message
 # -----------------------
 say_custom() {
-TTS_TEXT_MESSAGE="$@"
+TTS_TEXT_MESSAGE="$2"
 query_text2speech_engine
 }
 
@@ -178,6 +207,9 @@ query_text2speech_engine
 #################
 #  MAIN SCRIPT  #
 #################
+
+# Usage
+usage
 
 # Remove previously saved TTS audio
 sudo rm -f $TTS_OUTPUT_FILE
@@ -190,23 +222,42 @@ check_internet_access
 
 # Run selected action
 case $TTS_ACTION in 
+
 time)
 say_time
 ;;
+
 weather)
-say_weather $2 $3
+say_weather "$API" "$TTS_ACTION" "$3" "$4" "$5"
 ;;
+
 custom)
-say_custom "$2"
+say_custom "$API" "$3"
 ;;
+
 *)
-echo
-usage
+clear
+cat <<EOT
+Usage:  
+./`basename $0` [Speech API] time
+./`basename $0` [Speech API] weather [Period] [Weather API] [Debugging]
+./`basename $0` [Speech API] custom [Message]
+
+EOT
+# Sound error
+touch $TTS_OUTPUT_FILE
+$(basename $0) $TTS_API custom "I do not recognize that command.  Please try again"
+touch $TTS_OUTPUT_FILE
+exit 1
 ;;
-esac 
+
+esac
 
 # Kill waiting sound effects 
 [ "x$SOUND_EFFECTS_TEMP_SCRIPT_PID" = "x" ] || kill $SOUND_EFFECTS_TEMP_SCRIPT_PID
 
 # Play saved TTS audio
-$TTS_PLAY_CMD $TTS_PLAY_CMD_OPTS $TTS_OUTPUT_FILE
+[[ -e $TTS_OUTPUT_FILE ]] && $TTS_PLAY_CMD $TTS_PLAY_CMD_OPTS $TTS_OUTPUT_FILE
+
+# Add bogus sound effects file to stop beep if no TTS audio file found
+[[ -e $TTS_OUTPUT_FILE ]] || touch $TTS_OUTPUT_FILE
