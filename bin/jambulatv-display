@@ -1,0 +1,51 @@
+#!/bin/sh
+# This tool powers On or Off your JambulaTV display
+# Use it to conserve energy especially for older TV screens
+# Jambula Labs @copyright 2018-2019 All rights reserved
+
+DISPLAY_ACTION=$1
+CONNECTED_PORT=$(xrandr -q | grep -w connected | awk {'print $1'})
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage () {
+cat <<EOT
+Usage: $(basename $0) [On|Off]
+
+EOT
+exit 1
+}
+
+turn_display_off () {
+# Notify - Turning off
+logger -s -t $(basename $0) "Turning Off Display Screen ..."
+# Turn off display
+xrandr --output $CONNECTED_PORT --off
+}
+
+turn_display_on () {
+# Notify - Turning on
+logger -s -t $(basename $0) "Turning On Display Screen ..."
+# Turn on display
+xrandr --output $CONNECTED_PORT --auto
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+case $DISPLAY_ACTION in
+[Oo][Ff][Ff])
+turn_display_off
+;;
+[Oo][Nn])
+turn_display_on
+;;
+*)
+usage
+;;
+esac

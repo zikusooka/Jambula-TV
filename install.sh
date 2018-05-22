@@ -271,6 +271,7 @@ fmradio_streamer_setup
 TermFeed_install
 usbreset_install
 screen_resolution_configure
+screen_display_configure
 
 # ----------------
 # Communications 
