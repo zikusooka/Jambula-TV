@@ -4,6 +4,8 @@
 # Jambula Labs @copyright 2018-2019 All rights reserved
 
 DISPLAY_ACTION=$1
+DISPLAY=:0.0
+export DISPLAY
 CONNECTED_PORT=$(xrandr -q | grep -w connected | awk {'print $1'})
 
 
