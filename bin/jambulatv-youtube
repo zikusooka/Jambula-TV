@@ -6,6 +6,7 @@
 # Jambula Labs @copyright 2018-2019 All rights reserved
 
 # Variables
+YOUTUBE_DEBUG=no #no|yes
 YOUTUBE_USER_URL="https://www.youtube.com/user"
 YOUTUBE_CHANNEL_URL="https://www.youtube.com/channel"
 YOUTUBE_WATCH_URL="https://www.youtube.com/watch?v"
@@ -35,7 +36,7 @@ KODI_LOG_FILE=MY_KODI_LOG_FILE
 OSDRUNFILE=$(grep ^OSDRUNFILE $(which jambulatv-osd) | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed "s/[\"|']//g")
 
 CURL_CMD="/usr/bin/curl"
-CURL_OPTS="-s -S -G -L -m 60"
+CURL_OPTS="-s -S -L -m 60"
 
 HTTP_BROWSER_USERAGENT="MY_USER_AGENT"
 HTTP_BROWSER_COMMAND="$CURL_CMD $CURL_OPTS"
@@ -184,10 +185,8 @@ YOUTUBE_PLAYLIST_FILE=/tmp/youtube_video_ids_found
 [ -e $YOUTUBE_PLAYLIST_FILE ] && sudo rm -f $YOUTUBE_PLAYLIST_FILE
 #
 # Search for Youtube IDs using API
-$HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE ${YOUTUBE_SEARCH_URL} \
-	-d part="snippet" -d sp="$YOUTUBE_SEARCH_FILTER" -d key="$YOUTUBE_API_KEY" \
-	-d type="video" -d maxResults=$YOUTUBE_MAX_RESULTS \
-	-d q="$YOUTUBE_SEARCH_TEXT"
+# NOTE: Do not use curl --data/ or -d option to post - Youtube search fails if done
+$HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE ${YOUTUBE_SEARCH_URL}?part=snippet'&'sp="$YOUTUBE_SEARCH_FILTER"'&'key="$YOUTUBE_API_KEY"'&'type=video'&'maxResults=$YOUTUBE_MAX_RESULTS'&'q="$YOUTUBE_SEARCH_TEXT"
 #
 # Generate Youtube playlist containing video Ids
 cat $YOUTUBE_SEARCH_OUTPUT_FILE | jq -r '.items[]' | grep videoId | awk {'print $2'} | sed 's:["|,]::g' > $YOUTUBE_PLAYLIST_FILE
@@ -240,15 +239,15 @@ fi
 # a) PRE-DEFINED CHANNELS: Extract and Set Youtube video IDs
 # -----------------------------------------------------------
 youtube_video_id_ntv_uganda () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i "NTV Uganda Livestream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i -e "NTV Uganda Livestream" -e "NTV Uganda Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_sparktv_uganda () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i -e "Spark TV Live Stream" -e "Spark TV Uganda Livestream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i -e "Spark TV Live Stream" -e "Spark TV Uganda Livestream"  -e "SparkTV Uganda Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_bukeddetv_uganda () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/bukeddetv | grep -i "Bukedde TV Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/bukeddetv | grep -i -e "Bukedde TV Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_citizentv_kenya () {
@@ -265,11 +264,11 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/KTNClassics | grep -i
 
 youtube_video_id_ntv_kenya () {
 YOUTUBE_LIVE_CHANNEL_PAGE_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/qtvkenya/channels | awk -F: '/title="Live"/ { print $0 }' | grep -oP '(?<=href="/channel/).+?(?=".*>Live)' | uniq)
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | grep -i -e "NTV Kenya Live Stream" -e "shows Live on NTV Kenya" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | grep -i -e "NTV Kenya Live Stream" -e "shows Live on NTV Kenya" -e "LIVE: \"NTV Today\"" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_learn_swahili () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/SwahiliPod101 | grep -i -e "Learn Swahili in 24 Hours with SwahiliPod101 TV" -e "Learn Swahili in 24 Hours" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/SwahiliPod101 | grep -i "Learn Swahili in 24 Hours with SwahiliPod101 TV" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_inooro_tv_kenya () {
@@ -308,7 +307,7 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ABNDigital | grep -i 
 }
 
 youtube_video_id_bloomberg () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/Bloomberg | grep -i -e "Bloomberg TV LIVE" -e "Bloomberg Global News LIVE" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/Bloomberg | grep -i -e "Bloomberg TV LIVE" -e "Bloomberg Global News LIVE" -e "Bloomberg Global News" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_fox_news () {
@@ -466,8 +465,15 @@ fi
 #
 # Remove Youtube temp variables file in case of next run
 [ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
-# Add log message to systemd journal
-logger -s -t $(basename $0) "Error: No Youtube ID or Manifest URL was found for $STREAM_NAME, quitting ..."
+# Add log message to systemd journal if No Youtube ID was found
+if [[ "x$YOUTUBE_VIDEO_ID" = "x" ]];
+then
+logger -s -t $(basename $0) "Error: The Youtube ID for $STREAM_NAME was NOT found.  Quitting ..."
+# Add log message to systemd journal if No Manifest ID was found
+elif [[ "x$YOUTUBE_MANIFEST_URL" = "x" ]];
+then
+logger -s -t $(basename $0) "Error: The Youtube ID for $STREAM_NAME was found i.e. $YOUTUBE_VIDEO_ID.  However, the Manifest URL was not fetched.  Please upgrade youtube-dl and try again.  Quitting ..."
+fi
 # Quit
 exit 1
 }
@@ -498,6 +504,13 @@ EOF
 #
 # Export set Youtube variables
 export YOUTUBE_VIDEO_ID YOUTUBE_VIDEO_URL YOUTUBE_VIDEO_QUALITY YOUTUBE_MANIFEST_URL
+}
+
+print_debug_info () {
+if [[ "$YOUTUBE_DEBUG" = "yes" ]] && [[ -e $YOUTUBE_VARIABLES_TEMP_FILE ]];
+then
+cat $YOUTUBE_VARIABLES_TEMP_FILE
+fi
 }
 
 
@@ -537,3 +550,6 @@ save_youtube_variables
 
 # Streaming notification on OSD while we wait IF script was called by htsp client
 osd_notification_streaming
+
+# Print Youtube variables to screen if debugging is enables
+print_debug_info
