@@ -10091,6 +10091,7 @@ chmod 755 $BINARY_PREFIX/jambulatv-asr-skills
 			> $BINARY_PREFIX/jambulatv-fetch-news
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-fetch-news
+#
 # Add sample RSS file for news headlines
 cat > $PROJECT_SYSTEM_CONF_DIR/rss-feeds.cfg << EOF
 World Political | http://feeds.bbci.co.uk/news/world/rss.xml

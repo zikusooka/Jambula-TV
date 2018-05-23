@@ -1,7 +1,7 @@
 #!/bin/sh
 # This is a set of voice recognition skills used by JambulaTV 
 # It is used by jambulatv-speech2text tool
-# Jambula Labs @copyright 2017-2018 All rights reserved
+# Jambula Labs @copyright 2018-2019 All rights reserved
 
 # Variables
 FAVORITE_TV_CHANNEL="NBS TV"
@@ -21,26 +21,59 @@ TTS_PLAY_TOOL=$(basename $(grep ^TTS_PLAY_CMD $(which $TEXT2SPEECH_TOOL) | cut -
 ############
 
 skill_time () {
-/usr/bin/python /usr/share/kodi/scripts/kodi_say_time.py
+# Un Pause Player
+/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+# Say weather
+/usr/bin/jambulatv-text2speech '2' time
+# Un Pause Player
+/usr/bin/jambulatv-kodi-controller video_play_pause
+}
+
+skill_weather_currently () {
+# Un Pause Player
+/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+# Say weather
+/usr/bin/jambulatv-text2speech '' weather current 3
+# Un Pause Player
+/usr/bin/jambulatv-kodi-controller video_play_pause
+}
+
+skill_weather_today () {
+# Un Pause Player
+/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+# Say weather
+/usr/bin/jambulatv-text2speech '' weather today 1
+# Un Pause Player
+/usr/bin/jambulatv-kodi-controller video_play_pause
+}
+
+skill_weather_later () {
+# Un Pause Player
+/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+# Say weather
+/usr/bin/jambulatv-text2speech '' weather later 2
+# Un Pause Player
+/usr/bin/jambulatv-kodi-controller video_play_pause
 }
 
 skill_weather () {
-/usr/bin/python /usr/share/kodi/scripts/kodi_say_weather.py 
+# Say default weather report
+skill_weather_currently 
 }
 
 skill_headlines_start () {
-$TEXT_2_SPEECH_TOOL_PATH custom "Here's whats making news today"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "Here's whats making news today"
 /usr/bin/jambulatv-fetch-news
 }
 
 skill_headlines_stop () {
 killall jambulatv-fetch-news && killall jambulatv-text2speech
-$TEXT_2_SPEECH_TOOL_PATH custom "Okay, I will stop reading the news"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "Okay, I will stop reading the news"
 touch $TTS_OUTPUT_FILE
 }
 
 skill_reminders () {
-$TEXT_2_SPEECH_TOOL_PATH custom "$(/usr/bin/remind /JambulaTV/Reminders/)"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "$(/usr/bin/remind /JambulaTV/Reminders/)"
 }
 
 skill_calendar_events () {
@@ -56,36 +89,36 @@ $CALENDAR_EVENTS_TOOL_PATH $CALENDAR_EVENT_START $CALENDAR_EVENT_END
 
 # If no events are found, say it 
 [ -s $CALENDAR_TEXT_2_SPEECH_INPUT_FILE ] || \
-	$TEXT_2_SPEECH_TOOL_PATH custom "No events are scheduled for $CALENDAR_EVENT_ASR_PERIOD" 
+	$TEXT_2_SPEECH_TOOL_PATH "" custom "No events are scheduled for $CALENDAR_EVENT_ASR_PERIOD" 
 # Quit if no events found
 [ -s $CALENDAR_TEXT_2_SPEECH_INPUT_FILE ] || exit 0
 
 # Say header message
-$TEXT_2_SPEECH_TOOL_PATH custom "The following events are scheduled for $CALENDAR_EVENT_ASR_PERIOD"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "The following events are scheduled for $CALENDAR_EVENT_ASR_PERIOD"
 # Cycle through speech-to-text input file and say event summary
 cat $CALENDAR_TEXT_2_SPEECH_INPUT_FILE | while read EVENT_SUMMARY
 do
-$TEXT_2_SPEECH_TOOL_PATH custom "The $EVENT_SUMMARY"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "The $EVENT_SUMMARY"
 done
 # Say footer message
-$TEXT_2_SPEECH_TOOL_PATH custom "That is all for $CALENDAR_EVENT_ASR_PERIOD"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "That is all for $CALENDAR_EVENT_ASR_PERIOD"
 }
 
 skill_motd () {
-$TEXT_2_SPEECH_TOOL_PATH custom "Today's message of the day is - -  $(/usr/bin/fortune -s -n 80)"
+$TEXT_2_SPEECH_TOOL_PATH "1" custom "Today's message of the day is \"\\pau=1000\\\" $(/usr/bin/fortune -s -n 80)"
 }
 
 skill_flash_briefing () {
 # Get registered name, etc
 get_contact_details
 # Daily Digest
-$TEXT_2_SPEECH_TOOL_PATH custom "Hello $CONTACT_FIRST_NAME - - here is your daily digest for today $(date "+%A %d %B %Y")"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "Hello $CONTACT_FIRST_NAME here is your daily digest for today $(date "+%A %d %B %Y")"
 skill_reminders
 skill_weather
 skill_headlines
 skill_motd
 skill_time
-$TEXT_2_SPEECH_TOOL_PATH custom "Happy $(date "+%A")"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "Happy $(date "+%A")"
 }
 
 skill_lights_on () {
@@ -137,7 +170,7 @@ skill_tv_record_start_now () {
 if [ "$TV_RECORDING_CURRENT_STATUS" = "true" ];
 then
 # Let user know there's already a recording and quit
-$TEXT_2_SPEECH_TOOL_PATH custom "Am sorry, there is already another recording in progress. To end that recording, please say - - STOP RECORDING TV CHANNEL. - -  Then repeat your request"
+$TEXT_2_SPEECH_TOOL_PATH "2" custom "Am sorry, there is already another recording in progress. To end that recording, please say \"\\pau=1000\\\" STOP RECORDING TV CHANNEL. \"\\pau=1000\\\"  Then repeat your request"
 # Quit
 exit 1
 
@@ -156,7 +189,7 @@ skill_tv_record_stop_now () {
 if [ "$TV_RECORDING_CURRENT_STATUS" = "false" ];
 then
 # Let user know there's no recording to stop
-$TEXT_2_SPEECH_TOOL_PATH custom "Am sorry, there is no recording for me to stop"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "Am sorry, there is no recording for me to stop"
 # Quit
 exit 1
 
@@ -355,11 +388,21 @@ sudo asterisk -rx "console hangup"
 
 skill_connect_2_hotspot () {
 sudo /usr/bin/jambulatv-auto-wifi-provision &
-$TEXT_2_SPEECH_TOOL_PATH custom "Please scan the QR Code displayed on the TV Screen to get the Wifi password.  For Android devices, you may connect automatically"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "Please scan the QR Code displayed on the TV Screen to get the Wifi password.  For Android devices, you may connect automatically"
+}
+
+skill_display_off () {
+#$TEXT_2_SPEECH_TOOL_PATH "" custom "Turning off Display"
+. /usr/bin/jambulatv-display off
+}
+
+skill_display_on () {
+#$TEXT_2_SPEECH_TOOL_PATH "" custom "Turning on Display"
+. /usr/bin/jambulatv-display on
 }
 
 skill_power_off () {
-$TEXT_2_SPEECH_TOOL_PATH custom "Turning off system"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "Turning off system"
 systemctl poweroff -i
 }
 
@@ -370,7 +413,7 @@ kill $TTS_PID
 }
 
 skill_mute_speech_recognition () {
-$TEXT_2_SPEECH_TOOL_PATH custom "Geez - Am I that noisy? - - OK - I will go off line for now"
+$TEXT_2_SPEECH_TOOL_PATH "1" custom "Geeez \"\\pau=1000\\\" Am I that noisy? \"\\pau=1000\\\" OK \"\\pau=500\\\" I will go off line for now"
 [ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
 touch $TEXT_2_SPEECH_OUTPUT_FILE
 sudo chattr +i $TEXT_2_SPEECH_OUTPUT_FILE
@@ -379,9 +422,9 @@ sudo chattr +i $TEXT_2_SPEECH_OUTPUT_FILE
 skill_unmute_speech_recognition () {
 sudo chattr -i $TEXT_2_SPEECH_OUTPUT_FILE 
 [ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
-$TEXT_2_SPEECH_TOOL_PATH custom "You missed me - Right? - - OK - I am baack"
+$TEXT_2_SPEECH_TOOL_PATH "1" custom "You missed me \"\\pau=500\\\" Right? \"\\pau=1000\\\" OK \"\\pau=500\\\"  I am baack"
 }
 
 skill_unknown () {
-$TEXT_2_SPEECH_TOOL_PATH custom "Am sorry, I did not understand what you said"
+$TEXT_2_SPEECH_TOOL_PATH "" custom "Am sorry, I did not understand what you said"
 }

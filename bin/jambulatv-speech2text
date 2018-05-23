@@ -126,6 +126,21 @@ elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER" ];
 then
 skill_weather &
 
+# Weather - Currently
+elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER CURRENTLY" ];
+then
+skill_weather_currently &
+
+# Weather - Today
+elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER TODAY" ];
+then
+skill_weather_today &
+
+# Weather - Later
+elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER LATER" ];
+then
+skill_weather_later &
+
 # Headlines (Start)
 elif [ "$DETECTED_PATTERN" = "WHAT ARE THE HEADLINES" ];
 then
@@ -417,7 +432,17 @@ elif [ "$DETECTED_PATTERN" = "I WANT TO CONNECT TO THE HOTSPOT" ];
 then
 skill_connect_2_hotspot
 
-# Turn off
+# Turn off display
+elif [ "$DETECTED_PATTERN" = "TURN OFF SCREEN" ];
+then
+skill_display_off
+
+# Turn on display
+elif [ "$DETECTED_PATTERN" = "TURN ON SCREEN" ];
+then
+skill_display_on
+
+# Turn off system
 elif [ "$DETECTED_PATTERN" = "TURN OFF JAMB BOO LA TV" ];
 then
 skill_power_off
