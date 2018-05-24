@@ -6,6 +6,8 @@
 #
 # udevadm info --query property /sys/class/tty/ttyUSB0
 #
+#
+# ----------------------------------------
 # 3G USB dongles for Internet connectivity
 #----------------------------------------- 
 #
@@ -34,3 +36,13 @@ ACTION=="add", ENV{ID_SERIAL_SHORT}=="1234567890ABCDEF", ENV{ID_VENDOR_ID}=="12d
 #
 # Remove
 ACTION=="remove", ENV{ID_SERIAL}=="HUAWEI_HUAWEI_Mobile", ENV{ID_VENDOR_ID}=="12d1", ENV{ID_MODEL_ID}=="1003", RUN+="/usr/bin/systemctl stop 3g_internet.service"
+#
+#
+#
+# -------------------------------------------------------------------------
+# 3G USB dongles Used for Mobile Phone calls, SMS, and Geolocation services
+# -------------------------------------------------------------------------
+#
+# Huawei E1750
+# ------------
+SUBSYSTEM=="tty", ATTRS{idVendor}=="12d1", ATTRS{idProduct}=="1446", SYMLINK+="ttyUSB-3G-Mobile" 
