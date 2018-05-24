@@ -3919,7 +3919,7 @@ cat > $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config << 
 	"url": "http://$TVHEADEND_HTTP_IP:$PLAYLISTS_PORT/$PLAYLISTS_IPTV_WORLD_M3U_FILE",
 	"bouquet": false,
 	"channel_number": 31,
-	"refetch_period": 60,
+	"refetch_period": 1440,
 	"ssl_peer_verify": false,
 	"tsid_zero": true,
 	"remove_args": "ticket",
@@ -4072,7 +4072,7 @@ cat > $TVHEADEND_CAMERAS_NETWORK_CONFIG_DIR/$TVHEADEND_CAMERAS_NETWORK_UUID/conf
 {
 	"url": "http://$TVHEADEND_HTTP_IP:$PLAYLISTS_PORT/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE",
 	"channel_number": 980,
-	"refetch_period": 180,
+	"refetch_period": 1440,
 	"ssl_peer_verify": false,
 	"tsid_zero": true,
 	"remove_args": "",
