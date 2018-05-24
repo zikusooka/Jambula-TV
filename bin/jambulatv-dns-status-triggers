@@ -22,6 +22,8 @@ BEEP_SOUNDS_SCRIPT=/usr/bin/jambulatv-sounds
 SPEED_TEST_SCRIPT=/usr/bin/jambulatv-speed-test
 GEOLOCATION_SCRIPT=/usr/bin/jambulatv-whereami
 
+YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
+
 INTERNET_OFF_FILE=/etc/dnsmasq.d/dns_off.conf
 DEBUG_FILE=/tmp/internet_status.log
 DNS_STATUS=$1
@@ -66,6 +68,18 @@ sed -i "/name_servers=127.0.0.1/a name_servers_append=\"$SECONDARY_DNS_SERVER $T
 /usr/sbin/resolvconf -u
 }
 
+update_youtube_dl () {
+$YOUTUBE_DL_CMD -U | grep -i 'Updated youtube-dl' > /dev/null 2>&1
+YOUTUBE_DL_UPDATED=$?
+if [[ "$YOUTUBE_DL_UPDATED" = "0" ]];
+then
+YOUTUBE_DL_NEW_VERSION=$($YOUTUBE_DL_CMD --version)
+# Notify
+logger -s -t $(basename $0) "Youtube-dl has been updated to version: $YOUTUBE_DL_NEW_VERSION"
+$OSD_SCRIPT "Youtube-dl has been updated to version: $YOUTUBE_DL_NEW_VERSION"
+fi
+}
+
 check_4_updates () {
 $MONITORING_PLUGINS_DIR/check_updates > /dev/null 2>&1
 UPDATES_STATUS=$?
@@ -107,12 +121,16 @@ sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=off:g" $COOVA_CONFIG_FIL
 # Since Internet is now UP -  Do other stuff that requires connectivity
 #######################################################################
 
-#  Take chrony on-line: Update clock time
-# ---------------------------------------
+# Take chrony on-line: Update clock time
+# --------------------------------------
 $CHRONYC_CMD <<EOF
 password $CHRONYC_PASSWD
 online
 EOF
+
+# Update Youtube-DL: Critical in Youtube-based Live TV streams
+# ------------------------------------------------------------
+update_youtube_dl > /dev/null 2>&1
 
 # Lookup current public IP Address and City and Country Name i.e. Setup Geo Location Data
 # ---------------------------------------------------------------------------------------
