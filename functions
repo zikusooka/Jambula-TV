@@ -3971,7 +3971,7 @@ iptv_tvheadend_network_add
 # Copy jambulatv-yplayer used to play Youtube based IPTV streams via TVHeadend and add User-Agent string too
 [ -e $BINARY_PREFIX/jambulatv-yplayer ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-yplayer | \
-		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" | \
+		sed -e "s:MY_USER_AGENT:$HTTP_BROWSER_USERAGENT_YOUTUBE:g" | \
 		sed -e "s:MY_IPTV_SERVICE_PROVIDER:$TVHEADEND_IPTV_NETWORK_NAME:g" \
 			> $BINARY_PREFIX/jambulatv-yplayer 
 # Make script executable

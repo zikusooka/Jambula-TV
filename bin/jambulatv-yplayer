@@ -4,10 +4,10 @@
 # Jambula Labs @copyright 2018-2019 All rights reserved
 
 # Variables
-DEBUG_LOG=no #no|yes
+FFMPEG_DEBUG_LOG=no #no|yes
 
 FFMPEG_CMD=/usr/bin/ffmpeg
-FFMPEG_FFLAGS="+nobuffer"
+FFMPEG_FFLAGS="+nobuffer+genpts+genpts+igndts+ignidx"
 FFMPEG_FLAGS="+low_delay"
 FFMPEG_PROBE_SIZE=2M
 FFMPEG_ANALYZE_DURATION=2M
@@ -35,7 +35,7 @@ IPTV_SERVICE_NAME="$(echo $@ | sed 's:"::g')"
 
 set_logging_level () {
 # Set the logging level number
-if [[ "$DEBUG_LOG" = "yes" ]];
+if [[ "$FFMPEG_DEBUG_LOG" = "yes" ]];
 then
 # Debug
 LOG_LEVEL=56
@@ -46,9 +46,12 @@ fi
 }
 
 add_youtube_ffmpeg_debugging_files () {
+if [[ "$FFMPEG_DEBUG_LOG" = "yes" ]];
+then
+
 # Change log file ownership to multimedia user or person running this tool
 [ -e $YOUTUBE_LOG_FILE ] && sudo chown $(whoami) $YOUTUBE_LOG_FILE
-[ -e $FFMPEG_LOG_FILE ] && sudo chown $(whoami) $FFMEPG_LOG_FILE
+[ -e $FFMPEG_LOG_FILE ] && sudo chown $(whoami) $FFMPEG_LOG_FILE
 #
 # Add Youtube info details to log file i.e. for debugging purposes
 cat >> $YOUTUBE_LOG_FILE <<EOF
@@ -71,8 +74,12 @@ cat >> $FFMPEG_LOG_FILE <<EOF
 FFmpeg Channel:	[$IPTV_SERVICE_NAME] at $(date)
 -------------------------------------------------------------------------------
 reset; clear; time $FFMPEG_FULL_COMMAND | ffplay -probesize $FFMPEG_PROBE_SIZE -
-
 EOF
+
+else
+# Add log file if debugging not enabled. Needed in ffmpeg command
+[[ -e $FFMPEG_LOG_FILE ]] || touch $FFMPEG_LOG_FILE
+fi
 }
 
 youtube_query_video () {
@@ -90,17 +97,34 @@ YOUTUBE_MANIFEST_URL="$(grep YOUTUBE_MANIFEST_URL $YOUTUBE_VARIABLES_TEMP_FILE |
 #
 # Set FFmpeg command for streaming
 ###############################################################################
+if [[ "$FFMPEG_DEBUG_LOG" = "yes" ]];
+then
 FFMPEG_FULL_COMMAND="FFREPORT=file=$FFMPEG_LOG_FILE:level=$LOG_LEVEL $FFMPEG_CMD -loglevel $LOG_LEVEL -hide_banner -nostats -user_agent \"$IPTV_USER_AGENT\" -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -probesize $FFMPEG_PROBE_SIZE -analyzeduration $FFMPEG_ANALYZE_DURATION -i $YOUTUBE_MANIFEST_URL -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=\"$IPTV_SERVICE_NAME\" -codec $FFMPEG_CODECS $FFMPEG_FILTERS $FFMPEG_OTHER_OPTS -f $FFMPEG_FORMAT pipe:1"
+
+else
+FFMPEG_FULL_COMMAND="$FFMPEG_CMD -loglevel $LOG_LEVEL -hide_banner -nostats -user_agent \"$IPTV_USER_AGENT\" -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -probesize $FFMPEG_PROBE_SIZE -analyzeduration $FFMPEG_ANALYZE_DURATION -i $YOUTUBE_MANIFEST_URL -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=\"$IPTV_SERVICE_NAME\" -codec $FFMPEG_CODECS $FFMPEG_FILTERS $FFMPEG_OTHER_OPTS -f $FFMPEG_FORMAT pipe:1"
+fi
 ###############################################################################
 export FFMPEG_FULL_COMMAND
 }
 
 youtube_stream_url () {
+if [[ "$FFMPEG_DEBUG_LOG" != "yes" ]];
+then
 # Remove Youtube temp variables file in case of next run
 [ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && rm -f $YOUTUBE_VARIABLES_TEMP_FILE
 #
 # Run stream via Ffmpeg Pipe
 $FFMPEG_FULL_COMMAND
+fi
+}
+
+print_debug_info () {
+clear; tail -12 $YOUTUBE_LOG_FILE
+echo "Full command for testing is shown below. Please Enter ..."
+read
+tail -3 $FFMPEG_LOG_FILE
+echo
 }
 
 
@@ -115,15 +139,11 @@ set_logging_level
 # Query Youtube for video parameters like ID, URL etc
 youtube_query_video
 
-# Add FFmpeg and Youtube information (variables) file if debugging is enabled
-if [[ "$DEBUG_LOG" = "yes" ]];
-then
+# Add FFmpeg and Youtube information (variables) file depending on whether debug is enabled
 add_youtube_ffmpeg_debugging_files 
-else
-# Add log file if debugging not enabled. Needed in ffmpeg command
-[[ -e $FFMPEG_LOG_FILE ]] || touch $FFMPEG_LOG_FILE
-fi
-
 
 # Start streaming video
-[[ "$DEBUG_LOG" != "yes" ]] && youtube_stream_url
+youtube_stream_url
+
+# Print Youtube variables to screen if debugging is enabled
+print_debug_info
