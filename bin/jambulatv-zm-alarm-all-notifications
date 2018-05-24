@@ -55,6 +55,9 @@ ASTERISK_DIAL_OUT_CID="CCTV Security Alarm <(071)-000-0000>"
 OSD_SCRIPT=MY_OSD_SCRIPT
 LIGHTS_CMD=/usr/bin/jambulatv-lights
 
+CURL_CMD="/usr/bin/curl"
+CURL_OPTS="-s -S -L -m 60"
+
 
 
 ###############
@@ -90,7 +93,7 @@ fi
 
 capture_motion_event () {
 # Capture current camera view
-curl -G -s -o $ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg $ZM_WATCH_URL
+$CURL_CMD $CURL_OPTS -G -o $ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg $ZM_WATCH_URL
 }
 
 generate_message_4_notice () {
@@ -102,7 +105,7 @@ EOF
 }
 
 kodi_screensaver_status () {
-KODI_SCREENSAVER_STATUS=$(curl -s -X POST -H "Content-Type: application/json" -u $KODI_HTTP_USER:$KODI_HTTP_PASS -d '{"jsonrpc": "2.0", "method": "XBMC.GetInfoBooleans", "params":{"booleans":["System.ScreenSaverActive"]},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc | jq .result[])
+KODI_SCREENSAVER_STATUS=$($CURL_CMD $CURL_OPTS -X POST -H "Content-Type: application/json" -u $KODI_HTTP_USER:$KODI_HTTP_PASS -d '{"jsonrpc": "2.0", "method": "XBMC.GetInfoBooleans", "params":{"booleans":["System.ScreenSaverActive"]},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc | jq .result[])
 }
 
 kodi_screensaver_poke () {
@@ -110,12 +113,12 @@ kodi_screensaver_poke () {
 if [ "$KODI_SCREENSAVER_STATUS" = "true" ];
 then
 # Input.Select
-curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Input.Select","id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+$CURL_CMD $CURL_OPTS -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Input.Select","id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
 fi
 }
 
 kodi_addon_script_doorbell () {
-curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Addons.ExecuteAddon","params":{"addonid":"script.doorbell","params":{"CamID":"'"$ZM_CAMERA_ID"'","CamName":"'"$ZM_CAMERA_NAME"'","CamEvent":"'"$ZM_CAMERA_EVENT_ID"'","CamTime":"'"$ZM_TIME"'","CamMessage":"'"$NOTIFICATION_MESSAGE"'"}},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+$CURL_CMD $CURL_OPTS -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Addons.ExecuteAddon","params":{"addonid":"script.doorbell","params":{"CamID":"'"$ZM_CAMERA_ID"'","CamName":"'"$ZM_CAMERA_NAME"'","CamEvent":"'"$ZM_CAMERA_EVENT_ID"'","CamTime":"'"$ZM_TIME"'","CamMessage":"'"$NOTIFICATION_MESSAGE"'"}},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
 }
 
 create_asterisk_call_file () {
