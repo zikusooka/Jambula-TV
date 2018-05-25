@@ -119,21 +119,26 @@ CURL_OPTS="-s -S -L -m 60"
 case $API in
 1)
 # TTS using acapela
-text2speech_acapela "$TTS_TEXT_MESSAGE"
+TTS_CHARACTER_LIMIT=337
+text2speech_acapela "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
 ;;
 
 2)
 # TTS using google
-text2speech_google "$(echo $TTS_TEXT_MESSAGE | fold -s -w 200 | head -1)"
+TTS_CHARACTER_LIMIT=200
+text2speech_google "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
 ;;
 
 3)
 # TTS using watson
-text2speech_watson "$TTS_TEXT_MESSAGE" 
+TTS_CHARACTER_LIMIT=337
+text2speech_watson "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
 ;;
 
 *)
-text2speech_acapela "$TTS_TEXT_MESSAGE"
+# TTS using acapela
+TTS_CHARACTER_LIMIT=337
+text2speech_acapela "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
 ;;
 esac
 
