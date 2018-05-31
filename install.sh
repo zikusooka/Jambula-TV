@@ -25,8 +25,8 @@ install_dir_create
 update_dtv_scan_tables
 
 # Ask and set key variables
-ask_4_variables
-set_variables
+dvbt_ask_4_variables
+dvbt_set_variables
 
 # Non-Interactive install starts here i.e. Start logging to file 
 exec 2>> $BUILD_LOG

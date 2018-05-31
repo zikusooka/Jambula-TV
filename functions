@@ -186,28 +186,29 @@ TVHEADEND_HTTP_PORT=9981  # Please change to conform with our lineup
 TVHEADEND_HTSP_PORT=9982  # Please change to conform with our lineup
 TVHEADEND_HTTP_USER=""
 TVHEADEND_HTTP_PASS=""
+TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
 # TVHeadend components
 TVHEADEND_TIMESHIFT_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/timeshift
 TVHEADEND_TIMESHIFT_BUFFER_FILE=$TMPDIR/timeshift_buffer
 TVHEADEND_DVR_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/dvr/config
-TVHEADEND_DVR_UUID=$(uuidgen -t | sed 's:-::g')
 
 TVHEADEND_ADAPTERS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/linuxdvb/adapters
-TVHEADEND_ADAPTER_UUID=$(uuidgen -t | sed 's:-::g')
 
-TVHEADEND_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/dvb/networks
-TVHEADEND_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
-TVHEADEND_NETWORK_CONFIG_FILE=$TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/config
+TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE=/tmp/tvheadend_reset_in_progress
 
-TVHEADEND_IPTV_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/iptv/networks
-TVHEADEND_IPTV_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
+TVHEADEND_DVBT_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/dvb/networks
+TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE=/tmp/create_dvbt_network.sh
+TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE=/tmp/create_dvbt_multiplex.sh
+
 TVHEADEND_IPTV_NETWORK_NAME=jambula-IPTV
 TVHEADEND_IPTV_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/iptv
+TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE=/tmp/create_iptv_network.sh
+
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
 TVHEADEND_CHANNELS_TAGS_DIR=$TVHEADEND_CONFIG_DIR/channel/tag
-#
-TVHEADEND_CAMERAS_NETWORK_CONFIG_DIR=$TVHEADEND_IPTV_NETWORK_CONFIG_DIR
-TVHEADEND_CAMERAS_NETWORK_UUID=$(uuidgen -t | sed 's:-::g')
+
+TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE=/tmp/create_cameras_network.sh
+
 TVHEADEND_CAMERAS_NETWORK_NAME=jambula-Eyes
 TVHEADEND_CAMERAS_LOG_DIR=$TVHEADEND_IPTV_LOG_DIR
 
@@ -1638,6 +1639,46 @@ userdel -r netdata
 
 
 
+#####################
+#  RESET FUNCTIONS  #
+#####################
+reset_tvheadend_2_default () {
+# Notify of reset
+$OSD_SCRIPT -m "Reset of TV server has been requested"
+logger -s -t $(basename $0) "Reset of TVHeadend server has been requested"
+# Add control file for other apps to know that TVHeadend Reset is in progress
+[ -e $TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE ] || \
+touch $TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE
+# Stop tvheadend service
+sudo systemctl stop tvheadend.service
+# Backup and remove old files
+mv -v $TVHEADEND_CONFIG_DIR ${TVHEADEND_CONFIG_DIR}.$(date +%Y%m%d%H%M)
+#
+# Source DVB-T2 variables
+dvbt_ask_4_variables yes
+dvbt_set_variables
+#
+# Quit if no
+if [[ "$TVH_DVBT_CONFIG_REQUESTED" != "yes" ]];
+then
+clear
+logger -s -t $(basename $0) "You did not agree to configuring DVB-T, so quitting ..."
+exit 0
+fi
+# DVB-T2 & IPTV
+tvheadend_configure
+iptv_tvheadend_configure
+iptv_icons_add 
+# EPG
+epg_tvheadend_configure
+cameras_tvheadend_configure
+# Remove control file for other apps to know that TVHeadend Reset completed
+[ -e $TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE ] && \
+sudo rm -f $TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE
+}
+
+
+
 #######################
 #  INSTALL FUNCTIONS  #
 #######################
@@ -1722,7 +1763,7 @@ update_dtv_scan_tables () {
 rsync -avz $PROJECT_GITHUB_DIR/dtv-scan-tables/ $DATAROOTDIR/dvb/
 }
 
-ask_4_variables () {
+dvbt_ask_4_variables () {
 # ----------
 # TV Market
 # ----------
@@ -1762,25 +1803,6 @@ DVBT_TUNER_NAME=$DEFAULT_DVBT_TUNER_NAME
 fi
 # Export
 export DVBT_TUNER_NAME
-#
-# ------------------------
-# DVB-T Configure request
-# ------------------------
-clear
-DEFAULT_TVH_DVBT_CONFIG_REQUESTED=no
-read -p "Would you like to configure DVB-T network in tvheadend (yes|no)? [$DEFAULT_TVH_DVBT_CONFIG_REQUESTED]
-
-IMPORTANT: If yes, please insert the DVB-T device before continuing.
-You must also ensure the TV Antenna is also hooked up properly
-
-" TVH_DVBT_CONFIG_REQUESTED
-# If empty set to default
-if [ "x$TVH_DVBT_CONFIG_REQUESTED" = "x" ];
-then
-TVH_DVBT_CONFIG_REQUESTED=$DEFAULT_TVH_DVBT_CONFIG_REQUESTED
-fi
-# Export
-export TVH_DVBT_CONFIG_REQUESTED
 #
 # ---------------
 # InfraRed Remote
@@ -1824,24 +1846,49 @@ IR_REMOTE=vr-1100
 esac
 # Export
 export IR_REMOTE
+#
+# ------------------------
+# DVB-T Configure request
+# ------------------------
+clear
+# Set default action depending on whether its specified in function
+[[ "x$1" = "x" ]] && DEFAULT_TVH_DVBT_CONFIG_REQUESTED="no" || \
+DEFAULT_TVH_DVBT_CONFIG_REQUESTED="$1"
+read -p "Would you like to configure DVB-T network in tvheadend (yes|no)? [$DEFAULT_TVH_DVBT_CONFIG_REQUESTED]
+
+IMPORTANT: If yes, please insert the DVB-T device before continuing.
+You must also ensure the TV Antenna is also hooked up properly
+
+" TVH_DVBT_CONFIG_REQUESTED
+# If empty set to default
+if [ "x$TVH_DVBT_CONFIG_REQUESTED" = "x" ];
+then
+TVH_DVBT_CONFIG_REQUESTED=$DEFAULT_TVH_DVBT_CONFIG_REQUESTED
+fi
+# Export
+export TVH_DVBT_CONFIG_REQUESTED
 
 # Set DVBT variables
 # ----------
 # TV Market
 # ----------
-DVBT_NETWORK_NAME=$(basename $(find $DATAROOTDIR/dvb/dvb-t -maxdepth 1 -iname "$TV_MARKET"))
+FIND_DVBT_NETWORK=$(find $DATAROOTDIR/dvb/dvb-t -maxdepth 1 -iname "$TV_MARKET")
+[[ "x$FIND_DVBT_NETWORK" = "x" ]] || \
+DVBT_NETWORK_NAME=$(basename $FIND_DVBT_NETWORK)
 case $TV_MARKET in
 [Uu][Gg]-[Kk][Aa][Mm][Pp][Aa][Ll][Aa])
 DVBT_PNETWORK_NAME="UBC TX2"
+DVBT_MULTIPLEXES="$(awk /FREQUENCY/{'print $3'} $DATAROOTDIR/dvb/dvb-t/[Uu][Gg]-[Kk][Aa][Mm][Pp][Aa][Ll][Aa] | grep -Ex '[0-9]{9}' | paste -s -d " ")"
 ;;
+
 [Kk][Ee]-[Nn][Aa][Ii][Rr][Oo][Bb][Ii])
 DVBT_PNETWORK_NAME="ADN"
+DVBT_MULTIPLEXES="$(awk /FREQUENCY/{'print $3'} $DATAROOTDIR/dvb/dvb-t/[Kk][Ee]-[Nn][Aa][Ii][Rr][Oo][Bb][Ii] | grep -Ex '[0-9]{9}' | paste -s -d " ")"
 ;;
-*)
-DVBT_PNETWORK_NAME=$DVBT_NETWORK_NAME
+
 esac
 # Export
-export DVBT_NETWORK_NAME DVBT_PNETWORK_NAME
+export DVBT_NETWORK_NAME DVBT_PNETWORK_NAME DVBT_MULTIPLEXES
 #
 # -----------------
 # TV Tuner chipset
@@ -1863,7 +1910,7 @@ fi
 export DVBT_TUNER_NAME DVB_TUNER_ADAPTER DVBT_TUNER_NO
 }
 
-set_variables () {
+dvbt_set_variables () {
 # Copy to DVBT settings file
 # --------------------------
 cat > $PROJECT_DVBT_SETTINGS_FILE <<EOF
@@ -1874,6 +1921,7 @@ TV_MARKET="$TV_MARKET"
 IR_REMOTE="$IR_REMOTE"
 DVBT_NETWORK_NAME="$DVBT_NETWORK_NAME"
 DVBT_PNETWORK_NAME="$DVBT_PNETWORK_NAME"
+DVBT_MULTIPLEXES="$DVBT_MULTIPLEXES"
 EOF
 # Change ownership to multimedia user i.e. jambula and make it executable
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_DVBT_SETTINGS_FILE
@@ -2878,11 +2926,17 @@ systemctl enable tvheadend.service
 cp -v $PROJECT_CONFIGS_DIR/logrotate/tvheadend $LOGROTATE_CONF_DIR/
 }
 
-dvb_tvheadend_network_add () {
+dvb_tvheadend_adapter_add () {
+# NOTE: Run after DVB-T2 network has been configured
+
+# Adapter UUID
+TVHEADEND_ADAPTER_UUID=$(uuidgen -t | sed 's:-::g')
+
 # Source DVBT settings file
 . $PROJECT_DVBT_SETTINGS_FILE
 # Configure DVBT-2 adapter settings
 TVHEADEND_ADAPTERS_CONFIG_FILE=$(grep -rli "$DVBT_TUNER_NAME" $TVHEADEND_ADAPTERS_CONFIG_DIR | xargs grep -l adapter${DVBT_TUNER_NO})
+TVHEADEND_DVBT_NETWORK_UUID=$(curl -s http://127.0.0.1:9981/api/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$DVBT_NETWORK_NAME"'") |.uuid' | uniq)
 #
 cat > $TVHEADEND_ADAPTERS_CONFIG_FILE << EOF
 {
@@ -2906,7 +2960,7 @@ cat > $TVHEADEND_ADAPTERS_CONFIG_FILE << EOF
 			"idlescan": true,
 			"free_weight": 0,
 			"networks": [
-				"$TVHEADEND_NETWORK_UUID"
+				"$TVHEADEND_DVBT_NETWORK_UUID"
 			],
 			"linked": "",
 			"type": "DVB-T",
@@ -2915,19 +2969,28 @@ cat > $TVHEADEND_ADAPTERS_CONFIG_FILE << EOF
 	}
 }
 EOF
-#
-# Add DVB-T network
-[ -d $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID ] || \
-	mkdir -p $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID
-#
-cat > $TVHEADEND_NETWORK_CONFIG_FILE <<EOF
-{
+}
+
+dvb_tvheadend_network_add () {
+# Source DVBT settings file
+. $PROJECT_DVBT_SETTINGS_FILE
+
+# Remove previous temp script file for creating DVB-T network
+[[ -e $TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE ]] && sudo rm -f $TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE 
+
+# Add DVB-T network creation command to temp file
+cat >> $TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE <<EOF
+# $DVBT_NETWORK_NAME
+# ----------------------------
+# Add DVB-T network to backend
+$CURL_CMD $CURL_OPTS -d "class=dvb_network_dvbt" -d "\$(printf $(echo -n $(cat <<EOT
+conf='{
 	"networkname": "$DVBT_NETWORK_NAME",
 	"pnetworkname": "$DVBT_PNETWORK_NAME",
 	"nid": 0,
 	"autodiscovery": 0,
         "bouquet": false,
-	"skipinitscan": false,
+	"skipinitscan": true,
 	"idlescan": false,
 	"sid_chnum": false,
 	"ignore_chnum": true,
@@ -2935,37 +2998,100 @@ cat > $TVHEADEND_NETWORK_CONFIG_FILE <<EOF
 	"localtime": 180,
 	"wizard": false,
 	"class": "dvb_network_dvbt"
-}
+}'
+EOT
+)
+))" $TVHEADEND_API_URL/mpegts/network/create > /dev/null 2>&1
+#
+# Notify - DVB-T network added
+logger -s -t $(basename $0) "Added DVB-T network [$DVBT_NETWORK_NAME]"
+
 EOF
-#
-# Create muxes directory if it does not exist
-[ -d $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes ] || \
-	mkdir -p $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes
-#
-# Set muxes directory for contributed TV market
+
+# Prepare create DVB-T network script
+sed -i '1i #!/bin/sh' "$TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE"
+chmod 755 $TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE
+
+# Run script to create DVB-T network
+$TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE
+
+# Pause for a bit to allow DVB-T network to be added properly
+sleep 3
+# Remove temp script file
+[[ -e $TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE ]] && rm -f $TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE
+
+# Query and set DVB-T network UUID
+TVHEADEND_DVBT_NETWORK_UUID=$(curl -s http://127.0.0.1:9981/api/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$DVBT_NETWORK_NAME"'") |.uuid' | uniq)
+}
+
+dvb_tvheadend_multiplex_add () {
+# Source DVBT settings file
+. $PROJECT_DVBT_SETTINGS_FILE
+
+# Query and set DVB-T network UUID
+TVHEADEND_DVBT_NETWORK_UUID=$(curl -s http://127.0.0.1:9981/api/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$DVBT_NETWORK_NAME"'") |.uuid' | uniq)
+
+# Set location of pre-defined DVB-T multiplexes
 MUXES_DIR_4_TV_MARKET=$(find $PROJECT_CONFIGS_DIR/tvheadend/muxes -maxdepth 1 -iname "$TV_MARKET")
-# Copy muxes for specified TV Market
-rsync -av $MUXES_DIR_4_TV_MARKET/ $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID/muxes/
+
+# Remove previous temp script file for creating DVB-T multiplex
+[[ -e $TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE ]] && sudo rm -f $TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE 
+
+# Cycle through available multiplexes for this TV market
+for MUX in ${DVBT_MULTIPLEXES[$@]}
+do
+
+# Break off if config file for multiplex is not found
+[[ -e "$MUXES_DIR_4_TV_MARKET/$MUX" ]] || break
+
+# Add DVB-T multiplex creation command to temp file
+cat >> $TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE <<EOF
+# FREQUENCY: [$MUX]
+# ----------------------------
+# Add DVB-T mux to backend
+$CURL_CMD $CURL_OPTS -d "uuid=$TVHEADEND_DVBT_NETWORK_UUID" -d "\$(printf $(echo -n $(cat <<EOT
+conf='
+$(cat $MUXES_DIR_4_TV_MARKET/$MUX)
+'
+EOT
+)
+))" $TVHEADEND_API_URL/mpegts/network/mux_create > /dev/null 2>&1
 #
-# Restart TVHeadend
-sudo systemctl restart tvheadend.service
-#
-# Notifications
-SCAN_NOTIFICATION_MESSAGE="Scanning for DVB-T2 services, please wait ..."
-logger -s -t $(basename $0) "$SCAN_NOTIFICATION_MESSAGE"
-$OSD_SCRIPT -m "$SCAN_NOTIFICATION_MESSAGE"
-#
-# Pause for a couple of minutes to allow all services to be added before proceeding to mapping of channels
-sleep 120
+# Notify - DVB-T mux added
+logger -s -t $(basename $0) "Added DVB-T multiplex [$MUX]"
+
+EOF
+done
+
+# Prepare create DVB-T multiplex script
+sed -i '1i #!/bin/sh' "$TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE"
+chmod 755 $TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE
+
+# Run script to create DVB-T multiplex
+$TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE
+
+# Pause for a bit to allow DVB-T multiplex to be added properly
+sleep 3
+
+# Remove temp script file
+[[ -e $TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE ]] && rm -f $TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE
 }
 
 tvheadend_dvbt_configure () {
-# NOTE: This functions will be used by other tools e.g. jambulatv-initial-setup
+# NOTE: This function will be used by other tools e.g. jambulatv-initial-setup
 #       This means functions/commands should be executable by normal user like jambula
 #
 # Source DVBT settings file
 . $PROJECT_DVBT_SETTINGS_FILE
-#
+
+# DVB-T multiplexes for selected TV market must exist before proceeding, otherwise fail
+if [[ "x$DVBT_MULTIPLEXES" = "x" ]];
+then
+clear
+logger -s -t $(basename $0) "Error: No multiplexes were found for $TV_MARKET TV market area"
+exit 0
+fi
+
 # Start tvheadend if adapter has been inserted
 if [ ! -d /dev/dvb/adapter${DVBT_TUNER_NO} ];
 then
@@ -2990,15 +3116,26 @@ do
   if [ "$(ls -A "$TVHEADEND_ADAPTERS_CONFIG_DIR")" ]; 
     then
     break
-  else 
-    echo "Waiting for tvheadend.service to settle. Please be patient ..."
+  else
+    logger -s -t $(basename $0) "Waiting for tvheadend.service to settle. Please be patient ..."
+
     sleep 7
   fi
 
 done
-#
-# Configure network that will be used and type
+
+# -----------------
+# Configure DVB-T 
+# -----------------
+
+# Add DVB-T network
 dvb_tvheadend_network_add
+
+# Add DVB-T adapter
+dvb_tvheadend_adapter_add 
+
+# Add DVB-T muxes
+dvb_tvheadend_multiplex_add 
 }
 
 dvb_icons_add () {
@@ -3008,19 +3145,19 @@ dvb_icons_add () {
 # Create picons directory if it does not exist
 [ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
 #
-# Copy DVB icons to JambulaTV share directory if logos for requested TV market exist
-if [ -e $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET ];
+# Copy DVB icons to JambulaTV share directory if logos plus requested TV market exist
+if [[ -e $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET && "x$DVBT_MULTIPLEXES" != "x" ]];
 then
 # Set chicon dir used in chiconpath
 TVHEADEND_CHICON_DIR=$PROJECT_SYSTEM_ICONS_DIR/$TV_MARKET
 # Add DVB picons
-echo "Adding DVB TV picon images for $TV_MARKET"
-rsync -av $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET/ $TVHEADEND_CHICON_DIR/
+rsync -avq $PROJECT_CONTRIB_DIR/tv/picons/$TV_MARKET/ $TVHEADEND_CHICON_DIR/
+logger -s -t $(basename $0) "Added DVB-T picon images for $TV_MARKET TV market area"
 # Give permissons to TV Icons
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_CHICON_DIR
 
 else
-logger -s -t $(basename $0) "Error: DVB TV picon images for $TV_MARKET not found"
+logger -s -t $(basename $0) "Error: DVB-T picon images for $TV_MARKET TV market not found"
 fi
 }
 
@@ -3034,8 +3171,8 @@ dvb_icons_add
 [ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
 [ -d $TVHEADEND_TIMESHIFT_CONFIG_DIR ] || mkdir -p $TVHEADEND_TIMESHIFT_CONFIG_DIR
 [ -d $TVHEADEND_DVR_CONFIG_DIR ] || mkdir -p $TVHEADEND_DVR_CONFIG_DIR
-[ -d $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID ] || \
-	mkdir -p $TVHEADEND_NETWORK_CONFIG_DIR/$TVHEADEND_NETWORK_UUID
+[ -d $TVHEADEND_DVBT_NETWORK_CONFIG_DIR/$TVHEADEND_DVBT_NETWORK_UUID ] || \
+	mkdir -p $TVHEADEND_DVBT_NETWORK_CONFIG_DIR/$TVHEADEND_DVBT_NETWORK_UUID
 [ -d $TVHEADEND_ADAPTERS_CONFIG_DIR ] || mkdir -p $TVHEADEND_ADAPTERS_CONFIG_DIR
 [ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
 
@@ -3133,10 +3270,14 @@ cat > $TVHEADEND_TIMESHIFT_CONFIG_DIR/config << EOF
 }
 EOF
 
-# Configure recording profile for JambulaTV i.e. Make sure tvheadend is running
-# -----------------------------------------------------------------------------
-TVHEADEND_PROFILE_PASS=$(curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/profile/list | jq -c ".entries[]" | grep -i pass | cut -d : -f3 | sed 's:["|}]::g')
-#
+# Configure recording profile for JambulaTV 
+# -----------------------------------------
+# Make sure tvheadend is running before extracting recording profile
+sudo systemctl -q is-active tvheadend.service || sudo systemctl start tvheadend.service
+TVHEADEND_PROFILE_PASS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/profile/list | jq -r '.entries[0].key')
+
+TVHEADEND_DVR_UUID=$(uuidgen -t | sed 's:-::g')
+
 # Remove created default passthrough DVR entry, only one needs to exist for recordings
 rm -f $TVHEADEND_DVR_CONFIG_DIR/*
 #
@@ -3217,13 +3358,16 @@ chmod 755 $BINARY_PREFIX/jambulatv-tvheadend-controller
 if [ "$TVH_DVBT_CONFIG_REQUESTED" = "yes" ];
 then
 
-# DVB-T configure if dvbt tuner is detected
-[ -d /dev/dvb/adapter${DVBT_TUNER_NO} ] && tvheadend_dvbt_configure 
+# DVB-T configure if DVB-T network
+tvheadend_dvbt_configure 
 
 # Map DVB-T channels
-[ -d /dev/dvb/adapter${DVBT_TUNER_NO} ] && jambulatv-tvheadend-controller dvb map
+jambulatv-tvheadend-controller dvb all
 
-# create script which will enable kodi pvr.hts addon at next boot.  Can't do it here, since kodi still not alive
+# Create script which will enable kodi pvr.hts addon at next boot, but only if it is
+# non-existent.  Can't do it here, since kodi still not alive
+if [[ ! -e $KODI_PVR_MANAGER_ENABLE_SCRIPT ]];
+then
 cat > $KODI_PVR_MANAGER_ENABLE_SCRIPT <<EOF
 #!/bin/sh
 # Temporary script to enable PVR Manager in kodi after initial install
@@ -3257,6 +3401,7 @@ EOF
 chmod 755  $KODI_PVR_MANAGER_ENABLE_SCRIPT
 # Let other tools know, we already configured DVB-T
 touch $TVHEADEND_CONFIG_DIR/.dvbt_configured
+fi
 
 else
 # Remind to run manually in post install information, and output to final notice
@@ -3269,7 +3414,7 @@ TVHeadend DVB-T Network
 
   tvheadend_dvbt_configure and map channels using:
 
-  jambulatv-tvheadend-controller dvb map
+  jambulatv-tvheadend-controller dvb all
 
   
 TIP: Run initial-setup tool or just add it to testing.sh and run!  
@@ -3909,13 +4054,16 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_ADDON_DATA_DIR
 }
 
 iptv_tvheadend_network_add () {
-# Create tvheadend IPTV directory if it does not exist
-[ -d $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID ] || \
-	mkdir -p $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID
-#
-# Create IPTV Network i.e. jambulaIPTV
-cat > $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config << EOF
-{
+# Remove previous temp script file for creating IPTV network
+[[ -e $TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE ]] && sudo rm -f $TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE 
+
+# Add IPTV network creation command to temp file
+cat >> $TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE <<EOF
+# $TVHEADEND_IPTV_NETWORK_NAME
+# ----------------------------
+# Add IPTV network to backend
+$CURL_CMD $CURL_OPTS -d "class=iptv_auto_network" -d "\$(printf $(echo -n $(cat <<EOT
+conf='{
 	"url": "http://$TVHEADEND_HTTP_IP:$PLAYLISTS_PORT/$PLAYLISTS_IPTV_WORLD_M3U_FILE",
 	"bouquet": false,
 	"channel_number": 31,
@@ -3941,25 +4089,40 @@ cat > $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config << 
 	"ignore_chnum": false,
 	"satip_source": 0,
 	"localtime": 180,
-	"wizard": false
-}
+	"wizard": false,
+	"ignore_path": 0,
+	"remove_scrambled": true
+}'
+EOT
+)
+))" $TVHEADEND_API_URL/mpegts/network/create > /dev/null 2>&1
+#
+# Notify - IPTV network added
+logger -s -t $(basename $0) "Added IPTV network [$TVHEADEND_IPTV_NETWORK_NAME]"
+
 EOF
+
+# Prepare create IPTV network script
+sed -i '1i #!/bin/sh' "$TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE"
+chmod 755 $TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE
+
+# Run script to create IPTV network
+$TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE
+
+# Pause for a bit to allow IPTV network to be added properly
+sleep 3
+# Remove temp script file
+[[ -e $TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE ]] && rm -f $TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE
+
 # Give multimedia user permission to access tvheadend directories
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
-#
+
 # Copy default IPTV world playlist for JambulaTV if not existent - see playlists_configure
 if [[ -e $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_IPTV_WORLD_M3U_FILE ]] && \
 	[[ ! -e $PLAYLISTS_DIRECTORY/$PLAYLISTS_IPTV_WORLD_M3U_FILE ]];
 then
 	cp -rv $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_IPTV_WORLD_M3U_FILE $PLAYLISTS_DIRECTORY
 fi
-#
-# Remove default gateway so TVH service can restart
-#ip route del default
-# Restart TVHeadend
-sudo systemctl restart tvheadend.service
-# Restore Internet default route
-#ip route add default via $NETWORK_GATEWAY_ADDRESS
 }
 
 iptv_tvheadend_configure () {
@@ -3990,14 +4153,14 @@ set_www_user_group
 # Create picons directory if it does not exist
 [ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
 # Copy IP TV picons e.g. logos to JambulaTV share directory
-rsync -av $PROJECT_CONTRIB_DIR/tv/picons/IPTV $PROJECT_SYSTEM_ICONS_DIR/
+rsync -avq $PROJECT_CONTRIB_DIR/tv/picons/IPTV $PROJECT_SYSTEM_ICONS_DIR/
 # Give permissons to TV Icons
 chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/IPTV
 }
 
 iptv_builder_install () {
 # Unpack sources
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/jambula-iptv-builder $SOURCESDIR/
+rsync -avq --delete-after $PROJECT_GITHUB_DIR/jambula-iptv-builder $SOURCESDIR/
 # Create XMLTV directory in multimedia user's home directory
 [ -d $MULTIMEDIA_USER_HOME_DIR/.xmltv ] || mkdir -p $MULTIMEDIA_USER_HOME_DIR/.xmltv
 # Change iptv-builder directory permissions to multimedia user
@@ -4063,13 +4226,16 @@ sudo systemctl restart tvheadend.service
 }
 
 cameras_tvheadend_network_add () {
-# Create tvheadend IPTV directory if it does not exist
-[ -d $TVHEADEND_CAMERAS_NETWORK_CONFIG_DIR/$TVHEADEND_CAMERAS_NETWORK_UUID ] || \
-	mkdir -p $TVHEADEND_CAMERAS_NETWORK_CONFIG_DIR/$TVHEADEND_CAMERAS_NETWORK_UUID
-#
-# Create IPTV Network i.e. jambulaIPTV
-cat > $TVHEADEND_CAMERAS_NETWORK_CONFIG_DIR/$TVHEADEND_CAMERAS_NETWORK_UUID/config << EOF
-{
+# Remove previous temp script file for creating cameras network
+[[ -e $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE ]] && sudo rm -f $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE 
+
+# Add Cameras network creation command to temp file
+cat >> $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE <<EOF
+# $TVHEADEND_CAMERAS_NETWORK_NAME
+# -------------------------------
+# Add Cameras network to backend
+$CURL_CMD $CURL_OPTS -d "class=iptv_auto_network" -d "\$(printf $(echo -n $(cat <<EOT
+conf='{
 	"url": "http://$TVHEADEND_HTTP_IP:$PLAYLISTS_PORT/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE",
 	"channel_number": 980,
 	"refetch_period": 1440,
@@ -4090,18 +4256,40 @@ cat > $TVHEADEND_CAMERAS_NETWORK_CONFIG_DIR/$TVHEADEND_CAMERAS_NETWORK_UUID/conf
 	"nid": 0,
 	"autodiscovery": 0,
 	"bouquet": false,
-	"skipinitscan": false,
+	"skipinitscan": true,
 	"idlescan": false,
 	"sid_chnum": false,
 	"ignore_chnum": false,
 	"satip_source": 0,
 	"localtime": 180,
 	"wizard": false
-}
-EOF
-# Give multimedia user permission to access tvheadend directories
-chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+}'
+EOT
+)
+))" $TVHEADEND_API_URL/mpegts/network/create > /dev/null 2>&1
 #
+# Notify - Cameras network added
+logger -s -t $(basename $0) "Added Cameras network [$TVHEADEND_CAMERAS_NETWORK_NAME]"
+
+EOF
+
+# Prepare create cameras network script
+sed -i '1i #!/bin/sh' "$TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE"
+chmod 755 $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE
+
+# Run script to create cameras network
+$TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE
+
+# Pause for a bit to allow cameras network to be added properly
+sleep 3
+# Remove temp script file
+[[ -e $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE ]] && rm -f $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE
+}
+
+cameras_tvheadend_configure () {
+# Add Cameras network
+cameras_tvheadend_network_add
+
 # Copy default Camera list for JambulaTV if not existent - see playlists_configure
 if [[ -e $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE && ! -e $PLAYLISTS_DIRECTORY/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE ]];
 then
@@ -4109,21 +4297,13 @@ cp -rv $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE $PLAYLISTS
 # Change playlist directory ownership to multimedia user i.e. jambula
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PLAYLISTS_DIRECTORY
 fi
-#
-# Restart TVHeadend - So Scan is done
-sudo systemctl restart tvheadend.service
 
-# Add cameras services scanning to schedule
 # Copy jambulatv-cameras-scan-map-channels .timer and .service files
 cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-cameras-scan-map-channels.{timer,service} $SYSTEMD_UNITS_DIR_USER/
+# Add cameras services scanning to schedule
 systemctl enable jambulatv-cameras-scan-map-channels.timer
 systemctl start jambulatv-cameras-scan-map-channels.timer
-}
 
-cameras_tvheadend_configure () {
-# Add Cameras network
-cameras_tvheadend_network_add
-#
 # Copy jambulatv-camplayer used to play web based camera streams via TVHeadend
 [ -e $BINARY_PREFIX/jambulatv-camplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-camplayer $BINARY_PREFIX/
 #
@@ -7300,7 +7480,7 @@ XUPNPD
 ========
 % Please setup a TV playlist for use by xupnpd.  For example:
 
-  $BINARY_PREFIX/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' http://$NETWORK_IP_ADDRESS:9981/playlist/channels
+  $CURL_CMD $CURL_OPTS -A 'Mozilla/5.0' http://$NETWORK_IP_ADDRESS:9981/playlist/channels
 
 #
 EOF
@@ -7572,7 +7752,7 @@ chmod -R 777 $WWW_HTML_DIR/owncloud
 systemctl restart nginx.service
 #
 # Generate owncloud instance ID
-$BINARY_PREFIX/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$(grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+$CURL_CMD $CURL_OPTS -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$(grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 # Get instance ID
 OWNCLOUD_INSTANCE_ID=$(grep 'instanceid' $WWW_HTML_DIR/owncloud/config/config.php | awk {'print $3'} | sed "s:'::g" | cut -d , -f1)
 # Generate initial owncloud config
@@ -7716,7 +7896,7 @@ nextcloud_configure () {
 # Get WWW User and Group
 set_www_user_group
 # Generate nextcloud instance ID
-$BINARY_PREFIX/curl -bj -L -sS -m 60 -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$NEXTCLOUD_HTTP_PORT
+$CURL_CMD $CURL_OPTS -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$NEXTCLOUD_HTTP_PORT
 # Get instance ID
 NEXTCLOUD_INSTANCE_ID=$(grep 'instanceid' $WWW_HTML_DIR/nextcloud/config/config.php | awk {'print $3'} | sed "s:'::g" | cut -d , -f1)
 # Generate initial nextcloud config
