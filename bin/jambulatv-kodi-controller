@@ -8,6 +8,7 @@ KODI_HTTP_PORT=MY_KODI_HTTP_PORT
 KODI_HTTP_USER=MY_KODI_HTTP_USER
 KODI_HTTP_PASS=MY_KODI_HTTP_PASS
 KODI_LOG=MY_KODI_LOG
+KODI_DATABASE_DIR=MY_KODI_DATABASE
 
 TVHEADEND_HTTP_IP=MY_TVHEADEND_HTTP_IP
 TVHEADEND_HTTP_PORT=MY_TVHEADEND_HTTP_PORT
@@ -43,7 +44,7 @@ usage () {
 if [ "x$TV_ACTION" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_fmradio|addon_play_youtube|addon_play_streamztv|tv_channels|tv_play_start|tv_play_stop|video_play_start|active_player_type|active_player_id|active_video_type|video_play_pause|video_play_next|video_play_previous|audio_play_stop|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_timer_start|tv_record_timer_stop|tv_record_instant_start|tv_record_instant_stop|tv_record_schedule_create|tv_record_schedule_cancel|tv_record_schedule_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home|fullscreen_toggle)] [TV_CHANNEL] [DURATION)]
+echo "Usage:  ./`basename $0` [TV_ACTION (osd_short|osd_long|addon_switch|addon_status|addon_play_fmradio|addon_play_youtube|addon_play_streamztv|tv_picons_repair|tv_channels|tv_play_start|tv_play_stop|video_play_start|active_player_type|active_player_id|active_video_type|video_play_pause|video_play_next|video_play_previous|audio_play_stop|video_play_stop|pictures_play_start|pictures_play_stop|music_play_offline_start|music_play_online_start|music_play_pause|music_play_next|music_play_previous|music_play_stop|volume_increase|volume_decrease|mute|tv_record_status|tv_record_timer_start|tv_record_timer_stop|tv_record_instant_start|tv_record_instant_stop|tv_record_schedule_create|tv_record_schedule_cancel|tv_record_schedule_stop|scan_video|scan_audio|clean_video|clean_audio|navigate_up|navigate_down|navigate_select|navigate_home|fullscreen_toggle)] [TV_CHANNEL] [DURATION)]
 "
 exit 1
 fi
@@ -467,6 +468,13 @@ play_streamztv_plugin () {
 curl -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Addons.ExecuteAddon","params":{"addonid":"plugin.video.streamztv", "params":{"url":"url", "mode":"2", "name":"'"$2"'", "channelid":"'"$1"'"}},"id":"2"}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
 }
 
+kodi_texture_db_delete () {
+# Delete kodi Textures DB file
+find $KODI_DATABASE_DIR -maxdepth 1 -iname Textures*.db -type f -exec rm {} \; 
+# Restart kodi
+sudo systemctl restart jambulatv@kodi.service
+}
+
 kodi_screensaver_poke () {
 # Poke screen if screensaver is active
 if [ "$KODI_SCREENSAVER_STATUS" = "true" ];
@@ -583,6 +591,10 @@ play_youtube_plugin "${@:2}"
 
 addon_play_streamztv)
 play_streamztv_plugin "$2" "$3"
+;;
+
+tv_picons_repair)
+kodi_texture_db_delete
 ;;
 
 tv_channels)
