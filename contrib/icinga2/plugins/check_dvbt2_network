@@ -4,40 +4,52 @@ PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
 PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 PROJECT_DVBT_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/dvbt-settings.cfg
+TVHEADEND_HTTP_IP=127.0.0.1
+TVHEADEND_HTTP_PORT=9981  # Please change to conform with our lineup
+TVHEADEND_HTSP_PORT=9982  # Please change to conform with our lineup
+TVHEADEND_HTTP_USER=""
+TVHEADEND_HTTP_PASS=""
+TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
 TVHEADEND_CONFIG_DIR=/JambulaTV/.hts/tvheadend
 TVHEADEND_ADAPTERS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/linuxdvb/adapters
-TVHEADEND_REPAIR_TOOL=jambulatv-tvheadend-controller
+TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE=$(grep ^TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE $PROJECT_FUNCTIONS_FILE | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g')
+TVHEADEND_REPAIR_IN_PROGRESS_TEMP_FILE=$(grep ^TVHEADEND_REPAIR_IN_PROGRESS_TEMP_FILE $PROJECT_FUNCTIONS_FILE | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g')
+
+# Curl
+CURL_CMD="/usr/bin/curl"
+CURL_OPTS="-s -L"
+
 
 # Source DVBT settings file
 . $PROJECT_DVBT_SETTINGS_FILE
 
 # DVBT Adapter node
 TVHEADEND_DVBT_TUNER_NODE=/dev/dvb/adapter$DVBT_TUNER_NO
-# DVBT network UUID
-TVHEADEND_DVBT_NETWORK_UUID=$(curl -s http://127.0.0.1:9981/api/mpegts/network/grid?limit=100000 | jq '.entries[] | select(.networkname=="'"$DVBT_NETWORK_NAME"'") |.uuid' | head -1 | sed 's:"::g')
 
-# Check if DVB network is correctly associated with the DVB-T2 tuner adapter
-if [[ "x$TVHEADEND_DVBT_NETWORK_UUID" = "x" ]];
+# DVBT network UUID
+TVHEADEND_DVBT_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$DVBT_NETWORK_NAME"'") |.uuid' | head -1)
+
+# Set DVB-T matched to adapter variable
+if [[ "x$TVHEADEND_DVBT_NETWORK_UUID" != "x" ]];
 then
-DVBT_NETWORK_MATCHED_WITH_TUNER=255
-else
+# Check if DVB network is correctly associated with the DVB-T tuner adapter
 sudo grep -rli $TVHEADEND_DVBT_NETWORK_UUID $TVHEADEND_ADAPTERS_CONFIG_DIR > /dev/null 2>&1
 DVBT_NETWORK_MATCHED_WITH_TUNER=$?
 fi
 
 # Icinga2 Notices
 # Notice when no DVB-T Tuner is found
-ICINGA2_NOTICE_CRITICAL_NO_TUNER="CRITICAL - DVB-T2 adapter was not detected. {Error: $TVHEADEND_DVBT_TUNER_NODE - No such file or directory}"
+ICINGA2_NOTICE_CRITICAL_NO_TUNER="CRITICAL - DVB-T adapter was not detected. {Error: $TVHEADEND_DVBT_TUNER_NODE - No such file or directory}"
 # Notice when no DVB-T Network is found
-ICINGA2_NOTICE_CRITICAL_NETWORK_MISSING="CRITICAL - DVB-T2 network was not found. {Error: The network ($DVBT_NETWORK_NAME) is missing}"
+ICINGA2_NOTICE_CRITICAL_NETWORK_MISSING="CRITICAL - DVB-T network was not found. {Error: The network ($DVBT_NETWORK_NAME) is missing}"
 # Network not associated with tuner
-ICINGA2_NOTICE_CRITICAL_NETWORK_NOT_ATTACHED="CRITICAL - DVB-T2 network not assigned to TV tuner.  {Error: The adapter ($TVHEADEND_DVBT_TUNER_NODE) is missing a network}"
+ICINGA2_NOTICE_CRITICAL_NETWORK_NOT_ATTACHED="CRITICAL - DVB-T network not assigned to TV tuner.  {Error: The adapter ($TVHEADEND_DVBT_TUNER_NODE) is missing a network}"
 # Notice when all is OK
-ICINGA2_NOTICE_OK="OK - DVB-T2 network and Channels list are fine"
+ICINGA2_NOTICE_OK="OK - DVB-T network and Channels list are fine"
 # TVHeadend not active
 ICINGA2_NOTICE_TVH_NOT_ACTIVE="The TVHeadend server is not running"
-# Repair tool in use
-ICINGA2_NOTICE_REPAIR_TOOL_IN_USE="Another process is using the repair tool: $TVHEADEND_REPAIR_TOOL"
+# Repair/Reset in progress
+ICINGA2_NOTICE_REPAIR_RESET="A TVHeadend repair or reset process is already in progress"
 
 
 
@@ -52,12 +64,11 @@ echo "$ICINGA2_NOTICE_TVH_NOT_ACTIVE"
 exit 0
 fi
 
-# Quit if repair tool is being used by another process
-ps auxw | grep -Ev grep | grep "$TVHEADEND_REPAIR_TOOL$" > /dev/null 2>&1
-TVHEADEND_REPAIR_TOOL_IS_RUNNING=$?
-if [[ "$TVHEADEND_REPAIR_TOOL_IS_RUNNING" = "0" ]];
+# Quit if, there's already a process to reset or repair tvheadend
+if [[ -e $TVHEADEND_REPAIR_IN_PROGRESS_TEMP_FILE ]] || \
+	[[ -e $TVHEADEND_REPAIR_IN_PROGRESS_TEMP_FILE ]]
 then
-echo "$ICINGA2_NOTICE_REPAIR_TOOL_IN_USE"
+echo "$ICINGA2_NOTICE_REPAIR_RESET"
 exit 0
 fi
 
@@ -74,7 +85,8 @@ echo "$ICINGA2_NOTICE_CRITICAL_NETWORK_MISSING"
 exit 2
 
 # Network not associated with tuner
-elif [[ "$DVBT_NETWORK_MATCHED_WITH_TUNER" != "0" ]];
+elif [[ "$DVBT_NETWORK_MATCHED_WITH_TUNER" != "0" &&
+	"x$DVBT_NETWORK_MATCHED_WITH_TUNER" != "x" ]];
 then
 echo "$ICINGA2_NOTICE_CRITICAL_NETWORK_NOT_ATTACHED"
 exit 2
