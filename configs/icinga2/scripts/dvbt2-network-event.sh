@@ -10,6 +10,8 @@ SERVICE_DATE=$LONGDATETIME
 SERVICE_DISPLAY_NAME=$SERVICEDISPLAYNAME
 
 SERVICE_REPAIR_COMMAND="/usr/bin/jambulatv-tvheadend-controller dvb repair"
+SERVICE_REPAIR_LOG_DIR="/var/log/JambulaTV"
+SERVICE_REPAIR_LOG_FILE="$SERVICE_REPAIR_LOG_DIR/tvheadend-dvb-repair.log"
 
 
 
@@ -17,5 +19,25 @@ SERVICE_REPAIR_COMMAND="/usr/bin/jambulatv-tvheadend-controller dvb repair"
 #  MAIN SCRIPT  #
 #################
 
-# Repair DVB-T2 network
-[[ "$SERVICE_STATE" = "OK" ]] || sudo $SERVICE_REPAIR_COMMAND
+if [[ "$SERVICE_STATE" = "CRITICAL" ]];
+then
+
+# Add base directory if non existent
+[[ -d $SERVICE_REPAIR_LOG_DIR ]] || mkdir -p $SERVICE_REPAIR_LOG_DIR
+# Add log file, if non-existent
+[[ -e $SERVICE_REPAIR_LOG_FILE ]] || sudo touch $SERVICE_REPAIR_LOG_FILE
+# Give icinga permsions to this file
+[[ -e $SERVICE_REPAIR_LOG_FILE ]] && sudo chown $(whoami) $SERVICE_REPAIR_LOG_FILE
+
+# Add start datestamp to log file
+cat >> $SERVICE_REPAIR_LOG_FILE <<EOT
+
+===============================================================================
+DVB-T Network Repair done on:		$(date)
+===============================================================================
+
+EOT
+
+# Run DVB-T network repair tool
+sudo $SERVICE_REPAIR_COMMAND >> $SERVICE_REPAIR_LOG_FILE 2>&1
+fi
