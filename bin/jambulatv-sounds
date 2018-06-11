@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # This is a general helper script used by other tools to generate sounds at certain points of processing
-# Jambula Labs @copyright 2017-2018 All rights reserved
+# Jambula Labs @copyright 2018-2019 All rights reserved
 
 # Variables
 JAMBULATV_SOUNDS_DIR="/usr/share/JambulaTV/sounds"
@@ -19,7 +19,7 @@ SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
 SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep $(basename $SOUND_EFFECTS_WAITING_PATH) | awk {'print $2'}
 )
 SOUND_PLAYER_CMD="/usr/bin/mplayer"
-SOUND_PLAYER_OPTS="-novideo"
+SOUND_PLAYER_OPTS="-novideo -nolirc -really-quiet"
 
 BEEP_CMD=/usr/bin/beep
 
@@ -55,6 +55,7 @@ WAITED_FOR_FILE=$1
 # Play sound while waiting
 while [ ! -e \$WAITED_FOR_FILE ];
 do
+[[ -e $SOUND_EFFECTS_WAITING_PATH ]] && \
 $SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $SOUND_EFFECTS_WAITING_PATH
 sleep 2
 done
@@ -70,6 +71,41 @@ check_for_beep_command () {
 [ -e $BEEP_CMD ] || exit 0
 }
 
+initial_setup_sounds () {
+SETUP_SOUND_NUMBER=$1
+case $SETUP_SOUND_NUMBER in
+1)
+SETUP_SOUND_FILE=setup-purchase-thankyou.wav
+;;
+2)
+SETUP_SOUND_FILE=setup-download-qrcode-app.wav
+;;
+3)
+SETUP_SOUND_FILE=setup-scan-qrcode.wav
+;;
+4)
+SETUP_SOUND_FILE=setup-completed-restarting.wav
+;;
+5)
+
+SETUP_SOUND_FILE=setup-completed-tutor-channel-restarting.wav
+;;
+*)
+cat <<EOT
+Usage: `basename $0` setup [number e.g. 1]"
+EOT
+;;
+esac
+
+# Play sound file if it exists
+[[ -e $JAMBULATV_SOUNDS_DIR/$SETUP_SOUND_FILE ]] && $SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $JAMBULATV_SOUNDS_DIR/$SETUP_SOUND_FILE
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
 case $1 in
 
 online)
@@ -107,9 +143,13 @@ api)
 waiting_4_online_response $2
 ;;
 
-*)
-
-clear
-echo "Usage: `basename $0` [online|offline|start|stop|misc|beethoven|api]"
+setup)
+initial_setup_sounds $2
 ;;
+
+*)
+clear
+echo "Usage: `basename $0` [online|offline|start|stop|misc|beethoven|api|setup]"
+;;
+
 esac

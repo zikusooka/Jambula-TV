@@ -10580,6 +10580,14 @@ initial_setup_configure () {
 			> $BINARY_PREFIX/jambulatv-initial-setup 
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-initial-setup 
+
+# Create setup sounds directory if no-existent
+[ -d $PROJECT_SYSTEM_SHARE_DIR/sounds ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/sounds
+# Copy setup sound files
+cp -rv $PROJECT_CONTRIB_DIR/sounds/setup/* $PROJECT_SYSTEM_SHARE_DIR/sounds/
+# Change ownership of sounds directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/sounds
+
 # Get WWW User and Group
 set_www_user_group
 # Add Setup Web files
