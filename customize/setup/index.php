@@ -14,7 +14,7 @@
 
 
 <br>
-<b>Congratulations on your purchase of the JambulaTV!  In order to enjoy the full benefits of this device, please complete the following information.  
+<b>Thank you for purchasing the JambulaTV, your smart home automation and entertainment hub.  <p>In order to enjoy the full benefits of this device, please complete the following information.  
 <p>When in doubt (and it is optional), you may leave the field blank.  You may also get help in the following ways:</p>
 
 <a href=mailto:support@jambulatv.com>Email</a> |
