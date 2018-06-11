@@ -275,20 +275,14 @@ done
 [ -e $SETUP_DVBT_CONFIG_FILE ] && . $SETUP_DVBT_CONFIG_FILE
 #
 # Configure TVHeadend
-if [ ! -e $TVHEADEND_CONFIG_DIR/.dvbt_configured ] && \
-	[ "$TVH_DVBT_CONFIG_REQUESTED" = "y" ];
+if [[ ! -e $TVHEADEND_CONFIG_DIR/.dvbt_configured && "$TVH_DVBT_CONFIG_REQUESTED" = "y" ]];
 then
 
 # Source Live TV variables
 set_variables 
 
-# Configure and setup DVB-T2 in TVHeadend server
-# ----------------------------------------------
-#
-# DVB-T configure if dvbt tuner is detected
-[ -d /dev/dvb/adapter${DVBT_TUNER_NO} ] && tvheadend_dvbt_configure
-# Map DVB-T channels
-[ -d /dev/dvb/adapter${DVBT_TUNER_NO} ] && jambulatv-tvheadend-controller dvb map
+# Create, configure DVB-T network, then Scan and Map all available channels
+jambulatv-tvheadend-controller dvb all
 
 # Since DVBT configure was requested, enable PVR functions in kodi 
 # ----------------------------------------------------------------
