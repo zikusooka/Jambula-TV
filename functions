@@ -223,6 +223,8 @@ TVHEADEND_TV_MARKET=UG-Kampala
 PLATFORM_TAG=1.0.10
 LIBCEC_TAG=libcec-2.2.0
 
+VLC_SOURCES_TYPE=tarball #git
+
 #KODI_VERSION=15.2 
 #KODI_CODENAME=Isengard
 #KODI_SOURCES_TYPE=git
@@ -2868,16 +2870,41 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 make clean
 }
 
-vlc_install () {
+vlc_unpack_git () {
 # Unpack
 rsync -avz $PROJECT_GITHUB_DIR/vlc/ $INSTALL_SRC_DIR/vlc/
 # Patch configure_ac - make AX_CXX_COMPILE_STDCXX_11 optional
 patch -p1 $INSTALL_SRC_DIR/vlc/configure.ac < $PROJECT_PATCHES_DIR/vlc_confiure_ac.patch
+}
+
+vlc_unpack_tarball () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/vlc-*.tar.xz -C $INSTALL_SRC_DIR
+mv -v $INSTALL_SRC_DIR/vlc-* $INSTALL_SRC_DIR/vlc
+}
+
+vlc_install () {
+# Unpack sources depending on type of sources
+case $VLC_SOURCES_TYPE in
+git)
+# Unpack vlc
+vlc_unpack_git
+;;
+tarball)
+# Unpack vlc
+vlc_unpack_tarball
+;;
+esac
+#
+# Change to install directory
+cd $INSTALL_SRC_DIR/vlc
 # Compile
-cd $INSTALL_SRC_DIR/vlc && ./bootstrap
+[[ -e bootstrap ]] && ./bootstrap
 # Configure
-./configure --libdir=$LIBDIR --prefix=$PREFIX --with-contrib=$PREFIX CXXFLAGS="-std=c++0x" PKG_CONFIG_PATH=$LIBDIR/pkgconfig --enable-debug --enable-run-as-root --enable-realrtsp --enable-wma-fixed --enable-shine --enable-omxil --enable-omxil-vout --enable-rpi-omxil --enable-merge-ffmpeg --enable-fdkaac --enable-tremor --enable-aa --enable-opensles --enable-lirc --disable-ncurses --disable-skins2 --enable-shine=no --enable-goom=no
-make_install_jambulatv
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-debug --enable-run-as-root --enable-realrtsp --enable-wma-fixed --enable-shine --enable-omxil --enable-rpi-omxil --enable-merge-ffmpeg --enable-fdkaac --enable-tremor --enable-aa --enable-opensles --enable-lirc --disable-ncurses --disable-skins2 --enable-shine=no --enable-goom=no
+#
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+#
 # Cache recently shared libraries 
 ldconfig
 # Clean up - saves upto 100MB
