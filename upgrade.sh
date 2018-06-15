@@ -233,6 +233,11 @@ alsa_plugins_install
 pyalsaaudio_install
 }
 
+upgrade_live555 () {
+uninstall_live555
+live555_install
+}
+
 
 
 #################
@@ -297,3 +302,5 @@ pyalsaaudio_install
 #upgrade_netdata 
 
 #upgrade_pulseaudio
+
+#upgrade_live555 
