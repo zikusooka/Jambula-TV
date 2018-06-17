@@ -1,5 +1,6 @@
 #!/usr/local/bin/python
 # Display Announcements on JambulaTV Screen
+# Jambula Labs @copyright 2018-2019 All rights reserved
 #
 # Import modules
 import json
@@ -10,21 +11,24 @@ import argparse
 import os
 import subprocess
 import time
+import threading 
+from threading import Timer
 import xml.etree.ElementTree as ET
 from pyxmpp2.simple import send_message
 from pyxmpp2.settings import XMPPSettings
+from textwrap import wrap
 
 
 # Who called this script
-PID = os.getppid()
-CALLER = open('/proc/%d/cmdline' % PID).read().split('\x00', 1)[1]
-
+PPID = os.getppid()
+PID = os.getpid()
+CALLER = open('/proc/%d/cmdline' % PPID).read().split('\x00', 1)[1]
 
 # Variables
 JAMBULATV_VIRTUAL_TERMINAL = 'tty7'
-KODI_GUI_SETTINGS = '/JambulaTV/.kodi/userdata/guisettings.xml'
-ICON = '/usr/share/kodi/addons/Aeon-Nox/media/DefaultIconInfo.png'
-OSDRUNFILE = '/tmp/osd_process_running' 
+KODI_GUI_SETTINGS = 'MY_KODI_USER_DATA/guisettings.xml'
+ICON = 'MY_KODI_SYSTEM_ADDONS/skin.estouchy/media/DefaultIconInfo.png'
+OSDRUNFILE = 'MY_TMPDIR/osd_process_running' 
 
 # Copyright
 __author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2018-2019 All rights reserved'
@@ -36,11 +40,13 @@ parser.add_argument('-t','--duration', help='How long in milliseconds you want t
 args = parser.parse_args()
 
 MESSAGE = args.message
+MESSAGE_WRAPPED = wrap(args.message, 106)
 
 # XMPP credentials
-XMPP_SCRIPT = '/usr/bin/jambulatv-xmpp'
+XMPP_TOOL = 'MY_XMPP_TOOL'
 XMPP_JID = 'USER_001_XMPP_USERNAME@USER_001_XMPP_HOST'
 XMPP_PASSWORD = 'USER_001_XMPP_PASSWORD'
+XMPP_RESOURCE = 'USER_001_XMPP_RESOURCE'
 XMPP_RECIPIENT = XMPP_JID
 
 # Set duration
@@ -48,6 +54,16 @@ if args.duration is None:
     TIME = 35000
 else:
     TIME = args.duration
+
+# Get Kodi web server variables
+tree = ET.parse(KODI_GUI_SETTINGS)
+root = tree.getroot()
+for services in root.findall('services'):
+    username = services.find('webserverusername').text
+    password = services.find('webserverpassword').text
+    xbmc_title = services.find('devicename').text
+    xbmc_port = services.find('webserverport').text
+    xbmc_host='127.0.0.1'
 
 
 
@@ -65,8 +81,6 @@ def wait_if_already_running ():
         while os.path.exists(OSDRUNFILE):
           print ("Another OSD process is running, please wait ...")
           time.sleep(10)
-	  # remove temp file after sleep time - process may be dead
-          #os.remove(OSDRUNFILE)
 
 # Open, write, close a temporary file to prevent others from calling this script until done
 def create_run_file ():
@@ -76,32 +90,9 @@ def create_run_file ():
 
 # Send xmpp message with notice
 def send_xmpp_message ():
-        subprocess.check_call([XMPP_SCRIPT, "-q", "-j", XMPP_JID, "-p", XMPP_PASSWORD, "-t", XMPP_RECIPIENT, "-m", "[JambulaTV] OSD Notice: " +MESSAGE])
+        subprocess.check_call([XMPP_TOOL, "-q", "-j", XMPP_JID, "-p", XMPP_PASSWORD, "-t", XMPP_RECIPIENT, "-m", "[JambulaTV] OSD Notice: " +MESSAGE])
 
-
-
-#################
-#  MAIN SCRIPT  #
-#################
-#
-# Pre process tasks
-quit_if_screen_not_running();
-wait_if_already_running();
-create_run_file();
-
-# Get Kodi web server variables
-tree = ET.parse(KODI_GUI_SETTINGS)
-root = tree.getroot()
-for services in root.findall('services'):
-   username = services.find('webserverusername').text
-   password = services.find('webserverpassword').text
-   xbmc_title = services.find('devicename').text
-   xbmc_port = services.find('webserverport').text
-   xbmc_host=['127.0.0.1']
-
-
-# Main Script 
-# -----------
+# Connect to Kodi
 def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=username, password=password):
     command = {'jsonrpc': '2.0', 'id': id, 'method': method}
     if params is not None: command['params'] = params
@@ -125,18 +116,39 @@ def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=
     conn.close()
     return data
 
-
 # De-activate screensaver
 def xbmc_poke_screen(xbmc_host, xbmc_port=xbmc_port):
-    for x in range(0, len(xbmc_host)):
-        screenSaverStatus = send_json_command(xbmc_host[x], xbmc_port, 'XBMC.GetInfoBooleans', params={'booleans':['System.ScreenSaverActive']})
+        screenSaverStatus = send_json_command(xbmc_host, xbmc_port, 'XBMC.GetInfoBooleans', params={'booleans':['System.ScreenSaverActive']})
         if screenSaverStatus == {u'System.ScreenSaverActive': True}:
-          send_json_command(xbmc_host[x], xbmc_port, "Input.Select")
+          send_json_command(xbmc_host, xbmc_port, "Input.Select")
+
+# Check if current PID still exists
+def check_pid(pid):        
+    """ Check For the existence of a unix pid. """
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    else:
+        return True
 
 # Display message on screen
 def xbmc_osd_message(xbmc_host, xbmc_port=xbmc_port):
-    for x in range(0, len(xbmc_host)):
-        result = send_json_command(xbmc_host[x], xbmc_port, 'GUI.ShowNotification', params={'title':xbmc_title, 'message':MESSAGE, 'displaytime':TIME, 'image':ICON})
+    for OSD_STRING in MESSAGE_WRAPPED:
+        check_pid (PID)    
+        send_json_command(xbmc_host, xbmc_port, 'GUI.ShowNotification', params={'title':xbmc_title, 'message':OSD_STRING, 'displaytime':TIME, 'image':ICON})
+        time.sleep(10)
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Pre process tasks
+quit_if_screen_not_running()
+wait_if_already_running()
+create_run_file()
 
 # Poke screen if screensaver is active
 xbmc_poke_screen(xbmc_host)
@@ -148,7 +160,8 @@ xbmc_osd_message(xbmc_host)
 send_xmpp_message ()
 
 # Remove run file created earlier to prevent others from using me
-os.remove(OSDRUNFILE);
+if os.path.exists(OSDRUNFILE):
+    os.remove(OSDRUNFILE)
 
 # Exit
-sys.exit(0);
+sys.exit(0)

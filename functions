@@ -861,8 +861,8 @@ TORRENTS_DOMAIN_NAME="MyJambulaTV"
 ASTERISK_DIAL_OUT_NUMBER_1=""
 
 # OSD/XMPP
-OSD_SCRIPT=$BINARY_PREFIX/jambulatv-osd
-XMPP_SCRIPT=$BINARY_PREFIX/jambulatv-xmpp
+OSD_TOOL=$BINARY_PREFIX/jambulatv-osd
+XMPP_TOOL=$BINARY_PREFIX/jambulatv-xmpp
 
 # HTTP Headers
 # -----------
@@ -941,9 +941,9 @@ then
 logger -s -t $(basename $0) "$NOTIFICATION_STRING"
 fi
 # Log to OSD
-if [[ -e "$OSD_SCRIPT" && "$NOTIFICATION_METHOD" = "osd" ]];
+if [[ -e "$OSD_TOOL" && "$NOTIFICATION_METHOD" = "osd" ]];
 then
-$OSD_SCRIPT -m "$NOTIFICATION_STRING" > /dev/null 2>&1 &
+$OSD_TOOL -m "$NOTIFICATION_STRING" > /dev/null 2>&1 &
 fi
 }
 
@@ -4944,19 +4944,23 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 
 kodi_osd_configure () {
 # Copy jambulatv-osd script, if none exists in bin directory
-[ -e $OSD_SCRIPT ] || cat $PROJECT_BIN_DIR/jambulatv-osd | \
+[ -e $OSD_TOOL ] || cat $PROJECT_BIN_DIR/jambulatv-osd | \
+	sed -e "s:MY_KODI_USER_DATA:$KODI_USER_DATA:g" | \
+	sed -e "s:MY_KODI_SYSTEM_ADDONS:$KODI_SYSTEM_ADDONS:g" | \
+	sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
+	sed -e "s:MY_XMPP_TOOL:$XMPP_TOOL:g" | \
 	sed -e "s:USER_001_XMPP_HOST:$USER_001_XMPP_HOST:g" | \
 	sed -e "s:USER_001_XMPP_USERNAME:$USER_001_XMPP_USERNAME:g" | \
 	sed -e "s:USER_001_XMPP_PASSWORD:$USER_001_XMPP_PASSWORD:g" | \
 	sed -e "s:USER_001_XMPP_RESOURCE:$USER_001_XMPP_RESOURCE:g" \
-		> $OSD_SCRIPT
+		> $OSD_TOOL
 # Make script executable
-chmod 755 $OSD_SCRIPT
+chmod 755 $OSD_TOOL
 #
 # Copy jambulatv-xmpp script, if none exists in bin directory
-[ -e $XMPP_SCRIPT ] || cp -v $PROJECT_BIN_DIR/jambulatv-xmpp $XMPP_SCRIPT
+[ -e $XMPP_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-xmpp $XMPP_TOOL
 # Make script executable
-chmod 755 $XMPP_SCRIPT
+chmod 755 $XMPP_TOOL
 }
 
 livestreamer_install () {
@@ -9441,7 +9445,7 @@ chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 		sed -e "s:MY_WHATSAPP_SCRIPT:$WHATSAPP_SCRIPT:g" | \
 		sed -e "s:MY_EMAIL_CREDENTIALS_CONFIG:$EMAIL_CREDENTIALS_CONFIG:g" | \
 		sed -e "s:EMAIL_VIA_GMAIL_CMD:$EMAIL_VIA_GMAIL_CMD:g" | \
-		sed -e "s:MY_OSD_SCRIPT:$OSD_SCRIPT:g" | \
+		sed -e "s:MY_OSD_SCRIPT:$OSD_TOOL:g" | \
 		sed -e "s:MY_KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
 		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
 		sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
