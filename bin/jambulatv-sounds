@@ -16,10 +16,10 @@ SOUND_EFFECTS_WAITING_PATH="$JAMBULATV_SOUNDS_DIR/$3"
 fi
 #
 SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
-SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep $(basename $SOUND_EFFECTS_WAITING_PATH) | awk {'print $2'}
+SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep ${SOUND_EFFECTS_WAITING_PATH##*/} | awk {'print $2'}
 )
 SOUND_PLAYER_CMD="/usr/bin/mplayer"
-SOUND_PLAYER_OPTS="-novideo -nolirc -really-quiet"
+SOUND_PLAYER_OPTS="-ao pulse,oss,alsa -novideo -nolirc -really-quiet"
 
 BEEP_CMD=/usr/bin/beep
 
@@ -81,13 +81,15 @@ SETUP_SOUND_FILE=setup-purchase-thankyou.wav
 SETUP_SOUND_FILE=setup-download-qrcode-app.wav
 ;;
 3)
-SETUP_SOUND_FILE=setup-scan-qrcode.wav
+SETUP_SOUND_FILE=setup-connected-2-jambulatv.wav
 ;;
 4)
-SETUP_SOUND_FILE=setup-completed-restarting.wav
+SETUP_SOUND_FILE=setup-scan-qrcode.wav
 ;;
 5)
-
+SETUP_SOUND_FILE=setup-completed-restarting.wav
+;;
+6)
 SETUP_SOUND_FILE=setup-completed-tutor-channel-restarting.wav
 ;;
 *)
