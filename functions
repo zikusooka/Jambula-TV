@@ -872,6 +872,7 @@ TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
 TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controller 
 WHATSAPP_TOOL=$BINARY_PREFIX/jambulatv-whatsapp
 XMPP_TOOL=$BINARY_PREFIX/jambulatv-xmpp
+ZONEMINDER_ALARM_NOTIFICATIONS_TOOL=$BINARY_PREFIX/jambulatv-zm-alarm-all-notifications 
 
 # HTTP Headers
 # ------------
@@ -9452,7 +9453,7 @@ cat $PROJECT_CONTRIB_DIR/scripts/zoneminder_alarm_daemon.pl | \
 chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 #
 # Copy ZoneMinder script to send out all types of notifications/alerts upon ZM alarms
-[ -e $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications ] || \
+[ -e $ZONEMINDER_ALARM_NOTIFICATIONS_TOOL ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-zm-alarm-all-notifications | \
 		sed -e "s:ZONEMINDER_DB_HOST:$ZONEMINDER_DB_HOST:g" | \
 		sed -e "s:ZONEMINDER_WWW_PORT:$ZONEMINDER_WWW_PORT:g" | \
@@ -9461,16 +9462,16 @@ chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 		sed -e "s:MY_WHATSAPP_CREDENTIALS_CONFIG:$WHATSAPP_CREDENTIALS_CONFIG:g" | \
 		sed -e "s:MY_WHATSAPP_TOOL:$WHATSAPP_TOOL:g" | \
 		sed -e "s:MY_EMAIL_CREDENTIALS_CONFIG:$EMAIL_CREDENTIALS_CONFIG:g" | \
-		sed -e "s:EMAIL_VIA_GMAIL_TOOL:$EMAIL_VIA_GMAIL_TOOL:g" | \
-		sed -e "s:MY_OSD_SCRIPT:$OSD_TOOL:g" | \
+		sed -e "s:MY_EMAIL_VIA_GMAIL_TOOL:$EMAIL_VIA_GMAIL_TOOL:g" | \
+		sed -e "s:MY_OSD_TOOL:$OSD_TOOL:g" | \
 		sed -e "s:MY_KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
 		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
 		sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
 		sed -e "s:MY_ASTERISK_USER:$ASTERISK_FILES_USER:g" | \
 		sed -e "s:MY_ASTERISK_GROUP:$WWW_USER:g" \
-			> $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
+			> $ZONEMINDER_ALARM_NOTIFICATIONS_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-zm-alarm-all-notifications
+chmod 755 $ZONEMINDER_ALARM_NOTIFICATIONS_TOOL
 #
 # Add sample cctv-settings.cfg file
 cat > $PROJECT_SYSTEM_CONF_DIR/cctv-settings.cfg << EOF

@@ -33,7 +33,7 @@ WHATSAPP_CREDENTIALS_CONFIG=MY_WHATSAPP_CREDENTIALS_CONFIG
 # Email
 EMAIL_CREDENTIALS_CONFIG=MY_EMAIL_CREDENTIALS_CONFIG
 EMAIL_NOTIFICATION_ADDRESS=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
-EMAIL_SCRIPT="EMAIL_VIA_GMAIL_CMD"
+EMAIL_VIA_GMAIL_TOOL="MY_EMAIL_VIA_GMAIL_TOOL"
 
 # Kodi
 KODI_HTTP_USER=MY_KODI_HTTP_USER
@@ -52,7 +52,7 @@ ASTERISK_DIAL_OUT_NUMBER=MY_ASTERISK_DIAL_OUT_NUMBER
 ASTERISK_DIAL_OUT_CID="CCTV Security Alarm <(071)-000-0000>"
 
 # OSD
-OSD_SCRIPT=MY_OSD_SCRIPT
+OSD_TOOL=MY_OSD_TOOL
 LIGHTS_CMD=/usr/bin/jambulatv-lights
 
 CURL_CMD="/usr/bin/curl"
@@ -191,9 +191,9 @@ then
 # Generate message for Telegram
 generate_message_4_notice
 # SendMesage
-$TELEGRAM_SCRIPT SendMessage "$(cat $ZM_MESSAGE_FILE). Also attached is a snapshot ..." &
+$TELEGRAM_TOOL SendMessage "$(cat $ZM_MESSAGE_FILE). Also attached is a snapshot ..." &
 # SendPhoto
-$TELEGRAM_SCRIPT SendImageDisk  $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg &
+$TELEGRAM_TOOL SendImageDisk  $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg &
 fi
 
 
@@ -204,13 +204,13 @@ then
 # Source WhatsApp credentials
 . $WHATSAPP_CREDENTIALS_CONFIG
 # Check existence of command
-[[ "x$WHATSAPP_SCRIPT" = "x" ]] && WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
+[[ "x$WHATSAPP_TOOL" = "x" ]] && WHATSAPP_TOOL=/usr/bin/jambulatv-whatsapp
 # Generate message for WhatsApp
 generate_message_4_notice
 # SendMesage
-$WHATSAPP_SCRIPT sendmessage "$(cat $ZM_MESSAGE_FILE)" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
+$WHATSAPP_TOOL sendmessage "$(cat $ZM_MESSAGE_FILE)" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
 # SendPhoto
-$WHATSAPP_SCRIPT sendimage $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1
+$WHATSAPP_TOOL sendimage $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1
 fi
 
 
@@ -233,13 +233,13 @@ create_asterisk_call_file
 # OSD Message using jambulatv-osd script
 # --------------------------------------
 [[ "$CCTV_OSD" = "1" ]] && \
-$OSD_SCRIPT -m "$NOTIFICATION_MESSAGE"
+$OSD_TOOL -m "$NOTIFICATION_MESSAGE"
 
 
 # Send Email (IMPORTANT:  Make this one the last notification to run)
 # --------------------------------------------------------------------
 [[ "$CCTV_EMAIL" = "1" ]] && \
-$EMAIL_SCRIPT $EMAIL_NOTIFICATION_ADDRESS "$NOTIFICATION_SUBJECT" "$NOTIFICATION_MESSAGE" "$ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg"
+$EMAIL_VIA_GMAIL_TOOL $EMAIL_NOTIFICATION_ADDRESS "$NOTIFICATION_SUBJECT" "$NOTIFICATION_MESSAGE" "$ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg"
 
 
 # LAMP
