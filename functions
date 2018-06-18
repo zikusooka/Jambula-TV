@@ -370,7 +370,6 @@ BUILD_LOG=$HOME/$PROJECT_NAME-build.log
 
 EMAIL_CONFIG_DIR=/etc/email
 EMAIL_SIGNATURE_FILE=$PROJECT_SYSTEM_CONF_DIR/email.signature
-EMAIL_VIA_GMAIL_CMD=$BINARY_PREFIX/jambulatv-email
 EMAIL_GMAIL_CONFIG=$PROJECT_SYSTEM_CONF_DIR/email-gmail.cfg
 
 MODPROBE_DIR=/etc/modprobe.d
@@ -847,10 +846,8 @@ JAMBULATV_UPDATES_FTP_SERVER_INFO_FILE=$PROJECT_SYSTEM_CONF_DIR/updates-ftp-serv
 
 # Telegram messaging
 TELEGRAM_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-telegram.cfg
-TELEGRAM_SCRIPT=$BINARY_PREFIX/jambulatv-telegram
 
 # WhatsApp Info
-WHATSAPP_SCRIPT=$BINARY_PREFIX/jambulatv-whatsapp
 WHATSAPP_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-whatsapp.cfg
 
 # Email messaging
@@ -860,13 +857,24 @@ TORRENTS_DOMAIN_NAME="MyJambulaTV"
 # Asterisk Credentials - Copy these to globals file
 ASTERISK_DIAL_OUT_NUMBER_1=""
 
-# Tools: OSD/XMPP/Sounds
+# JambulaTV Tools
+# ---------------
+AUTO_WIFI_PROVISION_TOOL=$BINARY_PREFIX/jambulatv-auto-wifi-provision 
+CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
+INITIAL_SETUP_TOOL=$BINARY_PREFIX/jambulatv-initial-setup 
+KODI_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-kodi-controller 
+KODI_LIBRARY_TOOL=$BINARY_PREFIX/jambulatv-library
 OSD_TOOL=$BINARY_PREFIX/jambulatv-osd
-XMPP_TOOL=$BINARY_PREFIX/jambulatv-xmpp
+PPP_DIAL_TOOL=$BINARY_PREFIX/jambulatv-ppp-dialer
+EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
+TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
+TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controller 
+WHATSAPP_TOOL=$BINARY_PREFIX/jambulatv-whatsapp
+XMPP_TOOL=$BINARY_PREFIX/jambulatv-xmpp
 
 # HTTP Headers
-# -----------
+# ------------
 # MacOS
 HTTP_BROWSER_USERAGENT_MAC="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8"
 # Linux
@@ -909,7 +917,7 @@ DVBT_NETWORK_EXISTS_MESSAGE="Warning: DVB-T network ($DVBT_NETWORK_NAME) already
 DVBT_MULTIPLEX_NOT_FOUND_MESSAGE="Error: No multiplexes were found for $TV_MARKET"
 DVBT_PICONS_ADDED_MESSAGE="Added DVB-T picon images for $TV_MARKET TV market area"
 DVBT_PICONS_NOT_FOUND_MESSAGE="Error: DVB-T picon images for $TV_MARKET TV market not found"
-# The following, used by jambulatv-tvheadend-controller tool
+# The following, used by TVHeadend Controller tool
 TVHEADEND_SERVER_IN_USE_MESSAGE="The TV Server is currently in use, please pick another convenient time to perform this task"
 DVBT_CHECK_HEALTH_STATUS_MESSAGE="Checking the health status of DVB-T network ($DVBT_NETWORK_NAME)"
 DVBT_HEALTH_STATUS_OK_MESSAGE="DVB-T network ($DVBT_NETWORK_NAME) is OK"
@@ -1745,7 +1753,7 @@ cameras_tvheadend_configure
 sudo rm -f $TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE
 #
 # Repair TV icons in Kodi Interface
-$BINARY_PREFIX/jambulatv-kodi-controller tv_picons_repair
+$KODI_CONTROLLER_TOOL tv_picons_repair
 }
 
 
@@ -3510,12 +3518,12 @@ chmod 755 $BINARY_PREFIX/jambulatv-tvheadend-processor
 [ -e $BINARY_PREFIX/jambulatv-dvbt-scan ] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/
 #
 # Generate jambulatv-tvheadend-controller script
-[ -e $BINARY_PREFIX/jambulatv-tvheadend-controller ] || \
+[ -e $TVHEADEND_CONTROLLER_TOOL ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-tvheadend-controller | \
 		sed "s:MY_PLAYLISTS_PORT:$PLAYLISTS_PORT:g" \
-			> $BINARY_PREFIX/jambulatv-tvheadend-controller
+			> $TVHEADEND_CONTROLLER_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-tvheadend-controller
+chmod 755 $TVHEADEND_CONTROLLER_TOOL
 
 # Configure DVB-T2 network if requested
 # -------------------------------------
@@ -3523,7 +3531,7 @@ if [ "$TVH_DVBT_CONFIG_REQUESTED" = "yes" ];
 then
 
 # Create, configure DVB-T network, then Scan and Map all available channels
-jambulatv-tvheadend-controller dvb all
+$TVHEADEND_CONTROLLER_TOOL dvb all
 
 # Create script which will enable kodi pvr.hts addon at next boot, but only if it is
 # non-existent.  Can't do it here, since kodi still not alive
@@ -3575,7 +3583,7 @@ TVHeadend DVB-T Network
 
   tvheadend_dvbt_configure and map channels using:
 
-  jambulatv-tvheadend-controller dvb all
+  $TVHEADEND_CONTROLLER_TOOL dvb all
 
   
 TIP: Run initial-setup tool or just add it to testing.sh and run!  
@@ -4722,9 +4730,9 @@ cat $PROJECT_BIN_DIR/jambulatv-library | \
 	sed -e "s:MY_KODI_CONFIG_DIR:$KODI_CONFIG_DIR:g" | \
 	sed -e "s:MY_USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" | \
 	sed -e "s:MY_USER_MOVIES_DIR:$USER_MOVIES_DIR:g" | \
-	sed -e "s:MY_USER_MUSIC_DIR:$USER_MUSIC_DIR:g" > $BINARY_PREFIX/jambulatv-library
+	sed -e "s:MY_USER_MUSIC_DIR:$USER_MUSIC_DIR:g" > $KODI_LIBRARY_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-library
+chmod 755 $KODI_LIBRARY_TOOL
 #
 # Picture-In-Picture
 # Copy jambulatv-pip script, if it does not exist in bin directory
@@ -4745,9 +4753,9 @@ cat $PROJECT_BIN_DIR/jambulatv-kodi-controller | \
 		sed -e "s:MY_TVHEADEND_HTTP_PORT:$TVHEADEND_HTTP_PORT:g" | \
 		sed -e "s:MY_USER_VIDEOS_DIR:$USER_VIDEOS_DIR:g" | \
 		sed -e "s:MY_USER_MUSIC_DIR:$USER_MUSIC_DIR:g" \
-			> $BINARY_PREFIX/jambulatv-kodi-controller
+			> $KODI_CONTROLLER_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-kodi-controller
+chmod 755 $KODI_CONTROLLER_TOOL
 # Copy kodi wrapper scripts e.g. time, pip
 cp -v $PROJECT_CONTRIB_DIR/scripts/kodi_*.py $KODI_SHARE_DIR/scripts
 }
@@ -4958,7 +4966,7 @@ kodi_osd_configure () {
 # Make script executable
 chmod 755 $OSD_TOOL
 #
-# Copy jambulatv-xmpp script, if none exists in bin directory
+# Copy XMPP tool, if none exists in bin directory
 [ -e $XMPP_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-xmpp $XMPP_TOOL
 # Make script executable
 chmod 755 $XMPP_TOOL
@@ -5156,7 +5164,7 @@ EOF
 # Copy over PPP dialer, chat, ISP and modem initialization scripts if they don't exist
 for SCRIPT in \
 jambulatv-ppp-chat \
-jambulatv-ppp-dialer \
+$PPP_DIAL_TOOL \
 jambulatv-ppp-init \
 jambulatv-ppp-modem-add \
 jambulatv-ppp-modem-remove \
@@ -5181,13 +5189,13 @@ ISP_NAME=$ISP_NAME_DEFAULT
 SSID="$WIFI_SSID"
 SECURITY_KEY="$WIFI_SECURITY_KEY"
 EOF
-# Copy jambulatv-connect-2-wifi-ap script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-connect-2-wifi-ap ] || \
+# Copy Connect to WiFi AP script, if it does not exist in bin directory
+[ -e $CONNECT_WIFI_AP_TOOL ] || \
 cat $PROJECT_BIN_DIR/jambulatv-connect-2-wifi-ap | \
 	sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" \
-		> $BINARY_PREFIX/jambulatv-connect-2-wifi-ap
+		> $CONNECT_WIFI_AP_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-connect-2-wifi-ap
+chmod 755 $CONNECT_WIFI_AP_TOOL
 #
 # Add jambulatv-mifi-query tool - Get stats such as data balance, battery level, signal etc
 [ -e $BINARY_PREFIX/jambulatv-mifi-query ] || \
@@ -5631,7 +5639,7 @@ AUTOSSH_PORT=$AUTOSSH_PORT
 AUTOSSH_GATETIME=$AUTOSSH_GATETIME
 
 # Notification
-EMAIL_VIA_GMAIL_CMD=$EMAIL_VIA_GMAIL_CMD
+EMAIL_VIA_GMAIL_TOOL=$EMAIL_VIA_GMAIL_TOOL
 REVERSE_SSH_NOTIFICATION_METHOD=$REVERSE_SSH_NOTIFICATION_METHOD
 REVERSE_SSH_NOTIFICATION_EMAIL=$REVERSE_SSH_NOTIFICATION_EMAIL
 EOF
@@ -6488,13 +6496,13 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 
 telegram_messaging_configure () {
 cat > $TELEGRAM_CREDENTIALS_CONFIG << EOF
-TELEGRAM_SCRIPT="$TELEGRAM_SCRIPT"
+TELEGRAM_TOOL="$TELEGRAM_TOOL"
 EOF
 # Copy Telegram Script if it does not exists
-[ -e $TELEGRAM_SCRIPT ] || \
-	cp -v $PROJECT_BIN_DIR/jambulatv-telegram $TELEGRAM_SCRIPT
+[ -e $TELEGRAM_TOOL ] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-telegram $TELEGRAM_TOOL
 # Make script executable
-[ -x $TELEGRAM_SCRIPT ] || chmod 755 $TELEGRAM_SCRIPT
+[ -x $TELEGRAM_TOOL ] || chmod 755 $TELEGRAM_TOOL
 }
 
 yowsup2_deps_install () {
@@ -6570,15 +6578,15 @@ python3 setup.py install
 }
 
 whatsapp_messaging_configure () {
-# Copy jambulatv-whatsapp script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-whatsapp ] || \
-	cp -v $PROJECT_BIN_DIR/jambulatv-whatsapp $BINARY_PREFIX/jambulatv-whatsapp
+# Copy WhatsApp tool, if it does not exist in bin directory
+[ -e $WHATSAPP_TOOL ] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-whatsapp $WHATSAPP_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-whatsapp
+chmod 755 $WHATSAPP_TOOL
 #
 # Add empty whatsapp settings file
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
-# TIP: Run the script $WHATSAPP_SCRIPT to generate the rest of whatsapp settings
+# TIP: Run the script $WHATSAPP_TOOL to generate the rest of whatsapp settings
 EOF
 #
 # Create directory of Mobile Providers 
@@ -7361,16 +7369,16 @@ usermod -a -G $HOSTAPD_GROUP $MULTIMEDIA_USER
       $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service.disabled
 
 # Copy over auto wifi provisioning tool, if none exists in bin directory
-[ -e $BINARY_PREFIX/jambulatv-auto-wifi-provision ] || cat $PROJECT_BIN_DIR/jambulatv-auto-wifi-provision | \
+[ -e $AUTO_WIFI_PROVISION_TOOL ] || cat $PROJECT_BIN_DIR/jambulatv-auto-wifi-provision | \
 	sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
 	sed -e "s:MY_SOUNDS_TOOL:$SOUNDS_TOOL:g" | \
 	sed -e "s:MY_OSD_TOOL:$OSD_TOOL:g" | \
 	sed -e "s:MY_SYSTEM_SHARE_DIR:$PROJECT_SYSTEM_SHARE_DIR:g" | \
 	sed -e "s:MY_HOSTAPD_DIR:$HOSTAPD_DIR:g" | \
 	sed -e "s:MY_TMPDIR:$TMPDIR:g" \
-		> $BINARY_PREFIX/jambulatv-auto-wifi-provision
+		> $AUTO_WIFI_PROVISION_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-auto-wifi-provision
+chmod 755 $AUTO_WIFI_PROVISION_TOOL
 #
 # Display WiFi SSID and Passphrase post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
@@ -7853,8 +7861,8 @@ EOF
 }
 
 email_via_gmail_setup () {
-# Copy jambulatv-email script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-email ] || cp -v $PROJECT_BIN_DIR/jambulatv-email $BINARY_PREFIX/
+# Copy Email via GMail tool, if it does not exist in bin directory
+[ -e $EMAIL_VIA_GMAIL_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-email $BINARY_PREFIX/
 # Add usernames, passwords credentials to Gmail config
 cat > $EMAIL_GMAIL_CONFIG << EOF
 EMAIL_CMD=$BINARY_PREFIX/email
@@ -9451,9 +9459,9 @@ chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
 		sed -e "s:MY_SMARTHOME_HUB_WWW_PORT:$SMARTHOME_HUB_WWW_PORT:g" | \
 		sed -e "s:MY_TELEGRAM_CREDENTIALS_CONFIG:$TELEGRAM_CREDENTIALS_CONFIG:g" | \
 		sed -e "s:MY_WHATSAPP_CREDENTIALS_CONFIG:$WHATSAPP_CREDENTIALS_CONFIG:g" | \
-		sed -e "s:MY_WHATSAPP_SCRIPT:$WHATSAPP_SCRIPT:g" | \
+		sed -e "s:MY_WHATSAPP_TOOL:$WHATSAPP_TOOL:g" | \
 		sed -e "s:MY_EMAIL_CREDENTIALS_CONFIG:$EMAIL_CREDENTIALS_CONFIG:g" | \
-		sed -e "s:EMAIL_VIA_GMAIL_CMD:$EMAIL_VIA_GMAIL_CMD:g" | \
+		sed -e "s:EMAIL_VIA_GMAIL_TOOL:$EMAIL_VIA_GMAIL_TOOL:g" | \
 		sed -e "s:MY_OSD_SCRIPT:$OSD_TOOL:g" | \
 		sed -e "s:MY_KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
 		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
@@ -10623,15 +10631,15 @@ chmod 755 $BINARY_PREFIX/jambulatv-weather-api
 
 initial_setup_configure () {
 # Copy jambulatv-initial-setup, if none exists in bin directory
-[ -e $BINARY_PREFIX/jambulatv-initial-setup ] || \
+[ -e $INITIAL_SETUP_TOOL ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-initial-setup | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" \
-			> $BINARY_PREFIX/jambulatv-initial-setup 
+			> $INITIAL_SETUP_TOOL 
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-initial-setup 
+chmod 755 $INITIAL_SETUP_TOOL
 
 # Create setup sounds directory if no-existent
 [ -d $PROJECT_SYSTEM_SHARE_DIR/sounds ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/sounds

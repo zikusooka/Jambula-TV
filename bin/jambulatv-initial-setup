@@ -17,13 +17,6 @@ SERIAL=$(grep -i Serial $PROJECT_RELEASE_FILE | cut -d : -f2)
 
 KODI_GUI_SETTINGS=$KODI_USER_DATA/guisettings.xml
 
-QRCODE_PLAYER_CMD="/usr/bin/cvlc"
-QRCODE_WIDTH=320
-QRCODE_HEIGHT=240
-QRCODE_PLAYER_OPTIONS="--daemon -I dummy --quiet --no-audio --width $QRCODE_WIDTH --height $QRCODE_HEIGHT --loop --meta-title=SETUP --video-title-timeout=300000000000000"
-
-OSDRUNFILE=/tmp/osd_process_running
-
 FLEXGET_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/flexget
 ASTERISK_AGI_BIN_DIR=/var/lib/asterisk/agi-bin
 
@@ -48,15 +41,33 @@ EMAIL_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-email.cfg
 EMAIL_GMAIL_CONFIG=$PROJECT_SYSTEM_CONF_DIR/email-gmail.cfg
 TELEGRAM_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-telegram.cfg
 WHATSAPP_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-whatsapp.cfg
-WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
 
 SETUP_LAN_SYSCONFIG_FILE=/etc/sysconfig/network-scripts/ifcfg-${SETUP_LAN_DEVICE}
 
 JAMBULATV_SSID=$(grep ^ssid= /etc/hostapd/hostapd.conf | cut -d '=' -f2)
 
-OSD_CMD="/usr/bin/jambulatv-osd -m"
+OSDRUNFILE=$(grep ^OSDRUNFILE $OSD_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed "s/'//g")
 
-QRCODE_OSD_MSG_4_SETUP="Please connect to $JAMBULATV_SSID first, then use the QR Code Reader App on your WiFi device to scan this code.  This QR code will only be removed once setup has been completed."
+OSD_MSG_TURN_ON_SPEAKERS="Please turn on your speakers for a voice assisted setup process"
+
+QRCODE_OSD_MSG_4_SETUP="To begin setup, please use the QR Code Reader App on your smartphone to scan this code.  Alternatively, you may manually open the following link using a browser on your smart phone: http://172.16.0.1:8502  This QR code will only be removed once setup has been completed."
+
+QRCODE_PREFERRED_PLAYER=ffplay
+#
+case $QRCODE_PREFERRED_PLAYER in
+ffplay)
+QRCODE_PLAYER_CMD="/usr/bin/ffplay"
+QRCODE_WIDTH=570
+QRCODE_HEIGHT=570
+QRCODE_PLAYER_OPTIONS="-hide_banner -nostats -loglevel error -an -noborder -vf scale=${QRCODE_WIDTH}x${QRCODE_HEIGHT}"
+;;
+vlc)
+QRCODE_PLAYER_CMD="/usr/bin/vlc"
+QRCODE_WIDTH=320
+QRCODE_HEIGHT=240
+QRCODE_PLAYER_OPTIONS="--daemon -I dummy -V x11 --quiet --no-audio --width $QRCODE_WIDTH --height $QRCODE_HEIGHT --loop --meta-title=SETUP --video-title-timeout=300000000000000"
+;;
+esac
 
 SETUP_ICINGA2_PRESENCE_HOSTS=no #yes
 ICINGA2_JAMBULATV_HOSTS_FILE=/etc/icinga2/conf.d/JambulaTV/hosts.conf
@@ -66,7 +77,7 @@ JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
 JAMBULATV_SETUP_DB_PASS=MY_JAMBULATV_SETUP_DB_PASS
 JAMBULATV_SETUP_DB_TABLE=MY_JAMBULATV_SETUP_DB_TABLE
 
-PVR_STATUS_FILE=$(grep ^PVR_STATUS_FILE $(which jambulatv-kodi-controller) | cut -d '=' -f2 | head -1 | awk {'print $1'})
+PVR_STATUS_FILE=$(grep ^PVR_STATUS_FILE $KODI_CONTROLLER_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'})
 
 
 
@@ -80,7 +91,7 @@ check_if_setup_completed () {
 }
 
 jambula_addons_enable () {
-# Enable our addons
+# Enable our custom addons
 if [[ ! -e $KODI_USER_DATA/Database/.jambula_addons_enabled && \
 	-x $KODI_USER_DATA/Database/jambula_addons.sh ]];
 then
@@ -98,49 +109,81 @@ sudo systemctl restart nginx.service
 }
 
 remove_previous_osd_message () {
-# Kill any lingering OSD message scrolls
-OSD_PID=$(ps auxw | grep -Ev grep | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
-[ "x$OSD_PID" = "x" ] || sudo kill -15 $OSD_PID
+# Set PID of current OSD tool process
+EXISTING_OSD_PID=$(ps auxw | grep -Ev grep | grep ${OSD_TOOL##*/} | grep python | awk {'print $2'})
+[ "x$EXISTING_OSD_PID" = "x" ] || sudo kill -15 $EXISTING_OSD_PID
 # Remove OSD run file if it exists
-[ ! -e $OSDRUNFILE ] || sudo rm -f $OSDRUNFILE
+[[ -e $OSDRUNFILE ]] && sudo rm -f $OSDRUNFILE
 }
 
 remove_previous_qrcode () {
-# Kill existing QR Code/VLC process
-QRCODE_VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep qrcodes/setup_url.png | awk {'print $2'})
-[ "x$QRCODE_VLC_PID" != "x" ] && kill $QRCODE_VLC_PID
+# Kill existing QR Code player process
+QRCODE_PLAYER_PID=$(ps auxw | grep -Ev grep | grep ${QRCODE_PLAYER_CMD##*/} | grep qrcodes/setup_url.png | awk {'print $2'})
+[ "x$QRCODE_PLAYER_PID" != "x" ] && kill $QRCODE_PLAYER_PID
+}
+
+stop_voice_assistant () {
+# Set PID of current voice assistant process
+PID_SOUNDS_TOOL=$(ps auxw | grep -Ev grep | grep setup-.*wav | awk {'print $2'})
+#
+# Kill current voice assistant process
+[ "x$PID_SOUNDS_TOOL" = "x" ] || kill -15 $PID_SOUNDS_TOOL
+}
+
+osd_turn_on_speakers () {
+# Kill current OSD tool processes
+remove_previous_osd_message
+# Display 'Turn on speakers' OSD message
+$OSD_TOOL -m "$OSD_MSG_TURN_ON_SPEAKERS"
+}
+
+voice_assist_thanks_4_purchase () {
+# Voice Assist - Thank you for purchase
+$SOUNDS_TOOL setup 1
+}
+
+voice_assist_setup_scan_qrcode () {
+$SOUNDS_TOOL setup 4
+}
+
+voice_assist_setup_completed () {
+# Voice Assist - Setup completed
+$SOUNDS_TOOL setup 5
+}
+
+voice_assist_setup_completed_tutor_channel () {
+# Voice Assist - Setup completed + Mention Tutor channel
+$SOUNDS_TOOL setup 6
 }
 
 display_qrcode_4_setup () {
 # Display QR Code since setup not yet done
-$QRCODE_PLAYER_CMD $QRCODE_PLAYER_OPTIONS $QRCODE_DIR/$QRCODE_FILE 
+export DISPLAY=:0.0 && $QRCODE_PLAYER_CMD $QRCODE_PLAYER_OPTIONS $QRCODE_DIR/$QRCODE_FILE &
 }
 
 run_auto_wifi_provision () {
-sudo jambulatv-auto-wifi-provision 
+sudo $AUTO_WIFI_PROVISION_TOOL 
 }
 
-display_osd_message_4_setup () {
-# Stop other OSD messages form showing
-[ -e $OSDRUNFILE ] || touch $OSDRUNFILE
-#
+display_and_play_setup_message () {
+# Pause a bit so previous voice assistant message completes
+sleep 5
+# Set Webserver Setup Page accessed to 'Not-Yet-accessed', so we can display OSD & QRcode
+SERVER_ACCESSED=255
+while [[ "$SERVER_ACCESSED" != "0" ]];
+do
+# Voice Assist - Scan QR code
+voice_assist_setup_scan_qrcode &
+
+# Kill current OSD tool processes
+remove_previous_osd_message
+# Display setup OSD Message
+$OSD_TOOL -m "$QRCODE_OSD_MSG_4_SETUP"
+
 # Check to see if setup web server has been accessed, so we can display OSD
 grep form_01.php $PROJECT_SYSTEM_LOG_DIR/setup-nginx.log > /dev/null 2>&1
 SERVER_ACCESSED=$?
-while [ "$SERVER_ACCESSED" != "0" ];
-do
-
-# Display OSD Message
-jambulatv-kodi-controller osd_long "$QRCODE_OSD_MSG_4_SETUP"
-# Wait
-sleep 30
-# Check again
-grep form_01.php $PROJECT_SYSTEM_LOG_DIR/setup-nginx.log > /dev/null 2>&1
-SERVER_ACCESSED=$?
-
 done
-# Allow OSD messages from showing again
-[ ! -e $OSDRUNFILE ] || sudo rm -f $OSDRUNFILE
 }
 
 configure_internet_connection () {
@@ -164,7 +207,7 @@ PASSWORD=$PASSWORD
 APN=$APN
 EOF
 # Trigger 3/4G Internet connect
-sudo jambulatv-ppp-dialer $ISP_NAME $USERNAME $PASSWORD 1 &
+sudo $PPP_DIAL_TOOL $ISP_NAME $USERNAME $PASSWORD 1 &
 ;;
 mifi_router)
 [ -e $SETUP_MIFI_ROUTER_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_MIFI_ROUTER_FILE
@@ -174,7 +217,7 @@ SSID="$WIFI_SSID"
 SECURITY_KEY="$WIFI_SECURITY_KEY"
 EOF
 # Trigger MiFi Internet connect
-sudo jambulatv-connect-2-wifi-ap UP &
+sudo $CONNECT_WIFI_AP_TOOL UP &
 ;;
 lan_dhcp)
 [ -e $SETUP_LAN_SYSCONFIG_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
@@ -282,17 +325,17 @@ then
 set_variables 
 
 # Create, configure DVB-T network, then Scan and Map all available channels
-jambulatv-tvheadend-controller dvb all
+sudo $TVHEADEND_CONTROLLER_TOOL dvb all
 
 # Since DVBT configure was requested, enable PVR functions in kodi 
 # ----------------------------------------------------------------
 #
 # 1) Check status of pvr.hts addon, and enable it if false
-jambulatv-kodi-controller addon_status pvr.hts > /dev/null 2>&1
+$KODI_CONTROLLER_TOOL addon_status pvr.hts > /dev/null 2>&1
 # Source PVR status temp file
 [ -e $PVR_STATUS_FILE ] && . $PVR_STATUS_FILE
 # If status is disabled - Enable it! i.e. Toggle to true
-[ "$ADDON_STATUS" = "true" ] || jambulatv-kodi-controller addon_switch pvr.hts > /dev/null 2>&1
+[ "$ADDON_STATUS" = "true" ] || $KODI_CONTROLLER_TOOL addon_switch pvr.hts > /dev/null 2>&1
 # Let other runs know, we did this already
 touch $KODI_USER_DATA/.pvrmanager_enabled 
 
@@ -408,8 +451,8 @@ EOF
 whatsapp_messaging_setup () {
 [ -e $WHATSAPP_CREDENTIALS_CONFIG ] && sudo chown $MULTIMEDIA_USER $WHATSAPP_CREDENTIALS_CONFIG
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
-# TIP: Run the script $WHATSAPP_SCRIPT to generate the rest of whatsapp settings
-WHATSAPP_SCRIPT=$WHATSAPP_SCRIPT
+# TIP: Run the script $WHATSAPP_TOOL to generate the rest of whatsapp settings
+WHATSAPP_TOOL=$WHATSAPP_TOOL
 WHATSAPP_PHONE_NUMBER_SENDER=$WHATSAPP_NO_SENDER
 WHATSAPP_PHONE_NUMBER_RECIPIENT=$WHATSAPP_NO_RECIPIENT
 EOF
@@ -577,7 +620,7 @@ email_system_info () {
 extract_setup_variables
 
 # Email system info and passwords for storage
-jambulatv-email $CONTACT_EMAIL "[JambulaTV] Setup completed" "Dear $CONTACT_NAME, 
+$SEND_EMAIL_TOOL $CONTACT_EMAIL "[JambulaTV] Setup completed" "Dear $CONTACT_NAME, 
 
 Congratulations! The initial setup of your JambulaTV completed successfully.
 
@@ -601,11 +644,11 @@ $SYSTEM_PASSWORD
 }
 
 create_video_music_db () {
-sudo jambulatv-library create
+sudo $KODI_LIBRARY_TOOL create
 }
 
 scan_video_music_db () {
-sudo jambulatv-library scan
+sudo $KODI_LIBRARY_TOOL scan
 }
 
 
@@ -613,22 +656,24 @@ sudo jambulatv-library scan
 #################
 #  MAIN SCRIPT  #
 #################
+
 check_if_setup_completed
 
-# Debug
 logger -s -t $(basename $0) "JambulaTV Setup: START"
 
-# Enable custom addons
+osd_turn_on_speakers
+
+voice_assist_thanks_4_purchase
+
 jambula_addons_enable
 
 clear_logfile
-remove_previous_osd_message
-remove_previous_qrcode
 
 run_auto_wifi_provision
 
 display_qrcode_4_setup
-display_osd_message_4_setup
+
+display_and_play_setup_message
 
 configure_internet_connection
 configure_wifi_mac_addresses
@@ -647,10 +692,13 @@ news_headlines_setup
 
 reset_system_password
 
-create_video_music_db
-scan_video_music_db
-
 email_system_info
 
-# Debug
+# End
 logger -s -t $(basename $0) "JambulaTV Setup: END"
+
+voice_assist_setup_completed_tutor_channel
+
+# Scan library
+create_video_music_db
+scan_video_music_db
