@@ -3,44 +3,114 @@
 # Use it to autoconnect for first time Android users.  iOs clients can copy and paste
 # WiFi passphrase 
 # Requires: qrencode, VLC, convert (ImageMagick) utilities
-# Jambula Labs @copyright 2017-2018 All rights reserved
+# Jambula Labs @copyright 2018-2019 All rights reserved
 
 # Variables
-PROJECT_SYSTEM_SHARE_DIR=/usr/share/JambulaTV
+PROJECT_SYSTEM_SHARE_DIR=MY_SYSTEM_SHARE_DIR
 
-HOSTAPD_CONFIG_FILE=/etc/hostapd/hostapd.conf
+HOSTAPD_CONFIG_FILE=MY_HOSTAPD_DIR/hostapd.conf
 
 WIRELESS_SSID=$(sudo grep '^ssid=' $HOSTAPD_CONFIG_FILE | sed 's:ssid=::')
 WIRELESS_PASSPHRASE=$(sudo grep '^wpa_passphrase=' $HOSTAPD_CONFIG_FILE | sed 's:wpa_passphrase=::')
 
 CONVERT_CMD=/usr/bin/convert
 
-OSD_CMD="/usr/bin/jambulatv-osd -m"
-OSDRUNFILE=/tmp/osd_process_running # Hardcoded in $OSD_CMD
+SOUNDS_TOOL=MY_SOUNDS_TOOL
+OSD_TOOL=MY_OSD_TOOL
+OSDRUNFILE=$(grep ^OSDRUNFILE $OSD_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed "s/'//g")
 
-AUTO_WIFI_OSD_TEMP_SCRIPT=/tmp/osd_4_auto_wifi_provision
-PAUSE_OSD_AUTO_WIFI="35"
+AUTO_WIFI_OSD_TEMP_SCRIPT=MY_TMPDIR/osd_4_auto_wifi_provision
 
+# QR Code variables
 QRCODE_CMD=/usr/bin/qrencode
 QRCODE_DIR=$PROJECT_SYSTEM_SHARE_DIR/images/qrcodes
 QRCODE_IMAGE_NAME=auto_wifi
 QRCODE_IMAGE_EXT=png
 
-QRCODE_RAW_IMAGE_FILENAME_ANDROID=$TMPDIR/$QRCODE_IMAGE_NAME.android.$QRCODE_IMAGE_EXT
-QRCODE_RAW_IMAGE_FILENAME_IOS=$TMPDIR/$QRCODE_IMAGE_NAME.ios.$QRCODE_IMAGE_EXT
+QRCODE_RAW_IMAGE_FILENAME_ANDROID=/tmp/$QRCODE_IMAGE_NAME.android.$QRCODE_IMAGE_EXT
+QRCODE_RAW_IMAGE_FILENAME_IOS=/tmp/$QRCODE_IMAGE_NAME.ios.$QRCODE_IMAGE_EXT
 
 QRCODE_IMAGE_FILENAME_ANDROID=$QRCODE_DIR/$QRCODE_IMAGE_NAME.android.$QRCODE_IMAGE_EXT
 QRCODE_IMAGE_FILENAME_IOS=$QRCODE_DIR/$QRCODE_IMAGE_NAME.ios.$QRCODE_IMAGE_EXT
 
 QRCODE_IMAGE_FILENAME_ANDROID_IOS=$QRCODE_DIR/$QRCODE_IMAGE_NAME.android.ios.$QRCODE_IMAGE_EXT
 
-QRCODE_OSD_MSG_AUTO_WIFI_PROVISION="Please download and install any Quick Response (QR) Code Reader on your WiFi device.  Then launch the installed app to scan the QR Code displayed on the TV Screen.  You may also connect to $WIRELESS_SSID manually using the key:  $WIRELESS_PASSPHRASE   This QR Code will be removed once you have connected to the Hotspot"
+QRCODE_OSD_MSG_AUTO_WIFI_PROVISION="Please download and install any QR Code Reader on your smart phone.  Then launch the installed app to scan the QR Code displayed on the TV Screen.  You may also connect to $WIRELESS_SSID manually using the key:  $WIRELESS_PASSPHRASE   This QR Code will be removed once you have connected to the Hotspot"
+
+QRCODE_PREFERRED_PLAYER=ffplay
+#
+case $QRCODE_PREFERRED_PLAYER in
+ffplay)
+QRCODE_PLAYER_CMD="/usr/bin/ffplay"
+QRCODE_WIDTH=570
+QRCODE_HEIGHT=570
+QRCODE_PLAYER_OPTIONS="-hide_banner -nostats -loglevel error -an -noborder -vf scale=${QRCODE_WIDTH}x${QRCODE_HEIGHT}"
+;;
+vlc)
+QRCODE_PLAYER_CMD="/usr/bin/vlc"
+QRCODE_WIDTH=320
+QRCODE_HEIGHT=240
+QRCODE_PLAYER_OPTIONS="--daemon -I dummy -V x11 --quiet --no-audio --width $QRCODE_WIDTH --height $QRCODE_HEIGHT --loop --no-video-title"
+;;
+esac
 
 
 
 ###############
 #  FUNCTIONS  #
 ###############
+clean_up () {
+# Remove previous raw and final qrcodes
+[[ -e $QRCODE_RAW_IMAGE_FILENAME_ANDROID ]] && sudo rm -f $QRCODE_RAW_IMAGE_FILENAME_ANDROID
+[[ -e $QRCODE_RAW_IMAGE_FILENAME_IOS ]] && sudo rm -f $QRCODE_RAW_IMAGE_FILENAME_IOS
+[[ -e $QRCODE_IMAGE_FILENAME_ANDROID ]] && sudo rm -f $QRCODE_IMAGE_FILENAME_ANDROID
+[[ -e $QRCODE_IMAGE_FILENAME_IOS ]] && sudo rm -f $QRCODE_IMAGE_FILENAME_IOS
+[[ -e $QRCODE_IMAGE_FILENAME_ANDROID_IOS ]] && sudo rm -f $QRCODE_IMAGE_FILENAME_ANDROID_IOS
+# Remove OSD temp script
+rm -f $AUTO_WIFI_OSD_TEMP_SCRIPT
+}
+
+kill_qrcode_process () {
+# Set PID of current displayed qrcode process
+PID_AUTO_WIFI_QR=$(ps auxw | grep -Ev grep | grep ${QRCODE_IMAGE_FILENAME_ANDROID_IOS##*/} | awk {'print $2'})
+#
+# Kill current displayed qrcode process
+[ "x$PID_AUTO_WIFI_QR" = "x" ] || kill -15 $PID_AUTO_WIFI_QR
+}
+
+kill_osd_process () {
+# Set PID of current OSD tool process
+EXISTING_OSD_PID=$(ps auxw | grep -Ev grep | grep ${OSD_TOOL##*/} | grep python | awk {'print $2'})
+#
+# Kill current OSD tool process
+[ "x$EXISTING_OSD_PID" = "x" ] || kill -15 $EXISTING_OSD_PID
+# Remove OSD run file if it exists
+[[ -e $OSDRUNFILE ]] && sudo rm -f $OSDRUNFILE
+}
+
+kill_voice_assistant () {
+# Set PID of current voice assistant process
+PID_SOUNDS_TOOL=$(ps auxw | grep -Ev grep | grep setup-.*wav | awk {'print $2'})
+#
+# Kill current voice assistant process
+[ "x$PID_SOUNDS_TOOL" = "x" ] || kill -15 $PID_SOUNDS_TOOL
+}
+
+destroy_auto_wifi_qrcode_and_osd () {
+# Wait for WiFi handshake, and when completed remove QR codes displayed
+/usr/bin/journalctl -b -f -o cat --no-pager | grep -m 1 -i "WPA: pairwise key handshake completed" | while read LINE
+do
+# Kill processes
+kill_qrcode_process
+kill_osd_process
+kill_voice_assistant
+done
+
+# Notify of connected status - OSD
+$OSD_TOOL -m "Connected to JambulaTV" &
+# Notify of connected status - voice assistant
+$SOUNDS_TOOL setup 3
+}
 
 create_auto_wifi_qrcode_4_android_ios () {
 # Android
@@ -63,80 +133,41 @@ $CONVERT_CMD -append $QRCODE_IMAGE_FILENAME_ANDROID $QRCODE_IMAGE_FILENAME_ANDRO
 }
 
 display_auto_wifi_qrcode_4_android_ios () {
-# Display QR codes - Set display first for vlc
-export DISPLAY=:0.0 && cvlc -V x11 --quiet --no-audio --width 320 --height 240 --loop --no-video-title $QRCODE_IMAGE_FILENAME_ANDROID_IOS &
+# Display QR codes - Set display first for image player
+export DISPLAY=:0.0 && $QRCODE_PLAYER_CMD $QRCODE_PLAYER_OPTIONS $QRCODE_IMAGE_FILENAME_ANDROID_IOS &
 }
 
 display_osd_message_4_auto_wifi_provisioning () {
 # Create OSD temp script
 cat > $AUTO_WIFI_OSD_TEMP_SCRIPT <<EOF
 #!/bin/sh
-
 # Check if QR code is being shown on screen
-ps auxw | grep -Ev grep | grep $(basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS) > /dev/null
+ps auxw | grep -Ev grep | grep ${QRCODE_IMAGE_FILENAME_ANDROID_IOS##*/} > /dev/null 2>&1
 OSDEXITVAL=\$?
 
 # While waiting for user action
 while [ "\$OSDEXITVAL" = "0" ];
 do
 
-# Stop other OSD messages form showing
-[ -e $OSDRUNFILE ] || touch $OSDRUNFILE
+# Play voice assistant
+$SOUNDS_TOOL setup 2 &
 
 # Display OSD message
-jambulatv-kodi-controller osd_long "$QRCODE_OSD_MSG_AUTO_WIFI_PROVISION" &
-
-# Pause for next scroll
-sleep $PAUSE_OSD_AUTO_WIFI
+$OSD_TOOL -m "$QRCODE_OSD_MSG_AUTO_WIFI_PROVISION"
 
 # Check if QR code is still being shown on screen
-ps auxw | grep -Ev grep | grep $(basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS) > /dev/null
+ps auxw | grep -Ev grep | grep ${QRCODE_IMAGE_FILENAME_ANDROID_IOS##*/} > /dev/null
 OSDEXITVAL=\$?
 
 done
-
-# Allow OSD messages from showing again
-[ ! -e $OSDRUNFILE ] || sudo rm -f $OSDRUNFILE
 EOF
 
+# Make script executable
 chmod 755 $AUTO_WIFI_OSD_TEMP_SCRIPT
-#
-# Remove any existing OSD notice
-EXISTING_OSD_PID=$(ps auxw | grep -Ev grep | grep $(basename $OSD_CMD) | grep python | awk {'print $2'})
-[ "x$EXISTING_OSD_PID" = "x" ] || kill -15 $EXISTING_OSD_PID
-#
-# Display OSD Message
-. $AUTO_WIFI_OSD_TEMP_SCRIPT
-}
 
-kill_qrcode_process () {
-PID_AUTO_WIFI_QR=$(ps auxw | grep -Ev grep | grep $(basename $QRCODE_IMAGE_FILENAME_ANDROID_IOS) | awk {'print $2'})
-[ "x$PID_AUTO_WIFI_QR" = "x" ] || kill -15 $PID_AUTO_WIFI_QR
-}
-
-kill_osd_process () {
-# PID variables
-OSD_SCRIPT_PID=$(ps auxw | grep -Ev grep | grep $(basename $AUTO_WIFI_OSD_TEMP_SCRIPT) | awk {'print $2'})
-OSD_SLEEP_PID=$(ps auxw | grep -Ev grep | grep "sleep $PAUSE_OSD_AUTO_WIFI" | awk {'print $2'})
-#
-# Kill lingering OSD message scrolls
-[ "x$OSD_SCRIPT_PID" = "x" ] || kill -15 $OSD_SCRIPT_PID
-[ "x$OSD_SLEEP_PID" = "x" ] || kill -15 $OSD_SLEEP_PID
-#
-# Remove OSD temp script
-rm -f $AUTO_WIFI_OSD_TEMP_SCRIPT
-}
-
-destroy_auto_wifi_qrcode_and_osd () {
-# Wait for WiFi handshake, and when completed remove QR codes displayed
-/usr/bin/journalctl -b -f -o cat --no-pager | grep -m 1 -i "WPA: pairwise key handshake completed" | while read LINE
-do
-#
-# Kill QR Code and OSD processes
-kill_qrcode_process
+# Kill OSD tool processes and start displaying new OSD Message
 kill_osd_process
-#
-done
+. $AUTO_WIFI_OSD_TEMP_SCRIPT
 }
 
 
@@ -147,8 +178,10 @@ done
 
 create_auto_wifi_qrcode_4_android_ios
 
-display_auto_wifi_qrcode_4_android_ios
-
 destroy_auto_wifi_qrcode_and_osd &
 
+display_auto_wifi_qrcode_4_android_ios
+
 display_osd_message_4_auto_wifi_provisioning
+
+clean_up
