@@ -139,12 +139,6 @@ ARIA2_CONFIG_FILE=$PROJECT_SYSTEM_CONF_DIR/aria2.conf
 ARIA2_DOWNLOADS_DIRECTORY=$PROJECT_PARTITION/Downloads
 ARIA2_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/aria2.log
 ARIA2_SAVE_SESSION_FILE=$PROJECT_SYSTEM_LOG_DIR/aria2.session
-ARIA2_DOWNLOAD_COMPLETE_BT_SCRIPT=
-ARIA2_DOWNLOAD_COMPLETE_SCRIPT=
-ARIA2_DOWNLOAD_ERROR_SCRIPT=
-ARIA2_DOWNLOAD_PAUSE_SCRIPT=
-ARIA2_DOWNLOAD_START_SCRIPT=
-ARIA2_DOWNLOAD_STOP_SCRIPT=
 
 KAA_MODULES_GIT_DIR=$PROJECT_SRC_DIR/kaa-modules
 FREEVO1_GIT_DIR=$PROJECT_SRC_DIR/freevo1-git
@@ -168,8 +162,6 @@ FREEVO_SYSTEM_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/freevo
 FREEVO_CMD=$FREEVO_INSTALL_DIR/freevo
 FREEVO_USER=$MULTIMEDIA_USER
 FREEVO_USER_HOME_DIR=`cat /etc/passwd | grep "$FREEVO_USER" | cut -d ':' -f6 | head -1`/.freevo 
-
-GENERATE_LOCAL_CONF_SCRIPT=$BINARY_PREFIX/jambulatv-generate-local-conf
 
 #FREEVO_VERSION=git
 FREEVO_VERSION=svn
@@ -245,8 +237,6 @@ KODI_SYSTEM_DATA=$KODI_SHARE_DIR/userdata
 KODI_SYSTEM_ADDONS=$KODI_SHARE_DIR/addons
 KODI_SYSTEM_SYS=$KODI_SHARE_DIR/system
 KODI_LOG_FILE=$KODI_CONFIG_DIR/temp/kodi.log
-KODI_STANDALONE_SCRIPT=$BINARY_PREFIX/kodi-standalone
-KODI_PVR_MANAGER_ENABLE_SCRIPT=$BINARY_PREFIX/jambulatv-kodi-pvr-hts-manager
 #
 KODI_DB_PREFIX=kodi
 KODI_DB_VIDEO=${KODI_DB_PREFIX}_video
@@ -560,7 +550,6 @@ ZONEMINDER_DB_SCHEMA=$INSTALL_SRC_DIR/ZoneMinder/db/zm_create.sql
 ZONEMINDER_DB_USER=jambulatv
 ZONEMINDER_DB_PASS=jambulatvzm3
 ZONEMINDER_WWW_PORT=$(grep -i 'ZoneMinder$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-ZONEMINDER_ZMS_INETD_SCRIPT=$BINARY_PREFIX/jambulatv-zms-inetd
 ZONEMINDER_ZMS_INETD_PORT=8521
 ZONEMINDER_EVENTS_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Camera-Events
 
@@ -747,8 +736,6 @@ DNS2TCPC_USER=root
 VLM_VOD_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/vlm
 VLM_VOD_CONFIG_FILE=$VLM_VOD_CONFIG_DIR/vlm.conf
 VLM_VOD_DIRECTORY=/JambulaTV/vlm_vod
-VLM_VOD_CREATE_SCRIPT=$BINARY_PREFIX/jambulatv-create-video-on-demand
-VLM_VOD_DELETE_SCRIPT=$BINARY_PREFIX/jambulatv-delete-video-on-demand
 
 INCRON_DIRECTORY=/etc/incron.d
 
@@ -857,22 +844,35 @@ TORRENTS_DOMAIN_NAME="MyJambulaTV"
 # Asterisk Credentials - Copy these to globals file
 ASTERISK_DIAL_OUT_NUMBER_1=""
 
+ARIA2_DOWNLOAD_COMPLETE_BT_TOOL=
+ARIA2_DOWNLOAD_COMPLETE_TOOL=
+ARIA2_DOWNLOAD_ERROR_TOOL=
+ARIA2_DOWNLOAD_PAUSE_TOOL=
+ARIA2_DOWNLOAD_START_TOOL=
+ARIA2_DOWNLOAD_STOP_TOOL=
+
 # JambulaTV Tools
 # ---------------
 AUTO_WIFI_PROVISION_TOOL=$BINARY_PREFIX/jambulatv-auto-wifi-provision 
 CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
+GENERATE_LOCAL_CONF_TOOL=$BINARY_PREFIX/jambulatv-generate-local-conf
 INITIAL_SETUP_TOOL=$BINARY_PREFIX/jambulatv-initial-setup 
 KODI_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-kodi-controller 
 KODI_LIBRARY_TOOL=$BINARY_PREFIX/jambulatv-library
+KODI_STANDALONE_TOOL=$BINARY_PREFIX/kodi-standalone
+KODI_PVR_MANAGER_ENABLE_TOOL=$BINARY_PREFIX/jambulatv-kodi-pvr-hts-manager
 OSD_TOOL=$BINARY_PREFIX/jambulatv-osd
 PPP_DIAL_TOOL=$BINARY_PREFIX/jambulatv-ppp-dialer
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
 TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
 TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controller 
+VLM_VOD_CREATE_TOOL=$BINARY_PREFIX/jambulatv-create-video-on-demand
+VLM_VOD_DELETE_TOOL=$BINARY_PREFIX/jambulatv-delete-video-on-demand
 WHATSAPP_TOOL=$BINARY_PREFIX/jambulatv-whatsapp
 XMPP_TOOL=$BINARY_PREFIX/jambulatv-xmpp
 ZONEMINDER_ALARM_NOTIFICATIONS_TOOL=$BINARY_PREFIX/jambulatv-zm-alarm-all-notifications 
+ZONEMINDER_ZMS_INETD_TOOL=$BINARY_PREFIX/jambulatv-zms-inetd
 
 # HTTP Headers
 # ------------
@@ -3536,9 +3536,9 @@ $TVHEADEND_CONTROLLER_TOOL dvb all
 
 # Create script which will enable kodi pvr.hts addon at next boot, but only if it is
 # non-existent.  Can't do it here, since kodi still not alive
-if [[ ! -e $KODI_PVR_MANAGER_ENABLE_SCRIPT ]];
+if [[ ! -e $KODI_PVR_MANAGER_ENABLE_TOOL ]];
 then
-cat > $KODI_PVR_MANAGER_ENABLE_SCRIPT <<EOF
+cat > $KODI_PVR_MANAGER_ENABLE_TOOL <<EOF
 #!/bin/sh
 # Temporary script to enable PVR Manager in kodi after initial install
 #
@@ -3565,10 +3565,10 @@ EOF
 cat >> $KODI_USER_DATA/autoexec.py <<EOF
 
 # Enable PVR Manager if it was disabled and was requested for at setup
-subprocess.check_call("$KODI_PVR_MANAGER_ENABLE_SCRIPT")
+subprocess.check_call("$KODI_PVR_MANAGER_ENABLE_TOOL")
 EOF
 # Make script executable
-chmod 755  $KODI_PVR_MANAGER_ENABLE_SCRIPT
+chmod 755  $KODI_PVR_MANAGER_ENABLE_TOOL
 # Let other tools know, we already configured DVB-T
 touch $TVHEADEND_CONFIG_DIR/.dvbt_configured
 fi
@@ -4498,9 +4498,9 @@ chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/Cameras
 
 kodi_configure () {
 # JambulaTV: Start Linux Desktop i.e. PC Mode after quiting Kodi
-cp -v ${KODI_STANDALONE_SCRIPT} ${KODI_STANDALONE_SCRIPT}.orig
+cp -v ${KODI_STANDALONE_TOOL} ${KODI_STANDALONE_TOOL}.orig
 #
-cat >> ${KODI_STANDALONE_SCRIPT} <<EOF2
+cat >> ${KODI_STANDALONE_TOOL} <<EOF2
 # JambulaTV: Go to PC Mode after quiting Kodi i.e. Start Linux Desktop
 at now <<EOF
 $BINARY_PREFIX/jambulatv-computer-mode on
@@ -5057,7 +5057,7 @@ systemctl enable prefdm.service
 autostart_freevo_lxdm () {
 # Backup original autostart file
 cp -v $LXDE_AUTOSTART_FILE $LXDE_AUTOSTART_FILE.orig
-echo "$GENERATE_LOCAL_CONF_SCRIPT
+echo "$GENERATE_LOCAL_CONF_TOOL
 $XSET_CMD s noblank
 $XSET_CMD s off
 $XSET_CMD -dpms
@@ -6448,12 +6448,12 @@ cat $PROJECT_CONFIGS_DIR/aria2.conf.template | \
    sed -e "s:ARIA2_DOWNLOADS_DIRECTORY:$ARIA2_DOWNLOADS_DIRECTORY:g" | \
    sed -e "s:ARIA2_LOG_FILE:$ARIA2_LOG_FILE:g" | \
    sed -e "s:ARIA2_SAVE_SESSION_FILE:$ARIA2_SAVE_SESSION_FILE:g" | \
-   sed -e "s:ARIA2_DOWNLOAD_COMPLETE_BT_SCRIPT:$ARIA2_DOWNLOAD_COMPLETE_BT_SCRIPT:g" | \
-   sed -e "s:ARIA2_DOWNLOAD_COMPLETE_SCRIPT:$ARIA2_DOWNLOAD_COMPLETE_SCRIPT:g" | \
-   sed -e "s:ARIA2_DOWNLOAD_ERROR_SCRIPT:$ARIA2_DOWNLOAD_ERROR_SCRIPT:g" | \
-   sed -e "s:ARIA2_DOWNLOAD_PAUSE_SCRIPT:$ARIA2_DOWNLOAD_PAUSE_SCRIPT:g" | \
-   sed -e "s:ARIA2_DOWNLOAD_START_SCRIPT:$ARIA2_DOWNLOAD_START_SCRIPT:g" | \
-   sed -e "s:ARIA2_DOWNLOAD_STOP_SCRIPT:$ARIA2_DOWNLOAD_STOP_SCRIPT:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_COMPLETE_BT_TOOL:$ARIA2_DOWNLOAD_COMPLETE_BT_TOOL:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_COMPLETE_TOOL:$ARIA2_DOWNLOAD_COMPLETE_TOOL:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_ERROR_TOOL:$ARIA2_DOWNLOAD_ERROR_TOOL:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_PAUSE_TOOL:$ARIA2_DOWNLOAD_PAUSE_TOOL:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_START_TOOL:$ARIA2_DOWNLOAD_START_TOOL:g" | \
+   sed -e "s:ARIA2_DOWNLOAD_STOP_TOOL:$ARIA2_DOWNLOAD_STOP_TOOL:g" | \
    sed -e "s:NETWORK_IP_ADDRESS:$NETWORK_IP_ADDRESS:g" \
 > $ARIA2_CONFIG_FILE
 fi
@@ -7695,8 +7695,8 @@ chmod -R 775 $PLAYLISTS_DIRECTORY
 video_on_demand_configure () {
 # Create incron tab file for vlm vod
 echo "
-$VLM_VOD_DIRECTORY IN_CREATE $VLM_VOD_CREATE_SCRIPT \$#
-#$VLM_VOD_DIRECTORY IN_DELETE $VLM_VOD_DELETE_SCRIPT \$# 
+$VLM_VOD_DIRECTORY IN_CREATE $VLM_VOD_CREATE_TOOL \$#
+#$VLM_VOD_DIRECTORY IN_DELETE $VLM_VOD_DELETE_TOOL \$# 
 " > $INCRON_DIRECTORY/vlm_vod
 # Create vlm vod directory
 [ -d $VLM_VOD_DIRECTORY ] || mkdir -p $VLM_VOD_DIRECTORY
@@ -9591,15 +9591,15 @@ service zms-inetd
         wait            = no
         user            = $WWW_USER
         port            = $ZONEMINDER_ZMS_INETD_PORT
-        server          = $ZONEMINDER_ZMS_INETD_SCRIPT 
+        server          = $ZONEMINDER_ZMS_INETD_TOOL 
 }
 EOF
 #
 # Copy zms-inetd script if it does not exist
-[ -e $ZONEMINDER_ZMS_INETD_SCRIPT ] || cp -v $PROJECT_BIN_DIR/jambulatv-zms-inetd $ZONEMINDER_ZMS_INETD_SCRIPT
+[ -e $ZONEMINDER_ZMS_INETD_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-zms-inetd $ZONEMINDER_ZMS_INETD_TOOL
 # Change permissions
-chmod 755 $ZONEMINDER_ZMS_INETD_SCRIPT
-chown $WWW_USER:$WWW_GROUP $ZONEMINDER_ZMS_INETD_SCRIPT
+chmod 755 $ZONEMINDER_ZMS_INETD_TOOL
+chown $WWW_USER:$WWW_GROUP $ZONEMINDER_ZMS_INETD_TOOL
 #
 # Restart xinetd service
 systemctl restart xinetd.service
