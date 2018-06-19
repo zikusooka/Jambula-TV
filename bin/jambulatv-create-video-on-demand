@@ -10,7 +10,7 @@ VLM_VOD_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/vlm
 VLM_VOD_CONFIG_FILE=$VLM_VOD_CONFIG_DIR/vlm.conf
 VLM_VOD_DIRECTORY=/JambulaTV/vlm_vod
 
-VLM_SERVER_SCRIPT=$BINARY_PREFIX/jambulatv-vlc-vlm-server
+VLM_SERVER_TOOL=$BINARY_PREFIX/jambulatv-vlc-vlm-server
 
 
 
@@ -26,4 +26,4 @@ setup `echo $@ | cut -d . -f1` input 'file://$VLM_VOD_DIRECTORY/$@'
 # Kill existing vlm processes
 kill `ps auxw | grep vlm-conf | awk {'print $2'} | head -1`
 # Restart vlm server
-$VLM_SERVER_SCRIPT &
+$VLM_SERVER_TOOL &
