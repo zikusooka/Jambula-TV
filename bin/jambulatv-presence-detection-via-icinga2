@@ -5,7 +5,7 @@
 
 HOSTSTATE=$1
 HOSTDISPLAYNAME=$2
-OSD_SCRIPT="sudo /usr/bin/jambulatv-osd"
+OSD_TOOL_CMD="sudo /usr/bin/jambulatv-osd"
 LIGHTS_CMD="/usr/bin/jambulatv-lights"
 SMARTHOME_HUB_LAMP_NAME="Living Room"
 
@@ -17,14 +17,14 @@ SMARTHOME_HUB_LAMP_NAME="Living Room"
 # Zik
 zik_tasks_present () {
 # OSD Notice
-$OSD_SCRIPT -m "Looks like $HOSTDISPLAYNAME is around!"
+$OSD_TOOL_CMD -m "Looks like $HOSTDISPLAYNAME is around!"
 # Turn Off Lights
 $LIGHTS_CMD "$SMARTHOME_HUB_LAMP_NAME" on
 }
 
 zik_tasks_absent () {
 # OSD Notice
-$OSD_SCRIPT -m "Looks like $HOSTDISPLAYNAME is away ..."
+$OSD_TOOL_CMD -m "Looks like $HOSTDISPLAYNAME is away ..."
 # Turn Off Lights
 $LIGHTS_CMD "$SMARTHOME_HUB_LAMP_NAME" off
 }
@@ -32,12 +32,12 @@ $LIGHTS_CMD "$SMARTHOME_HUB_LAMP_NAME" off
 # Others
 other_tasks_present () {
 # OSD Notice
-$OSD_SCRIPT -m "Looks like $HOSTDISPLAYNAME is around!"
+$OSD_TOOL_CMD -m "Looks like $HOSTDISPLAYNAME is around!"
 }
 
 other_tasks_absent () {
 # OSD Notice
-$OSD_SCRIPT -m "Looks like $HOSTDISPLAYNAME is away ..."
+$OSD_TOOL_CMD -m "Looks like $HOSTDISPLAYNAME is away ..."
 }
 
 
