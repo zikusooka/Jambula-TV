@@ -20,7 +20,7 @@ WIFI_INTERFACES_AVAILABLE=$(sudo ip link |grep jwlan | wc -l)
 # Variable specific to this script
 WIFI_SSID=$(grep -i SSID $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 WIFI_SECURITY_KEY=$(grep -i SECURITY_KEY $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
-OSD_SCRIPT="sudo /usr/bin/jambulatv-osd -m"
+OSD_TOOL_CMD="sudo /usr/bin/jambulatv-osd -m"
 AP_NOT_FOUND_MSG="WARNING - Wireless Access Point ($WIFI_SSID) Not Available"
 AP_FOUND_MSG="Found your WiFi Access Point ($WIFI_SSID). Please wait while I connect to it"
 CONNECTED_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID), Assigning IP Address ..."
@@ -104,7 +104,7 @@ WIFI_STICK_PRESENT=$?
 until [ "$WIFI_STICK_PRESENT" = "0" ];
 do
 # Display success message on Screen
-$OSD_SCRIPT "$INSERT_WIFI_DONGLE_MSG"
+$OSD_TOOL_CMD "$INSERT_WIFI_DONGLE_MSG"
 # Pause while waiting for insertion
 sleep 60
 # Test if WiFi stick is now present
@@ -200,7 +200,7 @@ else
 # Beep to alert: Connected WiFi AP
 /usr/bin/beep
 # Display success message on Screen
-$OSD_SCRIPT "$CONNECTED_MSG"
+$OSD_TOOL_CMD "$CONNECTED_MSG"
 fi
 }
 
