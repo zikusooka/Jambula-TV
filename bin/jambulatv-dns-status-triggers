@@ -34,7 +34,7 @@ PUBLIC_DNS_SERVERS="8.8.8.8 208.67.222.222 8.26.56.26 107.170.95.180 77.88.8.8"
 
 MONITORING_PLUGINS_DIR=/usr/lib64/nagios/plugins
 
-OSD_SCRIPT="sudo /usr/bin/jambulatv-osd -m"
+OSD_TOOL_CMD="sudo /usr/bin/jambulatv-osd -m"
 UPDATE_AVAIL_MSG="Software Updates: A new version of JambulaTV software is available. Please update as soon as possible"
 
 
@@ -76,7 +76,7 @@ then
 YOUTUBE_DL_NEW_VERSION=$($YOUTUBE_DL_CMD --version)
 # Notify
 logger -s -t $(basename $0) "Youtube-dl has been updated to version: $YOUTUBE_DL_NEW_VERSION"
-$OSD_SCRIPT "Youtube-dl has been updated to version: $YOUTUBE_DL_NEW_VERSION"
+$OSD_TOOL_CMD "Youtube-dl has been updated to version: $YOUTUBE_DL_NEW_VERSION"
 fi
 }
 
@@ -84,7 +84,7 @@ check_4_updates () {
 $MONITORING_PLUGINS_DIR/check_updates > /dev/null 2>&1
 UPDATES_STATUS=$?
 # Notify if updates are available
-[ "$UPDATES_STATUS" = "2" ] && $OSD_SCRIPT "$UPDATE_AVAIL_MSG"
+[ "$UPDATES_STATUS" = "2" ] && $OSD_TOOL_CMD "$UPDATE_AVAIL_MSG"
 }
 
 reverse_ssh_tunnel () {
