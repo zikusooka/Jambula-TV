@@ -52,7 +52,7 @@ KODI_FAVOURITES=$KODI_USER_DATA/favourites.xml
 
 pip_notices () {
 # Notices - OSD
-$OSD_SCRIPT -m "$@" -t $OSD_NOTICE_TIMEOUT
+$OSD_TOOL -m "$@" -t $OSD_NOTICE_TIMEOUT
 # Notices - CLI
 logger -s -t $(basename $0) "$@"
 }
