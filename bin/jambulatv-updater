@@ -21,7 +21,7 @@ WGET_OPTIONS="-q --no-check-certificate --retr-symlinks -T $WGET_TIMEOUT --ftp-u
 PING_COUNT=1 #9
 PING_IP_ADDRESS=8.8.8.8
 
-OSD_SCRIPT="sudo /usr/bin/jambulatv-osd"
+OSD_TOOL_CMD="sudo /usr/bin/jambulatv-osd"
 
 
 
@@ -104,11 +104,11 @@ sed -i "s/Version:v${JAMBULATV_INSTALLED_VERSION}/Version:v${JAMBULATV_LATEST_UP
 }
 
 logging_osd_notice_started () {
-$OSD_SCRIPT -m "IMPORTANT: System update in progress.  Please do not power off.  You will be notified when all updates have been completed"
+$OSD_TOOL_CMD -m "IMPORTANT: System update in progress.  Please do not power off.  You will be notified when all updates have been completed"
 }
 
 logging_osd_notice_completed () {
-$OSD_SCRIPT -m "System updates have completed.  You may now power off if desired"
+$OSD_TOOL_CMD -m "System updates have completed.  You may now power off if desired"
 }
 
 logging_success  () {
