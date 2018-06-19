@@ -6,7 +6,7 @@ MCC_MNC_TABLE_FILE_URL=https://github.com/musalbas/mcc-mnc-table/raw/master/mcc-
 MCC_MNC_TABLE_FILE=/usr/share/JambulaTV/mobile_providers/mcc-mnc-table.csv
 COUNTRY_MCC_MNC_RAW_FILE=/tmp/mcc_mnc_raw.csv
 
-WHATSAPP_SCRIPT=/usr/bin/jambulatv-whatsapp
+WHATSAPP_TOOL=/usr/bin/jambulatv-whatsapp
 WHATSAPP_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-whatsapp.cfg
 WHATSAPP_CMD=$(which yowsup-cli)
 WHATSAPP_LOG_FILE=/var/log/JambulaTV/whatsapp.log
@@ -259,7 +259,7 @@ EOF
 # Write variables to whatsapp settings file i.e. Overwrite in case previous registrations existed
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
 # Generated using jambulatv-whatsapp on $(date)
-WHATSAPP_SCRIPT=$WHATSAPP_SCRIPT
+WHATSAPP_TOOL=$WHATSAPP_TOOL
 WHATSAPP_PHONE_NUMBER_SENDER=$WHATSAPP_PHONE_NUMBER_SENDER
 WHATSAPP_PHONE_NUMBER_RECIPIENT=$WHATSAPP_PHONE_NUMBER_RECIPIENT
 TELEPHONE_COUNTRY_CODE=$TELEPHONE_COUNTRY_CODE
