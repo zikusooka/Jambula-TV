@@ -5,7 +5,7 @@ ARIA2_CMD=/usr/bin/aria2c
 ARIA2_OPTIONS="-c -D -q --log-level=notice"
 ARIA2_LOG_FILE=/var/log/JambulaTV/aria2.log
 # Email
-EMAIL_NOTIFICATION_SCRIPT=/usr/bin/jambulatv-email
+EMAIL_VIA_GMAIL_TOOL=/usr/bin/jambulatv-email
 EMAIL_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-email.cfg
 # Telegram
 TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
@@ -126,7 +126,7 @@ cat > $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT << EOF
 . $WHATSAPP_CREDENTIALS_CONFIG
 
 # Email
-$EMAIL_NOTIFICATION_SCRIPT $EMAIL_TO_ADDRESS "*[JambulaTV] New Podcast(s) Added*" "The following podcast was successfully downloaded. You may find it under 'Videos >> Files >> Podcasts' on your JambulaTV or in the folder $PODCASTS_COMPLETED_DIRECTORY. Enjoy!
+$EMAIL_VIA_GMAIL_TOOL $EMAIL_TO_ADDRESS "*[JambulaTV] New Podcast(s) Added*" "The following podcast was successfully downloaded. You may find it under 'Videos >> Files >> Podcasts' on your JambulaTV or in the folder $PODCASTS_COMPLETED_DIRECTORY. Enjoy!
 
 *$TITLE*
 $DESCRIPTION
