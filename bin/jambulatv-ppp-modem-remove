@@ -7,11 +7,11 @@ OPENVPN_LINK=n
 
 # Fixed Variables
 LOGGING_DIR=/var/log/JambulaTV
-PPP_DIAL_SCRIPT=/usr/bin/jambulatv-ppp-dialer
+PPP_DIAL_TOOL=/usr/bin/jambulatv-ppp-dialer
 PPP_LOG_FILE=$LOGGING_DIR/ppp-dialer.log
-DNS2TCP_CLIENT_SCRIPT=/usr/bin/jambulatv-dns2tcp_client 
-IODINE_CLIENT_SCRIPT=/usr/bin/jambulatv-iodine_client
-OPENVPN_CLIENT_SCRIPT=/usr/bin/jambulatv-openvpn-client
+DNS2TCP_CLIENT_TOOL=/usr/bin/jambulatv-dns2tcp_client 
+IODINE_CLIENT_TOOL=/usr/bin/jambulatv-iodine_client
+OPENVPN_CLIENT_TOOL=/usr/bin/jambulatv-openvpn-client
 SSH_PID=`ps auxw | grep ssh | grep localhost | awk {'print $2'}`
 
 
@@ -25,10 +25,10 @@ SSH_PID=`ps auxw | grep ssh | grep localhost | awk {'print $2'}`
 # Kill ppp
 killall pppd || killall pppd
 # kill pppd script
-killall `basename $PPP_DIAL_SCRIPT`
+killall `basename $PPP_DIAL_TOOL`
 #
 # Stop iodine tunnel
-[ "$DNS_TUNNEL" != "iodine" ] || $IODINE_CLIENT_SCRIPT stop 
+[ "$DNS_TUNNEL" != "iodine" ] || $IODINE_CLIENT_TOOL stop 
 # Stop dns2tcp tunnel
 if [ "$DNS_TUNNEL" = "dns2tcp" ];
 then
@@ -38,4 +38,4 @@ kill $SSH_PID || kill $SSH_PID
 killall dns2tcpc || killall dns2tcpc
 fi
 # Stop OpenVPN link
-[ "$OPENVPN_LINK" != "y" ] || $OPENVPN_CLIENT_SCRIPT stop 
+[ "$OPENVPN_LINK" != "y" ] || $OPENVPN_CLIENT_TOOL stop 
