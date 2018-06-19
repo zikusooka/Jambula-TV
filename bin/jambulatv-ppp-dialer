@@ -94,10 +94,10 @@ esac
 
 # Fixed Variables 
 # ---------------
-PPP_SCRIPTS_DIR=/usr/bin
-DIALER_SCRIPT=$PPP_SCRIPTS_DIR/jambulatv-ppp-chat
-MODEM_ISP_INIT_SCRIPT=$PPP_SCRIPTS_DIR/jambulatv-ppp-init
-BEEP_SOUNDS_SCRIPT=/usr/bin/jambulatv-sounds
+PPP_TOOLS_DIR=/usr/bin
+DIALER_TOOL=$PPP_TOOLS_DIR/jambulatv-ppp-chat
+MODEM_ISP_INIT_TOOL=$PPP_TOOLS_DIR/jambulatv-ppp-init
+SOUNDS_TOOL=/usr/bin/jambulatv-sounds
 
 TELEPHONE="*99#"	# The telephone number for the connection
 PROTOCOL=PPP            # The protocol to satrt after connection
@@ -188,7 +188,7 @@ fi
 
 
 # Source modem ISP initialization scripts
-. $MODEM_ISP_INIT_SCRIPT
+. $MODEM_ISP_INIT_TOOL
 
 # Source modem device
 MODEM_LOCKFILE=/var/lock/LCK..$DEVICE_NODE*
@@ -424,14 +424,14 @@ then
 /usr/sbin/pppd debug logfile $PPP_LOG_FILE lock modem crtscts updetach nomagic \
 	asyncmap a0000 defaultroute usepeerdns $MODEMDEV $SPEED mtu $MTU \
 	noipdefault noauth user $ACCOUNT password $PASSWORD \
-	$LOCAL_IP:$REMOTE_IP connect $DIALER_SCRIPT
+	$LOCAL_IP:$REMOTE_IP connect $DIALER_TOOL
 
 else
 
 /usr/sbin/pppd debug logfile $PPP_LOG_FILE lock modem crtscts updetach nomagic \
 	asyncmap a0000 defaultroute $MODEMDEV $SPEED mtu $MTU \
 	noipdefault noauth user $ACCOUNT password $PASSWORD \
-	$LOCAL_IP:$REMOTE_IP connect $DIALER_SCRIPT
+	$LOCAL_IP:$REMOTE_IP connect $DIALER_TOOL
 fi
 PPP_EXIT_STATUS=$?
 
@@ -651,7 +651,7 @@ $IPTABLES -t nat -A POSTROUTING -o $PPP_INTERFACE -j MASQUERADE
 fi
 
 # Connection succeeded - alert using beep sounds
-[ -x $BEEP_SOUNDS_SCRIPT ] && $BEEP_SOUNDS_SCRIPT online
+[ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL online
 
 
 # QUERY Modem when in On-Line state
