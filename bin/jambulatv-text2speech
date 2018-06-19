@@ -19,7 +19,7 @@ PING_IP_ADDRESS=8.8.8.8
 JAMBULATV_SOUNDS_DIR="/usr/share/JambulaTV/sounds"
 SOUND_EFFECTS_WAITING="$JAMBULATV_SOUNDS_DIR/waiting-4-online-response.wav"
 SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
-SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep $(basename $SOUND_EFFECTS_WAITING) | awk {'print $2'})
+SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep ${SOUND_EFFECTS_WAITING##*/} | awk {'print $2'})
 
 MULTIMEDIA_USER=MY_MULTIMEDIA_USER
 
