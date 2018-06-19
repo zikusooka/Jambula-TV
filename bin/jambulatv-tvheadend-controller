@@ -183,7 +183,7 @@ refresh_tvheadend
 email_failed_iptv_notice () {
 # Email notice regarding failed IPTV streams
 [ -e "$TVHEADEND_IPTV_FAILED_LOG_FILE" ] && \
-	$EMAIL_VIA_GMAIL_CMD $EMAIL_ADDRESS_ERRORS "[JambulaTV]: IPTV services failed" "The following IPTV streams are no longer working at the following JambulaTV user: Serial No. $SERIAL" $TVHEADEND_IPTV_FAILED_LOG_FILE
+	$EMAIL_VIA_GMAIL_TOOL $EMAIL_ADDRESS_ERRORS "[JambulaTV]: IPTV services failed" "The following IPTV streams are no longer working at the following JambulaTV user: Serial No. $SERIAL" $TVHEADEND_IPTV_FAILED_LOG_FILE
 }
 
 zap_dead_services () { 
