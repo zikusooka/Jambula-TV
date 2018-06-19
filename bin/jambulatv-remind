@@ -8,7 +8,7 @@ MULTIMEDIA_USER=jambula
 
 TODAYS_REMINDERS_FILE=/tmp/reminders
 
-OSD_SCRIPT=/usr/bin/jambulatv-osd
+OSD_TOOL=/usr/bin/jambulatv-osd
 OSD_WAIT=15
 
 KODI_GUI_SETTINGS="/JambulaTV/.kodi/userdata/guisettings.xml"
@@ -35,6 +35,6 @@ do
 # Quit if no reminders
 [ "x$REMINDER_MSG" = "x" ] && exit 0
 # Display Message one at a time
-$OSD_SCRIPT -m "$REMINDER_MSG"
+$OSD_TOOL -m "$REMINDER_MSG"
 sleep $OSD_WAIT
 done
