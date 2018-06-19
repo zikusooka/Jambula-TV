@@ -107,7 +107,7 @@ Reverse SSH connection for [$SERIAL] failed. Possible causes:
 
 EOF
 # Send email
-$EMAIL_VIA_GMAIL_CMD $REVERSE_SSH_NOTIFICATION_EMAIL "[$SERIAL] Error: Reverse SSH connection failed" "$(cat $TMP_EMAIL_FILE)"
+$EMAIL_VIA_GMAIL_TOOL $REVERSE_SSH_NOTIFICATION_EMAIL "[$SERIAL] Error: Reverse SSH connection failed" "$(cat $TMP_EMAIL_FILE)"
 ;;
 *)
 echo "No notification sent"
@@ -144,7 +144,7 @@ ssh -p ${PORT_MIDDLEMAN_WILL_LISTEN_ON} ${LOCAL_SSH_USER}@${MIDDLEMAN_SSH_SERVER
 
 EOF
 # Send email
-$EMAIL_VIA_GMAIL_CMD $REVERSE_SSH_NOTIFICATION_EMAIL "[$SERIAL]: Reverse SSH connection has been made" "$(cat $TMP_EMAIL_FILE)"
+$EMAIL_VIA_GMAIL_TOOL $REVERSE_SSH_NOTIFICATION_EMAIL "[$SERIAL]: Reverse SSH connection has been made" "$(cat $TMP_EMAIL_FILE)"
 ;;
 none)
 echo "No notification is needed"
