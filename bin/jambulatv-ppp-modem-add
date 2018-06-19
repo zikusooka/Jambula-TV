@@ -8,15 +8,15 @@ VPN_TUNNEL_IP=10.8.0.5
 OPENVPN_LINK=n
 
 # Fixed Variables
-PPP_SCRIPTS_DIR=/usr/bin
+PPP_TOOLS_DIR=/usr/bin
 LOGGING_DIR=/var/log/JambulaTV
-PPP_DIAL_SCRIPT=$PPP_SCRIPTS_DIR/jambulatv-ppp-dialer
-MODEM_ISP_INIT_SCRIPT=$PPP_SCRIPTS_DIR/jambulatv-ppp-init
+PPP_DIAL_TOOL=$PPP_TOOLS_DIR/jambulatv-ppp-dialer
+MODEM_ISP_INIT_TOOL=$PPP_TOOLS_DIR/jambulatv-ppp-init
 PPP_LOG_FILE=$LOGGING_DIR/ppp-dialer.log
 PPP_VARIABLES_FILE=/tmp/ppp-connected-variables
-DNS2TCP_CLIENT_SCRIPT=/usr/bin/jambulatv-dns2tcp_client 
-IODINE_CLIENT_SCRIPT=/usr/bin/jambulatv-iodine_client
-OPENVPN_CLIENT_SCRIPT=/usr/bin/jambulatv-openvpn-client
+DNS2TCP_CLIENT_TOOL=/usr/bin/jambulatv-dns2tcp_client 
+IODINE_CLIENT_TOOL=/usr/bin/jambulatv-iodine_client
+OPENVPN_CLIENT_TOOL=/usr/bin/jambulatv-openvpn-client
 ISP_FILE=/etc/JambulaTV/internet-mobile-usb.cfg
 
 
@@ -25,7 +25,7 @@ ISP_FILE=/etc/JambulaTV/internet-mobile-usb.cfg
 #  MAIN SCRIPT  #
 #################
 # Source modem ISP initialization scripts
-. $MODEM_ISP_INIT_SCRIPT
+. $MODEM_ISP_INIT_TOOL
 
 # Identify ISP using MCC code
 query_mnc_code
@@ -96,12 +96,12 @@ fi
 # Create PPP Log directory if non-existent
 [ -d $LOGGING_DIR ] || /usr/bin/mkdir -p $LOGGING_DIR
 # Connect to the Internet
-$PPP_DIAL_SCRIPT $ISP_NAME $USERNAME $PASSWORD 1 $ACCOUNT_PHONE_NUMBER $ACCOUNT_ACCESS_CODE $VPN_TUNNEL $DNS_TUNNEL > $PPP_LOG_FILE 2>&1
+$PPP_DIAL_TOOL $ISP_NAME $USERNAME $PASSWORD 1 $ACCOUNT_PHONE_NUMBER $ACCOUNT_ACCESS_CODE $VPN_TUNNEL $DNS_TUNNEL > $PPP_LOG_FILE 2>&1
 # Source PPP connected variables - needed for tunnel scripts
 [ -f $PPP_VARIABLES_FILE ] && . $PPP_VARIABLES_FILE
 # Start iodine tunnel if activated
-[ "$DNS_TUNNEL" != "iodine" ] || $IODINE_CLIENT_SCRIPT start 
+[ "$DNS_TUNNEL" != "iodine" ] || $IODINE_CLIENT_TOOL start 
 # Start dns2tcp tunnel if activated
-[ "$DNS_TUNNEL" != "dns2tcp" ] || $DNS2TCP_CLIENT_SCRIPT $DNS2TCP_RESOURCE $DNS2TCP_LOCAL_PORT 
+[ "$DNS_TUNNEL" != "dns2tcp" ] || $DNS2TCP_CLIENT_TOOL $DNS2TCP_RESOURCE $DNS2TCP_LOCAL_PORT 
 # Start OpenVPN link if activated
-[ "$OPENVPN_LINK" != "y" ] || $OPENVPN_CLIENT_SCRIPT start $VPN_TUNNEL_DEV $VPN_TUNNEL_IP
+[ "$OPENVPN_LINK" != "y" ] || $OPENVPN_CLIENT_TOOL start $VPN_TUNNEL_DEV $VPN_TUNNEL_IP
