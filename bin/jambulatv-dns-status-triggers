@@ -18,9 +18,9 @@ CHRONYC_PASSWD=`awk {'print $2'} $CHRONY_KEYS_FILE`
 HTTP_USER_AGENT="MY_USER_AGENT"
 MULTIMEDIA_USER=jambula
 
-BEEP_SOUNDS_SCRIPT=/usr/bin/jambulatv-sounds
-SPEED_TEST_SCRIPT=/usr/bin/jambulatv-speed-test
-GEOLOCATION_SCRIPT=/usr/bin/jambulatv-whereami
+SOUNDS_TOOL=/usr/bin/jambulatv-sounds
+SPEED_TEST_TOOL=/usr/bin/jambulatv-speed-test
+GEOLOCATION_TOOL=/usr/bin/jambulatv-whereami
 
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
 
@@ -134,15 +134,15 @@ update_youtube_dl > /dev/null 2>&1
 
 # Lookup current public IP Address and City and Country Name i.e. Setup Geo Location Data
 # ---------------------------------------------------------------------------------------
-. $GEOLOCATION_SCRIPT > /dev/null 2>&1
+. $GEOLOCATION_TOOL > /dev/null 2>&1
 
 # Sound alert beep
 # ----------------
-[ -x $BEEP_SOUNDS_SCRIPT ] && $BEEP_SOUNDS_SCRIPT online
+[ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL online
 
 # Test Internet speed
 # -------------------
-[ -x $SPEED_TEST_SCRIPT ] && $SPEED_TEST_SCRIPT
+[ -x $SPEED_TEST_TOOL ] && $SPEED_TEST_TOOL
 
 # JambulaTV: Check for available updates
 # --------------------------------------
@@ -194,7 +194,7 @@ EOF
 
 # Sound alert beep
 # ----------------
-[ -x $BEEP_SOUNDS_SCRIPT ] && $BEEP_SOUNDS_SCRIPT offline
+[ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL offline
 
 
 else
