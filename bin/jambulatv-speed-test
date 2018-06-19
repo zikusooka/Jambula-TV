@@ -9,7 +9,7 @@ WGET_OPTIONS="--no-check-certificate --retr-symlinks -T $WGET_TIMEOUT -O /dev/nu
 PING_COUNT=1 #9
 PING_IP_ADDRESS=8.8.8.8
 
-OSD_SCRIPT="sudo /usr/bin/jambulatv-osd -m"
+OSD_TOOL_CMD="sudo /usr/bin/jambulatv-osd -m"
 
 
 
@@ -105,7 +105,7 @@ notify_internet_speed () {
 RUNNING_USER=$(whoami)
 if [ "$RUNNING_USER" = "icinga" ] || [ "$SUDO_USER" = "icinga" ];
 then
-$OSD_SCRIPT "Your current Internet speed is $SPEED ($SPEED_TEST_SERVER_NAME)"
+$OSD_TOOL_CMD "Your current Internet speed is $SPEED ($SPEED_TEST_SERVER_NAME)"
 else
 clear; echo "Your current Internet speed is $SPEED ($SPEED_TEST_SERVER_NAME)"
 fi
