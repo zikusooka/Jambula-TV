@@ -844,6 +844,10 @@ TORRENTS_DOMAIN_NAME="MyJambulaTV"
 # Asterisk Credentials - Copy these to globals file
 ASTERISK_DIAL_OUT_NUMBER_1=""
 
+# Vnstat
+VNSTAT_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/vnstat
+VNSTAT_CONFIG_FILE=$VNSTAT_CONFIG_DIR/vnstat.conf
+
 ARIA2_DOWNLOAD_COMPLETE_BT_TOOL=
 ARIA2_DOWNLOAD_COMPLETE_TOOL=
 ARIA2_DOWNLOAD_ERROR_TOOL=
@@ -7799,6 +7803,33 @@ cd $INSTALL_SRC_DIR/vnstat
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$PROJECT_SYSTEM_CONF_DIR/vnstat
 # compile
 make_install_jambulatv
+}
+
+vnstat_configure () {
+# Add log directories
+[ -d $PROJECT_SYSTEM_LOG_DIR/vnstat ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/vnstat
+#touch $PROJECT_SYSTEM_LOG_DIR/vnstat/vnstat.log
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/vnstat
+
+# Backup default config file
+[[ -e ${VNSTAT_CONFIG_FILE}.default ]] || \
+	mv -v ${VNSTAT_CONFIG_FILE} ${VNSTAT_CONFIG_FILE}.default
+# Add custom vnstat config file
+cat $PROJECT_CONFIGS_DIR/vnstat.conf.template | \
+	sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" | \
+	sed -e "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" | \
+	sed -e "s:MY_PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
+	sed -e "s:MY_RUNDIR:$RUNDIR:g" \
+		> $VNSTAT_CONFIG_FILE
+
+# Configure Systemd service file
+cat $PROJECT_INIT_SCRIPTS_DIR/vnstat.service | \
+	sed "s:MY_VNSTAT_CONFIG_FILE:$VNSTAT_CONFIG_FILE:g" \
+		> $SYSTEMD_UNITS_DIR_USER/vnstat.service
+# Enable vnstat if needed
+systemctl enable vnstat.service
+# Start vnstat if needed
+systemctl start vnstat.service
 }
 
 iptv_support () {
