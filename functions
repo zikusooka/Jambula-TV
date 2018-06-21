@@ -7791,6 +7791,16 @@ screen_display_configure () {
 	cp -v $PROJECT_BIN_DIR/jambulatv-display $BINARY_PREFIX/
 }
 
+vnstat_install () {
+# unpack
+rsync -avz $PROJECT_GITHUB_DIR/vnstat/ $INSTALL_SRC_DIR/vnstat/
+cd $INSTALL_SRC_DIR/vnstat 
+# configure
+./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$PROJECT_SYSTEM_CONF_DIR/vnstat
+# compile
+make_install_jambulatv
+}
+
 iptv_support () {
 # Copy IPTV xml files to html directory
 cp -rv $PROJECT_CONTRIB_DIR/iptv $WWW_HTML_DIR
