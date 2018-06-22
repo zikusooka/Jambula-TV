@@ -277,6 +277,7 @@ screen_resolution_configure
 screen_display_configure
 vnstat_install
 vnstat_configure
+bwm_ng_install
 
 # ----------------
 # Communications 
