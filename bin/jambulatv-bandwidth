@@ -1,0 +1,244 @@
+#!/bin/sh
+# A CLI based tool used to measure the data bandwidth used by JambulaTV
+# Use it to monitor and query data bandwidth usage by application or
+# duration respectively.  It can also be used to interactively get the 
+# current data bandwidth usage of connected users or devices
+#
+# Jambula Labs @copyright 2018-2019 All rights reserved
+
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+VNSTAT_CMD=/usr/bin/vnstat
+VNSTAT_QUERY_OPTS="--config $VNSTAT_CONFIG_FILE -q" 
+VNSTAT_TODAY=$(date +%Y-%m-%d)
+VNSTAT_ONE_WEEK_AGO=$(date --date='7 days ago' +%Y-%m-%d)
+VNSTAT_CURRENT_MONTH=$(date +%B-%Y)
+
+VNSTATI_CMD=/usr/bin/vnstati
+VNSTATI_OPTS="--config $VNSTAT_CONFIG_FILE -vs" 
+VNSTATI_IMAGE=$TMPDIR/vnstati.png
+VNSTATI_HEADER_TEXT="Data Used by JambulaTV"
+
+BWM_NG_CMD=/usr/bin/bwm-ng
+
+IFTOP_CMD=/usr/sbin/iftop
+
+# Who called this tool
+if [[ "x$MONITOR_REQUESTOR" = "x" ]];
+then
+MONITOR_REQUESTOR=$(basename $0)
+else
+MONITOR_REQUESTOR=$MONITOR_REQUESTOR
+fi
+
+BANDWIDTH_USED_RAW_FILE=$TMPDIR/bandwidth_usage_4_${MONITOR_REQUESTOR}_raw.csv
+BANDWIDTH_USED_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/bandwidth_usage_$(date +%Y%m%d).log
+
+ACTION=$1
+ARG2=$2
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage_monitor () {
+clear
+cat <<EOT
+Usage: ./$(basename $0) monitor [start|stop]
+EOT
+exit 1
+}
+
+usage_query () {
+clear
+cat <<EOT
+Usage: ./$(basename $0) query [today|yesterday|week|month|top]
+EOT
+exit 1
+}
+
+
+# Monitoring
+# ----------
+bandwidth_monitor_start () {
+[[ -e $BANDWIDTH_USED_RAW_FILE ]] || sudo $BWM_NG_CMD -I $WIFI_STATION_INTERFACE -T sum -o csv -C ',' -F $BANDWIDTH_USED_RAW_FILE
+}
+
+bandwidth_monitor_results () {
+# Data categories
+DATA_BANDWIDTH_USED_KB=$(echo "$(tail -1 $BANDWIDTH_USED_RAW_FILE | cut -d ',' -f5) / 1024" | bc)
+DATA_BANDWIDTH_USED_MB=$(echo "$(tail -1 $BANDWIDTH_USED_RAW_FILE | cut -d ',' -f5) / 1048576" | bc)
+DATA_BANDWIDTH_USED_GB=$(echo "$(tail -1 $BANDWIDTH_USED_RAW_FILE | cut -d ',' -f5) / 1073741824" | bc)
+#
+# Add data bandwidth used - pick appropriate units to log
+if [[ "$DATA_BANDWIDTH_USED_GB" != "0" ]];
+then
+DATA_BANDWIDTH_USED=${DATA_BANDWIDTH_USED_GB}GB
+
+elif [[ "$DATA_BANDWIDTH_USED_MB" != "0" ]];
+then
+DATA_BANDWIDTH_USED=${DATA_BANDWIDTH_USED_MB}MB
+
+elif [[ "$DATA_BANDWIDTH_USED_KB" != "0" ]];
+then
+DATA_BANDWIDTH_USED=${DATA_BANDWIDTH_USED_KB}KB
+fi
+#
+# Add data used to log file
+cat >> $BANDWIDTH_USED_LOG_FILE <<EOT
+$(date +%Y-%m-%d-%H%M)	:	$DATA_BANDWIDTH_USED	:	$MONITOR_REQUESTOR
+
+EOT
+
+# Set data bandwidth used during this session
+BANDWIDTH_USED_CURRENT_SESSION=$(grep -i "$MONITOR_REQUESTOR" $BANDWIDTH_USED_LOG_FILE | grep -Ev '(#.*$)|(^$)|({|})' | tail -1 | awk -F':' '{$1=$1}1' | awk {'print $2'})
+
+# Source notification strings
+set_notifications
+#
+# Notify via stdout and systemd journal 
+logger -s -t $(basename $0) "$BANDWIDTH_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*"
+#
+# Send notifications via messaging services 
+# WhatsApp 
+sudo $WHATSAPP_TOOL sendmessage "$BANDWIDTH_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
+# Telegram
+$TELEGRAM_TOOL SendMessage "$BANDWIDTH_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*"
+}
+
+bandwidth_monitor_stop () {
+# Set PID of current BWM_NG tool process
+BWM_NG_PID=$(ps auxw | grep -Ev grep | grep ${BWM_NG_CMD##*/} | awk {'print $2'})
+#
+# Kill bandwidth monitor
+[[ "x$BWM_NG_PID" = "x" ]] || sudo kill -15 $BWM_NG_PID
+#
+# Calculate and get data bandwidth that was used
+bandwidth_monitor_results
+#
+# Remove current bandwidth output file since we are done
+[[ -e $BANDWIDTH_USED_RAW_FILE ]] && sudo rm -f $BANDWIDTH_USED_RAW_FILE
+}
+
+# Graphs
+# ------
+generate_bandwidth_graphs () {
+# Generate data used graph
+$VNSTATI_CMD $VNSTATI_OPTS --headertext "$VNSTATI_HEADER_TEXT" -o $VNSTATI_IMAGE
+# Print notification
+clear
+cat <<EOF
+Data used ($ARG2):		$DATA_BANDWIDTH_USED
+
+Sending data bandwidth usage stats to Telegram and WhatsApp, please be patient ...
+EOF
+sleep 7
+# Telegram
+$TELEGRAM_TOOL SendImageDisk $VNSTATI_IMAGE &
+# WhatsApp
+sudo $WHATSAPP_TOOL sendimage $VNSTATI_IMAGE $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 &
+}
+
+
+# Querying
+# --------
+bandwidth_query_by_period () {
+# Vnstat by Period
+case $ARG2 in
+today)
+DATA_BANDWIDTH_USED=$($VNSTAT_CMD $VNSTAT_QUERY_OPTS -s | grep -i today | awk -F'/' {'print $3'} | awk '{$1=$1}1')
+;;
+yesterday)
+DATA_BANDWIDTH_USED=$($VNSTAT_CMD $VNSTAT_QUERY_OPTS -s | grep -i yesterday | awk -F'/' {'print $3'} | awk '{$1=$1}1')
+;;
+week)
+DATA_BANDWIDTH_USED=$($VNSTAT_CMD $VNSTAT_QUERY_OPTS -d -b $VNSTAT_ONE_WEEK_AGO -e $VNSTAT_TODAY | grep -i 'sum of' | awk -F'|' {'print $3'} | awk '{$1=$1}1')
+;;
+month)
+DATA_BANDWIDTH_USED=$($VNSTAT_CMD $VNSTAT_QUERY_OPTS -s | grep -i $VNSTAT_CURRENT_MONTH | awk -F'/' {'print $3'} | awk '{$1=$1}1')
+;;
+top)
+# Print notification
+clear
+logger -s -t $(basename $0) "Please standby for a minute while I gather your data bandwidth stats ..."
+# Collect data bandwidth info
+sudo $IFTOP_CMD -i $WIFI_STATION_INTERFACE -t -n -N  -F $NETWORK_WIRELESS_NET_MASK -s 60 2>/dev/null > $BANDWIDTH_USED_RAW_FILE 2>&1
+# Calculate top user and data
+CURRENT_TOP_USER=$(awk '$1 == "1" {print $2,$7}' $BANDWIDTH_USED_RAW_FILE)
+# Print top user and data if available
+clear
+if [[ "x$CURRENT_TOP_USER" != "x" ]];
+then
+cat <<EOT
+Current top user of bandwidth is:
+
+$CURRENT_TOP_USER
+
+EOT
+
+else
+
+cat <<EOT
+No data is available
+
+EOT
+fi
+;;
+esac
+
+# Pause abit to allow display of data used
+sleep 10
+# Send bandwidth graphs if period is specified
+[[ "$ARG2" = "top" ]] || generate_bandwidth_graphs
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+case $ACTION in
+monitor)
+# Start monitoring bandwidth usage
+if [[ "$ARG2" = "start" ]];
+then
+bandwidth_monitor_start &
+
+# Stop monitoring bandwidth usage
+elif [[ "$ARG2" = "stop" ]];
+then
+bandwidth_monitor_stop
+
+else
+usage_monitor
+fi
+;;
+
+query)
+if [[ "x$ARG2" != "x" ]];
+then
+#
+# Query bandwidth data usage over specified period
+bandwidth_query_by_period
+
+else
+usage_query
+fi
+;;
+
+*)
+clear
+cat <<EOT
+Usage: ./$(basename $0) [monitor|query]
+EOT
+exit 1
+;;
+esac

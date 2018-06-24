@@ -1,0 +1,18 @@
+[Unit]
+Description = Internet Bandwidth and Data Usage Monitoring for JambulaTV Services
+Requires = sys-subsystem-net-devices-MY_WIFI_STATION_INTERFACE.device
+After = sys-subsystem-net-devices-MY_WIFI_STATION_INTERFACE.device
+After = syslog.target network.target
+StopWhenUnneeded = true
+
+
+[Service]
+Environment=MONITOR_REQUESTOR=%i
+User = MY_MULTIMEDIA_USER
+Type = forking
+ExecStart=/bin/sh -c "MY_BANDWIDTH_TOOL monitor start"
+ExecStop=/bin/sh -c "MY_BANDWIDTH_TOOL monitor stop"
+
+
+[Install]
+WantedBy = multi-user.target

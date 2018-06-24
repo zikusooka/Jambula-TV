@@ -278,6 +278,7 @@ screen_display_configure
 vnstat_install
 vnstat_configure
 bwm_ng_install
+bandwidth_measurement_setup
 
 # ----------------
 # Communications 
