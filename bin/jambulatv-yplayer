@@ -5,6 +5,7 @@
 
 # Variables
 FFMPEG_DEBUG_LOG=no #no|yes
+TERM=xterm
 
 FFMPEG_CMD=/usr/bin/ffmpeg
 FFMPEG_FFLAGS="+nobuffer+genpts+genpts+igndts+ignidx"
@@ -26,6 +27,8 @@ YOUTUBE_LOG_FILE=/tmp/youtube-info.log
 IPTV_SERVICE_PROVIDER=MY_IPTV_SERVICE_PROVIDER
 IPTV_USER_AGENT="MY_USER_AGENT"
 IPTV_SERVICE_NAME="$(echo $@ | sed 's:"::g')"
+
+METADATA_SERVICE_NAME=$(echo $IPTV_SERVICE_NAME | sed -e 's: :-:g' | tr '[:lower:]' '[:upper:]')
 
 
 
@@ -56,7 +59,7 @@ then
 # Add Youtube info details to log file i.e. for debugging purposes
 cat >> $YOUTUBE_LOG_FILE <<EOF
 -------------------------------------------------------------------------------
-Youtube Channel:	[$IPTV_SERVICE_NAME] at $(date)
+Youtube Channel:	[$METADATA_SERVICE_NAME] at $(date)
 -------------------------------------------------------------------------------
 Youtube Video ID:	[$YOUTUBE_VIDEO_ID]
 
@@ -71,7 +74,7 @@ EOF
 # Add FFmpeg info details to log file i.e. for debugging purposes
 cat >> $FFMPEG_LOG_FILE <<EOF
 -------------------------------------------------------------------------------
-FFmpeg Channel:	[$IPTV_SERVICE_NAME] at $(date)
+FFmpeg Channel:	[$METADATA_SERVICE_NAME] at $(date)
 -------------------------------------------------------------------------------
 reset; clear; time $FFMPEG_FULL_COMMAND | ffplay -probesize $FFMPEG_PROBE_SIZE -
 EOF
@@ -146,4 +149,4 @@ add_youtube_ffmpeg_debugging_files
 youtube_stream_url
 
 # Print Youtube variables to screen if debugging is enabled
-print_debug_info
+[[ "$FFMPEG_DEBUG_LOG" = "yes" ]] && print_debug_info
