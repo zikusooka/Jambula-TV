@@ -1,19 +1,14 @@
 [Unit]
 Description = Automatic fetching of playlists, scanning of services and channels for JambulaTV IPTV 
 After = graphical.target
+Requires = jambulatv-bandwidth-monitor@JambulaTV-IPTV-Scanner.service
+After = jambulatv-bandwidth-monitor@JambulaTV-IPTV-Scanner.service
 
 
 [Service]
 User = jambula
-Type = forking
-
-# Restart every 20 minutes on failure for up to 5 times in a period of 2 hours
-Restart = on-failure
-RestartSec = 20min
-StartLimitInterval = 2hr
-StartLimitBurst = 5
-
-ExecStart = /bin/sh -c "/usr/bin/jambulatv-tvheadend-controller iptv all incremental &"
+Type = oneshot
+ExecStart = /bin/sh -c "/usr/bin/jambulatv-tvheadend-controller iptv all incremental"
 
 
 [Install]
