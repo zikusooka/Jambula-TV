@@ -38,8 +38,8 @@ TVHEADEND_DVBT_CREATE_CHAN_TAG_TEMP_FILE=/tmp/create_dvb_channel_tags.sh
 TVHEADEND_PLAY_STREAM_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/play/stream"
 TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid')
 TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=/tmp/iptv_service_uuid.txt
-TVHEADEND_IPTV_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-full.$(date +%Y%m%d%H%M).log
-TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-error.$(date +%Y%m%d%H%M).log
+TVHEADEND_IPTV_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-info.$(date +%Y%m%d%H%M).log
+TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-failed.$(date +%Y%m%d%H%M).log
 TVHEADEND_IPTV_SERVICE_LOG_FILE=/tmp/iptv_service_output.log
 TVHEADEND_IPTV_CREATE_CHAN_TEMP_FILE=/tmp/create_iptv_channels.sh
 TVHEADEND_IPTV_CREATE_CHAN_TAG_TEMP_FILE=/tmp/create_iptv_channel_tags.sh
@@ -48,7 +48,7 @@ TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE=/tmp/iptv_mapping_in_progress
 
 TVHEADEND_CAMERAS_CREATE_CHAN_TEMP_FILE=/tmp/create_cameras_channels.sh
 TVHEADEND_CAMERAS_CREATE_CHAN_TAG_TEMP_FILE=/tmp/create_cameras_channel_tags.sh
-TVHEADEND_CAMERAS_FULL_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/cameras-scan-full.$(date +%Y%m%d%H%M).log
+TVHEADEND_CAMERAS_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/cameras-scan-info.$(date +%Y%m%d%H%M).log
 TVHEADEND_CAMERAS_SERVICE_UUIDS_RAW_FILE=/tmp/cameras_service_uuid.txt
 
 PLAYLISTS_PORT=MY_PLAYLISTS_PORT
@@ -58,13 +58,6 @@ IPTV_BUILDER_GROUPS_DIR=$IPTV_BUILDER_BASE_DIR/groups
 
 TV_TYPE=$1
 TV_TASK=$2
-# Full, or Incremental scan
-if [ "x$3" = "x" ];
-then
-TV_MEASURE="incremental"
-else
-TV_MEASURE=$3
-fi
 
 # Generate log file
 DEBUG_LOG=no
@@ -85,33 +78,59 @@ exit 1
 fi
 }
 
-usage_dvb () {
+usage_and_pre_start_dvb () {
 if [ "x$TV_TASK" = "x" ];
 then
 clear
 echo "Usage:  ./`basename $0` dvb [scan|map|all|repair]
 "
 exit 1
+
+else
+# Notify when TV server controller process has been initiated
+notify_tv_server_refresh_initiated
+#
+# Check to see if TVHeadend server is in use
+check_if_in_use 
 fi
 }
 
-usage_iptv () {
+usage_and_pre_start_iptv () {
 if [ "x$TV_TASK" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` iptv [get|scan|map|all] [full|incremental]
+echo "Usage:  ./`basename $0` iptv [get|scan|map|all]
 "
 exit 1
+
+# Don't proceed when fetching IPTV playlist
+elif [ "$TV_TASK" = "get" ];
+then
+break
+
+else
+# Notify when TV server controller process has been initiated
+notify_tv_server_refresh_initiated
+#
+# Check to see if TVHeadend server is in use
+check_if_in_use 
 fi
 }
 
-usage_cameras () {
+usage_and_pre_start_cameras () {
 if [ "x$TV_TASK" = "x" ];
 then
 clear
 echo "Usage:  ./`basename $0` cameras [scan|map|all]
 "
 exit 1
+
+else
+# Notify when TV server controller process has been initiated
+notify_tv_server_refresh_initiated
+#
+# Check to see if TVHeadend server is in use
+check_if_in_use
 fi
 }
 
@@ -119,7 +138,7 @@ generate_debug_log () {
 PARENT_COMMAND="$(ps -o comm= $PPID)"
 cat >> $PROJECT_SYSTEM_LOG_DIR/$(basename $0).log <<EOT
 
-$(date +'%b %d %I:%M:%S') [$PARENT_COMMAND] Running '$(basename $0) $TV_TYPE $TV_TASK $TV_MEASURE'
+$(date +'%b %d %I:%M:%S') [$PARENT_COMMAND] Running '$(basename $0) $TV_TYPE $TV_TASK'
 -----------------------------------------------------------------------------------------
 EOT
 # Start Logging
@@ -143,16 +162,25 @@ exit 1
 fi
 }
 
+notify_tv_server_refresh_initiated () {
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$TVHEADEND_SERVER_REFRESH_START_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$TVHEADEND_SERVER_REFRESH_START_MESSAGE" osd
+}
+
 log_file () {
 # Create IPTV log directory if non existent
 [ -d $TVHEADEND_IPTV_LOG_DIR ] || mkdir -p $TVHEADEND_IPTV_LOG_DIR
 # Give it Multimedia user's permissions
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_IPTV_LOG_DIR
 # Date stamp log file
-cat >> $TVHEADEND_IPTV_FULL_LOG_FILE <<EOT
+cat >> $TVHEADEND_IPTV_INFO_LOG_FILE <<EOT
 
 ###############################################################################
-IPTV [$TV_MEASURE] services scan performed on:  $(date)
+IPTV services scan performed on:  $(date)
 ###############################################################################
 
 EOT
@@ -167,17 +195,21 @@ sudo systemctl restart tvheadend.service
 pre_config () {
 # Create channels directory, if non-existent
 [ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
-
+#
 # Load IPTV Lists i.e. refresh tvheadend
 refresh_tvheadend
 }
 
 post_config () {
+# Don't refresh TVHeadend if just feteching playlists
+if [[ "$TV_TASK" != "get" ]];
+then
 # Give multimedia user permission to access tvheadend directories
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 #
 # Refresh tvheadend
 refresh_tvheadend
+fi
 }
 
 email_failed_iptv_notice () {
@@ -475,7 +507,6 @@ $(basename $0) dvb all
 sudo rm -f $TVHEADEND_REPAIR_IN_PROGRESS_TEMP_FILE
 }
 
-
 check_health_of_dvb_tvheadend_network () {
 # Notify of DVB-T health status check
 # Source notification strings
@@ -570,6 +601,14 @@ fi
 ##########
 #
 iptv_get_fresh_playlist () {
+# Notify that playlist is going to be downloaded
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$IPTV_FETCH_PLAYLIST_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$IPTV_FETCH_PLAYLIST_MESSAGE" osd
+
 # Fetch fresh IPTV playlists file from remote FTP server
 ftp_connect_get_file $(basename $JAMBULATV_FTP_SERVER_IPTV_DIR_NAME)/ $PLAYLISTS_IPTV_WORLD_M3U_FILE $TMPDIR/
 #
@@ -619,7 +658,7 @@ PLAYLIST_CHANNEL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit
 PLAYLIST_PIPE_COMMAND="$(echo $PLAYLIST_URL | sed 's|pipe://||g')"
 
 # Add to log file
-echo 2>&1 | tee -a $TVHEADEND_IPTV_FULL_LOG_FILE << EOF
+echo 2>&1 | tee -a $TVHEADEND_IPTV_INFO_LOG_FILE << EOF
 
 
 *******************************************************************************
@@ -628,7 +667,7 @@ JambulaTV: Testing IPTV stream: [$SERVICE_NAME], please wait ...
 
 EOF
 # Probe remote stream using ffprobe i.e. play mux briefly to add service
-$FFPROBE_CMD $FFPROBE_OPTS $MUX_URL 2>&1 | tee -a $TVHEADEND_IPTV_FULL_LOG_FILE > $TVHEADEND_IPTV_SERVICE_LOG_FILE
+$FFPROBE_CMD $FFPROBE_OPTS $MUX_URL 2>&1 | tee -a $TVHEADEND_IPTV_INFO_LOG_FILE > $TVHEADEND_IPTV_SERVICE_LOG_FILE
 
 # Check if service was added i.e. Remote Link works
 SERVICE_ADDED=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .num_svc')
@@ -687,37 +726,15 @@ PLAYLIST_PIPE_COMMAND="$(echo $PLAYLIST_URL | sed 's|pipe://||g')"
 echo $PLAYLIST_URL | grep $PLAYLIST_PIPE_COMMAND > /dev/null 2>&1
 IS_YPIPE=$?
 
-# Test stream i.e. create service depending on whether full or incremental is specified
-case $1 in
-
-incremental)
-# Add service if none existent (i.e. play mux).  Force testing of Youtube pipes
-# .............................................................................
+# Add service if none existent. Force testing of Youtube pipes
+# ............................................................
 # SERVICE_ADDED=1 means service was found
 # IS_YPIPE=0 means URL is a Youtube pipe
 if [[ "$SERVICE_ADDED" != "1" || "$IS_YPIPE" = "0" ]];
 then
+# Play mux 
 iptv_test_stream
 fi
-;;
-
-full)
-# Play mux i.e. Add service regardless of existence of service
-iptv_test_stream
-;;
-
-*)
-# Assume this is incremental:
-# Add service if none existent (i.e. play mux).  Force testing of Youtube pipes
-# .............................................................................
-# SERVICE_ADDED=1 means service was found
-# IS_YPIPE=0 means URL is a Youtube pipe
-if [[ "$SERVICE_ADDED" != "1" || "$IS_YPIPE" = "0" ]];
-then
-iptv_test_stream
-fi
-;;
-esac
 
 done
 #
@@ -935,9 +952,6 @@ SIMILAR_CAMERAS_NETWORK_FOUND=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/n
 if [[ "x$TVHEADEND_CAMERAS_NETWORK_UUID" != "x" || "x$SIMILAR_CAMERAS_NETWORK_FOUND" != "x" ]];
 then
 # Notify of camera network already existing and proceed
-
-
-
 # Source notification strings
 set_notifications
 # Print notifciation to stdout and systemd journal 
@@ -1054,7 +1068,7 @@ CHANNEL_EXISTS=$?
 SERVICE_URL="$TVHEADEND_PLAY_STREAM_URL/service/$SERVICE_UUID"
 
 # Probe remote stream using ffprobe i.e. play mux briefly to add service
-$FFPROBE_CMD $FFPROBE_OPTS $SERVICE_URL 2>&1 | tee -a $TVHEADEND_CAMERAS_FULL_LOG_FILE 
+$FFPROBE_CMD $FFPROBE_OPTS $SERVICE_URL 2>&1 | tee -a $TVHEADEND_CAMERAS_INFO_LOG_FILE 
 
 # Add cameras channel creation command to temp file
 cat >> $TVHEADEND_CAMERAS_CREATE_CHAN_TEMP_FILE <<EOF
@@ -1118,21 +1132,17 @@ print_notification "$CCTV_CHANNEL_MAP_COMPLETED_MESSAGE" osd
 #################
 #  MAIN SCRIPT  #
 #################
+# Usage - all
+usage
 
 # Generate debug log for this tool runs
 [[ "$DEBUG_LOG" = "yes" ]] && generate_debug_log
 
-# Check to see if TVHeadend server is in use
-check_if_in_use 
-
-# If IPTV specified, check for Internet connectivity before proceeding
-[[ "$TV_TYPE" = "iptv" ]] && check_internet_connectivity_ping 1
-
 # Run tasks based on type specified
 case $TV_TYPE in
 dvb)
-# Usage
-usage_dvb
+# Usage - dvb
+usage_and_pre_start_dvb
 
 # Scan
 [[ "$TV_TASK" = "scan" ]] && \
@@ -1156,45 +1166,40 @@ usage_dvb
 ;;
 
 iptv)
-# Usage
-usage_iptv
+# Usage - iptv
+usage_and_pre_start_iptv
+
+# Check for Internet connectivity if not mapping
+[[ "$TV_TASK" != "map" ]] && \
+	check_internet_connectivity_ping 1
 
 # Fetch fresh playlist if get is requested
 [[ "$TV_TASK" = "get" ]] && \
 	iptv_get_fresh_playlist
 
-# Add IPTV Network
-configure_iptv_network
+# Add IPTV Network if not fetching playlists
+[[ "$TV_TASK" = "get" ]] || \
+	configure_iptv_network
 
 # Add Services i.e. Manually play each mux found
-[[ "$TV_TASK" = "scan" && "$TV_MEASURE" = "incremental" ]] && \
-	iptv_scan_add_services incremental
-[[ "$TV_TASK" = "scan" && "$TV_MEASURE" = "full" ]] && \
-	iptv_scan_add_services full
-[[ "$TV_TASK" = "scan" && "x$TV_MEASURE" = "x" ]] && \
-	iptv_scan_add_services incremental
+[[ "$TV_TASK" = "scan" ]] && \
+	iptv_scan_add_services
 
 # Map
 [[ "$TV_TASK" = "map" ]] && \
 	iptv_add_channel_tags && \
 	iptv_map_services_2_channels
 
-# All tasks {get+scan+map} in incremental mode
-[[ "$TV_TASK" = "all" && "$TV_MEASURE" = "incremental" || "x$TV_MEASURE" = "x" ]] && \
+# All tasks {get+scan+map} 
+[[ "$TV_TASK" = "all" ]] && \
 	$(basename $0) iptv get && \
-	$(basename $0) iptv scan incremental && \
-	$(basename $0) iptv map
-
-# All tasks {get+scan+map} in full mode 
-[[ "$TV_TASK" = "all" && "$TV_MEASURE" = "full" ]] && \
-	$(basename $0) iptv get && \
-	$(basename $0) iptv scan full && \
+	$(basename $0) iptv scan && \
 	$(basename $0) iptv map
 ;;
 
 cameras)
-# Usage
-usage_cameras
+# Usage - cctv
+usage_and_pre_start_cameras
 
 # Add cameras network
 configure_cameras_network
@@ -1212,10 +1217,6 @@ configure_cameras_network
 [[ "$TV_TASK" = "all" ]] && \
 	$(basename $0) cameras scan && \
 	$(basename $0) cameras map
-;;
-
-*)
-usage
 ;;
 esac
 

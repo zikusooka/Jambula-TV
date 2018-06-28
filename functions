@@ -925,7 +925,8 @@ DVBT_MULTIPLEX_NOT_FOUND_MESSAGE="Error: No multiplexes were found for $TV_MARKE
 DVBT_PICONS_ADDED_MESSAGE="Added DVB-T picon images for $TV_MARKET TV market area"
 DVBT_PICONS_NOT_FOUND_MESSAGE="Error: DVB-T picon images for $TV_MARKET TV market not found"
 # The following, used by TVHeadend Controller tool
-TVHEADEND_SERVER_IN_USE_MESSAGE="The TV Server is currently in use, please pick another convenient time to perform this task"
+TVHEADEND_SERVER_REFRESH_START_MESSAGE="The TV server controller has been initiated and processing of your ($TV_TYPE) network has started"
+TVHEADEND_SERVER_IN_USE_MESSAGE="The TV server is currently in use, please pick another convenient time to process your ($TV_TYPE) network"
 DVBT_CHECK_HEALTH_STATUS_MESSAGE="Checking the health status of DVB-T network ($DVBT_NETWORK_NAME)"
 DVBT_HEALTH_STATUS_OK_MESSAGE="DVB-T network ($DVBT_NETWORK_NAME) is OK"
 DVBT_ADAPTER_NODE_MISSING_MESSAGE="Unable to detect the TV Tuner. This is most likely a hardware issue.  Please check your DVB-T2 tuner and ensure it is properly connected"
@@ -933,6 +934,7 @@ DVBT_NETWORK_MISSING_MESSAGE="Your Live TV network and channels list is corrupte
 DVBT_NETWORK_NOT_ASSOCIATED_MESSAGE="The Live TV network is not associated to your DVB-T/T2 tuner. I will attempt to repair it now, please be patient"
 DVBT_NETWORK_REPAIR_STARTED_MESSAGE="DVB-T Network Repair Mode initiated for $DVBT_NETWORK_NAME"
 DVBT_NETWORK_CREATION_MESSAGE="Setting up a fresh DVB-T network named $DVBT_NETWORK_NAME"
+IPTV_FETCH_PLAYLIST_MESSAGE="Downloading the latest IPTV playlist i.e. $PLAYLISTS_IPTV_WORLD_M3U_FILE"
 IPTV_NETWORK_EXISTS_MESSAGE="IPTV network already exists, proceeding"
 CCTV_NETWORK_EXISTS_MESSAGE="Camera network already exists, proceeding"
 IPTV_NETWORK_SCAN_STARTED_MESSAGE="Scanning of IPTV network started. This will take some time, please be patient ..."
@@ -945,8 +947,10 @@ CCTV_CHANNEL_MAP_STARTED_MESSAGE="Mapping of your CCTV network started. Please b
 DVBT_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your DVB-T network ($DVBT_NETWORK_NAME) completed. You may now resume watching Live TV ..."
 IPTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your IPTV network completed. You may now resume watching IPTV ..."
 CCTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your CCTV network completed. You may now resume watching Camera feeds ..."
+KODI_REFRESH_TV_LOGOS_MESSAGE="Refreshing TV icons for your ($TV_TYPE) network, the video screen will be restarted shortly"
+KODI_REFRESH_EPG_DATA_MESSAGE="Refreshing TV programme information for your ($TV_TYPE) network"
 #
-BANDWIDTH_USED_MESSAGE="*[JambulaTV]* Data bandwidth used by ($MONITOR_REQUESTOR) is:"
+BANDWIDTH_USED_MESSAGE="*[JambulaTV]* Data bandwidth used by ($MONITOR_REQUESTOR) was:"
 }
 
 print_notification () {
@@ -961,7 +965,7 @@ fi
 # Log to OSD
 if [[ -e "$OSD_TOOL" && "$NOTIFICATION_METHOD" = "osd" ]];
 then
-$OSD_TOOL -m "$NOTIFICATION_STRING" > /dev/null 2>&1 &
+$OSD_TOOL -m "$NOTIFICATION_STRING" > /dev/null 2>&1
 fi
 }
 
@@ -3550,7 +3554,7 @@ cat > $KODI_PVR_MANAGER_ENABLE_TOOL <<EOF
 #!/bin/sh
 # Temporary script to enable PVR Manager in kodi after initial install
 #
-PVR_STATUS_FILE=\$(grep ^PVR_STATUS_FILE \$(which jambulatv-kodi-controller) | cut -d '=' -f2 | head -1 | awk {'print $1'})
+PVR_STATUS_FILE=\$(grep ^PVR_STATUS_FILE $KODI_CONTROLLER_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'})
 
 # Quit if PVR manager was already enabled
 [ -e $KODI_USER_DATA/.pvrmanager_enabled ] && exit
@@ -3558,11 +3562,11 @@ PVR_STATUS_FILE=\$(grep ^PVR_STATUS_FILE \$(which jambulatv-kodi-controller) | c
 [ -e $TVHEADEND_CONFIG_DIR/.dvbt_configured ] || exit 
 
 # Check status of kodi pvr.hts addon, and enable it if false
-jambulatv-kodi-controller addon_status pvr.hts > /dev/null 2>&1
+$KODI_CONTROLLER_TOOL addon_status pvr.hts > /dev/null 2>&1
 # Source PVR status temp file
 [ -e \$PVR_STATUS_FILE ] && . \$PVR_STATUS_FILE
 # If status is disabled - Enable it! i.e. Toggle to true
-[ "\$ADDON_STATUS" = "true" ] || jambulatv-kodi-controller addon_switch pvr.hts > /dev/null 2>&1
+[ "\$ADDON_STATUS" = "true" ] || $KODI_CONTROLLER_TOOL addon_switch pvr.hts > /dev/null 2>&1
 
 # Let other runs know, we did this already
 touch $KODI_USER_DATA/.pvrmanager_enabled 
