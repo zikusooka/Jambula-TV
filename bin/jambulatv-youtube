@@ -222,7 +222,7 @@ export YOUTUBE_VIDEO_ID
 }
 
 set_youtube_search_method () {
-query_db_4_youtube_api 
+query_db_4_youtube_api
 #
 # Method of search depending on availability of Youtube API Key
 if [ "x$GOOGLE_YOUTUBE_API_KEY" != "x" ];
@@ -243,7 +243,7 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i -
 }
 
 youtube_video_id_sparktv_uganda () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i -e "Spark TV Live Stream" -e "Spark TV Uganda Livestream"  -e "SparkTV Uganda Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i -e "Spark TV LiveStream" -e "Spark TV Live Stream" -e "Spark TV Uganda Livestream"  -e "SparkTV Uganda Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_bukeddetv_uganda () {
@@ -268,7 +268,7 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHAN
 }
 
 youtube_video_id_learn_swahili () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/SwahiliPod101 | grep -i "Learn Swahili in 24 Hours with SwahiliPod101 TV" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/SwahiliPod101 | grep -i -e "Learn Swahili in 24 Hours with SwahiliPod101 TV" -e "Learn Swahili 24/7 with SwahiliPod101 TV" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_inooro_tv_kenya () {
@@ -442,7 +442,7 @@ sudo touch $YOUTUBE_FETCH_IN_PROGRESS_FILE
 }
 
 get_youtube_manifest () {
-YOUTUBE_MANIFEST_URL=$($YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_VIDEO_FORMAT -g --youtube-skip-dash-manifest $YOUTUBE_VIDEO_ID | grep http | head -1)
+YOUTUBE_MANIFEST_URL=$($YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_VIDEO_FORMAT -g --youtube-skip-dash-manifest "$YOUTUBE_WATCH_URL=$YOUTUBE_VIDEO_ID" | grep http | head -1)
 }
 
 youtube_failed_actions () {
