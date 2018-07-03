@@ -183,6 +183,7 @@ TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
 TVHEADEND_TIMESHIFT_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/timeshift
 TVHEADEND_TIMESHIFT_BUFFER_FILE=$TMPDIR/timeshift_buffer
 TVHEADEND_DVR_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/dvr/config
+TVHEADEND_IMAGE_CACHE_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/imagecache
 
 TVHEADEND_ADAPTERS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/linuxdvb/adapters
 
@@ -3354,6 +3355,7 @@ dvb_icons_add
 # Create tvheadend directories if it does not exist
 # -------------------------------------------------
 [ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
+[ -d $TVHEADEND_IMAGE_CACHE_CONFIG_DIR ] || mkdir -p $TVHEADEND_IMAGE_CACHE_CONFIG_DIR
 [ -d $TVHEADEND_TIMESHIFT_CONFIG_DIR ] || mkdir -p $TVHEADEND_TIMESHIFT_CONFIG_DIR
 [ -d $TVHEADEND_DVR_CONFIG_DIR ] || mkdir -p $TVHEADEND_DVR_CONFIG_DIR
 [ -d $TVHEADEND_DVBT_NETWORK_CONFIG_DIR/$TVHEADEND_DVBT_NETWORK_UUID ] || \
@@ -3434,9 +3436,16 @@ cat > $TVHEADEND_CONFIG_DIR/config << EOF
 }
 EOF
 
-# Give multimedia user permission to access tvheadend main config file
-# --------------------------------------------------------------------
-chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+# Configure Image Cache i.e. Caching of TV icons
+# -----------------------------------------------
+cat > $TVHEADEND_IMAGE_CACHE_CONFIG_DIR/config << EOF
+{
+	"enabled": true,
+	"ignore_sslcert": false,
+	"ok_period": 168,
+	"fail_period": 24
+}
+EOF
 
 # Configure Timeshift i.e. Pausing of Live TV
 # -------------------------------------------
@@ -3513,8 +3522,9 @@ cat > $TVHEADEND_DVR_CONFIG_DIR/$TVHEADEND_DVR_UUID << EOF
 EOF
 
 # Give multimedia user permission to access tvheadend directories
+# --------------------------------------------------------------------
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
-#
+
 # Generate jambulatv-tvheadend-processor tool which is used to process tvheadend processes like recordings
 [ -e $BINARY_PREFIX/jambulatv-tvheadend-processor ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-tvheadend-processor | \
