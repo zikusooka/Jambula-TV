@@ -4388,6 +4388,17 @@ cat > $TVHEADEND_EPG_GRAB_DIR/config <<EOF
 			"enabled": true,
 			"priority": 3
 		},
+		"xmltv": {
+			"class": "epggrab_mod_ext_xmltv",
+			"dn_chnum": false,
+			"scrape_extra": false,
+			"scrape_onto_desc": false,
+			"use_category_not_genre": false,
+			"name": "XMLTV",
+			"type": "External",
+			"enabled": true,
+			"priority": 3
+		},
 		"eit": {
 			"class": "epggrab_mod_ota",
 			"name": "EIT: DVB Grabber",
