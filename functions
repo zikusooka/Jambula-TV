@@ -22,7 +22,7 @@ PRODUCT_SERIAL_NUMBER=$(uuid | cut -d - -f5)
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
-AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer, /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd, /usr/bin/chattr, /usr/sbin/asterisk, /usr/sbin/iftop, /usr/bin/bwm-ng"
+AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer, /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd, /usr/bin/chattr, /usr/sbin/asterisk, /usr/sbin/iftop, /usr/bin/bwm-ng, /usr/bin/socat"
 MULTIMEDIA_USER=$AUTOLOGIN_USER
 MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
 BACKUPS_DIR=$ROOT_DIR/Backups
@@ -210,6 +210,13 @@ TVHEADEND_EPG_GRAB_DIR=$TVHEADEND_CONFIG_DIR/epggrab
 TVHEADEND_EPG_XMLTV_DIR=$TVHEADEND_EPG_GRAB_DIR/xmltv
 
 XMLTV_GRABBER=tv_grab_combiner
+
+EPG_XMLTV_GUIDE_FILE=$TVHEADEND_EPG_XMLTV_DIR/tvguide_uk.xml
+EPG_XMLTV_GUIDE_FILE_AGE=259200 # 3 Days
+EPG_XMLTV_SOCKET=$TVHEADEND_EPG_GRAB_DIR/xmltv.sock
+EPG_XMLTV_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/xmltv.log
+
+EPG_XMLTV_GUIDE_URL="http://epg.koditvepg.com/GB/guide.xml"
 
 TVHEADEND_TV_MARKET=UG-Kampala
 
@@ -901,6 +908,11 @@ DEFAULT_USER_AGENT=$HTTP_BROWSER_USERAGENT_LINUX
 CURL_CMD="/usr/bin/curl"
 CURL_OPTS="-s -L"
 
+# Wget
+WGET_CMD=wget
+WGET_TIMEOUT=20
+WGET_OPTIONS="-nv --no-check-certificate --retr-symlinks -T $WGET_TIMEOUT"
+
 YOUTUBE_API_KEY="AIzaSyC3bSp66pSZdSvRpWLVVaIQtVtdJw8kDGM"
 YOUTUBE_CLIENT_ID="1047595433853-gspvl15aj43op9e2timmcqu9en3eefoo.apps.googleusercontent.com"
 YOUTUBE_CLIENT_SECRET="x4HTznrI1eixU5XHVQxA-5wx"
@@ -916,7 +928,8 @@ FMRADIO_STREAMER_PORT=$(grep -i 'fmradio streamer$' $PORTS_ASSIGNED_FILE | awk {
 # Set notifications for logging purposes
 set_notifications () {
 NO_INTERNET_NOTIFICATION_MESSAGE="Error: I was unable to connect to the Internet.  Please try again later! {Error $EXIT_VALUE}"
-FTP_FAILED_NOTIFICATION_MESSAGE="FTP Error: I failed to download the following file:"
+FTP_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
+WGET_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 TVHEADEND_RESET_MESSAGE="Reset of TV server has been requested"
 TVHEADEND_NO_TUNER_FOUND_MESSAGE="No DVB-T Adapter was detected!  Please insert the DVB-T device before continuing. You must also ensure the TV Antenna is also hooked up properly"
 TVHEADEND_WAITING_4_SERVER_MESSAGE="Waiting for tvheadend.service to settle. Please be patient"
@@ -926,13 +939,13 @@ DVBT_MULTIPLEX_NOT_FOUND_MESSAGE="Error: No multiplexes were found for $TV_MARKE
 DVBT_PICONS_ADDED_MESSAGE="Added DVB-T picon images for $TV_MARKET TV market area"
 DVBT_PICONS_NOT_FOUND_MESSAGE="Error: DVB-T picon images for $TV_MARKET TV market not found"
 # The following, used by TVHeadend Controller tool
-TVHEADEND_SERVER_REFRESH_START_MESSAGE="The TV server controller has been initiated and processing of your ($TV_TYPE) network has started"
-TVHEADEND_SERVER_IN_USE_MESSAGE="The TV server is currently in use, please pick another convenient time to process your ($TV_TYPE) network"
+TVHEADEND_SERVER_REFRESH_START_MESSAGE="TV controller tool activated: Please wait while I attempt to perform maintenance on your ($TV_TYPE) network"
+TVHEADEND_SERVER_IN_USE_MESSAGE="Sorry, the TV server is currently in use ... Postponing maintenance on the ($TV_TYPE) network"
 DVBT_CHECK_HEALTH_STATUS_MESSAGE="Checking the health status of DVB-T network ($DVBT_NETWORK_NAME)"
 DVBT_HEALTH_STATUS_OK_MESSAGE="DVB-T network ($DVBT_NETWORK_NAME) is OK"
 DVBT_ADAPTER_NODE_MISSING_MESSAGE="Unable to detect the TV Tuner. This is most likely a hardware issue.  Please check your DVB-T2 tuner and ensure it is properly connected"
 DVBT_NETWORK_MISSING_MESSAGE="Your Live TV network and channels list is corrupted. Please wait while I attempt to repair it now"
-DVBT_NETWORK_NOT_ASSOCIATED_MESSAGE="The Live TV network is not associated to your DVB-T/T2 tuner. I will attempt to repair it now, please be patient"
+DVBT_NETWORK_NOT_ASSOCIATED_MESSAGE="The DVB-T network is not associated to your tuner. I will attempt to repair it now, please be patient"
 DVBT_NETWORK_REPAIR_STARTED_MESSAGE="DVB-T Network Repair Mode initiated for $DVBT_NETWORK_NAME"
 DVBT_NETWORK_CREATION_MESSAGE="Setting up a fresh DVB-T network named $DVBT_NETWORK_NAME"
 IPTV_FETCH_PLAYLIST_MESSAGE="Downloading the latest IPTV playlist i.e. $PLAYLISTS_IPTV_WORLD_M3U_FILE"
@@ -949,7 +962,8 @@ DVBT_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your DVB-T network ($DVBT_NETWORK
 IPTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your IPTV network completed. You may now resume watching IPTV ..."
 CCTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your CCTV network completed. You may now resume watching Camera feeds ..."
 KODI_REFRESH_TV_LOGOS_MESSAGE="Refreshing TV icons for your ($TV_TYPE) network, the video screen will be restarted shortly"
-KODI_REFRESH_EPG_DATA_MESSAGE="Refreshing TV programme information for your ($TV_TYPE) network"
+EPG_DATA_4_KODI_REFRESH_MESSAGE="Refreshing TV programme information for your ($TV_TYPE) network, please wait ..."
+EPG_DATA_DOWNLOAD_START_MESSAGE="Download of TV programme information for your ($TV_TYPE) network started, please be patient ..."
 #
 BANDWIDTH_USED_MESSAGE="*[JambulaTV]* Data bandwidth used by ($MONITOR_REQUESTOR) was:"
 }
@@ -10890,5 +10904,28 @@ set_notifications
 print_notification "$FTP_FAILED_NOTIFICATION_MESSAGE $FTP_REMOTE_FILE" text
 # Print notification using OSD tool
 print_notification "$FTP_FAILED_NOTIFICATION_MESSAGE $FTP_REMOTE_FILE" osd
+fi
+}
+
+wget_download_file () {
+# Check Internet connectivity
+check_internet_connectivity_ping 0
+
+WGET_OUTPUT_FILE=$1
+WGET_DOWNLOAD_URL=$2
+WGET_OTHER_ARGS="$3 $4 $5"
+#
+$WGET_CMD $WGET_OPTIONS -O $WGET_OUTPUT_FILE $WGET_DOWNLOAD_URL $WGET_OTHER_ARGS
+#
+# Test to see if file was downloaded
+if [[ ! -s "$WGET_OUTPUT_FILE" ]];
+then
+# Notify if Wget download failed
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$WGET_FAILED_NOTIFICATION_MESSAGE $(basename $WGET_OUTPUT_FILE)" text
+# Print notification using OSD tool
+print_notification "$WGET_FAILED_NOTIFICATION_MESSAGE $(basename $WGET_OUTPUT_FILE)" osd
 fi
 }
