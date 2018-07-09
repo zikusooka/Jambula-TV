@@ -207,16 +207,13 @@ TVHEADEND_CAMERAS_NETWORK_NAME=jambula-Eyes
 TVHEADEND_CAMERAS_LOG_DIR=$TVHEADEND_IPTV_LOG_DIR
 
 TVHEADEND_EPG_GRAB_DIR=$TVHEADEND_CONFIG_DIR/epggrab
-TVHEADEND_EPG_XMLTV_DIR=$TVHEADEND_EPG_GRAB_DIR/xmltv
 
 XMLTV_GRABBER=tv_grab_combiner
 
-EPG_XMLTV_GUIDE_FILE=$TVHEADEND_EPG_XMLTV_DIR/tvguide_uk.xml
+EPG_XMLTV_GUIDE_DIR=$MULTIMEDIA_USER_HOME_DIR/.xmltv
 EPG_XMLTV_GUIDE_FILE_AGE=259200 # 3 Days
 EPG_XMLTV_SOCKET=$TVHEADEND_EPG_GRAB_DIR/xmltv.sock
 EPG_XMLTV_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/xmltv.log
-
-EPG_XMLTV_GUIDE_URL="http://epg.koditvepg.com/GB/guide.xml"
 
 TVHEADEND_TV_MARKET=UG-Kampala
 
@@ -962,8 +959,8 @@ DVBT_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your DVB-T network ($DVBT_NETWORK
 IPTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your IPTV network completed. You may now resume watching IPTV ..."
 CCTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your CCTV network completed. You may now resume watching Camera feeds ..."
 KODI_REFRESH_TV_LOGOS_MESSAGE="Refreshing TV icons for your ($TV_TYPE) network, the video screen will be restarted shortly"
-EPG_DATA_4_KODI_REFRESH_MESSAGE="Refreshing TV programme information for your ($TV_TYPE) network, please wait ..."
-EPG_DATA_DOWNLOAD_START_MESSAGE="Download of TV programme information for your ($TV_TYPE) network started, please be patient ..."
+EPG_DATA_4_KODI_REFRESH_MESSAGE="Refreshing the TV Guide for your ($TV_TYPE) channels ..."
+EPG_DATA_DOWNLOAD_START_MESSAGE="Download of TV programme information for $EPG_XMLTV_GUIDE_NAME started, please be patient ..."
 #
 BANDWIDTH_USED_MESSAGE="*[JambulaTV]* Data bandwidth used by ($MONITOR_REQUESTOR) was:"
 }
@@ -3388,7 +3385,7 @@ cat > $TVHEADEND_CONFIG_DIR/config << EOF
 	"theme_ui": "blue",
 	"ui_quicktips": true,
 	"uilevel": 2,
-	"uilevel_nochange": true,
+	"uilevel_nochange": false,
 	"caclient_ui": false,
 	"info_area": [
 		"login",
@@ -4369,28 +4366,28 @@ iptv_builder_install () {
 # Unpack sources
 rsync -avq --delete-after $PROJECT_GITHUB_DIR/jambula-iptv-builder $SOURCESDIR/
 # Create XMLTV directory in multimedia user's home directory
-[ -d $MULTIMEDIA_USER_HOME_DIR/.xmltv ] || mkdir -p $MULTIMEDIA_USER_HOME_DIR/.xmltv
+[ -d $EPG_XMLTV_GUIDE_DIR ] || mkdir -p $EPG_XMLTV_GUIDE_DIR
 # Change iptv-builder directory permissions to multimedia user
-chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $MULTIMEDIA_USER_HOME_DIR/.xmltv
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $EPG_XMLTV_GUIDE_DIR
 }
 
 epg_tvheadend_configure () {
 # Create XMLTV directory in multimedia user's home directory
-[ -d $MULTIMEDIA_USER_HOME_DIR/.xmltv ] || mkdir -p $MULTIMEDIA_USER_HOME_DIR/.xmltv
+[ -d $EPG_XMLTV_GUIDE_DIR ] || mkdir -p $EPG_XMLTV_GUIDE_DIR
 # Create tvheadend epggrab directory if it does not exist
 [ -d $TVHEADEND_EPG_GRAB_DIR ] || mkdir -p $TVHEADEND_EPG_GRAB_DIR
 
 # Copy xmltv system config for selected grabber
 [ -e $PROJECT_CONTRIB_DIR/tv/epg/xmltv/${XMLTV_GRABBER}.conf ] && \
-	cp -v $PROJECT_CONTRIB_DIR/tv/epg/xmltv/${XMLTV_GRABBER}.conf $MULTIMEDIA_USER_HOME_DIR/.xmltv
+	cp -v $PROJECT_CONTRIB_DIR/tv/epg/xmltv/${XMLTV_GRABBER}.conf $EPG_XMLTV_GUIDE_DIR
 
 # Create xmltv supplement maps directory
-[ -d $MULTIMEDIA_USER_HOME_DIR/.xmltv/supplement/${XMLTV_GRABBER} ] || \
-	mkdir -p $MULTIMEDIA_USER_HOME_DIR/.xmltv/supplement/${XMLTV_GRABBER}
+[ -d $EPG_XMLTV_GUIDE_DIR/supplement/${XMLTV_GRABBER} ] || \
+	mkdir -p $EPG_XMLTV_GUIDE_DIR/supplement/${XMLTV_GRABBER}
 
 # Copy xmltv system maps for grabbers like uk_tvguide if available
 [ -e $PROJECT_CONTRIB_DIR/tv/epg/xmltv/maps/${XMLTV_GRABBER}.map.conf ] && \
-	cp -v $PROJECT_CONTRIB_DIR/tv/epg/xmltv/maps/${XMLTV_GRABBER}.map.conf $MULTIMEDIA_USER_HOME_DIR/.xmltv/supplement/${XMLTV_GRABBER}/${XMLTV_GRABBER}.map.conf
+	cp -v $PROJECT_CONTRIB_DIR/tv/epg/xmltv/maps/${XMLTV_GRABBER}.map.conf $EPG_XMLTV_GUIDE_DIR/supplement/${XMLTV_GRABBER}/${XMLTV_GRABBER}.map.conf
 
 # Create epg grab config
 cat > $TVHEADEND_EPG_GRAB_DIR/config <<EOF
@@ -4435,12 +4432,28 @@ cat > $TVHEADEND_EPG_GRAB_DIR/config <<EOF
 EOF
 
 # Change xmltv directory permissions to multimedia user
-chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $MULTIMEDIA_USER_HOME_DIR/.xmltv
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $EPG_XMLTV_GUIDE_DIR
 # Change epg directory permissions to multimedia user
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_EPG_GRAB_DIR
 
 # Restart TVHeadend
 sudo systemctl restart tvheadend.service
+}
+
+epg_xmltv_guide_sources () {
+# EPG data sources by country
+case $EPG_XMLTV_COUNTRY in
+UK)
+EPG_XMLTV_GUIDE_NAME="the United Kingdom (UK)"
+EPG_XMLTV_GUIDE_FILE=$EPG_XMLTV_GUIDE_DIR/tvguide.uk.xml
+EPG_XMLTV_GUIDE_URL="http://epg.koditvepg.com/GB/guide.xml"
+;;
+US)
+EPG_XMLTV_GUIDE_NAME="the United States of America (USA)"
+EPG_XMLTV_GUIDE_FILE=$EPG_XMLTV_GUIDE_DIR/tvguide.us.xml
+EPG_XMLTV_GUIDE_URL="http://epg.koditvepg.com/US/guide.xml"
+;;
+esac
 }
 
 cameras_tvheadend_network_add () {
