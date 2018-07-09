@@ -6,6 +6,10 @@
 #
 # Jambula Labs @copyright 2018-2019 All rights reserved
 
+# CLI Arguments
+ACTION=$1
+ARG2=$2
+
 # Variables
 PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
@@ -18,12 +22,13 @@ VNSTAT_CMD=/usr/bin/vnstat
 VNSTAT_QUERY_OPTS="--config $VNSTAT_CONFIG_FILE -q" 
 VNSTAT_TODAY=$(date +%Y-%m-%d)
 VNSTAT_ONE_WEEK_AGO=$(date --date='7 days ago' +%Y-%m-%d)
+VNSTAT_ONE_MONTH_AGO=$(date --date='30 days ago' +%Y-%m-%d)
 VNSTAT_CURRENT_MONTH=$(date +%B-%Y)
 
 VNSTATI_CMD=/usr/bin/vnstati
 VNSTATI_OPTS="--config $VNSTAT_CONFIG_FILE -vs" 
 VNSTATI_IMAGE=$TMPDIR/vnstati.png
-VNSTATI_HEADER_TEXT="Data Used by JambulaTV"
+VNSTATI_HEADER_TEXT="Data Used by JambulaTV ($ARG2)"
 
 BWM_NG_CMD=/usr/bin/bwm-ng
 
@@ -39,9 +44,6 @@ fi
 
 BANDWIDTH_USED_RAW_FILE=$TMPDIR/bandwidth_usage_4_${MONITOR_REQUESTOR}_raw.csv
 BANDWIDTH_USED_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/bandwidth_usage_$(date +%Y%m%d).log
-
-ACTION=$1
-ARG2=$2
 
 
 
@@ -71,7 +73,7 @@ bandwidth_monitor_start () {
 [[ -e $BANDWIDTH_USED_RAW_FILE ]] || sudo $BWM_NG_CMD -I $WIFI_STATION_INTERFACE -T sum -o csv -C ',' -F $BANDWIDTH_USED_RAW_FILE
 }
 
-bandwidth_monitor_results () {
+bandwidth_monitor_calculate_usage () {
 # Data categories
 DATA_BANDWIDTH_USED_KB=$(echo "$(tail -1 $BANDWIDTH_USED_RAW_FILE | cut -d ',' -f5) / 1024" | bc)
 DATA_BANDWIDTH_USED_MB=$(echo "$(tail -1 $BANDWIDTH_USED_RAW_FILE | cut -d ',' -f5) / 1048576" | bc)
@@ -96,21 +98,6 @@ cat >> $BANDWIDTH_USED_LOG_FILE <<EOT
 $(date +%Y-%m-%d-%H%M)	:	$DATA_BANDWIDTH_USED	:	$MONITOR_REQUESTOR
 
 EOT
-
-# Set data bandwidth used during this session
-BANDWIDTH_USED_CURRENT_SESSION=$(grep -i "$MONITOR_REQUESTOR" $BANDWIDTH_USED_LOG_FILE | grep -Ev '(#.*$)|(^$)|({|})' | tail -1 | awk -F':' '{$1=$1}1' | awk {'print $2'})
-
-# Source notification strings
-set_notifications
-#
-# Notify via stdout and systemd journal 
-logger -s -t $(basename $0) "$BANDWIDTH_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*"
-#
-# Send notifications via messaging services 
-# WhatsApp 
-sudo $WHATSAPP_TOOL sendmessage "$BANDWIDTH_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
-# Telegram
-$TELEGRAM_TOOL SendMessage "$BANDWIDTH_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*"
 }
 
 bandwidth_monitor_stop () {
@@ -119,31 +106,31 @@ BWM_NG_PID=$(ps auxw | grep -Ev grep | grep ${BWM_NG_CMD##*/} | awk {'print $2'}
 #
 # Kill bandwidth monitor
 [[ "x$BWM_NG_PID" = "x" ]] || sudo kill -15 $BWM_NG_PID
-#
 # Calculate and get data bandwidth that was used
-bandwidth_monitor_results
+bandwidth_monitor_calculate_usage
+#
+# Notify only if bandwidth used is more than 1MB i.e. Ignore failed processes and when 
+# there's no Internet
+if [[ "$DATA_BANDWIDTH_USED" =~ ^[0-9]+([.][0-9]+)? ]] && [[ "$DATA_BANDWIDTH_USED_KB" -gt 1024 ]];
+then
+bandwidth_monitor_notify_used_data
+fi
 #
 # Remove current bandwidth output file since we are done
 [[ -e $BANDWIDTH_USED_RAW_FILE ]] && sudo rm -f $BANDWIDTH_USED_RAW_FILE
 }
 
-# Graphs
-# ------
-generate_bandwidth_graphs () {
-# Generate data used graph
-$VNSTATI_CMD $VNSTATI_OPTS --headertext "$VNSTATI_HEADER_TEXT" -o $VNSTATI_IMAGE
-# Print notification
-clear
-cat <<EOF
-Data used ($ARG2):		$DATA_BANDWIDTH_USED
+bandwidth_monitor_notify_used_data () {
+# Set data bandwidth used during this session
+BANDWIDTH_USED_CURRENT_SESSION=$(grep -i "$MONITOR_REQUESTOR" $BANDWIDTH_USED_LOG_FILE | grep -Ev '(#.*$)|(^$)|({|})' | tail -1 | awk -F':' '{$1=$1}1' | awk {'print $2'})
+# Source notification strings
+set_notifications
+#
+# Notify via stdout and systemd journal 
+logger -s -t $(basename $0) "$BANDWIDTH_MONITOR_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*"
 
-Sending data bandwidth usage stats to Telegram and WhatsApp, please be patient ...
-EOF
-sleep 7
-# Telegram
-$TELEGRAM_TOOL SendImageDisk $VNSTATI_IMAGE &
-# WhatsApp
-sudo $WHATSAPP_TOOL sendimage $VNSTATI_IMAGE $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 &
+# Send notifications via messaging services 
+send_notification_of_used_data_by_bandwidth_monitor
 }
 
 
@@ -162,12 +149,13 @@ week)
 DATA_BANDWIDTH_USED=$($VNSTAT_CMD $VNSTAT_QUERY_OPTS -d -b $VNSTAT_ONE_WEEK_AGO -e $VNSTAT_TODAY | grep -i 'sum of' | awk -F'|' {'print $3'} | awk '{$1=$1}1')
 ;;
 month)
-DATA_BANDWIDTH_USED=$($VNSTAT_CMD $VNSTAT_QUERY_OPTS -s | grep -i $VNSTAT_CURRENT_MONTH | awk -F'/' {'print $3'} | awk '{$1=$1}1')
+#DATA_BANDWIDTH_USED=$($VNSTAT_CMD $VNSTAT_QUERY_OPTS -s | grep -i $VNSTAT_CURRENT_MONTH | awk -F'/' {'print $3'} | awk '{$1=$1}1')
+DATA_BANDWIDTH_USED=$($VNSTAT_CMD $VNSTAT_QUERY_OPTS -d -b $VNSTAT_ONE_MONTH_AGO -e $VNSTAT_TODAY | grep -i 'sum of' | awk -F'|' {'print $3'} | awk '{$1=$1}1')
 ;;
 top)
 # Print notification
 clear
-logger -s -t $(basename $0) "Please standby for a minute while I gather your data bandwidth stats ..."
+logger -s -t $(basename $0) "$BANDWIDTH_QUERY_STANDBY_GENERATING_DATA_MESSAGE"
 # Collect data bandwidth info
 sudo $IFTOP_CMD -i $WIFI_STATION_INTERFACE -t -n -N  -F $NETWORK_WIRELESS_NET_MASK -s 60 2>/dev/null > $BANDWIDTH_USED_RAW_FILE 2>&1
 # Calculate top user and data
@@ -193,10 +181,74 @@ fi
 ;;
 esac
 
+# Notify of data usage on CLI/systemd journal and send notice via WhatsApp and Telegram
+# If not 'top'
+[[ "$ARG2" != "top" ]] && bandwidth_query_notify_used_data
+}
+
+bandwidth_query_notify_used_data () {
+# Source notification strings
+set_notifications
+#
+# Notify via stdout and systemd journal 
+logger -s -t $(basename $0) "$BANDWIDTH_QUERY_USED_MESSAGE *$DATA_BANDWIDTH_USED*"
+#
 # Pause abit to allow display of data used
 sleep 10
-# Send bandwidth graphs if period is specified
-[[ "$ARG2" = "top" ]] || generate_bandwidth_graphs
+# Print notification on CLI 
+clear
+cat <<EOF
+Data used ($ARG2):		$DATA_BANDWIDTH_USED
+
+$BANDWIDTH_QUERY_SENDING_WHATSAPP_TELEGRAM_MESSAGE
+EOF
+sleep 7
+
+# Generate image of bandwidth graphs
+generate_image_of_bandwidth_graphs
+
+# Send notifications via messaging services 
+send_notification_of_used_data_by_bandwidth_query
+send_image_of_bandwidth_graphs
+}
+
+
+# Graphs
+# ------
+generate_image_of_bandwidth_graphs () {
+# If action is not 'monitor'; then generate bandwidth ONLY if used data is more than 1MB 
+# i.e. Ignore failed processes and when there's no Internet
+if [[ "$ACTION" != "monitor" ]] || \
+	[[ "$DATA_BANDWIDTH_USED" =~ ^[0-9]+([.][0-9]+)? && "$DATA_BANDWIDTH_USED_KB" -gt 1024 ]];
+then
+#
+# Generate data used graph
+$VNSTATI_CMD $VNSTATI_OPTS --headertext "$VNSTATI_HEADER_TEXT" -o $VNSTATI_IMAGE
+#
+# Give multimedia user i.e. jambula access permissions to vnstati temp image file
+sudo chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $VNSTATI_IMAGE
+fi
+}
+
+send_notification_of_used_data_by_bandwidth_monitor () {
+# WhatsApp 
+sudo $WHATSAPP_TOOL sendmessage "$BANDWIDTH_MONITOR_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
+# Telegram
+$TELEGRAM_TOOL SendMessage "$BANDWIDTH_MONITOR_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*"
+}
+
+send_notification_of_used_data_by_bandwidth_query () {
+# WhatsApp 
+sudo $WHATSAPP_TOOL sendmessage "$BANDWIDTH_QUERY_USED_MESSAGE *$DATA_BANDWIDTH_USED*. $BANDWIDTH_GRAPHS_ATTACHED_MESSAGE" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
+# Telegram
+$TELEGRAM_TOOL SendMessage "$BANDWIDTH_QUERY_USED_MESSAGE *$DATA_BANDWIDTH_USED*. $BANDWIDTH_GRAPHS_ATTACHED_MESSAGE"
+}
+
+send_image_of_bandwidth_graphs () {
+# Send Telegram
+$TELEGRAM_TOOL SendImageDisk $VNSTATI_IMAGE
+# Send WhatsApp
+sudo $WHATSAPP_TOOL sendimage $VNSTATI_IMAGE $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
 }
 
 

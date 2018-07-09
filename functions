@@ -963,7 +963,7 @@ EPG_DATA_4_KODI_REFRESH_MESSAGE="Refreshing the TV Guide for your ($TV_TYPE) cha
 EPG_DATA_DOWNLOAD_START_MESSAGE="Download of TV programme information for $EPG_XMLTV_GUIDE_NAME started, please be patient ..."
 #
 BANDWIDTH_MONITOR_USED_MESSAGE="*[JambulaTV]* The Internet data used by *$MONITOR_REQUESTOR* was:"
-BANDWIDTH_QUERY_USED_MESSAGE="*[JambulaTV]* The Internet data used $(echo $QUERY_PERIOD | sed 's:week:during the last 7 days:' | sed 's:month:this month:') was:"
+BANDWIDTH_QUERY_USED_MESSAGE="*[JambulaTV]* The Internet data used $(echo $QUERY_PERIOD | sed 's:week:during the last 7 days:' | sed 's:month:during the last 30 days:') was:"
 BANDWIDTH_QUERY_STANDBY_GENERATING_DATA_MESSAGE="Please standby for a minute while I gather your data bandwidth stats ..."
 BANDWIDTH_QUERY_SENDING_WHATSAPP_TELEGRAM_MESSAGE="Sending data bandwidth usage stats to Telegram and WhatsApp, please be patient ..."
 BANDWIDTH_GRAPHS_ATTACHED_MESSAGE="Attached are graphs showing total bandwidth used by your JambulaTV"
