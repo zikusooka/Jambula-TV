@@ -1,0 +1,16 @@
+[Unit]
+Description = Internet bandwidth and data usage querying for JambulaTV services
+Requires = sys-subsystem-net-devices-MY_WIFI_STATION_INTERFACE.device
+After = sys-subsystem-net-devices-MY_WIFI_STATION_INTERFACE.device
+After = syslog.target network.target
+
+
+[Service]
+Environment=QUERY_PERIOD=%i
+User = MY_MULTIMEDIA_USER
+Type = oneshot
+ExecStart=MY_BANDWIDTH_TOOL query ${QUERY_PERIOD}
+
+
+[Install]
+WantedBy=multi-user.target

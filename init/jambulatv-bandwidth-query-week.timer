@@ -1,0 +1,11 @@
+[Unit]
+Description = generation and reporting of Internet data and bandwidth used this week
+
+
+[Timer]
+OnCalendar = Mon *-*-* 00:00:00
+Unit = jambulatv-bandwidth-query@week.service
+
+
+[Install]
+WantedBy = multi-user.target

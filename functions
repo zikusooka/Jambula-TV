@@ -962,7 +962,11 @@ KODI_REFRESH_TV_LOGOS_MESSAGE="Refreshing TV icons for your ($TV_TYPE) network, 
 EPG_DATA_4_KODI_REFRESH_MESSAGE="Refreshing the TV Guide for your ($TV_TYPE) channels ..."
 EPG_DATA_DOWNLOAD_START_MESSAGE="Download of TV programme information for $EPG_XMLTV_GUIDE_NAME started, please be patient ..."
 #
-BANDWIDTH_USED_MESSAGE="*[JambulaTV]* Data bandwidth used by ($MONITOR_REQUESTOR) was:"
+BANDWIDTH_MONITOR_USED_MESSAGE="*[JambulaTV]* The Internet data used by *$MONITOR_REQUESTOR* was:"
+BANDWIDTH_QUERY_USED_MESSAGE="*[JambulaTV]* The Internet data used $(echo $QUERY_PERIOD | sed 's:week:during the last 7 days:' | sed 's:month:this month:') was:"
+BANDWIDTH_QUERY_STANDBY_GENERATING_DATA_MESSAGE="Please standby for a minute while I gather your data bandwidth stats ..."
+BANDWIDTH_QUERY_SENDING_WHATSAPP_TELEGRAM_MESSAGE="Sending data bandwidth usage stats to Telegram and WhatsApp, please be patient ..."
+BANDWIDTH_GRAPHS_ATTACHED_MESSAGE="Attached are graphs showing total bandwidth used by your JambulaTV"
 }
 
 print_notification () {
@@ -7901,16 +7905,41 @@ make_install_jambulatv
 
 bandwidth_measurement_setup () {
 # Copy data bandwidth tool, if it does not exist in bin directory
-[ -e $BANDWIDTH_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-bandwidth $BANDWIDTH_TOOL
+[[ -e $BANDWIDTH_TOOL ]] || cp -v $PROJECT_BIN_DIR/jambulatv-bandwidth $BANDWIDTH_TOOL
 # Make tool executable
 chmod 755 $BANDWIDTH_TOOL
 
-# Configure Systemd service file
-cat $PROJECT_INIT_SCRIPTS_DIR/jambulatv-bandwidth-monitor@.service | \
-	sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" | \
-	sed -e "s:MY_BANDWIDTH_TOOL:$BANDWIDTH_TOOL:g" | \
-	sed -e "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
-		> $SYSTEMD_UNITS_DIR_USER/jambulatv-bandwidth-monitor@.service
+# Bandwidth Query systemd unit
+# -----------------------------
+# Configure and copy systemd unit (.service) file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-bandwidth-query@.service ]] || \
+	cat $PROJECT_INIT_SCRIPTS_DIR/jambulatv-bandwidth-query@.service | \
+		sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" | \
+		sed -e "s:MY_BANDWIDTH_TOOL:$BANDWIDTH_TOOL:g" | \
+		sed -e "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
+			> $SYSTEMD_UNITS_DIR_USER/jambulatv-bandwidth-query@.service
+#
+# Bandwidth Query systemd timers
+# ------------------------------
+for PERIOD in yesterday week month
+do
+# Copy daily, weekly, and monthly systemd timers if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-bandwidth-query-${PERIOD}.timer ]] || \
+	cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-bandwidth-query-${PERIOD}.timer $SYSTEMD_UNITS_DIR_USER/
+# Enable & start daily, weekly, and monthly systemd timers if not present
+systemctl enable jambulatv-bandwidth-query-${PERIOD}.timer
+systemctl start jambulatv-bandwidth-query-${PERIOD}.timer
+done
+#
+# Bandwidth Monitor systemd unit
+# ------------------------------
+# Configure and copy systemd unit (.service) file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-bandwidth-monitor@.service ]] || \
+	cat $PROJECT_INIT_SCRIPTS_DIR/jambulatv-bandwidth-monitor@.service | \
+		sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" | \
+		sed -e "s:MY_BANDWIDTH_TOOL:$BANDWIDTH_TOOL:g" | \
+		sed -e "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
+			> $SYSTEMD_UNITS_DIR_USER/jambulatv-bandwidth-monitor@.service
 }
 
 iptv_support () {

@@ -1,5 +1,5 @@
 [Unit]
-Description = Internet Bandwidth and Data Usage Monitoring for JambulaTV Services
+Description = Internet bandwidth and data usage monitoring for JambulaTV services
 Requires = sys-subsystem-net-devices-MY_WIFI_STATION_INTERFACE.device
 After = sys-subsystem-net-devices-MY_WIFI_STATION_INTERFACE.device
 After = syslog.target network.target
