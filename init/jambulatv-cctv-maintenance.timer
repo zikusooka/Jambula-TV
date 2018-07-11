@@ -1,0 +1,11 @@
+[Unit]
+Description = Maintenance of CCTV network cameras
+
+
+[Timer]
+OnCalendar = *-*-* 00/12:45:00
+Unit = jambulatv-cctv-maintenance.service
+
+
+[Install]
+WantedBy = multi-user.target

@@ -4353,11 +4353,17 @@ iptv_tvheadend_network_add
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-yplayer 
 #
-# Add iptv services scanning to schedule
-# Copy jambulatv-iptv-scan-map-channels .timer and .service files
-cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-iptv-scan-map-channels.{timer,service} $SYSTEMD_UNITS_DIR_USER/
-systemctl enable jambulatv-iptv-scan-map-channels.timer
-systemctl start jambulatv-iptv-scan-map-channels.timer
+# Schedule IPTV maintenance using systemd timers
+# ----------------------------------------------
+# Copy systemd service file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-iptv-maintenance.service ]] || \
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-iptv-maintenance.service $SYSTEMD_UNITS_DIR_USER/
+# Copy systemd timer file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-iptv-maintenance.timer ]] || \
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-iptv-maintenance.timer $SYSTEMD_UNITS_DIR_USER/
+# Enable and start timer
+systemctl enable jambulatv-iptv-maintenance.timer
+systemctl start jambulatv-iptv-maintenance.timer
 }
 
 iptv_icons_add () {
@@ -4541,11 +4547,17 @@ cp -rv $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_CCTV_LOCAL_M3U_FILE $PLAYLISTS_DI
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PLAYLISTS_DIRECTORY
 fi
 
-# Copy jambulatv-cctv-scan-map-channels .timer and .service files
-cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-cctv-scan-map-channels.{timer,service} $SYSTEMD_UNITS_DIR_USER/
-# Add CCTV services scanning to schedule
-systemctl enable jambulatv-cctv-scan-map-channels.timer
-systemctl start jambulatv-cctv-scan-map-channels.timer
+# Schedule CCTV maintenance using systemd timers
+# ----------------------------------------------
+# Copy systemd service file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-cctv-maintenance.service ]] || \
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-cctv-maintenance.service $SYSTEMD_UNITS_DIR_USER/
+# Copy systemd timer file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-cctv-maintenance.timer ]] || \
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-cctv-maintenance.timer $SYSTEMD_UNITS_DIR_USER/
+# Enable and start timer
+systemctl enable jambulatv-cctv-maintenance.timer
+systemctl start jambulatv-cctv-maintenance.timer
 
 # Copy jambulatv-camplayer used to play web based CCTV streams via TVHeadend
 [ -e $BINARY_PREFIX/jambulatv-camplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-camplayer $BINARY_PREFIX/

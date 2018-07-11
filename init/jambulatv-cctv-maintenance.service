@@ -1,0 +1,13 @@
+[Unit]
+Description = Maintenance of CCTV network cameras
+After = graphical.target
+
+
+[Service]
+User = jambula
+Type = forking
+ExecStart = /bin/sh -c "/usr/bin/jambulatv-tvheadend-controller cctv all &"
+
+
+[Install]
+WantedBy = graphical.target

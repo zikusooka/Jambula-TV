@@ -1,0 +1,11 @@
+[Unit]
+Description = Maintenance of IPTV network channels including TV guide and icons
+
+
+[Timer]
+OnCalendar = *-*-* 00:00:00
+Unit = jambulatv-iptv-maintenance.service
+
+
+[Install]
+WantedBy = multi-user.target
