@@ -118,7 +118,7 @@ USER_MOVIES_DIR=$USER_VIDEOS_DIR/Movies
 PLAYLISTS_DIRECTORY=$PROJECT_PARTITION/Playlists
 PLAYLISTS_PORT=$(grep -i 'playlists$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 PLAYLISTS_IPTV_WORLD_M3U_FILE=jambula-iptv.m3u8
-PLAYLISTS_CAMERAS_LOCAL_M3U_FILE=jambula-cameras.m3u8
+PLAYLISTS_CCTV_LOCAL_M3U_FILE=jambula-cctv.m3u8
 
 # Remind
 REMINDERS_DIRECTORY=$PROJECT_PARTITION/Reminders
@@ -201,10 +201,10 @@ TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE=/tmp/create_iptv_network.sh
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
 TVHEADEND_CHANNELS_TAGS_DIR=$TVHEADEND_CONFIG_DIR/channel/tag
 
-TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE=/tmp/create_cameras_network.sh
+TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE=/tmp/create_cctv_network.sh
 
-TVHEADEND_CAMERAS_NETWORK_NAME=jambula-Eyes
-TVHEADEND_CAMERAS_LOG_DIR=$TVHEADEND_IPTV_LOG_DIR
+TVHEADEND_CCTV_NETWORK_NAME=jambula-Eyes
+TVHEADEND_CCTV_LOG_DIR=$TVHEADEND_IPTV_LOG_DIR
 
 TVHEADEND_EPG_GRAB_DIR=$TVHEADEND_CONFIG_DIR/epggrab
 
@@ -556,7 +556,7 @@ ZONEMINDER_DB_USER=jambulatv
 ZONEMINDER_DB_PASS=jambulatvzm3
 ZONEMINDER_WWW_PORT=$(grep -i 'ZoneMinder$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 ZONEMINDER_ZMS_INETD_PORT=8521
-ZONEMINDER_EVENTS_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Camera-Events
+ZONEMINDER_EVENTS_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/CCTV-Events
 
 # Motion Database Variables
 MOTION_DB_HOST=localhost
@@ -910,6 +910,10 @@ WGET_CMD=wget
 WGET_TIMEOUT=20
 WGET_OPTIONS="-nv --no-check-certificate --retr-symlinks -T $WGET_TIMEOUT"
 
+# Socat
+SOCAT_CMD="/usr/bin/socat"
+SOCAT_OPTS=""
+
 YOUTUBE_API_KEY="AIzaSyC3bSp66pSZdSvRpWLVVaIQtVtdJw8kDGM"
 YOUTUBE_CLIENT_ID="1047595433853-gspvl15aj43op9e2timmcqu9en3eefoo.apps.googleusercontent.com"
 YOUTUBE_CLIENT_SECRET="x4HTznrI1eixU5XHVQxA-5wx"
@@ -936,8 +940,8 @@ DVBT_MULTIPLEX_NOT_FOUND_MESSAGE="Error: No multiplexes were found for $TV_MARKE
 DVBT_PICONS_ADDED_MESSAGE="Added DVB-T picon images for $TV_MARKET TV market area"
 DVBT_PICONS_NOT_FOUND_MESSAGE="Error: DVB-T picon images for $TV_MARKET TV market not found"
 # The following, used by TVHeadend Controller tool
-TVHEADEND_SERVER_REFRESH_START_MESSAGE="TV controller tool activated: Please wait while I attempt to perform maintenance on your ($TV_TYPE) network"
-TVHEADEND_SERVER_IN_USE_MESSAGE="Sorry, the TV server is currently in use ... Postponing maintenance on the ($TV_TYPE) network"
+TVHEADEND_SERVER_REFRESH_START_MESSAGE="TV controller tool activated: Please wait while I attempt to perform maintenance on your ($(echo $TV_TYPE | tr '[:lower:]' '[:upper:]')) network"
+TVHEADEND_SERVER_IN_USE_MESSAGE="Sorry, the TV server is currently in use ... Postponing maintenance on the ($(echo $TV_TYPE | tr '[:lower:]' '[:upper:]')) network"
 DVBT_CHECK_HEALTH_STATUS_MESSAGE="Checking the health status of DVB-T network ($DVBT_NETWORK_NAME)"
 DVBT_HEALTH_STATUS_OK_MESSAGE="DVB-T network ($DVBT_NETWORK_NAME) is OK"
 DVBT_ADAPTER_NODE_MISSING_MESSAGE="Unable to detect the TV Tuner. This is most likely a hardware issue.  Please check your DVB-T2 tuner and ensure it is properly connected"
@@ -945,22 +949,23 @@ DVBT_NETWORK_MISSING_MESSAGE="Your Live TV network and channels list is corrupte
 DVBT_NETWORK_NOT_ASSOCIATED_MESSAGE="The DVB-T network is not associated to your tuner. I will attempt to repair it now, please be patient"
 DVBT_NETWORK_REPAIR_STARTED_MESSAGE="DVB-T Network Repair Mode initiated for $DVBT_NETWORK_NAME"
 DVBT_NETWORK_CREATION_MESSAGE="Setting up a fresh DVB-T network named $DVBT_NETWORK_NAME"
-IPTV_FETCH_PLAYLIST_MESSAGE="Downloading the latest IPTV playlist i.e. $PLAYLISTS_IPTV_WORLD_M3U_FILE"
+IPTV_FETCH_PLAYLIST_MESSAGE="Downloading the latest IPTV playlist ($PLAYLISTS_IPTV_WORLD_M3U_FILE)"
 IPTV_NETWORK_EXISTS_MESSAGE="IPTV network already exists, proceeding"
-CCTV_NETWORK_EXISTS_MESSAGE="Camera network already exists, proceeding"
+CCTV_NETWORK_EXISTS_MESSAGE="CCTV network already exists, proceeding"
 IPTV_NETWORK_SCAN_STARTED_MESSAGE="Scanning of IPTV network started. This will take some time, please be patient ..."
 DVBT_NETWORK_SCAN_STARTED_MESSAGE="Scanning for DVB Terrestrial services in $TV_MARKET TV market area started, please wait ..."
 DVBT_NETWORK_REPAIR_TERMINATED="Warning: DVB-T repair process terminated since TVHeadend is being reset or repaired"
 DVBT_WAITING_4_SERVICES_ADD_MESSAGE="Waiting for all DVB-T services to be added to TVHeadend server, please be patient ..." 
 DVBT_CHANNEL_MAP_STARTED_MESSAGE="Mapping of your DVB-T network ($DVBT_NETWORK_NAME) started"
 IPTV_CHANNEL_MAP_STARTED_MESSAGE="Mapping of your IPTV network started. Please be patient while mapping of your IPTV channels takes place ..."
-CCTV_CHANNEL_MAP_STARTED_MESSAGE="Mapping of your CCTV network started. Please be patient while mapping of your Camera channel feeds takes place ..."
-DVBT_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your DVB-T network ($DVBT_NETWORK_NAME) completed. You may now resume watching Live TV ..."
-IPTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your IPTV network completed. You may now resume watching IPTV ..."
-CCTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your CCTV network completed. You may now resume watching Camera feeds ..."
-KODI_REFRESH_TV_LOGOS_MESSAGE="Refreshing TV icons for your ($TV_TYPE) network, the video screen will be restarted shortly"
-EPG_DATA_4_KODI_REFRESH_MESSAGE="Refreshing the TV Guide for your ($TV_TYPE) channels ..."
+CCTV_CHANNEL_MAP_STARTED_MESSAGE="Mapping of your CCTV network started. Please be patient while mapping of your CCTV channel feeds takes place ..."
+DVBT_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your DVB-T network ($DVBT_NETWORK_NAME) completed"
+IPTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your IPTV network completed"
+CCTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your CCTV network completed. You may now resume watching CCTV feeds ..."
+KODI_REFRESH_TV_LOGOS_MESSAGE="Refreshing TV icons for your ($(echo $TV_TYPE | tr '[:lower:]' '[:upper:]')) network, the video screen will be restarted shortly"
+EPG_DATA_4_KODI_REFRESH_MESSAGE="Refreshing the TV Guide for your ($(echo $TV_TYPE | tr '[:lower:]' '[:upper:]')) channels ..."
 EPG_DATA_DOWNLOAD_START_MESSAGE="Download of TV programme information for $EPG_XMLTV_GUIDE_NAME started, please be patient ..."
+TVHEADEND_SERVER_REFRESH_STOP_MESSAGE="Maintenance on your ($(echo $TV_TYPE | tr '[:lower:]' '[:upper:]')) network completed successfully. You may now resume watching Live TV"
 #
 BANDWIDTH_MONITOR_USED_MESSAGE="*[JambulaTV]* The Internet data used by *$MONITOR_REQUESTOR* was:"
 BANDWIDTH_QUERY_USED_MESSAGE="*[JambulaTV]* The Internet data used $(echo $QUERY_PERIOD | sed 's:week:during the last 7 days:' | sed 's:month:during the last 30 days:') was:"
@@ -1776,7 +1781,7 @@ iptv_tvheadend_configure
 iptv_icons_add 
 # EPG
 epg_tvheadend_configure
-cameras_tvheadend_configure
+cctv_tvheadend_configure
 # Remove control file for other apps to know that TVHeadend Reset completed
 [ -e $TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE ] && \
 sudo rm -f $TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE
@@ -4460,18 +4465,18 @@ EPG_XMLTV_GUIDE_URL="http://epg.koditvepg.com/US/guide.xml"
 esac
 }
 
-cameras_tvheadend_network_add () {
-# Remove previous temp script file for creating cameras network
-[[ -e $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE ]] && sudo rm -f $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE 
+cctv_tvheadend_network_add () {
+# Remove previous temp script file for creating CCTV network
+[[ -e $TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE ]] && sudo rm -f $TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE 
 
-# Add Cameras network creation command to temp file
-cat >> $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE <<EOF
-# $TVHEADEND_CAMERAS_NETWORK_NAME
+# Add CCTV network creation command to temp file
+cat >> $TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE <<EOF
+# $TVHEADEND_CCTV_NETWORK_NAME
 # -------------------------------
-# Add Cameras network to backend
+# Add CCTV network to backend
 $CURL_CMD $CURL_OPTS -d "class=iptv_auto_network" -d "\$(printf $(echo -n $(cat <<EOT
 conf='{
-	"url": "http://$TVHEADEND_HTTP_IP:$PLAYLISTS_PORT/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE",
+	"url": "http://$TVHEADEND_HTTP_IP:$PLAYLISTS_PORT/$PLAYLISTS_CCTV_LOCAL_M3U_FILE",
 	"channel_number": 980,
 	"refetch_period": 1440,
 	"ssl_peer_verify": false,
@@ -4484,9 +4489,9 @@ conf='{
 	"max_streams": 0,
 	"max_bandwidth": 0,
 	"max_timeout": 180,
-	"icon_url": "file://$PROJECT_SYSTEM_ICONS_DIR/Cameras",
+	"icon_url": "file://$PROJECT_SYSTEM_ICONS_DIR/CCTV",
 	"remove_scrambled": true,
-	"networkname": "$TVHEADEND_CAMERAS_NETWORK_NAME",
+	"networkname": "$TVHEADEND_CCTV_NETWORK_NAME",
 	"pnetworkname": "$PROJECT_NAME",
 	"nid": 0,
 	"autodiscovery": 0,
@@ -4503,61 +4508,61 @@ EOT
 )
 ))" $TVHEADEND_API_URL/mpegts/network/create > /dev/null 2>&1
 #
-# Notify - Cameras network added
-logger -s -t $(basename $0) "Added Cameras network [$TVHEADEND_CAMERAS_NETWORK_NAME]"
+# Notify - CCTV network added
+logger -s -t $(basename $0) "Added CCTV network [$TVHEADEND_CCTV_NETWORK_NAME]"
 
 EOF
 
-if [[ -e $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE ]];
+if [[ -e $TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE ]];
 then
-# Prepare create cameras network script
-sed -i '1i #!/bin/sh' "$TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE"
-chmod 755 $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE
+# Prepare create CCTV network script
+sed -i '1i #!/bin/sh' "$TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE"
+chmod 755 $TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE
 
-# Run script to create cameras network
-$TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE
+# Run script to create CCTV network
+$TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE
 
-# Pause for a bit to allow cameras network to be added properly
+# Pause for a bit to allow CCTV network to be added properly
 sleep 3
 # Remove temp script file
-rm -f $TVHEADEND_CAMERAS_CREATE_NETWORK_TEMP_FILE
+rm -f $TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE
 fi
 }
 
-cameras_tvheadend_configure () {
-# Add Cameras network
-cameras_tvheadend_network_add
+cctv_tvheadend_configure () {
+# Add CCTV network
+cctv_tvheadend_network_add
 
-# Copy default Camera list for JambulaTV if not existent - see playlists_configure
-if [[ -e $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE && ! -e $PLAYLISTS_DIRECTORY/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE ]];
+# Copy default CCTV list for JambulaTV if not existent - see playlists_configure
+if [[ -e $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_CCTV_LOCAL_M3U_FILE && ! -e $PLAYLISTS_DIRECTORY/$PLAYLISTS_CCTV_LOCAL_M3U_FILE ]];
 then
-cp -rv $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE $PLAYLISTS_DIRECTORY
+cp -rv $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_CCTV_LOCAL_M3U_FILE $PLAYLISTS_DIRECTORY
 # Change playlist directory ownership to multimedia user i.e. jambula
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PLAYLISTS_DIRECTORY
 fi
 
-# Copy jambulatv-cameras-scan-map-channels .timer and .service files
-cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-cameras-scan-map-channels.{timer,service} $SYSTEMD_UNITS_DIR_USER/
-# Add cameras services scanning to schedule
-systemctl enable jambulatv-cameras-scan-map-channels.timer
-systemctl start jambulatv-cameras-scan-map-channels.timer
+# Copy jambulatv-cctv-scan-map-channels .timer and .service files
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-cctv-scan-map-channels.{timer,service} $SYSTEMD_UNITS_DIR_USER/
+# Add CCTV services scanning to schedule
+systemctl enable jambulatv-cctv-scan-map-channels.timer
+systemctl start jambulatv-cctv-scan-map-channels.timer
 
-# Copy jambulatv-camplayer used to play web based camera streams via TVHeadend
+# Copy jambulatv-camplayer used to play web based CCTV streams via TVHeadend
 [ -e $BINARY_PREFIX/jambulatv-camplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-camplayer $BINARY_PREFIX/
 #
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-camplayer 
 }
 
-cameras_icons_add () {
+cctv_icons_add () {
 # Get WWW User and Group
 set_www_user_group
 # Create picons directory if it does not exist
 [ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
-# Copy camera picons e.g. logos to JambulaTV share directory
-rsync -av $PROJECT_CONTRIB_DIR/tv/picons/Cameras $PROJECT_SYSTEM_ICONS_DIR/
+# Copy CCTV picons e.g. logos to JambulaTV share directory
+rsync -av $PROJECT_CONTRIB_DIR/tv/picons/CCTV $PROJECT_SYSTEM_ICONS_DIR/
 # Give permissons to TV Icons
-chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/Cameras
+chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/CCTV
 }
 
 kodi_configure () {

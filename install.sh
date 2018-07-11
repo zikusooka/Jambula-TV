@@ -374,8 +374,8 @@ zoneminder_configure
 zoneminder_zms_inetd
 #
 # Cameras via TVHeadend
-cameras_tvheadend_configure
-cameras_icons_add
+cctv_tvheadend_configure
+cctv_icons_add
 
 # ----------------
 # Administration 

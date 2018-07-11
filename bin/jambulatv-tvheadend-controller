@@ -36,7 +36,6 @@ TVHEADEND_DVBT_TUNER_NODE=/dev/dvb/adapter$DVBT_TUNER_NO
 TVHEADEND_DVBT_CREATE_CHAN_TEMP_FILE=/tmp/create_dvb_channels.sh
 TVHEADEND_DVBT_CREATE_CHAN_TAG_TEMP_FILE=/tmp/create_dvb_channel_tags.sh
 TVHEADEND_PLAY_STREAM_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/play/stream"
-TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid')
 TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=/tmp/iptv_service_uuid.txt
 TVHEADEND_IPTV_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-info.$(date +%Y%m%d%H%M).log
 TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-failed.$(date +%Y%m%d%H%M).log
@@ -46,10 +45,10 @@ TVHEADEND_IPTV_CREATE_CHAN_TAG_TEMP_FILE=/tmp/create_iptv_channel_tags.sh
 TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE=/tmp/iptv_scanning_in_progress
 TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE=/tmp/iptv_mapping_in_progress
 
-TVHEADEND_CAMERAS_CREATE_CHAN_TEMP_FILE=/tmp/create_cameras_channels.sh
-TVHEADEND_CAMERAS_CREATE_CHAN_TAG_TEMP_FILE=/tmp/create_cameras_channel_tags.sh
-TVHEADEND_CAMERAS_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/cameras-scan-info.$(date +%Y%m%d%H%M).log
-TVHEADEND_CAMERAS_SERVICE_UUIDS_RAW_FILE=/tmp/cameras_service_uuid.txt
+TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE=/tmp/create_cctv_channels.sh
+TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE=/tmp/create_cctv_channel_tags.sh
+TVHEADEND_CCTV_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/cctv-scan-info.$(date +%Y%m%d%H%M).log
+TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE=/tmp/cctv_service_uuid.txt
 
 PLAYLISTS_PORT=MY_PLAYLISTS_PORT
 
@@ -72,23 +71,31 @@ usage () {
 if [ "x$TV_TYPE" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [dvb|iptv|cameras]
+echo "Usage:  ./`basename $0` [dvb|iptv|cctv]
 "
 exit 1
 fi
 }
 
 usage_and_pre_start_dvb () {
-if [ "x$TV_TASK" = "x" ];
+if [[ "x$TV_TASK" = "x" ]];
 then
 clear
-echo "Usage:  ./`basename $0` dvb [scan|map|all|repair]
+echo "Usage:  ./`basename $0` dvb [scan|map|all|repair|epg|icons]
 "
 exit 1
 
+# Don't proceed if TV_TASK is epg, icons)
+elif [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]];
+then
+# Notify when TV server controller process has been initiated
+notify_tv_server_controller_initiated
+# Break out
+break
+
 else
 # Notify when TV server controller process has been initiated
-notify_tv_server_refresh_initiated
+notify_tv_server_controller_initiated
 #
 # Check to see if TVHeadend server is in use
 check_if_in_use 
@@ -96,38 +103,41 @@ fi
 }
 
 usage_and_pre_start_iptv () {
-if [ "x$TV_TASK" = "x" ];
+if [[ "x$TV_TASK" = "x" ]];
 then
 clear
-echo "Usage:  ./`basename $0` iptv [get|scan|map|all]
+echo "Usage:  ./`basename $0` iptv [scan|map|all|m3u|epg|icons]
 "
 exit 1
 
-# Don't proceed when fetching IPTV playlist
-elif [ "$TV_TASK" = "get" ];
+# Don't proceed if TV_TASK is m3u, epg, icons)
+elif [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]];
 then
+# Notify when TV server controller process has been initiated
+notify_tv_server_controller_initiated
+# Break out
 break
 
 else
 # Notify when TV server controller process has been initiated
-notify_tv_server_refresh_initiated
+notify_tv_server_controller_initiated
 #
 # Check to see if TVHeadend server is in use
 check_if_in_use 
 fi
 }
 
-usage_and_pre_start_cameras () {
+usage_and_pre_start_cctv () {
 if [ "x$TV_TASK" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` cameras [scan|map|all]
+echo "Usage:  ./`basename $0` cctv [scan|map|all]
 "
 exit 1
 
 else
 # Notify when TV server controller process has been initiated
-notify_tv_server_refresh_initiated
+notify_tv_server_controller_initiated
 #
 # Check to see if TVHeadend server is in use
 check_if_in_use
@@ -162,7 +172,7 @@ exit 1
 fi
 }
 
-notify_tv_server_refresh_initiated () {
+notify_tv_server_controller_initiated () {
 # Source notification strings
 set_notifications
 # Print notifciation to stdout and systemd journal 
@@ -171,11 +181,22 @@ print_notification "$TVHEADEND_SERVER_REFRESH_START_MESSAGE" text
 print_notification "$TVHEADEND_SERVER_REFRESH_START_MESSAGE" osd
 }
 
+notify_tv_server_controller_completed () {
+sleep 30
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$TVHEADEND_SERVER_REFRESH_STOP_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$TVHEADEND_SERVER_REFRESH_STOP_MESSAGE" osd
+}
+
 log_file () {
 # Create IPTV log directory if non existent
 [ -d $TVHEADEND_IPTV_LOG_DIR ] || mkdir -p $TVHEADEND_IPTV_LOG_DIR
 # Give it Multimedia user's permissions
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_IPTV_LOG_DIR
+
 # Date stamp log file
 cat >> $TVHEADEND_IPTV_INFO_LOG_FILE <<EOT
 
@@ -186,8 +207,10 @@ IPTV services scan performed on:  $(date)
 EOT
 }
 
-refresh_tvheadend () {
-# Probably better to use TVH API for this, so we dont stop completely
+tvheadend_restart_server () {
+# Give multimedia user permission to access tvheadend directories
+chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+#
 # Restart TVHeadend
 sudo systemctl restart tvheadend.service
 }
@@ -196,20 +219,14 @@ pre_config () {
 # Create channels directory, if non-existent
 [ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
 #
-# Load IPTV Lists i.e. refresh tvheadend
-refresh_tvheadend
+# Load IPTV Lists i.e. restart tvheadend
+tvheadend_restart_server
 }
 
 post_config () {
-# Don't refresh TVHeadend if just feteching playlists
-if [[ "$TV_TASK" != "get" ]];
-then
-# Give multimedia user permission to access tvheadend directories
-chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
-#
-# Refresh tvheadend
-refresh_tvheadend
-fi
+# Restart TVHeadend for all tasks except for m3u, epg, icons)
+[[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]] || \
+tvheadend_restart_server
 }
 
 email_failed_iptv_notice () {
@@ -236,8 +253,8 @@ do
 rm -f $TVHEADEND_CHANNELS_CONFIG_DIR/$DEAD_CHANNEL_UUID
 done
 
-# Refresh TVH
-refresh_tvheadend
+# Restart TVH server
+tvheadend_restart_server
 }
 
 get_tvheadend_last_channel_number () {
@@ -249,10 +266,35 @@ TVHEADEND_DVBT_CHANNELS_EXIST=$?
 TVHEADEND_LAST_CHANNEL_NUMBER=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[] | select(.name!="name-not-set") | .number'| sort -n | tail -1)
 }
 
+refresh_tvh_kodi_icons () {
+# Notify of refresh of TV icons
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$KODI_REFRESH_TV_LOGOS_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$KODI_REFRESH_TV_LOGOS_MESSAGE" osd
+#
+# Clean and Trigger imagecache in TVHeadend
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/imagecache/config/clean -d clean=1 > /dev/null 2>&1
+#
+# Refresh TV logos in kodi
+$KODI_CONTROLLER_TOOL tv_picons_repair > /dev/null 2>&1
+}
+
 
 ############
 #  DVB-T2  #
 ############
+#
+dvb_refresh_epg_data () {
+# Remove TVH EPG Database
+[[ -e $TVHEADEND_CONFIG_DIR/epgdb.v3 ]] && rm -f $TVHEADEND_CONFIG_DIR/epgdb.v3
+
+# Run TVH internal EPG grabbers
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/epggrab/internal/rerun -d rerun=1 > /dev/null 2>&1
+}
+
 dvb_query_scan_status () {
 TVH_DVBT_SCAN_STATUS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] |select(.network_uuid=="'"$TVHEADEND_DVBT_NETWORK_UUID"'")|.scan_state' | uniq)
 }
@@ -477,7 +519,7 @@ print_notification "$DVBT_NETWORK_REPAIR_TERMINATED" osd
 exit 0
 fi
 
-# Quit if TVHeadend is NOT running because of other process like cameras being configured
+# Quit if TVHeadend is NOT running because of other process like CCTV being configured
 systemctl -q is-active tvheadend.service || exit
 
 # Notify start of DVB-T network repair process
@@ -500,7 +542,7 @@ rm -rf $(find $TVHEADEND_DVBT_NETWORK_CONFIG_DIR -iname config -size 0 -type f -
 fi
 
 # Configure DVBT network afresh
-$(basename $0) dvb all
+dvb_functions_task_all
 
 # Remove control file for other apps to know that TVHeadend Repair completed
 [ -e $TVHEADEND_REPAIR_IN_PROGRESS_TEMP_FILE ] && \
@@ -619,12 +661,87 @@ ftp_connect_get_file $(basename $JAMBULATV_FTP_SERVER_IPTV_DIR_NAME)/ $PLAYLISTS
 [ -e $TMPDIR/$PLAYLISTS_IPTV_WORLD_M3U_FILE ] && rm -f $TMPDIR/$PLAYLISTS_IPTV_WORLD_M3U_FILE
 }
 
+iptv_download_epg_data () {
+# Cycle through all desired TV guides: UK, US
+for EPG_XMLTV_COUNTRY in UK US
+do
+# Source EPG XMLTV guide sources by country
+epg_xmltv_guide_sources 
+
+# Check the age of the EPG data file and set whether it is fresh or not
+[[ -e "$EPG_XMLTV_GUIDE_FILE" && "$(date -d "now - $(stat -c "%Y" $EPG_XMLTV_GUIDE_FILE) seconds" +%s)" -lt "$EPG_XMLTV_GUIDE_FILE_AGE" ]] && TV_GUIDE_FILE_IS_FRESH=yes
+
+# Download only if EPG data file is 3 days old or more since the XML file is huge ~50MB
+if [[ "$TV_GUIDE_FILE_IS_FRESH" != "yes" ]];
+then
+# Notify of starr of EPG data download
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$EPG_DATA_DOWNLOAD_START_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$EPG_DATA_DOWNLOAD_START_MESSAGE" osd
+
+# Remove previous TV guide if more than than three days
+[[ -e $EPG_XMLTV_GUIDE_FILE ]] && rm -f $EPG_XMLTV_GUIDE_FILE
+# Give multimedia user access to the log file
+[[ -e $EPG_XMLTV_LOG_FILE ]] && \
+	sudo chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $EPG_XMLTV_LOG_FILE
+
+# Add EPG downloaded date header to log file
+cat >> $EPG_XMLTV_LOG_FILE <<EOT
+
+###############################################################################
+Electronic Program Guide (EPG) Information for:		$EPG_XMLTV_COUNTRY
+###############################################################################
+EOT
+
+# Download the latest TV guide (EPG) from upstream providor
+wget_download_file $EPG_XMLTV_GUIDE_FILE $EPG_XMLTV_GUIDE_URL -a $EPG_XMLTV_LOG_FILE
+fi
+
+done
+}
+
+iptv_refresh_epg_data () {
+# Download latest EPG data from upstream XMLTV provider
+iptv_download_epg_data
+
+# Notify of refresh of EPG data
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$EPG_DATA_4_KODI_REFRESH_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$EPG_DATA_4_KODI_REFRESH_MESSAGE" osd
+#
+# Cycle through all desired TV guides: UK, US
+for EPG_XMLTV_COUNTRY in UK US
+do
+# Source EPG XMLTV guide sources by country
+epg_xmltv_guide_sources 
+
+# Pipe EPG data into TVHeadend XMLTV EPG grabber module
+[[ -e $EPG_XMLTV_GUIDE_FILE ]] && cat $EPG_XMLTV_GUIDE_FILE | \
+	sudo $SOCAT_CMD $SOCAT_OPTS - UNIX-CONNECT:$EPG_XMLTV_SOCKET
+
+# Add XMLTV based grabber listings for UK if available
+logger -s -t $(basename $0) "Added TV guide for [$EPG_XMLTV_COUNTRY] to TVHeadend EPG grabber"
+done
+}
+
 iptv_scan_add_muxes () {
+# Set Network UUID - Keep this here, not top
+TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid')
+#
 # Force scan of IPTV network
 $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/scan -d uuid=$TVHEADEND_IPTV_NETWORK_UUID > /dev/null 2>&1
 }
 
 configure_iptv_network () {
+# Set Network UUID - Keep this here, not top
+TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid')
+#
 # See IPTV network similar to what we want already exists
 SIMILAR_IPTV_NETWORK_FOUND=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") |.networkname')
 #
@@ -708,6 +825,9 @@ print_notification "$IPTV_NETWORK_SCAN_STARTED_MESSAGE" text
 # Print notification using OSD tool
 print_notification "$IPTV_NETWORK_SCAN_STARTED_MESSAGE" osd
 
+# Set Network UUID - Keep this here, not top
+TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid')
+#
 # ----------------------------------------------------------
 # Cycle through all IPTV MUX IDs and test to create services
 # ----------------------------------------------------------
@@ -939,19 +1059,19 @@ fi
 }
 
 
-#############
-#  CAMERAS  #
-#############
+##########
+#  CCTV  #
+##########
 #
-configure_cameras_network () {
-TVHEADEND_CAMERAS_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_CAMERAS_NETWORK_NAME"'") |.uuid')
-# See CAMERAS network similar to what we want already exists
-SIMILAR_CAMERAS_NETWORK_FOUND=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_CAMERAS_NETWORK_NAME"'") |.networkname')
+configure_cctv_network () {
+TVHEADEND_CCTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_CCTV_NETWORK_NAME"'") |.uuid')
+# See CCTV network similar to what we want already exists
+SIMILAR_CCTV_NETWORK_FOUND=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_CCTV_NETWORK_NAME"'") |.networkname')
 #
-# Test for existing Cameras network
-if [[ "x$TVHEADEND_CAMERAS_NETWORK_UUID" != "x" || "x$SIMILAR_CAMERAS_NETWORK_FOUND" != "x" ]];
+# Test for existing CCTV network
+if [[ "x$TVHEADEND_CCTV_NETWORK_UUID" != "x" || "x$SIMILAR_CCTV_NETWORK_FOUND" != "x" ]];
 then
-# Notify of camera network already existing and proceed
+# Notify of CCTV network already existing and proceed
 # Source notification strings
 set_notifications
 # Print notifciation to stdout and systemd journal 
@@ -960,33 +1080,33 @@ print_notification "$CCTV_NETWORK_EXISTS_MESSAGE" text
 print_notification "$CCTV_NETWORK_EXISTS_MESSAGE" osd
 
 else
-# Add Cameras network
-cameras_tvheadend_network_add
+# Add CCTV network
+cctv_tvheadend_network_add
 fi
 }
 
-cameras_scan_add_muxes () {
-TVHEADEND_CAMERAS_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_CAMERAS_NETWORK_NAME"'") |.uuid')
-# Force scan of cameras network
-$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/scan -d uuid=$TVHEADEND_CAMERAS_NETWORK_UUID > /dev/null 2>&1
+cctv_scan_add_muxes () {
+TVHEADEND_CCTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_CCTV_NETWORK_NAME"'") |.uuid')
+# Force scan of CCTV network
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/scan -d uuid=$TVHEADEND_CCTV_NETWORK_UUID > /dev/null 2>&1
 }
 
-cameras_add_channel_tags () {
-# Remove previous temp script file for creating cameras channel tags
-[[ -e $TVHEADEND_CAMERAS_CREATE_CHAN_TAG_TEMP_FILE ]] && sudo rm -f $TVHEADEND_CAMERAS_CREATE_CHAN_TAG_TEMP_FILE 
+cctv_add_channel_tags () {
+# Remove previous temp script file for creating CCTV channel tags
+[[ -e $TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE ]] && sudo rm -f $TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE 
 
-# Cycle through playlist m3u8 file for cameras channel tag
-cat ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CAMERAS_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | sort -u | while read CAMERA_CHANNEL
+# Cycle through playlist m3u8 file for CCTV channel tag
+cat ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CCTV_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | sort -u | while read CCTV_CHANNEL
 do
-TAG_NAME=$CAMERA_CHANNEL 
+TAG_NAME=$CCTV_CHANNEL 
 TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | head -1)
 TAG_EXISTS_COUNT=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | wc -l)
 
 # Test for existence of channel tag and ensure no duplicates are created
 if [[ "$TAG_EXISTS" != "true" || "$TAG_EXISTS_COUNT" = "0" ]];
 then
-# Add Cameras channel tags creation command to temp file
-cat >> $TVHEADEND_CAMERAS_CREATE_CHAN_TAG_TEMP_FILE <<EOF
+# Add CCTV channel tags creation command to temp file
+cat >> $TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE <<EOF
 # $CHANNEL_NAME
 # -------------
 # Add channel tag to backend
@@ -1014,23 +1134,23 @@ fi
 
 done
 
-# Create cameras channels script
-if [[ -e $TVHEADEND_CAMERAS_CREATE_CHAN_TAG_TEMP_FILE ]];
+# Create CCTV channels script
+if [[ -e $TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE ]];
 then
-# Prepare create cameras channels script
-sed -i '1i #!/bin/sh' "$TVHEADEND_CAMERAS_CREATE_CHAN_TAG_TEMP_FILE"
-chmod 755 $TVHEADEND_CAMERAS_CREATE_CHAN_TAG_TEMP_FILE
-# Run script to create cameras channels
-$TVHEADEND_CAMERAS_CREATE_CHAN_TAG_TEMP_FILE
+# Prepare create CCTV channels script
+sed -i '1i #!/bin/sh' "$TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE"
+chmod 755 $TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE
+# Run script to create CCTV channels
+$TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE
 # Pause for a bit to allow TV channels to be added properly
 # IMPORTANT: If left out, channels will not be mapped to services
 sleep 3
 # Remove temp script file
-rm -f $TVHEADEND_CAMERAS_CREATE_CHAN_TAG_TEMP_FILE
+rm -f $TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE
 fi
 }
 
-cameras_map_services_2_channels () {
+cctv_map_services_2_channels () {
 # Notify of CCTV network mapping start
 # Source notification strings
 set_notifications
@@ -1042,19 +1162,19 @@ print_notification "$CCTV_CHANNEL_MAP_STARTED_MESSAGE" osd
 # Remove dead channels
 zap_dead_channels
 #
-$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.text | contains("'${TVHEADEND_CAMERAS_NETWORK_NAME}'")).uuid' > $TVHEADEND_CAMERAS_SERVICE_UUIDS_RAW_FILE
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.text | contains("'${TVHEADEND_CCTV_NETWORK_NAME}'")).uuid' > $TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE
 
 # Remove previous temp script file for creating DVB channels
-[[ -e $TVHEADEND_CAMERAS_CREATE_CHAN_TEMP_FILE ]] && sudo rm -f $TVHEADEND_CAMERAS_CREATE_CHAN_TEMP_FILE 
+[[ -e $TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE ]] && sudo rm -f $TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE 
 #
-# Cycle through cameras services
-cat $TVHEADEND_CAMERAS_SERVICE_UUIDS_RAW_FILE | while read SERVICE_UUID
+# Cycle through CCTV services
+cat $TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE | while read SERVICE_UUID
 do
-CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.uuid=="'$SERVICE_UUID'") | .text' | sed "s:$TVHEADEND_CAMERAS_NETWORK_NAME/$PLAYLISTS_CAMERAS_LOCAL_M3U_FILE - ::g"| cut -d / -f2-)
-# Extract channel number from cameras playlist
-CHANNEL_NUMBER=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CAMERAS_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d = -f5 | awk {'print $1'} | sed 's:"::g' | head -1)
-CHANNEL_LOGO=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CAMERAS_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d = -f4 | awk {'print $1'} | sed 's:"::g' | head -1)
-CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CAMERAS_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
+CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.uuid=="'$SERVICE_UUID'") | .text' | sed "s:$TVHEADEND_CCTV_NETWORK_NAME/$PLAYLISTS_CCTV_LOCAL_M3U_FILE - ::g"| cut -d / -f2-)
+# Extract channel number from CCTV playlist
+CHANNEL_NUMBER=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CCTV_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d = -f5 | awk {'print $1'} | sed 's:"::g' | head -1)
+CHANNEL_LOGO=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CCTV_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d = -f4 | awk {'print $1'} | sed 's:"::g' | head -1)
+CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CCTV_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
 CHANNEL_TAG=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/list?limit=100000 | jq -r '.entries[] | select(.val=="'${CHANNEL_CATEGORY}'") | .key')
 #
 # Check if channel already exists
@@ -1068,10 +1188,10 @@ CHANNEL_EXISTS=$?
 SERVICE_URL="$TVHEADEND_PLAY_STREAM_URL/service/$SERVICE_UUID"
 
 # Probe remote stream using ffprobe i.e. play mux briefly to add service
-$FFPROBE_CMD $FFPROBE_OPTS $SERVICE_URL 2>&1 | tee -a $TVHEADEND_CAMERAS_INFO_LOG_FILE 
+$FFPROBE_CMD $FFPROBE_OPTS $SERVICE_URL 2>&1 | tee -a $TVHEADEND_CCTV_INFO_LOG_FILE 
 
-# Add cameras channel creation command to temp file
-cat >> $TVHEADEND_CAMERAS_CREATE_CHAN_TEMP_FILE <<EOF
+# Add cctv channel creation command to temp file
+cat >> $TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE <<EOF
 # $CHANNEL_NAME
 # -------------
 # Add channel to TVHeadend backend
@@ -1079,7 +1199,7 @@ $CURL_CMD $CURL_OPTS -d "\$(printf $(echo -n $(cat <<EOT
 conf='{
 	"enabled": true,
 	"number": $CHANNEL_NUMBER,
-	"icon": "file://$PROJECT_SYSTEM_ICONS_DIR/Cameras/$CHANNEL_LOGO",
+	"icon": "file://$PROJECT_SYSTEM_ICONS_DIR/CCTV/$CHANNEL_LOGO",
 	"epgauto": true,
 	"dvr_pre_time": 0,
 	"dvr_pst_time": 0,
@@ -1103,19 +1223,19 @@ EOF
 
 done
 
-# Create cameras channels script
-if [[ -e $TVHEADEND_CAMERAS_CREATE_CHAN_TEMP_FILE ]];
+# Create CCTV channels script
+if [[ -e $TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE ]];
 then
-# Prepare create cameras channels script
-sed -i '1i #!/bin/sh' "$TVHEADEND_CAMERAS_CREATE_CHAN_TEMP_FILE"
-chmod 755 $TVHEADEND_CAMERAS_CREATE_CHAN_TEMP_FILE
-# Run script to create cameras channels
-$TVHEADEND_CAMERAS_CREATE_CHAN_TEMP_FILE
-# Pause for a bit to allow cameras channels to be added properly
+# Prepare create CCTV channels script
+sed -i '1i #!/bin/sh' "$TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE"
+chmod 755 $TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE
+# Run script to create CCTV channels
+$TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE
+# Pause for a bit to allow CCTV channels to be added properly
 # IMPORTANT: If left out, channels will not be mapped to services
 sleep 3
 # Remove temp script file
-rm -f $TVHEADEND_CAMERAS_CREATE_CHAN_TEMP_FILE
+rm -f $TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE
 fi
 
 # Notify of CCTV network mapping complete
@@ -1125,6 +1245,36 @@ set_notifications
 print_notification "$CCTV_CHANNEL_MAP_COMPLETED_MESSAGE" text
 # Print notification using OSD tool
 print_notification "$CCTV_CHANNEL_MAP_COMPLETED_MESSAGE" osd
+}
+
+
+# Group functions
+# ---------------
+dvb_functions_task_all () {
+	tvheadend_dvbt_configure
+	zap_dead_services
+	dvb_scan_add_muxes
+	dvb_add_channel_tags
+	dvb_map_services_2_channels
+	dvb_refresh_epg_data
+	refresh_tvh_kodi_icons
+	notify_tv_server_controller_completed
+}
+
+iptv_functions_task_all () {
+	iptv_get_fresh_playlist
+	iptv_scan_add_services
+	iptv_add_channel_tags
+	iptv_map_services_2_channels
+	iptv_refresh_epg_data
+	refresh_tvh_kodi_icons
+	notify_tv_server_controller_completed
+}
+
+cctv_functions_task_all () {
+	cctv_scan_add_muxes
+	cctv_add_channel_tags
+	cctv_map_services_2_channels
 }
 
 
@@ -1155,14 +1305,22 @@ usage_and_pre_start_dvb
 	dvb_add_channel_tags && \
 	dvb_map_services_2_channels
 
+# Refresh epg if requested
+[[ "$TV_TASK" = "epg" ]] && \
+	dvb_refresh_epg_data 
+
+# Refresh TV icons
+[[ "$TV_TASK" = "icons" ]] && \
+	refresh_tvh_kodi_icons
+
 # All tasks {scan+map} 
 [[ "$TV_TASK" = "all" ]] && \
-	$(basename $0) dvb scan && \
-	$(basename $0) dvb map
+	dvb_functions_task_all
 
 # Repair damaged DVB-T/T2
 [[ "$TV_TASK" = "repair" ]] && \
-	check_health_of_dvb_tvheadend_network
+	check_health_of_dvb_tvheadend_network && \
+	refresh_tvh_kodi_icons
 ;;
 
 iptv)
@@ -1173,12 +1331,12 @@ usage_and_pre_start_iptv
 [[ "$TV_TASK" != "map" ]] && \
 	check_internet_connectivity_ping 1
 
-# Fetch fresh playlist if get is requested
-[[ "$TV_TASK" = "get" ]] && \
+# Fetch fresh playlist if m3u is requested
+[[ "$TV_TASK" = "m3u" ]] && \
 	iptv_get_fresh_playlist
 
-# Add IPTV Network if not fetching playlists
-[[ "$TV_TASK" = "get" ]] || \
+# Add IPTV Network (except for m3u, epg, icons)
+[[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]] || \
 	configure_iptv_network
 
 # Add Services i.e. Manually play each mux found
@@ -1190,34 +1348,40 @@ usage_and_pre_start_iptv
 	iptv_add_channel_tags && \
 	iptv_map_services_2_channels
 
-# All tasks {get+scan+map} 
+# Download and refresh epg if requested
+[[ "$TV_TASK" = "epg" ]] && \
+	iptv_refresh_epg_data
+
+# Refresh TV icons
+[[ "$TV_TASK" = "icons" ]] && \
+	refresh_tvh_kodi_icons
+
+# All tasks {m3u+scan+map+epg} 
 [[ "$TV_TASK" = "all" ]] && \
-	$(basename $0) iptv get && \
-	$(basename $0) iptv scan && \
-	$(basename $0) iptv map
+	iptv_functions_task_all
 ;;
 
-cameras)
+cctv)
 # Usage - cctv
-usage_and_pre_start_cameras
+usage_and_pre_start_cctv
 
-# Add cameras network
-configure_cameras_network
+# Add CCTV network
+configure_cctv_network
 
 # Scan
 [[ "$TV_TASK" = "scan" ]] && \
-	cameras_scan_add_muxes 
+	cctv_scan_add_muxes 
 
 # Map
 [[ "$TV_TASK" = "map" ]] && \
-	cameras_add_channel_tags && \
-	cameras_map_services_2_channels
+	cctv_add_channel_tags && \
+	cctv_map_services_2_channels
 
 # All tasks {scan+map} 
 [[ "$TV_TASK" = "all" ]] && \
-	$(basename $0) cameras scan && \
-	$(basename $0) cameras map
+	cctv_functions_task_all
 ;;
+
 esac
 
 post_config
