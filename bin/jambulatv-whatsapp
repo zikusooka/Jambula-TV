@@ -1,6 +1,13 @@
 #!/bin/sh
 # Use this script to register for whatsapp; and then to send and receive messages
-# Fixed Variables
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
 # MCC/MNC table is pulled from http://mcc-mnc.com
 MCC_MNC_TABLE_FILE_URL=https://github.com/musalbas/mcc-mnc-table/raw/master/mcc-mnc-table.csv
 MCC_MNC_TABLE_FILE=/usr/share/JambulaTV/mobile_providers/mcc-mnc-table.csv
@@ -91,25 +98,11 @@ fi
 esac
 }
 
-check_internet_access () {
-# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
-ping -w $PING_TIMEOUT $PING_IP_ADDRESS > /dev/null 2>&1
-INTERNET_ALIVE=$?
-if [ "$INTERNET_ALIVE" != "0" ];
-then
-#
-cat <<EOF
-ERROR ($(basename $basename $0)): Unable to connect to WhatsApp. Check your Internet connection"
-EOF
-exit 0
-fi
-}
-
 pre_start_tasks () {
 usage
-#
-check_internet_access
-#
+
+check_internet_connectivity_ping 0 whatsapp.com
+
 # Wait if another instance of me is running
 while [ -e "$ANOTHER_INSTANCE_TEMP_FILE" ];
 do
