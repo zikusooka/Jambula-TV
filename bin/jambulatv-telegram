@@ -1,4 +1,12 @@
 #!/bin/sh
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
 TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
 TELEGRAM_TOOL=$0
 TELEGRAM_METHOD_NAME=$1
@@ -193,10 +201,13 @@ echo
 
 
 
-# Main Script
-# -----------
-#
+#################
+#  MAIN SCRIPT  #
+#################
+
 usage
+
+check_internet_connectivity_ping 0 telegram.com
 
 case $TELEGRAM_METHOD_NAME in
 [Ss][Ee][Nn][Dd][Mm][Ee][Ss][Ss][Aa][Gg][Ee])
