@@ -928,7 +928,7 @@ FMRADIO_STREAMER_PORT=$(grep -i 'fmradio streamer$' $PORTS_ASSIGNED_FILE | awk {
 ############################
 # Set notifications for logging purposes
 set_notifications () {
-NO_INTERNET_NOTIFICATION_MESSAGE="Error: I was unable to connect to the Internet.  Please try again later! {Error $EXIT_VALUE}"
+NO_INTERNET_NOTIFICATION_MESSAGE="Error: There's no Internet connection currently.  The host ($PING_FAILED_REMOTE_HOST_NAME) is unreachable, please try again later!"
 FTP_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 WGET_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 TVHEADEND_RESET_MESSAGE="Reset of TV server has been requested"
@@ -1011,18 +1011,32 @@ export PYTHON_VERSION PYTHON_FULL_VERSION_NUMBER PYTHON_MAJOR_VERSION_NUMBER PYT
 }
 
 check_internet_connectivity_ping () {
-# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
-REMOTE_HOST_NAME="4.4.4.4"
+# Default remote hostname to ping
+DEFAULT_REMOTE_HOST_NAME_2_PING=google.com
 PING_COUNT=3
 PING_TIMEOUT=3
+PING_OUTPUT_RESULT=$1
+PING_HOST_NAME=$2
 # Set exit value specified on command line
-if [ "x$1" = "x" ];
+if [[ "x$PING_OUTPUT_RESULT" = "x" ]];
 then
 EXIT_VALUE=0
 else
-EXIT_VALUE=$1
+EXIT_VALUE=$PING_OUTPUT_RESULT
 fi
-# Ping
+#
+# Remote hostname to ping
+# IMPORTANT: Don't use DNS to ping use actual IP i.e. convert DNS name to IP address
+if [[ "x$PING_HOST_NAME" = "x" ]];
+then
+REMOTE_HOST_NAME=$(dig +short $DEFAULT_REMOTE_HOST_NAME_2_PING A @8.8.8.8 | head -1)
+PING_FAILED_REMOTE_HOST_NAME=$DEFAULT_REMOTE_HOST_NAME_2_PING
+else
+REMOTE_HOST_NAME=$(dig +short $PING_HOST_NAME A @8.8.8.8 | head -1)
+PING_FAILED_REMOTE_HOST_NAME=$PING_HOST_NAME
+fi
+#
+# Ping to check for internet connectivity
 ping -c $PING_COUNT -W $PING_TIMEOUT $REMOTE_HOST_NAME > /dev/null 2>&1
 INTERNET_STATUS_VAL=$?
 #
