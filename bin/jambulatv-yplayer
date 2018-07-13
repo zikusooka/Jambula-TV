@@ -102,10 +102,10 @@ YOUTUBE_MANIFEST_URL="$(grep YOUTUBE_MANIFEST_URL $YOUTUBE_VARIABLES_TEMP_FILE |
 ###############################################################################
 if [[ "$FFMPEG_DEBUG_LOG" = "yes" ]];
 then
-FFMPEG_FULL_COMMAND="FFREPORT=file=$FFMPEG_LOG_FILE:level=$LOG_LEVEL $FFMPEG_CMD -loglevel $LOG_LEVEL -hide_banner -nostats -user_agent \"$IPTV_USER_AGENT\" -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -probesize $FFMPEG_PROBE_SIZE -analyzeduration $FFMPEG_ANALYZE_DURATION -i $YOUTUBE_MANIFEST_URL -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=\"$IPTV_SERVICE_NAME\" -codec $FFMPEG_CODECS $FFMPEG_FILTERS $FFMPEG_OTHER_OPTS -f $FFMPEG_FORMAT pipe:1"
+FFMPEG_FULL_COMMAND="FFREPORT=file=$FFMPEG_LOG_FILE:level=$LOG_LEVEL $FFMPEG_CMD -loglevel $LOG_LEVEL -hide_banner -nostats -user_agent \"$IPTV_USER_AGENT\" -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -probesize $FFMPEG_PROBE_SIZE -analyzeduration $FFMPEG_ANALYZE_DURATION -i $YOUTUBE_MANIFEST_URL -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=$METADATA_SERVICE_NAME -codec $FFMPEG_CODECS $FFMPEG_FILTERS $FFMPEG_OTHER_OPTS -f $FFMPEG_FORMAT pipe:1"
 
 else
-FFMPEG_FULL_COMMAND="$FFMPEG_CMD -loglevel $LOG_LEVEL -hide_banner -nostats -user_agent \"$IPTV_USER_AGENT\" -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -probesize $FFMPEG_PROBE_SIZE -analyzeduration $FFMPEG_ANALYZE_DURATION -i $YOUTUBE_MANIFEST_URL -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=\"$IPTV_SERVICE_NAME\" -codec $FFMPEG_CODECS $FFMPEG_FILTERS $FFMPEG_OTHER_OPTS -f $FFMPEG_FORMAT pipe:1"
+FFMPEG_FULL_COMMAND="$FFMPEG_CMD -loglevel $LOG_LEVEL -hide_banner -nostats -user_agent \"$IPTV_USER_AGENT\" -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -probesize $FFMPEG_PROBE_SIZE -analyzeduration $FFMPEG_ANALYZE_DURATION -i $YOUTUBE_MANIFEST_URL -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=$METADATA_SERVICE_NAME -codec $FFMPEG_CODECS $FFMPEG_FILTERS $FFMPEG_OTHER_OPTS -f $FFMPEG_FORMAT pipe:1"
 fi
 ###############################################################################
 export FFMPEG_FULL_COMMAND
