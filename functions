@@ -854,6 +854,9 @@ ASTERISK_DIAL_OUT_NUMBER_1=""
 VNSTAT_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/vnstat
 VNSTAT_CONFIG_FILE=$VNSTAT_CONFIG_DIR/vnstat.conf
 
+# Bandwidth
+BANDWIDTH_USAGE_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/bandwidth
+
 ARIA2_DOWNLOAD_COMPLETE_BT_TOOL=
 ARIA2_DOWNLOAD_COMPLETE_TOOL=
 ARIA2_DOWNLOAD_ERROR_TOOL=
@@ -7939,6 +7942,11 @@ bandwidth_measurement_setup () {
 [[ -e $BANDWIDTH_TOOL ]] || cp -v $PROJECT_BIN_DIR/jambulatv-bandwidth $BANDWIDTH_TOOL
 # Make tool executable
 chmod 755 $BANDWIDTH_TOOL
+
+# Create bandwidth usage logs directory if non-existent
+[ -d $BANDWIDTH_USAGE_LOG_DIR ] || mkdir -p $BANDWIDTH_USAGE_LOG_DIR
+# Give jambulatv user permissions to log directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $BANDWIDTH_USAGE_LOG_DIR
 
 # Bandwidth Query systemd unit
 # -----------------------------
