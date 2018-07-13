@@ -146,7 +146,7 @@ fi
 
 generate_debug_log () {
 PARENT_COMMAND="$(ps -o comm= $PPID)"
-cat >> $PROJECT_SYSTEM_LOG_DIR/$(basename $0).log <<EOT
+cat >> $TVHEADEND_LOG_DIR/$(basename $0).log <<EOT
 
 $(date +'%b %d %I:%M:%S') [$PARENT_COMMAND] Running '$(basename $0) $TV_TYPE $TV_TASK'
 -----------------------------------------------------------------------------------------

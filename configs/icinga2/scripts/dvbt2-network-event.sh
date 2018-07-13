@@ -10,8 +10,8 @@ SERVICE_DATE=$LONGDATETIME
 SERVICE_DISPLAY_NAME=$SERVICEDISPLAYNAME
 
 SERVICE_REPAIR_COMMAND="/usr/bin/jambulatv-tvheadend-controller dvb repair"
-SERVICE_REPAIR_LOG_DIR="/var/log/JambulaTV"
-SERVICE_REPAIR_LOG_FILE="$SERVICE_REPAIR_LOG_DIR/tvheadend-dvb-repair.log"
+SERVICE_REPAIR_LOG_DIR="/var/log/JambulaTV/tvheadend"
+SERVICE_REPAIR_LOG_FILE="$SERVICE_REPAIR_LOG_DIR/dvb-repair.log"
 
 
 
