@@ -928,7 +928,7 @@ FMRADIO_STREAMER_PORT=$(grep -i 'fmradio streamer$' $PORTS_ASSIGNED_FILE | awk {
 ############################
 # Set notifications for logging purposes
 set_notifications () {
-NO_INTERNET_NOTIFICATION_MESSAGE="Error: There's no Internet connection currently.  The host ($PING_FAILED_REMOTE_HOST_NAME) is unreachable, please try again later!"
+NO_INTERNET_NOTIFICATION_MESSAGE="Error: The host ($PING_FAILED_REMOTE_HOST_NAME) is unreachable. It is likely that there is no Internet connection, please try again later!"
 FTP_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 WGET_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 TVHEADEND_RESET_MESSAGE="Reset of TV server has been requested"
