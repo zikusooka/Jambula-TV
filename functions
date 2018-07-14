@@ -184,6 +184,8 @@ TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
 TVHEADEND_TIMESHIFT_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/timeshift
 TVHEADEND_TIMESHIFT_BUFFER_FILE=$TMPDIR/timeshift_buffer
 TVHEADEND_DVR_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/dvr/config
+TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE=/tmp/create_dvr_profile.sh
+
 TVHEADEND_IMAGE_CACHE_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/imagecache
 
 TVHEADEND_ADAPTERS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/linuxdvb/adapters
@@ -882,6 +884,7 @@ EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
 TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
 TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controller 
+TVHEADEND_PROCESSOR_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-processor
 VLM_VOD_CREATE_TOOL=$BINARY_PREFIX/jambulatv-create-video-on-demand
 VLM_VOD_DELETE_TOOL=$BINARY_PREFIX/jambulatv-delete-video-on-demand
 WHATSAPP_TOOL=$BINARY_PREFIX/jambulatv-whatsapp
@@ -3385,6 +3388,97 @@ print_notification "$DVBT_PICONS_NOT_FOUND_MESSAGE" osd
 fi
 }
 
+tvheadend_create_dvr_profile_mkv () {
+# Make sure tvheadend is running before extracting recording profile
+sudo systemctl -q is-active tvheadend.service || sudo systemctl start tvheadend.service
+TVHEADEND_PROFILE_PASS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/profile/list | jq -r '.entries[0].key')
+TVHEADEND_PROFILE_MKV=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/profile/list | jq -r '.entries[1].key')
+
+# Remove created default passthrough DVR entry, only one needs to exist for recordings
+rm -f $TVHEADEND_DVR_CONFIG_DIR/*
+#
+# Remove previous temp script file for creating DVR profile
+[[ -e $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE ]] && sudo rm -f $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE 
+#
+# Add DVR profile creation command to temp file
+cat >> $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE <<EOF
+# Add default DVR profile to backend
+$CURL_CMD $CURL_OPTS -d "name=$PROJECT_NAME-Matroska" -d "\$(echo -n $(echo -n $(cat <<EOT
+conf='{
+	"warm-time": 30,
+	"postremove": "$TVHEADEND_PROCESSOR_TOOL remove-recording \"'\\\\u0025'f\" \"'\\\\u0025'b\" \"'\\\\u0025't\" \"'\\\\u0025'c\"",
+	"postproc": "$TVHEADEND_PROCESSOR_TOOL post-recording \"'\\\\u0025'f\" \"'\\\\u0025'b\" \"'\\\\u0025't\" \"'\\\\u0025'c\" \"'\\\\u0025'S\" \"'\\\\u0025'E\"",
+	"preproc": "$TVHEADEND_PROCESSOR_TOOL pre-recording \"'\\\\u0025'f\" \"'\\\\u0025'b\" \"'\\\\u0025't\" \"'\\\\u0025'c\"",
+	"skip-commercials": true,
+	"autorec-maxsched": 0,
+	"autorec-maxcount": 0,
+	"epg-running": true,
+	"epg-update-window": 86400,
+	"tag-files": true,
+	"windows-compatible-filenames": false,
+	"whitespace-in-title": true,
+	"directory-permissions": "0775",
+	"storage-mused": 0,
+	"storage-mfree": 1000,
+	"storage": "$USER_TV_RECORDINGS_DIR",
+	"comment": "$PROJECT_NAME Recording Profile (Matroska)",
+	"rerecord-errors": 0,
+	"clone": true,
+	"post-extra-time": 5,
+	"name": "$PROJECT_NAME",
+	"profile": "$TVHEADEND_PROFILE_MKV",
+	"pri": 1,
+	"retention-days": 1,
+	"removal-days": 2147483647,
+	"pre-extra-time": 2,
+	"file-permissions": "0664",
+	"charset": "UTF-8",
+	"pathname": "'\\\\u0025'F/\$t\$-c-\$.s'\\\\u0025'R\$n.\$x",
+	"cache": 2,
+	"day-dir": true,
+	"channel-dir": false,
+	"title-dir": false,
+	"format-tvmovies-subdir": "tvmovies",
+	"format-tvshows-subdir": "tvshows",
+	"channel-in-title": true,
+	"date-in-title": false,
+	"time-in-title": true,
+	"episode-in-title": false,
+	"subtitle-in-title": true,
+	"omit-title": false,
+	"clean-title": false
+}'
+EOT
+)
+))" $TVHEADEND_API_URL/dvr/config/create > /dev/null 2>&1
+#
+# Notify - Default DVR profile added
+logger -s -t $(basename $0) "Default DVR profile $PROJECT_NAME (matroska) added"
+
+EOF
+#
+# Create DVR profile script
+if [[ -e $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE ]];
+then
+# Prepare create DVR profile script
+sed -i '1i #!/bin/sh' "$TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE"
+chmod 755 $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE
+#
+# Run script to create DVR profile
+$TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE
+#
+# Pause for a bit to allow  DVR profile to be added properly
+sleep 3
+# Remove temp script file
+rm -f $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE
+fi
+#
+#
+TVHEADEND_DVR_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/config/grid?limit=100000 | jq -r '.entries[0] | select(.name=="'"$PROJECT_NAME"'") |.uuid')
+# Export DVR profile UUID
+export TVHEADEND_DVR_UUID
+}
+
 tvheadend_configure () {
 # Add DVB TV Icons
 # ----------------
@@ -3502,62 +3596,9 @@ cat > $TVHEADEND_TIMESHIFT_CONFIG_DIR/config << EOF
 }
 EOF
 
-# Configure recording profile for JambulaTV 
-# -----------------------------------------
-# Make sure tvheadend is running before extracting recording profile
-sudo systemctl -q is-active tvheadend.service || sudo systemctl start tvheadend.service
-TVHEADEND_PROFILE_PASS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/profile/list | jq -r '.entries[0].key')
-
-TVHEADEND_DVR_UUID=$(uuidgen -t | sed 's:-::g')
-
-# Remove created default passthrough DVR entry, only one needs to exist for recordings
-rm -f $TVHEADEND_DVR_CONFIG_DIR/*
-#
-cat > $TVHEADEND_DVR_CONFIG_DIR/$TVHEADEND_DVR_UUID << EOF
-{
-	"enabled": true,
-	"name": "",
-	"comment": "JambulaTV TV Recording (Pass)",
-	"profile": "$TVHEADEND_PROFILE_PASS",
-	"pri": 0,
-	"cache": 2,
-	"retention-days": 1,
-	"removal-days": 2147483647,
-	"clone": true,
-	"rerecord-errors": 0,
-	"warm-time": 30,
-	"pre-extra-time": 2,
-	"post-extra-time": 5,
-	"epg-update-window": 86400,
-	"epg-running": false,
-	"autorec-maxcount": 0,
-	"autorec-maxsched": 0,
-	"preproc": "jambulatv-tvheadend-processor pre-recording \"%f\" \"%b\" \"%t\" \"%c\"",
-	"postproc": "jambulatv-tvheadend-processor post-recording \"%f\" \"%b\" \"%t\" \"%c\" \"%S\" \"%E\"",
-	"postremove": "jambulatv-tvheadend-processor remove-recording \"%f\" \"%b\" \"%t\" \"%c\"",
-	"storage": "$USER_TV_RECORDINGS_DIR",
-	"storage-mfree": 1000,
-	"storage-mused": 0,
-	"file-permissions": "0664",
-	"charset": "ASCII",
-	"tag-files": true,
-	"skip-commercials": true,
-	"pathname": "%F/\$t\$-c-\$.s%R\$n.\$x",
-	"directory-permissions": "0775",
-	"day-dir": true,
-	"channel-dir": false,
-	"title-dir": false,
-	"channel-in-title": true,
-	"date-in-title": false,
-	"time-in-title": true,
-	"episode-in-title": false,
-	"subtitle-in-title": true,
-	"omit-title": false,
-	"clean-title": false,
-	"whitespace-in-title": true,
-	"windows-compatible-filenames": false
-}
-EOF
+# Create recording profile for JambulaTV (matroska)
+# -------------------------------------------------
+tvheadend_create_dvr_profile_mkv
 
 # TVHeadend Logging
 # -----------------
