@@ -1,8 +1,10 @@
-/var/log/JambulaTV/iptv/* {
+MY_TVHEADEND_IPTV_LOG_DIR/* {
 	weekly
-	missingok
-	rotate 52
+	rotate 0
 	compress
+	missingok
 	notifempty
+	size 30M
+	create 0600 jambula video
+	maxage 7
 }
-

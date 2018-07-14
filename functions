@@ -3094,7 +3094,9 @@ cat $PROJECT_INIT_SCRIPTS_DIR/tvheadend.service | \
 systemctl enable tvheadend.service
 
 # Copy logrotate file to reduce size of tvheadend log
-cp -v $PROJECT_CONFIGS_DIR/logrotate/tvheadend $LOGROTATE_CONF_DIR/
+cat $PROJECT_CONFIGS_DIR/logrotate/tvheadend | \
+	sed "s:MY_TVHEADEND_LOG_FILE:$TVHEADEND_LOG_FILE:g" \
+		> $LOGROTATE_CONF_DIR/tvheadend
 }
 
 dvb_tvheadend_adapter_add () {
@@ -4429,6 +4431,11 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-iptv-maintenance.timer $SYSTEMD_UNITS_
 # Enable and start timer
 systemctl enable jambulatv-iptv-maintenance.timer
 systemctl start jambulatv-iptv-maintenance.timer
+
+# Copy logrotate file to reduce size of iptv logs
+cat $PROJECT_CONFIGS_DIR/logrotate/iptv | \
+	sed "s:MY_TVHEADEND_IPTV_LOG_DIR:$TVHEADEND_IPTV_LOG_DIR:g" \
+		> $LOGROTATE_CONF_DIR/iptv
 }
 
 iptv_icons_add () {
