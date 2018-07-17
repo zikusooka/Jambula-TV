@@ -1,0 +1,11 @@
+--- dvr_config.c.orig	2018-03-12 12:13:19.574991393 +0300
++++ dvr_config.c	2018-07-17 11:55:58.707517856 +0300
+@@ -51,7 +51,7 @@
+   dvr_config_t *cfg;
+ 
+   if (name == NULL)
+-    name = "";
++    name = "DVR_PROFILE_NAME";
+ 
+   LIST_FOREACH(cfg, &dvrconfigs, config_link)
+     if (cfg->dvr_enabled && !strcmp(name, cfg->dvr_config_name))

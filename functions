@@ -3078,6 +3078,11 @@ rsync -avz $PROJECT_GITHUB_DIR/tvheadend/ $INSTALL_SRC_DIR/tvheadend/
 # Change to tvheadend directory
 cd $INSTALL_SRC_DIR/tvheadend
 #
+# Patch: Change default DVR profile from null to our name i.e. JambulaTV
+cat $PROJECT_PATCHES_DIR/tvheadend.dvr_config.patch \
+	| sed -e "s:DVR_PROFILE_NAME:$PROJECT_NAME:g" > $TMPDIR/tvheadend.dvr_config.patch
+patch -p1 $INSTALL_SRC_DIR/tvheadend/src/dvr/dvr_config.c < $TMPDIR/tvheadend.dvr_config.patch
+#
 # Patch: Increase timeout when playing IPTV muxes for slow Internet connections
 patch -p1 $INSTALL_SRC_DIR/tvheadend/src/webui/webui.c < $PROJECT_PATCHES_DIR/tvheadend.webui.patch
 #
