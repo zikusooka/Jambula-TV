@@ -7949,6 +7949,12 @@ screen_display_configure () {
 	cp -v $PROJECT_BIN_DIR/jambulatv-display $BINARY_PREFIX/
 }
 
+screenshots_configure () {
+# Copy jambulatv-screenshots script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-screenshots ] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-screenshots $BINARY_PREFIX/
+}
+
 vnstat_install () {
 # unpack
 rsync -avz $PROJECT_GITHUB_DIR/vnstat/ $INSTALL_SRC_DIR/vnstat/

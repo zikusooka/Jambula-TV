@@ -1,0 +1,60 @@
+#!/bin/sh
+# This tool takes a screenshot of what is currently showing on screen, and sends
+# The image to recipient using WhatsApp and Telegram
+#
+# Jambula Labs @copyright 2018-2019 All rights reserved
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+SCREENSHOT_CMD=/usr/bin/scrot
+SCREENSHOTS_DIR=$TMPDIR/screenshots
+SCREENSHOT_DELAY=1
+SCREENSHOT_OPTS="-d $SCREENSHOT_DELAY"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+create_screenshots_dir () {
+# Create temporary screenshots directory if non-existent
+[[ -d $SCREENSHOTS_DIR ]] || mkdir -p $SCREENSHOTS_DIR
+}
+
+grab_screenshots () {
+for SCREENSHOT_FILENAME in one two three
+do
+$SCREENSHOT_CMD $SCREENSHOT_OPTS $SCREENSHOTS_DIR/take-${SCREENSHOT_FILENAME}.png
+done
+}
+
+send_screenshot_using_telegram () {
+for SCREENSHOT_FILENAME in $(find $SCREENSHOTS_DIR -type f -iname "*.png")
+do
+$TELEGRAM_TOOL SendImageDisk $SCREENSHOT_FILENAME
+done
+}
+
+send_screenshot_using_whatsapp () {
+sudo $WHATSAPP_TOOL sendimage $SCREENSHOT_FILENAME $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
+}
+
+delete_screenshots_sent () {
+rm -f $SCREENSHOTS_DIR/*
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+create_screenshots_dir
+grab_screenshots 
+send_screenshot_using_telegram
+send_screenshot_using_whatsapp
+delete_screenshots_sent
