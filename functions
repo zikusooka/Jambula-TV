@@ -40,6 +40,7 @@ KERNELS_SRC_DIR=/usr/src/kernels
 SPOOLDIR=$STATEDIR/spool
 VARLIBDIR=$STATEDIR/lib
 LOGDIR=$STATEDIR/log
+CACHEDIR=$STATEDIR/cache
 BINARY_PREFIX=/usr/bin
 SBINARY_PREFIX=/usr/sbin
 # Libraries directory
@@ -559,7 +560,10 @@ ZONEMINDER_DB_USER=jambulatv
 ZONEMINDER_DB_PASS=jambulatvzm3
 ZONEMINDER_WWW_PORT=$(grep -i 'ZoneMinder$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 ZONEMINDER_ZMS_INETD_PORT=8521
-ZONEMINDER_EVENTS_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/CCTV-Events
+ZONEMINDER_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/zoneminder
+ZONEMINDER_CONTENT_DIR=$MULTIMEDIA_USER_HOME_DIR/CCTV
+ZONEMINDER_SOUNDS_DIR=$PROJECT_SYSTEM_SHARE_DIR/sounds/zoneminder
+ZONEMINDER_WWW_ROOT_DIR=$WWW_HTML_DIR/zm
 
 # Motion Database Variables
 MOTION_DB_HOST=localhost
@@ -1483,28 +1487,47 @@ rm -rf $WWW_HTML_DIR/icingaweb2/
 uninstall_zoneminder () {
 # Stop processes
 systemctl stop zoneminder.service
-kill $(ps auxw | grep zm | awk {'print $2'})
+
+# Set PID of zoneminder processes still lingering
+PID_ZONEMINDER=$(ps auxw | grep zm | awk {'print $2'})
+#
+# Kill zoneminder processes still lingering
+[ "x$PID_ZONEMINDER" = "x" ] || kill -15 $PID_ZONEMINDER
+
+# Backup config directory
+[[ -d $ZONEMINDER_CONFIG_DIR ]] && \
+	mv -v $ZONEMINDER_CONFIG_DIR $ZONEMINDER_CONFIG_DIR.$(date +%Y%m%d)
+
 # Drop database data for tests/new installs
+clear
 echo "
-CAUTION: Take care here - ZoneMinder data is about to be dropped !!!
-====================================================================
+CAUTION: Take care here - ZoneMinder files, logs and database about to be dropped !!!
+
+Are you sure you want to proceed? If not, Press 'Ctrl+C' to back out
+
+=======================================================================================
 "
 mysqladmin -p$MYSQL_ROOT_PASSWORD drop $ZONEMINDER_DB_NAME
-# Uninstall
-cd $INSTALL_SRC_DIR/ZoneMinder && make uninstall
+
 # Uninstall ZoneMinder
-#uninstall_src_pkgs zoneminder
-rm -rf $INSTALL_SRC_DIR/ZoneMinder
+if [[ -d $INSTALL_SRC_DIR/ZoneMinder ]];
+then
+cd $INSTALL_SRC_DIR/ZoneMinder
+make uninstall
+fi
+# Remove ZM related directories
 rm -rf $DATAROOTDIR/zoneminder
-rm -rf $PROJECT_SYSTEM_CONF_DIR/zoneminder/
 rm -rf $DATAROOTDIR/perl5/vendor_perl/ZoneMinder
 rm -rf /usr/lib/perl5/vendor_perl/auto/ZoneMinder
 rm -f $MANDIR3/ZoneMinder.3pm
 rm -rf $RUNDIR/zm
-rm -rf $WWW_HTML_DIR/zm
+rm -rf $ZONEMINDER_WWW_ROOT_DIR
 rm -rf $WWW_CGI_DIR/zm
 rm -rf $STATEDIR/lib/mysql/zm
 rm -rf $PROJECT_SYSTEM_LOG_DIR/zoneminder
+rm -rf $CACHEDIR/zoneminder
+rm -rf $ZONEMINDER_SOUNDS_DIR
+rm -rf $INSTALL_SRC_DIR/ZoneMinder
 }
 
 uninstall_flexget () {
@@ -4444,12 +4467,12 @@ cat $PROJECT_CONFIGS_DIR/logrotate/iptv | \
 }
 
 iptv_icons_add () {
-# Get WWW User and Group
-set_www_user_group
 # Create picons directory if it does not exist
 [ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
 # Copy IP TV picons e.g. logos to JambulaTV share directory
 rsync -avq $PROJECT_CONTRIB_DIR/tv/picons/IPTV $PROJECT_SYSTEM_ICONS_DIR/
+# Get WWW User and Group
+set_www_user_group
 # Give permissons to TV Icons
 chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/IPTV
 }
@@ -4644,12 +4667,12 @@ chmod 755 $BINARY_PREFIX/jambulatv-camplayer
 }
 
 cctv_icons_add () {
-# Get WWW User and Group
-set_www_user_group
 # Create picons directory if it does not exist
 [ -d $PROJECT_SYSTEM_ICONS_DIR ] || mkdir -p $PROJECT_SYSTEM_ICONS_DIR
 # Copy CCTV picons e.g. logos to JambulaTV share directory
 rsync -av $PROJECT_CONTRIB_DIR/tv/picons/CCTV $PROJECT_SYSTEM_ICONS_DIR/
+# Get WWW User and Group
+set_www_user_group
 # Give permissons to TV Icons
 chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/CCTV
 }
@@ -4713,7 +4736,7 @@ cat $PROJECT_CONFIGS_DIR/kodi/sources.xml | \
 	sed -e "s:USER_PICTURES_DIR:$USER_PICTURES_DIR:g" | \
    	sed -e "s:TORRENTS_COMPLETED_DIRECTORY:$TORRENTS_COMPLETED_DIRECTORY:g" | \
 	sed -e "s:VLM_VOD_DIRECTORY:$VLM_VOD_DIRECTORY:g" | \
-	sed -e "s:ZONEMINDER_EVENTS_DIRECTORY:$ZONEMINDER_EVENTS_DIRECTORY:g" | \
+	sed -e "s:ZONEMINDER_CONTENT_DIR:$ZONEMINDER_CONTENT_DIR:g" | \
 	sed -e "s:BACKUPS_DIR:$BACKUPS_DIR:g" | \
 	sed -e "s:NEXTCLOUD_DATA_DIRECTORY:$NEXTCLOUD_DATA_DIRECTORY:g" | \
 	sed -e "s:AUTOLOGIN_USER_HOME_DIR:$AUTOLOGIN_USER_HOME_DIR:g" > $KODI_USER_DATA/sources.xml
@@ -7041,10 +7064,10 @@ systemctl start spawn-fcgi.service
 }
 
 rtgui_configure () {
-# Get WWW User and Group
-set_www_user_group
 # Unpack rtgui - Graphical frontend for rtorrent
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/rtgui/ $WWW_HTML_DIR/rtgui
+# Get WWW User and Group
+set_www_user_group
 # Create config.php file using template and copy to WWW location
 if [ ! -e $WWW_HTML_DIR/rtgui/config.php ];
 then
@@ -7222,12 +7245,12 @@ ATTRIBUTE      Max-All-Session         3000    integer" >> $FREERADIUS_DB_CONF_D
 }
 
 daloradius_configure () {
-# Get WWW User and Group
-set_www_user_group
 # Unpack daloradius - Web frontend for radius
 tar zxvf $PROJECT_TARBALLS_DIR/daloradius-*.tar.gz -C $WWW_HTML_DIR
 cd $WWW_HTML_DIR
 mv -v daloradius-* daloradius
+# Get WWW User and Group
+set_www_user_group
 # Change permissions to www
 chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/daloradius
 # Populate freeradius database tables with daloradius schema
@@ -7832,7 +7855,6 @@ EOF
 }
 
 playlists_configure () {
-set_www_user_group
 # Add playlists directory
 [ -d $PLAYLISTS_DIRECTORY ] || mkdir -p $PLAYLISTS_DIRECTORY
 # Add DVB-T Live TV playlists if any
@@ -7844,7 +7866,8 @@ ls $PROJECT_CONTRIB_DIR/tv/iptv/*.m3u* > /dev/null 2>&1 && \
 
 # Add Live Events Playlist Menu used by plugin.video.jambula.live.events
 cp -v $PROJECT_CONFIGS_DIR/kodi/live-events.xml $PLAYLISTS_DIRECTORY
-
+# Get WWW User and Group
+set_www_user_group
 # Change playlist directory permissions: IMPORTANT: User='Web User' Group='Multimedia User'
 chown -R $WWW_USER:$MULTIMEDIA_USER $PLAYLISTS_DIRECTORY
 chmod -R 775 $PLAYLISTS_DIRECTORY
@@ -8219,8 +8242,6 @@ EOF
 }
 
 owncloud_configure () {
-# Get WWW User and Group
-set_www_user_group
 # Create data directory for owncloud
 [ -d $OWNCLOUD_DATA_DIRECTORY ] || mkdir -p $OWNCLOUD_DATA_DIRECTORY
 # Make custom cache directory if not existent
@@ -8229,6 +8250,8 @@ set_www_user_group
 [ -d $OWNCLOUD_DATA_DIRECTORY/$OWNCLOUD_ADMIN_USER/files ] || mkdir -p $OWNCLOUD_DATA_DIRECTORY/$OWNCLOUD_ADMIN_USER/files
 # Add link to /JambulaTV folder - Find a better way to access these files
 ln -s $PROJECT_PARTITION $OWNCLOUD_DATA_DIRECTORY/$OWNCLOUD_ADMIN_USER/files/$PROJECT_NAME
+# Get WWW User and Group
+set_www_user_group
 # Change permissions on data directory
 chown -R $WWW_USER:$WWW_GROUP $OWNCLOUD_DATA_DIRECTORY
 #
@@ -8258,8 +8281,6 @@ EOF
 }
 
 nextcloud_install () {
-# Get WWW User and Group
-set_www_user_group
 # Unpack core
 tar jxvf $PROJECT_TARBALLS_DIR/nextcloud-*tar.bz2 -C $WWW_HTML_DIR
 # Unpack apps
@@ -8268,6 +8289,8 @@ do
 tar zxvf $PROJECT_TARBALLS_DIR/nextcloud_apps/$APP -C $WWW_HTML_DIR/nextcloud/apps
 done
 #
+# Get WWW User and Group
+set_www_user_group
 # Change permissions on data directory
 chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/nextcloud
 # Copy nextcloud nginx config file or run the command:
@@ -8282,7 +8305,7 @@ systemctl -q is-active mysqld.service || systemctl enable mysqld.service
 systemctl -q is-active mysqld.service || systemctl start mysqld.service
 # Change MySQL password if default is empty
 mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
-# Create zoneminder database
+# Create nextcloud database
 mysqladmin -p$MYSQL_ROOT_PASSWORD create $NEXTCLOUD_DB_NAME
 
 # Generate database tables using schema
@@ -8770,12 +8793,12 @@ chan_dongle_configure () {
 # If Asterisk installed
 if [ -d $ASTERISK_CONF_DIR ];
 then
-# Get WWW User and Group
-set_www_user_group
 # copy dongle.conf file to asterisk configs directory
 cp -v $PROJECT_CONFIGS_DIR/asterisk/dongle.conf $ASTERISK_CONF_DIR/dongle.conf
 # Include dongle.conf file
 echo "#include $ASTERISK_CONF_DIR/dongle.conf" > $ASTERISK_CONF_DIR/dongle.conf
+# Get WWW User and Group
+set_www_user_group
 # Set ownership/permissions on asterisk custom directory
 chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_CONF_DIR
 chmod -R 754 $ASTERISK_CONF_DIR
@@ -8783,12 +8806,12 @@ chmod -R 754 $ASTERISK_CONF_DIR
 # If FreePBX installed
 elif [ -d $FREEPBX_CONF_DIR ];
 then
-# Get WWW User and Group
-set_www_user_group
 # copy dongle.conf file to freepbx configs directory
 cp -v $PROJECT_CONFIGS_DIR/freepbx/dongle.conf $FREEPBX_CONF_DIR/dongle.conf
 # Include dongle.conf file
 echo "#include $FREEPBX_CONF_DIR/dongle.conf" > $FREEPBX_CONF_DIR/dongle.conf
+# Get WWW User and Group
+set_www_user_group
 # Set ownership/permissions on freepbx custom directory
 chown -R $ASTERISK_FILES_USER:$WWW_USER $FREEPBX_CONF_DIR
 chmod -R 754 $FREEPBX_CONF_DIR
@@ -8837,8 +8860,6 @@ chmod 755 $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 }
 
 freepbx_preinstall () {
-# Get WWW User and Group
-set_www_user_group
 # Remove/backup old asterisk config files
 [ -d $CONFDIR/asterisk ] && mv -v $CONFDIR/asterisk $CONFDIR/asterisk.nofreepbx.$(date +%I%M)
 [ -d $FREEPBX_CONF_DIR ] && mv -v $FREEPBX_CONF_DIR $FREEPBX_CONF_DIR.nofreepbx
@@ -8846,6 +8867,8 @@ set_www_user_group
 #
 # Regenerate asterisk sample files
 cd $INSTALL_SRC_DIR/asterisk && make samples
+# Get WWW User and Group
+set_www_user_group
 # Change permissions
 chown -R $ASTERISK_FILES_USER:$WWW_USER $CONFDIR/asterisk
 # Unpack freepbx
@@ -8878,8 +8901,6 @@ systemctl -q is-active asterisk.service || systemctl start asterisk.service
 }
 
 freepbx_install () {
-# Get WWW User and Group
-set_www_user_group
 # Check/fix errors in asterisk.conf file
 sed -i "s:\[directories\](!):\[directories\]:g" $CONFDIR/asterisk/asterisk.conf 
 sed -i "s:;runuser:runuser:g" $CONFDIR/asterisk/asterisk.conf 
@@ -8887,6 +8908,8 @@ sed -i "s:;rungroup:rungroup:g" $CONFDIR/asterisk/asterisk.conf
 #
 # Copy customized manager.conf for JambulaTV
 cp -v -f $PROJECT_CONFIGS_DIR/asterisk/manager.conf $CONFDIR/asterisk
+# Get WWW User and Group
+set_www_user_group
 # Make manager.conf accessible - retrieve_conf needs this
 chown -R $ASTERISK_FILES_USER:$WWW_USER $CONFDIR/asterisk/manager.conf
 #
@@ -9070,12 +9093,12 @@ sed -i '1s/^/MAILTO=""\n/' $CRONTABS_DIR/asterisk
 }
 
 freepbx_modules () {
-# Get WWW User and Group
-set_www_user_group
 # Asterisk PhoneBook Module
 tar zxvf $PROJECT_TARBALLS_DIR/freepbx_modules/phonebook*tar.gz -C $WWW_HTML_DIR/freepbx/admin/modules
 cd $WWW_HTML_DIR/freepbx/admin/modules 
 mv -v phonebook* phonebook
+# Get WWW User and Group
+set_www_user_group
 chown -R $ASTERISK_FILES_USER:$WWW_USER phonebook
 $SBINARY_PREFIX/fwconsole ma installlocal phonebook
 #
@@ -9362,8 +9385,6 @@ domoticz_install () {
 # Install open-zwave first
 open_zwave_install
 #
-# Get WWW User and Group
-set_www_user_group
 rsync -avz $PROJECT_GITHUB_DIR/domoticz/ $INSTALL_SRC_DIR/domoticz/
 # Create link to openzwave - I think this needs some type of install time option
 ln -s $INSTALL_SRC_DIR/open-zwave $INSTALL_SRC_DIR/open-zwave-read-only
@@ -9382,6 +9403,8 @@ make -j$SYSTEM_CPU_CORES
 mv -v $INSTALL_SRC_DIR/domoticz/domoticz $BINARY_PREFIX
 # Move web files to JambulaTV location
 mv -v $INSTALL_SRC_DIR/domoticz/www $DOMOTICZ_HTML_DIR
+# Get WWW User and Group
+set_www_user_group
 # Give access and permisions to WWW owner
 chown -R $WWW_USER:$DOMOTICZ_GROUP $DOMOTICZ_HTML_DIR
 # Create home directory if it does not exist
@@ -9621,14 +9644,14 @@ make_install_jambulatv
 }
 
 zoneminder_128_install () {
-# Get WWW User and Group
-set_www_user_group
 rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
 # Patches
 # Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
 sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > $TMPDIR/zmdc.pl.patch
 # Patch
 patch -p1 $INSTALL_SRC_DIR/ZoneMinder/scripts/zmdc.pl.in < $TMPDIR/zmdc.pl.patch
+# Get WWW User and Group
+set_www_user_group
 #
 cd $INSTALL_SRC_DIR/ZoneMinder
 # bootstrap
@@ -9637,8 +9660,8 @@ cd $INSTALL_SRC_DIR/ZoneMinder
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$PROJECT_SYSTEM_CONF_DIR \
 --with-extralibs="-L$LIBDIR -L$LIBDIR/mysql" --localstatedir=$STATEDIR \
 --enable-mmap=yes --with-libarch=lib --with-ffmpeg=$PREFIX --with-webuser=$WWW_USER \
---with-webgroup=$WWW_GROUP --with-webhost=$HOSTNAME --with-webdir=$WWW_HTML_DIR/zm \
---with-cgidir=$WWW_HTML_DIR/zm \
+--with-webgroup=$WWW_GROUP --with-webhost=$HOSTNAME --with-webdir=$ZONEMINDER_WWW_ROOT_DIR \
+--with-cgidir=$ZONEMINDER_WWW_ROOT_DIR \
 ZM_DB_HOST=$ZONEMINDER_DB_HOST ZM_DB_NAME=$ZONEMINDER_DB_NAME \
 ZM_DB_USER=$ZONEMINDER_DB_USER ZM_DB_PASS=$ZONEMINDER_DB_PASS \
 ZM_RUNDIR=$RUNDIR/zm ZM_TMPDIR=$TMPDIR/zm \
@@ -9648,57 +9671,177 @@ make_install_jambulatv
 }
 
 zoneminder_130_install () {
-# Get WWW User and Group
-set_www_user_group
 rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
 # Patches
 # Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
 sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > $TMPDIR/zmdc.pl.patch
 # Patch
 patch -p1 $INSTALL_SRC_DIR/ZoneMinder/scripts/zmdc.pl.in < $TMPDIR/zmdc.pl.patch
+# Get WWW User and Group
+set_www_user_group
 #
 cd $INSTALL_SRC_DIR/ZoneMinder
 # Log to build file
 cmake_build_log
 # Compile using cmake
-cmake -DCMAKE_BUILD_TYPE=Release \
+cmake \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE=OFF \
 	-DCMAKE_INSTALL_PREFIX=$PREFIX \
 	-DCMAKE_INSTALL_LIBDIR=$LIBDIR \
 	-DZM_RUNDIR=$RUNDIR/zm \
 	-DZM_SOCKDIR=$RUNDIR/zm \
 	-DZM_TMPDIR=$TMPDIR/zm \
 	-DZM_LOGDIR=$PROJECT_SYSTEM_LOG_DIR/zoneminder \
-	-DZM_WEBDIR=$WWW_HTML_DIR/zm \
-	-DZM_CGIDIR=$WWW_HTML_DIR/zm \
-	-DZM_CONTENTDIR=$ZONEMINDER_EVENTS_DIRECTORY \
+	-DZM_WEBDIR=$ZONEMINDER_WWW_ROOT_DIR \
+	-DZM_CGIDIR=$ZONEMINDER_WWW_ROOT_DIR \
+	-DZM_CACHEDIR=$CACHEDIR/zoneminder \
+	-DZM_CONTENTDIR=$ZONEMINDER_CONTENT_DIR \
 	-DZM_DB_HOST=$ZONEMINDER_DB_HOST \
 	-DZM_DB_NAME=$ZONEMINDER_DB_NAME \
 	-DZM_DB_USER=$ZONEMINDER_DB_USER \
 	-DZM_DB_PASS=$ZONEMINDER_DB_PASS \
 	-DZM_WEB_USER=$WWW_USER \
 	-DZM_WEB_GROUP=$WWW_GROUP \
+	-DZM_DIR_EVENTS=$ZONEMINDER_CONTENT_DIR/events \
+	-DZM_DIR_IMAGES=$ZONEMINDER_CONTENT_DIR/images \
+	-DZM_DIR_SOUNDS=$ZONEMINDER_SOUNDS_DIR \
+	-DZM_PATH_ZMS=/zms-inetd \
+	-DZM_PATH_MAP=/dev/shm \
+	-DZM_PATH_ARP= \
+	-DZM_CONFIG_DIR=$ZONEMINDER_CONFIG_DIR \
+	-DZM_CONFIG_SUBDIR=$ZONEMINDER_CONFIG_DIR/conf.d \
 	-DZM_EXTRA_LIBS=ssl \
 	-DZM_MYSQL_ENGINE=InnoDB \
 	-DZM_NO_MMAP=OFF \
 	-DZM_NO_FFMPEG=OFF \
+	-DZM_NO_LIBVLC=OFF \
+	-DZM_NO_CURL=OFF \
 	-DZM_NO_X10=OFF \
-.
+	-DZM_ONVIF=ON \
+	-DZM_SYSTEMD=ON \
+	.
 # Make and install
 make_install_jambulatv
 }
 
 zoneminder_configure () {
+# Setup Systemd
+# -------------
+# Copy systemd script- this defers from source file to kill errors during start
+cp -v $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service $SYSTEMD_UNITS_DIR_USER/
+# Enable zoneminder
+systemctl enable zoneminder.service
+
+# Set permissions on ZM related directories
+# -----------------------------------------
 # Get WWW User and Group
 set_www_user_group
-# Copy ZoneMinder config file
-cp -v $INSTALL_SRC_DIR/ZoneMinder/zm.conf $PROJECT_SYSTEM_CONF_DIR/zm.conf
-# Change permissions on zoneminder.conf - or web interface wont display
-chmod 644 $PROJECT_SYSTEM_CONF_DIR/zm.conf
-# Create logs directory for Zoneminder
-[ -d $PROJECT_SYSTEM_LOG_DIR/zoneminder ] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/zoneminder
+
+# Create content directory for ZoneMinder under user's home directory
+[[ -d $ZONEMINDER_CONTENT_DIR ]] || mkdir -p $ZONEMINDER_CONTENT_DIR
+# Give web user ownership of content directory for ZoneMinder 
+chown -R $WWW_USER:$WWW_GROUP $ZONEMINDER_CONTENT_DIR
+
+# Create events and images directory for ZoneMinder 
+for ZM_DIR in events images
+do
+[ -d $ZONEMINDER_CONTENT_DIR/$ZM_DIR ] || mkdir -p $ZONEMINDER_CONTENT_DIR/$ZM_DIR
+# Give web user ownership of events and images directory for ZoneMinder 
+chown -R $WWW_USER:$WWW_GROUP $ZONEMINDER_CONTENT_DIR/$ZM_DIR
+done
+
+# Create logging directory for Zoneminder
+[[ -d $PROJECT_SYSTEM_LOG_DIR/zoneminder ]] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/zoneminder
 # Change permissions on logging directory
 chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_LOG_DIR/zoneminder
 
+# Create cache directory for Zoneminder
+[[ -d $CACHEDIR/zoneminder ]] || mkdir -p $CACHEDIR/zoneminder
+# Change permissions on cache directory
+chown -R $WWW_USER:$WWW_GROUP $CACHEDIR/zoneminder
+# Add link to cache directory under webroot directory for ZoneMinder 
+ln -s $CACHEDIR/zoneminder $ZONEMINDER_WWW_ROOT_DIR/cache
+
+# Create sounds directory for Zoneminder
+[[ -d $PROJECT_SYSTEM_SHARE_DIR/sounds/zoneminder ]] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/sounds/zoneminder
+# Change ownership of ZM sounds directory
+chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_SHARE_DIR/sounds/zoneminder
+
+# Setup Web Server
+# ----------------
+# Add nginx web server config file for ZoneMinder if not present
+[ -f $NGINX_CONF_DIR/sites-enabled/zoneminder ] || \
+cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/zoneminder $NGINX_CONF_DIR/sites-enabled/
+# Add nginx user to video group
+usermod -a -G video $WWW_USER
+#
+# Copy test index.html, *.php and *.cgi files to zm
+cp -rv $PROJECT_CUSTOMIZATION_DIR/nginx/html/test* $ZONEMINDER_WWW_ROOT_DIR/
+# Make nph-zms behave like cgi script since we are on nginx i.e. We want jpeg image
+ln -s $ZONEMINDER_WWW_ROOT_DIR/nph-zms $ZONEMINDER_WWW_ROOT_DIR/jpeg.cgi
+# Make .php and .cgi files executable
+cd $ZONEMINDER_WWW_ROOT_DIR && chmod 755 *.php *.cgi
+
+# Give web user ownership of webroot directory for ZoneMinder 
+chown -R $WWW_USER:$WWW_GROUP $ZONEMINDER_WWW_ROOT_DIR
+
+# MySQL DB for ZoneMinder
+# ------------------------
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+#
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+# Create zoneminder database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $ZONEMINDER_DB_NAME
+# Generate database tables using schema
+mysql -u root -p$MYSQL_ROOT_PASSWORD $ZONEMINDER_DB_NAME < $ZONEMINDER_DB_SCHEMA
+# Set privileges on zoneminder database
+echo "GRANT ALL PRIVILEGES ON $ZONEMINDER_DB_NAME.* to $ZONEMINDER_DB_USER@localhost IDENTIFIED by '$ZONEMINDER_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+#
+# Add customized data to Config table
+mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Config.sql
+#
+# Add sample USB webcams
+mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Monitors.sql
+
+# Load Zones for above Monitors
+#------------------------------
+# Set number of cameras
+ZONEMINDER_CAMERAS_NO=$(echo "SELECT COUNT(Id) from Monitors;" | mysql -sN -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME)
+# Clear temporary SQL file for Zones table if it exists
+[ ! -e $TMPDIR/zm-zones.sql ] || rm -f $TMPDIR/zm-zones.sql
+# Create temporary SQL file for Zones table
+POSITION=1
+while let "POSITION <= $ZONEMINDER_CAMERAS_NO" 
+do
+# Set variables
+TABLE_ID=$POSITION
+MONITOR_ID=$(echo "SELECT Id from Monitors WHERE Id = '$TABLE_ID';" | mysql -sN -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME)
+# Create SQL statements
+cat >> $TMPDIR/zm-zones.sql << EOF
+INSERT INTO \`Zones\` VALUES ('$TABLE_ID','$MONITOR_ID','All','Active','Percent',4,'0,0 319,0 319,239 0,239',76800,16711680,'Blobs',25,NULL,2304,57600,3,3,2304,57600,1536,NULL,1,NULL,0,0);
+EOF
+let "POSITION = $POSITION + 1"
+done
+#
+# Load Zones table
+mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $TMPDIR/zm-zones.sql
+#
+# Upgrade ZM database tables to current version
+/usr/bin/zmupdate.pl -nointeractive
+#
+# Give entire ownership of ZM config directory to web user 
+# IMPORTANT: Run after zmupdate.pl
+chown -R $WWW_USER:$WWW_GROUP $ZONEMINDER_CONFIG_DIR
+# Change permissions on ZM config file - or web interface wont display
+chmod 644 $ZONEMINDER_CONFIG_DIR/zm.conf
+chmod 644 $ZONEMINDER_CONFIG_DIR/conf.d/zmcustom.conf
+
+# Setup utilities for Alarms
+# --------------------------
 # Modify perl-based daemon script that watches for ZoneMinder alarms and copy to bin/
 cat $PROJECT_CONTRIB_DIR/scripts/zoneminder_alarm_daemon.pl | \
 	sed "s:ZONEMINDER_DB_HOST:$ZONEMINDER_DB_HOST:g" | \
@@ -9742,81 +9885,6 @@ CCTV_CALL=0
 CCTV_OSD=0
 CCTV_EMAIL=0
 EOF
-#
-# Copy systemd script- this defers from source file to kill errors during start
-cp -v $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service $SYSTEMD_UNITS_DIR_USER/
-# Enable zoneminder
-systemctl enable zoneminder.service
-#
-# Add nginx web server config file for ZoneMinder if not present
-[ -f $NGINX_CONF_DIR/sites-enabled/zoneminder ] || \
-cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/zoneminder $NGINX_CONF_DIR/sites-enabled/
-# Add nginx user to video group
-usermod -a -G video $WWW_USER
-#
-# Copy test index.html, *.php and *.cgi files to zm
-cp -rv $PROJECT_CUSTOMIZATION_DIR/nginx/html/test* $WWW_HTML_DIR/zm/
-# Make nph-zms behave like cgi script since we are on nginx i.e. We want jpeg image
-ln -s $WWW_HTML_DIR/zm/nph-zms $WWW_HTML_DIR/zm/jpeg.cgi
-# Make .php and .cgi files executable
-cd $WWW_HTML_DIR/zm && chmod 755 *.php *.cgi
-#
-# Create Events directory for ZoneMinder under user's home directory
-[ -d $ZONEMINDER_EVENTS_DIRECTORY ] || mkdir -p $ZONEMINDER_EVENTS_DIRECTORY
-# Remove default events directory and link to specified home direcory
-[ ! -d $WWW_HTML_DIR/zm ] || rm -rf $WWW_HTML_DIR/zm/events
-ln -s $ZONEMINDER_EVENTS_DIRECTORY $WWW_HTML_DIR/zm/events
-# Create ZM Images directory if non-existent
-[ -d $WWW_HTML_DIR/zm/images ] || mkdir -p $WWW_HTML_DIR/zm/images
-# Change permissions
-chown -R $WWW_USER:$WWW_GROUP $ZONEMINDER_EVENTS_DIRECTORY
-chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/zm/images
-#
-# MySQL DB for ZoneMinder
-# ------------------------
-# Enable and start mysql service if it is not running
-systemctl -q is-active mysqld.service || systemctl enable mysqld.service
-systemctl -q is-active mysqld.service || systemctl start mysqld.service
-# Change MySQL password if default is empty
-mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
-# Create zoneminder database
-mysqladmin -p$MYSQL_ROOT_PASSWORD create $ZONEMINDER_DB_NAME
-# Generate database tables using schema
-mysql -u root -p$MYSQL_ROOT_PASSWORD $ZONEMINDER_DB_NAME < $ZONEMINDER_DB_SCHEMA
-# Set privileges on zoneminder database
-echo "GRANT ALL PRIVILEGES ON $ZONEMINDER_DB_NAME.* to $ZONEMINDER_DB_USER@localhost IDENTIFIED by '$ZONEMINDER_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
-#
-# Add customized data to Config table
-mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Config.sql
-#
-# Add sample USB webcams
-mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Monitors.sql
-#
-# Load Zones for above Monitors
-#------------------------------
-# Set number of cameras
-ZONEMINDER_CAMERAS_NO=$(echo "SELECT COUNT(Id) from Monitors;" | mysql -sN -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME)
-# Clear temporary SQL file for Zones table if it exists
-[ ! -e $TMPDIR/zm-zones.sql ] || rm -f $TMPDIR/zm-zones.sql
-# Create temporary SQL file for Zones table
-POSITION=1
-while let "POSITION <= $ZONEMINDER_CAMERAS_NO" 
-do
-# Set variables
-TABLE_ID=$POSITION
-MONITOR_ID=$(echo "SELECT Id from Monitors WHERE Id = '$TABLE_ID';" | mysql -sN -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME)
-# Create SQL statements
-cat >> $TMPDIR/zm-zones.sql << EOF
-INSERT INTO \`Zones\` VALUES ('$TABLE_ID','$MONITOR_ID','All','Active','Percent',4,'0,0 319,0 319,239 0,239',76800,16711680,'Blobs',25,NULL,2304,57600,3,3,2304,57600,1536,NULL,1,NULL,0,0);
-EOF
-let "POSITION = $POSITION + 1"
-done
-#
-# Load Zones table
-mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $TMPDIR/zm-zones.sql
-#
-# Upgrade ZM database tables to current version
-/usr/bin/zmupdate.pl -nointeractive
 
 # USB Webcams
 #------------
@@ -9851,10 +9919,14 @@ service zms-inetd
 }
 EOF
 #
-# Copy zms-inetd script if it does not exist
-[ -e $ZONEMINDER_ZMS_INETD_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-zms-inetd $ZONEMINDER_ZMS_INETD_TOOL
-# Change permissions
+# Copy jambulatv-zms-inetd script, if it does not exist in bin directory
+[ -e $ZONEMINDER_ZMS_INETD_TOOL ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-zms-inetd | \
+		sed -e "s:MY_ZONEMINDER_CONFIG_DIR:$ZONEMINDER_CONFIG_DIR:g" \
+			> $ZONEMINDER_ZMS_INETD_TOOL
+# Make tool executable
 chmod 755 $ZONEMINDER_ZMS_INETD_TOOL
+# Give web user permission to use this tool
 chown $WWW_USER:$WWW_GROUP $ZONEMINDER_ZMS_INETD_TOOL
 #
 # Restart xinetd service

@@ -23,19 +23,11 @@
 #	port            = 85
 #	server          = /usr/bin/zms-inetd
 #}
-#
-#
-# ZM Options / Paths / Web path to zms streaming server:
-#   ZM_PATH_ZMS = http://<server>:{PORT}/<anypath>
-#
 
 
 
 # configuration
-PROJECT_NAME="JambulaTV"
-CONFDIR="/etc"
-PROJECT_SYSTEM_CONF_DIR="$CONFDIR/$PROJECT_NAME"
-ZMCONF="$PROJECT_SYSTEM_CONF_DIR/zm.conf"
+ZMCONF="MY_ZONEMINDER_CONFIG_DIR/zm.conf"
 CGIBIN="nph-zms"
 
 
