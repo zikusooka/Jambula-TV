@@ -281,7 +281,7 @@ live555_install
 #upgrade_open_zwave
 #upgrade_domoticz
 
-#upgrade_zoneminder
+upgrade_zoneminder
 
 #upgrade_x264
 

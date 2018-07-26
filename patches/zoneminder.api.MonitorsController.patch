@@ -1,0 +1,48 @@
+--- /web/api/app/Controller/MonitorsController.php	2018-07-25 02:07:49.306570042 +0300
++++ /zm/api/app/Controller/MonitorsController.php	2018-07-26 13:43:03.672634011 +0300
+@@ -21,11 +21,6 @@
+ 
+   public function beforeFilter() {
+     parent::beforeFilter();
+-    $canView = $this->Session->Read('monitorPermission');
+-    if ($canView == 'None') {
+-      throw new UnauthorizedException(__('Insufficient Privileges'));
+-      return;
+-    }
+   }
+ 
+ /**
+@@ -115,11 +110,6 @@
+   public function add() {
+     if ( $this->request->is('post') ) {
+ 
+-      if ( $this->Session->Read('systemPermission') != 'Edit' ) {
+-        throw new UnauthorizedException(__('Insufficient privileges'));
+-        return;
+-      }
+-
+       $this->Monitor->create();
+       if ( $this->Monitor->save($this->request->data) ) {
+         $this->daemonControl($this->Monitor->id, 'start');
+@@ -148,10 +138,6 @@
+     if ( !$this->Monitor->exists($id) ) {
+       throw new NotFoundException(__('Invalid monitor'));
+     }
+-    if ( $this->Session->Read('monitorPermission') != 'Edit' ) {
+-      throw new UnauthorizedException(__('Insufficient privileges'));
+-      return;
+-    }
+ 
+     $message = '';
+     if ( $this->Monitor->save($this->request->data) ) {
+@@ -199,10 +185,6 @@
+     if ( !$this->Monitor->exists() ) {
+       throw new NotFoundException(__('Invalid monitor'));
+     }
+-    if ( $this->Session->Read('systemPermission') != 'Edit' ) {
+-       throw new UnauthorizedException(__('Insufficient privileges'));
+-      return;
+-    }
+     $this->request->allowMethod('post', 'delete');
+ 
+     $this->daemonControl($this->Monitor->id, 'stop');

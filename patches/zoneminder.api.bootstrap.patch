@@ -1,0 +1,11 @@
+--- /Backup1/JambulaTV/src/github/ZoneMinder/web/api/app/Config/bootstrap.php.in	2018-07-20 00:07:58.146997158 +0300
++++ /tmp/bootstrap.php.in	2018-07-23 12:40:00.120474675 +0300
+@@ -120,7 +120,7 @@
+ Configure::write('ZM_VERSION', '@VERSION@');
+ Configure::write('ZM_API_VERSION', '@API_VERSION@');
+ 
+-require_once("../../../includes/config.php");
++require_once("@ZM_WEBDIR@/includes/config.php");
+ global $configvals;
+ 
+ # Now that our array our finalized, and the config has been defined.

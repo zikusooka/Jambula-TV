@@ -558,12 +558,18 @@ ZONEMINDER_DB_NAME=zm
 ZONEMINDER_DB_SCHEMA=$INSTALL_SRC_DIR/ZoneMinder/db/zm_create.sql
 ZONEMINDER_DB_USER=jambulatv
 ZONEMINDER_DB_PASS=jambulatvzm3
+ZONEMINDER_ADMIN_USER=jambulatv
+ZONEMINDER_ADMIN_PASS=jambulatv
 ZONEMINDER_WWW_PORT=$(grep -i 'ZoneMinder$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 ZONEMINDER_ZMS_INETD_PORT=8521
 ZONEMINDER_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/zoneminder
 ZONEMINDER_CONTENT_DIR=$MULTIMEDIA_USER_HOME_DIR/CCTV
 ZONEMINDER_SOUNDS_DIR=$PROJECT_SYSTEM_SHARE_DIR/sounds/zoneminder
 ZONEMINDER_WWW_ROOT_DIR=$WWW_HTML_DIR/zm
+ZONEMINDER_WEB_URL="http://${ZONEMINDER_DB_HOST}:${ZONEMINDER_WWW_PORT}"
+ZONEMINDER_API_URL=$ZONEMINDER_WEB_URL/api
+ZONEMINDER_CCTV_MONITORS_CONFIGS_DIR=$PROJECT_CONTRIB_DIR/cameras
+ZONEMINDER_CCTV_MONITORS="logitech_quickcam_communicate_stx logitech_c200"
 
 # Motion Database Variables
 MOTION_DB_HOST=localhost
@@ -894,6 +900,7 @@ VLM_VOD_DELETE_TOOL=$BINARY_PREFIX/jambulatv-delete-video-on-demand
 WHATSAPP_TOOL=$BINARY_PREFIX/jambulatv-whatsapp
 XMPP_TOOL=$BINARY_PREFIX/jambulatv-xmpp
 ZONEMINDER_ALARM_NOTIFICATIONS_TOOL=$BINARY_PREFIX/jambulatv-zm-alarm-all-notifications 
+ZONEMINDER_ALARM_DAEMON=$BINARY_PREFIX/zmalarm_daemon.pl
 ZONEMINDER_ZMS_INETD_TOOL=$BINARY_PREFIX/jambulatv-zms-inetd
 
 # HTTP Headers
@@ -914,7 +921,8 @@ DEFAULT_USER_AGENT=$HTTP_BROWSER_USERAGENT_LINUX
 
 # Curl
 CURL_CMD="/usr/bin/curl"
-CURL_OPTS="-s -L"
+CURL_OPTS="-s"
+CURL_COOKIE_JAR_FILE=$TMPDIR/curl_cookie.txt
 
 # Wget
 WGET_CMD=wget
@@ -1485,8 +1493,12 @@ rm -rf $WWW_HTML_DIR/icingaweb2/
 }
 
 uninstall_zoneminder () {
-# Stop processes
+# Stop, disable, and remove zoneminder systemd unit file
 systemctl stop zoneminder.service
+systemctl disable zoneminder.service
+[[ -e $SYSTEMD_UNITS_DIR_USER/zoneminder.service ]] && \
+	rm -f $SYSTEMD_UNITS_DIR_USER/zoneminder.service
+systemctl daemon-reload
 
 # Set PID of zoneminder processes still lingering
 PID_ZONEMINDER=$(ps auxw | grep zm | awk {'print $2'})
@@ -9675,8 +9687,20 @@ rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMi
 # Patches
 # Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
 sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > $TMPDIR/zmdc.pl.patch
-# Patch
+# Fixes to zmdc.pl
 patch -p1 $INSTALL_SRC_DIR/ZoneMinder/scripts/zmdc.pl.in < $TMPDIR/zmdc.pl.patch
+
+
+# API Bugs - Remove these patches when fixed
+# ------------------------------------------
+# Set require_once - includes to full path
+patch -p1 $INSTALL_SRC_DIR/ZoneMinder/web/api/app/Config/bootstrap.php.in < $PROJECT_PATCHES_DIR/zoneminder.api.bootstrap.patch
+# Also set to full path in '../api/app/Controller/HostController.php'
+#
+# Add/Edit/Delete of Monitors produces 'Insufficient privileges' errors 
+patch -p1 $INSTALL_SRC_DIR/ZoneMinder/web/api/app/Controller/MonitorsController.php < $PROJECT_PATCHES_DIR/zoneminder.api.MonitorsController.patch
+
+
 # Get WWW User and Group
 set_www_user_group
 #
@@ -9726,18 +9750,11 @@ make_install_jambulatv
 }
 
 zoneminder_configure () {
-# Setup Systemd
-# -------------
-# Copy systemd script- this defers from source file to kill errors during start
-cp -v $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service $SYSTEMD_UNITS_DIR_USER/
-# Enable zoneminder
-systemctl enable zoneminder.service
-
-# Set permissions on ZM related directories
-# -----------------------------------------
 # Get WWW User and Group
 set_www_user_group
 
+# Set permissions on ZM related directories
+# -----------------------------------------
 # Create content directory for ZoneMinder under user's home directory
 [[ -d $ZONEMINDER_CONTENT_DIR ]] || mkdir -p $ZONEMINDER_CONTENT_DIR
 # Give web user ownership of content directory for ZoneMinder 
@@ -9762,6 +9779,11 @@ chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_LOG_DIR/zoneminder
 chown -R $WWW_USER:$WWW_GROUP $CACHEDIR/zoneminder
 # Add link to cache directory under webroot directory for ZoneMinder 
 ln -s $CACHEDIR/zoneminder $ZONEMINDER_WWW_ROOT_DIR/cache
+
+# Create run directory for Zoneminder
+[[ -d $RUNDIR/zm ]] || mkdir -p $RUNDIR/zm
+# Change permissions on run directory
+chown -R $WWW_USER:$WWW_GROUP $RUNDIR/zm
 
 # Create sounds directory for Zoneminder
 [[ -d $PROJECT_SYSTEM_SHARE_DIR/sounds/zoneminder ]] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/sounds/zoneminder
@@ -9800,45 +9822,33 @@ mysqladmin -p$MYSQL_ROOT_PASSWORD create $ZONEMINDER_DB_NAME
 mysql -u root -p$MYSQL_ROOT_PASSWORD $ZONEMINDER_DB_NAME < $ZONEMINDER_DB_SCHEMA
 # Set privileges on zoneminder database
 echo "GRANT ALL PRIVILEGES ON $ZONEMINDER_DB_NAME.* to $ZONEMINDER_DB_USER@localhost IDENTIFIED by '$ZONEMINDER_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
-#
-# Add customized data to Config table
-mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Config.sql
-#
-# Add sample USB webcams
-mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Monitors.sql
 
-# Load Zones for above Monitors
-#------------------------------
-# Set number of cameras
-ZONEMINDER_CAMERAS_NO=$(echo "SELECT COUNT(Id) from Monitors;" | mysql -sN -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME)
-# Clear temporary SQL file for Zones table if it exists
-[ ! -e $TMPDIR/zm-zones.sql ] || rm -f $TMPDIR/zm-zones.sql
-# Create temporary SQL file for Zones table
-POSITION=1
-while let "POSITION <= $ZONEMINDER_CAMERAS_NO" 
-do
-# Set variables
-TABLE_ID=$POSITION
-MONITOR_ID=$(echo "SELECT Id from Monitors WHERE Id = '$TABLE_ID';" | mysql -sN -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME)
-# Create SQL statements
-cat >> $TMPDIR/zm-zones.sql << EOF
-INSERT INTO \`Zones\` VALUES ('$TABLE_ID','$MONITOR_ID','All','Active','Percent',4,'0,0 319,0 319,239 0,239',76800,16711680,'Blobs',25,NULL,2304,57600,3,3,2304,57600,1536,NULL,1,NULL,0,0);
-EOF
-let "POSITION = $POSITION + 1"
-done
-#
-# Load Zones table
-mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $TMPDIR/zm-zones.sql
-#
+# ZM Options
+# ----------
+# Add customized data to Config table
+mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Config.13x.sql
+
+# ZM Users
+# --------
+# Rename zoneminder admin user and set password in MySQL database
+echo $(cat <<EOT
+UPDATE Users SET Username="$ZONEMINDER_ADMIN_USER", Password=password("$ZONEMINDER_ADMIN_PASS") WHERE Username='admin';
+EOT
+) | mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME
+
 # Upgrade ZM database tables to current version
+# ---------------------------------------------
 /usr/bin/zmupdate.pl -nointeractive
-#
+
 # Give entire ownership of ZM config directory to web user 
+# --------------------------------------------------------
 # IMPORTANT: Run after zmupdate.pl
 chown -R $WWW_USER:$WWW_GROUP $ZONEMINDER_CONFIG_DIR
-# Change permissions on ZM config file - or web interface wont display
-chmod 644 $ZONEMINDER_CONFIG_DIR/zm.conf
-chmod 644 $ZONEMINDER_CONFIG_DIR/conf.d/zmcustom.conf
+# Change permissions on ZM config files (if existent) - or web interface wont display
+[[ -e $ZONEMINDER_CONFIG_DIR/zm.conf ]] && \
+	chmod 644 $ZONEMINDER_CONFIG_DIR/zm.conf
+[[ -e $ZONEMINDER_CONFIG_DIR/conf.d/zmcustom.conf ]] && \
+	chmod 644 $ZONEMINDER_CONFIG_DIR/conf.d/zmcustom.conf
 
 # Setup utilities for Alarms
 # --------------------------
@@ -9847,9 +9857,9 @@ cat $PROJECT_CONTRIB_DIR/scripts/zoneminder_alarm_daemon.pl | \
 	sed "s:ZONEMINDER_DB_HOST:$ZONEMINDER_DB_HOST:g" | \
 	sed "s:ZONEMINDER_DB_NAME:$ZONEMINDER_DB_NAME:g"| \
 	sed "s:ZONEMINDER_DB_USER:$ZONEMINDER_DB_USER:g" | \
-	sed "s:ZONEMINDER_DB_PASS:$ZONEMINDER_DB_PASS:g" > $BINARY_PREFIX/zmalarm_daemon.pl
+	sed "s:ZONEMINDER_DB_PASS:$ZONEMINDER_DB_PASS:g" > $ZONEMINDER_ALARM_DAEMON
 # Make script executable
-chmod 755 $BINARY_PREFIX/zmalarm_daemon.pl
+chmod 755 $ZONEMINDER_ALARM_DAEMON
 #
 # Copy ZoneMinder script to send out all types of notifications/alerts upon ZM alarms
 [ -e $ZONEMINDER_ALARM_NOTIFICATIONS_TOOL ] || \
@@ -9892,6 +9902,196 @@ EOF
 cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-webcams.rules $UDEV_RULES_DIR
 # Reload udev
 /usr/sbin/udevadm control --reload && udevadm trigger --action=add
+
+# ZM Monitors
+# -----------
+zoneminder_add_monitors_using_api
+
+# Setup Systemd
+# -------------
+# Copy systemd script- this defers from source file to kill errors during start
+cat $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service | \
+	sed "s:MY_WWW_USER:$WWW_USER:g" | \
+	sed "s:MY_WWW_GROUP:$WWW_GROUP:g" | \
+	sed -e "s:MY_RUNDIR:$RUNDIR:g" | \
+	sed -e "s:MY_ZONEMINDER_ALARM_DAEMON:$ZONEMINDER_ALARM_DAEMON:g" | \
+	sed -e "s:MY_BINARY_PREFIX:$BINARY_PREFIX:g" \
+		> $SYSTEMD_UNITS_DIR_USER/zoneminder.service
+# Enable zoneminder
+systemctl enable zoneminder.service
+# Start zoneminder
+systemctl start zoneminder.service
+}
+
+zoneminder_login_using_api () {
+# Remove old cookies-jar file
+[[ -e $CURL_COOKIE_JAR_FILE ]] && rm -f $CURL_COOKIE_JAR_FILE
+# Login for ZoneMinder < v1.32.0
+$CURL_CMD $CURL_OPTS -c $CURL_COOKIE_JAR_FILE \
+	-d view=console \
+	-d action=login \
+	-d username=$ZONEMINDER_ADMIN_USER \
+	-d password=$ZONEMINDER_ADMIN_PASS \
+		$ZONEMINDER_WEB_URL/index.php
+}
+
+zoneminder_logout_using_api () {
+# Logout for ZoneMinder < v1.32.0
+$CURL_CMD -XPOST $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
+	-d username=$ZONEMINDER_ADMIN_USER \
+	-d password=$ZONEMINDER_ADMIN_PASS \
+	-d action=logout \
+	-d view=console \
+		$ZONEMINDER_WEB_URL/index.php > /dev/null 2>&1
+}
+
+zoneminder_add_monitors_using_api () {
+# Log into Zoneminder using API
+zoneminder_login_using_api
+
+# Add ZoneMinder Monitor(s)
+# -------------------------
+for MONITOR in $ZONEMINDER_CCTV_MONITORS;
+do
+
+if [[ -e $ZONEMINDER_CCTV_MONITORS_CONFIGS_DIR/$MONITOR ]];
+then
+# Source variables for this monitor
+. $ZONEMINDER_CCTV_MONITORS_CONFIGS_DIR/$MONITOR
+
+# Add selected monitor if its config file is found
+$CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
+	-d "Monitor[Id]=$Id" \
+	-d "Monitor[Name]=$Name" \
+	-d "Monitor[ServerId]=null" \
+	-d "Monitor[StorageId]=1" \
+	-d "Monitor[Type]=$Type" \
+	-d "Monitor[Function]=$Function" \
+	-d "Monitor[Enabled]=$Enabled" \
+	-d "Monitor[LinkedMonitors]=null" \
+	-d "Monitor[Triggers]=" \
+	-d "Monitor[Device]=$Device" \
+	-d "Monitor[Channel]=0" \
+	-d "Monitor[Format]=255" \
+	-d "Monitor[V4LMultiBuffer]=false" \
+	-d "Monitor[V4LCapturesPerFrame]=1" \
+	-d "Monitor[Protocol]=$Protocol" \
+	-d "Monitor[Method]=$Method" \
+	-d "Monitor[Host]=$Host" \
+	-d "Monitor[Port]=$Port" \
+	-d "Monitor[SubPath]=" \
+	-d "Monitor[Path]=$Path" \
+	-d "Monitor[Options]=$Options" \
+	-d "Monitor[User]=$User" \
+	-d "Monitor[Pass]=$Path" \
+	-d "Monitor[Width]=$Width" \
+	-d "Monitor[Height]=$Height" \
+	-d "Monitor[Colours]=$Colours" \
+	-d "Monitor[Palette]=0" \
+	-d "Monitor[Orientation]=0" \
+	-d "Monitor[Deinterlacing]=0" \
+	-d "Monitor[SaveJPEGs]=0" \
+	-d "Monitor[VideoWriter]=1" \
+	-d "Monitor[EncoderParameters]=null" \
+	-d "Monitor[RecordAudio]=0" \
+	-d "Monitor[RTSPDescribe]=false" \
+	-d "Monitor[Brightness]=-1" \
+	-d "Monitor[Contrast]=-1" \
+	-d "Monitor[Hue]=-1" \
+	-d "Monitor[Colour]=-1" \
+	-d "Monitor[EventPrefix]=$Name -" \
+	-d "Monitor[LabelFormat]=%t%t%A%t%t%t%t%t%d %B, %Y%t%t%t%t%t%t%_I:%M:%S %p" \
+	-d "Monitor[LabelX]=0" \
+	-d "Monitor[LabelY]=0" \
+	-d "Monitor[LabelSize]=1" \
+	-d "Monitor[ImageBufferCount]=20" \
+	-d "Monitor[WarmupCount]=0" \
+	-d "Monitor[PreEventCount]=0" \
+	-d "Monitor[PostEventCount]=5" \
+	-d "Monitor[StreamReplayBuffer]=0" \
+	-d "Monitor[AlarmFrameCount]=1" \
+	-d "Monitor[SectionLength]=600" \
+	-d "Monitor[FrameSkip]=0" \
+	-d "Monitor[MotionFrameSkip]=0" \
+	-d "Monitor[AnalysisFPSLimit]=null" \
+	-d "Monitor[AnalysisUpdateDelay]=0" \
+	-d "Monitor[MaxFPS]=$MaxFPS" \
+	-d "Monitor[AlarmMaxFPS]=$AlarmMaxFPS" \
+	-d "Monitor[FPSReportInterval]=100" \
+	-d "Monitor[RefBlendPerc]=6" \
+	-d "Monitor[AlarmRefBlendPerc]=6" \
+	-d "Monitor[Controllable]=0" \
+	-d "Monitor[ControlId]=null" \
+	-d "Monitor[ControlDevice]=null" \
+	-d "Monitor[ControlAddress]=null" \
+	-d "Monitor[AutoStopTimeout]=null" \
+	-d "Monitor[TrackMotion]=0" \
+	-d "Monitor[TrackDelay]=null" \
+	-d "Monitor[ReturnLocation]=-1" \
+	-d "Monitor[ReturnDelay]=null" \
+	-d "Monitor[DefaultView]=Events" \
+	-d "Monitor[DefaultRate]=100" \
+	-d "Monitor[DefaultScale]=100" \
+	-d "Monitor[SignalCheckPoints]=10" \
+	-d "Monitor[SignalCheckColour]=#0000c0" \
+	-d "Monitor[WebColour]=red" \
+	-d "Monitor[Exif]=false" \
+	-d "Monitor[Sequence]=1" \
+		$ZONEMINDER_API_URL/monitors.json | grep -i "\"success\": false," > /dev/null 2>&1
+MONITOR_ADDED_STATUS=$?
+# Notify of added monitor
+[[ "$MONITOR_ADDED_STATUS" = "0" ]] || \
+	logger -s -t $(basename $0) "Info: CCTV monitor [$MONITOR] has been added"
+# Notify of error adding monitor
+[[ "$MONITOR_ADDED_STATUS" = "0" ]] && \
+	logger -s -t $(basename $0) "Error: CCTV monitor [$MONITOR] could not be added"
+
+# Add corresponding Zones(s)
+# --------------------------
+# Add Zone for Monitor Id 1
+$CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
+	-d "Zone[MonitorId]=$Id" \
+	-d "Zone[Name]=$Name" \
+	-d "Zone[Id]=" \
+	-d "Zone[Type]=Active" \
+	-d "Zone[Units]=Percent" \
+	-d "Zone[NumCoords]=4" \
+	-d "Zone[Coords]=0,0 319,0 319,239 0,239" \
+	-d "Zone[Area]=76800" \
+	-d "Zone[AlarmRGB]=16711680" \
+	-d "Zone[CheckMethod]=Blobs" \
+	-d "Zone[MinPixelThreshold]=25" \
+	-d "Zone[MaxPixelThreshold]=null" \
+	-d "Zone[MinAlarmPixels]=2304" \
+	-d "Zone[MaxAlarmPixels]=57600" \
+	-d "Zone[FilterX]=3" \
+	-d "Zone[FilterY]=3" \
+	-d "Zone[MinFilterPixels]=2304" \
+	-d "Zone[MaxFilterPixels]=57600" \
+	-d "Zone[MinBlobPixels]=1536" \
+	-d "Zone[MaxBlobPixels]=null" \
+	-d "Zone[MinBlobs]=1" \
+	-d "Zone[MaxBlobs]=null" \
+	-d "Zone[OverloadFrames]=0" \
+	-d "Zone[ExtendAlarmFrames]=0" \
+		$ZONEMINDER_API_URL/zones.json | grep -i "\"success\": false," > /dev/null 2>&1
+ZONE_ADDED_STATUS=$?
+# Notify of added monitor
+[[ "$ZONE_ADDED_STATUS" = "0" ]] || \
+	logger -s -t $(basename $0) "Info: Zone for [$MONITOR] has been added"
+# Notify of error adding monitor
+[[ "$ZONE_ADDED_STATUS" = "0" ]] && \
+	logger -s -t $(basename $0) "Error: Zone for [$MONITOR] could not be added"
+
+else
+# Notify of missing config file for monitor
+logger -s -t $(basename $0) "Warning: The config file for CCTV monitor [$MONITOR] was not found"
+fi
+
+done
+
+# Log Out Zoneminder using API
+zoneminder_logout_using_api
 }
 
 zoneminder_zms_inetd () {
