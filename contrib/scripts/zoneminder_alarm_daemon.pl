@@ -12,8 +12,9 @@ my $ZM_DB_HOST = 'ZONEMINDER_DB_HOST';
 my $ZM_DB_USER = 'ZONEMINDER_DB_USER';
 my $ZM_DB_PASS = 'ZONEMINDER_DB_PASS';
 my $ZM_ALARM_PID = $$;
-my $ZM_ALARM_PID_FILE = '/run/zm/zm_alarm.pid';
-my $ALARM_NOTIFICATION_SCRIPT = '/usr/bin/jambulatv-zm-alarm-all-notifications';
+my $ZM_ALARM_PID_FILE = 'MY_RUNDIR/zm/zm_alarm.pid';
+my $ALARM_NOTIFICATION_SCRIPT = 'MY_ZONEMINDER_ALARM_NOTIFICATIONS_TOOL';
+
 
 # Remove any existing PID file
 unlink $ZM_ALARM_PID_FILE;

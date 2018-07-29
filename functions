@@ -441,8 +441,8 @@ SYSCONFIG_i18N_FILE=/etc/sysconfig/i18n
 
 HOSTNAME_FILE=/etc/hostname
 
-INTERNET_GATEWAY_IP=$(ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')
-NETWORK_MAC_ADDRESS=`ip addr show | grep ether | awk {'print $2'} | head -1`
+INTERNET_GATEWAY_IP=$(/usr/sbin/ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')
+NETWORK_MAC_ADDRESS=$(/usr/sbin/ip addr show | grep ether | awk {'print $2'} | head -1)
 
 DHCLIENT_CONFIG_DIR=$CONFDIR/dhcp
 DHCLIENT_CONFIG_FILE=$DHCLIENT_CONFIG_DIR/dhclient.conf
@@ -476,6 +476,8 @@ then
 WWW_USER=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $2'})
 WWW_GROUP=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $3'} | sed 's:;::')
 fi
+
+WWW_USER_COMMANDS="/usr/bin/chmod, /usr/bin/grep"
 
 WWW_HTML_DIR=$PROJECT_SYSTEM_SHARE_DIR/html
 WWW_CGI_DIR=$PROJECT_SYSTEM_SHARE_DIR/cgi-bin
@@ -520,7 +522,7 @@ JABBERD_CONF_DIR=$CONFDIR/jabberd
 JABBERD_ROUTER_USERS_FILE=$JABBERD_CONF_DIR/router-users.xml
 JABBERD_TEMPLATES_DIR=$JABBERD_CONF_DIR/templates
 JABBERD_DB_CREATE=$DATAROOTDIR/jabberd/db-setup.mysql
-JABBERD_PASSWORD=$(sudo grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //')
+JABBERD_PASSWORD=$(sudo /usr/bin/grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //')
 JABBERD_RESOURCE=Home
 
 # Smart Home - Generic settings
@@ -625,7 +627,7 @@ WIFI_SSID="Jambula Labs"
 WIFI_SECURITY_KEY="Mustbe8ormorecharacters"
 WIFI_WPA_CONFIG_DIR=/etc/wpa_supplicant
 WIFI_WPA_CONFIG_FILE=$WIFI_WPA_CONFIG_DIR/wpa_supplicant.conf
-WIFI_INTERFACES_AVAILABLE=$(iw dev |grep Interface |wc -l)
+WIFI_INTERFACES_AVAILABLE=$(/usr/sbin/iw dev | grep Interface | wc -l)
 # Virtual wifi interfaces support 
 #lsmod | grep mac80211 | grep 'ath9k' > /dev/null 2>&1
 #VIRT_WIFI_SUPPORT=$?
@@ -637,15 +639,15 @@ WIFI_STATION_INTERFACE=jwlan1
 WIFI_PHY_DEV=0
 WIFI_WAIT_TIME=40
 
-NETWORK_ETHERNET_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
-NETWORK_IP_ADDRESS=$(ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
-NETWORK_GATEWAY_ADDRESS=$(ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')
+NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
+NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
+NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')
 NETWORK_MASK_PREFIX=24
 NETWORK_DOMAIN=jambulatv.com
 NETWORK_WIRELESS_SSID="$PROJECT_NAME-$(echo $SYSTEM_IDENTIFIER | cut -c 1-5)"
 NETWORK_WIRELESS_CHANNEL_NO=11
 NETWORK_WIRELESS_PASSPHRASE=$(pwgen -A -v -N1 12)
-NETWORK_WIRELESS_NET_MASK=$(ip addr show tun0 | awk '$1=="inet"{print $2}')
+NETWORK_WIRELESS_NET_MASK=$(/usr/sbin/ip addr show tun0 | awk '$1=="inet"{print $2}')
 NETWORK_DHCP_RANGE="192.168.0.100,192.168.0.199"
 
 CHRONYC_PASSWD=jul1214
@@ -739,7 +741,7 @@ OPENVPN_CLIENT_CONFIG_FILE=$OPENVPN_CLIENT_CONFIG_DIR/client.conf
 OPENVPN_CLIENT_PROTOCOL=tcp #udp
 OPENVPN_SERVER_IP=[REMOTE-VPN-SERVER]
 OPENVPN_SERVER_PORT=[REMOTE-VPN-PORT:11945]
-OPENVPN_SAMPLE_KEYS_DIR=$(find $DOCSDIR/openvpn* -iname 'sample-keys')
+OPENVPN_SAMPLE_KEYS_DIR=$(cd $TMPDIR && find $DOCSDIR/openvpn* -iname 'sample-keys')
 
 # DNS2TCP
 DNS2TCP_DOMAIN=t1.soroti.com
@@ -5495,7 +5497,7 @@ do
 # Get device biosdev name
 export WIFI_DEVICE=$LINE
 # Query MAC address
-export MAC_ADDRESS=$(ip link show dev ${WIFI_DEVICE} | grep 'link/ether' | awk {'print $2'})
+export MAC_ADDRESS=$(/usr/sbin/ip link show dev ${WIFI_DEVICE} | grep 'link/ether' | awk {'print $2'})
 #
 # Determine if device is USB or PCI based
 WIFI_DEVICE_CHARS=$(echo -n $WIFI_DEVICE | wc -c)
@@ -7376,11 +7378,11 @@ SYSCONFIG_DIR=/etc/sysconfig
 SYSCONFIG_NETWORK_SCRIPTS_DIR=\$SYSCONFIG_DIR/network-scripts
 NETWORK_ETHERNET_DEVICE=\`ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g'\`
 NETWORK_GATEWAY_ADDRESS=\`grep GATEWAY \$SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-\$NETWORK_ETHERNET_DEVICE | cut -d = -f2 | sed \"s/\\\"//g\"\`
-INTERNET_GATEWAY_DEV=\$(ip route list | grep default | sed -n 's/^.*dev //p' | awk '{print \$1}')
+INTERNET_GATEWAY_DEV=\$(/usr/sbin/ip route list | grep default | sed -n 's/^.*dev //p' | awk '{print \$1}')
 # Gateway device
 if [ \"x\$INTERNET_GATEWAY_DEV\" != \"x\" ];
 then
-INTERNET_GATEWAY_IP=\$(ip route list | grep default | sed -n 's/^.*via //p' | awk '{print \$1}')
+INTERNET_GATEWAY_IP=\$(/usr/sbin/ip route list | grep default | sed -n 's/^.*via //p' | awk '{print \$1}')
 fi
 TUNTAP=\$(basename \$DEV)
 
@@ -9857,7 +9859,9 @@ cat $PROJECT_CONTRIB_DIR/scripts/zoneminder_alarm_daemon.pl | \
 	sed "s:ZONEMINDER_DB_HOST:$ZONEMINDER_DB_HOST:g" | \
 	sed "s:ZONEMINDER_DB_NAME:$ZONEMINDER_DB_NAME:g"| \
 	sed "s:ZONEMINDER_DB_USER:$ZONEMINDER_DB_USER:g" | \
-	sed "s:ZONEMINDER_DB_PASS:$ZONEMINDER_DB_PASS:g" > $ZONEMINDER_ALARM_DAEMON
+	sed "s:ZONEMINDER_DB_PASS:$ZONEMINDER_DB_PASS:g" | \
+	sed "s:MY_RUNDIR:$RUNDIR:g" | \
+	sed "s:MY_ZONEMINDER_ALARM_NOTIFICATIONS_TOOL:$ZONEMINDER_ALARM_NOTIFICATIONS_TOOL:g" > $ZONEMINDER_ALARM_DAEMON
 # Make script executable
 chmod 755 $ZONEMINDER_ALARM_DAEMON
 #
@@ -10000,7 +10004,7 @@ $CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
 	-d "Monitor[Hue]=-1" \
 	-d "Monitor[Colour]=-1" \
 	-d "Monitor[EventPrefix]=$Name -" \
-	-d "Monitor[LabelFormat]=%t%t%A%t%t%t%t%t%d %B, %Y%t%t%t%t%t%t%_I:%M:%S %p" \
+	-d "Monitor[LabelFormat]=  %A    %d %B, %Y        %I:%M:%S %p" \
 	-d "Monitor[LabelX]=0" \
 	-d "Monitor[LabelY]=0" \
 	-d "Monitor[LabelSize]=1" \

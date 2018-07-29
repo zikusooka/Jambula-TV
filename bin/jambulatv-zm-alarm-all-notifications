@@ -208,9 +208,9 @@ then
 # Generate message for WhatsApp
 generate_message_4_notice
 # SendMesage
-$WHATSAPP_TOOL sendmessage "$(cat $ZM_MESSAGE_FILE)" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
+sudo $WHATSAPP_TOOL sendmessage "$(cat $ZM_MESSAGE_FILE)" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
 # SendPhoto
-$WHATSAPP_TOOL sendimage $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1
+sudo $WHATSAPP_TOOL sendimage $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1
 fi
 
 
