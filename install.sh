@@ -192,6 +192,7 @@ nginx_install
 set_www_user_group  # Keep this Active from here-on!!!
 nginx_configure
 nginx_customization
+www_superuser_permissions_configure
 php_configure
 nginx_fcgiwrap_install
 nginx_spawn_fcgi_configure

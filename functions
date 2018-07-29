@@ -5203,7 +5203,7 @@ cat > $SUDOERS_DIR/$AUTOLOGIN_USER << EOF
 # Don't require TTY
 Defaults:$AUTOLOGIN_USER    !requiretty
 # Set Command Aliases
-Cmnd_Alias $(echo $PROJECT_NAME | tr [:lower:] [:upper:]) = $AUTOLOGIN_USER_COMMANDS
+Cmnd_Alias $(echo $PROJECT_NAME | tr [:lower:] [:upper:]) = $AUTOLOGIN_USER_COMMANDS, $WHATSAPP_TOOL
 # Set User actions
 $AUTOLOGIN_USER             ALL = NOPASSWD: $(echo $PROJECT_NAME | tr [:lower:] [:upper:])
 EOF
@@ -7014,6 +7014,26 @@ ssl_cert_key_generate $NGINX_CONF_DIR/ssl/cert.pem $NGINX_CONF_DIR/ssl/cert.key 
 nginx_customization () {
 # Add HTML customized files
 rsync -av $PROJECT_CUSTOMIZATION_DIR/nginx/html/ $WWW_HTML_DIR/
+}
+
+www_superuser_permissions_configure () {
+# Get WWW User and Group
+set_www_user_group
+
+# Allow WWW user to use 'sudo' e.g. source functions file
+cat > $SUDOERS_DIR/$WWW_USER << EOF
+# Don't require TTY
+Defaults:$WWW_USER    !requiretty
+# Set Command Aliases
+Cmnd_Alias WEBUSER = $WWW_USER_COMMANDS, $WHATSAPP_TOOL
+# Set User actions
+$WWW_USER             ALL = NOPASSWD: WEBUSER
+EOF
+# Change sudoer permissions
+chmod 0440 $SUDOERS_DIR/$WWW_USER
+
+# Add www to systemd-journal group so they can query using journalctl
+usermod -a -G systemd-journal $WWW_USER
 }
 
 php_configure () {
