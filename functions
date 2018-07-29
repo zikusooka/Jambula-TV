@@ -573,6 +573,9 @@ ZONEMINDER_API_URL=$ZONEMINDER_WEB_URL/api
 ZONEMINDER_CCTV_MONITORS_CONFIGS_DIR=$PROJECT_CONTRIB_DIR/cameras
 ZONEMINDER_CCTV_MONITORS="logitech_quickcam_communicate_stx logitech_c200"
 
+# ZMEventServer
+ZMEVENTSERVER_PORT=$(grep -i 'zmeventserver$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+
 # Motion Database Variables
 MOTION_DB_HOST=localhost
 MOTION_DB_NAME=motion
@@ -9660,6 +9663,7 @@ EOF
 
 zoneminder_pre_install () {
 # Install pre-requisite Perl modules that are not packaged
+# --------------------------------------------------------
 # X10 module
 tar zxvf $PROJECT_TARBALLS_DIR/X10-*.tar.gz -C $INSTALL_SRC_DIR
 # Change to perl_X10 directory
@@ -9667,13 +9671,29 @@ cd $INSTALL_SRC_DIR && mv X10* perl_X10
 cd $INSTALL_SRC_DIR/perl_X10
 perl Makefile.PL
 make_install_jambulatv
-#
+
 # Net-SFTP-Foreign module
 tar zxvf $PROJECT_TARBALLS_DIR/Net-SFTP-Foreign-*.tar.gz -C $INSTALL_SRC_DIR
 # Change to Net-SFTP-Foreign directory
 cd $INSTALL_SRC_DIR && mv Net-SFTP-Foreign* perl_Net-SFTP-Foreign
 cd $INSTALL_SRC_DIR/perl_Net-SFTP-Foreign
 perl Makefile.PL PREFIX="$PREFIX" LIBS="-L$LIBDIR"
+make_install_jambulatv
+
+# Net-WebSocket-Server module
+tar zxvf $PROJECT_TARBALLS_DIR/Net-WebSocket-Server-*.tar.gz -C $INSTALL_SRC_DIR
+# Change to perl_Net-WebSocket-Server directory
+cd $INSTALL_SRC_DIR && mv Net-WebSocket-Server* perl_Net-WebSocket-Server
+cd $INSTALL_SRC_DIR/perl_Net-WebSocket-Server
+perl Makefile.PL
+make_install_jambulatv
+
+# Crypt-MySQL module
+tar zxvf $PROJECT_TARBALLS_DIR/Crypt-MySQL-*.tar.gz -C $INSTALL_SRC_DIR
+# Change to perl_Crypt-MySQL directory
+cd $INSTALL_SRC_DIR && mv Crypt-MySQL* perl_Crypt-MySQL
+cd $INSTALL_SRC_DIR/perl_Crypt-MySQL
+perl Makefile.PL
 make_install_jambulatv
 }
 
