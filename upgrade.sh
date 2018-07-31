@@ -171,7 +171,8 @@ upgrade_zoneminder () {
 uninstall_zoneminder
 #zoneminder_128_install
 zoneminder_130_install
-zoneminder_configure 
+zoneminder_configure
+zmeventserver_configure
 }
 
 upgrade_x264 () {

@@ -477,7 +477,7 @@ WWW_USER=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $2
 WWW_GROUP=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $3'} | sed 's:;::')
 fi
 
-WWW_USER_COMMANDS="/usr/bin/chmod, /usr/bin/grep"
+WWW_USER_COMMANDS="/usr/bin/chmod, /usr/bin/grep, /usr/bin/rm"
 
 WWW_HTML_DIR=$PROJECT_SYSTEM_SHARE_DIR/html
 WWW_CGI_DIR=$PROJECT_SYSTEM_SHARE_DIR/cgi-bin
@@ -572,6 +572,7 @@ ZONEMINDER_WEB_URL="http://${ZONEMINDER_DB_HOST}:${ZONEMINDER_WWW_PORT}"
 ZONEMINDER_API_URL=$ZONEMINDER_WEB_URL/api
 ZONEMINDER_CCTV_MONITORS_CONFIGS_DIR=$PROJECT_CONTRIB_DIR/cameras
 ZONEMINDER_CCTV_MONITORS="logitech_quickcam_communicate_stx logitech_c200"
+ZONEMINDER_CCTV_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/cctv-settings.cfg
 
 # ZMEventServer
 ZMEVENTSERVER_PORT=$(grep -i 'zmeventserver$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -893,6 +894,7 @@ KODI_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-kodi-controller
 KODI_LIBRARY_TOOL=$BINARY_PREFIX/jambulatv-library
 KODI_STANDALONE_TOOL=$BINARY_PREFIX/kodi-standalone
 KODI_PVR_MANAGER_ENABLE_TOOL=$BINARY_PREFIX/jambulatv-kodi-pvr-hts-manager
+LIGHTS_TOOL=/usr/bin/jambulatv-lights
 OSD_TOOL=$BINARY_PREFIX/jambulatv-osd
 PPP_DIAL_TOOL=$BINARY_PREFIX/jambulatv-ppp-dialer
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
@@ -904,6 +906,7 @@ VLM_VOD_CREATE_TOOL=$BINARY_PREFIX/jambulatv-create-video-on-demand
 VLM_VOD_DELETE_TOOL=$BINARY_PREFIX/jambulatv-delete-video-on-demand
 WHATSAPP_TOOL=$BINARY_PREFIX/jambulatv-whatsapp
 XMPP_TOOL=$BINARY_PREFIX/jambulatv-xmpp
+ZMEVENTSERVER_NOTIFICATION_DAEMON=$BINARY_PREFIX/zmeventnotification.pl
 ZONEMINDER_ALARM_NOTIFICATIONS_TOOL=$BINARY_PREFIX/jambulatv-zm-alarm-all-notifications 
 ZONEMINDER_ALARM_DAEMON=$BINARY_PREFIX/zmalarm_daemon.pl
 ZONEMINDER_ZMS_INETD_TOOL=$BINARY_PREFIX/jambulatv-zms-inetd
@@ -1545,6 +1548,7 @@ rm -rf $PROJECT_SYSTEM_LOG_DIR/zoneminder
 rm -rf $CACHEDIR/zoneminder
 rm -rf $ZONEMINDER_SOUNDS_DIR
 rm -rf $INSTALL_SRC_DIR/ZoneMinder
+rm -f $ZMEVENTSERVER_NOTIFICATION_DAEMON
 }
 
 uninstall_flexget () {
@@ -9969,7 +9973,7 @@ systemctl start zoneminder.service
 
 zoneminder_login_using_api () {
 # Remove old cookies-jar file
-[[ -e $CURL_COOKIE_JAR_FILE ]] && rm -f $CURL_COOKIE_JAR_FILE
+[[ -e $CURL_COOKIE_JAR_FILE ]] && sudo rm -f $CURL_COOKIE_JAR_FILE
 # Login for ZoneMinder < v1.32.0
 $CURL_CMD $CURL_OPTS -c $CURL_COOKIE_JAR_FILE \
 	-d view=console \
@@ -10192,6 +10196,44 @@ zmupdate.pl
 
 #
 EOF
+}
+
+zmeventserver_configure () {
+# Modify zmeventnotification.pl, a perl-based script that watches for ZoneMinder alarms
+# --------------------------------------------------------------------------------------
+if [[ ! -x $ZMEVENTSERVER_NOTIFICATION_DAEMON ]];
+then
+
+# Create temp patch to change path for config file, port number, and disable SSL for now
+cat $PROJECT_PATCHES_DIR/zmeventnotification.pl.patch | \
+	sed "s:MY_ZONEMINDER_CONFIG_DIR:$ZONEMINDER_CONFIG_DIR:g" | \
+	sed "s:MY_ZMEVENTSERVER_PORT:$ZMEVENTSERVER_PORT:g"| \
+	sed "s:MY_ZONEMINDER_ALARM_NOTIFICATIONS_TOOL:$ZONEMINDER_ALARM_NOTIFICATIONS_TOOL:g" > $TMPDIR/zmeventnotification.pl.patch
+
+# Copy original zmeventnotification.pl script to /usr/bin directory
+cp -v $PROJECT_CONTRIB_DIR/scripts/zmeventnotification.pl \
+	$ZMEVENTSERVER_NOTIFICATION_DAEMON
+# Make script executable
+chmod 755 $ZMEVENTSERVER_NOTIFICATION_DAEMON
+
+# Apply above patch to zmeventnotification.pl script
+patch -p1 $ZMEVENTSERVER_NOTIFICATION_DAEMON < $TMPDIR/zmeventnotification.pl.patch
+fi
+
+# Copy and modify zmeventnotification.ini, a sample config file for zmeventserver
+if [[ ! -e $ZONEMINDER_CONFIG_DIR/zmeventnotification.ini ]];
+then
+cat $PROJECT_CONFIGS_DIR/zoneminder/zmeventnotification.ini | \
+	sed "s:MY_ZMEVENTSERVER_PORT:$ZMEVENTSERVER_PORT:g" | \
+	sed "s:MY_NGINX_CONF_DIR:$NGINX_CONF_DIR:g" \
+		> $ZONEMINDER_CONFIG_DIR/zmeventnotification.ini
+# Give web user permission to access zmevenserver config file
+set_www_user_group
+chown $WWW_USER:$WWW_GROUP $ZONEMINDER_CONFIG_DIR/zmeventnotification.ini
+fi
+
+# Create SSL certificates and keys
+ssl_cert_key_generate $NGINX_CONF_DIR/ssl/zoneminder.crt $NGINX_CONF_DIR/ssl/zoneminder.key 7300
 }
 
 motion_install () {

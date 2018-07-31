@@ -1,0 +1,54 @@
+--- zmeventnotification.pl.a	2018-07-28 18:16:57.383736010 +0300
++++ zmeventnotification.pl.b	2018-07-31 00:54:32.853885334 +0300
+@@ -64,9 +64,9 @@
+ # go into that config file.
+ # ==========================================================================
+ 
+-use constant DEFAULT_CONFIG_FILE => "/etc/zmeventnotification.ini";
++use constant DEFAULT_CONFIG_FILE => "MY_ZONEMINDER_CONFIG_DIR/zmeventnotification.ini";
+ 
+-use constant DEFAULT_PORT => 9000;
++use constant DEFAULT_PORT => MY_ZMEVENTSERVER_PORT;
+ use constant DEFAULT_ADDRESS => '[::]';
+ use constant DEFAULT_AUTH_ENABLE => 1;
+ use constant DEFAULT_AUTH_TIMEOUT => 20;
+@@ -111,6 +111,8 @@
+ my $tag_alarm_event_id;
+ my $use_custom_notification_sound;
+ 
++my $ZONEMINDER_ALARM_NOTIFICATIONS_TOOL = 'MY_ZONEMINDER_ALARM_NOTIFICATIONS_TOOL';
++
+ #default key. Please don't change this
+ use constant NINJA_API_KEY => "AAAApYcZ0mA:APA91bG71SfBuYIaWHJorjmBQB3cAN7OMT7bAxKuV3ByJ4JiIGumG6cQw0Bo6_fHGaWoo4Bl-SlCdxbivTv5Z-2XPf0m86wsebNIG15pyUHojzmRvJKySNwfAHs7sprTGsA_SIR_H43h";
+ 
+@@ -140,12 +142,12 @@
+ 
+   --help                              Print this page.
+ 
+-  --config=FILE                       Read options from configuration file (default: /etc/zmeventnotification.ini).
++  --config=FILE                       Read options from configuration file (default: MY_ZONEMINDER_CONFIG_DIR/zmeventnotification.ini).
+                                       Any CLI options used below will override config settings.
+ 
+   --check-config                      Print configuration and exit.
+ 
+-  --port=PORT                         Port for Websockets connection (default: 9000).
++  --port=PORT                         Port for Websockets connection (default: MY_ZMEVENTSERVER_PORT).
+   --address=ADDRESS                   Address for Websockets server (default: [::]).
+ 
+   --enable-auth                       Check username/password against ZoneMinder database (default: true).
+@@ -495,6 +497,15 @@
+                 $alarm_cause = $trigger_cause if (defined($trigger_cause) && $alarm_cause eq "" && $trigger_cause ne "");
+                 printdbg ("Unified Alarm details: $alarm_cause");
+                 Info( "New event $last_event reported for ".$monitor->{Name}." ".$alarm_cause."\n");
++                #
++                # -----------------------------------
++                # Send JambulaTV Notification Alerts
++                # -----------------------------------
++                my $current_time = strftime('%l:%M:%S %p on %A, %e %B %Y',localtime);
++                system("$ZONEMINDER_ALARM_NOTIFICATIONS_TOOL $monitor->{Id} $monitor->{Name} $last_event '$current_time' &");
++                Info("JambulaTV ZoneMinder Alarm Notifications tool activated for event $last_event\n");
++                # -----------------------------------
++                #
+                 $monitor->{LastState} = $state;
+                 $monitor->{LastEvent} = $last_event;
+                 my $name = $monitor->{Name};

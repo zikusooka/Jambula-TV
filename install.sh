@@ -374,6 +374,7 @@ zoneminder_pre_install
 zoneminder_130_install
 zoneminder_configure 
 zoneminder_zms_inetd
+zmeventserver_configure
 #
 # Cameras via TVHeadend
 cctv_tvheadend_configure
