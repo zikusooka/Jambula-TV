@@ -28,7 +28,7 @@ then
 clear
 cat <<EOF
 Usage:  ./`basename $0` [METHOD]
-Available methods: sendmessage|sendimagedisk|newbot
+Available methods: sendMessage|sendImageDisk|sendVideoDisk|newbot
 EOF
 exit 1
 fi
@@ -47,6 +47,10 @@ exit 1
 echo "$USAGE [IMAGE_PATH_eg_/tmp/bell.png]"
 exit 1
 ;;
+[Ss][Ee][Nn][Dd][Vv][Ii][Dd][Ee][Oo][Dd][Ii][Ss][Kk])
+echo "$USAGE [VIDEO_PATH_eg_/tmp/alarm.mp4]"
+exit 1
+;;
 [Nn][Ee][Ww][Bb][Oo][Tt])
 # No arguments when creating new bot
 break
@@ -55,7 +59,7 @@ break
 clear
 cat <<EOF
 Usage:  ./`basename $0` [METHOD]
-Available methods: sendmessage|sendimagedisk|newbot
+Available methods: sendMessage|sendImageDisk|sendVideoDisk|newbot
 EOF
 exit 1
 ;;
@@ -178,6 +182,12 @@ curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/sendPhoto \
 	-F photo=@$TELEGRAM_ARGUMENTS > /dev/null 2>&1
 }
 
+send_video_disk () {
+curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/sendVideo \
+	-F chat_id=$TELEGRAM_CHAT_ID \
+	-F video=@$TELEGRAM_ARGUMENTS > /dev/null 2>&1
+}
+
 create_new_bot () {
 # Create API bot token
 create_api_bot
@@ -218,6 +228,11 @@ send_message
 [Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee][Dd][Ii][Ss][Kk])
 get_chat_id 
 send_image_disk
+;;
+
+[Ss][Ee][Nn][Dd][Vv][Ii][Dd][Ee][Oo][Dd][Ii][Ss][Kk])
+get_chat_id 
+send_video_disk 
 ;;
 
 [Nn][Ee][Ww][Bb][Oo][Tt])
