@@ -613,8 +613,18 @@ fi
 NETWORK_DNS_1=$CURRENT_DNS1
 NETWORK_DNS_2=$CURRENT_DNS2
 
-# Public DNS Servers: Google, OpenDNS, Comodo, OpenNIC, Yandex
-PUBLIC_DNS_SERVERS="8.8.8.8 208.67.222.222 8.26.56.26 107.170.95.180 77.88.8.8"
+# Public DNS Servers
+GOOGLE_DNS_SERVER_IP_1=8.8.8.8
+GOOGLE_DNS_SERVER_IP_2=8.8.4.4
+CLOUDFARE_DNS_SERVER_IP_1=1.0.0.1
+CLOUDFARE_DNS_SERVER_IP_2=1.1.1.1
+OPEN_DNS_SERVER_IP_1=208.67.222.222
+COMODO_DNS_SERVER_IP_1=8.26.56.26
+YANDEX_DNS_SERVER_IP_1=77.88.8.8
+#
+PUBLIC_DNS_SERVERS="$GOOGLE_DNS_SERVER_IP_1 $CLOUDFARE_DNS_SERVER_IP_1 $OPEN_DNS_SERVER_IP_1 $COMODO_DNS_SERVER_IP_1"
+#
+DNS_SERVER_IP_ADDRESS_DEFAULT=$GOOGLE_DNS_SERVER_IP_1
 
 # Netdata
 NETDATA_PORT=$(grep -i 'netdata$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -697,6 +707,17 @@ ICINGA2_FEATURES_AVAIL_DIR=$ICINGA2_CONFIG_DIR/features-available
 
 MONITORING_PLUGINS_DIR=$LIBDIR/nagios/plugins
 FPING_CMD=/usr/sbin/fping
+
+# ping
+PING_COUNT=1
+PING_TIMEOUT=2
+PING_CMD="/usr/bin/ping"
+PING_OPTS="-n -c $PING_COUNT -W $PING_TIMEOUT"
+
+# nmap
+NMAP_CMD='/usr/bin/nmap'
+NMAP_OPTS_GENERAL='-n'
+NMAP_OPTS_PING_SCAN='-sn -Pn -oG -' 
 
 # Icingaweb2
 ICINGAWEB2_DB_NAME=icingaweb2
@@ -955,7 +976,9 @@ FMRADIO_STREAMER_PORT=$(grep -i 'fmradio streamer$' $PORTS_ASSIGNED_FILE | awk {
 ############################
 # Set notifications for logging purposes
 set_notifications () {
-NO_INTERNET_NOTIFICATION_MESSAGE="Error: The host ($PING_FAILED_REMOTE_HOST_NAME) is unreachable. It is likely that there is no Internet connection, please try again later!"
+NO_INTERNET_NOTIFICATION_MESSAGE="Error: You are not connected to the Internet. Please check your router and try again later!"
+HOST_NOT_REACHEABLE_NOTIFICATION_MESSAGE="Error: The host $REMOTE_HOST_NAME is unreachable and may currently be down, please try again later!"
+HOST_IS_BLOCKED_NOTIFICATION_MESSAGE="Warning: Internet traffic to $REMOTE_HOST_NAME is being filtered either by your ISP or the remote server. Expect a degradation in this service."
 FTP_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 WGET_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 TVHEADEND_RESET_MESSAGE="Reset of TV server has been requested"
@@ -1037,39 +1060,61 @@ PYTHON3_SITEDIR=$PREFIX/local/lib/python${PYTHON_MINOR_VERSION_NUMBER}/site-pack
 export PYTHON_VERSION PYTHON_FULL_VERSION_NUMBER PYTHON_MAJOR_VERSION_NUMBER PYTHON_MINOR_VERSION_NUMBER PYTHON_SITEDIR
 }
 
+probe_remote_host_using_nmap () {
+# Set nmap host to ping
+NMAP_PROBE_HOST=$1
+# Ping scan remote host using nmap
+NMAP_HOST_STATUS=$($NMAP_CMD $NMAP_OPTS_GENERAL $NMAP_OPTS_PING_SCAN $NMAP_PROBE_HOST 2>&1 | grep -Evi -e 'Failed' -e 'WARNING' -e '^#' | awk '$4=="Status:" && $5=="Up" {print $5}')
+# Set Internet status exit value based on previous ping scan
+if [[ "$NMAP_HOST_STATUS" = "Up" ]];
+then
+INTERNET_STATUS_VAL=0
+# Notify tools that use this function that ICMP ping requests are either blocked by server
+# or the ISP is filtering access to this host 
+PING_ICMP_REQUESTS_BLOCKED=yes
+export PING_ICMP_REQUESTS_BLOCKED
+#
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$HOST_IS_BLOCKED_NOTIFICATION_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$HOST_IS_BLOCKED_NOTIFICATION_MESSAGE" osd
+
+else
+INTERNET_STATUS_VAL=255
+fi
+}
+
 check_internet_connectivity_ping () {
-# Default remote hostname to ping
-DEFAULT_REMOTE_HOST_NAME_2_PING=google.com
-PING_COUNT=3
-PING_TIMEOUT=3
-PING_OUTPUT_RESULT=$1
+DEFAULT_REMOTE_HOST_NAME_2_PING=$DNS_SERVER_IP_ADDRESS_DEFAULT # Use IP Address NOT DOMAIN NAME!!!
+PING_HOST_EXIT_STATUS_TO_BE_USED=$1
 PING_HOST_NAME=$2
 # Set exit value specified on command line
-if [[ "x$PING_OUTPUT_RESULT" = "x" ]];
+if [[ "x$PING_HOST_EXIT_STATUS_TO_BE_USED" = "x" ]];
 then
 EXIT_VALUE=0
 else
-EXIT_VALUE=$PING_OUTPUT_RESULT
+EXIT_VALUE=$PING_HOST_EXIT_STATUS_TO_BE_USED
 fi
 #
 # Remote hostname to ping
 # IMPORTANT: Don't use DNS to ping use actual IP i.e. convert DNS name to IP address
 if [[ "x$PING_HOST_NAME" = "x" ]];
 then
-REMOTE_HOST_NAME=$(dig +short $DEFAULT_REMOTE_HOST_NAME_2_PING A @8.8.8.8 | head -1)
-PING_FAILED_REMOTE_HOST_NAME=$DEFAULT_REMOTE_HOST_NAME_2_PING
+REMOTE_HOST_NAME=$DEFAULT_REMOTE_HOST_NAME_2_PING
 else
-REMOTE_HOST_NAME=$(dig +short $PING_HOST_NAME A @8.8.8.8 | head -1)
-PING_FAILED_REMOTE_HOST_NAME=$PING_HOST_NAME
+REMOTE_HOST_NAME=$PING_HOST_NAME
 fi
+
+# Check to see if there's atleast an Internet connection whether filtered or not
+$PING_CMD $PING_OPTS $DEFAULT_REMOTE_HOST_NAME_2_PING > /dev/null 2>&1
+INTERNET_IS_REACHEABLE=$?
 #
-# Ping to check for internet connectivity
-ping -c $PING_COUNT -W $PING_TIMEOUT $REMOTE_HOST_NAME > /dev/null 2>&1
-INTERNET_STATUS_VAL=$?
-#
-# Notify and quit when there's NO Internet 
-if [ "$INTERNET_STATUS_VAL" != "0" ];
+if [[ "$INTERNET_IS_REACHEABLE" != "0" ]];
 then
+# 1. If there is NO Internet at all, notify and quit immediately
+# ..............................................................
 # Source notification strings
 set_notifications
 # Print notifciation to stdout and systemd journal 
@@ -1078,6 +1123,37 @@ print_notification "$NO_INTERNET_NOTIFICATION_MESSAGE" text
 print_notification "$NO_INTERNET_NOTIFICATION_MESSAGE" osd
 # Quit script, since there's no internet
 exit $EXIT_VALUE
+fi
+
+# 2. If there is an Internet connection, check to see if is unfiltered
+# ....................................................................
+$PING_CMD $PING_OPTS $REMOTE_HOST_NAME > /dev/null 2>&1
+INTERNET_STATUS_VAL=$?
+
+if [[ "$INTERNET_STATUS_VAL" = "0" ]];
+then
+# Back out and continue with the rest of the tasks
+break
+
+else
+# 3. Use nmap to do a ping scan of the remote as ICMP ping requests may be either
+# blocked by server or the ISP is filtering access to this host
+# ...............................................................................
+probe_remote_host_using_nmap $REMOTE_HOST_NAME
+
+if [[ "$INTERNET_STATUS_VAL" != "0" ]];
+then
+# Notify and quit when remote host is not alive i.e. dead
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$HOST_NOT_REACHEABLE_NOTIFICATION_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$HOST_NOT_REACHEABLE_NOTIFICATION_MESSAGE" osd
+# Quit script, since there's no internet
+exit $EXIT_VALUE
+fi
+
 fi
 }
 
@@ -8870,7 +8946,7 @@ GV_SERVER=talk.google.com
 GV_USERNAME=GOOGLE_SERVICES_USERNAME
 GV_PASSWORD=GOOGLE_SERVICES_PASSWORD
 #
-REMOTE_XMPP_HOST=8.8.8.8 # Use IP Address NOT DOMAIN NAME!!!
+REMOTE_XMPP_HOST=$DNS_SERVER_IP_ADDRESS_DEFAULT # Use IP Address NOT DOMAIN NAME!!!
 #
 # Ping Internet
 ping -c 3 -W 3 \$REMOTE_XMPP_HOST > /dev/null 2>&1
