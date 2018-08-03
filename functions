@@ -5945,6 +5945,15 @@ SSH Reverse Tunnel
 EOF
 }
 
+sshuttle_install () {
+get_python_version
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/sshuttle/ $INSTALL_SRC_DIR/sshuttle/
+cd $INSTALL_SRC_DIR/sshuttle
+python setup.py install --install-lib=$PYTHON_SITEDIR
+# Create symbolic link in /usr/bin
+[ -x $BINARY_PREFIX/sshuttle ] || ln -s $PREFIX/local/bin/sshuttle $BINARY_PREFIX/sshuttle
+}
+
 cutter_install () {
 # Unpack
 tar xvf $PROJECT_TARBALLS_DIR/cutter-*.tgz -C $INSTALL_SRC_DIR

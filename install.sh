@@ -270,6 +270,7 @@ email_via_gmail_setup
 gdata_install
 google_sms_setup
 reverse_ssh_configure
+sshuttle_install
 rtl_sdr_install
 fmradio_streamer_setup
 TermFeed_install
