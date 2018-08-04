@@ -19,7 +19,7 @@ WHATSAPP_CMD=$(which yowsup-cli)
 WHATSAPP_LOG_FILE=/var/log/JambulaTV/whatsapp.log
 WHATSAPP_METHOD_NAME=$1
 WHATSAPP_TEXT_MESSAGE="$2"
-WHATSAPP_IMAGE_PATH="$2"
+WHATSAPP_ATTACHMENT_FILE_PATH="$2"
 WHATSAPP_PHONE_NUMBER_RECIPIENT=$3
 WHATSAPP_REGISTRATION_METHOD=sms
 
@@ -65,7 +65,7 @@ check_if_root
 clear
 if [ "x$WHATSAPP_METHOD_NAME" = "x" ];
 then
-echo "Usage:  ./`basename $0` [register]|[sendmessage]|[sendimage]
+echo "Usage:  ./`basename $0` [register]|[sendMessage]|[sendImage][sendVideo]
 "
 exit 1
 fi
@@ -87,9 +87,21 @@ fi
 # Source settings file
 [ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
 # Test for blank message or recipient phone number
-if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_IMAGE_PATH" = "x" ];
+if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_ATTACHMENT_FILE_PATH" = "x" ];
 then
-echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_IMAGE_PATH] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
+echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_IMAGE_FILE_PATH] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
+"
+exit 1
+fi
+;;
+
+[Ss][Ee][Nn][Dd][Vv][Ii][Dd][Ee][Oo])
+# Source settings file
+[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+# Test for blank message or recipient phone number
+if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_ATTACHMENT_FILE_PATH" = "x" ];
+then
+echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_VIDEO_FILE_PATH] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
 "
 exit 1
 fi
@@ -99,9 +111,21 @@ esac
 }
 
 pre_start_tasks () {
+# Usage
 usage
 
+# Check connectivity to WhatsApp servers
 check_internet_connectivity_ping 0 whatsapp.com
+
+# Test and see if filtering is going on i.e. ICMP ping requests were blocked 
+if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
+then
+# Source SSH server variables i.e. credentials
+[[ -e $REVERSE_SSH_CONFIG ]] && . $REVERSE_SSH_CONFIG
+#
+# Start a VPN tunnel using sshuttle
+vpn_connection_using_sshuttle start $MIDDLEMAN_SSH_SERVER $MIDDLEMAN_SSH_SERVER_PORT $MIDDLEMAN_SSH_SERVER_USER 0.0.0.0/0
+fi
 
 # Wait if another instance of me is running
 while [ -e "$ANOTHER_INSTANCE_TEMP_FILE" ];
@@ -110,13 +134,21 @@ logger -s -t $(basename $0) "Another WhatsApp instance is running, waiting a bit
 sleep 10
 done
 #
-# Create temp file to prevent other WhatsApp instances from neing started while
+# Create temp file to prevent other WhatsApp instances from being started while
 # this one is in progress
-[ -e "$ANOTHER_INSTANCE_TEMP_FILE" ] || touch $ANOTHER_INSTANCE_TEMP_FILE
+[[ -e "$ANOTHER_INSTANCE_TEMP_FILE" ]] || touch $ANOTHER_INSTANCE_TEMP_FILE
 }
 
 post_clean_up_tasks () {
-[ -e "$ANOTHER_INSTANCE_TEMP_FILE" ] && rm -f $ANOTHER_INSTANCE_TEMP_FILE
+# Test and see if filtering is going on i.e. ICMP ping requests were blocked 
+if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
+then
+# Stop VPN tunnel using sshuttle
+vpn_connection_using_sshuttle stop
+fi
+
+# Remove temp instance file
+[[ -e "$ANOTHER_INSTANCE_TEMP_FILE" ]] && rm -f $ANOTHER_INSTANCE_TEMP_FILE
 }
 
 registration_status () {
@@ -292,9 +324,6 @@ send_pre_check () {
 # Source settings file
 . $WHATSAPP_CREDENTIALS_CONFIG
 
-# Where applicable, use recipient phone number specified on command line
-[ "x$2" = "x" ] || WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
-
 # Check if registration was done
 if [ "x$WHATSAPP_ENCRYPTED_PASSWORD" = "x" ];
 then
@@ -307,13 +336,51 @@ fi
 send_message () {
 # Pre-checks before sending
 send_pre_check
+
+# Where applicable, use recipient phone number specified on command line
+[[ "x$2" = "x" ]] || WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
+
 # Send message to Whatsapp recipient
 $WHATSAPP_CMD demos -d -L $WHATSAPP_LOG_FILE -l "$WHATSAPP_PHONE_NUMBER_SENDER:$WHATSAPP_ENCRYPTED_PASSWORD" -s $WHATSAPP_PHONE_NUMBER_RECIPIENT "$WHATSAPP_TEXT_MESSAGE"
 }
 
-send_image () {
+send_attachment () {
 # Pre-checks before sending
 send_pre_check
+
+# Where applicable, use recipient phone number specified on command line
+[[ "x$2" = "x" ]] || WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
+
+# Determine file format from path name - May be use the 'file' command
+WHATSAPP_ATTACHMENT_FILE_EXT="${WHATSAPP_ATTACHMENT_FILE_PATH##*.}"
+case $WHATSAPP_ATTACHMENT_FILE_EXT in
+ogg|m4a|mp3|wav)
+MEDIA_TYPE=audio
+;;
+avi|mkv|mov|mp4)
+MEDIA_TYPE=video
+;;
+gif|jpeg|jpg|png)
+MEDIA_TYPE=image
+;;
+*)
+MEDIA_TYPE=image
+;;
+esac
+#
+# Set command for sending media
+case $MEDIA_TYPE in
+audio)
+SEND_MEDIA_COMMAND="audio send $WHATSAPP_PHONE_NUMBER_RECIPIENT $WHATSAPP_ATTACHMENT_FILE_PATH"
+;;
+image)
+SEND_MEDIA_COMMAND="image send $WHATSAPP_PHONE_NUMBER_RECIPIENT $WHATSAPP_ATTACHMENT_FILE_PATH"
+;;
+video)
+SEND_MEDIA_COMMAND="video send $WHATSAPP_PHONE_NUMBER_RECIPIENT $WHATSAPP_ATTACHMENT_FILE_PATH"
+;;
+esac
+
 # Send image to Whatsapp recipient
 /usr/bin/expect -c "
 spawn $WHATSAPP_CMD demos -y -d -L $WHATSAPP_LOG_FILE -l \"$WHATSAPP_PHONE_NUMBER_SENDER:$WHATSAPP_ENCRYPTED_PASSWORD\"; 
@@ -328,8 +395,8 @@ expect eof;
 send \"\n\";
 expect \[connected\];
 
-# Send image
-send -- \"/image send $WHATSAPP_PHONE_NUMBER_RECIPIENT $WHATSAPP_IMAGE_PATH\";
+# Send media
+send -- \"/$SEND_MEDIA_COMMAND\";
 send \"\n\";
 expect eof;
 
@@ -386,11 +453,15 @@ send_message "$2" "$3"
 ;;
 
 [Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee])
-send_image "$2" "$3"
+send_attachment "$2" "$3"
+;;
+
+[Ss][Ee][Nn][Dd][Vv][Ii][Dd][Ee][Oo])
+send_attachment "$2" "$3"
 ;;
 
 *)
-echo "Usage:  ./`basename $0` [register]|[sendmessage]|[sendimage]
+echo "Usage:  ./`basename $0` [register]|[sendMessage]|[sendImage][sendVideo]
 "
 exit 1
 ;;
