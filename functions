@@ -760,6 +760,11 @@ AUTOSSH_CMD=$BINARY_PREFIX/autossh
 AUTOSSH_PORT=$[ ( $RANDOM % 10000 )  + 20000 ]
 AUTOSSH_GATETIME=0
 
+# sshuttle
+SSHUTTLE_CMD="/usr/bin/sshuttle"
+SSHUTTLE_PID_FILE="$RUNDIR/sshuttle.pid"
+SSHUTTLE_OPTS="-D --dns --pidfile $SSHUTTLE_PID_FILE -r"
+
 # OpenVPN
 OPENVPN_CLIENT_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/openvpn
 OPENVPN_CLIENT_CONFIG_FILE=$OPENVPN_CLIENT_CONFIG_DIR/client.conf
@@ -979,6 +984,8 @@ set_notifications () {
 NO_INTERNET_NOTIFICATION_MESSAGE="Error: You are not connected to the Internet. Please check your router and try again later!"
 HOST_NOT_REACHEABLE_NOTIFICATION_MESSAGE="Error: The host $REMOTE_HOST_NAME is unreachable and may currently be down, please try again later!"
 HOST_IS_BLOCKED_NOTIFICATION_MESSAGE="Warning: Internet traffic to $REMOTE_HOST_NAME is being filtered either by your ISP or the remote server. Expect a degradation in this service."
+VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE="Alert: A secure VPN tunnel has been opened, re-routing all traffic through new connection"
+VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE="Alert: The VPN tunnel has been closed, re-routing all traffic back to default connection"
 FTP_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 WGET_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 TVHEADEND_RESET_MESSAGE="Reset of TV server has been requested"
@@ -1155,6 +1162,52 @@ exit $EXIT_VALUE
 fi
 
 fi
+}
+
+vpn_connection_using_sshuttle () {
+SSHUTTLE_ACTION=$1
+SSHUTTLE_REMOTE_SERVER=$2
+SSHUTTLE_REMOTE_PORT=$3
+SSHUTTLE_REMOTE_USER=$4
+SSHUTTLE_REMOTE_SUBNET=$5
+#
+case $SSHUTTLE_ACTION in
+
+start)
+# Connect to remote SSH server using sshuttle
+$SSHUTTLE_CMD $SSHUTTLE_OPTS $SSHUTTLE_REMOTE_USER@$SSHUTTLE_REMOTE_SERVER:$SSHUTTLE_REMOTE_PORT $SSHUTTLE_REMOTE_SUBNET
+
+# Notify that VPN tunnel has been established
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE" osd
+;;
+
+stop)
+# Stop current sshuttle tunnel process
+[[ -e $SSHUTTLE_PID_FILE ]] && kill -15 $(cat $SSHUTTLE_PID_FILE)
+
+# Notify that VPN tunnel has been established
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE" osd
+;;
+
+*)
+clear
+cat <<EOT
+Usage:	vpn_connection_using_sshuttle [start] [SERVER] [USER] [SUBNETS]
+	vpn_connection_using_sshuttle [stop]
+EOT
+;;
+
+esac
 }
 
 download_asterisk_deps () {
