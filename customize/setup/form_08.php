@@ -35,6 +35,7 @@ if (!empty($_SESSION['error_form_07'])) {
  <br><input type="hidden" name="cctv_all" value="1">
  <br><input type="checkbox" name="cctv_whatsapp" value="1"> WhatsApp
  <br><input type="checkbox" name="cctv_telegram" value="1"> Telegram
+ <br><input type="checkbox" name="cctv_sms" value="1"> SMS
  <br><input type="checkbox" name="cctv_email" value="1"> Email
  <br><input type="checkbox" name="cctv_kodi" value="1"> OSD (with picture)
  <br><input type="checkbox" name="cctv_osd" value="1"> OSD (text only)

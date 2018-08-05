@@ -31,6 +31,7 @@ if (!empty($_SESSION['error_form_08'])) {
 // Set to '1' if checked else '0'
 $cctv_whatsapp = (isset($_POST['cctv_whatsapp'])) ? 1 : 0;
 $cctv_telegram = (isset($_POST['cctv_telegram'])) ? 1 : 0;
+$cctv_sms = (isset($_POST['cctv_sms'])) ? 1 : 0;
 $cctv_email = (isset($_POST['cctv_email'])) ? 1 : 0;
 $cctv_kodi = (isset($_POST['cctv_kodi'])) ? 1 : 0;
 $cctv_osd = (isset($_POST['cctv_osd'])) ? 1 : 0;
@@ -41,7 +42,7 @@ $cctv_lights = (isset($_POST['cctv_lights'])) ? 1 : 0;
  $cctv_settings_file=".cctv-settings.txt";
 
  $file=fopen($cctv_settings_file,"w");
- fwrite($file,"CCTV_ALL=$cctv_all # Must be set to 1 if you want any alert below to work\nCCTV_WHATSAPP=$cctv_whatsapp\nCCTV_TELEGRAM=$cctv_telegram\nCCTV_EMAIL=$cctv_email\nCCTV_KODI=$cctv_kodi\nCCTV_OSD=$cctv_osd\nCCTV_CALL=$cctv_call\nCCTV_LIGHTS=$cctv_lights");
+ fwrite($file,"CCTV_ALL=$cctv_all # Must be set to 1 if you want any alert below to work\nCCTV_WHATSAPP=$cctv_whatsapp\nCCTV_TELEGRAM=$cctv_telegram\nCCTV_SMS=$cctv_sms\nCCTV_EMAIL=$cctv_email\nCCTV_KODI=$cctv_kodi\nCCTV_OSD=$cctv_osd\nCCTV_CALL=$cctv_call\nCCTV_LIGHTS=$cctv_lights");
  fclose($file);
 ?>
 

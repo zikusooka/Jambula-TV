@@ -49,6 +49,23 @@ function checkPasswordMatch() {
 
 <hr/>
 
+ <h4>Router Web Management Access</h4>
+ Please enter the IP Address, Admin username, and password of your wireless router.
+These credentials will be used to login and query your MiFi for battery levels, data balances, and perform several other tasks.
+  <p>
+
+ <label>IP Address :</label><br />
+ <input name="mifi_ip_address" id="mifi_ip_address" type="text" value="" required>
+ <label>Admin Username :</label><br />
+ <input name="mifi_admin_user" id="mifi_admin_user" type="text" value="" required>
+ <label>Admin Password :</label><br />
+ <input name="mifi_admin_pass" id="txtNewPassword" type="password" placeholder="Enter Password" required/>
+ <input name="mifi_admin_pass" id="txtConfirmPassword" type="password" onkeyup="checkPasswordMatch();" placeholder="Confirm Password" required/>
+ <div class="registrationFormAlert" id="divCheckPasswordMatch">
+ </div>
+
+<hr/>
+
 <b> Please turn on your MiFi device now ... </b>
 <br>
 
