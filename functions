@@ -920,10 +920,12 @@ KODI_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-kodi-controller
 KODI_LIBRARY_TOOL=$BINARY_PREFIX/jambulatv-library
 KODI_STANDALONE_TOOL=$BINARY_PREFIX/kodi-standalone
 KODI_PVR_MANAGER_ENABLE_TOOL=$BINARY_PREFIX/jambulatv-kodi-pvr-hts-manager
-LIGHTS_TOOL=/usr/bin/jambulatv-lights
+LIGHTS_TOOL=$BINARY_PREFIX/jambulatv-lights
+MIFI_QUERY_TOOL=$BINARY_PREFIX/jambulatv-mifi-query
 OSD_TOOL=$BINARY_PREFIX/jambulatv-osd
 PPP_DIAL_TOOL=$BINARY_PREFIX/jambulatv-ppp-dialer
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
+SMS_TOOL=$BINARY_PREFIX/jambulatv-sms
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
 TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
 TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controller 
@@ -1029,6 +1031,7 @@ BANDWIDTH_QUERY_USED_MESSAGE="*[JambulaTV]* The Internet data used $(echo $QUERY
 BANDWIDTH_QUERY_STANDBY_GENERATING_DATA_MESSAGE="Please standby for a minute while I gather your data bandwidth stats ..."
 BANDWIDTH_QUERY_SENDING_WHATSAPP_TELEGRAM_MESSAGE="Sending data bandwidth usage stats to Telegram and WhatsApp, please be patient ..."
 BANDWIDTH_GRAPHS_ATTACHED_MESSAGE="Attached are graphs showing total bandwidth used by your JambulaTV"
+SMS_UNKNOWN_SEND_METHOD_MESSAGE="Error: Could not send SMS message. Do not know which method to use"
 }
 
 print_notification () {
@@ -1361,6 +1364,13 @@ CAUTION:  This may take anywhere from 4 to 7 hours to complete!
 Enter to proceed ...
 EOF
 read
+}
+
+query_mysql_db () {
+mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} 2> /dev/null << EOF
+USE ${JAMBULATV_SETUP_DB_NAME};
+SELECT $@ FROM ${JAMBULATV_SETUP_DB_TABLE} WHERE id = (SELECT MAX(id) FROM ${JAMBULATV_SETUP_DB_TABLE});
+EOF
 }
 
 
@@ -5530,8 +5540,10 @@ cat $PROJECT_BIN_DIR/jambulatv-connect-2-wifi-ap | \
 chmod 755 $CONNECT_WIFI_AP_TOOL
 #
 # Add jambulatv-mifi-query tool - Get stats such as data balance, battery level, signal etc
-[ -e $BINARY_PREFIX/jambulatv-mifi-query ] || \
+[[ -e $MIFI_QUERY_TOOL ]] || \
 	cp -v $PROJECT_BIN_DIR/jambulatv-mifi-query $BINARY_PREFIX
+# Make tool executable
+chmod 755 $MIFI_QUERY_TOOL
 }
 
 nfs_server_configure () {
@@ -10986,6 +10998,14 @@ google_sms_setup () {
 cp -v $PROJECT_GITHUB_DIR/google-sms/google-sms.py $BINARY_PREFIX/
 # Make it executable
 chmod 755 $BINARY_PREFIX/google-sms.py
+}
+
+sms_tool_setup () {
+# Add jambulatv-sms tool - Send SMS messages using MiFi router, 3G dongle, etc
+[[ -e $SMS_TOOL ]] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-sms $BINARY_PREFIX
+# Make tool executable
+chmod 755 $SMS_TOOL
 }
 
 vncserver_configure () {
