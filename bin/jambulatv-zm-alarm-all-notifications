@@ -1,62 +1,19 @@
 #!/bin/sh
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+# Source CCTV settings
+. $ZONEMINDER_CCTV_SETTINGS_FILE
+
 # Variables
 ZM_CAMERA_ID=$1
-ZM_CAMERA_NAME=$2
+ZM_CAMERA_NAME="$2"
 ZM_CAMERA_EVENT_ID=$3
-ZM_TIME=$(date '+%r')
-ZM_EVENTS_DIR=/tmp
-ZM_MESSAGE_FILE=$ZM_EVENTS_DIR/cctv_message
-ZM_HOST_LOCAL=ZONEMINDER_DB_HOST
-ZM_HOST_WIFI=172.16.0.1
-ZM_PORT=ZONEMINDER_WWW_PORT
-ZM_ROOT_URL_LOCAL="http://$ZM_HOST_LOCAL:$ZM_PORT"
-ZM_ROOT_URL_WIFI="http://$ZM_HOST_WIFI:$ZM_PORT"
-ZM_WATCH_URL="$ZM_ROOT_URL_LOCAL/jpeg.cgi?mode=single&monitor=${ZM_CAMERA_ID}&scale=100"
-
-# CCTV alert settings
-CCTV_SETTINGS_FILE=/etc/JambulaTV/cctv-settings.cfg
-
-# Smart Home stuff
-SMARTHOME_HUB_HOST_IP=jambulatv
-SMARTHOME_HUB_WWW_PORT=MY_SMARTHOME_HUB_WWW_PORT
-SMARTHOME_HUB_SECURITY_LAMP_NAME="Living Room"
-SMARTHOME_HUB_SECURITY_LAMP_DURATION=60
-
-# Edit Notification message templates here
-NOTIFICATION_SUBJECT="*[JambulaTV] CCTV Security Alert: Motion Detected on $ZM_CAMERA_NAME Camera*"
-NOTIFICATION_MESSAGE="Motion Was Detected by Camera No.$ZM_CAMERA_ID ($ZM_CAMERA_NAME) at $ZM_TIME.  The Video of this Event has been logged and is viewable at: $ZM_ROOT_URL_WIFI/index.php?view=event%26eid=${ZM_CAMERA_EVENT_ID}"
-
-# Telegram
-TELEGRAM_CREDENTIALS_CONFIG=MY_TELEGRAM_CREDENTIALS_CONFIG
-WHATSAPP_CREDENTIALS_CONFIG=MY_WHATSAPP_CREDENTIALS_CONFIG
-
-# Email
-EMAIL_CREDENTIALS_CONFIG=MY_EMAIL_CREDENTIALS_CONFIG
-EMAIL_NOTIFICATION_ADDRESS=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
-EMAIL_VIA_GMAIL_TOOL="MY_EMAIL_VIA_GMAIL_TOOL"
-
-# Kodi
-KODI_HTTP_USER=MY_KODI_HTTP_USER
-KODI_HTTP_PASS=MY_KODI_HTTP_PASS
-KODI_HTTP_IP=$ZM_HOST_LOCAL
-KODI_HTTP_PORT=MY_KODI_HTTP_PORT
-
-# Asterisk
-ASTERISK_USER=MY_ASTERISK_USER
-ASTERISK_GROUP=MY_ASTERISK_GROUP
-ASTERISK_DIAL_OUT_SPOOL_DIR=/var/spool/asterisk/outgoing
-ASTERISK_DIAL_OUT_SPOOL_FILE=zm-alarm-$ZM_CAMERA_EVENT_ID.call
-ASTERISK_DIAL_OUT_CHANNEL=Mobile
-ASTERISK_DIAL_OUT_TRUNK=GSM_PHONE_01
-ASTERISK_DIAL_OUT_NUMBER=MY_ASTERISK_DIAL_OUT_NUMBER
-ASTERISK_DIAL_OUT_CID="CCTV Security Alarm <(071)-000-0000>"
-
-# OSD
-OSD_TOOL=MY_OSD_TOOL
-LIGHTS_CMD=/usr/bin/jambulatv-lights
-
-CURL_CMD="/usr/bin/curl"
-CURL_OPTS="-s -S -L -m 60"
+ZM_CAMERA_EVENT_TIME="$4"
 
 
 
@@ -64,44 +21,121 @@ CURL_OPTS="-s -S -L -m 60"
 #  FUNCTIONS  #
 ###############
 
-# Source CCTV settings
-. $CCTV_SETTINGS_FILE
-
 usage () {
 # Camera ID
 if [ "x$ZM_CAMERA_ID" = "x" ];
 then
-echo "Usage:  ./`basename $0` [ZM_CAMERA_ID] [ZM_CAMERA_NAME] [ZM_CAMERA_EVENT_ID]
+echo "Usage:  ./`basename $0` [ZM_CAMERA_ID] [ZM_CAMERA_NAME] [ZM_CAMERA_EVENT_ID] [ZM_CAMERA_EVENT_TIME]
 "
 exit 1
 fi
 # Camera Name
 if [ "x$ZM_CAMERA_NAME" = "x" ];
 then
-echo "Usage:  ./`basename $0` $ZM_CAMERA_ID [ZM_CAMERA_NAME] [ZM_CAMERA_EVENT_ID]
+echo "Usage:  ./`basename $0` $ZM_CAMERA_ID [ZM_CAMERA_NAME] [ZM_CAMERA_EVENT_ID] [ZM_CAMERA_EVENT_TIME]
 "
 exit 1
 fi
 # Camera Event ID
 if [ "x$ZM_CAMERA_EVENT_ID" = "x" ];
 then
-echo "Usage:  ./`basename $0` $ZM_CAMERA_ID $ZM_CAMERA_NAME [ZM_CAMERA_EVENT_ID]
+echo "Usage:  ./`basename $0` $ZM_CAMERA_ID $ZM_CAMERA_NAME [ZM_CAMERA_EVENT_ID] [ZM_CAMERA_EVENT_TIME]
+"
+exit 1
+fi
+# Camera Event Time
+if [ "x$ZM_CAMERA_EVENT_TIME" = "x" ];
+then
+echo "Usage:  ./`basename $0` $ZM_CAMERA_ID $ZM_CAMERA_NAME $ZM_CAMERA_EVENT_ID [ZM_CAMERA_EVENT_TIME]
 "
 exit 1
 fi
 }
 
 capture_motion_event () {
-# Capture current camera view
-$CURL_CMD $CURL_OPTS -G -o $ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg $ZM_WATCH_URL
+# Log into ZM API
+zoneminder_login_using_api
+#
+# Remove previous event data output file
+[[ -e $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE ]] && sudo rm -f $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE 
+
+# Query ZM event data using API
+$CURL_CMD $CURL_OPTS -o $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE -b $CURL_COOKIE_JAR_FILE \
+	$ZONEMINDER_API_URL/events/${ZM_CAMERA_EVENT_ID}.json 
+# Set attributes
+ZM_EVENT_CAUSE=$(jq -r '. [].Event.Cause' $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE)
+ZM_EVENT_TIMESTAMP_START=$(jq -r '. [].Event.StartTime' $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE)
+ZM_EVENT_DATE=$(echo $ZM_EVENT_TIMESTAMP_START | awk {'print $1'})
+ZM_EVENT_TIME=$(echo $ZM_EVENT_TIMESTAMP_START | awk {'print $2'})
+ZM_EVENT_VIDEO_DIR=$ZONEMINDER_CONTENT_DIR/events/$ZM_CAMERA_ID/$ZM_EVENT_DATE/$ZM_CAMERA_EVENT_ID
+ZM_EVENT_VIDEO_FILE=$ZM_EVENT_VIDEO_DIR/$ZM_CAMERA_EVENT_ID-video.mp4
+#
+# Source ZM subject and message notifications
+set_notifications
+#
+# Logout of ZM API
+zoneminder_logout_using_api
 }
 
 generate_message_4_notice () {
-cat > $ZM_MESSAGE_FILE << EOF
-*$NOTIFICATION_SUBJECT*
+cat > $ZONEMINDER_CCTV_TEMP_MESSAGE_FILE << EOF
+*$ZONEMINDER_NOTIFICATION_SUBJECT*
 
-$NOTIFICATION_MESSAGE
+$ZONEMINDER_NOTIFICATION_MESSAGE
 EOF
+}
+
+wait_4_complete_video_file () {
+while [[ ! -e $ZM_EVENT_VIDEO_FILE ]];
+do
+sleep 1
+done
+}
+
+set_cctv_alarm_lights () {
+SMARTHOME_HUB_SECURITY_LAMP_NAME="Living Room"
+SMARTHOME_HUB_SECURITY_LAMP_DURATION=60
+}
+
+cctv_alarm_lights_on () {
+set_cctv_alarm_lights
+# Turn on security Light and log event
+$LIGHTS_TOOL "$SMARTHOME_HUB_SECURITY_LAMP_NAME" on
+}
+
+cctv_alarm_lights_off () {
+set_cctv_alarm_lights
+# Switch off security Light if it was turned on after desired period e.g. 60 minutes
+sleep $SMARTHOME_HUB_SECURITY_LAMP_DURATION
+$LIGHTS_TOOL "$SMARTHOME_HUB_SECURITY_LAMP_NAME" off
+}
+
+cctv_alarm_send_telegram () {
+# Source Telegram credentials
+. $TELEGRAM_CREDENTIALS_CONFIG
+# Generate message for Telegram
+generate_message_4_notice
+# SendMesage
+$TELEGRAM_TOOL SendMessage "$(cat $ZONEMINDER_CCTV_TEMP_MESSAGE_FILE). A video clip of this incident is attached" &
+# SendVideo
+$TELEGRAM_TOOL SendVideoDisk $ZM_EVENT_VIDEO_FILE &
+}
+
+cctv_alarm_send_whatsapp () {
+# Source WhatsApp credentials
+. $WHATSAPP_CREDENTIALS_CONFIG
+# Generate message for WhatsApp
+generate_message_4_notice
+# SendMesage
+sudo $WHATSAPP_TOOL sendmessage "$(cat $ZONEMINDER_CCTV_TEMP_MESSAGE_FILE). A video clip of this incident is attached" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
+# SendVideo
+sudo $WHATSAPP_TOOL sendvideo $ZM_EVENT_VIDEO_FILE $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1
+}
+
+cctv_alarm_send_sms () {
+SMS_PHONE_NUMBER=$(query_mysql_db contact_phone)
+# SendMesage
+$SMS_TOOL "Subject: $ZONEMINDER_NOTIFICATION_SUBJECT Details: $ZONEMINDER_NOTIFICATION_MESSAGE" $SMS_PHONE_NUMBER > /dev/null 2>&1
 }
 
 kodi_screensaver_status () {
@@ -118,16 +152,24 @@ fi
 }
 
 kodi_addon_script_doorbell () {
-$CURL_CMD $CURL_OPTS -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Addons.ExecuteAddon","params":{"addonid":"script.doorbell","params":{"CamID":"'"$ZM_CAMERA_ID"'","CamName":"'"$ZM_CAMERA_NAME"'","CamEvent":"'"$ZM_CAMERA_EVENT_ID"'","CamTime":"'"$ZM_TIME"'","CamMessage":"'"$NOTIFICATION_MESSAGE"'"}},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+$CURL_CMD $CURL_OPTS -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Addons.ExecuteAddon","params":{"addonid":"script.doorbell","params":{"CamID":"'"$ZM_CAMERA_ID"'", "CamName":"'"$ZM_CAMERA_NAME"'", "CamEvent":"'"$ZM_CAMERA_EVENT_ID"'", "CamTime":"'"$ZM_CAMERA_EVENT_TIME"'", "CamMessage":"'"$ZONEMINDER_NOTIFICATION_MESSAGE"'", "CamHost":"'"$ZONEMINDER_DB_HOST"'", "CamPort":"'"$ZONEMINDER_WWW_PORT"'", "CamDBUser":"'"$ZONEMINDER_ADMIN_USER"'", "CamDBPass":"'"$ZONEMINDER_ADMIN_PASS"'"}},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+}
+
+cctv_alarm_activate_kodi_doorbell () {
+kodi_screensaver_status
+kodi_screensaver_poke 
+kodi_addon_script_doorbell &
 }
 
 create_asterisk_call_file () {
+ASTERISK_DIAL_OUT_NUMBER=$(query_mysql_db contact_phone)
+#
 # Generate Asterisk call file
 cat > /tmp/$ASTERISK_DIAL_OUT_SPOOL_FILE <<EOF
 # Call file was automatically generated by $(basename $0) on $(date)
 #
 Channel: $ASTERISK_DIAL_OUT_CHANNEL/$ASTERISK_DIAL_OUT_TRUNK/$ASTERISK_DIAL_OUT_NUMBER
-Codecs: gsm, speex
+Codecs: gsm
 #
 MaxRetries: 0
 #RetryTime: 60
@@ -145,15 +187,30 @@ Callerid: "$ASTERISK_DIAL_OUT_CID"
 #
 Set: CAM_ID=$ZM_CAMERA_ID
 Set: CAM_NAME="$ZM_CAMERA_NAME"
-Set: CAM_TIME="$ZM_TIME"
+Set: CAM_TIME="$ZM_CAMERA_EVENT_TIME"
 Set: CAM_EVENT=$ZM_CAMERA_EVENT_ID
 #
 #Archive: yes
 EOF
-# Change permissions to asterisk user and group
-chown $ASTERISK_USER:$ASTERISK_GROUP /tmp/$ASTERISK_DIAL_OUT_SPOOL_FILE
+# Change permissions to asterisk user
+chown $ASTERISK_FILES_USER /tmp/$ASTERISK_DIAL_OUT_SPOOL_FILE
+}
+
+cctv_alarm_call_gsm_phone () {
+# Create Asterisk call file
+create_asterisk_call_file
 # Move to outgoing spool directory i.e. Make the call
 mv -v /tmp/$ASTERISK_DIAL_OUT_SPOOL_FILE $ASTERISK_DIAL_OUT_SPOOL_DIR
+}
+
+cctv_alarm_notify_via_osd () {
+$OSD_TOOL -m "$ZONEMINDER_NOTIFICATION_MESSAGE"
+}
+
+cctv_alarm_send_email () {
+EMAIL_NOTIFICATION_ADDRESS=$(query_mysql_db notification_email_address)
+#
+$EMAIL_VIA_GMAIL_TOOL $EMAIL_NOTIFICATION_ADDRESS "$ZONEMINDER_NOTIFICATION_SUBJECT" "$ZONEMINDER_NOTIFICATION_MESSAGE" "$ZM_EVENT_VIDEO_FILE"
 }
 
 
@@ -161,92 +218,52 @@ mv -v /tmp/$ASTERISK_DIAL_OUT_SPOOL_FILE $ASTERISK_DIAL_OUT_SPOOL_DIR
 #################
 #  MAIN SCRIPT  #
 #################
+
 # Usage
 usage
-
 
 # Quit if all cctv settings are turned off
 [[ "$CCTV_ALL" = "1" ]] || exit 0
 
-
 # Capture event image - This has to be here i.e. early on
 capture_motion_event
 
-
-# LAMP
-# ----
-# Turn on security Light and log event
-if [[ "$CCTV_LIGHTS" = "1" ]];
-then
-$LIGHTS_CMD "$SMARTHOME_HUB_SECURITY_LAMP_NAME" on
-fi
+# Wait for video file to be completely generated before proceeding
+wait_4_complete_video_file
 
 
-# Telegram
-# ---------
-if [[ "$CCTV_TELEGRAM" = "1" ]];
-then
-# Source Telegram credentials
-. $TELEGRAM_CREDENTIALS_CONFIG
-# Generate message for Telegram
-generate_message_4_notice
-# SendMesage
-$TELEGRAM_TOOL SendMessage "$(cat $ZM_MESSAGE_FILE). Also attached is a snapshot ..." &
-# SendPhoto
-$TELEGRAM_TOOL SendImageDisk  $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg &
-fi
+# Turn On Lights
+# --------------
+[[ "$CCTV_LIGHTS" = "1" ]] && cctv_alarm_lights_on
 
+# Send Telegram
+# -------------
+[[ "$CCTV_TELEGRAM" = "1" ]] && cctv_alarm_send_telegram
 
-# WhatsApp
+# Send WhatsApp
+# -------------
+[[ "$CCTV_WHATSAPP" = "1" ]] && cctv_alarm_send_whatsapp
+
+# Send SMS
 # --------
-if [[ "$CCTV_WHATSAPP" = "1" ]];
-then
-# Source WhatsApp credentials
-. $WHATSAPP_CREDENTIALS_CONFIG
-# Check existence of command
-[[ "x$WHATSAPP_TOOL" = "x" ]] && WHATSAPP_TOOL=/usr/bin/jambulatv-whatsapp
-# Generate message for WhatsApp
-generate_message_4_notice
-# SendMesage
-sudo $WHATSAPP_TOOL sendmessage "$(cat $ZM_MESSAGE_FILE)" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
-# SendPhoto
-sudo $WHATSAPP_TOOL sendimage $ZM_EVENTS_DIR/camera.$ZM_CAMERA_ID.jpg $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1
-fi
-
+[[ "$CCTV_SMS" = "1" ]] && cctv_alarm_send_sms
 
 # OSD Message using Doorbell plugin
 # ---------------------------------
-if [[ "$CCTV_KODI" = "1" ]];
-then
-kodi_screensaver_status
-kodi_screensaver_poke 
-kodi_addon_script_doorbell &
-fi
-
+[[ "$CCTV_KODI" = "1" ]] && cctv_alarm_activate_kodi_doorbell
 
 # Call using Mobile Network
-# --------------------------
-[[ "$CCTV_CALL" = "1" ]] && \
-create_asterisk_call_file
-
+# -------------------------
+[[ "$CCTV_CALL" = "1" ]] && cctv_alarm_call_gsm_phone
 
 # OSD Message using jambulatv-osd script
 # --------------------------------------
-[[ "$CCTV_OSD" = "1" ]] && \
-$OSD_TOOL -m "$NOTIFICATION_MESSAGE"
-
+[[ "$CCTV_OSD" = "1" ]] && cctv_alarm_notify_via_osd
 
 # Send Email (IMPORTANT:  Make this one the last notification to run)
-# --------------------------------------------------------------------
-[[ "$CCTV_EMAIL" = "1" ]] && \
-$EMAIL_VIA_GMAIL_TOOL $EMAIL_NOTIFICATION_ADDRESS "$NOTIFICATION_SUBJECT" "$NOTIFICATION_MESSAGE" "$ZM_EVENTS_DIR/camera.${ZM_CAMERA_ID}.jpg"
+# -------------------------------------------------------------------
+[[ "$CCTV_EMAIL" = "1" ]] && cctv_alarm_send_email
 
-
-# LAMP
-# -----
-# Switch off security Light if it was turned on after desired period e.g. 60 minutes
-if [[ "$CCTV_LIGHTS" = "1" ]];
-then
-sleep $SMARTHOME_HUB_SECURITY_LAMP_DURATION
-$LIGHTS_CMD "$SMARTHOME_HUB_SECURITY_LAMP_NAME" off
-fi
+# Turn Off Lights
+# ---------------
+[[ "$CCTV_LIGHTS" = "1" ]] && cctv_alarm_lights_off

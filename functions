@@ -573,6 +573,8 @@ ZONEMINDER_API_URL=$ZONEMINDER_WEB_URL/api
 ZONEMINDER_CCTV_MONITORS_CONFIGS_DIR=$PROJECT_CONTRIB_DIR/cameras
 ZONEMINDER_CCTV_MONITORS="logitech_quickcam_communicate_stx logitech_c200"
 ZONEMINDER_CCTV_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/cctv-settings.cfg
+ZONEMINDER_CCTV_TEMP_MESSAGE_FILE=$TMPDIR/cctv_event_notice
+ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE=$TMPDIR/cctv_event_data
 
 # ZMEventServer
 ZMEVENTSERVER_PORT=$(grep -i 'zmeventserver$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -1036,6 +1038,8 @@ BANDWIDTH_QUERY_STANDBY_GENERATING_DATA_MESSAGE="Please standby for a minute whi
 BANDWIDTH_QUERY_SENDING_WHATSAPP_TELEGRAM_MESSAGE="Sending data bandwidth usage stats to Telegram and WhatsApp, please be patient ..."
 BANDWIDTH_GRAPHS_ATTACHED_MESSAGE="Attached are graphs showing total bandwidth used by your JambulaTV"
 SMS_UNKNOWN_SEND_METHOD_MESSAGE="Error: Could not send SMS message. Do not know which method to use"
+ZONEMINDER_NOTIFICATION_SUBJECT="*[JambulaTV] CCTV Security Alert #$ZM_CAMERA_EVENT_ID: $ZM_EVENT_CAUSE detected on $ZM_CAMERA_NAME camera*"
+ZONEMINDER_NOTIFICATION_MESSAGE="$ZM_EVENT_CAUSE was detected by camera No.$ZM_CAMERA_ID ($ZM_CAMERA_NAME) at $ZM_CAMERA_EVENT_TIME. (No. $ZM_CAMERA_EVENT_ID)"
 }
 
 print_notification () {
@@ -10065,22 +10069,8 @@ chmod 755 $ZONEMINDER_ALARM_DAEMON
 #
 # Copy ZoneMinder script to send out all types of notifications/alerts upon ZM alarms
 [ -e $ZONEMINDER_ALARM_NOTIFICATIONS_TOOL ] || \
-	cat $PROJECT_BIN_DIR/jambulatv-zm-alarm-all-notifications | \
-		sed -e "s:ZONEMINDER_DB_HOST:$ZONEMINDER_DB_HOST:g" | \
-		sed -e "s:ZONEMINDER_WWW_PORT:$ZONEMINDER_WWW_PORT:g" | \
-		sed -e "s:MY_SMARTHOME_HUB_WWW_PORT:$SMARTHOME_HUB_WWW_PORT:g" | \
-		sed -e "s:MY_TELEGRAM_CREDENTIALS_CONFIG:$TELEGRAM_CREDENTIALS_CONFIG:g" | \
-		sed -e "s:MY_WHATSAPP_CREDENTIALS_CONFIG:$WHATSAPP_CREDENTIALS_CONFIG:g" | \
-		sed -e "s:MY_WHATSAPP_TOOL:$WHATSAPP_TOOL:g" | \
-		sed -e "s:MY_EMAIL_CREDENTIALS_CONFIG:$EMAIL_CREDENTIALS_CONFIG:g" | \
-		sed -e "s:MY_EMAIL_VIA_GMAIL_TOOL:$EMAIL_VIA_GMAIL_TOOL:g" | \
-		sed -e "s:MY_OSD_TOOL:$OSD_TOOL:g" | \
-		sed -e "s:MY_KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
-		sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
-		sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
-		sed -e "s:MY_ASTERISK_USER:$ASTERISK_FILES_USER:g" | \
-		sed -e "s:MY_ASTERISK_GROUP:$WWW_USER:g" \
-			> $ZONEMINDER_ALARM_NOTIFICATIONS_TOOL
+	cp -v $PROJECT_BIN_DIR/jambulatv-zm-alarm-all-notifications \
+		$ZONEMINDER_ALARM_NOTIFICATIONS_TOOL
 # Make script executable
 chmod 755 $ZONEMINDER_ALARM_NOTIFICATIONS_TOOL
 #
