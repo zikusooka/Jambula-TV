@@ -575,6 +575,7 @@ ZONEMINDER_CCTV_MONITORS="logitech_quickcam_communicate_stx logitech_c200"
 ZONEMINDER_CCTV_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/cctv-settings.cfg
 ZONEMINDER_CCTV_TEMP_MESSAGE_FILE=$TMPDIR/cctv_event_notice
 ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE=$TMPDIR/cctv_event_data
+ZONEMINDER_CCTV_ZONE_SENSITIVITY_DEFAULT="best-medium"
 
 # ZMEventServer
 ZMEVENTSERVER_PORT=$(grep -i 'zmeventserver$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -10165,7 +10166,7 @@ $CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
 	-d "Monitor[Triggers]=" \
 	-d "Monitor[Device]=$Device" \
 	-d "Monitor[Channel]=0" \
-	-d "Monitor[Format]=255" \
+	-d "Monitor[Format]=$Format" \
 	-d "Monitor[V4LMultiBuffer]=false" \
 	-d "Monitor[V4LCapturesPerFrame]=1" \
 	-d "Monitor[Protocol]=$Protocol" \
@@ -10180,12 +10181,12 @@ $CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
 	-d "Monitor[Width]=$Width" \
 	-d "Monitor[Height]=$Height" \
 	-d "Monitor[Colours]=$Colours" \
-	-d "Monitor[Palette]=0" \
+	-d "Monitor[Palette]=$Palette" \
 	-d "Monitor[Orientation]=0" \
 	-d "Monitor[Deinterlacing]=0" \
 	-d "Monitor[SaveJPEGs]=0" \
 	-d "Monitor[VideoWriter]=1" \
-	-d "Monitor[EncoderParameters]=null" \
+	-d "Monitor[EncoderParameters]=" \
 	-d "Monitor[RecordAudio]=0" \
 	-d "Monitor[RTSPDescribe]=false" \
 	-d "Monitor[Brightness]=-1" \
@@ -10241,6 +10242,42 @@ MONITOR_ADDED_STATUS=$?
 
 # Add corresponding Zones(s)
 # --------------------------
+# Set sensitivity levels first
+case $ZONEMINDER_CCTV_ZONE_SENSITIVITY_DEFAULT in
+best-low)
+FILTERX=7
+FILTERY=7
+MINALARMPIXELS=27648
+MINBLOBPIXELS=15360
+MINFILTERPIXELS=18432
+MINPIXELTHRESHOLD=60
+;;
+best-medium)
+FILTERX=5
+FILTERY=5
+MINALARMPIXELS=12288
+MINBLOBPIXELS=7680
+MINFILTERPIXELS=9216
+MINPIXELTHRESHOLD=40
+;;
+best-high)
+FILTERX=3
+FILTERY=3
+MINALARMPIXELS=6144
+MINBLOBPIXELS=3840
+MINFILTERPIXELS=4608
+MINPIXELTHRESHOLD=20
+;;
+*)
+FILTERX=3
+FILTERY=3
+MINALARMPIXELS=6144
+MINBLOBPIXELS=3840
+MINFILTERPIXELS=4608
+MINPIXELTHRESHOLD=20
+;;
+esac
+#
 # Add Zone for Monitor Id 1
 $CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
 	-d "Zone[MonitorId]=$Id" \
@@ -10253,15 +10290,15 @@ $CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
 	-d "Zone[Area]=76800" \
 	-d "Zone[AlarmRGB]=16711680" \
 	-d "Zone[CheckMethod]=Blobs" \
-	-d "Zone[MinPixelThreshold]=25" \
+	-d "Zone[MinPixelThreshold]=$MINPIXELTHRESHOLD" \
 	-d "Zone[MaxPixelThreshold]=null" \
-	-d "Zone[MinAlarmPixels]=2304" \
+	-d "Zone[MinAlarmPixels]=$MINALARMPIXELS" \
 	-d "Zone[MaxAlarmPixels]=57600" \
-	-d "Zone[FilterX]=3" \
-	-d "Zone[FilterY]=3" \
-	-d "Zone[MinFilterPixels]=2304" \
+	-d "Zone[FilterX]=$FILTERX" \
+	-d "Zone[FilterY]=$FILTERY" \
+	-d "Zone[MinFilterPixels]=$MINFILTERPIXELS" \
 	-d "Zone[MaxFilterPixels]=57600" \
-	-d "Zone[MinBlobPixels]=1536" \
+	-d "Zone[MinBlobPixels]=$MINBLOBPIXELS" \
 	-d "Zone[MaxBlobPixels]=null" \
 	-d "Zone[MinBlobs]=1" \
 	-d "Zone[MaxBlobs]=null" \
