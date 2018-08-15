@@ -273,6 +273,9 @@ object Host "$NICKNAME" {
 EOF
 # Restart icinga2 service
 sudo systemctl restart icinga2.service
+
+# Copy presence script used by icinga2, if it does not exist in bin directory
+[[ -e $BINARY_PREFIX/jambulatv-presence-detection-via-icinga2 ]] || cp -v $PROJECT_BIN_DIR/jambulatv-presence-detection-via-icinga2 $SCRIPT $BINARY_PREFIX/
 }
 
 configure_wifi_mac_addresses () {
