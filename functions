@@ -515,6 +515,7 @@ CHILLI_DHCP_END=99
 
 HOSTAPD_DIR=/etc/hostapd
 HOSTAPD_GROUP=hostapd
+HOSTAPD_CLI_CMD=/usr/sbin/hostapd_cli 
 
 IPTABLES_CMD=/usr/sbin/iptables
 
@@ -922,6 +923,7 @@ AUTO_WIFI_PROVISION_TOOL=$BINARY_PREFIX/jambulatv-auto-wifi-provision
 CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 BANDWIDTH_TOOL=$BINARY_PREFIX/jambulatv-bandwidth
 GENERATE_LOCAL_CONF_TOOL=$BINARY_PREFIX/jambulatv-generate-local-conf
+MIFI_HOTSPOT_TOOL=$BINARY_PREFIX/jambulatv-hotspot-query
 INITIAL_SETUP_TOOL=$BINARY_PREFIX/jambulatv-initial-setup 
 KODI_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-kodi-controller 
 KODI_LIBRARY_TOOL=$BINARY_PREFIX/jambulatv-library
@@ -7761,6 +7763,12 @@ usermod -a -G $HOSTAPD_GROUP $MULTIMEDIA_USER
 		> $AUTO_WIFI_PROVISION_TOOL
 # Make script executable
 chmod 755 $AUTO_WIFI_PROVISION_TOOL
+#
+# Add jambulatv-hotspot-query tool: Get connected users, status of AP, disconnect user, etc
+[[ -e $MIFI_HOTSPOT_TOOL ]] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-hotspot-query $BINARY_PREFIX
+# Make tool executable
+chmod 755 $MIFI_HOTSPOT_TOOL
 #
 # Display WiFi SSID and Passphrase post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF

@@ -1,0 +1,111 @@
+#!/bin/sh
+# This is used to query information from JambulaTV WiFi access point 
+# e.g. List /or disconnect users or clients connected to hotspot
+# Jambula Labs @copyright 2018-2019 All rights reserved
+
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+MY_WIFI_DEVICES_FILE=$PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg
+WIFI_AP_SSID=$(/usr/sbin/iw dev | grep ssid | awk {'print $2'})
+
+TASK=$1
+MAC_ADDRESS=$2
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+# Usage
+usage_task () {
+clear
+cat <<EOT
+Usage: ./$(basename $0) [TASK]
+
+Tasks
+-----
+users
+status
+disconnect
+
+EOT
+exit 1
+}
+
+usage_disconnect_user () {
+if [[ "x$MAC_ADDRESS" = "x" ]];
+then
+clear
+cat <<EOT
+Usage: ./$(basename $0) disconnect [MAC_ADDRESS]
+
+EOT
+
+exit 1
+fi
+}
+
+users_connected_2_ap () {
+cat <<EOF
+The following WiFi users are connected to $WIFI_AP_SSID access point:
+
+EOF
+
+$HOSTAPD_CLI_CMD -i${WIFI_AP_INTERFACE} list_sta | while read MAC_DETECTED
+do
+
+WIFI_USER_NAME="$(grep -i $(echo $MAC_DETECTED | sed 's/:/-/g') $MY_WIFI_DEVICES_FILE | cut -d '|' -f2 | sed 's:^ ::' | sed 's: *$::g')"
+if [[ "x$WIFI_USER_NAME" = "x" ]];
+then
+CONNECTED_USER=$MAC_DETECTED
+else
+CONNECTED_USER=$WIFI_USER_NAME
+fi
+cat <<EOT
+$CONNECTED_USER
+
+EOT
+
+done
+}
+
+status_of_ap () {
+cat <<EOF
+The curent status of $WIFI_AP_SSID access point:
+
+EOF
+
+$HOSTAPD_CLI_CMD -i${WIFI_AP_INTERFACE} status | grep -Ev '(num|olbc|cac_time)' && echo
+}
+
+disconnect_user () {
+usage_disconnect_user
+$HOSTAPD_CLI_CMD -i${WIFI_AP_INTERFACE} deauthenticate $MAC_ADDRESS
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+case $TASK in
+users)
+users_connected_2_ap
+;;
+status)
+status_of_ap
+;;
+disconnect)
+disconnect_user
+;;
+*)
+usage_task
+;;
+esac
