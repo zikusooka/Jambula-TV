@@ -283,6 +283,7 @@ vnstat_install
 vnstat_configure
 bwm_ng_install
 bandwidth_measurement_setup
+trackerjacker_install
 
 # ----------------
 # Communications 

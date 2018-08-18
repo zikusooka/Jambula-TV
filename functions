@@ -2358,7 +2358,7 @@ sleekxmpp \
 jinja2==2.9.6 \
 certifi==2017.4.17 \
 six==1.10.0 \
-ruamel.yaml \
+ruamel.yaml==0.15.0 \
 pyaml \
 scapy
 do
@@ -8279,6 +8279,15 @@ done
 		sed -e "s:MY_BANDWIDTH_TOOL:$BANDWIDTH_TOOL:g" | \
 		sed -e "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
 			> $SYSTEMD_UNITS_DIR_USER/jambulatv-bandwidth-monitor@.service
+}
+
+trackerjacker_install () {
+get_python_version
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/trackerjacker/ $INSTALL_SRC_DIR/trackerjacker/
+cd $INSTALL_SRC_DIR/trackerjacker
+python setup.py install --install-lib=$PYTHON_SITEDIR
+# Create symbolic link in /usr/bin
+[ -x $BINARY_PREFIX/trackerjacker ] || ln -s $PREFIX/local/bin/trackerjacker $BINARY_PREFIX/trackerjacker
 }
 
 iptv_support () {
