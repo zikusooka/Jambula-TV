@@ -2357,7 +2357,10 @@ pyxmpp2 \
 sleekxmpp \
 jinja2==2.9.6 \
 certifi==2017.4.17 \
-six==1.10.0
+six==1.10.0 \
+ruamel.yaml \
+pyaml \
+scapy
 do
 # Install Python package
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_PACKAGE
