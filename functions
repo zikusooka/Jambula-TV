@@ -529,6 +529,7 @@ JABBERD_RESOURCE=Home
 # Smart Home - Generic settings
 SMARTHOME_HUB_APP=homeassistant
 SMARTHOME_HUB_WWW_PORT=$(grep -i "$SMARTHOME_HUB_APP$" $PORTS_ASSIGNED_FILE | awk {'print $1'})
+SMARTHOME_HUB_WLAN_SSID=$(/usr/sbin/iw dev | grep ssid | awk {'print $2'})
 
 # OpenHAB
 OPENHAB_HTTP_PORT=$(grep -i 'openhab$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -549,11 +550,22 @@ HOMEASSISTANT_USER=$MULTIMEDIA_USER
 # Mosquitto - MQTT
 MOSQUITTO_USER=mosquitto
 MOSQUITTO_GROUP=mosquitto
+MOSQUITTO_HOST_IP=127.0.0.1
 MOSQUITTO_PORT=$(grep -i 'mosquitto$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 MOSQUITTO_SSL_PORT=$(grep -i 'mosquitto ssl$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-
 MOSQUITTO_CONFIG_DIR=/etc/mosquitto
 MOSQUITTO_CONFIG_CERTS_DIR=$MOSQUITTO_CONFIG_DIR/ssl
+
+# MQTT Command, Host, and Port
+MQTT_PUBLISH_CMD=/usr/bin/mosquitto_pub
+MQTT_BROKER_IP=$MOSQUITTO_HOST_IP
+MQTT_BROKER_PORT=$MOSQUITTO_PORT
+
+# MQTT Topics
+MQTT_TOPIC_PRESENCE_FAMILY="JambulaTV/house/presence/family"
+
+# Wait Time - Presence via MiFi
+PRESENCE_VIA_MIFI_CHECK_INTERVAL_SECS=120
 
 # ZM Database Variables
 ZONEMINDER_DB_HOST=localhost
@@ -656,6 +668,8 @@ WIFI_AP_INTERFACE=jwlan0
 WIFI_STATION_INTERFACE=jwlan1
 WIFI_PHY_DEV=0
 WIFI_WAIT_TIME=40
+
+OUR_WIFI_DEVICES_FILE=$PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg
 
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
@@ -1043,6 +1057,14 @@ BANDWIDTH_GRAPHS_ATTACHED_MESSAGE="Attached are graphs showing total bandwidth u
 SMS_UNKNOWN_SEND_METHOD_MESSAGE="Error: Could not send SMS message. Do not know which method to use"
 ZONEMINDER_NOTIFICATION_SUBJECT="*[JambulaTV] CCTV Security Alert #$ZM_CAMERA_EVENT_ID: $ZM_EVENT_CAUSE detected on $ZM_CAMERA_NAME camera*"
 ZONEMINDER_NOTIFICATION_MESSAGE="$ZM_EVENT_CAUSE was detected by camera No.$ZM_CAMERA_ID ($ZM_CAMERA_NAME) at $ZM_CAMERA_EVENT_TIME. (No. $ZM_CAMERA_EVENT_ID)"
+SMARTHOME_PRESENCE_IN_MESSAGE="Home"
+SMARTHOME_PRESENCE_OUT_MESSAGE="Away"
+CONNECTED_TO_HOTSPOT_NOTIFICATION_MESSAGE="has connected to $SMARTHOME_HUB_WLAN_SSID"
+DISCONNECTED_FROM_HOTSPOT_NOTIFICATION_MESSAGE="has disconnected from $SMARTHOME_HUB_WLAN_SSID"
+CONNECTED_TO_MIFI_NOTIFICATION_MESSAGE="is connected to the MiFi router"
+DISCONNECTED_FROM_MIFI_NOTIFICATION_MESSAGE="is disconnected from the MiFi router"
+DEVICE_SIGHTED_IN_VISCINITY_NOTIFICATION_MESSAGE="has been sighted in the viscinity"
+DEVICE_NOT_IN_VISCINITY_NOTIFICATION_MESSAGE="is no longer with in the viscinity"
 }
 
 print_notification () {
@@ -7599,8 +7621,8 @@ chmod 755 $COOVA_CONFIG_DIR/ipup.sh
 
 # Create Chilli User in radius MySql database
 echo "INSERT INTO radcheck (UserName, Attribute, Value, Op) VALUES ('$COOVA_NORMAL_USER_LOGIN', 'Cleartext-Password', '$COOVA_NORMAL_USER_PASSWORD', ':=');" | mysql -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME
-# Add My-Wifi-Devices config file
-cat > $PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg << EOF
+# Add Our Wifi devices config file
+cat > $OUR_WIFI_DEVICES_FILE << EOF
 #   MAC address   | User  | Monitor 
 00-00-00-00-00-00 | Sarah | yes
 EOF
