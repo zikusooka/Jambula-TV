@@ -9725,7 +9725,8 @@ systemctl enable home-assistant.service
 home_automation_scripts () {
 for SCRIPT in \
 jambulatv-lights \
-jambulatv-presence-detection-via-hostapd
+jambulatv-presence-detection-via-hostapd \
+jambulatv-presence-detection-via-mifi
 do
 # Copy script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX/

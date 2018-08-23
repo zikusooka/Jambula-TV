@@ -1,0 +1,121 @@
+#!/bin/sh
+# This is used to alert when a preset WiFi device has been sighted i.e. presence
+# presence detection using jambulatv-mifi-query tool 
+# Credit Joseph Zikusooka: https://github.com/zikusooka/query_huawei_wifi_router
+# Jambula Labs @copyright 2018-2019 All rights reserved
+
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+mqtt_publish_home () {
+# Source notification strings
+set_notifications
+# Publish to MQTT topic 
+$MQTT_PUBLISH_CMD -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT -t "$MQTT_TOPIC_PRESENCE_FAMILY/$MAC_ADDRESS" -m "$SMARTHOME_PRESENCE_IN_MESSAGE"
+}
+
+mqtt_publish_away () {
+# Source notification strings
+set_notifications
+# Publish to MQTT topic
+$MQTT_PUBLISH_CMD -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT -t "$MQTT_TOPIC_PRESENCE_FAMILY/$MAC_ADDRESS" -m "$SMARTHOME_PRESENCE_OUT_MESSAGE"
+}
+
+notify_via_logger_osd_home () {
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$WIFI_USER_NAME $CONNECTED_TO_MIFI_NOTIFICATION_MESSAGE" text
+print_notification "$WIFI_USER_NAME $CONNECTED_TO_MIFI_NOTIFICATION_MESSAGE" osd
+}
+
+notify_via_logger_osd_away () {
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$WIFI_USER_NAME $DISCONNECTED_FROM_MIFI_NOTIFICATION_MESSAGE" text
+print_notification "$WIFI_USER_NAME $DISCONNECTED_FROM_MIFI_NOTIFICATION_MESSAGE" osd
+}
+
+check_presence_for_selected_users () {
+# Check if MiFi router is alive
+MIFI_WIFI_IP_ADDRESS=$(query_mysql_db mifi_ip_address)
+ping -c 1 -W 1 $MIFI_WIFI_IP_ADDRESS > /dev/null 2>&1
+MIFI_REACHEABLE=$?
+if [[ "$MIFI_REACHEABLE" = "0" ]];
+then
+# source mifi router login credentials
+MIFI_WIFI_ADMIN_USER=$(query_mysql_db mifi_admin_user)
+MIFI_WIFI_ADMIN_PASS=$(query_mysql_db mifi_admin_pass)
+else
+# Quit since MiFi router is unreacheable
+clear
+logger -s -t $(basename $0) "The WiFi router at $MIFI_IP_ADDRESS is not reacheable.
+Please check that it is powered on and that you are using the correct IP address"
+exit 255
+fi
+
+# Select only users with monitor flag set to 'yes'
+awk '$5 == "yes" {print $0}' $PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg | grep -Ev '(#.*$)|(^$)' | while read LINE
+do
+
+# Set user's WiFi MAC Address and Name
+WIFI_USER_MAC=$(echo $LINE | cut -d '|' -f1 | sed 's/-/:/g'| sed 's:^ ::' | sed 's: *$::g' | tr [A-Z] [a-z])
+WIFI_USER_NAME="$(echo $LINE | cut -d '|' -f2 | sed 's:^ ::' | sed 's: *$::g')"
+
+# Log into Mifi and check for users - Add argument 'by MAC ID' i.e. 2
+$MIFI_QUERY_TOOL $MIFI_WIFI_IP_ADDRESS $MIFI_WIFI_ADMIN_USER $MIFI_WIFI_ADMIN_PASS users 2 | grep -i "$WIFI_USER_MAC" > /dev/null 2>&1
+USER_SIGHTED=$?
+
+# Home
+# ----
+if [[ $USER_SIGHTED = 0 ]];
+then
+# Notify via MQTT - Implement case transformations 
+for MAC_ADDRESS in ${WIFI_USER_MAC,,} ${WIFI_USER_MAC^^};
+do
+mqtt_publish_home
+done
+# Notify via logger and OSD
+notify_via_logger_osd_home
+
+# Away
+# ----
+else
+# Notify via MQTT - Implement case transformations 
+for MAC_ADDRESS in ${WIFI_USER_MAC,,} ${WIFI_USER_MAC^^};
+do
+mqtt_publish_away
+done
+# Notify via logger and OSD
+notify_via_logger_osd_away
+fi
+
+done
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+while true
+do
+
+check_presence_for_selected_users
+
+# Pause a bit i.e. PRESENCE_VIA_MIFI_CHECK_INTERVAL_SECS
+sleep $PRESENCE_VIA_MIFI_CHECK_INTERVAL_SECS
+
+done
