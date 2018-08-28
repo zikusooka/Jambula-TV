@@ -562,10 +562,33 @@ MQTT_BROKER_IP=$MOSQUITTO_HOST_IP
 MQTT_BROKER_PORT=$MOSQUITTO_PORT
 
 # MQTT Topics
-MQTT_TOPIC_PRESENCE_FAMILY="JambulaTV/house/presence/family"
+MQTT_TOPIC_PRESENCE_FAMILY=JambulaTV/house/presence/family
 
-# Wait Time - Presence via MiFi
-PRESENCE_VIA_MIFI_CHECK_INTERVAL_SECS=120
+# Presence via MiFi
+PRESENCE_VIA_MIFI_CHECK_INTERVAL_SECS=60
+PRESENCE_VIA_MIFI_TEMP_FILE=$TMPDIR/presence_detection_via_mifi
+
+# Presence via trackerjacker
+TRACKERJACKER_INTERFACE=wlp0s20u4
+TRACKERJACKER_CMD=/usr/bin/trackerjacker
+TRACKERJACKER_LOG_LEVEL=INFO # DEBUG | INFO | WARNING | ERROR | CRITICAL
+TRACKERJACKER_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/trackerjacker.log
+TRACKERJACKER_CHANNEL_SWITCH_SCHEME=traffic_based
+TRACKERJACKER_CHANNELS_TO_MONITOR='1,2,3,4,5,6,7,8,9,10,11,12,13'
+TRACKERJACKER_TIME_PER_CHANNEL='0.5'
+TRACKERJACKER_TRIGGER_COOLDOWN='30.0'
+TRACKERJACKER_THRESHOLD_WINDOW=10
+TRACKERJACKER_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/trackerjacker
+TRACKERJACKER_CONFIG_FILE=$TRACKERJACKER_CONFIG_DIR/trackerjacker.json
+
+# Presence variables
+PRESENCE_VIA_TRACKER_TRIGGER_PLUGIN=$TRACKERJACKER_CONFIG_DIR/plugin_presence_detection.py
+PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR=$TMPDIR/.presence_state_of_wifi_devs
+PRESENCE_VIA_TRACKER_DEVICES_SEEN_LOG_NAME=trackerjacker_log
+PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_FILE=$PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR/$PRESENCE_VIA_TRACKER_DEVICES_SEEN_LOG_NAME
+PRESENCE_VIA_TRACKER_THRESHOLD_TIME=300
+PRESENCE_VIA_TRACKER_CHECK_INTERVAL_SECS=60
+PRESENCE_VIA_TRACKER_THRESHOLD_COUNT=$(expr $PRESENCE_VIA_TRACKER_THRESHOLD_TIME / $PRESENCE_VIA_TRACKER_CHECK_INTERVAL_SECS)
 
 # ZM Database Variables
 ZONEMINDER_DB_HOST=localhost
@@ -670,6 +693,8 @@ WIFI_PHY_DEV=0
 WIFI_WAIT_TIME=40
 
 OUR_WIFI_DEVICES_FILE=$PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg
+	[[ -e $OUR_WIFI_DEVICES_FILE ]] && \
+NUMBER_OF_OUR_WIFI_DEVICES=$(awk '$5 == "yes" {print $0}' $OUR_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' | wc -l)
 
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
@@ -949,6 +974,7 @@ MIFI_QUERY_TOOL=$BINARY_PREFIX/jambulatv-mifi-query
 OSD_TOOL=$BINARY_PREFIX/jambulatv-osd
 PPP_DIAL_TOOL=$BINARY_PREFIX/jambulatv-ppp-dialer
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
+PRESENCE_DETECTION_VIA_TRACKER_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-trackerjacker
 SMS_TOOL=$BINARY_PREFIX/jambulatv-sms
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
 TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
@@ -1060,6 +1086,7 @@ ZONEMINDER_NOTIFICATION_SUBJECT="*[JambulaTV] CCTV Security Alert #$ZM_CAMERA_EV
 ZONEMINDER_NOTIFICATION_MESSAGE="$ZM_EVENT_CAUSE was detected by camera No.$ZM_CAMERA_ID ($ZM_CAMERA_NAME) at $ZM_CAMERA_EVENT_TIME. (No. $ZM_CAMERA_EVENT_ID)"
 SMARTHOME_PRESENCE_IN_MESSAGE="Home"
 SMARTHOME_PRESENCE_OUT_MESSAGE="Away"
+NO_NETWORK_INTERFACE_4_TRACKING_FOUND_NOTIFICATION_MESSAGE="The specified network card was not found"
 CONNECTED_TO_HOTSPOT_NOTIFICATION_MESSAGE="has connected to $SMARTHOME_HUB_WLAN_SSID"
 DISCONNECTED_FROM_HOTSPOT_NOTIFICATION_MESSAGE="has disconnected from $SMARTHOME_HUB_WLAN_SSID"
 CONNECTED_TO_MIFI_NOTIFICATION_MESSAGE="is connected to the MiFi router"
@@ -1072,11 +1099,15 @@ print_notification () {
 # Set notification string and method
 NOTIFICATION_STRING=$1
 NOTIFICATION_METHOD=$2
-# Log to stdout and systemd journal
-if [[ "$NOTIFICATION_METHOD" = "text" ]];
+# Log to stdout and systemd journal if not in debug mode
+if [[ "$NOTIFICATION_METHOD" = "text" && "$DEBUG_MODE" != "yes" ]];
 then
 logger -s -t $(basename $0) "$NOTIFICATION_STRING"
+else
+# Log to ONLY systemd journal if in debug mode
+logger -t $(basename $0) "$NOTIFICATION_STRING"
 fi
+
 # Log to OSD
 if [[ -e "$OSD_TOOL" && "$NOTIFICATION_METHOD" = "osd" ]];
 then
@@ -1089,6 +1120,11 @@ fi
 ######################
 #  HELPER FUNCTIONS  #
 ######################
+# Debugging
+debug_print () {
+[[ "$DEBUG_MODE" = "yes" ]] && echo -e "$(date '+%b %d %T') | DEBUG | $1"
+}
+
 # Get current Python version
 get_python_version () {
 PYTHON_VERSION=$(python -V)
@@ -1102,6 +1138,12 @@ PYTHON3_SITEDIR=$PREFIX/local/lib/python${PYTHON_MINOR_VERSION_NUMBER}/site-pack
 [[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && PYTHON_SITEDIR=$PYTHON3_SITEDIR
 # Export
 export PYTHON_VERSION PYTHON_FULL_VERSION_NUMBER PYTHON_MAJOR_VERSION_NUMBER PYTHON_MINOR_VERSION_NUMBER PYTHON_SITEDIR
+}
+
+network_interface_exists () {
+NETWORK_INTERFACE_SPECIFIED=$1
+/usr/sbin/ip -o link show | awk -F: {'print $2'} | grep $NETWORK_INTERFACE_SPECIFIED > /dev/null 2>&1
+NETWORK_INTERFACE_EXISTS=$?
 }
 
 probe_remote_host_using_nmap () {
@@ -9726,7 +9768,8 @@ home_automation_scripts () {
 for SCRIPT in \
 jambulatv-lights \
 jambulatv-presence-detection-via-hostapd \
-jambulatv-presence-detection-via-mifi
+jambulatv-presence-detection-via-mifi \
+jambulatv-presence-detection-via-trackerjacker
 do
 # Copy script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX/

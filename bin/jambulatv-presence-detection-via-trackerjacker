@@ -1,0 +1,318 @@
+#!/bin/sh
+# This tool uses trackerjacker (https://github.com/calebmadrigal/trackerjacker)
+# to find and log our preset WiFi-enabled devices whenever they are seen in the
+# viscinity.
+# 
+# It provides for a reliable presence detection mechanism by generating triggers
+# and hence perform certain tasks when a preset (monitored) WiFi device has been 
+# sighted. When no traffic is seen from the device after a while, it is marked
+# as absent.
+#
+# The tool uses MQTT protocol and system logger for notifications. It is simple
+# to add other methods of notifications depending on presence type
+#
+# IMPORTANT: Please note that this tool requires an unused & dedicated wireless
+#            interface
+#
+# Jambula Labs @copyright 2018-2019 All rights reserved
+
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+# Set debug mode
+DEBUG_MODE=no #yes|no
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+check_existence_of_trackerjacker_interface () {
+network_interface_exists $TRACKERJACKER_INTERFACE
+
+if [[ "$NETWORK_INTERFACE_EXISTS" != "0" ]];
+then
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$NO_NETWORK_INTERFACE_4_TRACKING_FOUND_NOTIFICATION_MESSAGE ($NETWORK_INTERFACE_SPECIFIED)" text
+#
+# Quit this program since we did not find an interface to use
+exit 0
+fi
+}
+
+set_trackerjacker_cli_options () {
+TRACKERJACKER_OPTS="--interface $TRACKERJACKER_INTERFACE --track --channels-to-monitor $TRACKERJACKER_CHANNELS_TO_MONITOR --channel-switch-scheme $TRACKERJACKER_CHANNEL_SWITCH_SCHEME --time-per-channel $TRACKERJACKER_TIME_PER_CHANNEL --trigger-cooldown $TRACKERJACKER_TRIGGER_COOLDOWN --time-window $TRACKERJACKER_THRESHOLD_WINDOW --log-level $TRACKERJACKER_LOG_LEVEL --log-path $TRACKERJACKER_LOG_FILE"
+}
+
+generate_trackerjacker_config_file () {
+# Create trackerjacker directory if it is non-existent
+[[ -d $TRACKERJACKER_CONFIG_DIR ]] || mkdir -p $TRACKERJACKER_CONFIG_DIR
+
+# Remove previous config file if it exists
+[[ -e $TRACKERJACKER_CONFIG_FILE ]] && sudo rm $TRACKERJACKER_CONFIG_FILE
+
+# Add header to config file including: trigger command or trigger plugin
+cat > $TRACKERJACKER_CONFIG_FILE <<EOT
+{
+  "trigger_command": "",
+  "trigger_plugin": "$PRESENCE_VIA_TRACKER_TRIGGER_PLUGIN",
+
+  "devices_to_watch": {
+EOT
+
+# Select MAC IDs of devices that will be tracked by trackerjacker utility
+CURRENT_LINE=0
+awk '$5 == "yes" {print $0}' $OUR_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' | while read LINE
+do
+
+# Set current line number
+CURRENT_LINE=$((CURRENT_LINE + 1))
+#
+# Set user's WiFi MAC Address and Name
+WIFI_USER_MAC=$(echo $LINE | cut -d '|' -f1 | sed 's/-/:/g'| sed 's:^ ::' | sed 's: *$::g' | tr [A-Z] [a-z])
+WIFI_USER_NAME="$(echo $LINE | cut -d '|' -f2 | sed 's:^ ::' | sed 's: *$::g')"
+
+# Add list of MAC addresses of our devices
+if [[ "$CURRENT_LINE" -lt "$NUMBER_OF_OUR_WIFI_DEVICES" ]];
+then
+# Add comma
+cat >> $TRACKERJACKER_CONFIG_FILE <<EOT
+                      "$WIFI_USER_MAC": {"power": "", "threshold": 100},
+EOT
+
+else
+# Don't add comma at end - last line
+cat >> $TRACKERJACKER_CONFIG_FILE <<EOT
+                      "$WIFI_USER_MAC": {"power": "", "threshold": 100}
+EOT
+fi
+
+done
+
+# Add footer to config file 
+cat >> $TRACKERJACKER_CONFIG_FILE <<EOT
+                     }
+}
+EOT
+}
+
+mqtt_publish_home () {
+# Source notification strings
+set_notifications
+# Publish to MQTT topic 
+$MQTT_PUBLISH_CMD -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT -t "$MQTT_TOPIC_PRESENCE_FAMILY/$WIFI_USER_MAC" -m "$SMARTHOME_PRESENCE_IN_MESSAGE"
+}
+
+mqtt_publish_away () {
+# Source notification strings
+set_notifications
+# Publish to MQTT topic
+$MQTT_PUBLISH_CMD -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT -t "$MQTT_TOPIC_PRESENCE_FAMILY/$WIFI_USER_MAC" -m "$SMARTHOME_PRESENCE_OUT_MESSAGE"
+}
+
+notify_via_logger_osd_home () {
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$WIFI_USER_NAME ($WIFI_USER_MAC) $DEVICE_SIGHTED_IN_VISCINITY_NOTIFICATION_MESSAGE" text
+}
+
+notify_via_logger_osd_away () {
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$WIFI_USER_NAME ($WIFI_USER_MAC) $DEVICE_NOT_IN_VISCINITY_NOTIFICATION_MESSAGE" text
+print_notification "$WIFI_USER_NAME ($WIFI_USER_MAC) was last seen $TIME_SINCE_LAST_SEEN seconds ago i.e. [$SMARTHOME_PRESENCE_OUT_MESSAGE]" text
+}
+
+tasks_wifi_device_is_present () {
+# Debug
+debug_print "\033[1m$WIFI_USER_MAC seen $TIME_SINCE_LAST_SEEN secs ago | $WIFI_USER_NAME is Present!\033[0m"
+
+# Notify via MQTT
+mqtt_publish_home
+
+# Notify via logger and OSD
+notify_via_logger_osd_home
+}
+
+tasks_wifi_device_is_absent () {
+# Debug
+debug_print "\033[1m$WIFI_USER_MAC seen $TIME_SINCE_LAST_SEEN secs ago | $WIFI_USER_NAME) is Absent!\033[0m"
+
+# Notify via MQTT
+mqtt_publish_away
+
+# Notify via logger and OSD
+notify_via_logger_osd_away
+}
+
+cleanup_presence_state_files () {
+# If existent, remove temporary directory that stores the presence status of WiFi devices
+if [[ -d $PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR ]];
+then
+rm -rf $PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR/*
+else
+# Create temporary directory that stores the presence status of WiFi devices
+mkdir -p $PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR
+fi
+}
+
+calculate_user_presence_last_seen_times () {
+if [[ -e $PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_FILE ]];
+then 
+# Check if WiFi MAC user was seen recently if presence log file exists
+grep -i $WIFI_USER_MAC $PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_FILE > /dev/null 2>&1
+WIFI_USER_RECENTLY_SEEN=$? 
+fi
+#
+# Extract last seen times
+if [[ "$WIFI_USER_RECENTLY_SEEN" = "0" ]];
+then
+# Last Time in Epoch
+LAST_TIME_EPOCH=$(grep $WIFI_USER_MAC $PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_FILE | tail -1 | cut -d , -f3 | sed 's: ::g')
+# Current Time in Epoch
+CURRENT_TIME_EPOCH=$(date +%s)
+# Time Elapsed
+TIME_SINCE_LAST_SEEN=$(expr $CURRENT_TIME_EPOCH - $LAST_TIME_EPOCH)
+#
+# Number of times last seen when within threshold interval
+#NUMBER_OF_TIMES_LAST_SEEN=$(awk -F',' '{if($1 == "'"$WIFI_USER_MAC"'" && '$TIME_SINCE_LAST_SEEN' <= '$PRESENCE_VIA_TRACKER_THRESHOLD_TIME') print $0}' $PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_FILE | wc -l)
+#
+else
+# Skip to next if no record of user was found in presence log file
+continue
+fi
+}
+
+calculate_age_of_user_presence_status_files () {
+# Find age of 'user last seen as nearby' file
+[[ -e $WIFI_USER_LAST_SEEN_AS_NEARBY_TEMP_FILE ]] && \
+AGE_OF_WIFI_USER_LAST_SEEN_AS_NEARBY_TEMP_FILE=$(date -d "now - $(stat -c "%Y" $WIFI_USER_LAST_SEEN_AS_NEARBY_TEMP_FILE) seconds" +%s)
+#
+# Find age of 'user last seen as present' file
+[[ -e $WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE ]] && \
+AGE_OF_WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE=$(date -d "now - $(stat -c "%Y" $WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE) seconds" +%s)
+#
+# Find age of 'user last seen as absent' file
+[[ -e $WIFI_USER_LAST_SEEN_AS_ABSENT_TEMP_FILE ]] && \
+AGE_OF_WIFI_USER_LAST_SEEN_AS_ABSENT_TEMP_FILE=$(date -d "now - $(stat -c "%Y" $WIFI_USER_LAST_SEEN_AS_ABSENT_TEMP_FILE) seconds" +%s)
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# 1. TrackerJacker
+# -----------------
+#
+# Check if interface for tracking WiFi devices in monitor mode exists
+check_existence_of_trackerjacker_interface
+
+# Set trackerjacker command line options
+set_trackerjacker_cli_options
+
+# Generate trackerjacker config file 
+generate_trackerjacker_config_file
+
+# Run trackerjacker processes in track mode
+$TRACKERJACKER_CMD $TRACKERJACKER_OPTS -c $TRACKERJACKER_CONFIG_FILE >> $TRACKERJACKER_LOG_FILE 2>&1 &
+
+
+# 2. JambulaTV Presence Detection
+# -------------------------------
+#
+# Cleanup - Remove previous temp files for when user last seen as present or absent
+cleanup_presence_state_files
+
+# Run continuously to see which monitored WiFi devices are present or absent
+while true
+do
+
+
+# Process only WiFi devices used by our users that have their monitor flag preset to 'yes'
+awk '$5 == "yes" {print $0}' $OUR_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' | while read LINE
+
+do
+# Set user's WiFi MAC Address and Name 
+WIFI_USER_MAC=$(echo $LINE | cut -d '|' -f1 | sed 's/-/:/g'| sed 's:^ ::' | sed 's: *$::g' | tr [A-Z] [a-z])
+WIFI_USER_NAME="$(echo $LINE | cut -d '|' -f2 | sed 's:^ ::' | sed 's: *$::g')"
+WIFI_USER_LAST_SEEN_AS_NEARBY_TEMP_FILE=$PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR/$(echo $LINE | cut -d '|' -f1 | sed 's:^ ::' | sed 's: *$::g' | tr [A-Z] [a-z])_is_nearby
+WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE=$PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR/$(echo $LINE | cut -d '|' -f1 | sed 's:^ ::' | sed 's: *$::g' | tr [A-Z] [a-z])_is_present
+WIFI_USER_LAST_SEEN_AS_ABSENT_TEMP_FILE=$PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR/$(echo $LINE | cut -d '|' -f1 | sed 's:^ ::' | sed 's: *$::g' | tr [A-Z] [a-z])_is_absent
+
+# Calculate last time this device was seen
+calculate_user_presence_last_seen_times
+
+# Calculate the age of temp file for when user was last seen as present or absent 
+calculate_age_of_user_presence_status_files
+
+# ----------------
+# User is present
+# ----------------
+# Mark as present if the 'user last seen as nearby' file
+# a) Exists and 
+# b) Age is less than the presence threshold time
+#
+if [[ -e $WIFI_USER_LAST_SEEN_AS_NEARBY_TEMP_FILE ]] && [[ "$AGE_OF_WIFI_USER_LAST_SEEN_AS_NEARBY_TEMP_FILE" -le "$PRESENCE_VIA_TRACKER_THRESHOLD_TIME" ]];
+then
+
+# Delete 'user last seen as absent' file if it exists
+[[ -e $WIFI_USER_LAST_SEEN_AS_ABSENT_TEMP_FILE ]] && sudo rm $WIFI_USER_LAST_SEEN_AS_ABSENT_TEMP_FILE
+
+	# Skip if 'user last seen as present' file exists i.e. WiFi user is still around
+	if [[ -e $WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE ]];
+	then
+	# Print 
+	debug_print "$WIFI_USER_MAC seen $TIME_SINCE_LAST_SEEN secs ago | $WIFI_USER_NAME is still present"
+	continue
+	fi
+
+# Add 'user last seen as present' file i.e Mark as present
+touch $WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE
+
+# WiFi device is present tasks
+tasks_wifi_device_is_present
+
+# ---------------
+# User is absent
+# ---------------
+else
+
+# Delete 'user last seen as nearby' file if it exists since WiFi user is not visible
+[[ -e $WIFI_USER_LAST_SEEN_AS_NEARBY_TEMP_FILE ]] && sudo rm -f $WIFI_USER_LAST_SEEN_AS_NEARBY_TEMP_FILE
+
+# Delete 'user last seen as present' file if it exists
+[[ -e $WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE ]] && sudo rm -f $WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE
+
+	# Skip if 'user last seen as absent' file exists i.e. WiFi user is still absent
+	if [[ -e $WIFI_USER_LAST_SEEN_AS_ABSENT_TEMP_FILE ]];
+	then
+	# Print
+	debug_print "$WIFI_USER_MAC seen $TIME_SINCE_LAST_SEEN secs ago | $WIFI_USER_NAME is still absent"
+	continue
+	fi
+
+# WiFi device is absent tasks
+tasks_wifi_device_is_absent
+
+# Add 'user last seen as absent' file i.e. Mark as absent
+touch $WIFI_USER_LAST_SEEN_AS_ABSENT_TEMP_FILE 
+fi
+
+done
+
+# Pause and wait for a period set by presence check interval variable
+sleep $PRESENCE_VIA_TRACKER_CHECK_INTERVAL_SECS
+
+
+done
