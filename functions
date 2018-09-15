@@ -8355,6 +8355,26 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 [ -x $BINARY_PREFIX/trackerjacker ] || ln -s $PREFIX/local/bin/trackerjacker $BINARY_PREFIX/trackerjacker
 }
 
+trackerjacker_configure () {
+# Create trackerjacker config directory if it is non existent
+[[ -d $TRACKERJACKER_CONFIG_DIR ]] || mkdir -p $TRACKERJACKER_CONFIG_DIR
+# Add trackerjacker plugins to config directory - Replace default with custom variables
+#
+# plugin_presence_detection.py: modify and add if not yet done
+if [[ ! -x $PRESENCE_VIA_TRACKER_TRIGGER_PLUGIN ]];
+then
+cat $PROJECT_CONTRIB_DIR/scripts/trackerjacker_plugin_presence_detection.py | \
+	sed "s:MY_PRESENCE_VIA_TRACKER_THRESHOLD_TIME:$PRESENCE_VIA_TRACKER_THRESHOLD_TIME:g" | \
+	sed "s:MY_PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR:$PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR:g" | \
+	sed "s:MY_PRESENCE_VIA_TRACKER_DEVICES_SEEN_LOG_NAME:$PRESENCE_VIA_TRACKER_DEVICES_SEEN_LOG_NAME:g" | \
+	sed "s:MY_TRACKERJACKER_LOG_LEVEL:$TRACKERJACKER_LOG_LEVEL:g" \
+		> $PRESENCE_VIA_TRACKER_TRIGGER_PLUGIN
+
+# Make plugin script executable
+chmod 755 $PRESENCE_VIA_TRACKER_TRIGGER_PLUGIN
+fi
+}
+
 iptv_support () {
 # Copy IPTV xml files to html directory
 cp -rv $PROJECT_CONTRIB_DIR/iptv $WWW_HTML_DIR
