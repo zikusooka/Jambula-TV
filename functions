@@ -93,8 +93,7 @@ PROJECT_SYSTEM_LOG_DIR=$LOGDIR/$PROJECT_NAME
 PROJECT_SYSTEM_LIB_DIR=$STATEDIR/lib/$PROJECT_NAME
 PROJECT_SYSTEM_CACHE_DIR=$STATEDIR/cache/$PROJECT_NAME
 PROJECT_SYSTEM_ICONS_DIR=$PROJECT_SYSTEM_SHARE_DIR/picons
-
-PROJECT_VERSION=$(cd $PROJECT_BASE_DIR && git tag -l | tail -1 && cd)
+PROJECT_VERSION=$(cd $PROJECT_BASE_DIR && git describe --abbrev=0 --tags)
 PROJECT_RELEASE_FILE=$PROJECT_SYSTEM_CONF_DIR/release
 PROJECT_DVBT_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/dvbt-settings.cfg
 PROJECT_PARTITION=/$PROJECT_NAME
@@ -8359,15 +8358,15 @@ trackerjacker_configure () {
 # Create trackerjacker config directory if it is non existent
 [[ -d $TRACKERJACKER_CONFIG_DIR ]] || mkdir -p $TRACKERJACKER_CONFIG_DIR
 # Add trackerjacker plugins to config directory - Replace default with custom variables
-#
+# ---
 # plugin_presence_detection.py: modify and add if not yet done
 if [[ ! -x $PRESENCE_VIA_TRACKER_TRIGGER_PLUGIN ]];
 then
 cat $PROJECT_CONTRIB_DIR/scripts/trackerjacker_plugin_presence_detection.py | \
-	sed "s:MY_PRESENCE_VIA_TRACKER_THRESHOLD_TIME:$PRESENCE_VIA_TRACKER_THRESHOLD_TIME:g" | \
-	sed "s:MY_PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR:$PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR:g" | \
-	sed "s:MY_PRESENCE_VIA_TRACKER_DEVICES_SEEN_LOG_NAME:$PRESENCE_VIA_TRACKER_DEVICES_SEEN_LOG_NAME:g" | \
-	sed "s:MY_TRACKERJACKER_LOG_LEVEL:$TRACKERJACKER_LOG_LEVEL:g" \
+	sed -e "s:MY_PRESENCE_VIA_TRACKER_THRESHOLD_TIME:$PRESENCE_VIA_TRACKER_THRESHOLD_TIME:g" | \
+	sed -e "s:MY_PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR:$PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR:g" | \
+	sed -e "s:MY_PRESENCE_VIA_TRACKER_DEVICES_SEEN_LOG_NAME:$PRESENCE_VIA_TRACKER_DEVICES_SEEN_LOG_NAME:g" | \
+	sed -e "s:MY_TRACKERJACKER_LOG_LEVEL:$TRACKERJACKER_LOG_LEVEL:g" \
 		> $PRESENCE_VIA_TRACKER_TRIGGER_PLUGIN
 
 # Make plugin script executable
@@ -9794,12 +9793,25 @@ do
 # Copy script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX/
 done
-
-# Add systemd service for presence detection which uses hostapd
-cp -v $PROJECT_INIT_SCRIPTS_DIR/presence-detection.service $SYSTEMD_UNITS_DIR_USER/
-# Enable and start presence-detection if needed
-systemctl enable presence-detection.service
 } 
+
+home_automation_services () {
+# 1. Presence detection using hostapd - presence-detection-via-hostapd.service
+# -----
+# Add systemd service for presence detection which uses hostapd
+cp -v $PROJECT_INIT_SCRIPTS_DIR/presence-detection-via-hostapd.service $SYSTEMD_UNITS_DIR_USER/
+# Enable and start presence-detection if needed
+systemctl enable presence-detection-via-hostapd.service
+
+# 2. Presence detection using trackerjacker - presence-detection-via-trackerjacker.service
+# -----
+# Add systemd service for presence detection which uses trackerjacker
+cat $PROJECT_INIT_SCRIPTS_DIR/presence-detection-via-trackerjacker.service | \
+	sed -e "s:MY_TRACKERJACKER_INTERFACE:$TRACKERJACKER_INTERFACE:g" | \
+	sed -e "s:MY_PRESENCE_DETECTION_VIA_TRACKER_TOOL:$PRESENCE_DETECTION_VIA_TRACKER_TOOL:g" > $SYSTEMD_UNITS_DIR_USER/presence-detection-via-trackerjacker.service
+# Enable and start presence-detection if needed
+systemctl enable presence-detection-via-trackerjacker.service
+}
 
 openhab_install () {
 # Create install directory
@@ -10212,8 +10224,8 @@ zoneminder_add_monitors_using_api
 # -------------
 # Copy systemd script- this defers from source file to kill errors during start
 cat $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service | \
-	sed "s:MY_WWW_USER:$WWW_USER:g" | \
-	sed "s:MY_WWW_GROUP:$WWW_GROUP:g" | \
+	sed -e "s:MY_WWW_USER:$WWW_USER:g" | \
+	sed -e "s:MY_WWW_GROUP:$WWW_GROUP:g" | \
 	sed -e "s:MY_RUNDIR:$RUNDIR:g" | \
 	sed -e "s:MY_ZONEMINDER_ALARM_DAEMON:$ZONEMINDER_ALARM_DAEMON:g" | \
 	sed -e "s:MY_BINARY_PREFIX:$BINARY_PREFIX:g" \

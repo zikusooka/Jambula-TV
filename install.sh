@@ -402,6 +402,9 @@ nextcloud_configure
 # OpenHAB
 #openhab_install
 #openhab_configure
+#
+# JambulaTV
+home_automation_services
 home_automation_scripts
 #
 # HomeAssistant
