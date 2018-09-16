@@ -107,14 +107,14 @@ mqtt_publish_home () {
 # Source notification strings
 set_notifications
 # Publish to MQTT topic 
-$MQTT_PUBLISH_CMD -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT -t "$MQTT_TOPIC_PRESENCE_FAMILY/$WIFI_USER_MAC" -m "$SMARTHOME_PRESENCE_IN_MESSAGE"
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_PRESENCE_FAMILY/$WIFI_USER_MAC" -m "$SMARTHOME_PRESENCE_IN_MESSAGE"
 }
 
 mqtt_publish_away () {
 # Source notification strings
 set_notifications
 # Publish to MQTT topic
-$MQTT_PUBLISH_CMD -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT -t "$MQTT_TOPIC_PRESENCE_FAMILY/$WIFI_USER_MAC" -m "$SMARTHOME_PRESENCE_OUT_MESSAGE"
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_PRESENCE_FAMILY/$WIFI_USER_MAC" -m "$SMARTHOME_PRESENCE_OUT_MESSAGE"
 }
 
 notify_via_logger_osd_home () {
@@ -225,7 +225,7 @@ set_trackerjacker_cli_options
 generate_trackerjacker_config_file
 
 # Run trackerjacker processes in track mode
-$TRACKERJACKER_CMD $TRACKERJACKER_OPTS -c $TRACKERJACKER_CONFIG_FILE >> $TRACKERJACKER_LOG_FILE 2>&1 &
+sudo $TRACKERJACKER_CMD $TRACKERJACKER_OPTS -c $TRACKERJACKER_CONFIG_FILE >> $TRACKERJACKER_LOG_FILE 2>&1 &
 
 
 # 2. JambulaTV Presence Detection

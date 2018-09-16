@@ -20,32 +20,28 @@ mqtt_publish_home () {
 # Source notification strings
 set_notifications
 # Publish to MQTT topic 
-$MQTT_PUBLISH_CMD -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT -t "$MQTT_TOPIC_PRESENCE_FAMILY/$MAC_ADDRESS" -m "$SMARTHOME_PRESENCE_IN_MESSAGE"
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_PRESENCE_FAMILY/$MAC_ADDRESS" -m "$SMARTHOME_PRESENCE_IN_MESSAGE"
 }
 
 mqtt_publish_away () {
 # Source notification strings
 set_notifications
 # Publish to MQTT topic
-$MQTT_PUBLISH_CMD -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT -t "$MQTT_TOPIC_PRESENCE_FAMILY/$MAC_ADDRESS" -m "$SMARTHOME_PRESENCE_OUT_MESSAGE"
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_PRESENCE_FAMILY/$MAC_ADDRESS" -m "$SMARTHOME_PRESENCE_OUT_MESSAGE"
 }
 
 notify_via_logger_osd_home () {
 # Source notification strings
 set_notifications
 # Print notifciation to stdout and systemd journal 
-print_notification "$WIFI_USER_NAME $CONNECTED_TO_HOTSPOT_NOTIFICATION_MESSAGE" text
-# Print notifciation to OSD
-print_notification "$WIFI_USER_NAME $CONNECTED_TO_HOTSPOT_NOTIFICATION_MESSAGE" osd
+print_notification "$WIFI_USER_NAME ($WIFI_USER_MAC) $CONNECTED_TO_HOTSPOT_NOTIFICATION_MESSAGE" text
 }
 
 notify_via_logger_osd_away () {
 # Source notification strings
 set_notifications
 # Print notifciation to stdout and systemd journal 
-print_notification "$WIFI_USER_NAME $DISCONNECTED_FROM_HOTSPOT_NOTIFICATION_MESSAGE" text
-# Print notifciation to OSD
-print_notification "$WIFI_USER_NAME $DISCONNECTED_FROM_HOTSPOT_NOTIFICATION_MESSAGE" osd
+print_notification "$WIFI_USER_NAME ($WIFI_USER_MAC) $DISCONNECTED_FROM_HOTSPOT_NOTIFICATION_MESSAGE" text
 }
 
 
