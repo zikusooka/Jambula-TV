@@ -553,12 +553,16 @@ MOSQUITTO_HOST_IP=127.0.0.1
 MOSQUITTO_PORT=$(grep -i 'mosquitto$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 MOSQUITTO_SSL_PORT=$(grep -i 'mosquitto ssl$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 MOSQUITTO_CONFIG_DIR=/etc/mosquitto
+MOSQUITTO_CONFIG_FILE=$MOSQUITTO_CONFIG_DIR/mosquitto.conf
 MOSQUITTO_CONFIG_CERTS_DIR=$MOSQUITTO_CONFIG_DIR/ssl
 
-# MQTT Command, Host, and Port
-MQTT_PUBLISH_CMD=/usr/bin/mosquitto_pub
+# MQTT Host and Port
 MQTT_BROKER_IP=$MOSQUITTO_HOST_IP
 MQTT_BROKER_PORT=$MOSQUITTO_PORT
+
+# MQTT Publish command and options
+MQTT_PUBLISH_CMD=/usr/bin/mosquitto_pub
+MQTT_PUBLISH_OPTS="--quiet -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT"
 
 # MQTT Topics
 MQTT_TOPIC_PRESENCE_FAMILY=JambulaTV/house/presence/family
@@ -7060,7 +7064,10 @@ cat $PROJECT_CONFIGS_DIR/mosquitto.conf.template | \
 	sed "s:MOSQUITTO_USER:$MOSQUITTO_USER:g" | \
 	sed "s:MOSQUITTO_PORT:$MOSQUITTO_PORT:g" | \
 	sed "s:MOSQUITTO_SSL_PORT:$MOSQUITTO_SSL_PORT:g" \
-		> $MOSQUITTO_CONFIG_DIR/mosquitto.conf
+		> $MOSQUITTO_CONFIG_FILE
+# Give ownership of mosquitto.conf file to the user - mosquitto
+chown -R $MOSQUITTO_USER:$MOSQUITTO_USER $MOSQUITTO_CONFIG_FILE
+#
 # Setup TLS/SSL for mosquitto
 [ -d $MOSQUITTO_CONFIG_CERTS_DIR ] || mkdir $MOSQUITTO_CONFIG_CERTS_DIR
 # Create TLS/SSL CA, Server Keys and Certs
