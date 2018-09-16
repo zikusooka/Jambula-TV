@@ -5,8 +5,9 @@ After = sys-subsystem-net-devices-MY_TRACKERJACKER_INTERFACE.device
 After = syslog.target network.target
 
 [Service]
+User=MY_AUTOLOGIN_USER
 Type=simple
-ExecStart=/bin/sh -c "MY_PRESENCE_DETECTION_VIA_TRACKER_TOOL"
+ExecStart=MY_PRESENCE_DETECTION_VIA_TRACKER_TOOL
 
 [Install]
 WantedBy=multi-user.target
