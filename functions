@@ -8365,6 +8365,11 @@ python setup.py install --install-lib=$PYTHON_SITEDIR
 trackerjacker_configure () {
 # Create trackerjacker config directory if it is non existent
 [[ -d $TRACKERJACKER_CONFIG_DIR ]] || mkdir -p $TRACKERJACKER_CONFIG_DIR
+# Give ownership of trackerjacker configuration directory to autologin user i.e. jambula
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TRACKERJACKER_CONFIG_DIR
+# Give ownership of trackerjacker log file to autologin user i.e. jambula
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TRACKERJACKER_LOG_FILE
+#
 # Add trackerjacker plugins to config directory - Replace default with custom variables
 # ---
 # plugin_presence_detection.py: modify and add if not yet done
