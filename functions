@@ -973,6 +973,8 @@ MIFI_QUERY_TOOL=$BINARY_PREFIX/jambulatv-mifi-query
 OSD_TOOL=$BINARY_PREFIX/jambulatv-osd
 PPP_DIAL_TOOL=$BINARY_PREFIX/jambulatv-ppp-dialer
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
+PRESENCE_DETECTION_VIA_MIFI_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-mifi
+PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-hostapd
 PRESENCE_DETECTION_VIA_TRACKER_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-trackerjacker
 SMS_TOOL=$BINARY_PREFIX/jambulatv-sms
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
@@ -7059,7 +7061,6 @@ cat $PROJECT_CONFIGS_DIR/mosquitto.conf.template | \
 	sed "s:MOSQUITTO_PORT:$MOSQUITTO_PORT:g" | \
 	sed "s:MOSQUITTO_SSL_PORT:$MOSQUITTO_SSL_PORT:g" \
 		> $MOSQUITTO_CONFIG_DIR/mosquitto.conf
-#
 # Setup TLS/SSL for mosquitto
 [ -d $MOSQUITTO_CONFIG_CERTS_DIR ] || mkdir $MOSQUITTO_CONFIG_CERTS_DIR
 # Create TLS/SSL CA, Server Keys and Certs
@@ -9783,15 +9784,15 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/home-assistant.service $SYSTEMD_UNITS_DIR_USER/
 systemctl enable home-assistant.service
 }
 
-home_automation_scripts () {
-for SCRIPT in \
-jambulatv-lights \
-jambulatv-presence-detection-via-hostapd \
-jambulatv-presence-detection-via-mifi \
-jambulatv-presence-detection-via-trackerjacker
+home_automation_tools () {
+for TOOL_NAME in \
+${LIGHTS_TOOL##*/} \
+${PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL##*/} \
+${PRESENCE_DETECTION_VIA_MIFI_TOOL##*/} \
+${PRESENCE_DETECTION_VIA_TRACKER_TOOL##*/}
 do
 # Copy script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX/
+[ -e $BINARY_PREFIX/$TOOL_NAME ] || cp -v $PROJECT_BIN_DIR/$TOOL_NAME $BINARY_PREFIX/$TOOL_NAME
 done
 } 
 
