@@ -1,0 +1,11 @@
+[Unit]
+Description=WiFi user presence detection using MiFi router
+After = syslog.target network.target
+
+[Service]
+User=jambula
+Type=simple
+ExecStart=/usr/bin/jambulatv-presence-detection-via-mifi
+
+[Install]
+WantedBy=multi-user.target

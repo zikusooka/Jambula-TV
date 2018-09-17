@@ -9817,8 +9817,15 @@ home_automation_services () {
 cp $PROJECT_INIT_SCRIPTS_DIR/presence-detection-via-hostapd.service $SYSTEMD_UNITS_DIR_USER/
 # Enable and start presence-detection if needed
 systemctl enable presence-detection-via-hostapd.service
-
-# 2. Presence detection using trackerjacker - presence-detection-via-trackerjacker.service
+#
+# 2. Presence detection using mifi - presence-detection-via-mifi.service
+# -----
+# Add systemd service for presence detection which uses mifi
+cp $PROJECT_INIT_SCRIPTS_DIR/presence-detection-via-mifi.service $SYSTEMD_UNITS_DIR_USER/
+# Enable and start presence-detection if needed
+systemctl enable presence-detection-via-mifi.service
+#
+# 3. Presence detection using trackerjacker - presence-detection-via-trackerjacker.service
 # -----
 # Add systemd service for presence detection which uses trackerjacker
 cat $PROJECT_INIT_SCRIPTS_DIR/presence-detection-via-trackerjacker.service | \
