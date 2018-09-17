@@ -711,6 +711,9 @@ NETWORK_WIRELESS_TUNTAP_DEV=$(ip tuntap | awk -F: {'print $1'} | head -1)
 NETWORK_WIRELESS_NET_MASK=$(/usr/sbin/ip addr show $NETWORK_WIRELESS_TUNTAP_DEV | awk '$1=="inet"{print $2}')
 NETWORK_DHCP_RANGE="192.168.0.100,192.168.0.199"
 
+IEEE_OUI_HWDATA_DIR=$PROJECT_SYSTEM_SHARE_DIR/hwdata
+IEEE_OUI_HWDATA_FILE=$IEEE_OUI_HWDATA_DIR/oui.txt
+
 CHRONYC_PASSWD=jul1214
 
 MYSQL_ROOT_PASSWORD=173dell
@@ -1030,6 +1033,9 @@ YOUTUBE_CLIENT_SECRET="x4HTznrI1eixU5XHVQxA-5wx"
 
 # FM radio Streamer
 FMRADIO_STREAMER_PORT=$(grep -i 'fmradio streamer$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+
+# GeoLocation
+GEOLOCATION_FILE=$PROJECT_SYSTEM_CONF_DIR/geolocation.txt
 
 
 
@@ -5649,10 +5655,10 @@ done
 
 ieee_oui_configure () {
 # Create directory of hardware data
-[ -d $PROJECT_SYSTEM_SHARE_DIR/hwdata ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/hwdata
+[ -d $IEEE_OUI_HWDATA_DIR ] || mkdir -p $IEEE_OUI_HWDATA_DIR
 # Copy oui.txt file containing OUI for all vendors - used in MAC addresses
 cp -v $PROJECT_CONTRIB_DIR/hwdata/oui.txt \
-	$PROJECT_SYSTEM_SHARE_DIR/hwdata
+	$IEEE_OUI_HWDATA_DIR
 }
 
 wired_interfaces_configure () {
