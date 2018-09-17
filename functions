@@ -985,6 +985,7 @@ PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL=$BINARY_PREFIX/jambulatv-presence-detec
 PRESENCE_DETECTION_VIA_TRACKER_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-trackerjacker
 SMS_TOOL=$BINARY_PREFIX/jambulatv-sms
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
+SYSINFO_TOOL=$BINARY_PREFIX/jambulatv-sysinfo
 TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
 TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controller 
 TVHEADEND_PROCESSOR_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-processor
@@ -6038,12 +6039,10 @@ cat > $CONFDIR/cron.d/motd << EOF
 @daily root $BINARY_PREFIX/jambulatv-sysinfo > $CONFDIR/motd
 EOF
 # Copy jambulatv-sysinfo script, if it does not exist in bin directory and Add User-Agents too
-[ -e $BINARY_PREFIX/jambulatv-sysinfo ] || \
-	cat $PROJECT_BIN_DIR/jambulatv-sysinfo | \
-		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" \
-			> $BINARY_PREFIX/jambulatv-sysinfo 
+[[ -e $SYSINFO_TOOL ]] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-sysinfo $SYSINFO_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-sysinfo 
+chmod 755 $SYSINFO_TOOL 
 #
 # Remove ssh lastlog
 sed -i 's:#PrintLastLog yes:PrintLastLog no:' $CONFDIR/ssh/sshd_config

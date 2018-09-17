@@ -1,25 +1,28 @@
 #!/bin/bash
-COMPANY_NAME="Jambula Labs"
-COPYRIGHT_YEAR_START=$(date '+%Y')
-COPYRIGHT_YEAR_END=$(date '+%Y' --date='12 months')
-COPYRIGHT_NOTICE=" ©$COPYRIGHT_YEAR_START-$COPYRIGHT_YEAR_END $COMPANY_NAME All Rights Reserved."
-RELEASE_FILE=/etc/JambulaTV/release
-PRODUCT=$(grep -i Product $RELEASE_FILE | cut -d : -f2)
-VERSION=$(grep -i Version $RELEASE_FILE | cut -d : -f2)
-MODEL=$(grep -i Model $RELEASE_FILE | cut -d : -f2)
-SERIAL=$(grep -i Serial $RELEASE_FILE | cut -d : -f2)
-HEADER=$(figlet $PRODUCT $VERSION)
-KERNEL=$(uname -r)
-OUI_HWDATA_FILE=/usr/share/$PRODUCT/hwdata/oui.txt
+# This is used to generate system information such as: JambulaTV Model/Serial Number, 
+# Software Version, Hardware (CPU, GPU, Memory, Disks), Networking information, 
+# Current WiFi/Internet status, GeoLocation, etc.
+#
+# Prerequisites: Linux using systemd
+#
+# Jambula Labs @copyright 2018-2019 All rights reserved
+#
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 
-# TTY
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+
+
+# TTY - Set font and colors
 if tty -s
 then
 b=$(tput bold)
 n=$(tput sgr0)
 fi
-INSTALL_DATE=$(ls -dlct --time-style="+%d %B %Y" "/lost+found" | awk '{printf $9 " " $6 " "$7 " " $8}' | sed 's:/lost+found ::g')
-HTTP_USER_AGENT="MY_USER_AGENT"
 
 # IP Settings
 # ***********
@@ -49,10 +52,10 @@ CURRENT_DNS2=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | se
 else
 CURRENT_DNS2=$CURRENT_DNS1
 fi
-
+#
 # WiFi AP and Client Chipsets
-WIFI_AP_CHIPSET=$(grep -i $(iw dev | grep -B2 -i 'type AP' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g') $OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
-WIFI_CLIENT_CHIPSET=$(grep -i $(iw dev | grep -i -B2 'type managed' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g') $OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
+WIFI_AP_CHIPSET=$(grep -i $(iw dev | grep -B2 -i 'type AP' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g') $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
+WIFI_CLIENT_CHIPSET=$(grep -i $(iw dev | grep -i -B2 'type managed' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g') $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
 
 # Check if Internet connection is up
 host -W 1 google.com 1.0.0.1 > /dev/null 2>&1
@@ -60,9 +63,10 @@ INTERNET_ALIVE=$?
 if [ "$INTERNET_ALIVE" = "0" ];
 then
 INTERNET_STATE=UP↑
+#
 # Public IP Address
 # -----------------
-PUBLIC_IP_ADDRESS=$(curl --get -sS -m 60  -A "$HTTP_USER_AGENT" https://api.ipify.org)
+PUBLIC_IP_ADDRESS=$(curl --get -sS -m 60  -A "$DEFAULT_USER_AGENT" https://api.ipify.org)
 
 # See if update is available
 /usr/lib64/nagios/plugins/check_updates > /dev/null 2>&1
@@ -81,10 +85,31 @@ CITY=$([ -e /etc/timezone ] && cat /etc/timezone | cut -d / -f2)
 SUMMARY="Info not available"
 UPDATES_AVAILABLE="${b}Current Version Unknown"
 fi
+# WiFi state
+WIFI_STATUS=$(cat /sys/class/net/${WIFI_STATION_INTERFACE}/operstate)
+if [[ "$WIFI_STATUS" = "up" ]];
+then
+WIFI_CONNECTION_STATUS="Connected"
+else
+WIFI_CONNECTION_STATUS="Not Connected"
+fi
+# Geolocation
+CITY=$(grep -i city $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2)
+COUNTRY=$(grep -i country $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2)
+LATITUDE=$(grep -i latitude $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2)
+LONGITUDE=$(grep -i longitude $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2) 
+GEOLOCATION="$CITY, $COUNTRY ($LATITUDE, $LONGITUDE)"
+# Install Date
+INSTALL_DATE=$(ls -dlct --time-style="+%d %B %Y" "/lost+found" | awk '{printf $9 " " $6 " "$7 " " $8}' | sed 's:/lost+found ::g')
+# Owner
+CONTACT_NAME=$(query_mysql_db contact_name)
 
 # ------------------
 # Hardware variables
 # ------------------
+ACPI_BATTERY_DIR=/sys/class/power_supply/BAT0
+[[ -d $ACPI_BATTERY_DIR ]] && \
+BATTERY_CAPACITY="$(cat $ACPI_BATTERY_DIR/capacity)"
 #CPU_MODEL="$(cat /proc/cpuinfo | grep -i 'model name' | sort -u | cut -d ':' -f2)"
 CPU_MODEL=$(awk -F ': | @' '/model name|Processor|^cpu model|chip type|^cpu type/ {printf $2; exit}' /proc/cpuinfo | awk {'print $1FS$2FS$3'})
 CPU_SPEED=$(awk -F ': | @' '/model name|Processor|^cpu model|chip type|^cpu type/ {printf $3; exit}' /proc/cpuinfo)
@@ -95,8 +120,7 @@ CPU_LOAD=$(cat /proc/loadavg | cut -d' ' -f1-3)
 CPU_VAMPIRE=$()
 CPU_VAMPIRE_USAGE=$(ps --no-header -e -o pcpu,args --sort -pcpu | sed '/^ 0.0 /d' | head -1 | awk {'print $1'} | cut -d . -f1)%
 GPU_NAME=$(/usr/sbin/lspci -mm | awk -F '\\"|\\" \\"' '/"Display|"3D|"VGA/ {print $3 " "}')
-GPU_DRIVER=$(dmesg | grep -i '\[drm\] Initialized' | grep -i minor | awk {'print $5'})
-
+GPU_DRIVER=$(/usr/bin/journalctl -b -o cat | grep -i '\[drm\] Initialized' | grep -i minor | sed 's:\[drm\] Initialized::g' | awk {'print $1'})
 # Disks
 DISKS_INSTALLED=$(cat /proc/diskstats | awk {'print $3'} | cut -c2,1,3 | sort -u | wc -l)
 # Disk 1
@@ -138,17 +162,25 @@ SCREEN_RESOLUTION=$(export DISPLAY=:0.0 && /usr/bin/xrandr --nograb --current | 
 #echo -e "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #"
 # Header
-echo -e "\e[32;5;196m $HEADER"
+echo -e "\e[32;5;196m $([[ -e `which figlet` ]] && figlet $PROJECT_NAME $PROJECT_VERSION)"
 # Copyright
 echo -e "\t\e[32;5;196m\t$COPYRIGHT_NOTICE"
 echo -e ""
 # Internet
 echo -e "\t\t${n}Internet Status:\t${b} $INTERNET_STATE"
+# Current WiFi
+echo -e "\t\t${n}Current WiFi:\t\t${b} $WIFI_CONNECTION_STATUS"
+# Battery Level
+[[ -d $ACPI_BATTERY_DIR ]] && \
+echo -e "\t\t${n}Battery Level:\t\t${b} ${BATTERY_CAPACITY}%"
+# Current Location
+echo -e "\t\t${n}Current Location:\t${b} $GEOLOCATION"
 # Software/Updates/Model/Serial No.
-echo -e "\t\t${n}Platform Software:\t${b} $VERSION ${n}($KERNEL) $UPDATES_AVAILABLE"
-echo -e "\t\t${n}Model Number:\t\t${b} $MODEL"
-echo -e "\t\t${n}Serial Number:\t\t${b} $SERIAL"
+echo -e "\t\t${n}Platform Software:\t${b} $PROJECT_VERSION ${n}($(uname -r)) $UPDATES_AVAILABLE"
+echo -e "\t\t${n}Model Number:\t\t${b} $PRODUCT_MODEL_NUMBER"
+echo -e "\t\t${n}Serial Number:\t\t${b} $PRODUCT_SERIAL_NUMBER"
 echo -e "\t\t${n}Install Date:\t\t${b} $INSTALL_DATE"
+echo -e "\t\t${n}Owner:\t\t\t${b} $CONTACT_NAME"
 echo -e""
 # Date
 echo -e "${n}Date:${b} $(date +'%A, %d %b %Y') \t\t ${n}Time:${b} $(uptime | awk {'print $1FS$2FS$3'} | sed 's/,//')" 
