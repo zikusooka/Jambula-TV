@@ -358,6 +358,39 @@ skill_music_play_stop () {
 /usr/bin/jambulatv-kodi-controller music_play_stop
 }
 
+skill_volume_mute_toggle () {
+# Get index
+SINK_INPUT_INDEX=$(/usr/bin/pactl list | grep -B 19 "application.name = \"Kodi\"" | grep 'Sink Input #' | sed 's:Sink Input #::')
+# Toggle mute
+/usr/bin/pactl set-sink-input-mute $SINK_INPUT_INDEX toggle
+}
+
+skill_volume_increase () {
+# Get index
+SINK_INPUT_INDEX=$(/usr/bin/pactl list | grep -B 19 "application.name = \"Kodi\"" | grep 'Sink Input #' | sed 's:Sink Input #::')
+#
+# Current Volume level
+SINK_INPUT_VOLUME_CURRENT=$(/usr/bin/pactl list | grep -B 19 "application.name = \"Kodi"\" | grep 'Volume' | awk -F':' {'print $3'} | awk {'print $1'})
+#
+# Step up by 5% i.e. 3277
+let "SINK_INPUT_VOLUME_NEXT = $SINK_INPUT_VOLUME_CURRENT + 3277"
+# Increase Volume
+pactl set-sink-input-volume $SINK_INPUT_INDEX $SINK_INPUT_VOLUME_NEXT
+}
+
+skill_volume_decrease () {
+# Get index
+SINK_INPUT_INDEX=$(/usr/bin/pactl list | grep -B 19 "application.name = \"Kodi\"" | grep 'Sink Input #' | sed 's:Sink Input #::')
+#
+# Current Volume level
+SINK_INPUT_VOLUME_CURRENT=$(/usr/bin/pactl list | grep -B 19 "application.name = \"Kodi"\" | grep 'Volume' | awk -F':' {'print $3'} | awk {'print $1'})
+#
+# Step down by 5% i.e. 3277
+let "SINK_INPUT_VOLUME_NEXT = $SINK_INPUT_VOLUME_CURRENT - 3277"
+# Decrease Volume
+pactl set-sink-input-volume $SINK_INPUT_INDEX $SINK_INPUT_VOLUME_NEXT
+}
+
 skill_go_home () {
 /usr/bin/jambulatv-kodi-controller navigate_home
 }
