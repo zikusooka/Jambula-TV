@@ -400,6 +400,21 @@ elif [ "$DETECTED_PATTERN" = "STOP FM RADIO" ];
 then
 skill_fmradio_stop
 
+# Volume Mute - Toggle
+elif [ "$DETECTED_PATTERN" = "MUTE VOLUME" ];
+then
+skill_volume_mute_toggle
+
+# Volume Increase
+elif [ "$DETECTED_PATTERN" = "INCREASE VOLUME" ];
+then
+skill_volume_increase
+
+# Volume Decrease
+elif [ "$DETECTED_PATTERN" = "DECREASE VOLUME" ];
+then
+skill_volume_decrease
+
 # Go Home
 elif [ "$DETECTED_PATTERN" = "GO HOME" ];
 then
