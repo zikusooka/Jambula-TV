@@ -967,6 +967,7 @@ ARIA2_DOWNLOAD_STOP_TOOL=
 # ---------------
 AUTO_WIFI_PROVISION_TOOL=$BINARY_PREFIX/jambulatv-auto-wifi-provision 
 BANDWIDTH_TOOL=$BINARY_PREFIX/jambulatv-bandwidth
+CALENDAR_EVENTS_TOOL=$BINARY_PREFIX/jambulatv-calendar-events
 CAMPLAYER_TOOL=$BINARY_PREFIX/jambulatv-camplayer
 CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
@@ -8750,15 +8751,15 @@ chown -R $WWW_USER:$WWW_GROUP $NEXTCLOUD_DATA_DIRECTORY
 patch -p1 $WWW_HTML_DIR/nextcloud/apps/calendar/controller/proxycontroller.php < $PROJECT_PATCHES_DIR/nextcloud.proxycontroller.patch
 
 # Add jambulatv-calendar-events tool if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-calendar-events ] || \
+[ -e $CALENDAR_EVENTS_TOOL ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-calendar-events | \
 		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
 		sed -e "s:MY_NEXTCLOUD_ADMIN_USER:$NEXTCLOUD_ADMIN_USER:g" | \
 		sed -e "s:MY_NEXTCLOUD_ADMIN_PASS:$NEXTCLOUD_ADMIN_PASS:g" | \
 		sed -e "s:MY_NEXTCLOUD_HTTP_PORT:$NEXTCLOUD_HTTP_PORT:g" \
-			> $BINARY_PREFIX/jambulatv-calendar-events
+			> $CALENDAR_EVENTS_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-calendar-events
+chmod 755 $CALENDAR_EVENTS_TOOL
 
 # Display NextCloud's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
