@@ -984,6 +984,7 @@ PPP_DIAL_TOOL=$BINARY_PREFIX/jambulatv-ppp-dialer
 PRESENCE_DETECTION_VIA_MIFI_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-mifi
 PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-hostapd
 PRESENCE_DETECTION_VIA_TRACKER_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-trackerjacker
+SCREEN_DISPLAY_TOOL=$BINARY_PREFIX/jambulatv-display
 SMS_TOOL=$BINARY_PREFIX/jambulatv-sms
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
 SYSINFO_TOOL=$BINARY_PREFIX/jambulatv-sysinfo
@@ -8265,8 +8266,8 @@ screen_resolution_configure () {
 
 screen_display_configure () {
 # Copy jambulatv-display script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-display ] || \
-	cp -v $PROJECT_BIN_DIR/jambulatv-display $BINARY_PREFIX/
+[ -e $SCREEN_DISPLAY_TOOL ] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-display $SCREEN_DISPLAY_TOOL
 }
 
 screenshots_configure () {
