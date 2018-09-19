@@ -966,20 +966,21 @@ ARIA2_DOWNLOAD_STOP_TOOL=
 # JambulaTV Tools
 # ---------------
 AUTO_WIFI_PROVISION_TOOL=$BINARY_PREFIX/jambulatv-auto-wifi-provision 
-CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 BANDWIDTH_TOOL=$BINARY_PREFIX/jambulatv-bandwidth
+CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
+EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
 GENERATE_LOCAL_CONF_TOOL=$BINARY_PREFIX/jambulatv-generate-local-conf
-MIFI_HOTSPOT_TOOL=$BINARY_PREFIX/jambulatv-hotspot-query
 INITIAL_SETUP_TOOL=$BINARY_PREFIX/jambulatv-initial-setup 
 KODI_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-kodi-controller 
 KODI_LIBRARY_TOOL=$BINARY_PREFIX/jambulatv-library
 KODI_STANDALONE_TOOL=$BINARY_PREFIX/kodi-standalone
 KODI_PVR_MANAGER_ENABLE_TOOL=$BINARY_PREFIX/jambulatv-kodi-pvr-hts-manager
 LIGHTS_TOOL=$BINARY_PREFIX/jambulatv-lights
+MIFI_HOTSPOT_TOOL=$BINARY_PREFIX/jambulatv-hotspot-query
 MIFI_QUERY_TOOL=$BINARY_PREFIX/jambulatv-mifi-query
 OSD_TOOL=$BINARY_PREFIX/jambulatv-osd
+PIP_TOOL=$BINARY_PREFIX/jambulatv-pip
 PPP_DIAL_TOOL=$BINARY_PREFIX/jambulatv-ppp-dialer
-EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
 PRESENCE_DETECTION_VIA_MIFI_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-mifi
 PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-hostapd
 PRESENCE_DETECTION_VIA_TRACKER_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-trackerjacker
@@ -5174,7 +5175,10 @@ chmod 755 $KODI_LIBRARY_TOOL
 #
 # Picture-In-Picture
 # Copy jambulatv-pip script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-pip ] || cp -v $PROJECT_BIN_DIR/jambulatv-pip $BINARY_PREFIX/
+[ -e $PIP_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-pip $PIP_TOOL
+# Make script executable
+chmod 755 $PIP_TOOL
+#
 # Create kodi scripts directory
 [ -d $KODI_SHARE_DIR/scripts ] || mkdir -p $KODI_SHARE_DIR/scripts
 #
