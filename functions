@@ -970,6 +970,7 @@ BANDWIDTH_TOOL=$BINARY_PREFIX/jambulatv-bandwidth
 CAMPLAYER_TOOL=$BINARY_PREFIX/jambulatv-camplayer
 CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
+FETCH_NEWS_TOOL=$BINARY_PREFIX/jambulatv-fetch-news
 FMRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-fmradio-streamer
 GENERATE_LOCAL_CONF_TOOL=$BINARY_PREFIX/jambulatv-generate-local-conf
 INITIAL_SETUP_TOOL=$BINARY_PREFIX/jambulatv-initial-setup 
@@ -11411,14 +11412,14 @@ chmod 755 $BINARY_PREFIX/jambulatv-speech2text
 chmod 755 $BINARY_PREFIX/jambulatv-asr-skills
 
 # Copy jambulatv-fetch-news helper tool for headlines ASR skill
-[ -e $BINARY_PREFIX/jambulatv-fetch-news ] || \
+[ -e $FETCH_NEWS_TOOL ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-fetch-news | \
 		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
 		sed -e "s:MY_PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" | \
 		sed -e "s:MY_BINARY_PREFIX:$BINARY_PREFIX:g" \
-			> $BINARY_PREFIX/jambulatv-fetch-news
+			> $FETCH_NEWS_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-fetch-news
+chmod 755 $FETCH_NEWS_TOOL
 #
 # Add sample RSS file for news headlines
 cat > $PROJECT_SYSTEM_CONF_DIR/rss-feeds.cfg << EOF
