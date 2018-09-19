@@ -967,6 +967,7 @@ ARIA2_DOWNLOAD_STOP_TOOL=
 # ---------------
 AUTO_WIFI_PROVISION_TOOL=$BINARY_PREFIX/jambulatv-auto-wifi-provision 
 BANDWIDTH_TOOL=$BINARY_PREFIX/jambulatv-bandwidth
+CAMPLAYER_TOOL=$BINARY_PREFIX/jambulatv-camplayer
 CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
 GENERATE_LOCAL_CONF_TOOL=$BINARY_PREFIX/jambulatv-generate-local-conf
@@ -4918,10 +4919,10 @@ systemctl enable jambulatv-cctv-maintenance.timer
 systemctl start jambulatv-cctv-maintenance.timer
 
 # Copy jambulatv-camplayer used to play web based CCTV streams via TVHeadend
-[ -e $BINARY_PREFIX/jambulatv-camplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-camplayer $BINARY_PREFIX/
+[ -e $CAMPLAYER_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-camplayer $CAMPLAYER_TOOL
 #
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-camplayer 
+chmod 755 $CAMPLAYER_TOOL 
 }
 
 cctv_icons_add () {
