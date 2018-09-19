@@ -987,6 +987,7 @@ SMS_TOOL=$BINARY_PREFIX/jambulatv-sms
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
 SYSINFO_TOOL=$BINARY_PREFIX/jambulatv-sysinfo
 TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
+TEXT2SPEECH_TOOL=$BINARY_PREFIX/jambulatv-text2speech
 TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controller 
 TVHEADEND_PROCESSOR_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-processor
 VLM_VOD_CREATE_TOOL=$BINARY_PREFIX/jambulatv-create-video-on-demand
@@ -997,6 +998,10 @@ ZMEVENTSERVER_NOTIFICATION_DAEMON=$BINARY_PREFIX/zmeventnotification.pl
 ZONEMINDER_ALARM_NOTIFICATIONS_TOOL=$BINARY_PREFIX/jambulatv-zm-alarm-all-notifications 
 ZONEMINDER_ALARM_DAEMON=$BINARY_PREFIX/zmalarm_daemon.pl
 ZONEMINDER_ZMS_INETD_TOOL=$BINARY_PREFIX/jambulatv-zms-inetd
+
+# TTS/ASR
+[[ -e $TEXT2SPEECH_TOOL ]] && \
+TTS_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $TEXT2SPEECH_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'}) # IMPORTANT: Must be on 'ext4' partition i.e. /var
 
 # HTTP Headers
 # ------------
@@ -9643,13 +9648,13 @@ chmod 700 $ASTERISK_AGI_BIN_DIR/picotts.agi
 
 text2speech_setup () {
 # Copy jambulatv-text2speech script, if it does not exist in bin directory and add custom User-Agent string
-[ -e $BINARY_PREFIX/jambulatv-text2speech ] || \
+[ -e $TEXT2SPEECH_TOOL ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-text2speech | \
 		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" | \
 		sed "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
-			> $BINARY_PREFIX/jambulatv-text2speech 
+			> $TEXT2SPEECH_TOOL 
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-text2speech 
+chmod 755 $TEXT2SPEECH_TOOL 
 }
 
 cmake_install () {
