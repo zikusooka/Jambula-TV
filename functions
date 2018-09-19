@@ -11385,11 +11385,7 @@ rsync -av $PROJECT_CONTRIB_DIR/speech_tts_asr/pocketsphinx/ $POCKETSPHINX_DATA_D
 		sed -e "s:MY_PREFIX:$PREFIX:g" | \
 		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
 		sed -e "s:MY_POCKETSPHINX_DATA_DIR:$POCKETSPHINX_DATA_DIR:g" | \
-		sed -e "s:MY_JAMBULATV_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
-		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
-		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
-		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
-		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" \
+		sed -e "s:MY_JAMBULATV_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" \
 			> $BINARY_PREFIX/jambulatv-speech2text
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-speech2text
