@@ -11403,12 +11403,7 @@ chmod 755 $BINARY_PREFIX/jambulatv-speech2text
 
 # Copy jambulatv-asr-skills script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-asr-skills ] || \
-	cat $PROJECT_BIN_DIR/jambulatv-asr-skills | \
-		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
-		sed -e "s:MY_USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
-		sed -e "s:MY_USER_PICTURES_DIR:$USER_PICTURES_DIR:g" | \
-		sed -e "s:MY_USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" \
-			> $BINARY_PREFIX/jambulatv-asr-skills
+	cp -v $PROJECT_BIN_DIR/jambulatv-asr-skills $BINARY_PREFIX/jambulatv-asr-skills
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-asr-skills
 

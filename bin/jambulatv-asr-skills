@@ -1,18 +1,16 @@
 #!/bin/sh
 # This is a set of voice recognition skills used by JambulaTV 
-# It is used by jambulatv-speech2text tool
+# It is used by the Speech-2-Text tool
+#
 # Jambula Labs @copyright 2018-2019 All rights reserved
 
 # Variables
-FAVORITE_TV_CHANNEL="NBS TV"
-FAVORITE_VIDEO="MY_USER_TV_SHOWS_DIR/Arrow/Season_05/Arrow.S05E04.Penance.HDTV.H264.mkv"
-MUSIC_DIR="MY_USER_MUSIC_DIR"
-PICTURES_DIR="MY_USER_PICTURES_DIR"
-TV_RECORD_STATUS_FILE=MY_TMPDIR/tv_record_status # Must be same as in kodi-controller!
-SMARTHOME_HUB_LAMP_NAME="Living Room"
-TEXT2SPEECH_TOOL=jambulatv-text2speech
-TTS_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $(which $TEXT2SPEECH_TOOL) | cut -d '=' -f2 | head -1 | awk {'print $1'}) # IMPORTANT: Must be on 'ext4' partition i.e. /var
-TTS_PLAY_TOOL=$(basename $(grep ^TTS_PLAY_CMD $(which $TEXT2SPEECH_TOOL) | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed "s:\"::g"))
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
 
 
 
@@ -22,38 +20,38 @@ TTS_PLAY_TOOL=$(basename $(grep ^TTS_PLAY_CMD $(which $TEXT2SPEECH_TOOL) | cut -
 
 skill_time () {
 # Un Pause Player
-/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+$KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say weather
-/usr/bin/jambulatv-text2speech '2' time
+$TEXT2SPEECH_TOOL '2' time
 # Un Pause Player
-/usr/bin/jambulatv-kodi-controller video_play_pause
+$KODI_CONTROLLER_TOOL video_play_pause
 }
 
 skill_weather_currently () {
 # Un Pause Player
-/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+$KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say weather
-/usr/bin/jambulatv-text2speech '' weather current 3
+$TEXT2SPEECH_TOOL '' weather current 3
 # Un Pause Player
-/usr/bin/jambulatv-kodi-controller video_play_pause
+$KODI_CONTROLLER_TOOL video_play_pause
 }
 
 skill_weather_today () {
 # Un Pause Player
-/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+$KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say weather
-/usr/bin/jambulatv-text2speech '' weather today 1
+$TEXT2SPEECH_TOOL '' weather today 1
 # Un Pause Player
-/usr/bin/jambulatv-kodi-controller video_play_pause
+$KODI_CONTROLLER_TOOL video_play_pause
 }
 
 skill_weather_later () {
 # Un Pause Player
-/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+$KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say weather
-/usr/bin/jambulatv-text2speech '' weather later 2
+$TEXT2SPEECH_TOOL '' weather later 2
 # Un Pause Player
-/usr/bin/jambulatv-kodi-controller video_play_pause
+$KODI_CONTROLLER_TOOL video_play_pause
 }
 
 skill_weather () {
@@ -62,18 +60,20 @@ skill_weather_currently
 }
 
 skill_headlines_start () {
-$TEXT_2_SPEECH_TOOL_PATH "" custom "Here's whats making news today"
-/usr/bin/jambulatv-fetch-news
+# Header voice
+$TEXT2SPEECH_TOOL "" custom "Here's whats making news today"
+# Fetch news
+$FETCH_NEWS_TOOL
 }
 
 skill_headlines_stop () {
-killall jambulatv-fetch-news && killall jambulatv-text2speech
-$TEXT_2_SPEECH_TOOL_PATH "" custom "Okay, I will stop reading the news"
+killall ${FETCH_NEWS_TOOL##*/} && killall ${TEXT2SPEECH_TOOL##*/}
+$TEXT2SPEECH_TOOL "" custom "Okay, I will stop reading the news"
 touch $TTS_OUTPUT_FILE
 }
 
 skill_reminders () {
-$TEXT_2_SPEECH_TOOL_PATH "" custom "$(/usr/bin/remind /JambulaTV/Reminders/)"
+$TEXT2SPEECH_TOOL "" custom "$(/usr/bin/remind /JambulaTV/Reminders/)"
 }
 
 skill_calendar_events () {
@@ -81,188 +81,204 @@ skill_calendar_events () {
 CALENDAR_EVENT_START=$1
 CALENDAR_EVENT_END=$2
 CALENDAR_EVENT_ASR_PERIOD=$3
-CALENDAR_EVENTS_TOOL_PATH=/usr/bin/jambulatv-calendar-events
-CALENDAR_TEXT_2_SPEECH_INPUT_FILE=$(grep '^TEXT2SPEECH_INPUT_FILE' $CALENDAR_EVENTS_TOOL_PATH | cut -d '=' -f2 | head -1 | awk {'print $1'})
+CALENDAR_TEXT_2_SPEECH_INPUT_FILE=$(grep '^TEXT2SPEECH_INPUT_FILE' $CALENDAR_EVENTS_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'})
 
 # Query calendar for events
-$CALENDAR_EVENTS_TOOL_PATH $CALENDAR_EVENT_START $CALENDAR_EVENT_END
+$CALENDAR_EVENTS_TOOL $CALENDAR_EVENT_START $CALENDAR_EVENT_END
 
 # If no events are found, say it 
 [ -s $CALENDAR_TEXT_2_SPEECH_INPUT_FILE ] || \
-	$TEXT_2_SPEECH_TOOL_PATH "" custom "No events are scheduled for $CALENDAR_EVENT_ASR_PERIOD" 
+	$TEXT2SPEECH_TOOL "" custom "No events are scheduled for $CALENDAR_EVENT_ASR_PERIOD" 
 # Quit if no events found
 [ -s $CALENDAR_TEXT_2_SPEECH_INPUT_FILE ] || exit 0
 
 # Say header message
-$TEXT_2_SPEECH_TOOL_PATH "" custom "The following events are scheduled for $CALENDAR_EVENT_ASR_PERIOD"
+$TEXT2SPEECH_TOOL "" custom "The following events are scheduled for $CALENDAR_EVENT_ASR_PERIOD"
 # Cycle through speech-to-text input file and say event summary
 cat $CALENDAR_TEXT_2_SPEECH_INPUT_FILE | while read EVENT_SUMMARY
 do
-$TEXT_2_SPEECH_TOOL_PATH "" custom "The $EVENT_SUMMARY"
+$TEXT2SPEECH_TOOL "" custom "The $EVENT_SUMMARY"
 done
 # Say footer message
-$TEXT_2_SPEECH_TOOL_PATH "" custom "That is all for $CALENDAR_EVENT_ASR_PERIOD"
+$TEXT2SPEECH_TOOL "" custom "That is all for $CALENDAR_EVENT_ASR_PERIOD"
 }
 
 skill_motd () {
-$TEXT_2_SPEECH_TOOL_PATH "1" custom "Today's message of the day is \"\\pau=1000\\\" $(/usr/bin/fortune -s -n 80)"
+$TEXT2SPEECH_TOOL "1" custom "Today's message of the day is \"\\pau=1000\\\" $(/usr/bin/fortune -s -n 80)"
 }
 
 skill_flash_briefing () {
 # Get registered name, etc
 get_contact_details
 # Daily Digest
-$TEXT_2_SPEECH_TOOL_PATH "" custom "Hello $CONTACT_FIRST_NAME here is your daily digest for today $(date "+%A %d %B %Y")"
+$TEXT2SPEECH_TOOL "" custom "Hello $CONTACT_FIRST_NAME here is your daily digest for today $(date "+%A %d %B %Y")"
 skill_reminders
 skill_weather
 skill_headlines
 skill_motd
 skill_time
-$TEXT_2_SPEECH_TOOL_PATH "" custom "Happy $(date "+%A")"
+$TEXT2SPEECH_TOOL "" custom "Happy $(date "+%A")"
 }
 
 skill_lights_on () {
-/usr/bin/jambulatv-lights "$SMARTHOME_HUB_LAMP_NAME" on demo
+# Lamp name 
+SMARTHOME_HUB_LAMP_NAME="Living Room"
+# Turn lamp on
+$LIGHTS_TOOL "$SMARTHOME_HUB_LAMP_NAME" on demo
 }
 
 skill_lights_off () {
-/usr/bin/jambulatv-lights "$SMARTHOME_HUB_LAMP_NAME" off demo
+# Lamp name 
+SMARTHOME_HUB_LAMP_NAME="Living Room"
+# Turn lamp off
+$LIGHTS_TOOL "$SMARTHOME_HUB_LAMP_NAME" off demo
 }
 
 skill_tv_start () {
-/usr/bin/jambulatv-kodi-controller tv_play_start "$FAVORITE_TV_CHANNEL"
+# Favorite TV channel
+FAVORITE_TV_CHANNEL="NBS TV"
+# Play TV channel
+$KODI_CONTROLLER_TOOL tv_play_start "$FAVORITE_TV_CHANNEL"
 }
 
 skill_tv_play_next () {
-/usr/bin/jambulatv-kodi-controller video_play_next
+$KODI_CONTROLLER_TOOL video_play_next
 }
 
 skill_tv_play_previous () {
-/usr/bin/jambulatv-kodi-controller video_play_previous
+$KODI_CONTROLLER_TOOL video_play_previous
 }
 
 skill_tv_pause_channel () {
-/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+$KODI_CONTROLLER_TOOL video_play_pause noreplay
 }
 
 skill_tv_unpause_channel () {
-/usr/bin/jambulatv-kodi-controller video_play_pause
+$KODI_CONTROLLER_TOOL video_play_pause
 }
 
 skill_tv_play_ntv () {
-/usr/bin/jambulatv-kodi-controller tv_play_start "N TV"
+$KODI_CONTROLLER_TOOL tv_play_start "N TV"
 }
 
 skill_tv_play_nbs () {
-/usr/bin/jambulatv-kodi-controller tv_play_start "NBS TV"
+$KODI_CONTROLLER_TOOL tv_play_start "NBS TV"
 }
 
 skill_tv_stop () {
-/usr/bin/jambulatv-kodi-controller tv_play_stop
+$KODI_CONTROLLER_TOOL tv_play_stop
 }
 
 skill_tv_record_start_now () {
+# TV record status temp file
+TV_RECORD_STATUS_FILE=$(grep ^TV_RECORD_STATUS_FILE $KODI_CONTROLLER_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed "s:\"::g")
 # Check status of tv recording
-/usr/bin/jambulatv-kodi-controller tv_record_status
+$KODI_CONTROLLER_TOOL tv_record_status
 # Source current TV recording status file
 . $TV_RECORD_STATUS_FILE && export TV_RECORDING_CURRENT_STATUS
 #
 if [ "$TV_RECORDING_CURRENT_STATUS" = "true" ];
 then
 # Let user know there's already a recording and quit
-$TEXT_2_SPEECH_TOOL_PATH "2" custom "Am sorry, there is already another recording in progress. To end that recording, please say \"\\pau=1000\\\" STOP RECORDING TV CHANNEL. \"\\pau=1000\\\"  Then repeat your request"
+$TEXT2SPEECH_TOOL "2" custom "Am sorry, there is already another recording in progress. To end that recording, please say \"\\pau=1000\\\" STOP RECORDING TV CHANNEL. \"\\pau=1000\\\"  Then repeat your request"
 # Quit
 exit 1
 
 else
 # Record TV channel now
-/usr/bin/jambulatv-kodi-controller tv_record_instant_start
+$KODI_CONTROLLER_TOOL tv_record_instant_start
 fi
 }
 
 skill_tv_record_stop_now () {
+# TV record status temp file
+TV_RECORD_STATUS_FILE=$(grep ^TV_RECORD_STATUS_FILE $KODI_CONTROLLER_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed "s:\"::g")
 # Check status of tv recording
-/usr/bin/jambulatv-kodi-controller tv_record_status
+$KODI_CONTROLLER_TOOL tv_record_status
 # Source current TV recording status file
 . $TV_RECORD_STATUS_FILE && export TV_RECORDING_CURRENT_STATUS
 #
 if [ "$TV_RECORDING_CURRENT_STATUS" = "false" ];
 then
 # Let user know there's no recording to stop
-$TEXT_2_SPEECH_TOOL_PATH "" custom "Am sorry, there is no recording for me to stop"
+$TEXT2SPEECH_TOOL "" custom "Am sorry, there is no recording for me to stop"
 # Quit
 exit 1
 
 else
 # Stop recording TV channel now
-/usr/bin/jambulatv-kodi-controller tv_record_instant_stop
+$KODI_CONTROLLER_TOOL tv_record_instant_stop
 fi
 }
 
 skill_video_start () {
-/usr/bin/jambulatv-kodi-controller video_play_start "$FAVORITE_VIDEO"
+# Favorite video
+FAVORITE_VIDEO="$USER_TV_SHOWS_DIR/Game_of_Thrones/Season_07/Game.of.Thrones.S07E07.The.Dragon.and.the.Wolf.HDTV.H264.mkv"
+# Play favorite video
+$KODI_CONTROLLER_TOOL video_play_start "$FAVORITE_VIDEO"
 }
 
 skill_video_pause () {
-/usr/bin/jambulatv-kodi-controller video_play_pause noreplay
+$KODI_CONTROLLER_TOOL video_play_pause noreplay
 }
 
 skill_video_unpause () {
-/usr/bin/jambulatv-kodi-controller video_play_pause
+$KODI_CONTROLLER_TOOL video_play_pause
 }
 
 skill_video_play_next () {
-/usr/bin/jambulatv-kodi-controller navigate_down
-/usr/bin/jambulatv-kodi-controller navigate_select
+$KODI_CONTROLLER_TOOL navigate_down
+$KODI_CONTROLLER_TOOL navigate_select
 }
 
 skill_video_play_previous () {
-/usr/bin/jambulatv-kodi-controller navigate_up
-/usr/bin/jambulatv-kodi-controller navigate_select
+$KODI_CONTROLLER_TOOL navigate_up
+$KODI_CONTROLLER_TOOL navigate_select
 }
 
 skill_video_play_stop () {
-/usr/bin/jambulatv-kodi-controller video_play_stop
+$KODI_CONTROLLER_TOOL video_play_stop
 }
 
 skill_picture_in_picture_start () {
-/usr/bin/jambulatv-pip start
+$PIP_TOOL start
 }
 
 skill_picture_in_picture_next () {
-/usr/bin/jambulatv-pip next
+$PIP_TOOL next
 }
 
 skill_picture_in_picture_previous () {
-/usr/bin/jambulatv-pip previous
+$PIP_TOOL previous
 }
 
 skill_picture_in_picture_pause () {
-/usr/bin/jambulatv-pip pause
+$PIP_TOOL pause
 }
 
 skill_picture_in_picture_unpause () {
-/usr/bin/jambulatv-pip unpause
+$PIP_TOOL unpause
 }
 
 skill_picture_in_picture_stop () {
-/usr/bin/jambulatv-pip stop
+$PIP_TOOL stop
 }
 
 skill_youtube_search_start () {
-/usr/bin/jambulatv-kodi-controller addon_play_youtube "$@"
+$KODI_CONTROLLER_TOOL addon_play_youtube "$@"
 }
 
 skill_youtube_search_stop () {
-/usr/bin/jambulatv-kodi-controller video_play_stop
+$KODI_CONTROLLER_TOOL video_play_stop
 }
 
 skill_pictures_slideshow_all_start () {
-/usr/bin/jambulatv-kodi-controller pictures_play_start $PICTURES_DIR
+# Run pictures slide show
+$KODI_CONTROLLER_TOOL pictures_play_start $USER_PICTURES_DIR
 }
 
 skill_pictures_slideshow_stop () {
-/usr/bin/jambulatv-kodi-controller pictures_play_stop
+$KODI_CONTROLLER_TOOL pictures_play_stop
 }
 
 skill_music_start () {
@@ -289,13 +305,13 @@ esac
 # Remove old playlist
 [ -e $MUSIC_PLAYLIST ] && rm -f $MUSIC_PLAYLIST
 # Generate playlist - TODO: Cache playlist and refresh periodically
-find $(find $MUSIC_DIR -type d -iname $MUSIC_CATEGORY) -type f | grep -E "*(\.mp3|\.mp4|\.wav|\.m4a|\.webm)" | while read SONG
+find $(find $USER_MUSIC_DIR -type d -iname $MUSIC_CATEGORY) -type f | grep -E "*(\.mp3|\.mp4|\.wav|\.m4a|\.webm)" | while read SONG
 do 
 echo "$SONG" >> "$MUSIC_PLAYLIST"
 done
 
 # Play requested music category
-/usr/bin/jambulatv-kodi-controller music_play_offline_start "$MUSIC_PLAYLIST" 
+$KODI_CONTROLLER_TOOL music_play_offline_start "$MUSIC_PLAYLIST" 
 }
 
 skill_internet_music_start () {
@@ -322,40 +338,40 @@ esac
 echo "$STATION_URL" >> "$MUSIC_PLAYLIST"
 
 # Play requested music category
-/usr/bin/jambulatv-kodi-controller music_play_online_start "$MUSIC_PLAYLIST" 
+$KODI_CONTROLLER_TOOL music_play_online_start "$MUSIC_PLAYLIST" 
 }
 
 skill_music_pause () {
-/usr/bin/jambulatv-kodi-controller music_play_pause noreplay
+$KODI_CONTROLLER_TOOL music_play_pause noreplay
 }
 
 skill_music_unpause () {
-/usr/bin/jambulatv-kodi-controller music_play_pause
+$KODI_CONTROLLER_TOOL music_play_pause
 }
 
 skill_fmradio_start () {
 # Change FM radio station
-jambulatv-fmradio-streamer restart "$@"
+$FMRADIO_STREAMER_TOOL restart "$@"
 # Stream FM radio
-/usr/bin/jambulatv-kodi-controller addon_play_fmradio 
+$KODI_CONTROLLER_TOOL addon_play_fmradio 
 }
 
 skill_fmradio_stop () {
-/usr/bin/jambulatv-kodi-controller audio_play_stop
+$KODI_CONTROLLER_TOOL audio_play_stop
 }
 
 skill_music_play_next () {
-/usr/bin/jambulatv-kodi-controller navigate_down
-/usr/bin/jambulatv-kodi-controller navigate_select
+$KODI_CONTROLLER_TOOL navigate_down
+$KODI_CONTROLLER_TOOL navigate_select
 }
 
 skill_music_play_previous () {
-/usr/bin/jambulatv-kodi-controller navigate_up
-/usr/bin/jambulatv-kodi-controller navigate_select
+$KODI_CONTROLLER_TOOL navigate_up
+$KODI_CONTROLLER_TOOL navigate_select
 }
 
 skill_music_play_stop () {
-/usr/bin/jambulatv-kodi-controller music_play_stop
+$KODI_CONTROLLER_TOOL music_play_stop
 }
 
 skill_volume_mute_toggle () {
@@ -392,15 +408,56 @@ pactl set-sink-input-volume $SINK_INPUT_INDEX $SINK_INPUT_VOLUME_NEXT
 }
 
 skill_go_home () {
-/usr/bin/jambulatv-kodi-controller navigate_home
+$KODI_CONTROLLER_TOOL navigate_home
 }
 
 skill_web_camera_view_play () {
-/usr/bin/jambulatv-camplayer play $1 ffplay
+$CAMPLAYER_TOOL play $1 ffplay
 }
 
 skill_web_camera_view_stop () {
-/usr/bin/jambulatv-camplayer stop
+$CAMPLAYER_TOOL stop
+}
+
+skill_internet_data_balance_mifi () {
+# Check if MiFi router is alive
+MIFI_IP_ADDRESS=$(query_mysql_db mifi_ip_address)
+ping -c 1 -W 1 $MIFI_IP_ADDRESS > /dev/null 2>&1
+MIFI_REACHEABLE=$?
+# If MiFi is up, proceed to query
+if [[ "$MIFI_REACHEABLE" = "0" ]];
+then
+# Add beeps while data stats are fetched
+$SOUNDS_TOOL api $TTS_OUTPUT_FILE
+
+# source mifi router login credentials
+MIFI_ADMIN_USER=$(query_mysql_db mifi_admin_user)
+MIFI_ADMIN_PASS=$(query_mysql_db mifi_admin_pass)
+# Source data remaining
+DATA_BALANCE_LEFT_MB=$($MIFI_QUERY_TOOL $MIFI_IP_ADDRESS $MIFI_ADMIN_USER $MIFI_ADMIN_PASS data | grep 'Data balance remaining' | head -1 | awk -F':' {'print $2'} | awk {'print $1'} | sed 's:MB: MB:')
+DATA_BALANCE_LEFT_PERCENT=$($MIFI_QUERY_TOOL $MIFI_IP_ADDRESS $MIFI_ADMIN_USER $MIFI_ADMIN_PASS data | grep 'Data balance remaining' | tail -1 | awk -F':' {'print $2'} | awk {'print $1'} | cut -d '.' -f1)
+DATA_BALANCE_THRESHOLD_LOW=$(grep -Ev '(#.*$)|(^$)' $MIFI_QUERY_TOOL | grep 'DATA_BALANCE_THRESHOLD_LOW=' | cut -d '=' -f2)
+fi
+
+# If MiFi is down, or no data fetched
+if [[ "$MIFI_REACHEABLE" != "0" || "x$DATA_BALANCE_LEFT_MB" = "x" ]];
+then
+# Alert using voice
+$TEXT2SPEECH_TOOL "" custom "I am sorry, but I failed to get the Internet data balance from your router. Please check that it is powered on"
+# quit
+exit 0
+fi
+
+# If data is above warning threshold
+if [[ "$DATA_BALANCE_LEFT_PERCENT" -ge "$DATA_BALANCE_THRESHOLD_LOW" ]];
+then
+# Only read the balance left
+$TEXT2SPEECH_TOOL "" custom "The remaining balance for your Internet data is $DATA_BALANCE_LEFT_MB"
+
+else
+# Read balance left and Warn when data is about to run out
+$TEXT2SPEECH_TOOL "" custom "The remaining balance for your Internet data is $DATA_BALANCE_LEFT_MB. Please recharge as soon as possible"
+fi
 }
 
 phone_call_dial () {
@@ -420,33 +477,35 @@ sudo asterisk -rx "console hangup"
 }
 
 skill_connect_2_hotspot () {
-sudo /usr/bin/jambulatv-auto-wifi-provision &
-$TEXT_2_SPEECH_TOOL_PATH "" custom "Please scan the QR Code displayed on the TV Screen to get the Wifi password.  For Android devices, you may connect automatically"
+sudo $AUTO_WIFI_PROVISION_TOOL &
+$TEXT2SPEECH_TOOL "" custom "Please scan the QR Code displayed on the TV Screen to get the Wifi password.  For Android devices, you may connect automatically"
 }
 
 skill_display_off () {
-#$TEXT_2_SPEECH_TOOL_PATH "" custom "Turning off Display"
-. /usr/bin/jambulatv-display off
+#$TEXT2SPEECH_TOOL "" custom "Turning off Display"
+. $SCREEN_DISPLAY_TOOL off
 }
 
 skill_display_on () {
-#$TEXT_2_SPEECH_TOOL_PATH "" custom "Turning on Display"
-. /usr/bin/jambulatv-display on
+#$TEXT2SPEECH_TOOL "" custom "Turning on Display"
+. $SCREEN_DISPLAY_TOOL on
 }
 
 skill_power_off () {
-$TEXT_2_SPEECH_TOOL_PATH "" custom "Turning off system"
+$TEXT2SPEECH_TOOL "" custom "Turning off system"
 systemctl poweroff -i
 }
 
 skill_stop_running_skill () {
+# Text2Speech tool
+TTS_PLAY_TOOL=$(basename $(grep ^TTS_PLAY_CMD $TEXT2SPEECH_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed "s:\"::g"))
 # Get PID of TTS audio
 TTS_PID=$(ps auxw | grep -Ev grep | grep $TTS_PLAY_TOOL | grep $TEXT_2_SPEECH_OUTPUT_FILE | awk {'print $2'})
 kill $TTS_PID
 }
 
 skill_mute_speech_recognition () {
-$TEXT_2_SPEECH_TOOL_PATH "1" custom "Geeez \"\\pau=1000\\\" Am I that noisy? \"\\pau=1000\\\" OK \"\\pau=500\\\" I will go off line for now"
+$TEXT2SPEECH_TOOL "1" custom "Geeez \"\\pau=1000\\\" Am I that noisy? \"\\pau=1000\\\" OK \"\\pau=500\\\" I will go off line for now"
 [ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
 touch $TEXT_2_SPEECH_OUTPUT_FILE
 sudo chattr +i $TEXT_2_SPEECH_OUTPUT_FILE
@@ -455,9 +514,9 @@ sudo chattr +i $TEXT_2_SPEECH_OUTPUT_FILE
 skill_unmute_speech_recognition () {
 sudo chattr -i $TEXT_2_SPEECH_OUTPUT_FILE 
 [ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
-$TEXT_2_SPEECH_TOOL_PATH "1" custom "You missed me \"\\pau=500\\\" Right? \"\\pau=1000\\\" OK \"\\pau=500\\\"  I am baack"
+$TEXT2SPEECH_TOOL "1" custom "You missed me \"\\pau=500\\\" Right? \"\\pau=1000\\\" OK \"\\pau=500\\\"  I am baack"
 }
 
 skill_unknown () {
-$TEXT_2_SPEECH_TOOL_PATH "" custom "Am sorry, I did not understand what you said"
+$TEXT2SPEECH_TOOL "" custom "Am sorry, I did not understand what you said"
 }
