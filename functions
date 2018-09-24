@@ -4823,12 +4823,12 @@ case $EPG_XMLTV_COUNTRY in
 UK)
 EPG_XMLTV_GUIDE_NAME="the United Kingdom (UK)"
 EPG_XMLTV_GUIDE_FILE=$EPG_XMLTV_GUIDE_DIR/tvguide.uk.xml
-EPG_XMLTV_GUIDE_URL="http://epg.koditvepg.com/GB/guide.xml"
+EPG_XMLTV_GUIDE_URL="http://epg.koditvepg2.com/GB/guide.xml.gz"
 ;;
 US)
 EPG_XMLTV_GUIDE_NAME="the United States of America (USA)"
 EPG_XMLTV_GUIDE_FILE=$EPG_XMLTV_GUIDE_DIR/tvguide.us.xml
-EPG_XMLTV_GUIDE_URL="http://epg.koditvepg.com/US/guide.xml"
+EPG_XMLTV_GUIDE_URL="http://epg.koditvepg2.com/US/guide.xml.gz"
 ;;
 esac
 }
@@ -11757,9 +11757,6 @@ fi
 }
 
 wget_download_file () {
-# Check Internet connectivity
-check_internet_connectivity_ping 0
-
 WGET_OUTPUT_FILE=$1
 WGET_DOWNLOAD_URL=$2
 WGET_OTHER_ARGS="$3 $4 $5"
