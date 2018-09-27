@@ -291,8 +291,8 @@ dvb_refresh_epg_data () {
 # Remove TVH EPG Database
 [[ -e $TVHEADEND_CONFIG_DIR/epgdb.v3 ]] && rm -f $TVHEADEND_CONFIG_DIR/epgdb.v3
 
-# Run TVH internal EPG grabbers
-$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/epggrab/internal/rerun -d rerun=1 > /dev/null 2>&1
+# Run OTA grabbers
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/epggrab/ota/trigger -d trigger=1 > /dev/null 2>&1
 }
 
 dvb_query_scan_status () {
@@ -674,7 +674,8 @@ epg_xmltv_guide_sources
 # Download only if EPG data file is 3 days old or more since the XML file is huge ~50MB
 if [[ "$TV_GUIDE_FILE_IS_FRESH" != "yes" ]];
 then
-# Notify of starr of EPG data download
+
+# Notify of start of EPG data download
 # Source notification strings
 set_notifications
 # Print notifciation to stdout and systemd journal 
@@ -698,12 +699,55 @@ EOT
 
 # Download the latest TV guide (EPG) from upstream providor
 wget_download_file $EPG_XMLTV_GUIDE_FILE $EPG_XMLTV_GUIDE_URL -a $EPG_XMLTV_LOG_FILE
+
+# Determine file format of downloaded tvguide
+EPG_XMLTV_GUIDE_FILE_FORMAT=$(file -b $EPG_XMLTV_GUIDE_FILE | awk {'print $1'})
+
+# If file is compressed, then decompress per type
+case $EPG_XMLTV_GUIDE_FILE_FORMAT in
+#
+# Gzip
+[Gg][Zz][Ii][Pp])
+# Rename
+mv -v ${EPG_XMLTV_GUIDE_FILE} ${EPG_XMLTV_GUIDE_FILE}.gz
+# Decompress
+gunzip -v ${EPG_XMLTV_GUIDE_FILE}.gz
+;;
+#
+# Zip 
+[Zz][Ii][Pp])
+# Rename
+mv -v ${EPG_XMLTV_GUIDE_FILE} ${EPG_XMLTV_GUIDE_FILE}.zip
+# Decompress
+unzip -v ${EPG_XMLTV_GUIDE_FILE}.zip
+;;
+#
+# Bzip2
+[Bb][Zz][Ii][Pp]2)
+# Rename
+mv -v ${EPG_XMLTV_GUIDE_FILE} ${EPG_XMLTV_GUIDE_FILE}.bzip2
+# Decompress
+bunzip2 -v ${EPG_XMLTV_GUIDE_FILE}.bzip2
+;;
+#
+# XZ
+[Xx][Zz])
+# Rename
+mv -v ${EPG_XMLTV_GUIDE_FILE} ${EPG_XMLTV_GUIDE_FILE}.xz
+# Decompress
+unxz -v ${EPG_XMLTV_GUIDE_FILE}.xz
+;;
+esac
+
 fi
 
 done
 }
 
 iptv_refresh_epg_data () {
+# Run TVH internal EPG grabbers e.g. xmltv: tv_grab_combiner -> tv_grab_uk_bleb
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/epggrab/internal/rerun -d rerun=1 > /dev/null 2>&1
+
 # Download latest EPG data from upstream XMLTV provider
 iptv_download_epg_data
 
