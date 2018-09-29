@@ -290,9 +290,14 @@ $KODI_CONTROLLER_TOOL tv_picons_repair > /dev/null 2>&1
 dvb_refresh_epg_data () {
 # Remove TVH EPG Database
 [[ -e $TVHEADEND_CONFIG_DIR/epgdb.v3 ]] && rm -f $TVHEADEND_CONFIG_DIR/epgdb.v3
-
+# Restart TVHeadend
+sudo systemctl restart tvheadend.service
 # Run OTA grabbers
 $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/epggrab/ota/trigger -d trigger=1 > /dev/null 2>&1
+# Pause to allow EPG to be added
+sleep 60
+# Run generic EPG tool
+$EPG_GENERIC_TVGUIDE_TOOL > /dev/null 2>&1
 }
 
 dvb_query_scan_status () {
@@ -758,7 +763,15 @@ set_notifications
 print_notification "$EPG_DATA_4_KODI_REFRESH_MESSAGE" text
 # Print notification using OSD tool
 print_notification "$EPG_DATA_4_KODI_REFRESH_MESSAGE" osd
-#
+
+# Get status of External XMLTV EPG module
+EPG_XMLTV_EXTERNAL_STATUS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/epggrab/module/list | jq -r '.entries[] | select(.title == "External: XMLTV") | .status')
+# Alert if External XMLTV is disabled
+if [[ "$EPG_XMLTV_EXTERNAL_STATUS" != "epggrabmodEnabled" ]];
+then
+logger -s -t $(basename $0) "Please enable External XMLTV EPG module in TVHeadend"
+
+else
 # Cycle through all desired TV guides: UK, US
 for EPG_XMLTV_COUNTRY in UK US
 do
@@ -768,10 +781,10 @@ epg_xmltv_guide_sources
 # Pipe EPG data into TVHeadend XMLTV EPG grabber module
 [[ -e $EPG_XMLTV_GUIDE_FILE ]] && cat $EPG_XMLTV_GUIDE_FILE | \
 	sudo $SOCAT_CMD $SOCAT_OPTS - UNIX-CONNECT:$EPG_XMLTV_SOCKET
-
 # Add XMLTV based grabber listings for UK if available
 logger -s -t $(basename $0) "Added TV guide for [$EPG_XMLTV_COUNTRY] to TVHeadend EPG grabber"
 done
+fi
 }
 
 iptv_scan_add_muxes () {
