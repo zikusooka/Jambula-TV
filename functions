@@ -211,14 +211,15 @@ TVHEADEND_CCTV_LOG_DIR=$TVHEADEND_IPTV_LOG_DIR
 
 TVHEADEND_EPG_GRAB_DIR=$TVHEADEND_CONFIG_DIR/epggrab
 
+TVHEADEND_TV_MARKET=UG-Kampala
+
 XMLTV_GRABBER=tv_grab_combiner
 
 EPG_XMLTV_GUIDE_DIR=$MULTIMEDIA_USER_HOME_DIR/.xmltv
 EPG_XMLTV_GUIDE_FILE_AGE=259200 # 3 Days
 EPG_XMLTV_SOCKET=$TVHEADEND_EPG_GRAB_DIR/xmltv.sock
 EPG_XMLTV_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/xmltv.log
-
-TVHEADEND_TV_MARKET=UG-Kampala
+EPG_XMLTV_FREE_2_AIR_GUIDE_FILE=$EPG_XMLTV_GUIDE_DIR/tvguide.$(echo ${TVHEADEND_TV_MARKET} | cut -d - -f1 | tr '[:upper:]' '[:lower:]').xml
 
 PLATFORM_TAG=1.0.10
 LIBCEC_TAG=libcec-2.2.0
@@ -971,6 +972,7 @@ CALENDAR_EVENTS_TOOL=$BINARY_PREFIX/jambulatv-calendar-events
 CAMPLAYER_TOOL=$BINARY_PREFIX/jambulatv-camplayer
 CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
+EPG_GENERIC_TVGUIDE_TOOL=$BINARY_PREFIX/jambulatv-tvguide-fta-generic
 FETCH_NEWS_TOOL=$BINARY_PREFIX/jambulatv-fetch-news
 FMRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-fmradio-streamer
 GENERATE_LOCAL_CONF_TOOL=$BINARY_PREFIX/jambulatv-generate-local-conf
@@ -1097,6 +1099,7 @@ CCTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your CCTV network completed. You 
 KODI_REFRESH_TV_LOGOS_MESSAGE="Refreshing TV icons for your ($(echo $TV_TYPE | tr '[:lower:]' '[:upper:]')) network, the video screen will be restarted shortly"
 EPG_DATA_4_KODI_REFRESH_MESSAGE="Refreshing the TV Guide for your ($(echo $TV_TYPE | tr '[:lower:]' '[:upper:]')) channels ..."
 EPG_DATA_DOWNLOAD_START_MESSAGE="Download of TV programme information for $EPG_XMLTV_GUIDE_NAME started, please be patient ..."
+EPG_GENERIC_FTA_XMLTV_CREATED_MESSAGE="Generated Free-To-Air XMLTV guide file (Generic):"
 TVHEADEND_SERVER_REFRESH_STOP_MESSAGE="Maintenance on your ($(echo $TV_TYPE | tr '[:lower:]' '[:upper:]')) network completed successfully. You may now resume watching Live TV"
 #
 BANDWIDTH_MONITOR_USED_MESSAGE="*[JambulaTV]* The Internet data used by *$MONITOR_REQUESTOR* was:"
@@ -2082,8 +2085,6 @@ fi
 tvheadend_configure
 iptv_tvheadend_configure
 iptv_icons_add 
-# EPG
-epg_tvheadend_configure
 cctv_tvheadend_configure
 # Remove control file for other apps to know that TVHeadend Reset completed
 [ -e $TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE ] && \
@@ -3680,113 +3681,7 @@ print_notification "$DVBT_PICONS_NOT_FOUND_MESSAGE" osd
 fi
 }
 
-tvheadend_create_dvr_profile_mkv () {
-# Make sure tvheadend is running before extracting recording profile
-sudo systemctl -q is-active tvheadend.service || sudo systemctl start tvheadend.service
-TVHEADEND_PROFILE_PASS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/profile/list | jq -r '.entries[0].key')
-TVHEADEND_PROFILE_MKV=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/profile/list | jq -r '.entries[1].key')
-
-# Remove created default passthrough DVR entry, only one needs to exist for recordings
-rm -f $TVHEADEND_DVR_CONFIG_DIR/*
-#
-# Remove previous temp script file for creating DVR profile
-[[ -e $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE ]] && sudo rm -f $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE 
-#
-# Add DVR profile creation command to temp file
-cat >> $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE <<EOF
-# Add default DVR profile to backend
-$CURL_CMD $CURL_OPTS -d "name=$PROJECT_NAME-Matroska" -d "\$(echo -n $(echo -n $(cat <<EOT
-conf='{
-	"warm-time": 30,
-	"postremove": "$TVHEADEND_PROCESSOR_TOOL remove-recording \"'\\\\u0025'f\" \"'\\\\u0025'b\" \"'\\\\u0025't\" \"'\\\\u0025'c\"",
-	"postproc": "$TVHEADEND_PROCESSOR_TOOL post-recording \"'\\\\u0025'f\" \"'\\\\u0025'b\" \"'\\\\u0025't\" \"'\\\\u0025'c\" \"'\\\\u0025'S\" \"'\\\\u0025'E\"",
-	"preproc": "$TVHEADEND_PROCESSOR_TOOL pre-recording \"'\\\\u0025'f\" \"'\\\\u0025'b\" \"'\\\\u0025't\" \"'\\\\u0025'c\"",
-	"skip-commercials": true,
-	"autorec-maxsched": 0,
-	"autorec-maxcount": 0,
-	"epg-running": true,
-	"epg-update-window": 86400,
-	"tag-files": true,
-	"windows-compatible-filenames": false,
-	"whitespace-in-title": true,
-	"directory-permissions": "0775",
-	"storage-mused": 0,
-	"storage-mfree": 1000,
-	"storage": "$USER_TV_RECORDINGS_DIR",
-	"comment": "$PROJECT_NAME Recording Profile (Matroska)",
-	"rerecord-errors": 0,
-	"clone": true,
-	"post-extra-time": 5,
-	"name": "$PROJECT_NAME",
-	"profile": "$TVHEADEND_PROFILE_MKV",
-	"pri": 1,
-	"retention-days": 1,
-	"removal-days": 2147483647,
-	"pre-extra-time": 2,
-	"file-permissions": "0664",
-	"charset": "UTF-8",
-	"pathname": "'\\\\u0025'F/\$t\$-c-\$.s'\\\\u0025'R\$n.\$x",
-	"cache": 2,
-	"day-dir": true,
-	"channel-dir": false,
-	"title-dir": false,
-	"format-tvmovies-subdir": "tvmovies",
-	"format-tvshows-subdir": "tvshows",
-	"channel-in-title": true,
-	"date-in-title": false,
-	"time-in-title": true,
-	"episode-in-title": false,
-	"subtitle-in-title": true,
-	"omit-title": false,
-	"clean-title": false
-}'
-EOT
-)
-))" $TVHEADEND_API_URL/dvr/config/create > /dev/null 2>&1
-#
-# Notify - Default DVR profile added
-logger -s -t $(basename $0) "Default DVR profile $PROJECT_NAME (matroska) added"
-
-EOF
-#
-# Create DVR profile script
-if [[ -e $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE ]];
-then
-# Prepare create DVR profile script
-sed -i '1i #!/bin/sh' "$TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE"
-chmod 755 $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE
-#
-# Run script to create DVR profile
-$TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE
-#
-# Pause for a bit to allow  DVR profile to be added properly
-sleep 3
-# Remove temp script file
-rm -f $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE
-fi
-#
-#
-TVHEADEND_DVR_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/config/grid?limit=100000 | jq -r '.entries[0] | select(.name=="'"$PROJECT_NAME"'") |.uuid')
-# Export DVR profile UUID
-export TVHEADEND_DVR_UUID
-}
-
-tvheadend_configure () {
-# Add DVB TV Icons
-# ----------------
-dvb_icons_add
-
-# Create tvheadend directories if it does not exist
-# -------------------------------------------------
-[ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
-[ -d $TVHEADEND_IMAGE_CACHE_CONFIG_DIR ] || mkdir -p $TVHEADEND_IMAGE_CACHE_CONFIG_DIR
-[ -d $TVHEADEND_TIMESHIFT_CONFIG_DIR ] || mkdir -p $TVHEADEND_TIMESHIFT_CONFIG_DIR
-[ -d $TVHEADEND_DVR_CONFIG_DIR ] || mkdir -p $TVHEADEND_DVR_CONFIG_DIR
-[ -d $TVHEADEND_DVBT_NETWORK_CONFIG_DIR/$TVHEADEND_DVBT_NETWORK_UUID ] || \
-	mkdir -p $TVHEADEND_DVBT_NETWORK_CONFIG_DIR/$TVHEADEND_DVBT_NETWORK_UUID
-[ -d $TVHEADEND_ADAPTERS_CONFIG_DIR ] || mkdir -p $TVHEADEND_ADAPTERS_CONFIG_DIR
-[ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
-
+tvheadend_config_files_setup () {
 # Setup tvheadend main config file
 # --------------------------------
 cat > $TVHEADEND_CONFIG_DIR/config << EOF
@@ -3887,10 +3782,195 @@ cat > $TVHEADEND_TIMESHIFT_CONFIG_DIR/config << EOF
 	"ram_fit": false
 }
 EOF
+}
 
-# Create recording profile for JambulaTV (matroska)
+tvheadend_create_dvr_profile_mkv () {
+# Make sure tvheadend is running before extracting recording profile
+sudo systemctl -q is-active tvheadend.service || sudo systemctl start tvheadend.service
+TVHEADEND_PROFILE_PASS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/profile/list | jq -r '.entries[0].key')
+TVHEADEND_PROFILE_MKV=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/profile/list | jq -r '.entries[1].key')
+
+# Remove created default passthrough DVR entry, only one needs to exist for recordings
+rm -f $TVHEADEND_DVR_CONFIG_DIR/*
+#
+# Remove previous temp script file for creating DVR profile
+[[ -e $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE ]] && sudo rm -f $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE 
+#
+# Add DVR profile creation command to temp file
+cat >> $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE <<EOF
+# Add default DVR profile to backend
+$CURL_CMD $CURL_OPTS -d "name=$PROJECT_NAME-Matroska" -d "\$(echo -n $(echo -n $(cat <<EOT
+conf='{
+	"warm-time": 30,
+	"postremove": "$TVHEADEND_PROCESSOR_TOOL remove-recording \"'\\\\u0025'f\" \"'\\\\u0025'b\" \"'\\\\u0025't\" \"'\\\\u0025'c\"",
+	"postproc": "$TVHEADEND_PROCESSOR_TOOL post-recording \"'\\\\u0025'f\" \"'\\\\u0025'b\" \"'\\\\u0025't\" \"'\\\\u0025'c\" \"'\\\\u0025'S\" \"'\\\\u0025'E\"",
+	"preproc": "$TVHEADEND_PROCESSOR_TOOL pre-recording \"'\\\\u0025'f\" \"'\\\\u0025'b\" \"'\\\\u0025't\" \"'\\\\u0025'c\"",
+	"skip-commercials": true,
+	"autorec-maxsched": 0,
+	"autorec-maxcount": 0,
+	"epg-running": true,
+	"epg-update-window": 86400,
+	"tag-files": true,
+	"windows-compatible-filenames": false,
+	"whitespace-in-title": true,
+	"directory-permissions": "0775",
+	"storage-mused": 0,
+	"storage-mfree": 1000,
+	"storage": "$USER_TV_RECORDINGS_DIR",
+	"comment": "$PROJECT_NAME Recording Profile (Matroska)",
+	"rerecord-errors": 0,
+	"clone": true,
+	"post-extra-time": 5,
+	"name": "$PROJECT_NAME",
+	"profile": "$TVHEADEND_PROFILE_MKV",
+	"pri": 1,
+	"retention-days": 1,
+	"removal-days": 2147483647,
+	"pre-extra-time": 2,
+	"file-permissions": "0664",
+	"charset": "UTF-8",
+	"pathname": "'\\\\u0025'F/\$t\$-c-\$.s'\\\\u0025'R\$n.\$x",
+	"cache": 2,
+	"day-dir": true,
+	"channel-dir": false,
+	"title-dir": false,
+	"format-tvmovies-subdir": "tvmovies",
+	"format-tvshows-subdir": "tvshows",
+	"channel-in-title": true,
+	"date-in-title": false,
+	"time-in-title": true,
+	"episode-in-title": false,
+	"subtitle-in-title": true,
+	"omit-title": false,
+	"clean-title": false
+}'
+EOT
+)
+))" $TVHEADEND_API_URL/dvr/config/create > /dev/null 2>&1
+#
+# Notify - Default DVR profile added
+logger -s -t $(basename $0) "Default DVR profile $PROJECT_NAME (matroska) added"
+
+EOF
+#
+# Create DVR profile script
+if [[ -e $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE ]];
+then
+# Prepare create DVR profile script
+sed -i '1i #!/bin/sh' "$TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE"
+chmod 755 $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE
+#
+# Run script to create DVR profile
+$TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE
+#
+# Pause for a bit to allow  DVR profile to be added properly
+sleep 3
+# Remove temp script file
+rm -f $TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE
+fi
+#
+#
+TVHEADEND_DVR_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/config/grid?limit=100000 | jq -r '.entries[0] | select(.name=="'"$PROJECT_NAME"'") |.uuid')
+# Export DVR profile UUID
+export TVHEADEND_DVR_UUID
+}
+
+epg_tvheadend_configure () {
+# Create XMLTV directory in multimedia user's home directory
+[ -d $EPG_XMLTV_GUIDE_DIR ] || mkdir -p $EPG_XMLTV_GUIDE_DIR
+# Create tvheadend epggrab directory if it does not exist
+[ -d $TVHEADEND_EPG_GRAB_DIR ] || mkdir -p $TVHEADEND_EPG_GRAB_DIR
+
+# Copy xmltv system config for selected grabber
+[ -e $PROJECT_CONTRIB_DIR/tv/epg/xmltv/${XMLTV_GRABBER}.conf ] && \
+	cp -v $PROJECT_CONTRIB_DIR/tv/epg/xmltv/${XMLTV_GRABBER}.conf $EPG_XMLTV_GUIDE_DIR
+
+# Create xmltv supplement maps directory
+[ -d $EPG_XMLTV_GUIDE_DIR/supplement/${XMLTV_GRABBER} ] || \
+	mkdir -p $EPG_XMLTV_GUIDE_DIR/supplement/${XMLTV_GRABBER}
+
+# Copy xmltv system maps for grabbers like uk_tvguide if available
+[ -e $PROJECT_CONTRIB_DIR/tv/epg/xmltv/maps/${XMLTV_GRABBER}.map.conf ] && \
+	cp -v $PROJECT_CONTRIB_DIR/tv/epg/xmltv/maps/${XMLTV_GRABBER}.map.conf $EPG_XMLTV_GUIDE_DIR/supplement/${XMLTV_GRABBER}/${XMLTV_GRABBER}.map.conf
+
+# Create epg grab config
+cat > $TVHEADEND_EPG_GRAB_DIR/config <<EOF
+{
+	"channel_rename": false,
+	"channel_renumber": false,
+	"channel_reicon": true,
+	"epgdb_periodicsave": 0,
+	"cron": "# Default config (00:04 and 12:04 everyday)\n4 */12 * * *",
+	"ota_initial": true,
+	"ota_cron": "# Default config (02:04 and 14:04 everyday)\n4 2 * * *\n4 14 * * *",
+	"ota_timeout": 600,
+	"modules": {
+		"$BINARY_PREFIX/${XMLTV_GRABBER}": {
+			"class": "epggrab_mod_int_xmltv",
+			"dn_chnum": 0,
+			"name": "XMLTV: JambulaTV Combined Grabber",
+			"type": "Internal",
+			"enabled": true,
+			"priority": 3
+		},
+		"xmltv": {
+			"class": "epggrab_mod_ext_xmltv",
+			"dn_chnum": false,
+			"scrape_extra": false,
+			"scrape_onto_desc": false,
+			"use_category_not_genre": false,
+			"name": "XMLTV",
+			"type": "External",
+			"enabled": true,
+			"priority": 3
+		},
+		"eit": {
+			"class": "epggrab_mod_ota",
+			"name": "EIT: DVB Grabber",
+			"type": "Over-the-air",
+			"enabled": true,
+			"priority": 1
+		}
+	}
+}
+EOF
+
+# Change xmltv directory permissions to multimedia user
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $EPG_XMLTV_GUIDE_DIR
+# Change epg directory permissions to multimedia user
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_EPG_GRAB_DIR
+
+# Restart tvheadend - this is useful especially for fresh installs and resets
+sudo systemctl restart tvheadend.service
+}
+
+epg_xmltv_tools_setup () {
+# 1. Generic XMLTV for FTA
+# Copy jambulatv-tvguide-fta-generic script, if it does not exist in bin directory
+[ -e $EPG_GENERIC_TVGUIDE_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-tvguide-fta-generic $EPG_GENERIC_TVGUIDE_TOOL
+# Make script executable
+chmod 755 $EPG_GENERIC_TVGUIDE_TOOL
+}
+
+tvheadend_configure () {
+# Add DVB TV Icons
+# ----------------
+dvb_icons_add
+
+# Create tvheadend directories if it does not exist
 # -------------------------------------------------
-tvheadend_create_dvr_profile_mkv
+[ -d $TVHEADEND_CONFIG_DIR ] || mkdir -p $TVHEADEND_CONFIG_DIR
+[ -d $TVHEADEND_IMAGE_CACHE_CONFIG_DIR ] || mkdir -p $TVHEADEND_IMAGE_CACHE_CONFIG_DIR
+[ -d $TVHEADEND_TIMESHIFT_CONFIG_DIR ] || mkdir -p $TVHEADEND_TIMESHIFT_CONFIG_DIR
+[ -d $TVHEADEND_DVR_CONFIG_DIR ] || mkdir -p $TVHEADEND_DVR_CONFIG_DIR
+[ -d $TVHEADEND_DVBT_NETWORK_CONFIG_DIR/$TVHEADEND_DVBT_NETWORK_UUID ] || \
+	mkdir -p $TVHEADEND_DVBT_NETWORK_CONFIG_DIR/$TVHEADEND_DVBT_NETWORK_UUID
+[ -d $TVHEADEND_ADAPTERS_CONFIG_DIR ] || mkdir -p $TVHEADEND_ADAPTERS_CONFIG_DIR
+[ -d $TVHEADEND_CHANNELS_CONFIG_DIR ] || mkdir -p $TVHEADEND_CHANNELS_CONFIG_DIR
+
+# Setup TVHeadend config files
+# ----------------------------
+tvheadend_config_files_setup
 
 # TVHeadend Logging
 # -----------------
@@ -3902,6 +3982,15 @@ tvheadend_create_dvr_profile_mkv
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 chown -R $MULTIMEDIA_USER:video $TVHEADEND_LOG_DIR
 
+# Restart tvheadend - this is useful especially for fresh installs and resets
+sudo systemctl restart tvheadend.service
+
+# Create recording profile for JambulaTV (matroska)
+# -------------------------------------------------
+tvheadend_create_dvr_profile_mkv
+
+# TVHeadend tools
+# ---------------
 # Generate jambulatv-tvheadend-processor tool which is used to process tvheadend processes like recordings
 [ -e $BINARY_PREFIX/jambulatv-tvheadend-processor ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-tvheadend-processor | \
@@ -3924,6 +4013,13 @@ chmod 755 $BINARY_PREFIX/jambulatv-tvheadend-processor
 			> $TVHEADEND_CONTROLLER_TOOL
 # Make script executable
 chmod 755 $TVHEADEND_CONTROLLER_TOOL
+
+# EPG for TVHeadend
+# -----------------
+epg_tvheadend_configure
+
+# EPG Generic XMLTV based tvguide tools
+epg_xmltv_tools_setup
 
 # Configure DVB-T2 network if requested
 # -------------------------------------
@@ -4746,75 +4842,6 @@ rsync -avq --delete-after $PROJECT_GITHUB_DIR/jambula-iptv-builder $SOURCESDIR/
 [ -d $EPG_XMLTV_GUIDE_DIR ] || mkdir -p $EPG_XMLTV_GUIDE_DIR
 # Change iptv-builder directory permissions to multimedia user
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $EPG_XMLTV_GUIDE_DIR
-}
-
-epg_tvheadend_configure () {
-# Create XMLTV directory in multimedia user's home directory
-[ -d $EPG_XMLTV_GUIDE_DIR ] || mkdir -p $EPG_XMLTV_GUIDE_DIR
-# Create tvheadend epggrab directory if it does not exist
-[ -d $TVHEADEND_EPG_GRAB_DIR ] || mkdir -p $TVHEADEND_EPG_GRAB_DIR
-
-# Copy xmltv system config for selected grabber
-[ -e $PROJECT_CONTRIB_DIR/tv/epg/xmltv/${XMLTV_GRABBER}.conf ] && \
-	cp -v $PROJECT_CONTRIB_DIR/tv/epg/xmltv/${XMLTV_GRABBER}.conf $EPG_XMLTV_GUIDE_DIR
-
-# Create xmltv supplement maps directory
-[ -d $EPG_XMLTV_GUIDE_DIR/supplement/${XMLTV_GRABBER} ] || \
-	mkdir -p $EPG_XMLTV_GUIDE_DIR/supplement/${XMLTV_GRABBER}
-
-# Copy xmltv system maps for grabbers like uk_tvguide if available
-[ -e $PROJECT_CONTRIB_DIR/tv/epg/xmltv/maps/${XMLTV_GRABBER}.map.conf ] && \
-	cp -v $PROJECT_CONTRIB_DIR/tv/epg/xmltv/maps/${XMLTV_GRABBER}.map.conf $EPG_XMLTV_GUIDE_DIR/supplement/${XMLTV_GRABBER}/${XMLTV_GRABBER}.map.conf
-
-# Create epg grab config
-cat > $TVHEADEND_EPG_GRAB_DIR/config <<EOF
-{
-	"channel_rename": false,
-	"channel_renumber": false,
-	"channel_reicon": true,
-	"epgdb_periodicsave": 0,
-	"cron": "# Default config (00:04 and 12:04 everyday)\n4 */12 * * *",
-	"ota_initial": true,
-	"ota_cron": "# Default config (02:04 and 14:04 everyday)\n4 2 * * *\n4 14 * * *",
-	"ota_timeout": 600,
-	"modules": {
-		"$BINARY_PREFIX/${XMLTV_GRABBER}": {
-			"class": "epggrab_mod_int_xmltv",
-			"dn_chnum": 0,
-			"name": "XMLTV: JambulaTV Combined Grabber",
-			"type": "Internal",
-			"enabled": true,
-			"priority": 3
-		},
-		"xmltv": {
-			"class": "epggrab_mod_ext_xmltv",
-			"dn_chnum": false,
-			"scrape_extra": false,
-			"scrape_onto_desc": false,
-			"use_category_not_genre": false,
-			"name": "XMLTV",
-			"type": "External",
-			"enabled": true,
-			"priority": 3
-		},
-		"eit": {
-			"class": "epggrab_mod_ota",
-			"name": "EIT: DVB Grabber",
-			"type": "Over-the-air",
-			"enabled": true,
-			"priority": 1
-		}
-	}
-}
-EOF
-
-# Change xmltv directory permissions to multimedia user
-chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $EPG_XMLTV_GUIDE_DIR
-# Change epg directory permissions to multimedia user
-chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_EPG_GRAB_DIR
-
-# Restart TVHeadend
-sudo systemctl restart tvheadend.service
 }
 
 epg_xmltv_guide_sources () {

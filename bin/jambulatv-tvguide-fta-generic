@@ -1,0 +1,168 @@
+#!/bin/sh
+# This is a helper script to create a generic XMLTV based TV guide for
+# Free-To-Air DVB services in areas where TV stations do not provide
+# EPG information
+#
+# Jambula Labs @copyright 2018-2019 All rights reserved
+
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+PROJECT_DVBT_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/dvbt-settings.cfg
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+# Source DVBT settings file
+. $PROJECT_DVBT_SETTINGS_FILE
+
+# Source Geolocation file
+. $GEOLOCATION_FILE
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+remove_epg_database_4_tvheadend () {
+[[ -e $TVHEADEND_CONFIG_DIR/epgdb.v3 ]] && rm -f $TVHEADEND_CONFIG_DIR/epgdb.v3
+}
+
+create_all_free_2_air_tv_channels_temp_file () {
+ALL_FTA_CHANNELS_TEMP_FILE=$TMPDIR/free_2_air_channels_used_4_epg_data_creation
+FREE_TO_AIR_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select (.name == "Free-To-Air") | .uuid')
+#
+# Generate temp file containing all Free-to-Air TV channels, and respective icon file paths
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[] | select(.tags | contains(["'$FREE_TO_AIR_UUID'"])) |.name,.icon' | paste -s -d"|\n" | sort -g > $ALL_FTA_CHANNELS_TEMP_FILE
+}
+
+generate_xmltv_file () {
+while read LINE;
+do
+
+CHANNEL_NAME=$(echo $LINE | cut -d '|' -f1)
+CHANNEL_ID=$(echo $CHANNEL_NAME | sed 's: :.:g')
+ICON_FILE=$(echo $LINE | cut -d '|' -f2-)
+
+XMLTV_START_TIME=$(date -d '1 hour ago' +'%Y%m%d%H%M00')
+XMLTV_STOP_TIME=$(date -d '+100 year' +'%Y%m%d235900')
+XMLTV_TIMEZONE_OFFSET=$(date +%z)
+XMLTV_DATE=$(date '+%A, %_d %B %Y')
+XMLTV_GENERIC_TITLE="$CHANNEL_NAME Programme on $XMLTV_DATE"
+XMLTV_GENERIC_CATEGORY="News / Current affairs"
+XMLTV_NEXT_EVENT_ID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/epg/events/grid?limit=100000 | jq -r '[.entries[] | select(.channelName == "'"$CHANNEL_NAME"'")][0] | .nextEventId')
+
+# Skip if EPG data already fetched via OTA grabber i.e. Channel provides EPG Info
+[[ "$XMLTV_NEXT_EVENT_ID" = "null" ]] || continue
+
+$1
+
+done < $ALL_FTA_CHANNELS_TEMP_FILE
+}
+
+xmltv_remove_old () {
+[[ -e $EPG_XMLTV_FREE_2_AIR_GUIDE_FILE ]] && sudo rm -f $EPG_XMLTV_FREE_2_AIR_GUIDE_FILE
+}
+
+xmltv_header () {
+cat > $EPG_XMLTV_FREE_2_AIR_GUIDE_FILE <<EOT
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE tv SYSTEM "xmltv.dtd">
+
+<tv source-info-url="$PROJECT_URL/tvguide" source-info-name="$PROJECT_NAME" generator-info-name="Generated: $(date) $" generator-info-url="http://www.xmltv.org/">
+
+EOT
+}
+
+xmltv_footer () {
+cat >> $EPG_XMLTV_FREE_2_AIR_GUIDE_FILE <<EOT
+
+</tv>
+EOT
+}
+
+channel_info () {
+# Add channel info
+cat >> $EPG_XMLTV_FREE_2_AIR_GUIDE_FILE <<EOT
+  <channel id="$CHANNEL_ID">
+    <display-name>$CHANNEL_NAME</display-name>
+    <icon src="$ICON_FILE" />
+  </channel>
+
+EOT
+}
+
+programming_info () {
+# Add programming info
+cat >> $EPG_XMLTV_FREE_2_AIR_GUIDE_FILE <<EOT
+  <programme start="$XMLTV_START_TIME $XMLTV_TIMEZONE_OFFSET" stop="$XMLTV_STOP_TIME $XMLTV_TIMEZONE_OFFSET" channel="$CHANNEL_ID">
+    <title lang="en">$XMLTV_GENERIC_TITLE</title>
+    <sub-title lang="en">Electronic grogram guide was not provided</sub-title>
+    <desc lang="en">$CHANNEL_NAME is a Free-To-Air DVB channel broadcasting in $CITY, $COUNTRY</desc>
+    <date>$XMLTV_DATE</date>
+    <category lang="en">$XMLTV_GENERIC_CATEGORY</category>
+    <audio>
+      <stereo>stereo</stereo>
+    </audio>
+    <subtitles type="teletext" />
+    <rating system="$PROJECT_NAME">
+      <value>TV-G</value>
+    </rating>
+  </programme>
+EOT
+}
+
+create_generic_fta_xmltv_file () {
+# Remove previous XMLTV guide file
+xmltv_remove_old
+# Generate XMLTV header
+xmltv_header
+# Generate channel info
+generate_xmltv_file channel_info
+# Generate programming info
+generate_xmltv_file programming_info
+# Generate XMLTV footer
+xmltv_footer
+# Give multimedia user ownership of epg xmltv file
+sudo chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $EPG_XMLTV_FREE_2_AIR_GUIDE_FILE
+}
+
+pipe_xmltv_guide_2_tvheadend () {
+# Get status of XMLTV EPG module
+EPG_XMLTV_EXTERNAL_STATUS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/epggrab/module/list | jq -r '.entries[] | select(.title == "External: XMLTV") | .status')
+# Alert if External XMLTV is disabled
+if [[ "$EPG_XMLTV_EXTERNAL_STATUS" != "epggrabmodEnabled" ]];
+then
+logger -s -t $(basename $0) "Please enable External XMLTV EPG module in TVHeadend"
+
+else
+# Pipe EPG data into TVHeadend XMLTV EPG grabber module
+[[ -e $EPG_XMLTV_FREE_2_AIR_GUIDE_FILE ]] && cat $EPG_XMLTV_FREE_2_AIR_GUIDE_FILE | \
+	sudo $SOCAT_CMD $SOCAT_OPTS - UNIX-CONNECT:$EPG_XMLTV_SOCKET
+fi
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Generate temp file containing all Free-to-Air TV channels, and respective icon file paths
+create_all_free_2_air_tv_channels_temp_file
+
+# Generate Free-To-Air XMLTV file
+create_generic_fta_xmltv_file
+
+# Remove TVH EPG Database
+remove_epg_database_4_tvheadend
+
+# Pipe EPG data into TVHeadend XMLTV EPG grabber module
+pipe_xmltv_guide_2_tvheadend
+
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$EPG_GENERIC_FTA_XMLTV_CREATED_MESSAGE $EPG_XMLTV_FREE_2_AIR_GUIDE_FILE" text
