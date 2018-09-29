@@ -83,6 +83,7 @@ cnbc africa
 bloomberg
 fox news
 cnn
+pbs newshour
 nbc2
 aljazeera
 twit live
@@ -186,7 +187,7 @@ YOUTUBE_PLAYLIST_FILE=/tmp/youtube_video_ids_found
 #
 # Search for Youtube IDs using API
 # NOTE: Do not use curl --data/ or -d option to post - Youtube search fails if done
-$HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE ${YOUTUBE_SEARCH_URL}?part=snippet'&'sp="$YOUTUBE_SEARCH_FILTER"'&'key="$YOUTUBE_API_KEY"'&'type=video'&'maxResults=$YOUTUBE_MAX_RESULTS'&'q="$YOUTUBE_SEARCH_TEXT"
+$HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE ${YOUTUBE_SEARCH_URL}?part=snippet'&'sp="$YOUTUBE_SEARCH_FILTER"'&'key="$YOUTUBE_API_KEY"'&'type=video'&'eventType="$YOUTUBE_EVENT_TYPE"'&'maxResults=$YOUTUBE_MAX_RESULTS'&'q="$YOUTUBE_SEARCH_TEXT"
 #
 # Generate Youtube playlist containing video Ids
 cat $YOUTUBE_SEARCH_OUTPUT_FILE | jq -r '.items[]' | grep videoId | awk {'print $2'} | sed 's:["|,]::g' > $YOUTUBE_PLAYLIST_FILE
@@ -320,6 +321,11 @@ $youtube_search_method "CNN Live"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
+youtube_video_id_pbs_newshour () {
+$youtube_search_method "PBS NewsHour"
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
+}
+
 youtube_video_id_nbc2 () {
 $youtube_search_method "NBC2 Live"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
@@ -339,6 +345,9 @@ YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 # b) PRE-DEFINED CHANNELS: Match Youtube video IDs based on user's request
 # -------------------------------------------------------------------------
 set_youtube_video_id () {
+# Set youtube event type flag to 'live' for TV channels
+YOUTUBE_EVENT_TYPE=live
+#
 case "$STREAM_NAME" in
 # NTV Uganda
 [Nn][Tt][Vv]*[Uu][Gg][Aa][Nn][Dd][Aa])
@@ -416,6 +425,10 @@ youtube_video_id_fox_news
 [Cc][Nn][Nn])
 youtube_video_id_cnn
 ;;
+# PBS NewsHour
+[Pp][Bb][Ss]*[Nn][Ee][Ww][Ss][Hh][Oo][Uu][Rr])
+youtube_video_id_pbs_newshour
+;;
 # NBC2
 [Nn][Bb][Cc]2)
 youtube_video_id_nbc2
@@ -430,6 +443,9 @@ youtube_video_id_twit_live
 ;;
 # Other search phrases
 *)
+# Set youtube event type flag to blank for Non - TV channels
+YOUTUBE_EVENT_TYPE=""
+#
 IS_NOT_PREDEFINED_TV_CHANNEL=y
 $youtube_search_method "$STREAM_NAME"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
