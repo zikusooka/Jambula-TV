@@ -7,5 +7,8 @@ User=jambula
 Type=simple
 ExecStart=/usr/bin/jambulatv-presence-detection-via-mifi
 
+SuccessExitStatus=255
+Restart=Always
+
 [Install]
 WantedBy=multi-user.target
