@@ -26,6 +26,33 @@ TRACKERJACKER_LOG_LEVEL = 'MY_TRACKERJACKER_LOG_LEVEL' # 'DEBUG' | 'INFO' | 'WAR
 # -----------------------------------------------------------------------------
 
 
+class Trackerjacker_Logging(object):
+  
+  def loglevel(self, i):
+    method_name='loglevel_'+str(i)
+    method=getattr(self, method_name, lambda :'Logging level is Invalid')
+    return method()
+
+  def loglevel_DEBUG(self):
+    LOGGING_LEVEL = logging.basicConfig(level=logging.DEBUG)
+    logging.debug (' WiFi Device was Sighted')
+
+  def loglevel_INFO(self):
+    LOGGING_LEVEL = logging.basicConfig(level=logging.INFO)
+    logging.info (' WiFi Device was Sighted')
+
+  def loglevel_WARNING(self):
+    LOGGING_LEVEL = logging.basicConfig(level=logging.DEBUG)
+    logging.warning (' WiFi Device was Sighted')
+
+  def loglevel_ERROR(self):
+    LOGGING_LEVEL = logging.basicConfig(level=logging.DEBUG)
+    logging.error (' WiFi Device was Sighted')
+
+  def loglevel_CRITICAL(self):
+    LOGGING_LEVEL = logging.basicConfig(level=logging.DEBUG)
+    logging.critical (' WiFi Device was Sighted')
+
 
 def trigger(dev_id=None, num_bytes=None, power=None, last_seen_time=0, last_presence_status='nearby', LOG_ENTRY='', **kwargs):
 
@@ -56,7 +83,6 @@ def trigger(dev_id=None, num_bytes=None, power=None, last_seen_time=0, last_pres
     MONITORED_DEVICE = re.sub(':','-', dev_id)    
     WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE = PRESENCE_VIA_TRACKER_DEVICES_SEEN_TEMP_DIR + '/' + MONITORED_DEVICE + '_is_nearby'
     LOG_ENTRY = '{}, {}, {}, {}, {}, nearby'.format(dev_id, power, CURRENT_SEEN_TIME, LAST_SEEN_TIME, ELAPSED_TIME)
-    LOGGING_FILE_ADDED_MSG = 'Added file: {}'
     
     # Add logged information if available
     if LOG_ENTRY is not '':
@@ -69,23 +95,6 @@ def trigger(dev_id=None, num_bytes=None, power=None, last_seen_time=0, last_pres
       with open (WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE, 'w') as temp_file:
         temp_file.close()
 
-      # Debugging - set logging level
-      if TRACKERJACKER_LOG_LEVEL == 'DEBUG':
-        LOGGING_LEVEL = logging.basicConfig(level=logging.DEBUG)
-        logging.debug (LOGGING_FILE_ADDED_MSG.format(WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE))
-
-      if TRACKERJACKER_LOG_LEVEL == 'INFO':
-        LOGGING_LEVEL = logging.basicConfig(level=logging.INFO)
-        logging.info (LOGGING_FILE_ADDED_MSG.format(WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE))
-
-      if TRACKERJACKER_LOG_LEVEL == 'WARNING':
-        LOGGING_LEVEL = logging.basicConfig(level=logging.DEBUG)
-        logging.warning (LOGGING_FILE_ADDED_MSG.format(WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE))
-
-      if TRACKERJACKER_LOG_LEVEL == 'ERROR':
-        LOGGING_LEVEL = logging.basicConfig(level=logging.DEBUG)
-        logging.error (LOGGING_FILE_ADDED_MSG.format(WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE))
-
-      if TRACKERJACKER_LOG_LEVEL == 'CRITICAL':
-        LOGGING_LEVEL = logging.basicConfig(level=logging.DEBUG)
-        logging.critical (LOGGING_FILE_ADDED_MSG.format(WIFI_USER_LAST_SEEN_AS_PRESENT_TEMP_FILE))
+      # Logging
+      jtvlogger=Trackerjacker_Logging()
+      jtvlogger.loglevel(TRACKERJACKER_LOG_LEVEL)
