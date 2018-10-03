@@ -566,7 +566,9 @@ MQTT_PUBLISH_CMD=/usr/bin/mosquitto_pub
 MQTT_PUBLISH_OPTS="--quiet -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT"
 
 # MQTT Topics
-MQTT_TOPIC_PRESENCE_FAMILY=JambulaTV/house/presence/family
+MQTT_TOPIC_PRESENCE_HOSTAPD=JambulaTV/house/presence/hostapd
+MQTT_TOPIC_PRESENCE_MIFI=JambulaTV/house/presence/mifi
+MQTT_TOPIC_PRESENCE_TRACKERJACKER=JambulaTV/house/presence/trackerjacker
 
 # Presence via MiFi
 PRESENCE_VIA_MIFI_CHECK_INTERVAL_SECS=60
