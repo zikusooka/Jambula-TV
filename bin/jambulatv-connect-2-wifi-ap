@@ -46,12 +46,12 @@ rm -f $SCRIPT_RUNNING_FILE
 
 elif [ -e "$INTERNET_OFF_FILE" ];
 then
-echo Internet-Off
+logger -s -t $(basename $0) "Internet is Off"
 break
 
 elif [ ! -e "$SETUP_COMPLETED_FILE" ];
 then
-echo Internet-Off
+logger -s -t $(basename $0) "Internet is Off"
 break
 
 else
@@ -72,7 +72,7 @@ number_of_interfaces () {
 # Quit if less than 2 WiFi devices are detected
 if [ "$WIFI_INTERFACES_AVAILABLE" -lt "2" ];
 then
-echo "CRITICAL: Sorry, I did not find a second and/or usable WiFi interface "
+logger -s -t $(basename $0) "CRITICAL: Sorry, I did not find a second and/or usable WiFi interface "
 exit 2
 fi
 }
@@ -141,10 +141,10 @@ if [ "$AP_EXISTENCE" = "0" ];
 then
 WIFI_FOUND=yes
 # Notify
-echo "$AP_FOUND_MSG"
+logger -s -t $(basename $0) "$AP_FOUND_MSG"
 else
 WIFI_FOUND=no
-echo "$AP_NOT_FOUND_MSG"
+logger -s -t $(basename $0) "$AP_NOT_FOUND_MSG"
 fi
 export WIFI_FOUND
 }
@@ -194,7 +194,7 @@ fi
 #
 if [ "$WIFI_LINK_STATUS" = "Not connected." ] || [ "$WIFI_LINK_STATUS" = "unassociated" ];
 then
-echo "Connection to $WIFI_SSID failed!. Exiting ..."
+logger -s -t $(basename $0) "Connection to $WIFI_SSID failed!. Exiting ..."
 exit 1
 else
 # Beep to alert: Connected WiFi AP
@@ -212,8 +212,20 @@ DHCLIENT_FAILED_PID=$(ps auxw | grep dhclient | grep ${WIFI_STATION_INTERFACE} |
 # Clear default route
 ip route del default
 # Get IP Address/Gateway/DNS
-echo "Acquiring IP address information ..."
+# NOTE: Run dhclient in background!
 sudo /sbin/dhclient -H $(hostname -s) -q -lf /var/lib/dhclient/dhclient--${WIFI_STATION_INTERFACE}.lease -pf /var/run/dhclient-${WIFI_STATION_INTERFACE}.pid ${WIFI_STATION_INTERFACE}
+}
+
+wait_4_ip_address () {
+IP_ADDRESS_ASSIGNED=255
+# Wait for WiFi interface to be assigned an IP address 
+while [[ "$IP_ADDRESS_ASSIGNED" != "0" ]]
+do
+logger -s -t $(basename $0) "Waiting for WiFi Interface (${WIFI_STATION_INTERFACE}) to be assigned an IP address"
+sleep 1
+/usr/sbin/ip addr show ${WIFI_STATION_INTERFACE} | grep inet > /dev/null 2>&1
+IP_ADDRESS_ASSIGNED=$?
+done
 }
 
 make_this_internet_gateway () {
@@ -222,10 +234,20 @@ make_this_internet_gateway () {
 /usr/sbin/iptables -t nat -A POSTROUTING -o ${WIFI_STATION_INTERFACE} -j MASQUERADE
 }
 
+start_presence_detection_via_mifi () {
+if [[ "$(systemctl is-enabled presence-detection-via-mifi.service)" = "enabled" && \
+      "$(systemctl is-active presence-detection-via-mifi.service)" != "active" ]];
+then
+# Start presence detection using MiFi: Restart systemd unit if enabled but not active
+logger -s -t $(basename $0) "Starting Presence Detection using MiFi Router"
+systemctl restart presence-detection-via-mifi.service 
+fi
+}
+
 quit_not_found () {
 if [[ $WIFI_FOUND != yes ]];
 then
-echo "$AP_NOT_FOUND_MSG"
+logger -s -t $(basename $0) "$AP_NOT_FOUND_MSG"
 exit 1
 fi
 }
@@ -256,7 +278,7 @@ OK)
 # Add script running file
 add_script_running_file
 # Started by icinga2
-echo "Wireless Access Point ($WIFI_SSID) Available"
+logger -s -t $(basename $0) "Wireless Access Point ($WIFI_SSID) Available"
 ;;
 WARNING)
 # Quit script since Icinga2 detects no WiFi AP.  Before though, kill any previous WiFi
@@ -280,7 +302,11 @@ connect_2_access_point
 sleep 5
 check_link_status
 get_ip_address
+wait_4_ip_address
 make_this_internet_gateway
+
+# Start presence detection using MiFi: Restart systemd unit if enabled but not active
+start_presence_detection_via_mifi
 
 # Reload coova-chilli in order to change default gateway device and DNS settings
 #/usr/bin/jambulatv-chilli restart
