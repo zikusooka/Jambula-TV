@@ -8,6 +8,7 @@ After = syslog.target network.target
 User=MY_AUTOLOGIN_USER
 Type=simple
 ExecStart=MY_PRESENCE_DETECTION_VIA_TRACKER_TOOL
+ExecStopPost=/usr/bin/sudo /usr/bin/killall trackerjacker
 
 [Install]
 WantedBy=multi-user.target
