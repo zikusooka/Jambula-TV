@@ -3948,10 +3948,22 @@ sudo systemctl restart tvheadend.service
 
 epg_xmltv_tools_setup () {
 # 1. Generic XMLTV for FTA
+# ------------------------
 # Copy jambulatv-tvguide-fta-generic script, if it does not exist in bin directory
 [ -e $EPG_GENERIC_TVGUIDE_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-tvguide-fta-generic $EPG_GENERIC_TVGUIDE_TOOL
 # Make script executable
 chmod 755 $EPG_GENERIC_TVGUIDE_TOOL
+# Schedule Generic FTA TV Guide generation using systemd timers
+# --------------------------------------------------------------
+# Copy systemd service file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-tvguide-fta-generic.service ]] || \
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-tvguide-fta-generic.service $SYSTEMD_UNITS_DIR_USER/
+# Copy systemd timer file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-tvguide-fta-generic.timer ]] || \
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-tvguide-fta-generic.timer $SYSTEMD_UNITS_DIR_USER/
+# Enable and start timer
+systemctl enable jambulatv-tvguide-fta-generic.timer
+systemctl start jambulatv-tvguide-fta-generic.timer
 }
 
 tvheadend_configure () {
