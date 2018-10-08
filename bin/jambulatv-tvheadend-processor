@@ -1,31 +1,147 @@
 #!/bin/sh
 # This script is used to process recording in tvheadend either before start or after
-# Jambula Labs @copyright 2017-2018 All rights reserved
-
+# Jambula Labs @copyright 2018-2019 All rights reserved
+#
 # Variables
-CURL_CMD="/usr/bin/curl -s"
-# Get current date
-CURRENT_DATE=$(date +%Y-%m-%d)
-CURRENT_TIMESTAMP=$(date "+%-I:%M:%P")
-# TVHeadend
-TVHEADEND_HTTP_IP=MY_TVHEADEND_HTTP_IP
-TVHEADEND_HTTP_PORT=MY_TVHEADEND_HTTP_PORT
-TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
-TVHEADEND_CONFIG_DIR=MY_TVHEADEND_CONFIG_DIR
-TVHEADEND_DVR_LOG_DIR=$TVHEADEND_CONFIG_DIR/dvr/log
-# Recordings
-RECORDED_FILE_PATH="$2" # %f
-RECORDED_FILE_NAME="$3" # %b
-RECORDING_TITLE="$4" # %t
-RECORDED_CHANNEL="$5" # %c
-RECORDING_START_EPOCH="$6" # %S
-RECORDING_STOP_EPOCH="$7" # %E
-RECORDED_FILE_DIR=$(dirname "$RECORDED_FILE_PATH")
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+# Other variables
+RECORDING_STAGE=$1
+
+# Variables piped in from tvheadend processor commands
+PRE_RECORDED_FILE_PATH="$2" # %f
+PRE_RECORDED_FILE_NAME="$3" # %b
+PRE_RECORDING_TITLE="$4" # %t
+PRE_RECORDING_CHANNEL="$5" # %c
+PRE_RECORDING_HOST="$6" # %C
+
+POST_RECORDED_FILE_PATH="$2" # %f
+POST_RECORDED_FILE_NAME="$3" # %b
+POST_RECORDING_TITLE="$4" # %t
+POST_RECORDING_CHANNEL="$5" # %c
+
+REMOVE_RECORDED_FILE_PATH="$2" # %f
+REMOVE_RECORDED_FILE_NAME="$3" # %b
+REMOVE_RECORDING_TITLE="$4" # %t
+REMOVE_RECORDING_CHANNEL="$5" # %c
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+remove_recordings_file_missing () {
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/entry/grid?limit=100000 | jq -r '.entries[] | select(.sched_status=="completedError") | select(.status=="File missing") |.uuid' | while read MISSING_FILE_UUID
+do
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/entry/remove -d uuid=$MISSING_FILE_UUID > /dev/null 2>&1
+sleep 1
+done
+}
+
+remove_recordings_file_not_created () {
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/entry/grid?limit=100000 | jq -r '.entries[] | select(.sched_status=="completedError") | select(.status=="File not created") |.uuid' | while read NOT_CREATED_FILE_UUID
+do
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/entry/remove -d uuid=$NOT_CREATED_FILE_UUID > /dev/null 2>&1
+sleep 1
+done
+}
+
+remove_recordings_not_enough_disk_space () {
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/entry/grid?limit=100000 | jq -r '.entries[] | select(.sched_status=="completedError") | select(.status=="Not enough disk space") |.uuid' | while read NOT_ENOUGH_SPACE_FILE_UUID
+do
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/entry/remove -d uuid=$NOT_ENOUGH_SPACE_FILE_UUID > /dev/null 2>&1
+sleep 1
+done
+}
+
+remove_recordings_aborted_by_user () {
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/entry/grid?limit=100000 | jq -r '.entries[] | select(.sched_status=="completedError") | select(.status=="Aborted by user") |.uuid' | while read ABORTED_BY_USER_FILE_UUID
+do
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/entry/remove -d uuid=$ABORTED_BY_USER_FILE_UUID > /dev/null 2>&1
+sleep 1
+done
+}
+
+check_disk_space_alert_if_low () {
+# Set notifications
+set_notifications
+
+# Set disk space limit
+STORAGE_LIMIT_SET=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/config/grid?limit=10000 | jq -r '.entries[] | select(.name=="'"$PROJECT_NAME"'") |.["storage-mfree"]')
+# Get disk space space left
+STORAGE_REMAINING=$(df -m $PROJECT_PARTITION | awk '{ a = $4 } END { print a }')
+
+# Check if there is enough disk space for this recording to take place
+if [[ $STORAGE_REMAINING -le $STORAGE_LIMIT_SET ]];
+then
+
+# Play alert sound after pausing a bit
+sleep 9 && jambulatv-sounds stop
+
+# Notify of Low Disk - OSD
+sudo jambulatv-osd -m "$TV_RECORDING_ABORTED_MESSAGE $PRE_RECORDING_TITLE"
+
+# Send chat notifications if non local host started the recording
+if [[ "$PRE_RECORDING_HOST" != "127.0.0.1" ]];
+then
+# Send WhatsApp & Telegram
+sudo jambulatv-whatsapp sendmessage "*[$PROJECT_NAME]* $TV_RECORDING_ABORTED_MESSAGE $PRE_RECORDING_TITLE"
+
+sudo jambulatv-telegram SendMessage "*[$PROJECT_NAME]* $TV_RECORDING_ABORTED_MESSAGE $PRE_RECORDING_TITLE"
+fi
+
+# Remove logged but not recorded entries created due to low disk space
+remove_recordings_not_enough_disk_space
+
+# Quit if space is less than what is set at backend
+exit 0
+
+fi
+}
+
+rename_recording_dir_filename () {
+# Rename Directory/file of recording if script was called by kodi "record" api 
+# i.e. BUG in kodi. This is manifested when recording using Yatse App, 
+# kodi-controller tv_record_instant command
+
+# Set recording start time
+RECORDING_IN_PROGRESS_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/dvr/entry/grid?limit=100000 | jq -r '.entries[] | select(.channelname=="'"$POST_RECORDING_CHANNEL"'") | select(.sched_status=="recording") | select(.status=="Running") |.uuid' | head -1)
+RECORDING_START_TIME_EPOCH="$(stat -c %Y $TVHEADEND_DVR_LOG_DIR/$RECORDING_IN_PROGRESS_UUID)"
+RECORDING_START_TIME=$(date --date="@$RECORDING_START_TIME_EPOCH" "+%H %M")
+
+# Set recording directory date
+RECORDED_FILE_DIR=$(dirname "$POST_RECORDED_FILE_PATH")
 RECORDED_FILE_DIR_DATE=$(echo $RECORDED_FILE_DIR | grep -o '[^/]*$')
-# Get log file associated with this recording
-RECORDED_FILE_UUID=$($CURL_CMD $TVHEADEND_API_URL/dvr/entry/grid?limit=100000 | jq '.entries[] | select(.stop_real=='$RECORDING_STOP_EPOCH') |.uuid' | sed 's:"::g' | head -1)
-RECORDING_START_TIME=$(date --date="@$(stat -c %Y $TVHEADEND_DVR_LOG_DIR/$RECORDED_FILE_UUID)" "+%-I:%M:%P")
-RECORDING_STOP_TIME=$CURRENT_TIMESTAMP
+
+# Set current and yesterday dates
+CURRENT_DATE=$(date +%Y-%m-%d)
+YESTERDAY_DATE=$(date -d '1 day ago' +%Y-%m-%d)
+
+# Check if recording directory is set to date other than today
+if [[ "$RECORDED_FILE_DIR_DATE" = "1970-01-01" || "$RECORDED_FILE_DIR_DATE" = "$YESTERDAY_DATE" ]];
+then
+
+# Set renamed dir and file names
+RECORDED_FILE_DIR_RENAMED=$(dirname "$RECORDED_FILE_DIR")/$CURRENT_DATE
+POST_RECORDED_FILE_NAME_RENAMED=$(echo ${POST_RECORDING_TITLE}-${RECORDING_START_TIME}.$(echo $POST_RECORDED_FILE_NAME | cut -d '.' -f2) | sed "s:  :-:g" | sed "s: :-:g" | sed "s:,::g")
+
+# Create current date directory if not existent
+[ -d $RECORDED_FILE_DIR_RENAMED ] || mkdir -p $RECORDED_FILE_DIR_RENAMED
+
+# Move recorded file to current dated directory
+mv -v $RECORDED_FILE_DIR/"$POST_RECORDED_FILE_NAME" \
+	$RECORDED_FILE_DIR_RENAMED/"$POST_RECORDED_FILE_NAME_RENAMED"
+
+# Remove bad directory
+rmdir $RECORDED_FILE_DIR
+fi
+}
 
 
 
@@ -33,46 +149,50 @@ RECORDING_STOP_TIME=$CURRENT_TIMESTAMP
 #  MAIN SCRIPT  #
 #################
 
-case $1 in
+case $RECORDING_STAGE in
 pre-recording)
-# Notify - OSD
-sudo jambulatv-osd -m "Recording of $RECORDING_TITLE on $RECORDED_CHANNEL started"
+# Check disk space: Alert and Quit if Disk space is low
+check_disk_space_alert_if_low
 ;;
 
 post-recording)
-# Rename Directory/file of recording if script was called by kodi "record" api i.e. BUG in kodi 15
-# This is manifested when recording using Yatse App, kodi-controller tv_record_instant command
-if [ "$RECORDED_FILE_DIR_DATE" = "1970-01-01" ];
-then
-
-# Set renamed dir and file names
-RECORDED_FILE_DIR_RENAMED=$(dirname "$RECORDED_FILE_DIR")/$CURRENT_DATE
-RECORDED_FILE_NAME_RENAMED=$(echo "${RECORDED_CHANNEL}"-from-${RECORDING_START_TIME}-to-${RECORDING_STOP_TIME}.$(echo $RECORDED_FILE_NAME | cut -d '.' -f2) | sed "s: :-:g")
-
-# Create current date directory if not existent
-[ -d $RECORDED_FILE_DIR_RENAMED ] || mkdir -p $RECORDED_FILE_DIR_RENAMED
-
-# Move recorded file to current dated directory
-mv -v $RECORDED_FILE_DIR/$RECORDED_FILE_NAME \
-	$RECORDED_FILE_DIR_RENAMED/"$RECORDED_FILE_NAME_RENAMED"
-
-# Remove 1970-01-01 directory
-rmdir $RECORDED_FILE_DIR
-
-fi
-
-# Notify - OSD
-sudo jambulatv-osd -m "Recording of $RECORDING_TITLE on $RECORDED_CHANNEL completed"
+# Rename Directory/file of recording if script was called by kodi "record" api 
+rename_recording_dir_filename
+# Remove logged recordings enrties created whose files no longer exist
+remove_recordings_file_missing
 ;;
 
 remove-recording)
+echo
+;;
+
+cleanup)
+# Remove logged recordings enrties created whose files no longer exist
+remove_recordings_file_missing
+# Remove logged recordings enrties created whose files were not added
+remove_recordings_file_not_created
+# Remove logged but not recorded entries created due to low disk space
+remove_recordings_not_enough_disk_space
+# Remove logged but not recorded entries created that were aborted by user
+remove_recordings_aborted_by_user
+#
+# Remove lingering recordings - requires a restart
+sudo rm -rf $TVHEADEND_DVR_LOG_DIR/*
+# Notify of need for restart
+clear
+print_notification "Please restart tvheadend server!
+
+sudo systemctl restart tvheadend.service
+
+" text
 ;;
 
 *)
 clear
 cat <<EOF
-Usage: $(basename $0) [pre-recording|post-recording|remove-recording] arguments
+Usage: $(basename $0) [pre-recording|post-recording|remove-recording|cleanup] [ARGS]
 EOF
 exit 1
 ;;
+
 esac

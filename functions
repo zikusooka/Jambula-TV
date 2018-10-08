@@ -184,6 +184,7 @@ TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
 TVHEADEND_TIMESHIFT_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/timeshift
 TVHEADEND_TIMESHIFT_BUFFER_FILE=$TMPDIR/timeshift_buffer
 TVHEADEND_DVR_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/dvr/config
+TVHEADEND_DVR_LOG_DIR=$TVHEADEND_CONFIG_DIR/dvr/log
 TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE=/tmp/create_dvr_profile.sh
 
 TVHEADEND_IMAGE_CACHE_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/imagecache
@@ -1121,6 +1122,7 @@ CONNECTED_TO_MIFI_NOTIFICATION_MESSAGE="is connected to the MiFi router"
 DISCONNECTED_FROM_MIFI_NOTIFICATION_MESSAGE="is disconnected from the MiFi router"
 DEVICE_SIGHTED_IN_VISCINITY_NOTIFICATION_MESSAGE="has been sighted in the viscinity"
 DEVICE_NOT_IN_VISCINITY_NOTIFICATION_MESSAGE="is no longer with in the viscinity"
+TV_RECORDING_ABORTED_MESSAGE="Aborted the TV recording: "
 }
 
 print_notification () {
@@ -4008,15 +4010,9 @@ tvheadend_create_dvr_profile_mkv
 # ---------------
 # Generate jambulatv-tvheadend-processor tool which is used to process tvheadend processes like recordings
 [ -e $BINARY_PREFIX/jambulatv-tvheadend-processor ] || \
-	cat $PROJECT_BIN_DIR/jambulatv-tvheadend-processor | \
-		sed -e "s:MY_TVHEADEND_IPTV_LOG_DIR:$TVHEADEND_IPTV_LOG_DIR:g" | \
-		sed -e "s:MY_TVHEADEND_HTTP_IP:$TVHEADEND_HTTP_IP:g" | \
-		sed -e "s:MY_TVHEADEND_HTTP_PORT:$TVHEADEND_HTTP_PORT:g" | \
-		sed "s:MY_TVHEADEND_CONFIG_DIR:$TVHEADEND_CONFIG_DIR:g" | \
-		sed "s:MY_TMPDIR:$TMPDIR:g" \
-			> $BINARY_PREFIX/jambulatv-tvheadend-processor
+	cp -v $PROJECT_BIN_DIR/jambulatv-tvheadend-processor $TVHEADEND_PROCESSOR_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-tvheadend-processor
+chmod 755 $TVHEADEND_PROCESSOR_TOOL
 #
 # Copy jambulatv-dvbt-scan used to scan 4 DVB-T services, if none exists in bin directory
 [ -e $BINARY_PREFIX/jambulatv-dvbt-scan ] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/
