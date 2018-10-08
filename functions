@@ -935,6 +935,9 @@ JAMBULATV_FTP_SERVER_IPTV_DIR_NAME=$JAMBULATV_FTP_SERVER_ROOT_DIR/iptv
 JAMBULATV_FTP_USER=jambulaftp1
 JAMBULATV_FTP_PASS=nahZic4k
 JAMBULATV_UPDATES_FTP_SERVER_INFO_FILE=$PROJECT_SYSTEM_CONF_DIR/updates-ftp-server-cfg
+JAMBULATV_UPDATES_DOWNLOAD_DIR=$STATEDIR/updates/$PROJECT_NAME
+JAMBULATV_UPDATES_TEMP_DIR=$TMPDIR/JambulaTV-updates
+JAMBULATV_UPDATES_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/updates
 
 # Telegram messaging
 TELEGRAM_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-telegram.cfg
@@ -1038,7 +1041,7 @@ CURL_COOKIE_JAR_FILE=$TMPDIR/curl_cookie.txt
 # Wget
 WGET_CMD=wget
 WGET_TIMEOUT=20
-WGET_OPTIONS="-nv --no-check-certificate --retr-symlinks -T $WGET_TIMEOUT"
+WGET_OPTS="-nv --no-check-certificate --retr-symlinks -T $WGET_TIMEOUT"
 
 # Socat
 SOCAT_CMD="/usr/bin/socat"
@@ -1123,6 +1126,9 @@ DISCONNECTED_FROM_MIFI_NOTIFICATION_MESSAGE="is disconnected from the MiFi route
 DEVICE_SIGHTED_IN_VISCINITY_NOTIFICATION_MESSAGE="has been sighted in the viscinity"
 DEVICE_NOT_IN_VISCINITY_NOTIFICATION_MESSAGE="is no longer with in the viscinity"
 TV_RECORDING_ABORTED_MESSAGE="Aborted the TV recording: "
+JAMBULATV_UPDATES_IN_PROGRESS_NOTIFICATION_MESSAGE="IMPORTANT: System update in progress.  Please do not power off.  You will be notified when done"
+JAMBULATV_UPDATES_FAILED_NOTIFICATION_MESSAGE="WARNING: System update failed, I will try later"
+JAMBULATV_UPDATES_COMPLETED_NOTIFICATION_MESSAGE="System updates have completed.  You may now power off if desired"
 }
 
 print_notification () {
@@ -11799,7 +11805,7 @@ WGET_OUTPUT_FILE=$1
 WGET_DOWNLOAD_URL=$2
 WGET_OTHER_ARGS="$3 $4 $5"
 #
-$WGET_CMD $WGET_OPTIONS -O $WGET_OUTPUT_FILE $WGET_DOWNLOAD_URL $WGET_OTHER_ARGS
+$WGET_CMD $WGET_OPTS -O $WGET_OUTPUT_FILE $WGET_DOWNLOAD_URL $WGET_OTHER_ARGS
 #
 # Test to see if file was downloaded
 if [[ ! -s "$WGET_OUTPUT_FILE" ]];

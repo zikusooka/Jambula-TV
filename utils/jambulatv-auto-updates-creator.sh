@@ -2,7 +2,7 @@
 clear
 JAMBULATV_NEW_VERSION=$1
 JAMBULATV_UPDATES_DIR=/tmp/freshly-baked-updates # Add path from somewhere in git tree
-JAMBULATV_FTP_SERVER_HOST=jlabs2
+JAMBULATV_FTP_SERVER_HOST=jlabs6
 JAMBULATV_FTP_SERVER_UPDATES_DIR=/home/vhosts/jambula/FTP/JambulaTV/updates
 WORK_DIR=/tmp
 
