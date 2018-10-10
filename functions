@@ -12,7 +12,7 @@ EMAIL_ADDRESS_SUPPORT=support@jambulatv.com
 EMAIL_ADDRESS_ERRORS=errors@jambulatv.com
 
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.4.128"
+KERNEL_VERSION="4.4.160"
 
 PRODUCT_MODEL_NAME="$PROJECT_NAME"
 PRODUCT_DISK_SIZE=$(journalctl -b -o cat --no-pager | grep sda | grep logical | awk {'print $8'} | sed 's:(::')
@@ -1468,6 +1468,7 @@ patch -p1 ./drivers/media/dvb-frontends/si2168.c < $PROJECT_PATCHES_DIR/kernel.d
 }
 
 kernel_install_notice () {
+clear
 cat <<EOF
 You are about to install the latest Linux kernel version [$KERNEL_VERSION], 
 
@@ -1583,11 +1584,13 @@ cat << EOF
 
     1. Copy .config file to project configs directory
 
-    2. Run make clean
+    2. Change Kernel Version in functions file
 
-    3. Change Kernel Version in functions file
+    3. Run: grub2-mkconfig -o /boot/grub2/grub.cfg
 
-    4. You must REBOOT before proceeding
+    4. Run: make clean
+
+    5. You must REBOOT before proceeding
                                                                              
 ###############################################################################
 EOF

@@ -245,7 +245,7 @@ live555_install
 #  MAIN SCRIPT  #
 #################
 
-#upgrade_kernel 4.4.128
+#upgrade_kernel 4.4.160
 #upgrade_kernel 4.9.43
 
 #upgrade_kodi
