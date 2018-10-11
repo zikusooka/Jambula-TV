@@ -2418,6 +2418,9 @@ cd $INSTALL_SRC_DIR/gcc5/build
 ../configure --prefix=$PREFIX/local --enable-languages=c,c++ --enable-checking=release --disable-multilib
 # Compile - Takes a minimum of 77 mins to complete
 make_install_jambulatv -j$SYSTEM_CPU_CORES
+#
+# Fix issue: libstdc++.so.6: version `GLIBCXX_3.4.XX' not found
+cp -v $PREFIX/local/lib64/libstdc++.so.6 $LIBDIR/libstdc++.so.6
 }
 
 python3_install () {
@@ -3086,8 +3089,7 @@ cd build
 # Log to build file
 cmake_build_log
 # cMake
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX \
-	-DCMAKE_INSTALL_LIBDIR=$LIBDIR ..
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX ..
 make install
 #
 #Add VDPAU_DRIVER=va_gl to your environment
@@ -5658,7 +5660,7 @@ EOF
 # Copy over PPP dialer, chat, ISP and modem initialization scripts if they don't exist
 for SCRIPT in \
 jambulatv-ppp-chat \
-$PPP_DIAL_TOOL \
+jambulatv-ppp-dialer \
 jambulatv-ppp-init \
 jambulatv-ppp-modem-add \
 jambulatv-ppp-modem-remove \
