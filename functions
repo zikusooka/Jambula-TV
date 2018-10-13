@@ -347,7 +347,6 @@ BLUEZ_VERSION=4.101 # Keep here, V5.X has no HSP/HFP
 SBC_VERSION=1.2
 PORTAUDIO_VERSION=snapshot
 X264_VERSION=snapshot-20130904-2245
-LIBDVBPSI_TAG=1.3.0
 TVTIME_VERSION=1.0.2
 DVBSTREAMER_VERSION=svn-20130829 #2.1.0
 PYDVBSTREAMER_VERSION=0.1
@@ -3179,10 +3178,8 @@ make_install_jambulatv
 libdvbpsi_install () {
 # Remove old libdvbpsi
 yum -y remove libdvbpsi-*
-# Change to Github sources
-cd $PROJECT_GITHUB_DIR/libdvbpsi
-# Unpack desired git branch/tag
-git archive --format tar.gz --prefix=libdvbpsi/ $LIBDVBPSI_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Copy git sources
+rsync -av --delete-after $PROJECT_GITHUB_DIR/libdvbpsi/ $INSTALL_SRC_DIR/libdvbpsi/
 # configure
 cd $INSTALL_SRC_DIR/libdvbpsi 
 ./bootstrap
@@ -7891,9 +7888,7 @@ usermod -a -G $HOSTAPD_GROUP $MULTIMEDIA_USER
 #
 # Disable wpa_supplicant service, which is automatically started by NetworkManager
 # ********************************************************************************
-[ ! -f $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service ] || \
-      mv -v $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service \
-      $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service.disabled
+[[ -f $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service ]] && mv -v $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service.disabled
 
 # Copy over auto wifi provisioning tool, if none exists in bin directory
 [ -e $AUTO_WIFI_PROVISION_TOOL ] || cat $PROJECT_BIN_DIR/jambulatv-auto-wifi-provision | \
