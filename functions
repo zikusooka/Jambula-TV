@@ -546,6 +546,7 @@ DOMOTICZ_WWW_PORT=$(grep -i 'domoticz$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # Home Assistant
 HOMEASSISTANT_USER=$MULTIMEDIA_USER
+HOMEASSISTANT_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/homeassistant
 
 # Mosquitto - MQTT
 MOSQUITTO_USER=mosquitto
@@ -9850,12 +9851,23 @@ usermod -a -G dialout $HOMEASSISTANT_USER
 }
 
 homeassistant_configure () {
-# Copy hass configuration files
-rsync -av $PROJECT_CONFIGS_DIR/homeassistant/ $PROJECT_SYSTEM_CONF_DIR/homeassistant/
-# Change hass config directory permissions
+# Copy homeassistant configuration files
+[[ -d $PROJECT_CONFIGS_DIR/homeassistant ]] && \
+	rsync -av -n $PROJECT_CONFIGS_DIR/homeassistant/ $HOMEASSISTANT_CONFIG_DIR/
+
+# Change homeassistant config directory permissions
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_CONF_DIR/homeassistant
 
 # Customize secrets i.e. port etc.....
+
+
+# Copy jambulatv-homeassistant-secrets script, if it does not exist in bin directory
+[ -e $BINARY_PREFIX/jambulatv-homeassistant-secrets ] || \
+	cat $PROJECT_BIN_DIR/jambulatv-homeassistant-secrets | \
+		sed -e "s:MY_HOMEASSISTANT_CONFIG_DIR:$HOMEASSISTANT_CONFIG_DIR:g" \
+			> $BINARY_PREFIX/jambulatv-homeassistant-secrets
+# Make script executable
+chmod 755 $BINARY_PREFIX/jambulatv-homeassistant-secrets
 
 # Copy home-assistant systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/home-assistant.service $SYSTEMD_UNITS_DIR_USER/
