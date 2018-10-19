@@ -7282,7 +7282,7 @@ mosquitto_install () {
 # Remove RPM based package if installed
 rpm -q mosquitto > /dev/null 2>&1 && rpm -e --nodeps mosquitto
 #
-# sync mosquitto sources excluding wpa_supplicant
+# sync mosquitto sources
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/mosquitto/ $INSTALL_SRC_DIR/mosquitto/
 # Patch config.mk: change bin,lib,include locations
 cp -v $INSTALL_SRC_DIR/mosquitto/config.mk $INSTALL_SRC_DIR/mosquitto/config.mk.orig
@@ -8110,7 +8110,7 @@ wpa_supplicant_install () {
 rsync -avz --exclude=hostapd --delete-after $PROJECT_GITHUB_DIR/hostap/ $INSTALL_SRC_DIR/hostap/
 #
 # Remove existing wpa_supplicant rpm package
-rpm -q wpa_supplicant > /dev/null 2>&1 && rpm -e --nodeps wpa_supplicant
+rpm -q wpa_supplicant > /dev/null 2>&1 && rpm --quiet -e --nodeps wpa_supplicant
 [ -d $WIFI_WPA_CONFIG_DIR ] && rm -rf $WIFI_WPA_CONFIG_DIR
 #
 # Patch Makefile: change bin,lib,include locations
@@ -11020,8 +11020,11 @@ make_install_jambulatv
 rsync -avz $PREFIX/etc/icinga2/ $ICINGA2_CONFIG_DIR/
 rm -rf $PREFIX/etc/icinga2
 # Move logrotate
+if [[ -d $PREFIX/etc/logrotate.d ]];
+then
 rsync -avz $PREFIX/etc/logrotate.d/ $LOGROTATE_CONF_DIR/
 rm -rf $PREFIX/etc/logrotate.d
+fi
 #
 # Create icinga group
 groupadd $ICINGA_CMD_GROUP
