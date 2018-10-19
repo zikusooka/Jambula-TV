@@ -3346,7 +3346,7 @@ cp -rv $PROJECT_CONTRIB_DIR/codecs/RealPlayer/* $LIBDIR/codecs/
 tar jxvf $PROJECT_TARBALLS_DIR/mplayer-checkout-snapshot.tar.bz2 -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v mplayer* mplayer
 # Add ffmpeg latest sources
-tar jxvf $PROJECT_TARBALLS_DIR/ffmpeg-*.tar.bz2 -C $INSTALL_SRC_DIR/mplayer
+#tar jxvf $PROJECT_TARBALLS_DIR/ffmpeg-*.tar.bz2 -C $INSTALL_SRC_DIR/mplayer
 # Patch that adds Uganda frequency table i.e. chanlist
 patch -p1 $INSTALL_SRC_DIR/mplayer/stream/frequencies.c < $PROJECT_PATCHES_DIR/mplayer_frequency_vhf.patch
 # Patch that fixes a problem when playing multiple streams 
@@ -3357,8 +3357,8 @@ cd $INSTALL_SRC_DIR/mplayer
 # Rename ffmpeg dir
 mv -v ffmpeg* ffmpeg
 # Compile
-./configure --prefix=$PREFIX --confdir=$CONFDIR --libdir=$LIBDIR --enable-xv \
-  --enable-sdl --enable-radio --enable-radio-capture --enable-radio-v4l2 \
+./configure --prefix=$PREFIX --confdir=$CONFDIR --libdir=$LIBDIR --disable-ffmpeg_a \
+  --enable-xv --enable-sdl --enable-radio --enable-radio-capture --enable-radio-v4l2 \
   --enable-tv-v4l2 --enable-pvr --enable-dvb --enable-pulse --enable-menu
 make_install_jambulatv
 # Clean up - saves upto 90MB
