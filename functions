@@ -135,6 +135,7 @@ RTORRENT_SESSIONS_DIR=$TORRENTS_WATCH_DIRECTORY/.sessions_rtorrent
 RTORRENT_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/rtorrent
 
 # aria2
+ARIA2_TAG=release-1.33.0
 ARIA2_CONFIG_FILE=$PROJECT_SYSTEM_CONF_DIR/aria2.conf
 ARIA2_DOWNLOADS_DIRECTORY=$PROJECT_PARTITION/Downloads
 ARIA2_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/aria2.log
@@ -7103,13 +7104,17 @@ systemctl enable rtorrent.service
 }
 
 aria2_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/aria2/ $INSTALL_SRC_DIR/aria2/
-cd $INSTALL_SRC_DIR/aria2
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/aria2
+# Unpack desired git branch/tag
+git archive --format tar.gz --prefix=aria2/ $ARIA2_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# configure
+cd $INSTALL_SRC_DIR/aria2 
 autoreconf -i
-./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-libaria2
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-libaria2 --without-libgmp
 make_install_jambulatv
 # Cache recently shared libraries 
-ldconfig
+#ldconfig
 }
 
 aria2_configure () {
