@@ -2411,6 +2411,16 @@ openssl x509 -req -in $SERVER_CSR_FILE -CA $CA_CERT_FILE -CAkey $CA_KEY_FILE \
   -CAcreateserial -out $SERVER_CERT_FILE -days $CERTIFICATES_DAYS
 }
 
+pcre_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/pcre-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v pcre-* pcre
+# Compile
+cd $INSTALL_SRC_DIR/pcre
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make_install_jambulatv
+}
+
 gcc5_install () {
 tar xvf $PROJECT_TARBALLS_DIR/gcc-5*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv gcc-5* gcc5

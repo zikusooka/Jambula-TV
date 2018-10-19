@@ -34,6 +34,9 @@ exec 2>> $BUILD_LOG
 # Install images and icons
 images_add
 
+# Install current pcre 
+pcre_install
+
 # Install gcc 5
 gcc5_install
 
