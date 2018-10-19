@@ -223,7 +223,10 @@ EPG_XMLTV_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/xmltv.log
 EPG_XMLTV_FREE_2_AIR_GUIDE_FILE=$EPG_XMLTV_GUIDE_DIR/tvguide.$(echo ${TVHEADEND_TV_MARKET} | cut -d - -f1 | tr '[:upper:]' '[:lower:]').xml
 
 PLATFORM_TAG=1.0.10
-LIBCEC_TAG=libcec-2.2.0
+#LIBCEC_TAG=libcec-2.2.0
+LIBCEC_TAG=libcec-4.0.2
+
+LIBBLURAY_TAG=1.0.2
 
 VLC_SOURCES_TYPE=tarball #git
 
@@ -347,6 +350,7 @@ BLUEZ_VERSION=4.101 # Keep here, V5.X has no HSP/HFP
 SBC_VERSION=1.2
 PORTAUDIO_VERSION=snapshot
 X264_VERSION=snapshot-20130904-2245
+LIBDVBPSI_TAG=1.2.0
 TVTIME_VERSION=1.0.2
 DVBSTREAMER_VERSION=svn-20130829 #2.1.0
 PYDVBSTREAMER_VERSION=0.1
@@ -449,8 +453,7 @@ DHCLIENT_CONFIG_FILE=$DHCLIENT_CONFIG_DIR/dhclient.conf
 
 SYSTEM_UUID=$(uuid)
 SYSTEM_IDENTIFIER=$(echo $SYSTEM_UUID | cut -d - -f5)
-
-SYSTEM_CPU_CORES=$(cat /proc/cpuinfo | grep -i processor | wc -l)
+SYSTEM_CPU_CORES=$(getconf _NPROCESSORS_ONLN)
 
 # Internet ISP settings
 INTERNET_USB_ISP_CONFIG=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-usb.cfg
@@ -3179,10 +3182,12 @@ make_install_jambulatv
 libdvbpsi_install () {
 # Remove old libdvbpsi
 yum -y remove libdvbpsi-*
-# Copy git sources
-rsync -av --delete-after $PROJECT_GITHUB_DIR/libdvbpsi/ $INSTALL_SRC_DIR/libdvbpsi/
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/libdvbpsi
+# Unpack desired git branch/tag
+git archive --format tar.gz --prefix=libdvbpsi/ $LIBDVBPSI_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 # configure
-cd $INSTALL_SRC_DIR/libdvbpsi 
+cd $INSTALL_SRC_DIR/libdvbpsi
 ./bootstrap
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-debug
 make_install_jambulatv
@@ -4284,6 +4289,101 @@ patch -p1 $FREEVO_RUNTIME_SKINS_DIR/main/geexbox.fxd  < $PROJECT_PATCHES_DIR/gee
 
 # Kodi Dependencies
 # -----------------
+tinyxml2_install () {
+rsync -av $PROJECT_GITHUB_DIR/tinyxml2/ $INSTALL_SRC_DIR/tinyxml2/
+cd $INSTALL_SRC_DIR/tinyxml2
+# Log to build file
+cmake_build_log
+# CMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
+flatbuffers_install () {
+rsync -avz $PROJECT_GITHUB_DIR/flatbuffers/ $INSTALL_SRC_DIR/flatbuffers/
+# Change to source dir
+cd $INSTALL_SRC_DIR/flatbuffers
+# Log to build file
+cmake_build_log
+# cMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
+rapidjson_install () {
+rsync -avz $PROJECT_GITHUB_DIR/rapidjson/ $INSTALL_SRC_DIR/rapidjson/
+# Change to source dir
+cd $INSTALL_SRC_DIR/rapidjson
+# Log to build file
+cmake_build_log
+# cMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
+fmt_install () {
+rsync -avz $PROJECT_GITHUB_DIR/fmt/ $INSTALL_SRC_DIR/fmt/
+# Change to source dir
+cd $INSTALL_SRC_DIR/fmt
+# Log to build file
+cmake_build_log
+# cMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
+fstrcmp_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/fstrcmp-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v fstrcmp-* fstrcmp
+# Compile
+cd $INSTALL_SRC_DIR/fstrcmp
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make_install_jambulatv
+}
+
+taglib_install () {
+# Remove RPM based package if installed
+rpm -q taglib-devel > /dev/null 2>&1 && rpm -e --nodeps taglib-devel
+#
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/taglib-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v taglib-* taglib
+# Change to source dir
+cd $INSTALL_SRC_DIR/taglib
+# Log to build file
+cmake_build_log
+# cMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
+libmicrohttpd_install () {
+# Remove RPM based package if installed
+rpm -q libmicrohttpd-devel > /dev/null 2>&1 && rpm -e --nodeps libmicrohttpd-devel
+#
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/libmicrohttpd-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libmicrohttpd-* libmicrohttpd
+# Compile
+cd $INSTALL_SRC_DIR/libmicrohttpd
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make_install_jambulatv
+}
+
+swig_install () {
+# Remove RPM based package if installed
+rpm -q swig-devel > /dev/null 2>&1 && rpm -e --nodeps swig-devel
+#
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/swig-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v swig-* swig
+# Compile
+cd $INSTALL_SRC_DIR/swig
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make_install_jambulatv
+}
+
 libnfs_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/libnfs-*.tar.gz -C $INSTALL_SRC_DIR
@@ -4318,19 +4418,66 @@ make_install_jambulatv
 libcec_install () {
 cd $PROJECT_GITHUB_DIR/libcec
 git archive --format tar.gz --prefix=libcec/ $LIBCEC_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Change to source dir
 cd $INSTALL_SRC_DIR/libcec
-./bootstrap
+# Log to build file
+cmake_build_log
+# cMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+#ldconfig
+}
+
+libbluray_install () {
+cd $PROJECT_GITHUB_DIR/libbluray
+git archive --format tar.gz --prefix=libbluray/ $LIBBLURAY_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+#
+# Add libudfread sources if they dont exist
+[[ -e $INSTALL_SRC_DIR/libbluray/contrib/libudfread/configure.ac ]] || \
+	rsync -av $PROJECT_GITHUB_DIR/libbluray/contrib/libudfread/ $INSTALL_SRC_DIR/libbluray/contrib/libudfread/
+#
+# Compile
+cd $INSTALL_SRC_DIR/libbluray
+./bootstrap 
+./configure --prefix=$PREFIX --libdir=$LIBDIR --disable-bdjava-jar
+make_install_jambulatv
+}
+
+shairplay_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/shairplay/ $INSTALL_SRC_DIR/shairplay/
+cd $INSTALL_SRC_DIR/shairplay
+./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
 make_install_jambulatv
-ldconfig
+}
+
+sndio_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/sndio-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v sndio-* sndio
+# Compile all
+cd $INSTALL_SRC_DIR/sndio
+./configure --prefix=$PREFIX --libdir=$LIBDIR 
+make
+make install
 }
 
 kodi_deps_install () {
+tinyxml2_install
+flatbuffers_install 
+rapidjson_install
+fmt_install
+fstrcmp_install
+taglib_install
+libmicrohttpd_install
+swig_install
 libnfs_install
 libusb_install
-# Needed for Addons like PVR.HTS
-platform_install 
+platform_install
 libcec_install
+libbluray_install
+shairplay_install
+sndio_install
 }
 
 kodi_unpack_git () {
@@ -6849,7 +6996,7 @@ libtorrent_install () {
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/libtorrent/ $INSTALL_SRC_DIR/libtorrent/
 cd $INSTALL_SRC_DIR/libtorrent
 ./autogen.sh
-./configure --prefix=/usr --libdir=$LIBDIR
+./configure --prefix=$PREFIX --libdir=$LIBDIR
 make_install_jambulatv
 # Clean up - saves upto 150MB
 make clean
@@ -9780,7 +9927,7 @@ cmake_build_log
 # cMake
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX -DUSE_PYTHON=NO
 #-DUSE_PYTHON_PLUGINS=NO
-make -j$SYSTEM_CPU_CORES
+make_install_jambulatv -j$SYSTEM_CPU_CORES
 #
 # Post-install actions - Not done by compile
 # ------------------------------------------
