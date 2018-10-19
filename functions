@@ -349,6 +349,7 @@ PYALSAAUDIO_VERSION=0.7
 BLUEZ_VERSION=4.101 # Keep here, V5.X has no HSP/HFP
 SBC_VERSION=1.2
 PORTAUDIO_VERSION=snapshot
+FFMPEG_VERSION_MAJOR=4
 X264_VERSION=snapshot-20130904-2245
 LIBDVBPSI_TAG=1.2.0
 TVTIME_VERSION=1.0.2
@@ -3238,8 +3239,8 @@ make_install_jambulatv
 
 ffmpeg_install () {
 # Unpack
-tar xvf $PROJECT_TARBALLS_DIR/ffmpeg-*.xz -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v ffmpeg-* ffmpeg
+tar xvf $PROJECT_TARBALLS_DIR/ffmpeg-$FFMPEG_VERSION_MAJOR*.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v ffmpeg-$FFMPEG_VERSION_MAJOR* ffmpeg
 cd $INSTALL_SRC_DIR/ffmpeg 
 # check for libx264
 which x264 > /dev/null 2>&1
