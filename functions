@@ -849,16 +849,6 @@ VLM_VOD_DIRECTORY=/JambulaTV/vlm_vod
 
 INCRON_DIRECTORY=/etc/incron.d
 
-# Asterisk config directory
-if [ -d $PROJECT_SYSTEM_CONF_DIR/asterisk ];
-then
-ASTERISK_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/asterisk
-elif [ -d $PROJECT_SYSTEM_CONF_DIR/freepbx ];
-then
-ASTERISK_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/freepbx
-else
-ASTERISK_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/asterisk
-fi
 ASTERISK_AGI_BIN_DIR=$STATEDIR/lib/asterisk/agi-bin
 # Asterisk AMI
 ASTERISK_AMI_USER=JambulaTV
@@ -1179,6 +1169,18 @@ PYTHON3_SITEDIR=$PREFIX/local/lib/python${PYTHON_MINOR_VERSION_NUMBER}/site-pack
 [[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && PYTHON_SITEDIR=$PYTHON3_SITEDIR
 # Export
 export PYTHON_VERSION PYTHON_FULL_VERSION_NUMBER PYTHON_MAJOR_VERSION_NUMBER PYTHON_MINOR_VERSION_NUMBER PYTHON_SITEDIR
+}
+
+get_asterisk_config_dir () {
+if [ -d $PROJECT_SYSTEM_CONF_DIR/asterisk ];
+then
+ASTERISK_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/asterisk
+elif [ -d $PROJECT_SYSTEM_CONF_DIR/freepbx ];
+then
+ASTERISK_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/freepbx
+else
+ASTERISK_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/asterisk
+fi
 }
 
 network_interface_exists () {
@@ -1830,6 +1832,8 @@ done
 }
 
 uninstall_asterisk () {
+# Asterisk config directory
+get_asterisk_config_dir
 # Stop running asterisk
 systemctl stop asterisk || kill -9 $(ps auxw | grep asterisk | awk {'print $2'})
 # Backup sqlite database - contains CallerID lookups etc..
@@ -9169,6 +9173,9 @@ usermod -a -G audio,pulse,pulse-access asterisk
 }
 
 asterisk_configure () {
+# Asterisk config directory
+get_asterisk_config_dir
+#
 # Get WWW User and Group
 set_www_user_group
 # Set ownership/permissions on asterisk directories
@@ -9298,6 +9305,9 @@ make_install_jambulatv
 }
 
 chan_mobile_configure () {
+# Asterisk config directory
+get_asterisk_config_dir
+#
 # Get bluetooth MAC Address
 BLUEZ_ADAPTER_0_ADDR=$(hciconfig $BLUEZ_DEVICE_HCI | grep 'BD Address' | awk {'print $3'})
 # Modify chan_mobile config file - Add custom bluez adapter and phone(s)
@@ -9350,6 +9360,9 @@ chmod 755 $ASTERISK_AGI_BIN_DIR/available_mobile_group.sh
 }
 
 chan_dongle_configure () {
+# Asterisk config directory
+get_asterisk_config_dir
+#
 # If Asterisk installed
 if [ -d $ASTERISK_CONF_DIR ];
 then
@@ -9420,6 +9433,9 @@ chmod 755 $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 }
 
 freepbx_preinstall () {
+# Asterisk config directory
+get_asterisk_config_dir
+#
 # Remove/backup old asterisk config files
 [ -d $CONFDIR/asterisk ] && mv -v $CONFDIR/asterisk $CONFDIR/asterisk.nofreepbx.$(date +%I%M)
 [ -d $FREEPBX_CONF_DIR ] && mv -v $FREEPBX_CONF_DIR $FREEPBX_CONF_DIR.nofreepbx
