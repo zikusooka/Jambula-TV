@@ -37,8 +37,9 @@ images_add
 # Install current pcre 
 pcre_install
 
-# Install gcc 5
-gcc5_install
+# Install gcc
+gcc8_install
+#gcc5_install
 
 # Install python3
 python3_install

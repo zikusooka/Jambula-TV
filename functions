@@ -2421,6 +2421,18 @@ cd $INSTALL_SRC_DIR/pcre
 make_install_jambulatv
 }
 
+gcc8_install () {
+tar xvf $PROJECT_TARBALLS_DIR/gcc-8*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv gcc-8* gcc8
+# Move to build directory
+mkdir $INSTALL_SRC_DIR/gcc8/build
+cd $INSTALL_SRC_DIR/gcc8/build
+# Configure
+../configure --prefix=$PREFIX --enable-languages=c,c++ --enable-checking=release --disable-multilib
+# Compile - Takes a minimum of 77 mins to complete
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
 gcc5_install () {
 tar xvf $PROJECT_TARBALLS_DIR/gcc-5*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv gcc-5* gcc5
