@@ -2470,7 +2470,7 @@ rpm -q python3 > /dev/null 2>&1 && rpm -e --nodeps python3
 tar xvf $PROJECT_TARBALLS_DIR/Python-3*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v Python-3* python3
 # Compile
-cd $INSTALL_SRC_DIR/python3 && ./configure --prefix=$PREFIX/local
+cd $INSTALL_SRC_DIR/python3 && ./configure --prefix=$PREFIX/local --enable-shared
 # make and install in alternate locations
 make && make altinstall
 #
