@@ -37,6 +37,9 @@ images_add
 # Install current pcre 
 pcre_install
 
+# Install current libxml2
+libxml2_install
+
 # Install gcc
 gcc8_install
 #gcc5_install
