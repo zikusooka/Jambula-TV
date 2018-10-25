@@ -2446,6 +2446,8 @@ cd $INSTALL_SRC_DIR/gcc8/build
 # Compile - Takes a minimum of 77 mins to complete
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 #
+# Cache recently shared libraries
+ldconfig
 # Remove this file to make ldconfig work
 [[ -e $LIBDIR/libstdc++.so.6.0.25-gdb.py ]] && rm -f $LIBDIR/libstdc++.so.6.0.25-gdb.py
 # Cache recently shared libraries
@@ -2463,6 +2465,27 @@ cd $INSTALL_SRC_DIR/gcc5/build
 # Compile - Takes a minimum of 77 mins to complete
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 #
+# Cache recently shared libraries
+ldconfig
+# Remove this file to make ldconfig work
+[[ -e $LIBDIR/libstdc++.so.6.0.25-gdb.py ]] && rm -f $LIBDIR/libstdc++.so.6.0.25-gdb.py
+# Cache recently shared libraries
+ldconfig
+}
+
+gcc4_install () {
+tar jxvf $PROJECT_TARBALLS_DIR/gcc-4*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv gcc-4* gcc4
+# Move to build directory
+mkdir $INSTALL_SRC_DIR/gcc4/build
+cd $INSTALL_SRC_DIR/gcc4/build
+# Configure
+../configure --prefix=$PREFIX --enable-languages=c,c++ --enable-checking=release --disable-multilib
+# Compile - Takes a minimum of 77 mins to complete
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+#
+# Cache recently shared libraries
+ldconfig
 # Remove this file to make ldconfig work
 [[ -e $LIBDIR/libstdc++.so.6.0.25-gdb.py ]] && rm -f $LIBDIR/libstdc++.so.6.0.25-gdb.py
 # Cache recently shared libraries

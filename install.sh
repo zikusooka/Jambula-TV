@@ -41,8 +41,9 @@ pcre_install
 libxml2_install
 
 # Install gcc
-gcc8_install
+#gcc8_install
 #gcc5_install
+gcc4_install
 
 # Install python3
 python3_install
