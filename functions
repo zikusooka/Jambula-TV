@@ -223,6 +223,8 @@ EPG_XMLTV_SOCKET=$TVHEADEND_EPG_GRAB_DIR/xmltv.sock
 EPG_XMLTV_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/xmltv.log
 EPG_XMLTV_FREE_2_AIR_GUIDE_FILE=$EPG_XMLTV_GUIDE_DIR/tvguide.$(echo ${TVHEADEND_TV_MARKET} | cut -d - -f1 | tr '[:upper:]' '[:lower:]').xml
 
+# Git software tags
+FMT_TAG=4.1.0
 PLATFORM_TAG=1.0.10
 #LIBCEC_TAG=libcec-2.2.0
 LIBCEC_TAG=libcec-4.0.2
@@ -4388,13 +4390,14 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
 fmt_install () {
-rsync -avz $PROJECT_GITHUB_DIR/fmt/ $INSTALL_SRC_DIR/fmt/
-# Change to source dir
+cd $PROJECT_GITHUB_DIR/fmt
+git archive --format tar.gz --prefix=fmt/ $FMT_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 cd $INSTALL_SRC_DIR/fmt
 # Log to build file
 cmake_build_log
 # cMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
+# make install
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
