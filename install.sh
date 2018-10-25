@@ -34,9 +34,6 @@ exec 2>> $BUILD_LOG
 # Install images and icons
 images_add
 
-# Install current pcre 
-pcre_install
-
 # Install current libxml2
 libxml2_install
 
