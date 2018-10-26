@@ -4365,6 +4365,18 @@ patch -p1 $FREEVO_RUNTIME_SKINS_DIR/main/geexbox.fxd  < $PROJECT_PATCHES_DIR/gee
 
 # Kodi Dependencies
 # -----------------
+jsoncpp_install () {
+rsync -avz $PROJECT_GITHUB_DIR/jsoncpp/ $INSTALL_SRC_DIR/jsoncpp/
+# Change to source dir
+cd $INSTALL_SRC_DIR/jsoncpp
+#
+# Log to build file
+cmake_build_log
+# cMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
 tinyxml2_install () {
 rsync -av $PROJECT_GITHUB_DIR/tinyxml2/ $INSTALL_SRC_DIR/tinyxml2/
 cd $INSTALL_SRC_DIR/tinyxml2
@@ -4540,6 +4552,7 @@ make install
 }
 
 kodi_deps_install () {
+jsoncpp_install
 tinyxml2_install
 flatbuffers_install 
 rapidjson_install
