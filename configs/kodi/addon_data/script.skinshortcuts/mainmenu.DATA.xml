@@ -9,6 +9,14 @@
 		<action>ActivateWindow(Videos,"/JambulaTV/Videos/TV_Recordings/",return)</action>
 	</shortcut>
 	<shortcut>
+		<defaultID>10025</defaultID>
+		<label>10025</label>
+		<label2 />
+		<icon>resource://resource.images.skinicons.wide/videos.png</icon>
+		<thumb />
+		<action>ActivateWindow(Videos,return)</action>
+	</shortcut>
+	<shortcut>
 		<defaultID>tvshows</defaultID>
 		<label>20343</label>
 		<label2>TV shows</label2>
@@ -42,7 +50,7 @@
 	</shortcut>
 	<shortcut>
 		<defaultID>music</defaultID>
-		<label>10005</label>
+		<label>Music</label>
 		<label2>Music</label2>
 		<icon>resource://resource.images.skinicons.wide/music.png</icon>
 		<thumb>$INFO[Window(Home).Property(SkinHelper.AllMusicBackground)]</thumb>

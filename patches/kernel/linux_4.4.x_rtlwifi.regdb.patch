@@ -1,0 +1,11 @@
+--- regd.c.orig	2016-10-06 00:50:11.363539998 +0300
++++ regd.c	2016-10-06 00:53:34.488307206 +0300
+@@ -48,7 +48,7 @@
+  *scan on all world regulatory domains
+  */
+ #define RTL819x_2GHZ_CH01_11	\
+-	REG_RULE(2412-10, 2462+10, 40, 0, 20, 0)
++	REG_RULE(2412-10, 2484+10, 40, 0, 33, 0)
+ 
+ /*
+  *We enable active scan on these a case

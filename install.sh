@@ -11,6 +11,8 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #################
 #  MAIN SCRIPT  #
 #################
+#DEBUGGING
+#_install_pause_check_4_errors_ $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "Insert program name here"
 
 # Custom kernel install, reboot is needed
 kernel_install 
@@ -34,19 +36,29 @@ exec 2>> $BUILD_LOG
 # Install images and icons
 images_add
 
+# Install current openssl
+openssl111_install
+
+# Install current mesa
+mesa_install
+glu_install
+
 # Install current libxml2
 libxml2_install
 
-# Install gcc
+# Install gcc ~53mins
 #gcc8_install
 #gcc5_install
 gcc4_install
 
+# General dependencies
+giflib_install 
+
+# Install expat - needed for python3
+expat_install
+
 # Install python3
 python3_install
-
-# Install commonly used python3 modules
-python3_common_modules_install
 
 # Pick desired X11 video driver
 case $X11_DRIVER in
@@ -118,11 +130,8 @@ fmtools_install
 
 # Kodi
 kodi_deps_install
-kodi_install # ~160 mins (107m on SSD)
-kodi_platform_install
-kodi_pvr_hts_install
-#kodi_pvr_iptvsimple_install
-#kodi_pvr_rtl_radiofm_install # ~ Not yet compiling 
+#kodi17_install
+kodi18_install
 kodi_configure
 kodi_addons_install
 kodi_addons_configure
@@ -139,7 +148,8 @@ x11_superuser_permissions_configure
 x11_user_autologin_lxde_configure
 
 # Boot screen customization
-plymouth_customization
+plymouth_install
+plymouth_configure
 grub_settings
 
 # Auto start for JambulaTV
@@ -293,8 +303,9 @@ trackerjacker_configure
 # Communications 
 # ----------------
 # IM Chat Server (Needed by XMPP usage in Asterisk)
-jabberd_configure
-jabberd_add_users
+prosody_install
+prosody_configure
+prosody_add_users
 
 # Telephone system support
 dahdi_install
@@ -422,8 +433,6 @@ mosquitto_configure
 #sleekxmpp_install 
 python_telegram_bot_install
 telegram_messaging_configure
-#yowsup2_deps_install
-#yowsup2_install
 yowsup2_python3_install
 
 whatsapp_messaging_configure

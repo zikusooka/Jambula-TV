@@ -5,7 +5,7 @@ SPEED_TEST_SERVER="LON1" # AMS1 AMS2 NYC1 NYC2 SF1 SGP1 DALS1
 STATS_DIR=/tmp
 WGET_CMD=/usr/bin/wget
 WGET_TIMEOUT=20
-WGET_OPTIONS="--no-check-certificate --retr-symlinks -T $WGET_TIMEOUT -O /dev/null"
+WGET_OPTS="--no-check-certificate --retr-symlinks -T $WGET_TIMEOUT -O /dev/null"
 PING_COUNT=1 #9
 PING_IP_ADDRESS=8.8.8.8
 
@@ -80,7 +80,7 @@ done
 
 fetch_dummy_file () {
 # Run Speed Tests for requested test server routes
-$WGET_CMD $WGET_OPTIONS $SPEED_TEST_SERVER_LINK > $STATS_DIR/$SPEED_TEST_SERVER_NAME.${USER}.log 2>&1
+$WGET_CMD $WGET_OPTS $SPEED_TEST_SERVER_LINK > $STATS_DIR/$SPEED_TEST_SERVER_NAME.${USER}.log 2>&1
 }
 
 extract_internet_speed () {

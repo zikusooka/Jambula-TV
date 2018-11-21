@@ -54,7 +54,7 @@ if (!empty($_SESSION['error_form_06'])) {
 <hr/>
 
  <h4>Telegram</h4>
-To setup your telegram bot, please start <a href="tg://resolve?domain=botfather" target="_blank">Botfather</a> 
+To setup your telegram bot, please read the instructions for <a href="help/telegram_botfather.html" target="_blank">Telegram Botfather</a> 
 <p>
  <label>Telegram API Bot ID :</label><br />
  <input name="telegram_bot_id" id="telegram_bot_id" type="text" value="" >

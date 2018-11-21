@@ -29,7 +29,7 @@ fi
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
 
-NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route list | grep default | sed 's/^.*via //' | awk {'print $1'})
+NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
 # If No Gateway
 if [ "x$NETWORK_GATEWAY_ADDRESS" = "x" ];
 then

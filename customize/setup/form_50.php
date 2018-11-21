@@ -22,7 +22,7 @@
  // Connect to our MySQL Database
  $connection = mysql_connect("localhost", "JAMBULATV_SETUP_DB_USER", "JAMBULATV_SETUP_DB_PASS");
  $db = mysql_select_db("JAMBULATV_SETUP_DB_NAME", $connection); // Storing values in database. 
- $query = mysql_query("insert into setup (contact_name, contact_email, contact_phone, contact_birthday, contact_address1, contact_address2, contact_city, contact_country, system_password, isp_name, internet_device, wifi_nickname_1, wifi_mac_1, wifi_nickname_2, wifi_mac_2, wifi_nickname_3, wifi_mac_3, wifi_nickname_4, wifi_mac_4, wifi_nickname_5, wifi_mac_5, network_apn, mifi_ssid, mifi_pass, mifi_ip_address, mifi_admin_user, mifi_admin_pass, lan_ip_addr, lan_ip_gate, lan_dns_1, lan_dns_2, tvh_dvbt_config_requested, tv_market, dvbt_tuner_name, schedule_tvseries, schedule_podcasts, schedule_movies, schedule_iptv, traktv_username, traktv_watchlist, telegram_bot_id, telegram_chat_id, telegram_username, whatsapp_no_recipient, whatsapp_no_sender, notification_email_address, gmail_address, gmail_password, cctv_all, cctv_whatsapp, cctv_telegram, cctv_sms, cctv_email, cctv_kodi, cctv_osd, cctv_call, cctv_lights, news_sources, youtube_api_key, youtube_client_id, youtube_client_secret, wunderground_api_key, latitude_home, longitude_home, tts_api_key, tts_api_id) values('$contact_name', '$contact_email', '$contact_phone', '$contact_birthday', '$contact_address1', '$contact_address2', '$contact_city', '$contact_country', '$system_password', '$isp_name', '$internet_device', '$wifi_nickname_1', '$wifi_mac_1', '$wifi_nickname_2', '$wifi_mac_2', '$wifi_nickname_3', '$wifi_mac_3', '$wifi_nickname_4', '$wifi_mac_4', '$wifi_nickname_5', '$wifi_mac_5', '$network_apn', '$mifi_ssid', '$mifi_pass', '$mifi_ip_address', '$mifi_admin_user', '$mifi_admin_pass', '$lan_ip_addr', '$lan_ip_gate', '$lan_dns_1', '$lan_dns_2', '$tvh_dvbt_config_requested', '$tv_market', '$dvbt_tuner_name', '$schedule_tvseries', '$schedule_podcasts', '$schedule_movies', '$schedule_iptv', '$traktv_username', '$traktv_watchlist', '$telegram_bot_id', '$telegram_chat_id', '$telegram_username', '$whatsapp_no_recipient', '$whatsapp_no_sender', '$notification_email_address', '$gmail_address', '$gmail_password', '$cctv_all', '$cctv_whatsapp', '$cctv_telegram', '$cctv_sms', '$cctv_email', '$cctv_kodi', '$cctv_osd', '$cctv_call', '$cctv_lights', '$news_sources', '$youtube_api_key', '$youtube_client_id', '$youtube_client_secret', '$wunderground_api_key', '$latitude_home', '$longitude_home', '$tts_api_key', '$tts_api_id')", $connection);
+ $query = mysql_query("insert into setup (contact_name, contact_email, contact_phone, contact_birthday, contact_address1, contact_address2, contact_city, contact_country, system_password, isp_name, internet_device, wifi_nickname_1, wifi_mac_1, wifi_nickname_2, wifi_mac_2, wifi_nickname_3, wifi_mac_3, wifi_nickname_4, wifi_mac_4, wifi_nickname_5, wifi_mac_5, network_apn, mifi_ssid, mifi_pass, mifi_ip_address, mifi_admin_user, mifi_admin_pass, lan_ip_addr, lan_ip_gate, lan_dns_1, lan_dns_2, tvh_dvbt_config_requested, tv_market, dvbt_tuner_name, schedule_tvseries, schedule_podcasts, schedule_movies, schedule_iptv, traktv_username, traktv_watchlist, telegram_bot_id, telegram_chat_id, telegram_username, whatsapp_no_recipient, whatsapp_no_sender, notification_email_address, gmail_address, gmail_password, cctv_all, cctv_whatsapp, cctv_telegram, cctv_sms, cctv_email, cctv_kodi, cctv_osd, cctv_call, cctv_lights, news_sources, youtube_api_key, youtube_client_id, youtube_client_secret, wunderground_api_key, openweathermap_api_key, latitude_home, longitude_home, tts_api_key, tts_api_id) values('$contact_name', '$contact_email', '$contact_phone', '$contact_birthday', '$contact_address1', '$contact_address2', '$contact_city', '$contact_country', '$system_password', '$isp_name', '$internet_device', '$wifi_nickname_1', '$wifi_mac_1', '$wifi_nickname_2', '$wifi_mac_2', '$wifi_nickname_3', '$wifi_mac_3', '$wifi_nickname_4', '$wifi_mac_4', '$wifi_nickname_5', '$wifi_mac_5', '$network_apn', '$mifi_ssid', '$mifi_pass', '$mifi_ip_address', '$mifi_admin_user', '$mifi_admin_pass', '$lan_ip_addr', '$lan_ip_gate', '$lan_dns_1', '$lan_dns_2', '$tvh_dvbt_config_requested', '$tv_market', '$dvbt_tuner_name', '$schedule_tvseries', '$schedule_podcasts', '$schedule_movies', '$schedule_iptv', '$traktv_username', '$traktv_watchlist', '$telegram_bot_id', '$telegram_chat_id', '$telegram_username', '$whatsapp_no_recipient', '$whatsapp_no_sender', '$notification_email_address', '$gmail_address', '$gmail_password', '$cctv_all', '$cctv_whatsapp', '$cctv_telegram', '$cctv_sms', '$cctv_email', '$cctv_kodi', '$cctv_osd', '$cctv_call', '$cctv_lights', '$news_sources', '$youtube_api_key', '$youtube_client_id', '$youtube_client_secret', '$wunderground_api_key', '$openweathermap_api_key', '$latitude_home', '$longitude_home', '$tts_api_key', '$tts_api_id')", $connection);
 
  if ($query) {
  // Create file to indicate setup was completed
@@ -51,7 +51,7 @@
 
      <tr>
        <td style="width: 25%;"><img style="width: 100%;" src="images/remote.jpg" alt="Remote app"></td>
-       <td>Download the Remote App and install it on your phone as follows:</td>
+       <td>Install the Remote App and set it up on your phone using the QRCode shown below:</td>
      </tr>
    </tbody></table>
  </p>';
@@ -67,6 +67,12 @@
        <td><a href="https://itunes.apple.com/en/app/official-kodi-remote/id520480364?mt=8">iOS</a></td>
      </tr>
    </tbody></table>
+
+<p>
+Instructions for Remote App i.e. Yatse: Settings >> Manage Hosts >> Add >> Import host from a QR Code
+ <img src="images/yatse_host_settings.png" alt="Yatse host settings for JambulaTV" style="width:100%">
+</p>
+
 </p>';
  
 

@@ -325,7 +325,7 @@ if [[ ! -e $TVHEADEND_CONFIG_DIR/.dvbt_configured && "$TVH_DVBT_CONFIG_REQUESTED
 then
 
 # Source Live TV variables
-set_variables 
+dvbt_set_variables
 
 # Create, configure DVB-T network, then Scan and Map all available channels
 sudo $TVHEADEND_CONTROLLER_TOOL dvb all

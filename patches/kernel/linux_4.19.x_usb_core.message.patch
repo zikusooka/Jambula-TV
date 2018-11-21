@@ -1,0 +1,20 @@
+--- message.c.orig	2018-11-15 05:27:13.926392462 +0300
++++ message.c	2018-11-15 05:32:59.162392462 +0300
+@@ -773,8 +773,6 @@
+ 	if (err == -ENODATA || (err > 0 && err < 4)) {
+ 		dev->string_langid = 0x0409;
+ 		dev->have_langid = 1;
+-		dev_err(&dev->dev,
+-			"language id specifier not provided by device, defaulting to English\n");
+ 		return 0;
+ 	}
+ 
+@@ -782,8 +780,6 @@
+ 	 * deal with strings at all. Set string_langid to -1 in order to
+ 	 * prevent any string to be retrieved from the device */
+ 	if (err < 0) {
+-		dev_info(&dev->dev, "string descriptor 0 read error: %d\n",
+-					err);
+ 		dev->string_langid = -1;
+ 		return -EPIPE;
+ 	}

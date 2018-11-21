@@ -48,7 +48,7 @@ templates:
 # Settings - TV Series
 # ---------------------
     _settings_for_series: &settings_for_series
-      quality: "h264 xvid !480p !720p !h265"
+      quality: "h264 h265 xvid 720p !480p"
       exact: yes
       propers: no 
       identified_by: ep
@@ -56,7 +56,7 @@ templates:
         - s(\d+)e(\d+)
         - s(\d+)ep(\d+)
       tracking: backfill
-      timeframe: 6 hours
+      timeframe: 1 hours
       target: "h264"
       upgrade: yes
 

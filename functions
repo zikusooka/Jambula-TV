@@ -11,8 +11,11 @@ COPYRIGHT_NOTICE=" ©$COPYRIGHT_YEAR_START-$COPYRIGHT_YEAR_END $COMPANY_NAME All
 EMAIL_ADDRESS_SUPPORT=support@jambulatv.com
 EMAIL_ADDRESS_ERRORS=errors@jambulatv.com
 
+PROJECT_ATTENDANT_USERNAME=zik
+PROJECT_ATTENDANT_HOSTNAME=kampala
+
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.4.160"
+KERNEL_VERSION="4.19.6"
 
 PRODUCT_MODEL_NAME="$PROJECT_NAME"
 PRODUCT_DISK_SIZE=$(journalctl -b -o cat --no-pager | grep sda | grep logical | awk {'print $8'} | sed 's:(::')
@@ -93,7 +96,7 @@ PROJECT_SYSTEM_LOG_DIR=$LOGDIR/$PROJECT_NAME
 PROJECT_SYSTEM_LIB_DIR=$STATEDIR/lib/$PROJECT_NAME
 PROJECT_SYSTEM_CACHE_DIR=$STATEDIR/cache/$PROJECT_NAME
 PROJECT_SYSTEM_ICONS_DIR=$PROJECT_SYSTEM_SHARE_DIR/picons
-PROJECT_VERSION=$(cd $PROJECT_BASE_DIR && git describe --abbrev=0 --tags)
+PROJECT_VERSION=$(cd $PROJECT_BASE_DIR && git tag -l | tail -1)
 PROJECT_RELEASE_FILE=$PROJECT_SYSTEM_CONF_DIR/release
 PROJECT_DVBT_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/dvbt-settings.cfg
 PROJECT_PARTITION=/$PROJECT_NAME
@@ -225,23 +228,52 @@ EPG_XMLTV_FREE_2_AIR_GUIDE_FILE=$EPG_XMLTV_GUIDE_DIR/tvguide.$(echo ${TVHEADEND_
 
 # Git software tags
 FMT_TAG=4.1.0
-PLATFORM_TAG=1.0.10
-#LIBCEC_TAG=libcec-2.2.0
-LIBCEC_TAG=libcec-4.0.2
 
 LIBBLURAY_TAG=1.0.2
 
 VLC_SOURCES_TYPE=tarball #git
 
-#KODI_VERSION=15.2 
-#KODI_CODENAME=Isengard
-#KODI_SOURCES_TYPE=git
+KODI17_VERSION=17.6
+KODI17_CODENAME=Krypton
+KODI17_TAG=$KODI17_VERSION-$KODI17_CODENAME
+KODI17_SOURCES_TYPE=tarball 
+KODI17_CORE_INSTALL_ROOT_DIR=$INSTALL_SRC_DIR/kodi-$KODI17_VERSION
 
-KODI_VERSION=17.6
-KODI_CODENAME=Krypton
-KODI_SOURCES_TYPE=tarball 
+KODI18_VERSION=18.0rc3
+KODI18_CODENAME=Leia
+KODI18_TAG=$KODI18_VERSION-$KODI18_CODENAME
+KODI18_SOURCES_TYPE=git
+KODI18_CORE_INSTALL_ROOT_DIR=$INSTALL_SRC_DIR/kodi-$KODI18_VERSION
+KODI18_CORE_INSTALL_BUILD_DIR=$KODI18_CORE_INSTALL_ROOT_DIR/build
+KODI18_BINARY_ADDONS_ROOT_DIR=$KODI18_CORE_INSTALL_ROOT_DIR/tools/depends/target/binary-addons
+KODI18_BINARY_ADDONS_BUILD_DIR=$KODI18_BINARY_ADDONS_ROOT_DIR/native/build
+KODI18_BINARY_ADDONS_DOWNLOAD_DIR=$KODI18_BINARY_ADDONS_BUILD_DIR/download
+#KODI18_BINARY_ADDONS_TO_BUILD="all"
+KODI18_BINARY_ADDONS_TO_BUILD="pvr.hts"
 
-KODI_PACKAGE_NAME=$KODI_VERSION-$KODI_CODENAME
+
+KODI18_CROSSGUID_PACAKGE_NAME=$(find $PROJECT_TARBALLS_DIR -iname crossguid-*.tar.gz | head -1)
+KODI18_FLATBUFFERS_PACAKGE_NAME=$(find $PROJECT_TARBALLS_DIR -iname flatbuffers-*.tar.gz | head -1)
+KODI18_LIBDVDCSS_PACAKGE_NAME=$(find $PROJECT_TARBALLS_DIR/libdvdcss-*-$KODI18_CODENAME-*.tar.gz | head -1)
+KODI18_LIBDVDNAV_PACAKGE_NAME=$(find $PROJECT_TARBALLS_DIR/libdvdnav-*-$KODI18_CODENAME-*.tar.gz | head -1)
+KODI18_LIBDVDREAD_PACAKGE_NAME=$(find $PROJECT_TARBALLS_DIR/libdvdread-*-$KODI18_CODENAME-*.tar.gz | head -1)
+KODI18_PVR_HTS_TAG="4.4.2-Leia"
+
+#KODI18_CMAKE_EXTRA_OPTIONS="-DADDON_TARBALL_CACHING=ON -DADDON_SRC_PREFIX=$KODI18_BINARY_ADDONS_BUILD_DIR"
+##KODI18_CMAKE_EXTRA_OPTIONS="-DADDON_TARBALL_CACHING=ON -DTARBALLS_LOCATION=$KODI18_BINARY_ADDONS_DOWNLOAD_DIR -DTARBALL_DIR=$KODI18_BINARY_ADDONS_DOWNLOAD_DIR"
+
+
+PREFERRED_KODI_CODENAME=$KODI18_CODENAME
+
+# Install p8-platform for kodi versions above Isengard
+if [[ "$PREFERRED_KODI_CODENAME" = "Isengard" ]];
+then
+PLATFORM_TAG=1.0.10
+LIBCEC_TAG=libcec-2.2.0
+else
+PLATFORM_TAG=p8-platform-2.1.0.1 
+LIBCEC_TAG=libcec-4.0.2
+fi
 
 KODI_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.kodi
 KODI_SHARE_DIR=$DATAROOTDIR/kodi
@@ -268,6 +300,59 @@ KODI_HTTP_PASS=jambulatv
 # -----------
 # Repositories
 KODI_ADDONS_REPOSITORIES="repository.xbmc.org repository.metalkettle repository.xbmchub repository.podgod repository.Kinkin repo.natko1412 repository.Goliath repository.shaneyrepos pakistani-repository.shani"
+
+# Required (Leia)
+KODI_ADDONS_REQUIRED_LEIA="\
+metadata.album.universal \
+metadata.artists.universal \
+metadata.common.fanart.tv \
+metadata.common.imdb.com \
+metadata.common.musicbrainz.org \
+metadata.common.theaudiodb.com \
+metadata.common.themoviedb.org \
+metadata.themoviedb.org \
+metadata.tvdb.com \
+plugin.program.autocompletion \
+plugin.video.ccloudtv \
+repository.marcelveldt \
+repository.marduk \
+screensaver.digitalclock \
+script.artwork.beef \
+script.cinema.experience \
+script.cinemavision \
+script.common.plugin.cache \
+script.extendedinfo \
+script.games.rom.collection.browser \
+script.module.addon.common \
+script.module.addon.signals \
+script.module.arrow \
+script.module.autocompletion \
+script.module.certifi \
+script.module.chardet \
+script.module.cherrypy \
+script.module.dateutil \
+script.module.idna \
+script.module.kodi65 \
+script.module.liveresolver \
+script.module.metadatautils \
+script.module.metahandler \
+script.module.requests \
+script.module.resolveurl \
+script.module.routing \
+script.module.simplecache \
+script.module.simplejson \
+script.module.six \
+script.module.thetvdb \
+script.module.trakt \
+script.module.unidecode \
+script.module.urllib3 \
+script.module.youtube.dl \
+script.skin.helper.skinbackup \
+script.trakt \
+script.tv.show.next.aired \
+service.nextup.notification \
+service.xbmc.versioncheck"
+
 # Required (Krypton)
 KODI_ADDONS_REQUIRED_KRYPTON="\
 metadata.album.universal \
@@ -312,6 +397,7 @@ service.xbmc.versioncheck"
 KODI_ADDONS_REQUIRED_ISENGARD="metadata.album.universal metadata.common.theaudiodb.com metadata.artists.universal script.module.simplejson service.library.data.provider metadata.artists.universal metadata.common.allmusic.com metadata.common.fanart.tv metadata.common.htbackdrops.com metadata.common.imdb.com metadata.common.musicbrainz.org metadata.common.themoviedb.org metadata.themoviedb.org metadata.tvdb.com plugin.program.rtorrent script.module.addon.signals script.module.beautifulsoup script.module.requests script.module.youtube.dl service.xbmc.versioncheck script.common.plugin.cache script.module.addon.common script.module.beautifulsoup4 script.module.httplib2 script.module.liveresolver script.module.mechanize script.module.parsedom script.module.simple.downloader script.module.urlresolver script.module.metahandler script.video.F4mProxy script.module.t0mm0.common"
 # Live TV
 KODI_ADDONS_LIVETV="plugin.video.livemix plugin.video.uktvnow plugin.video.ukturk plugin.video.ustvnow.tva plugin.video.phstreams plugin.video.ccloudtv plugin.video.channelpear plugin.video.F.T.V plugin.video.f4mTester plugin.video.srtv plugin.video.ustvnow-1 plugin.video.cartoons8 plugin.video.netflixbmc plugin.video.uiptv plugin.video.rt plugin.video.aljazeera plugin.video.world.news.live plugin.video.itbn_org plugin.video.fox.news plugin.video.twit plugin.video.LiveIPTV plugin.video.NJMSoccer plugin.video.watchcartoononline plugin.video.MaverickTV plugin.video.FMG plugin.video.sportsaccess plugin.video.echostreams plugin.video.sportie plugin.video.teevie plugin.video.echoplayer plugin.video.gobble plugin.video.specialistss plugin.video.amanda plugin.video.dreamfilm plugin.video.veetle plugin.video.HalowTV plugin.video.wildside plugin.video.Rising.Tides"
+KODI_ADDONS_IPTV="plugin.video.tvoneplus"
 # Music
 KODI_ADDONS_MUSIC="plugin.video.now_music plugin.video.urbanmix plugin.video.bbts plugin.audio.accuradio"
 # Sports
@@ -323,13 +409,57 @@ KODI_ADDONS_JAMBULA="plugin.audio.jambulaFMRadio plugin.video.jambulaLiveEvents 
 # Miscellaneous
 KODI_ADDONS_MISC="script.xbmc.unpausejumpback"
 
+# ------
+# Skins
+# ------
+# Titan
+KODI_SKIN_TITAN_ADDONS="\
+resource.images.backgroundoverlays.basic \
+resource.images.skinbackgrounds.titanium \
+resource.images.skinicons.wide \
+resource.uisounds.titan.modern \
+script.skin.helper.backgrounds \
+script.skin.helper.service \
+script.skin.helper.skinbackup \
+script.skin.helper.widgets \
+script.skinshortcuts"
+
+# Titan.MOD
+KODI_SKIN_TITAN_MOD_ADDONS="\
+resource.images.backgroundoverlays.basic \
+resource.images.languageflags.colour \
+resource.images.skinbackgrounds.titanium \
+resource.images.skinicons.wide \
+resource.images.studios.coloured \
+resource.images.studios.white \
+resource.uisounds.titan.modern \
+script.skinshortcuts \
+script.skin.helper.backgrounds \
+script.skin.helper.service \
+script.skin.helper.widgets \
+skin.titan.mod.beta.leia"
+
+# ----------------------------------------
+# Pick Addons depending on kodi codename
+# ----------------------------------------
+KODI_ADDONS_4_ISENGARD="$KODI_ADDONS_REPOSITORIES $KODI_ADDONS_REQUIRED_ISENGARD $KODI_ADDONS_LIVETV $KODI_ADDONS_MUSIC $KODI_ADDONS_SPORTS $KODI_ADDONS_GAMES $KODI_ADDONS_JAMBULA $KODI_ADDONS_MISC"
+KODI_ADDONS_4_KRYPTON="$KODI_ADDONS_REQUIRED_KRYPTON $KODI_ADDONS_JAMBULA"
+KODI_ADDONS_4_LEIA="$KODI_ADDONS_REQUIRED_LEIA $KODI_ADDONS_JAMBULA $KODI_ADDONS_IPTV"
+
+# Default kodi skin
+KODI_DEFAULT_SKIN=estuary
+KODI_DEFAULT_SKIN_FILES=$KODI_SYSTEM_ADDONS/skin.$KODI_DEFAULT_SKIN
+
 # Preferred kodi skin configuration
-case $KODI_CODENAME in
+case $PREFERRED_KODI_CODENAME in
 Isengard)
 KODI_PREFERRED_SKIN=aeonmq6
 ;;
 Krypton)
 KODI_PREFERRED_SKIN=titan
+;;
+Leia)
+KODI_PREFERRED_SKIN=titan.mod.beta.leia
 ;;
 confluence)
 KODI_PREFERRED_SKIN=confluence
@@ -337,6 +467,9 @@ KODI_PREFERRED_SKIN=confluence
 estuary)
 KODI_PREFERRED_SKIN=estuary
 esac
+
+QRCODE_CMD=/usr/bin/qrencode
+QRCODE_DIR=$PROJECT_SYSTEM_SHARE_DIR/images/qrcodes
 
 X11_DRIVER="intel" # intel|nouveau|mga|openchrome
 INTEL_X11_DRIVER_VERSION=git
@@ -374,6 +507,7 @@ BEEP2_VERSION=1.2a
 GDATA_VERSION=2.0.17
 
 BUILD_LOG=$HOME/$PROJECT_NAME-build.log
+BEEP_CMD=beep 
 
 EMAIL_CONFIG_DIR=/etc/email
 EMAIL_SIGNATURE_FILE=$PROJECT_SYSTEM_CONF_DIR/email.signature
@@ -419,7 +553,8 @@ GRUB2_DEFAULT_FILE=/etc/default/grub
 
 #GRUB2_CMD_OPTIONS="acpi=off noapic"
 #GRUB2_CMD_OPTIONS="radeon.modeset=0"
-GRUB2_CMD_OPTIONS=""
+#GRUB2_CMD_OPTIONS="loglevel=3"
+GRUB2_CMD_OPTIONS="quiet"
 
 GRUB2_VIDEO_RESOLUTION=${RES1}x${DEPTH1}
 GRUB2_BEEP_SOUND="480 440 1"
@@ -449,7 +584,7 @@ SYSCONFIG_i18N_FILE=/etc/sysconfig/i18n
 
 HOSTNAME_FILE=/etc/hostname
 
-INTERNET_GATEWAY_IP=$(/usr/sbin/ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')
+INTERNET_GATEWAY_IP=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
 NETWORK_MAC_ADDRESS=$(/usr/sbin/ip addr show | grep ether | awk {'print $2'} | head -1)
 
 DHCLIENT_CONFIG_DIR=$CONFDIR/dhcp
@@ -532,6 +667,9 @@ JABBERD_TEMPLATES_DIR=$JABBERD_CONF_DIR/templates
 JABBERD_DB_CREATE=$DATAROOTDIR/jabberd/db-setup.mysql
 JABBERD_PASSWORD=$(sudo /usr/bin/grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //')
 JABBERD_RESOURCE=Home
+
+# Prosody XMPP/Jabber server
+PROSODY_CTRL_CMD=$BINARY_PREFIX/prosodyctl 
 
 # Smart Home - Generic settings
 SMARTHOME_HUB_APP=homeassistant
@@ -712,7 +850,7 @@ NUMBER_OF_OUR_WIFI_DEVICES=$(awk '$5 == "yes" {print $0}' $OUR_WIFI_DEVICES_FILE
 
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
-NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')
+NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
 NETWORK_MASK_PREFIX=24
 NETWORK_DOMAIN=jambulatv.com
 NETWORK_WIRELESS_SSID="$PROJECT_NAME-$(echo $SYSTEM_IDENTIFIER | cut -c 1-5)"
@@ -1158,19 +1296,37 @@ debug_print () {
 [[ "$DEBUG_MODE" = "yes" ]] && echo -e "$(date '+%b %d %T') | DEBUG | $1"
 }
 
-# Get current Python version
-get_python_version () {
-PYTHON_VERSION=$(python -V)
-PYTHON_FULL_VERSION_NUMBER=$(echo $PYTHON_VERSION | awk {'print $2'})
-PYTHON_MAJOR_VERSION_NUMBER=$(echo $PYTHON_FULL_VERSION_NUMBER | cut -d '.' -f1)
-PYTHON_MINOR_VERSION_NUMBER=$(echo $PYTHON_FULL_VERSION_NUMBER | cut -d '.' -f1-2)
-PYTHON2_SITEDIR=$LIBDIR/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
-PYTHON3_SITEDIR=$PREFIX/local/lib/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
-# Set Python site directories depending on version in use
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && PYTHON_SITEDIR=$PYTHON2_SITEDIR
-[[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && PYTHON_SITEDIR=$PYTHON3_SITEDIR
+# Set Python version
+set_python_version () {
+case $PYTHON_VERSION_USED in
+
+2)
+PYTHON_VERSION=$($BINARY_PREFIX/python2 -c "import platform; print (platform.python_version())")
+PYTHON_MAJOR_VERSION_NUMBER=$(echo $PYTHON_VERSION | cut -d '.' -f1)
+PYTHON_MINOR_VERSION_NUMBER=$(echo $PYTHON_VERSION | cut -d '.' -f1-2)
+PYTHON_SITEDIR=$LIBDIR/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
+PYTHON_HOME=$(which python | sed "s:/bin/python$PYTHON_MAJOR_VERSION_NUMBER::" | sed "s:/bin/python::")
+PYTHON_INSTALL_CMD="python2 setup.py install"
 # Export
-export PYTHON_VERSION PYTHON_FULL_VERSION_NUMBER PYTHON_MAJOR_VERSION_NUMBER PYTHON_MINOR_VERSION_NUMBER PYTHON_SITEDIR
+export PYTHON_VERSION PYTHON_MAJOR_VERSION_NUMBER PYTHON_MINOR_VERSION_NUMBER PYTHON_SITEDIR PYTHON_HOME PYTHON_INSTALL_CMD
+;;
+
+3)
+PYTHON_VERSION=$($PREFIX/local/bin/python3 -c "import platform; print (platform.python_version())")
+PYTHON_MAJOR_VERSION_NUMBER=$(echo $PYTHON_VERSION | cut -d '.' -f1)
+PYTHON_MINOR_VERSION_NUMBER=$(echo $PYTHON_VERSION | cut -d '.' -f1-2)
+PYTHON_SITEDIR=$PREFIX/local/lib/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
+PYTHON_HOME=$(which python | sed "s:/bin/python$PYTHON_MAJOR_VERSION_NUMBER::" | sed "s:/bin/python::")
+PYTHON_INSTALL_CMD="python3 setup.py install"
+# Export
+export PYTHON_VERSION PYTHON_MAJOR_VERSION_NUMBER PYTHON_MINOR_VERSION_NUMBER PYTHON_SITEDIR PYTHON_HOME PYTHON_INSTALL_CMD
+;;
+
+*)
+PYTHON_VERSION_USED=2
+;;
+
+esac
 }
 
 get_asterisk_config_dir () {
@@ -1397,6 +1553,9 @@ echo "Update completed. All flexget dependencies are located in [$PROJECT_TARBAL
 }
 
 make_build_log () {
+# Set package name
+PACKAGE=$(pwd | sed "s:$INSTALL_SRC_DIR/::g" | cut -d "/" -f1)
+#
 echo 2>&1 | tee -a $BUILD_LOG << EOF
 
 =============================
@@ -1404,32 +1563,19 @@ $PACKAGE
 =============================
 
 % 
-Make: Building $PACKAGE, this may take some time.  Please be patient ...
-%
-
-EOF
-}
-
-cmake_build_log () {
-echo 2>&1 | tee -a $BUILD_LOG << EOF
-
-=============================
-$PACKAGE
-=============================
-
-% 
-cMake: Building $PACKAGE, this may take some time.  Please be patient ...
+Building $PACKAGE, this may take some time.  Please be patient ...
 %
 
 EOF
 }
 
 make_install_jambulatv () {
-PACKAGE=$(basename $(pwd | sed "s:/build::g"))
 # Log to build file
 make_build_log
-# Run make silently
-make $@ > /dev/null 2>&1 # DONT use -j cores option (If you want, add it like: make_install_jambulatv -j$SYSTEM_CPU_CORES)
+# Run Make - DONT use -j cores option
+# NOTE: If you want, add it like: 'make_install_jambulatv -j$SYSTEM_CPU_CORES'
+#make -s $@ 1>> $BUILD_LOG 2>&1
+make -s $@ >> $BUILD_LOG
 MAKE_EXIT_STATUS=$?
 if [ "$MAKE_EXIT_STATUS" = "0" ];
 then
@@ -1465,15 +1611,17 @@ kernel_patches () {
 # Change to kernel sources root directory
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 # USB Core messages
-patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel.usb_core.message.patch
+#patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel/linux_4.4.x_usb_core.message.patch
+patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel/linux_4.19.x_usb_core.message.patch
 # DVB Core Frontend - Set dvb_powerdown_on_sleep = 0
-patch -p1 ./drivers/media/dvb-core/dvb_frontend.c < $PROJECT_PATCHES_DIR/kernel.dvb_core.frontend.patch
+#patch -p1 ./drivers/media/dvb-core/dvb_frontend.c < $PROJECT_PATCHES_DIR/kernel/linux_4.4.x_dvb_core.frontend.patch
+patch -p1 ./drivers/media/dvb-core/dvb_frontend.c < $PROJECT_PATCHES_DIR/kernel/linux_4.19.x_dvb_core.frontend.patch
 # Realtek WiFi
-#patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel.rtlwifi.regdb.patch
+#patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel/linux_4.4.x_rtlwifi.regdb.patch
 # USB TV Tuner - Gadmei
-#patch -p1 ./drivers/media/usb/usbtv/usbtv-core.c < $PROJECT_PATCHES_DIR/kernel.usbtv_core.patch
+#patch -p1 ./drivers/media/usb/usbtv/usbtv-core.c < $PROJECT_PATCHES_DIR/kernel/linux_4.4.x_usbtv_core.patch
 # si2168 driver - DVB-T/T2 autodetect
-patch -p1 ./drivers/media/dvb-frontends/si2168.c < $PROJECT_PATCHES_DIR/kernel.dvb.si2168.patch
+#patch -p1 ./drivers/media/dvb-frontends/si2168.c < $PROJECT_PATCHES_DIR/kernel/linux_4.4.x_dvb.si2168.patch
 }
 
 kernel_install_notice () {
@@ -1481,7 +1629,7 @@ clear
 cat <<EOF
 You are about to install the latest Linux kernel version [$KERNEL_VERSION], 
 
-CAUTION:  This may take anywhere from 4 to 7 hours to complete! 
+CAUTION:  This may take up to 6 hours or more to complete! 
 
 Enter to proceed ...
 EOF
@@ -1502,12 +1650,36 @@ EOF
 #########################
 # Pause and check for Errors
 _install_pause_check_4_errors_ () {
+# Notify at Local workstation i.e. Here
+$BEEP_CMD -f 65.4064 -l 100 -n -f 130.813 -l 100 -n -f 261.626 -l 100 -n -f 523.2
+$BEEP_CMD -f 523.251 -l 100 -D 100 -n -f 391.995 -l 100 -D 100 -n -f 329.628 -l 10
+$BEEP_CMD -f 600 -l 155 -n -f 800 -l 155 -n -f 500 -l 155 -n -f 400 -l 155 -n -f 400 -l 1
+#
+$BEEP_CMD -f 65.4064 -l 100 -n -f 130.813 -l 100 -n -f 261.626 -l 100 -n -f 523.2
+$BEEP_CMD -f 523.251 -l 100 -D 100 -n -f 391.995 -l 100 -D 100 -n -f 329.628 -l 10
+$BEEP_CMD -f 600 -l 155 -n -f 800 -l 155 -n -f 500 -l 155 -n -f 400 -l 155 -n -f 400 -l 1
+#
+$BEEP_CMD -f 65.4064 -l 100 -n -f 130.813 -l 100 -n -f 261.626 -l 100 -n -f 523.2
+$BEEP_CMD -f 523.251 -l 100 -D 100 -n -f 391.995 -l 100 -D 100 -n -f 329.628 -l 10
+$BEEP_CMD -f 600 -l 155 -n -f 800 -l 155 -n -f 500 -l 155 -n -f 400 -l 155 -n -f 400 -l 1
+
 # Notify at Remote workstation - gxmessage needed there
-if [ "x$1" != "x" ] && [ "x$2" != "x" ];
+if [[ "x$1" != "x" && "x$2" != "x" ]];
 then
 # Run only if remote station is up
 ping -c 3 -W 3 $2 > /dev/null 2>&1
-[ "$?" = "0" ] && ssh $1@$2 /usr/bin/gxmessage -center -ontop -timeout 60 -title "$PROJECT_NAME" "Hi $1! Your attention is required at JambulaTV"
+if [[ "$?" = "0" ]];
+then
+# Beeps
+ssh $1@$2 /usr/bin/aplay /usr/share/sounds/purple/alert.wav > /dev/null 2>&1
+sleep 1
+ssh $1@$2 /usr/bin/aplay /usr/share/sounds/purple/alert.wav > /dev/null 2>&1
+sleep 1
+ssh $1@$2 /usr/bin/aplay /usr/share/sounds/purple/alert.wav > /dev/null 2>&1
+# Popup message
+ssh $1@$2 /usr/bin/gxmessage -center -ontop -sticky -timeout 60 -title "$PROJECT_NAME" "Hi $1! Your attention is required by the program [$3] running at: $(hostname)"
+fi
+
 fi
 #
 echo
@@ -1576,12 +1748,16 @@ KERNEL_VERSION=$NEW_KERNEL
 kernel_install_notice
 #
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
-make bzImage
-make modules
-make modules_install
-make install
+make -j$SYSTEM_CPU_CORES bzImage
+make -j$SYSTEM_CPU_CORES modules
+make -j$SYSTEM_CPU_CORES modules_install
+make -j$SYSTEM_CPU_CORES install
 #
-# Done - Banner
+# Done
+# ----
+# Send notice to operator
+_install_pause_check_4_errors_ $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "Kernel Compilation"
+# Banner
 echo
 echo
 cat << EOF
@@ -1622,7 +1798,8 @@ PKG_LEFTOVERS_EXIST=$?
 }
 
 uninstall_python_pkgs () {
-get_python_version
+#PYTHON_VERSION_USED=2 && set_python_version
+PYTHON_VERSION_USED=3 && set_python_version
 [ ! -d $PYTHON_SITEDIR/$1 ] || rm -rf $PYTHON_SITEDIR/$1
 [ -d $PYTHON_SITEDIR/$1*.egg ] && rm -rf $PYTHON_SITEDIR/$1*.egg
 whereis $1 > /dev/null
@@ -1647,15 +1824,28 @@ fi
 [ -d $INSTALL_SRC_DIR/$1 ] && rm -rf $INSTALL_SRC_DIR/$1
 }
 
+# Uninstall python3
+uninstall_python3 () {
+rm -rf $(find /usr -iname "*python3*" | grep -Ev jambulatv)
+rm -rf $(find /usr -iname "*pip3*" | grep -Ev jambulatv)
+rm -f /usr/local/bin/2to3-3*
+rm -f /usr/local/bin/easy_install-3*
+rm -f /usr/local/bin/idle3*
+rm -f /usr/local/bin/pydoc3*
+rm -f /usr/local/bin/python*
+rm -f /usr/local/bin/pyvenv-3*
+rm -rf $INSTALL_SRC_DIR/python3*
+}
+
 # Uninstall kodi
-uninstall_kodi () {
+uninstall_kodi17 () {
 # Stop kodi
 systemctl stop jambulatv@kodi.service
 # Uninstall kodi
 uninstall_src_pkgs kodi
 }
 
-uninstall_kodi_addons () {
+uninstall_kodi17_addons () {
 for KODI_ADDON in $@
 do
 # Remove from system kodi addons share
@@ -1678,6 +1868,15 @@ _install_pause_check_4_errors_
 fi
 #
 done
+}
+
+uninstall_kodi18 () {
+# Core
+[[ -d $KODI18_CORE_INSTALL_ROOT_DIR ]] && \
+	rm -rf $KODI18_CORE_INSTALL_ROOT_DIR
+# Pvr.hts
+[[ -d $INSTALL_SRC_DIR/kodi-$KODI18_VERSION-pvr.hts ]] && \
+	rm -rf $INSTALL_SRC_DIR/kodi-$KODI18_VERSION-pvr.hts
 }
 
 uninstall_oss () {
@@ -1775,7 +1974,7 @@ systemctl daemon-reload
 PID_ZONEMINDER=$(ps auxw | grep zm | awk {'print $2'})
 #
 # Kill zoneminder processes still lingering
-[ "x$PID_ZONEMINDER" = "x" ] || kill -15 $PID_ZONEMINDER
+#[ "x$PID_ZONEMINDER" = "x" ] || kill -15 $PID_ZONEMINDER
 
 # Backup config directory
 [[ -d $ZONEMINDER_CONFIG_DIR ]] && \
@@ -2154,10 +2353,11 @@ make oldconfig
 # Notice - Going to install
 kernel_install_notice
 #
-make bzImage
-make modules
-make modules_install
-make install
+make -j$SYSTEM_CPU_CORES bzImage
+make -j$SYSTEM_CPU_CORES modules
+make -j$SYSTEM_CPU_CORES modules_install
+make -j$SYSTEM_CPU_CORES install
+#
 # Clean up - saves upto 8GB
 make clean
 # Done - Banner
@@ -2192,7 +2392,7 @@ cat <<EOF
  ***********
  * WARNING *
  ***********
- Please be advised that this install process will take at least 8 hours 
+ Please be advised that this install process may take up to 12 hours or more
  to complete.  Please enter to proceed or press 'Ctrl+C to cancel' ...
 
 EOF
@@ -2378,6 +2578,9 @@ install_dir_create () {
 [ -d $PROJECT_SYSTEM_SHARE_DIR ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR
 # create backups directory
 [ -d $BACKUPS_DIR ] || mkdir -p $BACKUPS_DIR
+
+# Give other apps permissions to home folder e.g. Logging CCTV events
+chmod 755 $MULTIMEDIA_USER_HOME_DIR
 }
 
 images_add () {
@@ -2419,6 +2622,20 @@ openssl x509 -req -in $SERVER_CSR_FILE -CA $CA_CERT_FILE -CAkey $CA_KEY_FILE \
   -CAcreateserial -out $SERVER_CERT_FILE -days $CERTIFICATES_DAYS
 }
 
+openssl111_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/openssl-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v openssl-* openssl
+# Compile
+cd $INSTALL_SRC_DIR/openssl
+./Configure --prefix=$PREFIX/local/ssl --libdir=$PREFIX/local/ssl/lib64 -Wl,-rpath=$PREFIX/local/ssl/lib64 --openssldir=$PREFIX/local/ssl shared zlib-dynamic linux-x86_64
+# Add -fPIC flag to Mafile
+sed -i.orig '/^CFLAG/s/$/ -fPIC/' Makefile
+# Make Install
+make -j$SYSTEM_CPU_CORES
+make install_sw
+}
+
 pcre_install () {
 # Unpack
 tar jxvf $PROJECT_TARBALLS_DIR/pcre-*.tar.bz2 -C $INSTALL_SRC_DIR
@@ -2426,6 +2643,144 @@ cd $INSTALL_SRC_DIR && mv -v pcre-* pcre
 # Compile
 cd $INSTALL_SRC_DIR/pcre
 ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make_install_jambulatv
+}
+
+libdrm_install () {
+# Remove libdrm rpm installed package(s)
+rpm -q libdrm-devel > /dev/null 2>&1 && rpm -e --nodeps libdrm-devel
+rpm -q libdrm > /dev/null 2>&1 && rpm -e --nodeps libdrm
+#
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/libdrm-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libdrm-* libdrm
+# Compile
+cd $INSTALL_SRC_DIR/libdrm && ./configure --prefix=$PREFIX --libdir=$LIBDIR
+make_install_jambulatv
+}
+
+xcb_proto_install () {
+# Remove xcb-proto rpm installed package(s)
+rpm -q xcb-proto-devel > /dev/null 2>&1 && rpm -e --nodeps xcb-proto-devel
+rpm -q xcb-proto > /dev/null 2>&1 && rpm -e --nodeps xcb-proto
+#
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/xcb-proto-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v xcb-proto-* xcb-proto
+# Compile
+cd $INSTALL_SRC_DIR/xcb-proto && ./configure --prefix=$PREFIX --libdir=$LIBDIR
+make_install_jambulatv
+}
+
+libpthread_stubs_install () {
+# Remove libpthread-stubs rpm installed package(s)
+rpm -q libpthread-stubs-devel > /dev/null 2>&1 && rpm -e --nodeps libpthread-stubs-devel
+rpm -q libpthread-stubs > /dev/null 2>&1 && rpm -e --nodeps libpthread-stubs
+#
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/libpthread-stubs-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libpthread-stubs-* libpthread-stubs
+# Compile
+cd $INSTALL_SRC_DIR/libpthread-stubs
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+# IMPORTANT: Do not issue make!
+make install
+}
+
+libxcb_install () {
+# Remove libxcb rpm installed package(s)
+rpm -q libxcb-devel > /dev/null 2>&1 && rpm -e --nodeps libxcb-devel
+rpm -q libxcb > /dev/null 2>&1 && rpm -e --nodeps libxcb
+
+# Add needed libpthread to pkgconfig path
+cp -v $INSTALL_SRC_DIR/libpthread-stubs/*.pc $LIBDIR/pkgconfig/
+
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/libxcb-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libxcb-* libxcb
+# Compile
+cd $INSTALL_SRC_DIR/libxcb
+./configure --prefix=$PREFIX --libdir=$LIBDIR PKG_CONFIG_PATH=$LIBDIR \
+	--enable-devel-docs=no
+make_install_jambulatv
+}
+
+libxshmfence_install () {
+# Remove libxshmfence rpm installed package(s)
+rpm -q libxshmfence-devel > /dev/null 2>&1 && rpm -e --nodeps libxshmfence-devel
+rpm -q libxshmfence > /dev/null 2>&1 && rpm -e --nodeps libxshmfence
+#
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/libxshmfence-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libxshmfence-* libxshmfence
+# Compile
+cd $INSTALL_SRC_DIR/libxshmfence && ./configure --prefix=$PREFIX --libdir=$LIBDIR
+make_install_jambulatv
+}
+
+libvdpau_install () {
+# libvdpau
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/libvdpau-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libvdpau-* libvdpau
+# Compile
+cd $INSTALL_SRC_DIR/libvdpau
+./autogen.sh
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR \
+	--with-module-dir=$LIBDIR --localstatedir=$STATEDIR 
+make_install_jambulatv
+#
+# libvdpau-va-gl
+# Unpack
+rsync -av --delete-after $PROJECT_GITHUB_DIR/libvdpau-va-gl/ $INSTALL_SRC_DIR/libvdpau-va-gl/
+# configure
+cd $INSTALL_SRC_DIR/libvdpau-va-gl
+# Create cmake build directory
+mkdir build
+cd build
+# cMake
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX \
+	-DLIB_INSTALL_DIR=$LIBDIR ..
+make_install_jambulatv
+#
+#Add VDPAU_DRIVER=va_gl to your environment
+}
+
+mesa_deps_install () {
+libdrm_install
+xcb_proto_install
+libpthread_stubs_install
+libxcb_install
+libxshmfence_install
+libvdpau_install
+}
+
+mesa_install () {
+# Remove mesa rpms
+rpm -e --nodeps $(rpm -qa | grep -i mesa)
+#
+# Install mesa dependencies
+mesa_deps_install
+#
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/mesa-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v mesa-* mesa
+# Compile all
+cd $INSTALL_SRC_DIR/mesa
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-vdpau --with-gallium-drivers="i915,nouveau,r600,svga,swrast"
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
+glu_install () {
+# Remove expat rpm installed package(s)
+rpm -q mesa-libGLU-devel > /dev/null 2>&1 && rpm -e --nodeps mesa-libGLU-devel
+rpm -q mesa-libGLU > /dev/null 2>&1 && rpm -e --nodeps mesa-libGLU
+#
+rsync -avz $PROJECT_GITHUB_DIR/glu/ $INSTALL_SRC_DIR/glu/
+# configure
+cd $INSTALL_SRC_DIR/glu
+./autogen.sh
+./configure --prefix=$PREFIX --libdir=$LIBDIR 
 make_install_jambulatv
 }
 
@@ -2441,17 +2796,15 @@ gcc8_install () {
 tar xvf $PROJECT_TARBALLS_DIR/gcc-8*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv gcc-8* gcc8
 # Move to build directory
-mkdir $INSTALL_SRC_DIR/gcc8/build
+mkdir -p $INSTALL_SRC_DIR/gcc8/build
 cd $INSTALL_SRC_DIR/gcc8/build
 # Configure
 ../configure --prefix=$PREFIX --enable-languages=c,c++ --enable-checking=release --disable-multilib
 # Compile - Takes a minimum of 77 mins to complete
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 #
-# Cache recently shared libraries
-ldconfig
 # Remove this file to make ldconfig work
-[[ -e $LIBDIR/libstdc++.so.6.0.25-gdb.py ]] && rm -f $LIBDIR/libstdc++.so.6.0.25-gdb.py
+rm -f $LIBDIR/libstdc++.so.*-gdb.py
 # Cache recently shared libraries
 ldconfig
 }
@@ -2460,17 +2813,15 @@ gcc5_install () {
 tar xvf $PROJECT_TARBALLS_DIR/gcc-5*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv gcc-5* gcc5
 # Move to build directory
-mkdir $INSTALL_SRC_DIR/gcc5/build
+mkdir -p $INSTALL_SRC_DIR/gcc5/build
 cd $INSTALL_SRC_DIR/gcc5/build
 # Configure
 ../configure --prefix=$PREFIX --enable-languages=c,c++ --enable-checking=release --disable-multilib
 # Compile - Takes a minimum of 77 mins to complete
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 #
-# Cache recently shared libraries
-ldconfig
 # Remove this file to make ldconfig work
-[[ -e $LIBDIR/libstdc++.so.6.0.25-gdb.py ]] && rm -f $LIBDIR/libstdc++.so.6.0.25-gdb.py
+rm -f $LIBDIR/libstdc++.so.*-gdb.py
 # Cache recently shared libraries
 ldconfig
 }
@@ -2479,44 +2830,65 @@ gcc4_install () {
 tar jxvf $PROJECT_TARBALLS_DIR/gcc-4*.tar.bz2 -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv gcc-4* gcc4
 # Move to build directory
-mkdir $INSTALL_SRC_DIR/gcc4/build
+mkdir -p $INSTALL_SRC_DIR/gcc4/build
 cd $INSTALL_SRC_DIR/gcc4/build
 # Configure
 ../configure --prefix=$PREFIX --enable-languages=c,c++ --enable-checking=release --disable-multilib
 # Compile - Takes a minimum of 77 mins to complete
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 #
-# Cache recently shared libraries
-ldconfig
 # Remove this file to make ldconfig work
-[[ -e $LIBDIR/libstdc++.so.6.0.25-gdb.py ]] && rm -f $LIBDIR/libstdc++.so.6.0.25-gdb.py
+rm -f $LIBDIR/libstdc++.so.*-gdb.py
 # Cache recently shared libraries
 ldconfig
 }
 
-python3_install () {
-# Remove existing python3 rpm based packages if any
-rpm -q python3-libs > /dev/null 2>&1 && rpm -e --nodeps python3-libs
-rpm -q python3 > /dev/null 2>&1 && rpm -e --nodeps python3
+giflib_install () {
+# Remove RPM based package if installed
+rpm -q giflib-devel > /dev/null 2>&1 && rpm -e --nodeps giflib-devel > /dev/null 2>&1 
+rpm -q giflib > /dev/null 2>&1 && rpm -e --nodeps giflib > /dev/null 2>&1
 #
-# Unpack Python 3 package
-tar xvf $PROJECT_TARBALLS_DIR/Python-3*.tar.xz -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v Python-3* python3
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/giflib-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v giflib-* giflib
+# Compile all
+cd $INSTALL_SRC_DIR/giflib
+./configure --prefix=$PREFIX --libdir=$LIBDIR 
+make_install_jambulatv
+}
+
+libbsd_install () {
+# Remove libbsd rpm installed package(s)
+rpm -q libbsd-devel > /dev/null 2>&1 && rpm -e --nodeps libbsd-devel
+rpm -q libbsd > /dev/null 2>&1 && rpm -e --nodeps libbsd
+#
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/libbsd-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libbsd-* libbsd
 # Compile
-cd $INSTALL_SRC_DIR/python3 && ./configure --prefix=$PREFIX/local --enable-shared
-# make and install in alternate locations
-make && make altinstall
+cd $INSTALL_SRC_DIR/libbsd && ./configure --prefix=$PREFIX --libdir=$LIBDIR
+make_install_jambulatv
+}
+
+expat_install () {
+# Remove expat rpm installed package(s)
+rpm -q expat-devel > /dev/null 2>&1 && rpm -e --nodeps expat-devel
+rpm -q expat > /dev/null 2>&1 && rpm -e --nodeps expat
 #
-# Create symlinks to python binaries
-ln -s -f $PREFIX/local/bin/python3.6 $PREFIX/local/bin/python
-ln -s -f $PREFIX/local/bin/python3.6 $PREFIX/local/bin/python3
-# Create symlinks to pip binaries
-ln -s -f $PREFIX/local/bin/pip3.6 $PREFIX/local/bin/pip
-ln -s -f $PREFIX/local/bin/pip3.6 $PREFIX/local/bin/pip3
+# Install libbsd - dependency
+libbsd_install
+#
+rsync -avz $PROJECT_GITHUB_DIR/libexpat/expat/ $INSTALL_SRC_DIR/expat/
+# configure
+cd $INSTALL_SRC_DIR/expat
+./buildconf.sh
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-libbsd
+make_install_jambulatv
 }
 
 python3_common_modules_install () {
 for PYTHON_PACKAGE in \
+pip==18.1 \
 pytz==2017.2 \
 setuptools_scm \
 pytest-runner \
@@ -2534,13 +2906,57 @@ sleekxmpp \
 jinja2==2.9.6 \
 certifi==2017.4.17 \
 six==1.10.0 \
-ruamel.yaml==0.15.0 \
+ruamel.yaml==0.15.72 \
 pyaml \
-scapy
+scapy \
+nose \
+coverage \
+Cython
 do
 # Install Python package
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_PACKAGE
 done
+}
+
+python3_install () {
+# Remove existing python3 rpm based packages if any
+rpm -q python3-libs > /dev/null 2>&1 && rpm -e --nodeps python3-libs
+rpm -q python3-devel > /dev/null 2>&1 && rpm -e --nodeps python3-devel
+rpm -q python3 > /dev/null 2>&1 && rpm -e --nodeps python3
+#
+PYTHON_SRC_TARBALL=$(ls -x $PROJECT_TARBALLS_DIR/Python-*.tar.xz)
+PYTHON_SETUP_VERSION=$(echo ${PYTHON_SRC_TARBALL##*/} | sed 's:Python-::g' | cut -d '.' -f1-2)
+export PYTHON_SETUP_VERSION
+# Unpack Python 3 package
+tar xvf $PROJECT_TARBALLS_DIR/Python-$PYTHON_SETUP_VERSION*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v Python-$PYTHON_SETUP_VERSION* python${PYTHON_SETUP_VERSION}
+# Compile
+cd $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}
+#
+if [[ "$PYTHON_SETUP_VERSION" = "3.6" ]];
+then
+# Python 3.6
+./configure --prefix=$PREFIX/local LDFLAGS="-Wl,-rpath=$PREFIX/local/ssl/lib64" --enable-shared --with-system-expat --with-ensurepip=yes --with-pydebug RPATH=$PREFIX/local/ssl/lib64 
+else
+# Python 3.7
+./configure --prefix=$PREFIX/local LDFLAGS="-Wl,-rpath=$PREFIX/local/ssl/lib64" --with-openssl=$PREFIX/local --enable-shared --with-ssl-default-suites=python --with-system-expat --with-ensurepip=yes --with-pydebug
+fi
+# Patch python modules Setup file - This is mandatory
+patch -p1 $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}/Modules/Setup < $PROJECT_PATCHES_DIR/python${PYTHON_SETUP_VERSION}.modules.setup.patch
+# make and install in alternate locations
+make && make altinstall
+
+# Create symlinks to python binaries
+[[ -L $PREFIX/local/bin/python3 ]] && rm -f $PREFIX/local/bin/python3
+ln -s -v $PREFIX/local/bin/python${PYTHON_SETUP_VERSION} $PREFIX/local/bin/python3
+# Create symlinks to pip binaries
+[[ -L $PREFIX/local/bin/pip3 ]] && rm -f $PREFIX/local/bin/pip3
+ln -s -v $PREFIX/local/bin/pip${PYTHON_SETUP_VERSION} $PREFIX/local/bin/pip3
+# Create symlinks to python libraries
+ln -s -v $PREFIX/local/lib/libpython${PYTHON_SETUP_VERSION}dm.so.1.0 $LIBDIR/libpython${PYTHON_SETUP_VERSION}dm.so.1.0
+
+# Install commonly used python3 modules
+python3_common_modules_install
 }
 
 intel_x11_driver_install () {
@@ -2661,7 +3077,7 @@ tar jxvf $PROJECT_TARBALLS_DIR/oss-*src-gpl.tar.bz2 -C $INSTALL_SRC_DIR
 # Patch make file to disable soundon
 
 # Make build directory
-mkdir $INSTALL_SRC_DIR/oss
+mkdir -p $INSTALL_SRC_DIR/oss
 # Compile
 cd $INSTALL_SRC_DIR/oss && \
 $INSTALL_SRC_DIR/oss-*-src-gpl/configure
@@ -2825,12 +3241,12 @@ make_install_jambulatv
 }
 
 pyalsaaudio_install () {
-get_python_version
+PYTHON_VERSION_USED=2 && set_python_version
 tar zxvf $PROJECT_TARBALLS_DIR/pyalsaaudio-$PYALSAAUDIO_VERSION.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v pyalsaaudio-* pyalsaaudio
 # Compile
 cd $INSTALL_SRC_DIR/pyalsaaudio 
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 pulseaudio_query () {
@@ -3074,10 +3490,8 @@ tar jxvf $PROJECT_TARBALLS_DIR/openal-soft-*.tar.bz2 -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v openal-soft-* openal-soft
 # Compile
 cd $INSTALL_SRC_DIR/openal-soft 
-# Log to build file
-cmake_build_log
 # cMake
-cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DLIB_SUFFIX=64 
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DALSOFT_EXAMPLES=OFF -DALSOFT_TESTS=OFF
 make_install_jambulatv
 }
 
@@ -3088,8 +3502,6 @@ ln -s $INCDIR/GL/glfw3.h $INCDIR/GL/glfw.h
 cd $INSTALL_SRC_DIR/vsxu
 mkdir BUILD
 cd BUILD
-# Log to build file
-cmake_build_log
 # cMake
 cmake -DCMAKE_CXX_COMPILER=$BINARY_PREFIX/g++ -DCMAKE_C_COMPILER=$BINARY_PREFIX/gcc -DCMAKE_INSTALL_PREFIX=$PREFIX -DGLFW_INCLUDE_PATH=$INCDIR/GL ../../vsxu
 make_install_jambulatv 
@@ -3146,36 +3558,6 @@ tar zxvf $PROJECT_TARBALLS_DIR/gpac-*.tar.gz -C $INSTALL_SRC_DIR
 # Compile
 cd $INSTALL_SRC_DIR/gpac && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
 make_install_jambulatv
-#
-# libvdpau
-# Unpack
-tar zxvf $PROJECT_TARBALLS_DIR/libvdpau-*.tar.gz -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v libvdpau-* libvdpau
-# Compile
-cd $INSTALL_SRC_DIR/libvdpau
-./autogen.sh
-./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make_install_jambulatv
-#
-# libvdpau-va-gl
-# Unpack
-rsync -av --delete-after $PROJECT_GITHUB_DIR/libvdpau-va-gl/ $INSTALL_SRC_DIR/libvdpau-va-gl/
-# configure
-cd $INSTALL_SRC_DIR/libvdpau-va-gl
-# Create cmake build directory
-mkdir build
-cd build
-# Log to build file
-cmake_build_log
-# cMake
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX ..
-make install
-#
-#Add VDPAU_DRIVER=va_gl to your environment
-#
-# Add symbolic link to libdir
-[ -e $LIBDIR/vdpau/libvdpau_va_gl.so ] || \
-	ln -s $PREFIX/lib/vdpau/libvdpau_va_gl.so.1 $LIBDIR/vdpau/libvdpau_va_gl.so
 #
 # nut
 # Unpack
@@ -3409,7 +3791,7 @@ patch -p1 $INSTALL_SRC_DIR/mplayer/libmpdemux/demux_rtp.cpp < $PROJECT_PATCHES_D
 # Compile
 cd $INSTALL_SRC_DIR/mplayer
 # Rename ffmpeg dir
-mv -v ffmpeg* ffmpeg
+#mv -v ffmpeg* ffmpeg
 # Compile
 ./configure --prefix=$PREFIX --confdir=$CONFDIR --libdir=$LIBDIR --disable-ffmpeg_a \
   --enable-xv --enable-sdl --enable-radio --enable-radio-capture --enable-radio-v4l2 \
@@ -4216,13 +4598,13 @@ make_install_jambulatv
 }
 
 pydvbstreamer_install () {
-get_python_version
+PYTHON_VERSION_USED=2 && set_python_version
 # Unpack
 tar jxvf $PROJECT_TARBALLS_DIR/pydvbstreamer-$PYDVBSTREAMER_VERSION.tar.bz2 -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v pydvbstreamer-* pydvbstreamer
 cd $INSTALL_SRC_DIR/pydvbstreamer 
 # Compile
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 livepause_install () {
@@ -4252,19 +4634,19 @@ livepause_install
 }
 
 pyosd_install () {
-get_python_version
+PYTHON_VERSION_USED=2 && set_python_version
 # Unpack
 tar xvf $PROJECT_TARBALLS_DIR/pyosd-$PYOSD_VERSION.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v pyosd-* pyosd
 # Compile
 cd $INSTALL_SRC_DIR/pyosd 
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 # Patch - default font not working
 patch -p1 $PYTHON_SITEDIR/pyosd/__init__.py < $PROJECT_PATCHES_DIR/pyosd_font.patch
 }
 
 kaa_install () {
-get_python_version
+PYTHON_VERSION_USED=2 && set_python_version
 # Create kaa install directory
 [ -d $KAA_INSTALL_DIR ] || mkdir -p $KAA_INSTALL_DIR
 # Loop through all kaa-modules
@@ -4274,12 +4656,12 @@ do
 rsync -avz --delete-after $KAA_MODULES_GIT_DIR/$KAA_MODULE/ $KAA_INSTALL_DIR/$KAA_MODULE/
 # Install module
 cd $KAA_INSTALL_DIR/$KAA_MODULE
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 done
 }
 
 freevo1_install () {
-get_python_version
+PYTHON_VERSION_USED=2 && set_python_version
 # Create freevo1 install directory
 [ -d $FREEVO_INSTALL_DIR ] || mkdir -p $FREEVO_INSTALL_DIR
 # Choose freevo verion
@@ -4299,7 +4681,7 @@ then
 # BUG Fix: revision number missing in SVN
 echo "__revision__ = ''" > $FREEVO_INSTALL_DIR/src/revision.py 
 fi
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 freevo1_configure () {
@@ -4370,8 +4752,6 @@ rsync -avz $PROJECT_GITHUB_DIR/jsoncpp/ $INSTALL_SRC_DIR/jsoncpp/
 # Change to source dir
 cd $INSTALL_SRC_DIR/jsoncpp
 #
-# Log to build file
-cmake_build_log
 # cMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
 make_install_jambulatv -j$SYSTEM_CPU_CORES
@@ -4380,21 +4760,31 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 tinyxml2_install () {
 rsync -av $PROJECT_GITHUB_DIR/tinyxml2/ $INSTALL_SRC_DIR/tinyxml2/
 cd $INSTALL_SRC_DIR/tinyxml2
-# Log to build file
-cmake_build_log
 # CMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
 make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
+giflib_install () {
+# Remove RPM based package if installed
+rpm -q giflib-devel > /dev/null 2>&1 && rpm -e --nodeps giflib-devel > /dev/null 2>&1 
+rpm -q giflib > /dev/null 2>&1 && rpm -e --nodeps giflib > /dev/null 2>&1
+#
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/giflib-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v giflib-* giflib
+# Compile all
+cd $INSTALL_SRC_DIR/giflib
+./configure --prefix=$PREFIX --libdir=$LIBDIR 
+make_install_jambulatv
 }
 
 flatbuffers_install () {
 rsync -avz $PROJECT_GITHUB_DIR/flatbuffers/ $INSTALL_SRC_DIR/flatbuffers/
 # Change to source dir
 cd $INSTALL_SRC_DIR/flatbuffers
-# Log to build file
-cmake_build_log
 # cMake
-cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX .
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
@@ -4402,8 +4792,6 @@ rapidjson_install () {
 rsync -avz $PROJECT_GITHUB_DIR/rapidjson/ $INSTALL_SRC_DIR/rapidjson/
 # Change to source dir
 cd $INSTALL_SRC_DIR/rapidjson
-# Log to build file
-cmake_build_log
 # cMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
 make_install_jambulatv -j$SYSTEM_CPU_CORES
@@ -4413,8 +4801,6 @@ fmt_install () {
 cd $PROJECT_GITHUB_DIR/fmt
 git archive --format tar.gz --prefix=fmt/ $FMT_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 cd $INSTALL_SRC_DIR/fmt
-# Log to build file
-cmake_build_log
 # cMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
 # make install
@@ -4440,8 +4826,6 @@ tar zxvf $PROJECT_TARBALLS_DIR/taglib-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v taglib-* taglib
 # Change to source dir
 cd $INSTALL_SRC_DIR/taglib
-# Log to build file
-cmake_build_log
 # cMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
 make_install_jambulatv -j$SYSTEM_CPU_CORES
@@ -4497,8 +4881,6 @@ platform_install () {
 cd $PROJECT_GITHUB_DIR/platform
 git archive --format tar.gz --prefix=platform/ $PLATFORM_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 cd $INSTALL_SRC_DIR/platform
-# Log to build file
-cmake_build_log
 # CMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
 make_install_jambulatv
@@ -4509,8 +4891,6 @@ cd $PROJECT_GITHUB_DIR/libcec
 git archive --format tar.gz --prefix=libcec/ $LIBCEC_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 # Change to source dir
 cd $INSTALL_SRC_DIR/libcec
-# Log to build file
-cmake_build_log
 # cMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
 make_install_jambulatv -j$SYSTEM_CPU_CORES
@@ -4564,154 +4944,74 @@ swig_install
 libnfs_install
 libusb_install
 platform_install
-libcec_install
 libbluray_install
 shairplay_install
 sndio_install
 }
 
-kodi_unpack_git () {
+kodi17_unpack_git () {
 # Change to Github sources
-cd $PROJECT_GITHUB_DIR/kodi-$KODI_CODENAME
+cd $PROJECT_GITHUB_DIR/kodi-$KODI17_CODENAME
 # Check to see if desired branch/tag exists
-git tag -l | grep -x $KODI_PACKAGE_NAME > /dev/null 2>&1
+git tag -l | grep -x $KODI17_TAG > /dev/null 2>&1
 TAG_EXISTS=$?
 if [ "$TAG_EXISTS" = "0" ];
 then
-git archive --format tar.gz --prefix=kodi/ $KODI_PACKAGE_NAME | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=kodi-$KODI17_VERSION/ $KODI17_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 else
-git archive --format tar.gz --prefix=kodi/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=kodi-$KODI17_VERSION/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 # Display Kodi's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
 #
 KODI Version
 ============
-% The Kodi branch you specified, does not exist, so I used master/ HEAD instead
+% The Kodi branch you specified ($KODI17_TAG), does not exist, so I used master/ HEAD instead
 
 #
 EOF
 fi
 #
 # Set FFmpeg version for kodi
-KODI_FFMPEG_VERSION=$(grep VERSION $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/FFMPEG-VERSION | grep $KODI_CODENAME | cut -d "=" -f2)
+KODI_FFMPEG_VERSION=$(grep VERSION $KODI17_CORE_INSTALL_ROOT_DIR/tools/depends/target/ffmpeg/FFMPEG-VERSION | grep $KODI17_CODENAME | cut -d "=" -f2)
 #
 # Archive to kodi ffmpeg target folders directory
 cd $PROJECT_GITHUB_DIR/kodi-FFmpeg
-git archive -o $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/ffmpeg-$KODI_FFMPEG_VERSION.tar.gz --prefix=ffmpeg-$KODI_FFMPEG_VERSION/ $KODI_FFMPEG_VERSION
+git archive -o $KODI17_CORE_INSTALL_ROOT_DIR/tools/depends/target/ffmpeg/ffmpeg-$KODI_FFMPEG_VERSION.tar.gz --prefix=ffmpeg-$KODI_FFMPEG_VERSION/ $KODI_FFMPEG_VERSION
 }
 
-kodi_unpack_tarball () {
-tar zxvf $PROJECT_TARBALLS_DIR/xbmc-$KODI_PACKAGE_NAME*.tar.gz -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v xbmc-$KODI_PACKAGE_NAME* kodi
-cd $INSTALL_SRC_DIR/kodi
+kodi17_unpack_tarball () {
+tar zxvf $PROJECT_TARBALLS_DIR/xbmc-$KODI17_TAG*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v xbmc-$KODI17_TAG* kodi-$KODI17_VERSION
+cd $KODI17_CORE_INSTALL_ROOT_DIR
 #
 # Set FFmpeg version for kodi
-KODI_FFMPEG_VERSION=$(grep VERSION $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/FFMPEG-VERSION | grep $KODI_CODENAME | cut -d "=" -f2)
+KODI_FFMPEG_VERSION=$(grep VERSION $KODI17_CORE_INSTALL_ROOT_DIR/tools/depends/target/ffmpeg/FFMPEG-VERSION | grep $KODI17_CODENAME | cut -d "=" -f2)
 #
 # Copy to kodi ffmpeg target folders directory
-cp -v $PROJECT_TARBALLS_DIR/ffmpeg-$KODI_FFMPEG_VERSION.tar.gz $INSTALL_SRC_DIR/kodi/tools/depends/target/ffmpeg/
+cp -v $PROJECT_TARBALLS_DIR/ffmpeg-$KODI_FFMPEG_VERSION.tar.gz $KODI17_CORE_INSTALL_ROOT_DIR/tools/depends/target/ffmpeg/
 }
 
-kodi_install () {
-# Unpack sources depending on type of sources
-case $KODI_SOURCES_TYPE in
-git)
-# Unpack kodi
-kodi_unpack_git
-;;
-tarball)
-# Unpack kodi
-kodi_unpack_tarball
-;;
-esac
-
-# JsonSchemaBuilder
-# -----------------
-if [ ! -x $BINARY_PREFIX/JsonSchemaBuilder ];
-then
-# Build JsonSchemaBuilder, if not available
-make -C $INSTALL_SRC_DIR/kodi/tools/depends/native/JsonSchemaBuilder/
-cp -v $INSTALL_SRC_DIR/kodi/tools/depends/native/JsonSchemaBuilder/bin/JsonSchemaBuilder $BINARY_PREFIX
-chmod 775 $BINARY_PREFIX/JsonSchemaBuilder
-fi
-
-# CrossGuid
-# ---------
-# Copy tarball to kodi target directories
-cp -v $PROJECT_TARBALLS_DIR/crossguid-*.tar.gz $INSTALL_SRC_DIR/kodi/tools/depends/target/crossguid
-# Build
-make -C $INSTALL_SRC_DIR/kodi/tools/depends/target/crossguid PREFIX=/usr
-
-# Copy libdvdcss, libdvread, libdvdnav tarballs to kodi target directories
-for LIBDVDPKG in \
-libdvdcss \
-libdvdread \
-libdvdnav
-do
-cp -v $PROJECT_TARBALLS_DIR/$LIBDVDPKG-*.tar.gz $INSTALL_SRC_DIR/kodi/tools/depends/target/$LIBDVDPKG
-done
-
-# Apply patches
-# -------------
-# Change uPnP device names from kodi to ours - useful in discovery Apps
-cp -v $INSTALL_SRC_DIR/kodi/xbmc/network/upnp/UPnP.cpp \
-	$INSTALL_SRC_DIR/kodi/xbmc/network/upnp/UPnP.cpp.orig
-#
-cat $INSTALL_SRC_DIR/kodi/xbmc/network/upnp/UPnP.cpp.orig | \
-	sed "s|device->m_ModelName        = \"Kodi\";|device->m_ModelName        = \"$PROJECT_NAME\";|g" | \
-	sed "s|device->m_ModelDescription = \"Kodi - Media Server\";|device->m_ModelDescription = \"$PROJECT_NAME - Media Renderer\";|g" | \
-	sed "s|device->m_ModelURL         = \"http://kodi.tv/\";|device->m_ModelURL         = \"$PROJECT_URL\";|g" | \
-	sed "s|device->m_Manufacturer     = \"XBMC Foundation\";|device->m_Manufacturer     = \"$COMPANY_NAME\";|g" | \
-	sed "s|device->m_ManufacturerURL  = \"http://kodi.tv/\";|device->m_ManufacturerURL  = \"$COMPANY_URL\";|g" \
-		> $INSTALL_SRC_DIR/kodi/xbmc/network/upnp/UPnP.cpp
-
-# --------------------------------------------------------------------------------------------------
-# Compile - ONLY for kodi versions 17-Krypton and below.  For above 17, switch to cmake build system
-# --------------------------------------------------------------------------------------------------
-cd $INSTALL_SRC_DIR/kodi
-./bootstrap
-./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-pulse --enable-udev --enable-libusb --enable-libbluray --enable-player=mplayer,ffplay,cvlc,jambulatv-dvbplayer PYTHON_VERSION=2.7
-#
-cd $INSTALL_SRC_DIR/kodi
-[ ! -d $INCDIR/afpfs-ng ] || ln -s -f $INCDIR/afpfs-ng/* $INCDIR/
-#
-# Make Install
-make_install_jambulatv
-# Clean up - saves upto 1.5GB
-make clean
-}
-
-kodi_platform_install () {
-# Install p8-platform for kodi versions above Isengard.  Also needed for pvr addons
-[[ "$KODI_CODENAME" = "Isengard" ]] || \
-        PLATFORM_TAG=platform-2.1.0 && platform_install
-#
+kodi17_platform_install () {
 # Install kodi-platform - specific to specified kodi branch
-rsync -av $PROJECT_GITHUB_DIR/kodi-platform-$KODI_CODENAME/ $INSTALL_SRC_DIR/kodi-platform/
+rsync -av $PROJECT_GITHUB_DIR/kodi-platform-$KODI17_CODENAME/ $INSTALL_SRC_DIR/kodi-platform/
 cd $INSTALL_SRC_DIR/kodi-platform
-# Log to build file
-cmake_build_log
 # CMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
 make_install_jambulatv
 }
 
-kodi_pvr_hts_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts-$KODI_CODENAME/ $INSTALL_SRC_DIR/kodi-pvr.hts/
+kodi17_pvr_hts_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts-$KODI17_CODENAME/ $INSTALL_SRC_DIR/kodi-pvr.hts/
 cd $INSTALL_SRC_DIR/kodi-pvr.hts
-# Log to build file
-cmake_build_log
 # CMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
 make_install_jambulatv
 }
 
 kodi_pvr_iptvsimple_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.iptvsimple-$KODI_CODENAME/ $INSTALL_SRC_DIR/kodi-pvr.iptvsimple/
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.iptvsimple-$KODI17_CODENAME/ $INSTALL_SRC_DIR/kodi-pvr.iptvsimple/
 cd $INSTALL_SRC_DIR/kodi-pvr.iptvsimple
-# Log to build file
-cmake_build_log
 # CMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
 make_install_jambulatv
@@ -4722,8 +5022,6 @@ kodi_pvr_rtl_radiofm_install () {
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.rtl.radiofm/ $INSTALL_SRC_DIR/pvr.rtl.radiofm/
 # configure
 cd $INSTALL_SRC_DIR/pvr.rtl.radiofm
-# Log to build file
-cmake_build_log
 # CMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi \
 	-DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON .
@@ -4736,15 +5034,239 @@ _install_pause_check_4_errors_
 make_install_jambulatv
 }
 
+kodi17_install () {
+# Unpack sources depending on type of sources
+case $KODI17_SOURCES_TYPE in
+git)
+# Unpack kodi
+kodi17_unpack_git
+;;
+tarball)
+# Unpack kodi
+kodi17_unpack_tarball
+;;
+esac
+
+# JsonSchemaBuilder
+# -----------------
+if [ ! -x $BINARY_PREFIX/JsonSchemaBuilder ];
+then
+# Build JsonSchemaBuilder, if not available
+make -C $KODI17_CORE_INSTALL_ROOT_DIR/tools/depends/native/JsonSchemaBuilder/
+cp -v $KODI17_CORE_INSTALL_ROOT_DIR/tools/depends/native/JsonSchemaBuilder/bin/JsonSchemaBuilder $BINARY_PREFIX
+chmod 775 $BINARY_PREFIX/JsonSchemaBuilder
+fi
+
+# CrossGuid
+# ---------
+# Copy tarball to kodi target directories
+cp -v $PROJECT_TARBALLS_DIR/crossguid-*.tar.gz $KODI17_CORE_INSTALL_ROOT_DIR/tools/depends/target/crossguid
+# Build
+make -C $KODI17_CORE_INSTALL_ROOT_DIR/tools/depends/target/crossguid PREFIX=/usr
+
+# Copy libdvdcss, libdvread, libdvdnav tarballs to kodi target directories
+for LIBDVDPKG in \
+libdvdcss \
+libdvdread \
+libdvdnav
+do
+cp -v $PROJECT_TARBALLS_DIR/$LIBDVDPKG-*.tar.gz $KODI17_CORE_INSTALL_ROOT_DIR/tools/depends/target/$LIBDVDPKG
+done
+
+# Apply patches
+# -------------
+# Change uPnP device names from kodi to ours - useful in discovery Apps
+cp -v $KODI17_CORE_INSTALL_ROOT_DIR/xbmc/network/upnp/UPnP.cpp \
+	$KODI17_CORE_INSTALL_ROOT_DIR/xbmc/network/upnp/UPnP.cpp.orig
+#
+cat $KODI17_CORE_INSTALL_ROOT_DIR/xbmc/network/upnp/UPnP.cpp.orig | \
+	sed "s|device->m_ModelName        = \"Kodi\";|device->m_ModelName        = \"$PROJECT_NAME\";|g" | \
+	sed "s|device->m_ModelDescription = \"Kodi - Media Server\";|device->m_ModelDescription = \"$PROJECT_NAME - Media Renderer\";|g" | \
+	sed "s|device->m_ModelURL         = \"http://kodi.tv/\";|device->m_ModelURL         = \"$PROJECT_URL\";|g" | \
+	sed "s|device->m_Manufacturer     = \"XBMC Foundation\";|device->m_Manufacturer     = \"$COMPANY_NAME\";|g" | \
+	sed "s|device->m_ManufacturerURL  = \"http://kodi.tv/\";|device->m_ManufacturerURL  = \"$COMPANY_URL\";|g" \
+		> $KODI17_CORE_INSTALL_ROOT_DIR/xbmc/network/upnp/UPnP.cpp
+
+# --------------------------------------------------------------------------------------------------
+# Compile - ONLY for kodi versions 17-Krypton and below.  For above 17, switch to cmake build system
+# --------------------------------------------------------------------------------------------------
+cd $KODI17_CORE_INSTALL_ROOT_DIR
+./bootstrap
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-lirc-device=$RUNDIR/lirc/lircd --enable-pulse --enable-udev --enable-libusb --enable-libbluray --enable-player=mplayer,ffplay,cvlc,jambulatv-dvbplayer PYTHON_VERSION=2.7
+#
+cd $KODI17_CORE_INSTALL_ROOT_DIR
+[ ! -d $INCDIR/afpfs-ng ] || ln -s -f $INCDIR/afpfs-ng/* $INCDIR/
+#
+# Make Install
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+
+# Install other important addons
+# ------------------------------
+# kodi-platform
+kodi17_platform_install
+# cec
+libcec_install
+# pvr.hts
+kodi17_pvr_hts_install
+# pvr.rtl.radiofm ~ Not yet compiling 
+#kodi_pvr_rtl_radiofm_install 
+
+# Clean up - saves upto 1.5GB
+make clean
+}
+
+kodi18_unpack_git () {
+# Change to xbmc Github sources
+cd $PROJECT_GITHUB_DIR/xbmc
+
+# Check to see if desired branch/tag exists
+git tag -l | grep -x $KODI18_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+#
+if [ "$TAG_EXISTS" = "0" ];
+then
+git archive --format tar.gz --prefix=kodi-$KODI18_VERSION/ $KODI18_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=kodi-$KODI18_VERSION/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Display Kodi's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+KODI Version
+============
+% The Kodi branch you specified ($KODI18_TAG), does not exist, so I used master/ HEAD instead
+
+#
+EOF
+fi
+}
+
+kodi18_unpack_tarball () {
+echo
+}
+
+kodi18_platform_install () {
+# Install kodi-platform - specific to specified kodi branch
+rsync -av $PROJECT_GITHUB_DIR/kodi-platform/ $INSTALL_SRC_DIR/kodi-platform/
+cd $INSTALL_SRC_DIR/kodi-platform
+# CMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR .
+make_install_jambulatv
+}
+
+kodi18_pvr_hts_install () {
+# Change to pvr.hts Github sources
+cd $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts
+#
+# Check to see if desired branch/tag exists
+git tag -l | grep -x $KODI18_PVR_HTS_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+#
+if [ "$TAG_EXISTS" = "0" ];
+then
+git archive --format tar.gz --prefix=kodi-$KODI18_VERSION-pvr.hts/ $KODI18_PVR_HTS_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=kodi-$KODI18_VERSION-pvr.hts/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Display Kodi's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+KODI Version
+============
+% The pvr.hts branch you specified ($KODI18_PVR_HTS_TAG), does not exist, so I used master/ HEAD instead
+
+#
+EOF
+fi
+
+# Change to install directory
+cd $INSTALL_SRC_DIR/kodi-$KODI18_VERSION-pvr.hts
+# CMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
+make_install_jambulatv
+}
+
+kodi18_install () {
+# Remove previous kodi install directory if it exists
+uninstall_kodi18
+
+# Unpack sources depending on type of sources
+case $KODI18_SOURCES_TYPE in
+git)
+# Unpack kodi 18 from Github sources
+kodi18_unpack_git 
+;;
+tarball)
+# Unpack kodi from tarball
+kodi18_unpack_tarball
+;;
+esac
+
+# Create build directory if non existent
+[[ -d $KODI18_CORE_INSTALL_BUILD_DIR ]] || \
+	mkdir -p $KODI18_CORE_INSTALL_BUILD_DIR
+
+# Change to cmake build directory
+cd $KODI18_CORE_INSTALL_BUILD_DIR
+
+# CMake - Configure
+cmake .. \
+	-DCMAKE_INSTALL_PREFIX=$PREFIX \
+	-DCMAKE_INSTALL_LIBDIR=$LIBDIR \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DENABLE_BLUETOOTH=OFF \
+	-DENABLE_CCACHE=0 \
+	-DENABLE_INTERNAL_CROSSGUID=ON \
+	-DENABLE_INTERNAL_FFMPEG=OFF \
+	-DENABLE_INTERNAL_FLATBUFFERS=ON \
+	-DENABLE_INTERNAL_FMT=OFF \
+	-DENABLE_INTERNAL_FSTRCMP=OFF \
+	-DENABLE_INTERNAL_RapidJSON=OFF \
+	-DENABLE_VAAPI=OFF \
+	-DVERBOSE=ON \
+	-DCROSSGUID_URL="$KODI18_CROSSGUID_PACAKGE_NAME" \
+	-DFLATBUFFERS_URL="$KODI18_FLATBUFFERS_PACAKGE_NAME" \
+	-DLIBDVDCSS_URL="$KODI18_LIBDVDCSS_PACAKGE_NAME" \
+	-DLIBDVDNAV_URL="$KODI18_LIBDVDNAV_PACAKGE_NAME" \
+	-DLIBDVDREAD_URL="$KODI18_LIBDVDREAD_PACAKGE_NAME"
+# Cmake - Build
+cmake --build $KODI18_CORE_INSTALL_BUILD_DIR -- VERBOSE=1 -j$SYSTEM_CPU_CORES 
+# Make - Install
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+
+
+# Copy Kodi binary-addons and dependencies to download directories
+#rsync -aAXv $PROJECT_TARBALLS_DIR/kodi/ $KODI18_CORE_INSTALL_ROOT_DIR/
+
+# Compile kodi binary addons 
+#make -j$SYSTEM_CPU_CORES -C $KODI18_BINARY_ADDONS_ROOT_DIR \
+#	PREFIX=$PREFIX CMAKE_EXTRA="$KODI18_CMAKE_EXTRA_OPTIONS" \
+#	LIBDIR=$LIBDIR/kodi \
+#	ADDONS="$KODI18_BINARY_ADDONS_TO_BUILD"
+
+
+# Install other important addons
+# ------------------------------
+# kodi-platform
+kodi18_platform_install
+# pvr.hts
+kodi18_pvr_hts_install
+# pvr.rtl.radiofm ~ Not yet compiling 
+#kodi_pvr_rtl_radiofm_install 
+
+# Clean up - saves upto 1.5GB
+#make clean
+}
+
 kodi_addons_unpack () {
 # script.module.beautifulsoup
 if [ "$KODI_ADDON" = "script.module.beautifulsoup" ];
 then
-unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_CODENAME/script.module.beautifulsoup-*.zip
+unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$PREFERRED_KODI_CODENAME/script.module.beautifulsoup-*.zip
 # script.module.beautifulsoup4
 elif [ "$KODI_ADDON" = "script.module.beautifulsoup4" ];
 then
-unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_CODENAME/script.module.beautifulsoup4-*.zip
+unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$PREFERRED_KODI_CODENAME/script.module.beautifulsoup4-*.zip
 # plugin.video.youtube
 elif [ "$KODI_ADDON" = "plugin.video.youtube" ];
 then
@@ -4768,7 +5290,7 @@ rsync -avz $PROJECT_GITHUB_DIR/kodi-addons/weather.yahoo/ \
 
 else
 # All others
-unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$KODI_CODENAME/$KODI_ADDON*.zip
+unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$PREFERRED_KODI_CODENAME/$KODI_ADDON*.zip
 
 # Debugging
 #echo
@@ -4780,56 +5302,63 @@ fi
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_SYSTEM_ADDONS
 }
 
-kodi_addons_4_Isengard() {
-for KODI_ADDON in \
-$KODI_ADDONS_REPOSITORIES \
-$KODI_ADDONS_REQUIRED_ISENGARD \
-$KODI_ADDONS_LIVETV \
-$KODI_ADDONS_MUSIC \
-$KODI_ADDONS_SPORTS \
-$KODI_ADDONS_GAMES \
-$KODI_ADDONS_JAMBULA \
-$KODI_ADDONS_MISC
-do
-kodi_addons_unpack
-done
-}
-
-kodi_addons_4_Krypton() {
-for KODI_ADDON in \
-$KODI_ADDONS_REQUIRED_KRYPTON \
-$KODI_ADDONS_JAMBULA 
-do
-# Unpack addon
-kodi_addons_unpack
-#
-# Enable Addon during initial run of JambulaTV
-cat >> $TMP_DIR/jambula_addons2enable <<EOT
-sqlite3 $KODI_USER_DATA/Database/Addons27.db 'update installed set enabled=1 where addonid=='"'$KODI_ADDON'"';'
-EOT
-done
-#
+kodi_addons_enable_script_creation () {
+if [[ "$PREFERRED_KODI_CODENAME" != "Isengard" ]];
+then
 # Create Database directory if non-existent
 [[ -d $KODI_USER_DATA/Database ]] || mkdir -p $KODI_USER_DATA/Database
 # Create script that will run after this reboot and only once in a lifetime
 cat > $KODI_USER_DATA/Database/jambula_addons.sh <<EOT
 #!/bin/sh
 # Enable our favourite kodi addons
-$(cat $TMP_DIR/jambula_addons2enable)
+$(cat $TMPDIR/jambula_addons2enable)
 EOT
 # Make script executable
 chmod 755 $KODI_USER_DATA/Database/jambula_addons.sh
+fi
 }
 
 kodi_addons_install () {
-case $KODI_CODENAME in
+# Install addons depending on kodi codename
+case $PREFERRED_KODI_CODENAME in
 Isengard)
-kodi_addons_4_Isengard
+# a) Unpack kodi addons for Isengard
+for KODI_ADDON in $KODI_ADDONS_4_ISENGARD
+do
+kodi_addons_unpack
+done
 ;;
+
 Krypton)
-kodi_addons_4_Krypton
+# a) Unpack kodi addons for Krypton
+for KODI_ADDON in $KODI_ADDONS_4_KRYPTON
+do
+kodi_addons_unpack
+#
+# Enable Addon during initial run of JambulaTV
+cat >> $TMPDIR/jambula_addons2enable <<EOT
+sqlite3 $KODI_USER_DATA/Database/Addons27.db 'update installed set enabled=1 where addonid=='"'$KODI_ADDON'"';'
+EOT
+done
 ;;
+
+Leia)
+# a) Unpack kodi addons for Leia
+for KODI_ADDON in $KODI_ADDONS_4_LEIA
+do
+kodi_addons_unpack
+#
+# Enable Addon during initial run of JambulaTV
+cat >> $TMPDIR/jambula_addons2enable <<EOT
+sqlite3 $KODI_USER_DATA/Database/Addons27.db 'update installed set enabled=1 where addonid=='"'$KODI_ADDON'"';'
+EOT
+done
+;;
+
 esac
+
+# Create script to enable addons for kodi versions 17+
+kodi_addons_enable_script_creation
 }
 
 kodi_addons_configure() {
@@ -5364,31 +5893,36 @@ script.aeonmq6.extrapack \
 resource.uisounds.aeonmq6 \
 skin.aeonmq6
 do
-unzip -o -d $KODI_SYSTEM_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$KODI_CODENAME/skin.$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
+unzip -o -d $KODI_SYSTEM_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$PREFERRED_KODI_CODENAME/skin.$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
 done
 # Add custom backgrounds for this preferred skin
 rsync -av $PROJECT_IMAGES_DIR/kodi/backgrounds/skin.$KODI_PREFERRED_SKIN/ \
 	$KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/backgrounds/
 ;;
 
-titan)
+titan|titan.mod.beta.leia)
 # Copy preferred skin files to addons directory
-rsync -av --delete-after $PROJECT_GITHUB_DIR/kodi-addons/skin.$KODI_PREFERRED_SKIN \
-$KODI_USER_ADDONS/
+#rsync -av --delete-after $PROJECT_GITHUB_DIR/kodi-addons/skin.$KODI_PREFERRED_SKIN \
+#$KODI_USER_ADDONS/
 
+# Set collection of skin addon packages
+if [[ "$PREFERRED_KODI_CODENAME" = "Krypton" ]];
+then
+KODI_SKIN_ADDONS="$KODI_SKIN_TITAN_ADDONS"
+
+elif [[ "$PREFERRED_KODI_CODENAME" = "Leia" ]];
+then
+KODI_SKIN_ADDONS="$KODI_SKIN_TITAN_MOD_ADDONS"
+
+else
+KODI_SKIN_ADDONS="$KODI_SKIN_TITAN_MOD_ADDONS"
+fi
+#
 # Unzip skin related files to addons directory
 for SKIN_ADDON in \
-resource.images.backgroundoverlays.basic \
-resource.images.skinbackgrounds.titanium \
-resource.images.skinicons.wide \
-resource.uisounds.titan.modern \
-script.skin.helper.backgrounds \
-script.skin.helper.service \
-script.skin.helper.skinbackup \
-script.skin.helper.widgets \
-script.skinshortcuts
+$KODI_SKIN_ADDONS
 do
-unzip -o -d $KODI_USER_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$KODI_CODENAME/skin.$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
+unzip -o -d $KODI_USER_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$PREFERRED_KODI_CODENAME/skin.$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
 
 # Debugging
 #echo
@@ -5409,7 +5943,7 @@ rsync -av $PROJECT_IMAGES_DIR/kodi/backgrounds/skin.$KODI_PREFERRED_SKIN/ \
 	$KODI_USER_ADDONS/resource.images.skinicons.wide/resources/
 
 # Adjust custom Logo image dimensions
-rsync -av $PROJECT_CONFIGS_DIR/kodi/skin.titan/IncludesHeader.xml \
+rsync -av $PROJECT_CONFIGS_DIR/kodi/skin.$KODI_PREFERRED_SKIN/IncludesHeader.xml \
 	$KODI_USER_ADDONS/skin.$KODI_PREFERRED_SKIN/1080i/
 
 # Skin Settings
@@ -5428,15 +5962,22 @@ esac
 # Copy custom top left logo icon
 cp -fv $PROJECT_IMAGES_DIR/kodi/logos/skin.$KODI_PREFERRED_SKIN/top-left.png \
 	$KODI_SHARE_DIR/media/jambulatv-logo.png
-#
+
+# Replace top left icon and text logos for the default kodi skin i.e. estuary 
+# with customized JambulaTV logos
+cp -v $KODI_DEFAULT_SKIN_FILES/xml/Home.xml $KODI_DEFAULT_SKIN_FILES/xml/Home.xml.orig
+patch -p1 $KODI_DEFAULT_SKIN_FILES/xml/Home.xml < $PROJECT_PATCHES_DIR/kodi.skin.estuary.Home.xml.patch
+
+# Remove default splash logos
+rm -f $KODI_SHARE_DIR/media/{S,s}plash.*
 # Copy Splash image for startup
-cp -fv $PROJECT_IMAGES_DIR/kodi/logos/skin.$KODI_PREFERRED_SKIN/Splash.png $KODI_SHARE_DIR/media/
+cp -fv $PROJECT_IMAGES_DIR/kodi/logos/skin.$KODI_PREFERRED_SKIN/{S,s}plash.png $KODI_SHARE_DIR/media/
 
 # Customize strings.po for JambulaTV
 patch -p1 $KODI_SYSTEM_ADDONS/resource.language.en_gb/resources/strings.po < $PROJECT_PATCHES_DIR/kodi.strings_po.patch
 
 # Fix Shutdown Main Menu Button bug, if running kodi 15
-[[ "$KODI_CODENAME" = "Isengard" ]] && \
+[[ "$PREFERRED_KODI_CODENAME" = "Isengard" ]] && \
 sed -i "s:XBMC.ShutDown():System.Exec(systemctl poweroff):g" $KODI_SYSTEM_ADDONS/skin.$KODI_PREFERRED_SKIN/720p/DialogButtonMenu.xml
 
 # Give permissions to multimedia user for config directory
@@ -5640,6 +6181,9 @@ EOF
 }
 
 kodi_lircmap_configure () {
+# Create kodi system directory
+[[ -d $KODI_SYSTEM_SYS ]] || mkdir -p $KODI_SYSTEM_SYS
+
 # Use either lircd or inputlirc
 case $IR_DAEMON in
 lircd)
@@ -5673,13 +6217,19 @@ then
 inputlirc_install
 inputlirc_configure
 fi
+# Add Yatse remote settings
+[[ -d $QRCODE_DIR ]] || mkdir -p $QRCODE_DIR
+# Create qrcode containing Yatse host settings for JambulaTV
+$QRCODE_CMD -s 9 -o $QRCODE_DIR/yatse_host_settings.png <<ET
+{"source":"Yatse","version":"3","data":{"name":"JambulaTV","color":"#883662","type":5,"api":"xbmckrypton","ip":"$COOVA_SERVER_IP","port1":$KODI_HTTP_PORT,"port2":9090,"port3":9777,"port4":5600,"port5":0,"mac":"$NETWORK_MAC_ADDRESS","login":"$KODI_HTTP_USER","pass":"$KODI_HTTP_PASS","pi1":-1,"pi2":0,"pi3":0,"pi4":0,"pi5":0,"i1":"","i2":"","i3":"","ps1":"","ps2":"","ps3":"","ps4":"","ps5":"","wonly":true,"wssid":"","desc":"","uid":"$SYSTEM_UUID"}}
+ET
 }
 
 python_xbmc_install () {
-get_python_version
+PYTHON_VERSION_USED=2 && set_python_version
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/python-xbmc/ $INSTALL_SRC_DIR/python-xbmc/
 cd $INSTALL_SRC_DIR/python-xbmc
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 kodi_osd_configure () {
@@ -5704,19 +6254,19 @@ chmod 755 $XMPP_TOOL
 }
 
 livestreamer_install () {
-get_python_version
+PYTHON_VERSION_USED=3 && set_python_version
 # Install dependency: singledispatch
 tar zxvf $PROJECT_TARBALLS_DIR/singledispatch*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v singledispatch-* singledispatch
 # Compile
 cd $INSTALL_SRC_DIR/singledispatch 
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 
 # Copy sources 
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/livestreamer/ $INSTALL_SRC_DIR/livestreamer/
 cd $INSTALL_SRC_DIR/livestreamer
 #NOTE: Install after FlexGet which pulls latest dependencies like requests
-python setup.py install
+$PYTHON_INSTALL_CMD
 }
 
 x11_server_configure () {
@@ -5809,41 +6359,75 @@ load-module module-loopback source=$TV_AUDIO_SOURCE latency_msec=26" >> $PULSE_D
 }
 
 v4l_utils_install () {
-# Unpack
-tar jxvf $PROJECT_TARBALLS_DIR/v4l-utils-*.tar.bz2 -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v v4l-utils-* v4l-utils
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/v4l-utils/ $INSTALL_SRC_DIR/v4l-utils/
 # Compile
-cd $INSTALL_SRC_DIR/v4l-utils && ./configure --prefix=$PREFIX \
-	--libdir=$LIBDIR
+cd $INSTALL_SRC_DIR/v4l-utils
+./bootstrap.sh
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR \
+	--localstatedir=$STATEDIR 
+# Make Install
 make_install_jambulatv
 }
 
-plymouth_customization () {
-# Add rpm macros file, so that rpmbuild will be located elsewhere
-[ -e $HOME/.rpmmacros ] || echo "%_topdir $RPMBUILD_DIR" > $HOME/.rpmmacros
-# Install plymouth source rpm package in temp location
-rpm -Uvh $PROJECT_RPMS_DIR/plymouth-*.src.rpm
-# Patch plymouth.spec file
-patch -p1 $RPMBUILD_DIR/SPECS/plymouth.spec < $PROJECT_PATCHES_DIR/plymouth.spec.patch
-# Change to rpmbuild dir
-cd $RPMBUILD_DIR
-# Rebuild plymouth
-rpmbuild -bb $RPMBUILD_DIR/SPECS/plymouth.spec
-# Install freshly built and customized plymouth rpm packages
-rpm -Uvh --oldpackage --nodeps --force $RPMBUILD_DIR/RPMS/$(uname -m)/plymouth-*.rpm
-# Remove rpm macros file
-[ -e $HOME/.rpmmacros ] && rm -f $HOME/.rpmmacros
-# Remove rpmbuild directory
-[ -d $RPMBUILD_DIR ] && rm -rf $RPMBUILD_DIR
+plymouth_install () {
+# Remove RPM based package if installed
+rpm -q plymouth > /dev/null 2>&1 && rpm -e --nodeps $(rpm -qa | grep plymouth)
+# Remove lingering package files
+find $CONFDIR -iname "*plymouth*" -exec rm -rf {} \;
+find $INCDIR -iname "*plymouth*" -exec rm -rf {} \;
+find $PREFIX/lib* -iname "*plymouth*" -exec rm -rf {} \;
+find $STATEDIR -iname "*plymouth*" -exec rm -rf {} \;
 #
+# Change to plymouth Github sources
+cd $PROJECT_GITHUB_DIR/plymouth
+# unpack plymouth using specified tag
+PLYMOUTH_TAG=0.8.8
+git archive --format tar.gz --prefix=plymouth/ $PLYMOUTH_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Compile
+cd $INSTALL_SRC_DIR/plymouth
+LDFLAGS="$LDFLAGS -ludev" ./autogen.sh \
+	--prefix=$PREFIX \
+	--libdir=$LIBDIR \
+	--sysconfdir=$CONFDIR \
+	--localstatedir=$STATEDIR \
+	--enable-systemd-integration \
+	--enable-drm \
+	--enable-tracing \
+	--enable-pango \
+	--enable-gtk=no \
+	--disable-gdm-transition \
+	--with-release-file=$CONFDIR/os-release \
+	--with-logo=$DATAROOTDIR/pixmaps/jambula-labs.png \
+	--with-background-color=0x000000 \
+	--with-background-start-color-stop=0x000000 \
+	--with-background-end-color-stop=0x000000 \
+	--without-rhgb-compat-link \
+	--without-system-root-install
+# Make Install
+make_install_jambulatv
+}
+
+plymouth_configure () {
 # Update System Logo for use with Plymouth themes # Do this before Update
-cp -fv $PROJECT_IMAGES_DIR/jambula-labs.png $DATAROOTDIR/pixmaps/
+# Convert image to prevent error: libpng warning iccp ... srgb profile
+convert -strip $PROJECT_IMAGES_DIR/jambula-labs.png $DATAROOTDIR/pixmaps/jambula-labs.png
+#
 # Change to / dir - otherwise error: "shell-init: error retrieving current directory ..."
 cd /
 # Select Plymouth Theme & Rebuild initrd
+logger -s -t $(basename $0) "Setting plymouth theme to $PLYMOUTH_THEME"
 $PLYMOUTH_SET_CMD -R $PLYMOUTH_THEME
 # BUG: Run grub2-mkconfig - fixes, changed theme/logo not showing up
 grub2-mkconfig -o $GRUB2_BOOT_FILE
+
+# Modify systemd-fsck-root.service unit file to prevent logging on console
+# We want boot screen to only have splash graphics i.e. plymouth
+[[ -e $SYSTEMD_UNITS_DIR_USER/systemd-fsck-root.service ]] || \
+	cat $SYSTEMD_UNITS_DIR_SYSTEM/systemd-fsck@.service | \
+        sed -e 's:StandardOutput=journal+console:StandardOutput=journal:' | \
+        sed '/^#/d' > $SYSTEMD_UNITS_DIR_USER/systemd-fsck-root.service       
+# Reload services daemon
+systemctl --system daemon-reload
 }
 
 grub_settings () {
@@ -5858,7 +6442,7 @@ GRUB_TIMEOUT=0
 GRUB_DISTRIBUTOR=\"$PROJECT_NAME\"
 GRUB_DEFAULT=0
 GRUB_DISABLE_SUBMENU=true
-GRUB_TERMINAL_OUTPUT=gfxterm
+#GRUB_TERMINAL=console # Disable kernel boot logging
 GRUB_GFXMODE=$GRUB2_VIDEO_RESOLUTION
 GRUB_GFXPAYLOAD_LINUX=keep
 GRUB_INIT_TUNE=\"$GRUB2_BEEP_SOUND\"
@@ -5867,7 +6451,7 @@ GRUB_HIDDEN_TIMEOUT=1
 GRUB_HIDDEN_TIMEOUT_QUIET=true
 GRUB_DISABLE_LINUX_UUID=false
 #
-GRUB_CMDLINE_LINUX=\"vconsole.font=latarcyrheb-sun16 $([ -x /usr/sbin/rhcrashkernel-param ] && /usr/sbin/rhcrashkernel-param || :)rhgb quiet $GRUB2_CMD_OPTIONS\"" > $GRUB2_DEFAULT_FILE
+GRUB_CMDLINE_LINUX=\"vconsole.font=latarcyrheb-sun16 $([ -x /usr/sbin/rhcrashkernel-param ] && /usr/sbin/rhcrashkernel-param || :)rhgb $GRUB2_CMD_OPTIONS\"" > $GRUB2_DEFAULT_FILE
 # Patch 10_linux file to remove verbose 'Booting Linux' messages
 #patch -p1 $GRUB2_CONFIG_DIR/10_linux < $PROJECT_PATCHES_DIR/grub_10_linux.patch
 # Fix BUG: Grub error at boot time 
@@ -6263,6 +6847,9 @@ alias gs="clear && git status"
 alias gl="clear && git log"   
 alias gb="clear && git branch"
 
+# Clock in terminal
+#while sleep 1;do tput sc;tput cup 0 \$((\$(tput cols)-29));date +' %d %B %Y %I:%M:%S %p';tput rc;done &
+
 # JambulaTV History
 # Create user's logging directories and assign appropriate permissions
 [[ -d $PROJECT_SYSTEM_LOG_DIR/bash/\$(whoami)  ]] || sudo mkdir -p $PROJECT_SYSTEM_LOG_DIR/bash/\$(whoami)
@@ -6278,7 +6865,8 @@ export PROMPT_COMMAND='echo "\$(history 1)" >> $PROJECT_SYSTEM_LOG_DIR/bash/\$(w
 # CLI Calculator
 calc(){ awk "BEGIN{ print \$* }" ;}
 EOF
-# Add .bashrc to autologin user's home directory
+
+# Add .profile to autologin user's home directory
 cat > $AUTOLOGIN_USER_HOME_DIR/.profile << EOF
 # Source global definitions
 if [ -f /etc/bashrc ]; then
@@ -6398,10 +6986,10 @@ EOF
 }
 
 sshuttle_install () {
-get_python_version
+PYTHON_VERSION_USED=3 && set_python_version
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/sshuttle/ $INSTALL_SRC_DIR/sshuttle/
 cd $INSTALL_SRC_DIR/sshuttle
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 # Create symbolic link in /usr/bin
 [ -x $BINARY_PREFIX/sshuttle ] || ln -s $PREFIX/local/bin/sshuttle $BINARY_PREFIX/sshuttle
 }
@@ -6467,7 +7055,7 @@ cd $INSTALL_SRC_DIR && mv -v openresolv-* openresolv
 # Configure
 cd $INSTALL_SRC_DIR/openresolv && ./configure --prefix=$PREFIX  \
 	--libexecdir=$LIBDIR/resolvconf --sysconfdir=$CONFDIR
-# Compile
+# Make Install
 make_install_jambulatv
 }
 
@@ -6724,8 +7312,10 @@ ziproxy_install () {
 tar xvf $PROJECT_TARBALLS_DIR/ziproxy-*.tar.xz -C $INSTALL_SRC_DIR
 # Change to ziproxy directory
 cd $INSTALL_SRC_DIR && mv ziproxy* ziproxy
-cd $INSTALL_SRC_DIR/ziproxy
+# Patch image.c file so it is compatible with giflib versions 5+
+patch -p1 $INSTALL_SRC_DIR/ziproxy/src/image.c < $PROJECT_PATCHES_DIR/ziproxy.image.c.patch
 # configure ziproxy
+cd $INSTALL_SRC_DIR/ziproxy
 ./configure --prefix=$PREFIX \
   --with-cfgfile=$PROJECT_SYSTEM_CONF_DIR/ziproxy/ziproxy.conf
 make_install_jambulatv
@@ -6816,7 +7406,8 @@ systemctl start ziproxy.service
 }
 
 flexget_deps_install () {
-get_python_version
+#PYTHON_VERSION_USED=2 && set_python_version
+PYTHON_VERSION_USED=3 && set_python_version
 for PYTHON_MODULE in $FLEXGET_DEPENDENCIES
 do
 # Set module's package filename & strip version from it
@@ -6849,7 +7440,7 @@ mv -v *$PYTHON_MODULE-$MODULE_VERS* $PYTHON_MODULE
 fi
 #
 cd $INSTALL_SRC_DIR/$PYTHON_MODULE
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 #
 #
 echo
@@ -6865,7 +7456,7 @@ done
 }
 
 flexget_python3_install () {
-get_python_version
+PYTHON_VERSION_USED=3 && set_python_version
 # Dependencies for Flexget - Install locally using wheels/pips specified in requirements
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt
 #
@@ -6890,7 +7481,7 @@ patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/notifiers/notify.py < $PROJEC
 patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/input/rss.py < $PROJECT_PATCHES_DIR/flexget.plugin.input.rss.python3.patch
 # Install
 cd $INSTALL_SRC_DIR/Flexget
-python3 setup.py install
+$PYTHON_INSTALL_CMD
 # Create symbolic link
 [ -x $BINARY_PREFIX/flexget ] || ln -s $PREFIX/local/bin/flexget $BINARY_PREFIX/flexget
 #
@@ -6900,7 +7491,7 @@ cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \
 }
 
 flexget_python2_install () {
-get_python_version
+PYTHON_VERSION_USED=2 && set_python_version
 # Remove any existing modules
 [ ! -d $INSTALL_SRC_DIR/FlexGet* ] || rm -rf $INSTALL_SRC_DIR/FlexGet*
 rm -rf $PYTHON_SITEDIR/FlexGet* 
@@ -6919,7 +7510,8 @@ cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
 }
 
 flexget_configure () {
-get_python_version
+#PYTHON_VERSION_USED=2 && set_python_version
+PYTHON_VERSION_USED=3 && set_python_version
 # create flexget config directory
 [ -d $FLEXGET_CONFIG_DIR ] || mkdir -p $FLEXGET_CONFIG_DIR
 # Create flexget logs directory
@@ -6950,22 +7542,6 @@ cp -v $PROJECT_CONFIGS_DIR/flexget_python3/*.yml $FLEXGET_CONFIG_DIR/
 FLEXGET_VARIABLES_TEMPLATE=$PROJECT_CONFIGS_DIR/flexget_python3/variables.yml.template
 export FLEXGET_VARIABLES_TEMPLATE
 fi
-
-#DEBUGGING - Remove
-cat <<EOT
-$(date)
-
-Script has so far run for $SCRIPT_RUNTIME seconds
-
-
-PYTHON_VERSION=$PYTHON_VERSION
-PYTHON_FULL_VERSION_NUMBER=$PYTHON_FULL_VERSION_NUMBER
-PYTHON_MAJOR_VERSION_NUMBER=$PYTHON_MAJOR_VERSION_NUMBER
-PYTHON_MINOR_VERSION_NUMBER=$PYTHON_MINOR_VERSION_NUMBER
-PYTHON2_SITEDIR=$PYTHON2_SITEDIR
-PYTHON3_SITEDIR=$PYTHON3_SITEDIR
-
-EOT
 
 # Add custom variables to Flexget
 if [ ! -e $FLEXGET_CONFIG_DIR/variables.yml ];
@@ -7222,20 +7798,20 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/aria2.service $SYSTEMD_UNITS_DIR_USER/
 }
 
 python_telegram_bot_install () {
-get_python_version
+PYTHON_VERSION_USED=3 && set_python_version
 # future - dependency for python-telegram-bot
 tar zxvf $PROJECT_TARBALLS_DIR/future-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v future-* future
 # Compile
 cd $INSTALL_SRC_DIR/future 
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 #
 # python-telegram-bot
 tar zxvf $PROJECT_TARBALLS_DIR/python-telegram-bot-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v python-telegram-bot-* python-telegram-bot
 # Compile
 cd $INSTALL_SRC_DIR/python-telegram-bot 
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 telegram_messaging_configure () {
@@ -7250,7 +7826,7 @@ EOF
 }
 
 yowsup2_deps_install () {
-get_python_version
+PYTHON_VERSION_USED=2 && set_python_version
 for PYTHON_MODULE in \
 protobuf \
 python-axolotl-curve25519 \
@@ -7279,7 +7855,7 @@ echo "Installing $PYTHON_MODULE ..."
 cd $INSTALL_SRC_DIR && mv -v *$PYTHON_MODULE-$MODULE_VERS* $PYTHON_MODULE
 # Install
 cd $INSTALL_SRC_DIR/$PYTHON_MODULE
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 #
 # BUG: Change permissions on protobuf namespace_packages.txt file
 chmod 644 $PYTHON_SITEDIR/protobuf-*.egg/EGG-INFO/namespace_packages.txt
@@ -7297,17 +7873,19 @@ done
 }
 
 yowsup2_install () {
-get_python_version
+PYTHON_VERSION_USED=2 && set_python_version
+yowsup2_deps_install
+#
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup/ $INSTALL_SRC_DIR/yowsup/
 # Patch env_android
 patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/env/env_android.py < $PROJECT_PATCHES_DIR/yowsup.env.android.patch
 # Compile
 cd $INSTALL_SRC_DIR/yowsup
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 yowsup2_python3_install () {
-get_python_version
+PYTHON_VERSION_USED=3 && set_python_version
 # Dependencies for yowsup - Install locally using wheels specified in requirements
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/yowsup-requirements.txt
 #
@@ -7315,7 +7893,7 @@ pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup-AragurDEV/ $INSTALL_SRC_DIR/yowsup/
 # Install
 cd $INSTALL_SRC_DIR/yowsup
-python3 setup.py install
+$PYTHON_INSTALL_CMD
 #
 # Create symbolic link
 [ -x $BINARY_PREFIX/yowsup-cli ] || ln -s $PREFIX/local/bin/yowsup-cli $BINARY_PREFIX/yowsup-cli
@@ -7420,19 +7998,19 @@ EOF
 }
 
 sleekxmpp_install () {
-get_python_version
+PYTHON_VERSION_USED=3 && set_python_version
 # dnspython - dependency for sleekxmpp
 unzip -d $INSTALL_SRC_DIR $PROJECT_TARBALLS_DIR/dnspython-*.zip
 cd $INSTALL_SRC_DIR && mv -v dnspython-* dnspython
 # Compile
 cd $INSTALL_SRC_DIR/dnspython 
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 # sleekxmpp 
 tar zxvf $PROJECT_TARBALLS_DIR/sleekxmpp-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v sleekxmpp-* sleekxmpp
 # Compile
 cd $INSTALL_SRC_DIR/sleekxmpp 
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 samba_configure () {
@@ -7948,11 +8526,11 @@ SYSCONFIG_DIR=/etc/sysconfig
 SYSCONFIG_NETWORK_SCRIPTS_DIR=\$SYSCONFIG_DIR/network-scripts
 NETWORK_ETHERNET_DEVICE=\`ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g'\`
 NETWORK_GATEWAY_ADDRESS=\`grep GATEWAY \$SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-\$NETWORK_ETHERNET_DEVICE | cut -d = -f2 | sed \"s/\\\"//g\"\`
-INTERNET_GATEWAY_DEV=\$(/usr/sbin/ip route list | grep default | sed -n 's/^.*dev //p' | awk '{print \$1}')
+INTERNET_GATEWAY_DEV=\$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
 # Gateway device
 if [ \"x\$INTERNET_GATEWAY_DEV\" != \"x\" ];
 then
-INTERNET_GATEWAY_IP=\$(/usr/sbin/ip route list | grep default | sed -n 's/^.*via //p' | awk '{print \$1}')
+INTERNET_GATEWAY_IP=\$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
 fi
 TUNTAP=\$(basename \$DEV)
 
@@ -8172,8 +8750,8 @@ wpa_supplicant_install () {
 rsync -avz --exclude=hostapd --delete-after $PROJECT_GITHUB_DIR/hostap/ $INSTALL_SRC_DIR/hostap/
 #
 # Remove existing wpa_supplicant rpm package
-rpm -q wpa_supplicant > /dev/null 2>&1 && rpm --quiet -e --nodeps wpa_supplicant
-[ -d $WIFI_WPA_CONFIG_DIR ] && rm -rf $WIFI_WPA_CONFIG_DIR
+rpm -q wpa_supplicant > /dev/null 2>&1 && rpm --quiet -e --nodeps wpa_supplicant > /dev/null 2>&1
+[[ -d $WIFI_WPA_CONFIG_DIR ]] && rm -rf $WIFI_WPA_CONFIG_DIR
 #
 # Patch Makefile: change bin,lib,include locations
 cp -v $INSTALL_SRC_DIR/hostap/wpa_supplicant/Makefile $INSTALL_SRC_DIR/hostap/wpa_supplicant/Makefile.orig
@@ -8200,7 +8778,7 @@ youtube_dl_install () {
 # Copy sources to install directory
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/youtube-dl/ $INSTALL_SRC_DIR/youtube-dl/
 cd $INSTALL_SRC_DIR/youtube-dl
-#python setup.py install
+#$PYTHON_INSTALL_CMD
 #
 # Compile youtube-dl with lazy-extractors
 make lazy-extractors
@@ -8503,12 +9081,10 @@ cd $INSTALL_SRC_DIR/rtl-sdr
 # Create cmake build directory
 mkdir build
 cd build
-# Log to build file
-cmake_build_log
 # cMake
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX \
 	-DDETACH_KERNEL_DRIVER=ON -DINSTALL_UDEV_RULES=ON ..
-make install
+make_install_jambulatv
 ldconfig
 }
 
@@ -8524,7 +9100,7 @@ chmod 755 $FMRADIO_STREAMER_TOOL
 }
 
 TermFeed_install () {
-get_python_version
+PYTHON_VERSION_USED=3 && set_python_version
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/TermFeed-*.tgz -C $INSTALL_SRC_DIR
 # Patch
@@ -8532,7 +9108,7 @@ patch -p1 $INSTALL_SRC_DIR/TermFeed/termfeed/feed.py < $PROJECT_PATCHES_DIR/term
 #
 cd $INSTALL_SRC_DIR/TermFeed 
 # Compile
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 usbreset_install () {
@@ -8661,10 +9237,10 @@ done
 }
 
 trackerjacker_install () {
-get_python_version
+PYTHON_VERSION_USED=3 && set_python_version
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/trackerjacker/ $INSTALL_SRC_DIR/trackerjacker/
 cd $INSTALL_SRC_DIR/trackerjacker
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 # Create symbolic link in /usr/bin
 [ -x $BINARY_PREFIX/trackerjacker ] || ln -s $PREFIX/local/bin/trackerjacker $BINARY_PREFIX/trackerjacker
 }
@@ -9967,14 +10543,15 @@ chmod 755 $TEXT2SPEECH_TOOL
 }
 
 cmake_install () {
+PYTHON_VERSION_USED=3 && set_python_version
 # Unpack 
 tar zxvf $PROJECT_TARBALLS_DIR/cmake-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v cmake-* cmake 
 cd $INSTALL_SRC_DIR/cmake
 # Configure
 ./configure --prefix=$PREFIX
-# make install
-make_install_jambulatv
+# Make Install
+make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
 boost_install () {
@@ -10009,14 +10586,37 @@ ln -s /usr/local/lib64/libopenzwave.so.1.4 $LIBDIR/libopenzwave.so.1.4
 }
 
 python_openzwave_install () {
+PYTHON_VERSION_USED=3 && set_python_version
+
 # Unpack runtime
 unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/python_openzwave-*.zip
-cd $INSTALL_SRC_DIR/python_openzwave
-# Remove external URL link to github for downloading embedded version of openzwave
-# i.e. it is vailable locally
-sed -i "s|def get_openzwave(self, url='https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/archives/open-zwave-master-{0}.zip'|def get_openzwave(self, url='file:$PROJECT_PIPS_DIR/openzwave-embed/open-zwave.zip'|g" $INSTALL_SRC_DIR/python_openzwave/pyozw_setup.py
+
+# Remove external URL to github for downloading embedded version of openzwave
+# i.e. it is available locally
+sed -i \
+	"s|def get_openzwave(self, url='https://raw.githubusercontent.com/OpenZWave/python-openzwave/master/archives/open-zwave-master-{0}.zip'|def get_openzwave(self, url='file:$PROJECT_PIPS_DIR/openzwave-embed/open-zwave-master-{0}.zip'|g" \
+	$INSTALL_SRC_DIR/python_openzwave/pyozw_setup.py
+
 # compile
-python setup.py install
+cd $INSTALL_SRC_DIR/python_openzwave
+$PYTHON_INSTALL_CMD
+}
+
+homeassistant_pyozw_install () {
+PYTHON_VERSION_USED=3 && set_python_version
+
+# Unpack runtime
+unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/homeassistant_pyozw-*.zip
+
+# Remove external URL to github for downloading embedded version of openzwave
+# i.e. it is available locally
+sed -i \
+	"s|def get_openzwave(self, url='https://raw.githubusercontent.com/home-assistant/python-openzwave/hass/archives/open-zwave-hass-{0}.zip'|def get_openzwave(self, url='file:$PROJECT_PIPS_DIR/openzwave-embed/open-zwave-hass-{0}.zip'|g" \
+	$INSTALL_SRC_DIR/homeassistant_pyozw/pyozw_setup.py
+
+# compile
+cd $INSTALL_SRC_DIR/homeassistant_pyozw
+$PYTHON_INSTALL_CMD
 }
 
 domoticz_install () {
@@ -10028,8 +10628,6 @@ rsync -avz $PROJECT_GITHUB_DIR/domoticz/ $INSTALL_SRC_DIR/domoticz/
 ln -s $INSTALL_SRC_DIR/open-zwave $INSTALL_SRC_DIR/open-zwave-read-only
 # Change to source dir
 cd $INSTALL_SRC_DIR/domoticz
-# Log to build file
-cmake_build_log
 # cMake
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX -DUSE_PYTHON=NO
 #-DUSE_PYTHON_PLUGINS=NO
@@ -10076,31 +10674,38 @@ systemctl start domoticz.service
 }
 
 homeassistant_install () {
-# open-zwave
+PYTHON_VERSION_USED=3 && set_python_version
+
+# python_openzwave
 python_openzwave_install
 
-# Unpack Home-Assistant using github sources
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/home-assistant/ $INSTALL_SRC_DIR/home-assistant/
-#
-# Force our requirements
-cat $PROJECT_PIPS_REQUIRES_DIR/homeassistant-requirements.txt | \
-	sed "s:MY_PROJECT_PIPS_DIR:$PROJECT_PIPS_DIR:g" \
-		> $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
-# Force SQLAlchemy 1.1.15 in recorder
-sed -i "s:sqlalchemy==1.2.2:sqlalchemy==1.1.15:g" $INSTALL_SRC_DIR/home-assistant/homeassistant/components/recorder/__init__.py
+# hass_openzwave
+homeassistant_pyozw_install
 
-# Dependencies for Homeassistant - Install locally using pips specified in requirements
+# Archive and Unpack specified home-assistant tag
+# -----------------------------------------------
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/home-assistant
+# Get latest home-assistant release tag
+HOME_ASSISTANT_TAG=$(git describe --abbrev=0 --tags)
+
+git archive --format tar.gz --prefix=home-assistant/ $HOME_ASSISTANT_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+
+# Install dependencies for Home-Assistant using pips specified in requirements
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
-#
-# Install
+
+# Install Home-Assistant
 cd $INSTALL_SRC_DIR/home-assistant
-python3 setup.py install
+$PYTHON_INSTALL_CMD
 #
 # Create symbolic link
 [ -x $BINARY_PREFIX/hass ] || ln -s $PREFIX/local/bin/hass $BINARY_PREFIX/hass
 
 # Add Home assistant user to dialout so they can access ZWave stick
 usermod -a -G dialout $HOMEASSISTANT_USER
+
+# Install homeassistant-cli
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR homeassistant-cli
 }
 
 homeassistant_configure () {
@@ -10296,6 +10901,68 @@ cat >> $JABBERD_TEMPLATES_DIR/roster.xml <<EOF
 EOF
 }
 
+prosody_install () {
+# Stop and disable conflicting jabberd XMPP/Jabber server if installed
+rpm -q jabberd > /dev/null 2>&1 && JABBERD_INSTALLED=yes
+if [[ "$JABBERD_INSTALLED" = "yes" ]];
+then
+systemctl -q is-active jabberd.service && systemctl stop jabberd.service
+systemctl disable jabberd.service
+fi
+#
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/prosody*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v prosody* prosody
+# Compile
+cd $INSTALL_SRC_DIR/prosody
+# configure
+./configure --ostype=linux --prefix=$PREFIX --libdir=$LIBDIR \
+	--with-lua-include=/usr/include --with-ssl=ssl \
+	--sysconfdir=$PROJECT_SYSTEM_CONF_DIR/prosody \
+	--datadir=$PROJECT_SYSTEM_LOG_DIR/prosody
+make_install_jambulatv 
+
+# Add prosody group and user
+groupadd -r prosody
+useradd -r -M -c "Prosody XMPP (Jabber) Server User" -g prosody prosody -s /sbin/nologin
+}
+
+prosody_configure () {
+# Copy our custom prosody config file
+cat $PROJECT_CONFIGS_DIR/prosody.cfg.lua.template | \
+	sed "s:MY_RUNDIR:$RUNDIR:g" | \
+	sed "s:MY_SYSTEM_IDENTIFIER:$SYSTEM_IDENTIFIER:g" | \
+	sed "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
+	sed "s:MY_PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" \
+		> $PROJECT_SYSTEM_CONF_DIR/prosody/prosody.cfg.lua
+#
+# Create SSL certificate and key for prosody
+ssl_cert_key_generate $PROJECT_SYSTEM_CONF_DIR/prosody/certs/JambulaTV.crt $PROJECT_SYSTEM_CONF_DIR/prosody/certs/JambulaTV.key 7300
+#
+# Give prosody user the ownership to config and data/log directories
+chown -R prosody:prosody $PROJECT_SYSTEM_CONF_DIR/prosody
+chown -R prosody:prosody $PROJECT_SYSTEM_LOG_DIR/prosody
+#
+# Copy prosody systemd file 
+cp -v $PROJECT_INIT_SCRIPTS_DIR/prosody.service $SYSTEMD_UNITS_DIR_USER/
+systemctl enable prosody.service
+systemctl start prosody.service
+}
+
+prosody_add_users () {
+# Add XMPP/Jabber user - Asterisk 
+$PROSODY_CTRL_CMD register \
+	$ASTERISK_XMPP_USERNAME \
+	$ASTERISK_XMPP_RESOURCE \
+	$ASTERISK_XMPP_PASSWORD
+
+# Add XMPP/Jabber user - Normal
+$PROSODY_CTRL_CMD register \
+	$USER_001_XMPP_USERNAME \
+	$USER_001_XMPP_RESOURCE \
+	$USER_001_XMPP_PASSWORD
+}
+
 zoneminder_pre_install () {
 # Install pre-requisite Perl modules that are not packaged
 # --------------------------------------------------------
@@ -10360,6 +11027,7 @@ make_install_jambulatv
 }
 
 zoneminder_130_install () {
+cd /
 rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
 # Patches
 # Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
@@ -10382,8 +11050,6 @@ patch -p1 $INSTALL_SRC_DIR/ZoneMinder/web/api/app/Controller/MonitorsController.
 set_www_user_group
 #
 cd $INSTALL_SRC_DIR/ZoneMinder
-# Log to build file
-cmake_build_log
 # Compile using cmake
 cmake \
 	-DCMAKE_BUILD_TYPE=Release \
@@ -10843,6 +11509,7 @@ ZONEMINDER (CCTV) Access
 % To access your Webcams & IP Cameras, use a client PC to open the URL below:
   http://$NETWORK_IP_ADDRESS:$ZONEMINDER_WWW_PORT
 
+  *** All cameras are disabled by default ***
 
 IMPORTANT:  You may need to update the database by running the following command:
 
@@ -10981,7 +11648,6 @@ cd $INSTALL_SRC_DIR/icinga && ./configure --prefix=$PREFIX \
 --with-lockfile=$STATEDIR/rw/icinga.lock \
 --with-icinga-chkfile=$STATEDIR/rw/icinga.check \
 --with-ext-cmd-file-dir=$STATEDIR/rw
-# Compile
 # Log to build file
 make_build_log
 # Make
@@ -11037,7 +11703,8 @@ set_www_user_group
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/icinga2
 # Get latest icinga2 tag
-ICINGA2_TAG=$(git tag -l | sort -u | tail -1)
+ICINGA2_TAG=$(git describe --abbrev=0 --tags)
+
 # Unpack desired git branch/tag
 case $ICINGA2_TAG in
 master)
@@ -11058,8 +11725,8 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
 #
 ICINGA2 Version
-============
-% The Kodi branch you specified, does not exist, so I used master/ HEAD instead
+===============
+% The icinga2 branch you specified ($ICINGA2_TAG), does not exist, so I used master/ HEAD instead
 
 #
 EOF
@@ -11069,18 +11736,17 @@ esac
 #
 cd $INSTALL_SRC_DIR/icinga2
 # Build
-mkdir $INSTALL_SRC_DIR/icinga2/build
+mkdir -p $INSTALL_SRC_DIR/icinga2/build
 cd $INSTALL_SRC_DIR/icinga2/build
-# Log to build file
-cmake_build_log
 # cMake
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_SYSCONFDIR=$CONFDIR -DCMAKE_INSTALL_LOCALSTATEDIR=$STATEDIR -DICINGA2_USER=$ICINGA_USER -DICINGA2_GROUP=$ICINGA_GROUP -DICINGA2_GIT_VERSION_INFO=OFF -DICINGA2_COMMAND_GROUP=$ICINGA_CMD_GROUP -DICINGA2_PLUGINDIR=$MONITORING_PLUGINS_DIR -DICINGA2_RUNDIR=$RUNDIR -DICINGA2_SYSCONFIGFILE=$SYSCONFIG_DIR/icinga2 -DICINGA2_WITH_MYSQL=ON -DICINGA2_WITH_PGSQL=OFF -DICINGA2_WITH_TESTS=OFF -DUSE_SYSTEMD=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=FALSE
-make_install_jambulatv
+cmake VERBOSE=1 ../ -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR -DCMAKE_INSTALL_SYSCONFDIR=$CONFDIR -DCMAKE_INSTALL_LOCALSTATEDIR=$STATEDIR -DICINGA2_USER=$ICINGA_USER -DICINGA2_GROUP=$ICINGA_GROUP -DICINGA2_GIT_VERSION_INFO=OFF -DICINGA2_COMMAND_GROUP=$ICINGA_CMD_GROUP -DICINGA2_PLUGINDIR=$MONITORING_PLUGINS_DIR -DICINGA2_RUNDIR=$RUNDIR -DICINGA2_SYSCONFIGFILE=$SYSCONFIG_DIR/icinga2 -DICINGA2_WITH_MYSQL=ON -DICINGA2_WITH_PGSQL=OFF -DICINGA2_WITH_TESTS=OFF -DUSE_SYSTEMD=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=FALSE
+# Make install
+make_install_jambulatv -j$SYSTEM_CPU_CORES
 #
 # BUG?
 # Move /usr/etc/icinga2 /etc/icinga2
-rsync -avz $PREFIX/etc/icinga2/ $ICINGA2_CONFIG_DIR/
-rm -rf $PREFIX/etc/icinga2
+[[ -d $PREFIX/etc/icinga2 ]] && rsync -avz $PREFIX/etc/icinga2/ $ICINGA2_CONFIG_DIR/
+[[ -d $PREFIX/etc/icinga2 ]] && rm -rf $PREFIX/etc/icinga2
 # Move logrotate
 if [[ -d $PREFIX/etc/logrotate.d ]];
 then
@@ -11108,7 +11774,8 @@ cd $INSTALL_SRC_DIR/monitoring-plugins
 # Compile
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --libexecdir=$MONITORING_PLUGINS_DIR \
 	--with-cgiurl=$WWW_CGI_DIR/icinga --with-fping-command=$FPING_CMD \
-	--with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP
+	--with-nagios-user=$ICINGA_USER --with-nagios-group=$ICINGA_CMD_GROUP \
+	--with-openssl=$PREFIX/local
 make_install_jambulatv
 }
 
@@ -11225,7 +11892,7 @@ set_www_user_group
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/icingaweb2
 # Get latest icinga2 tag
-ICINGAWEB2_TAG=$(git tag -l | sort -u | tail -1)
+ICINGAWEB2_TAG=$(git describe --abbrev=0 --tags)
 #
 # Unpack desired git branch/tag
 case $ICINGAWEB2_TAG in
@@ -11248,7 +11915,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
 Icingaweb2 Version
 ===================
-% The icingaweb2 branch you specified, does not exist, so I used master/ HEAD instead
+% The icingaweb2 branch you specified ($ICINGAWEB2_TAG), does not exist, so I used master/ HEAD instead
 
 #
 EOF
@@ -11484,7 +12151,7 @@ EOF
 }
 
 gdata_install () {
-get_python_version
+PYTHON_VERSION_USED=2 && set_python_version
 #Remove gdata rpm
 [ rpm -q python-gdata > /dev/null 2>&1 ] && rpm -e --nodeps  python-gdata
 # Copy sources depending on python version
@@ -11496,7 +12163,7 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/gdata-python2/ $INSTALL_SRC_DIR/gd
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/gdata-python3/ $INSTALL_SRC_DIR/gdata-python/
 #
 cd $INSTALL_SRC_DIR/gdata-python
-python setup.py install
+$PYTHON_INSTALL_CMD
 }
 
 google_sms_setup () {
@@ -11676,17 +12343,19 @@ make_install_jambulatv
 }
 
 sphinxbase_install () {
+PYTHON_VERSION_USED=2 && set_python_version
 # unpack
 rsync -avz $PROJECT_GITHUB_DIR/sphinxbase/ $INSTALL_SRC_DIR/sphinxbase/
 # configure
 cd $INSTALL_SRC_DIR/sphinxbase 
 ./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
---localstatedir=$STATEDIR
+	--localstatedir=$STATEDIR PYTHONHOME=$PYTHON_HOME
 make_install_jambulatv
 }
 
 pocketsphinx_install () {
+PYTHON_VERSION_USED=2 && set_python_version
 # Install pocketsphinx server
 # unpack
 rsync -avz $PROJECT_GITHUB_DIR/pocketsphinx/ $INSTALL_SRC_DIR/pocketsphinx/
@@ -11694,7 +12363,7 @@ rsync -avz $PROJECT_GITHUB_DIR/pocketsphinx/ $INSTALL_SRC_DIR/pocketsphinx/
 cd $INSTALL_SRC_DIR/pocketsphinx 
 ./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
---localstatedir=$STATEDIR
+	--localstatedir=$STATEDIR PYTHONHOME=$PYTHON_HOME
 make_install_jambulatv
 }
 
@@ -11744,19 +12413,19 @@ systemctl enable jambulatv-speech-recognition.service
 }
 
 SpeechRecognition_install () {
-get_python_version
+PYTHON_VERSION_USED=2 && set_python_version
 # PyAudio - Needed for Mic
 tar zxvf $PROJECT_TARBALLS_DIR/PyAudio-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v PyAudio-* PyAudio
 # Compile
 cd $INSTALL_SRC_DIR/PyAudio 
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 # Speech Recognition
 tar zxvf $PROJECT_TARBALLS_DIR/SpeechRecognition-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v SpeechRecognition-* SpeechRecognition
 # Compile
 cd $INSTALL_SRC_DIR/SpeechRecognition 
-python setup.py install --install-lib=$PYTHON_SITEDIR
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 remind_configure () {
@@ -11955,6 +12624,8 @@ cat >> $KODI_USER_DATA/autoexec.py <<EOF
 # If not yet done, run initial setup tool at next boot
 subprocess.check_call("$BINARY_PREFIX/jambulatv-initial-setup")
 EOF
+# Copy Yatse host settings image to HTML images directory
+cp -v $QRCODE_DIR/yatse_host_settings.png $WWW_HTML_DIR/setup/images
 }
 
 auto_updates_configure () {
@@ -11973,8 +12644,8 @@ systemctl enable jambulatv-updates.timer
 # --------------
 post_install_notice () {
 # Echo post install header 
-clear
-echo "Congratulations!
+cat <<EOT
+Congratulations!
 ****************
 
 Initial setup of $PROJECT_NAME is complete, however, several components will need
@@ -11985,17 +12656,18 @@ Details are listed in the following file which has been saved as:
 [$POST_INSTALL_NOTES]
 
 Press 'Enter' to proceed reading this file ...
-(To quit after viewing the file, press 'q')
+(Timeout is set to 120s.  To manually quit after viewing the file, press 'q')
 
 Time
 ****
 Script runtime was $SCRIPT_RUNTIME seconds
 
-"
-read
+EOT
+# Notify Attendant
+_install_pause_check_4_errors_ $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "Installation Completed"
 #
 # Print post install notes to screen
-less $POST_INSTALL_NOTES
+timeout --foreground 120s less $POST_INSTALL_NOTES
 # Give owner permissions
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $POST_INSTALL_NOTES
 

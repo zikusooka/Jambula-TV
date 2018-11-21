@@ -52,10 +52,14 @@ While optional, we recommend that you setup your very own Youtube API credential
 <hr/>
 
  <h4>Weather</h4>
-In order for JambulaTV to generate weather forecast reports for you, please create an API key using:  <br><a href="https://www.wunderground.com/weather/api" target="_blank">Weather Underground</a> 
+In order for JambulaTV to generate weather forecast reports for you, please add the following API keys: 
+
 <p>
- <label>Weather API Key :</label><br />
+ <label><a href="https://www.wunderground.com/weather/api" target="_blank">Weather Underground</a> API Key :</label><br />
  <input name="wunderground_api_key" id="wunderground_api_key" type="text" value="" >
+
+ <label><a href="https://openweathermap.org/api" target="_blank">OpenWeatherMap</a> API Key :</label><br />
+ <input name="openweathermap_api_key" id="openweathermap_api_key" type="text" value="" >
 
 <hr/>
 

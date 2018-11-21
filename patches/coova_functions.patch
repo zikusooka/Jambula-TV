@@ -15,7 +15,7 @@
  HS_DNS1=${HS_DNS1:-$HS_DNS}
  HS_DNS1=${HS_DNS1:-$(grep '^nameserver' /etc/resolv.conf | head -n1 | awk '{print $2}')}
 -HS_WANIF=${HS_WANIF:-$(route -n|grep '^0.0.0.0'|head -n1|awk '{print $8}')}
-+HS_WANIF=$(ip route list | grep default | sed -n 's/^.*dev //p' | awk '{print $1}')
++HS_WANIF=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
  
  bailout() { echo $1; exit; }
  
@@ -49,7 +49,7 @@
      [ -n "$HS_DHCPGATEWAY" ] && {
 -	HS_DHCPRELAYAGENT=${HS_DHCPRELAYAGENT:-$(ifconfig $(route -n|grep '^0.0.0.0'|awk '{ print $8 }')|grep 'inet addr:'|cut -d: -f 2|cut -d' ' -f1)}
 +        # Internet gateway ip address
-+	HS_DHCPRELAYAGENT=${HS_DHCPRELAYAGENT:-$(ip route list | grep default | sed -n 's/^.*via //p' | awk '{print $1}')}
++	HS_DHCPRELAYAGENT=${HS_DHCPRELAYAGENT:-$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')}
  	addconfig1 "dhcpgateway \"$HS_DHCPGATEWAY\""
  	addconfig1 "dhcprelayagent \"$HS_DHCPRELAYAGENT\""
      }

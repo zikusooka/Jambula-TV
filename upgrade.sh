@@ -17,9 +17,15 @@ kernel_upgrade_1
 kernel_upgrade_2
 }
 
+# Upgrade OpenSSL
+upgrade_openssl () {
+uninstall_src_pkgs openssl
+openssl111_install
+}
+
 # Upgrade Kodi
 upgrade_kodi () {
-uninstall_kodi
+uninstall_kodi17
 kodi_install
 kodi_pvr_hts_install
 kodi_addons_install
@@ -32,7 +38,7 @@ kodi_lircmap_configure
 upgrade_kodi_addons () {
 KODI_ADDONS_4_UPGRADE=$@
 # Uninstall Old
-uninstall_kodi_addons $KODI_ADDONS_4_UPGRADE
+uninstall_kodi17_addons $KODI_ADDONS_4_UPGRADE
 # Install New
 for KODI_ADDON in $KODI_ADDONS_4_UPGRADE; do kodi_addons_unpack $KODI_ADDON; echo; echo "$KODI_ADDON installed, please enter to proceed ..."; echo; read; done
 }
@@ -244,9 +250,13 @@ live555_install
 #################
 #  MAIN SCRIPT  #
 #################
+#DEBUGGING
+#_install_pause_check_4_errors_ $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "Insert program name here"
 
-#upgrade_kernel 4.4.160
-#upgrade_kernel 4.9.43
+#upgrade_kernel 4.4.166
+#upgrade_kernel 4.19.6
+
+#upgrade_openssl
 
 #upgrade_kodi
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
@@ -254,7 +264,7 @@ live555_install
 #FLEXGET_DEPENDENCIES="DEP_1 DEP_2 DEP_3" upgrade_flexget_deps
 #upgrade_flexget
 
-#upgrade_icinga2 # Takes ~20 mins
+#upgrade_icinga2 
 #upgrade_icingaweb2
 
 #upgrade_nextcloud

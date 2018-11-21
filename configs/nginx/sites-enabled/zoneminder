@@ -3,27 +3,30 @@ server {
          server_name JambulaCAM;
          root /usr/share/JambulaTV/html/zm;
          index index.php;
-
+ 
+         access_log /var/log/nginx/zoneminder_access.log;
+         error_log /var/log/nginx/zoneminder_error.log;
+         error_page 404 /index.html;
+         error_page 500 502 503 504  /50x.html;
+    
          location / {
+         try_files $uri $uri/ /index.php?$args =404;    
          }
-
-         error_page  404 /index.html;
-         error_page  500 502 503 504  /50x.html;
-        
+   
 	 location = /50x.html {
 	     root /usr/share/JambulaTV/html;
          }
 
 	 location ~ \.php$ {
-             include  includes/php_params;
+             include includes/php_params;
          }
 	
 	 location /zms-inetd {
-   	     proxy_pass  http://127.0.0.1:8521;
+   	     proxy_pass http://127.0.0.1:8521;
 	 } 
 
     	 location ~* \.(cgi|chi)$ {
-             include  includes/cgi_params;
+             include includes/cgi_params;
     	 }  
 
 	 location ~* .*\.(?:m4a|mp4|mov)$ {
@@ -33,11 +36,18 @@ server {
     	 }
 
 	location /api/ {
-             alias		/usr/share/JambulaTV/html/zm/api;
-             rewrite ^/api(.+)$ /api/index.php?p=$1 last;
+             alias /usr/share/JambulaTV/html/zm/api;
+             rewrite ^/api(.+)$ /api/app/webroot/index.php?p=$1 last;
+             try_files $uri $uri/ /api/app/webroot/index.php?$args;
+        }
+ 
+	location ~ /api/(css|img|ico) {
+        rewrite ^/api(.+)$ /api/app/webroot/$1 break;
+        try_files $uri $uri/ =404;
+        }
 
-             #rewrite ^/api(.+)$ /api/app/webroot/$1 break;
-             #try_files $uri $uri/ /api/app/webroot/index.php?$args;
-         }
+        location /cache {
+    	alias /var/cache/zoneminder;
+	}
 
        }

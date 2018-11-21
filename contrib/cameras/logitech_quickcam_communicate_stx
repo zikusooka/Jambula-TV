@@ -1,9 +1,10 @@
 # Logitech Quickcam Communicate STX
+# IMPORTANT: DO not enable here i.e. Enabled=0
 Id=1
 Name="Logitech-Quickcam"
 Type=Local
 Function=Modect
-Enabled=1
+Enabled=0
 Device=/dev/video-quickcam-0
 Format=1
 Protocol=null

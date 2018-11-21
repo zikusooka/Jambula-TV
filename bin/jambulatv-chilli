@@ -64,7 +64,7 @@ check_internet_status
 # Based on connectivity, get default gateway device
 if [ "$INTERNET_STATUS" = "0" ];
 then
-INTERNET_GATEWAY_DEV=$(ip route list | grep default | sed -n 's/^.*dev //p' | awk {'print $1'})
+INTERNET_GATEWAY_DEV=$(/usr/sbin/ip addr show | grep ether | awk {'print $2'} | head -1)
 else
 # Set to ethernet device - leaving it blank causes errors in coova up.sh scipt
 INTERNET_GATEWAY_DEV=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
