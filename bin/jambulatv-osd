@@ -22,11 +22,16 @@ from textwrap import wrap
 # Who called this script
 PPID = os.getppid()
 PID = os.getpid()
-CALLER = open('/proc/%d/cmdline' % PPID).read().split('\x00', 1)[1]
+with open('/proc/%d/cmdline' % PPID, 'r') as CALLER_FILE:
+  CALLER = CALLER_FILE.read().split('-', 1)[1]
 
 # Variables
 JAMBULATV_VIRTUAL_TERMINAL = 'tty7'
-KODI_GUI_SETTINGS = 'MY_KODI_USER_DATA/guisettings.xml'
+KODI_HTTP_IP = 'MY_KODI_HTTP_IP'
+KODI_HTTP_USER = 'MY_KODI_HTTP_USER'
+KODI_HTTP_PASS = 'MY_KODI_HTTP_PASS'
+KODI_HTTP_PORT = MY_KODI_HTTP_PORT
+KODI_PRODUCT_NAME = 'MY_PROJECT_NAME'
 ICON = 'MY_KODI_SYSTEM_ADDONS/skin.estouchy/media/DefaultIconInfo.png'
 OSDRUNFILE = 'MY_TMPDIR/osd_process_running' 
 
@@ -54,16 +59,6 @@ if args.duration is None:
     TIME = 35000
 else:
     TIME = args.duration
-
-# Get Kodi web server variables
-tree = ET.parse(KODI_GUI_SETTINGS)
-root = tree.getroot()
-for services in root.findall('services'):
-    username = services.find('webserverusername').text
-    password = services.find('webserverpassword').text
-    xbmc_title = services.find('devicename').text
-    xbmc_port = services.find('webserverport').text
-    xbmc_host='127.0.0.1'
 
 
 
@@ -93,7 +88,7 @@ def send_xmpp_message ():
         subprocess.check_call([XMPP_TOOL, "-q", "-j", XMPP_JID, "-p", XMPP_PASSWORD, "-t", XMPP_RECIPIENT, "-m", "[JambulaTV] OSD Notice: " +MESSAGE])
 
 # Connect to Kodi
-def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=username, password=password):
+def send_json_command(KODI_HTTP_IP, KODI_HTTP_PORT, method, params=None, id=1, username=KODI_HTTP_USER, password=KODI_HTTP_PASS):
     command = {'jsonrpc': '2.0', 'id': id, 'method': method}
     if params is not None: command['params'] = params
     payload = json.dumps(command, ensure_ascii=False, sort_keys=True)
@@ -103,8 +98,8 @@ def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=
         #userpass = base64.encodestring('%s:%s' % (username, password))[:-1] # Python2
         userpass = base64.encodestring(('%s:%s' % (username,password)).encode()).decode().replace('\n', '')
         headers['Authorization'] = 'Basic %s' % userpass
-    #conn = httplib.HTTPConnection(xbmc_host, xbmc_port) # Python 2
-    conn = http.client.HTTPConnection(xbmc_host, xbmc_port)
+    #conn = httplib.HTTPConnection(KODI_HTTP_IP, KODI_HTTP_PORT) # Python 2
+    conn = http.client.HTTPConnection(KODI_HTTP_IP, KODI_HTTP_PORT)
     data = None
     try:
         conn.request('POST', '/jsonrpc', payload, headers)
@@ -117,10 +112,10 @@ def send_json_command(xbmc_host, xbmc_port, method, params=None, id=1, username=
     return data
 
 # De-activate screensaver
-def xbmc_poke_screen(xbmc_host, xbmc_port=xbmc_port):
-        screenSaverStatus = send_json_command(xbmc_host, xbmc_port, 'XBMC.GetInfoBooleans', params={'booleans':['System.ScreenSaverActive']})
+def xbmc_poke_screen(KODI_HTTP_IP, KODI_HTTP_PORT=KODI_HTTP_PORT):
+        screenSaverStatus = send_json_command(KODI_HTTP_IP, KODI_HTTP_PORT, 'XBMC.GetInfoBooleans', params={'booleans':['System.ScreenSaverActive']})
         if screenSaverStatus == {u'System.ScreenSaverActive': True}:
-          send_json_command(xbmc_host, xbmc_port, "Input.Select")
+          send_json_command(KODI_HTTP_IP, KODI_HTTP_PORT, "Input.Select")
 
 # Check if current PID still exists
 def check_pid(pid):        
@@ -133,10 +128,10 @@ def check_pid(pid):
         return True
 
 # Display message on screen
-def xbmc_osd_message(xbmc_host, xbmc_port=xbmc_port):
+def xbmc_osd_message(KODI_HTTP_IP, KODI_HTTP_PORT=KODI_HTTP_PORT):
     for OSD_STRING in MESSAGE_WRAPPED:
         check_pid (PID)    
-        send_json_command(xbmc_host, xbmc_port, 'GUI.ShowNotification', params={'title':xbmc_title, 'message':OSD_STRING, 'displaytime':TIME, 'image':ICON})
+        send_json_command(KODI_HTTP_IP, KODI_HTTP_PORT, 'GUI.ShowNotification', params={'title':KODI_PRODUCT_NAME, 'message':OSD_STRING, 'displaytime':TIME, 'image':ICON})
         time.sleep(10)
 
 
@@ -151,10 +146,10 @@ wait_if_already_running()
 create_run_file()
 
 # Poke screen if screensaver is active
-xbmc_poke_screen(xbmc_host)
+xbmc_poke_screen(KODI_HTTP_IP)
 
 # Display message on screen
-xbmc_osd_message(xbmc_host)
+xbmc_osd_message(KODI_HTTP_IP)
 
 # Send XMPP message in background mode
 send_xmpp_message ()

@@ -6235,6 +6235,11 @@ $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 kodi_osd_configure () {
 # Copy jambulatv-osd script, if none exists in bin directory
 [ -e $OSD_TOOL ] || cat $PROJECT_BIN_DIR/jambulatv-osd | \
+	sed -e "s:MY_KODI_HTTP_IP:$KODI_HTTP_IP:g" | \
+	sed -e "s:MY_KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
+	sed -e "s:MY_KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
+	sed -e "s:MY_KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
+	sed -e "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
 	sed -e "s:MY_KODI_USER_DATA:$KODI_USER_DATA:g" | \
 	sed -e "s:MY_KODI_SYSTEM_ADDONS:$KODI_SYSTEM_ADDONS:g" | \
 	sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
