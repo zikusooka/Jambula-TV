@@ -103,6 +103,7 @@ oss_devices_configure
 SDL_install
 openal_soft_install
 libass_install
+libvdpau_va_gl_install 
 ffmpeg_deps_install
 live555_install
 libdvdcss_install

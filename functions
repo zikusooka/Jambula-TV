@@ -2729,21 +2729,6 @@ cd $INSTALL_SRC_DIR/libvdpau
 ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR \
 	--with-module-dir=$LIBDIR --localstatedir=$STATEDIR 
 make_install_jambulatv
-#
-# libvdpau-va-gl
-# Unpack
-rsync -av --delete-after $PROJECT_GITHUB_DIR/libvdpau-va-gl/ $INSTALL_SRC_DIR/libvdpau-va-gl/
-# configure
-cd $INSTALL_SRC_DIR/libvdpau-va-gl
-# Create cmake build directory
-mkdir build
-cd build
-# cMake
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX \
-	-DLIB_INSTALL_DIR=$LIBDIR ..
-make_install_jambulatv
-#
-#Add VDPAU_DRIVER=va_gl to your environment
 }
 
 mesa_deps_install () {
@@ -3513,6 +3498,22 @@ cd $INSTALL_SRC_DIR/libass
 ./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
 make_install_jambulatv
+}
+
+libvdpau_va_gl_install () {
+# Unpack
+rsync -av --delete-after $PROJECT_GITHUB_DIR/libvdpau-va-gl/ $INSTALL_SRC_DIR/libvdpau-va-gl/
+# configure
+cd $INSTALL_SRC_DIR/libvdpau-va-gl
+# Create cmake build directory
+mkdir build
+cd build
+# cMake
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX \
+	-DLIB_INSTALL_DIR=$LIBDIR ..
+make_install_jambulatv
+#
+#Add VDPAU_DRIVER=va_gl to your environment
 }
 
 ffmpeg_deps_install () {
