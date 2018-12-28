@@ -23,6 +23,12 @@ uninstall_src_pkgs openssl
 openssl111_install
 }
 
+# Upgrade Python 3
+upgrade_python3 () {
+uninstall_python3
+python3_install
+}
+
 # Upgrade Kodi
 upgrade_kodi () {
 uninstall_kodi17
@@ -257,6 +263,8 @@ live555_install
 #upgrade_kernel 4.19.6
 
 #upgrade_openssl
+
+#upgrade_python3
 
 #upgrade_kodi
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3

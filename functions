@@ -1826,14 +1826,29 @@ fi
 
 # Uninstall python3
 uninstall_python3 () {
-rm -rf $(find /usr -iname "*python3*" | grep -Ev jambulatv)
-rm -rf $(find /usr -iname "*pip3*" | grep -Ev jambulatv)
-rm -f /usr/local/bin/2to3-3*
-rm -f /usr/local/bin/easy_install-3*
-rm -f /usr/local/bin/idle3*
-rm -f /usr/local/bin/pydoc3*
-rm -f /usr/local/bin/python*
-rm -f /usr/local/bin/pyvenv-3*
+for PYTHON3_BINARY in \
+	python3.*dm \
+	python3.* \
+	python3.*dm-config \
+	pyvenv-3.* \
+	pydoc3.* \
+	idle3.* \
+	2to3-3.* \
+	pip3.* \
+	coverage-3.* \
+	f2py3.* \
+	easy_install-3.*
+do
+rm -f $PREFIX/local/bin/$PYTHON3_BINARY
+done
+
+rm -f $LIBDIR/libpython3.*dm.so.1.0*
+#rm -rf $PREFIX/local/lib/python3.*/site-packages
+rm -rf $PREFIX/local/lib/python3.*/config-3.*dm-x86_64-linux-gnu
+rm -f $PREFIX/local/lib/libpython3.*dm.so*
+rm -f $PREFIX/local/lib/pkgconfig/python-3.*.pc
+rm -rf $PREFIX/local/include/python3.*dm
+rm -rf $PREFIX/local/share/man/man1/python3.*
 rm -rf $INSTALL_SRC_DIR/python3*
 }
 
