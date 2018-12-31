@@ -237,13 +237,13 @@ KODI17_VERSION=17.6
 KODI17_CODENAME=Krypton
 KODI17_TAG=$KODI17_VERSION-$KODI17_CODENAME
 KODI17_SOURCES_TYPE=tarball 
-KODI17_CORE_INSTALL_ROOT_DIR=$INSTALL_SRC_DIR/kodi-$KODI17_VERSION
+KODI17_CORE_INSTALL_ROOT_DIR=$INSTALL_SRC_DIR/kodi
 
-KODI18_VERSION=18.0rc3
+KODI18_VERSION=18.0
 KODI18_CODENAME=Leia
 KODI18_TAG=$KODI18_VERSION-$KODI18_CODENAME
 KODI18_SOURCES_TYPE=git
-KODI18_CORE_INSTALL_ROOT_DIR=$INSTALL_SRC_DIR/kodi-$KODI18_VERSION
+KODI18_CORE_INSTALL_ROOT_DIR=$INSTALL_SRC_DIR/kodi
 KODI18_CORE_INSTALL_BUILD_DIR=$KODI18_CORE_INSTALL_ROOT_DIR/build
 KODI18_BINARY_ADDONS_ROOT_DIR=$KODI18_CORE_INSTALL_ROOT_DIR/tools/depends/target/binary-addons
 KODI18_BINARY_ADDONS_BUILD_DIR=$KODI18_BINARY_ADDONS_ROOT_DIR/native/build
@@ -251,17 +251,16 @@ KODI18_BINARY_ADDONS_DOWNLOAD_DIR=$KODI18_BINARY_ADDONS_BUILD_DIR/download
 #KODI18_BINARY_ADDONS_TO_BUILD="all"
 KODI18_BINARY_ADDONS_TO_BUILD="pvr.hts"
 
+KODI18_CROSSGUID_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/crossguid-8f399e8bd4.tar.gz
+KODI18_FLATBUFFERS_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/flatbuffers-1.9.0.tar.gz
+KODI18_LIBDVDCSS_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/libdvdcss-1.4.1-Leia-Beta-3.tar.gz
+KODI18_LIBDVDNAV_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/libdvdnav-6.0.0-Leia-Alpha-3.tar.gz
+KODI18_LIBDVDREAD_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/libdvdread-6.0.0-Leia-Alpha-3.tar.gz
 
-KODI18_CROSSGUID_PACAKGE_NAME=$(find $PROJECT_TARBALLS_DIR -iname crossguid-*.tar.gz | head -1)
-KODI18_FLATBUFFERS_PACAKGE_NAME=$(find $PROJECT_TARBALLS_DIR -iname flatbuffers-*.tar.gz | head -1)
-KODI18_LIBDVDCSS_PACAKGE_NAME=$(find $PROJECT_TARBALLS_DIR/libdvdcss-*-$KODI18_CODENAME-*.tar.gz | head -1)
-KODI18_LIBDVDNAV_PACAKGE_NAME=$(find $PROJECT_TARBALLS_DIR/libdvdnav-*-$KODI18_CODENAME-*.tar.gz | head -1)
-KODI18_LIBDVDREAD_PACAKGE_NAME=$(find $PROJECT_TARBALLS_DIR/libdvdread-*-$KODI18_CODENAME-*.tar.gz | head -1)
-KODI18_PVR_HTS_TAG="4.4.2-Leia"
+KODI18_PVR_HTS_TAG="4.4.6-Leia"
 
 #KODI18_CMAKE_EXTRA_OPTIONS="-DADDON_TARBALL_CACHING=ON -DADDON_SRC_PREFIX=$KODI18_BINARY_ADDONS_BUILD_DIR"
 ##KODI18_CMAKE_EXTRA_OPTIONS="-DADDON_TARBALL_CACHING=ON -DTARBALLS_LOCATION=$KODI18_BINARY_ADDONS_DOWNLOAD_DIR -DTARBALL_DIR=$KODI18_BINARY_ADDONS_DOWNLOAD_DIR"
-
 
 PREFERRED_KODI_CODENAME=$KODI18_CODENAME
 
@@ -970,7 +969,7 @@ OPENVPN_CLIENT_CONFIG_FILE=$OPENVPN_CLIENT_CONFIG_DIR/client.conf
 OPENVPN_CLIENT_PROTOCOL=tcp #udp
 OPENVPN_SERVER_IP=[REMOTE-VPN-SERVER]
 OPENVPN_SERVER_PORT=[REMOTE-VPN-PORT:11945]
-OPENVPN_SAMPLE_KEYS_DIR=$(cd $TMPDIR && find $DOCSDIR/openvpn* -iname 'sample-keys')
+OPENVPN_SAMPLE_KEYS_DIR=$DOCSDIR/openvpn/sample/sample-keys
 
 # DNS2TCP
 DNS2TCP_DOMAIN=t1.soroti.com
@@ -1629,7 +1628,7 @@ clear
 cat <<EOF
 You are about to install the latest Linux kernel version [$KERNEL_VERSION], 
 
-CAUTION:  This may take up to 6 hours or more to complete! 
+CAUTION:  This may take up to 1.5 hours or more to complete! 
 
 Enter to proceed ...
 EOF
@@ -1645,12 +1644,10 @@ EOF
 
 
 
-#########################
-#  UNINSTALL FUNCTIONS  #
-#########################
-# Pause and check for Errors
-_install_pause_check_4_errors_ () {
-# Notify at Local workstation i.e. Here
+############
+#  ALERTS  #
+############
+beeps_notification () {
 $BEEP_CMD -f 65.4064 -l 100 -n -f 130.813 -l 100 -n -f 261.626 -l 100 -n -f 523.2
 $BEEP_CMD -f 523.251 -l 100 -D 100 -n -f 391.995 -l 100 -D 100 -n -f 329.628 -l 10
 $BEEP_CMD -f 600 -l 155 -n -f 800 -l 155 -n -f 500 -l 155 -n -f 400 -l 155 -n -f 400 -l 1
@@ -1662,14 +1659,16 @@ $BEEP_CMD -f 600 -l 155 -n -f 800 -l 155 -n -f 500 -l 155 -n -f 400 -l 155 -n -f
 $BEEP_CMD -f 65.4064 -l 100 -n -f 130.813 -l 100 -n -f 261.626 -l 100 -n -f 523.2
 $BEEP_CMD -f 523.251 -l 100 -D 100 -n -f 391.995 -l 100 -D 100 -n -f 329.628 -l 10
 $BEEP_CMD -f 600 -l 155 -n -f 800 -l 155 -n -f 500 -l 155 -n -f 400 -l 155 -n -f 400 -l 1
+}
 
-# Notify at Remote workstation - gxmessage needed there
+remote_workstation_notification () {
 if [[ "x$1" != "x" && "x$2" != "x" ]];
 then
 # Run only if remote station is up
 ping -c 3 -W 3 $2 > /dev/null 2>&1
 if [[ "$?" = "0" ]];
 then
+echo "Connected to the remote workstation at ${2}. Please wait while I notify ${1} ..."
 # Beeps
 ssh $1@$2 /usr/bin/aplay /usr/share/sounds/purple/alert.wav > /dev/null 2>&1
 sleep 1
@@ -1678,10 +1677,21 @@ sleep 1
 ssh $1@$2 /usr/bin/aplay /usr/share/sounds/purple/alert.wav > /dev/null 2>&1
 # Popup message
 ssh $1@$2 /usr/bin/gxmessage -center -ontop -sticky -timeout 60 -title "$PROJECT_NAME" "Hi $1! Your attention is required by the program [$3] running at: $(hostname)"
+
+else
+echo "Unable to access the remote workstation at ${2}. Skipped notifying ${1}"
 fi
 
 fi
-#
+}
+
+_install_pause_check_4_errors_ () {
+# Notify at Local workstation i.e. Here
+beeps_notification
+
+# Notify at Remote workstation - gxmessage needed there
+remote_workstation_notification $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "$@"
+# Pause and check for Errors
 echo
 echo
 echo "Please enter to proceed ..."
@@ -1756,7 +1766,7 @@ make -j$SYSTEM_CPU_CORES install
 # Done
 # ----
 # Send notice to operator
-_install_pause_check_4_errors_ $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "Kernel Compilation"
+_install_pause_check_4_errors_ "Kernel Compilation"
 # Banner
 echo
 echo
@@ -1782,6 +1792,11 @@ EOF
 exit
 }
 
+
+
+#########################
+#  UNINSTALL FUNCTIONS  #
+#########################
 uninstall_src_pkgs () {
 if [ -d $INSTALL_SRC_DIR/$1 ];
 then
@@ -1860,7 +1875,7 @@ systemctl stop jambulatv@kodi.service
 uninstall_src_pkgs kodi
 }
 
-uninstall_kodi17_addons () {
+uninstall_kodi_addons () {
 for KODI_ADDON in $@
 do
 # Remove from system kodi addons share
@@ -1870,7 +1885,7 @@ rm -rf $KODI_SYSTEM_ADDONS/$KODI_ADDON
 #
 echo
 echo "$KODI_ADDON removed from $KODI_SYSTEM_ADDONS"
-_install_pause_check_4_errors_
+_install_pause_check_4_errors_ "$KODI_ADDON removed"
 #
 # Remove from user kodi addons share
 elif [ -d $KODI_ADDON_DATA_DIR/$KODI_ADDON ];
@@ -1879,19 +1894,28 @@ rm -rf $KODI_ADDON_DATA_DIR/$KODI_ADDON
 #
 echo
 echo "$KODI_ADDON removed from $KODI_ADDON_DATA_DIR"
-_install_pause_check_4_errors_
+_install_pause_check_4_errors_ "$KODI_ADDON removed"
 fi
 #
 done
 }
 
 uninstall_kodi18 () {
+# Remove all kodi files and directories in cmake install manifest
+uninstall_cmake_pkgs kodi
+#
+# Remove lingering kodi files
+rm -f $BINARY_PREFIX/kodi*
+rm -rf $LIBDIR/kodi 
+rm -rf $INCDIR/kodi
+rm -rf $KODI_SHARE_DIR
+rm -rf $KODI_CONFIG_DIR
 # Core
 [[ -d $KODI18_CORE_INSTALL_ROOT_DIR ]] && \
 	rm -rf $KODI18_CORE_INSTALL_ROOT_DIR
 # Pvr.hts
-[[ -d $INSTALL_SRC_DIR/kodi-$KODI18_VERSION-pvr.hts ]] && \
-	rm -rf $INSTALL_SRC_DIR/kodi-$KODI18_VERSION-pvr.hts
+[[ -d $INSTALL_SRC_DIR/kodi-pvr.hts ]] && \
+	rm -rf $INSTALL_SRC_DIR/kodi-pvr.hts
 }
 
 uninstall_oss () {
@@ -2356,7 +2380,7 @@ cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 # Apply patches
 kernel_patches
 #
-_install_pause_check_4_errors_
+_install_pause_check_4_errors_ "Kernel Patches"
 #
 # Remove stale .o files and dependencies lying around
 make mrproper
@@ -2407,7 +2431,7 @@ cat <<EOF
  ***********
  * WARNING *
  ***********
- Please be advised that this install process may take up to 12 hours or more
+ Please be advised that this install process may take up to 11 hours or more
  to complete.  Please enter to proceed or press 'Ctrl+C to cancel' ...
 
 EOF
@@ -2582,6 +2606,27 @@ EOF
 # Change ownership to multimedia user i.e. jambula and make it executable
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_DVBT_SETTINGS_FILE
 chmod 755 $PROJECT_DVBT_SETTINGS_FILE
+}
+
+cctv_ask_4_variables () {
+# -------------------
+# ZM Default Monitors
+# -------------------
+clear
+DEFAULT_ZM_ADD_DEFAULT_MONITORS=no
+read -p "Should I add the default CCTV monitors to ZoneMinder? [$DEFAULT_ZM_ADD_DEFAULT_MONITORS]
+If you say yes, the following monitors will be added if their config files are found:
+
+* $(echo "$ZONEMINDER_CCTV_MONITORS" | sed "s: :\n* :g")
+
+" ZM_ADD_DEFAULT_MONITORS
+# If empty set to default
+if [ "x$ZM_ADD_DEFAULT_MONITORS" = "x" ];
+then
+ZM_ADD_DEFAULT_MONITORS=$DEFAULT_ZM_ADD_DEFAULT_MONITORS
+fi
+# Export
+export ZM_ADD_DEFAULT_MONITORS
 }
 
 install_dir_create () {
@@ -2767,12 +2812,12 @@ tar xvf $PROJECT_TARBALLS_DIR/mesa-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v mesa-* mesa
 # Compile all
 cd $INSTALL_SRC_DIR/mesa
-./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-vdpau --with-gallium-drivers="i915,nouveau,r600,svga,swrast"
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-fast-install --enable-vdpau --with-gallium-drivers="i915,nouveau,r600,svga,swrast" 
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
 glu_install () {
-# Remove expat rpm installed package(s)
+# Remove mesa-libGLU rpm installed package(s)
 rpm -q mesa-libGLU-devel > /dev/null 2>&1 && rpm -e --nodeps mesa-libGLU-devel
 rpm -q mesa-libGLU > /dev/null 2>&1 && rpm -e --nodeps mesa-libGLU
 #
@@ -2853,6 +2898,69 @@ tar jxvf $PROJECT_TARBALLS_DIR/giflib-*.tar.bz2 -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v giflib-* giflib
 # Compile all
 cd $INSTALL_SRC_DIR/giflib
+./configure --prefix=$PREFIX --libdir=$LIBDIR 
+make_install_jambulatv
+}
+
+libva_install () {
+# Remove libva rpm installed package(s)
+for RPM_PKG in libva-vdpau-driver libva-drm1 libva-x11_1 libva1 libva-devel libva-tpi1 libva-glx1 libva-egl1
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+rsync -avz $PROJECT_GITHUB_DIR/libva/ $INSTALL_SRC_DIR/libva/
+# configure
+cd $INSTALL_SRC_DIR/libva
+./autogen.sh --prefix=$PREFIX --libdir=$LIBDIR 
+make_install_jambulatv
+
+# Create symbolic links for old libva libraries
+for LIBRARY in libva libva-drm libva-x11 libva-glx
+do
+[[ -e $LIBDIR/$LIBRARY.so.1 ]] || ln -s $LIBDIR/$LIBRARY.so $LIBDIR/$LIBRARY.so.1
+done
+}
+
+libva_utils_install () {
+# Remove libva-utils rpm installed package(s)
+for RPM_PKG in libva-utils
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+rsync -avz $PROJECT_GITHUB_DIR/libva-utils/ $INSTALL_SRC_DIR/libva-utils/
+# configure
+cd $INSTALL_SRC_DIR/libva-utils
+./autogen.sh --prefix=$PREFIX --libdir=$LIBDIR 
+make_install_jambulatv
+}
+
+intel_vaapi_driver_install () {
+# Remove intel-vaapi-driver rpm installed package(s)
+for RPM_PKG in libva-intel-driver
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+rsync -avz $PROJECT_GITHUB_DIR/intel-vaapi-driver/ $INSTALL_SRC_DIR/intel-vaapi-driver/
+# configure
+cd $INSTALL_SRC_DIR/intel-vaapi-driver
+./autogen.sh --prefix=$PREFIX --libdir=$LIBDIR 
+make_install_jambulatv
+}
+
+vdpauinfo_install () {
+# Remove vdpauinfo rpm installed package(s)
+for RPM_PKG in vdpauinfo
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+rsync -avz $PROJECT_GITHUB_DIR/vdpauinfo/ $INSTALL_SRC_DIR/vdpauinfo/
+# configure
+cd $INSTALL_SRC_DIR/vdpauinfo
+./autogen.sh 
 ./configure --prefix=$PREFIX --libdir=$LIBDIR 
 make_install_jambulatv
 }
@@ -3485,6 +3593,12 @@ mv -v $PREFIX/lib/pkgconfig/opencv.pc $LIBDIR/pkgconfig/
 }
 
 openal_soft_install () {
+# Remove openal-soft rpm installed package(s)
+for RPM_PKG in openal-soft-devel openal-soft
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
 # Unpack
 tar jxvf $PROJECT_TARBALLS_DIR/openal-soft-*.tar.bz2 -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v openal-soft-* openal-soft
@@ -4973,9 +5087,9 @@ git tag -l | grep -x $KODI17_TAG > /dev/null 2>&1
 TAG_EXISTS=$?
 if [ "$TAG_EXISTS" = "0" ];
 then
-git archive --format tar.gz --prefix=kodi-$KODI17_VERSION/ $KODI17_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=kodi/ $KODI17_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 else
-git archive --format tar.gz --prefix=kodi-$KODI17_VERSION/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=kodi/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 # Display Kodi's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
@@ -4998,7 +5112,7 @@ git archive -o $KODI17_CORE_INSTALL_ROOT_DIR/tools/depends/target/ffmpeg/ffmpeg-
 
 kodi17_unpack_tarball () {
 tar zxvf $PROJECT_TARBALLS_DIR/xbmc-$KODI17_TAG*.tar.gz -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v xbmc-$KODI17_TAG* kodi-$KODI17_VERSION
+cd $INSTALL_SRC_DIR && mv -v xbmc-$KODI17_TAG* kodi
 cd $KODI17_CORE_INSTALL_ROOT_DIR
 #
 # Set FFmpeg version for kodi
@@ -5141,9 +5255,9 @@ TAG_EXISTS=$?
 #
 if [ "$TAG_EXISTS" = "0" ];
 then
-git archive --format tar.gz --prefix=kodi-$KODI18_VERSION/ $KODI18_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=kodi/ $KODI18_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 else
-git archive --format tar.gz --prefix=kodi-$KODI18_VERSION/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=kodi/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 # Display Kodi's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
@@ -5180,9 +5294,9 @@ TAG_EXISTS=$?
 #
 if [ "$TAG_EXISTS" = "0" ];
 then
-git archive --format tar.gz --prefix=kodi-$KODI18_VERSION-pvr.hts/ $KODI18_PVR_HTS_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=kodi-pvr.hts/ $KODI18_PVR_HTS_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 else
-git archive --format tar.gz --prefix=kodi-$KODI18_VERSION-pvr.hts/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=kodi-pvr.hts/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 # Display Kodi's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
@@ -5196,16 +5310,13 @@ EOF
 fi
 
 # Change to install directory
-cd $INSTALL_SRC_DIR/kodi-$KODI18_VERSION-pvr.hts
+cd $INSTALL_SRC_DIR/kodi-pvr.hts
 # CMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
 make_install_jambulatv
 }
 
 kodi18_install () {
-# Remove previous kodi install directory if it exists
-uninstall_kodi18
-
 # Unpack sources depending on type of sources
 case $KODI18_SOURCES_TYPE in
 git)
@@ -5238,7 +5349,8 @@ cmake .. \
 	-DENABLE_INTERNAL_FMT=OFF \
 	-DENABLE_INTERNAL_FSTRCMP=OFF \
 	-DENABLE_INTERNAL_RapidJSON=OFF \
-	-DENABLE_VAAPI=OFF \
+	-DENABLE_VAAPI=ON \
+	-DENABLE_VDPAU=OFF \
 	-DVERBOSE=ON \
 	-DCROSSGUID_URL="$KODI18_CROSSGUID_PACAKGE_NAME" \
 	-DFLATBUFFERS_URL="$KODI18_FLATBUFFERS_PACAKGE_NAME" \
@@ -5303,16 +5415,9 @@ elif [ "$KODI_ADDON" = "weather.yahoo" ];
 then
 rsync -avz $PROJECT_GITHUB_DIR/kodi-addons/weather.yahoo/ \
 	$KODI_SYSTEM_ADDONS/weather.yahoo/
-
 else
 # All others
 unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$PREFERRED_KODI_CODENAME/$KODI_ADDON*.zip
-
-# Debugging
-#echo
-#_install_pause_check_4_errors_
-#echo
-
 fi
 # Give permissions to multimedia user for addons system directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $KODI_SYSTEM_ADDONS
@@ -5939,11 +6044,6 @@ for SKIN_ADDON in \
 $KODI_SKIN_ADDONS
 do
 unzip -o -d $KODI_USER_ADDONS $PROJECT_ZIPS_DIR/kodi-addons/$PREFERRED_KODI_CODENAME/skin.$KODI_PREFERRED_SKIN/$SKIN_ADDON*.zip
-
-# Debugging
-#echo
-#_install_pause_check_4_errors_
-#echo
 
 # Add enabling of skin related addons to script that runs at startup
 cat >> $KODI_USER_DATA/Database/jambula_addons.sh <<EOT
@@ -6850,9 +6950,6 @@ cat >> $CONFDIR/bashrc << EOF
 # JambulaTV Bash Settings
 # -----------------------
 #
-# Prompt (root)
-PS1="[\u@\h]\nAt \@ in (\w) # "
-#
 # Aliases
 alias ls='ls -lhrt --color=always'
 alias df='df -h'
@@ -6888,7 +6985,9 @@ calc(){ awk "BEGIN{ print \$* }" ;}
 EOF
 
 # Add .profile to autologin user's home directory
-cat > $AUTOLOGIN_USER_HOME_DIR/.profile << EOF
+for FILE in .bashrc .profile
+do
+cat > $AUTOLOGIN_USER_HOME_DIR/$FILE << EOF2
 # Source global definitions
 if [ -f /etc/bashrc ]; then
 	. /etc/bashrc
@@ -6897,9 +6996,10 @@ fi
 # Prompt (normal user)
 PS1="[\u@\h]\nAt \@ in (\w) $ "
 #
-EOF
+EOF2
 # Give autlogin user ownership
-chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/.profile
+chown -R $AUTOLOGIN_USER:$AUTOLOGIN_USER $AUTOLOGIN_USER_HOME_DIR/$FILE
+done
 }
 
 release_info_configure () {
@@ -7469,7 +7569,7 @@ echo
 echo 
 echo "Did python module [$PYTHON_MODULE] install correctly?"
 echo 
-#_install_pause_check_4_errors_
+#_install_pause_check_4_errors_ $PYTHON_MODULE install
 #clear
 #
 #
@@ -7887,7 +7987,7 @@ echo
 echo 
 echo "Did python module [$PYTHON_MODULE] install correctly?"
 echo 
-#_install_pause_check_4_errors_
+#_install_pause_check_4_errors_ $PYTHON_MODULE] install
 echo
 #
 done
@@ -9260,6 +9360,10 @@ done
 trackerjacker_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/trackerjacker/ $INSTALL_SRC_DIR/trackerjacker/
+# Force our requirements
+cp -v $PROJECT_PIPS_REQUIRES_DIR/trackerjacker-requirements.txt \
+        $INSTALL_SRC_DIR/trackerjacker/requirements.txt
+# Install
 cd $INSTALL_SRC_DIR/trackerjacker
 $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 # Create symbolic link in /usr/bin
@@ -11258,7 +11362,7 @@ cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-webcams.rules $UDEV_RULES_DIR
 
 # ZM Monitors
 # -----------
-zoneminder_add_monitors_using_api
+[[ "$ZM_ADD_DEFAULT_MONITORS" = "yes" ]] && zoneminder_add_monitors_using_api
 
 # Setup Systemd
 # -------------
@@ -12684,8 +12788,11 @@ Time
 Script runtime was $SCRIPT_RUNTIME seconds
 
 EOT
-# Notify Attendant
-_install_pause_check_4_errors_ $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "Installation Completed"
+# Notify at Local workstation i.e. Here
+beeps_notification
+
+# Notify at Remote workstation - gxmessage needed there
+remote_workstation_notification $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "Installation Completed"
 #
 # Print post install notes to screen
 timeout --foreground 120s less $POST_INSTALL_NOTES

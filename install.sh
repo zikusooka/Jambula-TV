@@ -1,4 +1,5 @@
 #!/bin/sh
+# Variables
 PROJECT_NAME=JambulaTV
 SOURCESDIR=/opt
 PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
@@ -12,7 +13,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #  MAIN SCRIPT  #
 #################
 #DEBUGGING
-#_install_pause_check_4_errors_ $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "Insert program name here"
+#_install_pause_check_4_errors_ "[Insert program name here] Install"
 
 # Custom kernel install, reboot is needed
 kernel_install 
@@ -29,6 +30,8 @@ update_dtv_scan_tables
 # Ask and set key variables
 dvbt_ask_4_variables
 dvbt_set_variables
+
+cctv_ask_4_variables
 
 # Non-Interactive install starts here i.e. Start logging to file 
 exec 2>> $BUILD_LOG
@@ -53,6 +56,12 @@ gcc4_install
 
 # General dependencies
 giflib_install 
+
+# VA-API/VDPAU
+libva_install
+libva_utils_install 
+intel_vaapi_driver_install
+vdpauinfo_install
 
 # Install expat - needed for python3
 expat_install

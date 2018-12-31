@@ -2,13 +2,18 @@
 # Variables
 PROJECT_NAME=JambulaTV
 SOURCESDIR=/opt
-PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
-PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 
 # Source functions file
-. $PROJECT_FUNCTIONS_FILE
+. $PROJECT_BASE_DIR/functions
 
 
+
+#################
+#  MAIN SCRIPT  #
+#################
+#DEBUGGING
+#_install_pause_check_4_errors_ "[Insert program name here] Upgrade"
 
 # Upgrade Linux Kernel
 upgrade_kernel () {
@@ -31,20 +36,22 @@ python3_install
 
 # Upgrade Kodi
 upgrade_kodi () {
-uninstall_kodi17
-kodi_install
-kodi_pvr_hts_install
+#uninstall_kodi17
+#kodi17_install
+uninstall_kodi18
+kodi18_install
+kodi_configure
 kodi_addons_install
+kodi_addons_configure
 kodi_skin_customization
 kodi_scripts
-IR_REMOTE=
-kodi_lircmap_configure 
+IR_REMOTE="vr-100" && kodi_remote_configure
 }
 
 upgrade_kodi_addons () {
 KODI_ADDONS_4_UPGRADE=$@
 # Uninstall Old
-uninstall_kodi17_addons $KODI_ADDONS_4_UPGRADE
+uninstall_kodi_addons $KODI_ADDONS_4_UPGRADE
 # Install New
 for KODI_ADDON in $KODI_ADDONS_4_UPGRADE; do kodi_addons_unpack $KODI_ADDON; echo; echo "$KODI_ADDON installed, please enter to proceed ..."; echo; read; done
 }
