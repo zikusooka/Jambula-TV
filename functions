@@ -9731,6 +9731,8 @@ EOF
 # Add link to /JambulaTV folder - Find a better way to access these files
 [ -e $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/files/$PROJECT_NAME ] || \
 	ln -s $PROJECT_PARTITION $NEXTCLOUD_DATA_DIRECTORY/$NEXTCLOUD_ADMIN_USER/files/$PROJECT_NAME
+# Add empty .ocdata file to nextcloud data directory - its required
+touch $NEXTCLOUD_DATA_DIRECTORY/.ocdata
 # Change permissions on data directory
 chown -R $WWW_USER:$WWW_GROUP $NEXTCLOUD_DATA_DIRECTORY
 
