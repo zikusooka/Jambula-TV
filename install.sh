@@ -130,6 +130,7 @@ vlc_install
 #xine_lib_install
 #xine_ui_install
 mplayer_install
+mpv_install
 sox_install
 v4l_utils_install
 tvheadend_install

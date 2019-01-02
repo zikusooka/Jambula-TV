@@ -214,6 +214,11 @@ uninstall_src_pkgs mplayer
 mplayer_install
 }
 
+upgrade_mpv () {
+uninstall_mpv
+mpv_install
+}
+
 upgrade_firefox () {
 uninstall_firefox
 firefox_install
@@ -316,6 +321,8 @@ live555_install
 #upgrade_vlc
 
 #upgrade_mplayer
+
+#upgrade_mpv
 
 #upgrade_firefox 
 

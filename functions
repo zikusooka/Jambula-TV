@@ -2305,6 +2305,15 @@ groupdel netdata
 userdel -r netdata
 }
 
+uninstall_mpv () {
+# change to sources dir
+cd $INSTALL_SRC_DIR/mpv
+# uninstall
+./waf uninstall
+# remove sources dir
+rm -rf $INSTALL_SRC_DIR/mpv
+}
+
 
 
 #####################
@@ -3014,12 +3023,13 @@ sleekxmpp \
 jinja2==2.9.6 \
 certifi==2017.4.17 \
 six==1.10.0 \
-ruamel.yaml==0.15.72 \
+ruamel.yaml==0.15.80 \
 pyaml \
 scapy \
 nose \
 coverage \
-Cython
+Cython \
+docutils
 do
 # Install Python package
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_PACKAGE
@@ -3932,17 +3942,27 @@ make clean
 }
 
 mpv_install () {
-# Unpack
-tar zxvf $PROJECT_TARBALLS_DIR/mpv-*.tar.gz -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v mpv-* mpv
-# Add ffmpeg latest sources
-tar jxvf $PROJECT_TARBALLS_DIR/ffmpeg-*.tar.bz2 -C $INSTALL_SRC_DIR/mpv
+# Copy git sources to install directory
+rsync -avz $PROJECT_GITHUB_DIR/mpv/ $INSTALL_SRC_DIR/mpv/
+# Change to build directory
 cd $INSTALL_SRC_DIR/mpv
-# Rename ffmpeg dir
-mv -v ffmpeg* ffmpeg
-# Compile
-./old-configure --prefix=$PREFIX
-make_install_jambulatv
+# Bootstrap
+./bootstrap.py
+# Configure
+./waf configure --prefix=/usr --libdir=$LIBDIR \
+	--enable-libsmbclient \
+	--enable-dvdread \
+	--enable-dvdnav \
+	--enable-cdda \
+	--enable-sdl2 \
+	--enable-sndio \
+	--enable-openal \
+	--enable-tv \
+	--enable-dvbin
+# Build
+./waf build -j$SYSTEM_CPU_CORES
+# Install
+./waf install
 }
 
 sox_install () {
