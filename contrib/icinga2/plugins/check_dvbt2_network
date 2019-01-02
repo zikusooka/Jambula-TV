@@ -65,7 +65,7 @@ exit 0
 fi
 
 # Quit if, there's already a process to reset or repair tvheadend
-if [[ -e $TVHEADEND_REPAIR_IN_PROGRESS_TEMP_FILE ]] || \
+if [[ -e $TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE ]] || \
 	[[ -e $TVHEADEND_REPAIR_IN_PROGRESS_TEMP_FILE ]]
 then
 echo "$ICINGA2_NOTICE_REPAIR_RESET"
