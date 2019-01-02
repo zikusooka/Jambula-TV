@@ -36,6 +36,9 @@ cctv_ask_4_variables
 # Non-Interactive install starts here i.e. Start logging to file 
 exec 2>> $BUILD_LOG
 
+# Linux tools - selected linux kernel tools
+linux_tools_install
+
 # Install images and icons
 images_add
 

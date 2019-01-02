@@ -1668,7 +1668,8 @@ then
 ping -c 3 -W 3 $2 > /dev/null 2>&1
 if [[ "$?" = "0" ]];
 then
-echo "Connected to the remote workstation at ${2}. Please wait while I notify ${1} ..."
+echo "
+Connected to the remote workstation at ${2}. Please wait while I notify ${1} ..."
 # Beeps
 ssh $1@$2 /usr/bin/aplay /usr/share/sounds/purple/alert.wav > /dev/null 2>&1
 sleep 1
@@ -1679,7 +1680,8 @@ ssh $1@$2 /usr/bin/aplay /usr/share/sounds/purple/alert.wav > /dev/null 2>&1
 ssh $1@$2 /usr/bin/gxmessage -center -ontop -sticky -timeout 60 -title "$PROJECT_NAME" "Hi $1! Your attention is required by the program [$3] running at: $(hostname)"
 
 else
-echo "Unable to access the remote workstation at ${2}. Skipped notifying ${1}"
+echo "
+Unable to access the remote workstation at ${2}. Skipped notifying ${1}"
 fi
 
 fi
@@ -2389,8 +2391,6 @@ cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 # Apply patches
 kernel_patches
 #
-_install_pause_check_4_errors_ "Kernel Patches"
-#
 # Remove stale .o files and dependencies lying around
 make mrproper
 # Add our .config file
@@ -2421,6 +2421,58 @@ cat << EOF
 EOF
 exit
 fi
+}
+
+usbip_install () {
+cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME/tools/usb/usbip
+./autogen.sh 
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR
+make_install_jambulatv
+}
+
+turbostat_install () {
+cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME/tools/power/x86/turbostat
+make_install_jambulatv
+}
+
+tmon_install () {
+cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME/tools/thermal/tmon
+make_install_jambulatv
+}
+
+acpi_install () {
+cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME/tools/power/acpi
+make_install_jambulatv
+}
+
+cpupower_install () {
+cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME/tools/power/cpupower
+make_install_jambulatv
+}
+
+perf_install () {
+cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME/tools/perf
+make_install_jambulatv
+}
+
+linux_tools_install () {
+# USBIP - Access remote USB nodes
+usbip_install
+#
+# turbostat - Report processor frequency and idle statistics
+turbostat_install
+#
+# tmon - Thermal monitoring and tuning
+tmon_install
+#
+# acpi - ACPI tools
+acpi_install
+#
+# cpupower - Examine and tune power saving related features of processor
+cpupower_install
+#
+# perf - Performance analyzing tool
+perf_install
 }
 
 # Info about this install
