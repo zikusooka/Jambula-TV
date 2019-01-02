@@ -48,6 +48,8 @@ ICINGA2_NOTICE_CRITICAL_NETWORK_NOT_ATTACHED="CRITICAL - DVB-T network not assig
 ICINGA2_NOTICE_OK="OK - DVB-T network and Channels list are fine"
 # TVHeadend not active
 ICINGA2_NOTICE_TVH_NOT_ACTIVE="The TVHeadend server is not running"
+# DVB-T2 Live TV Not Enabled
+ICINGA2_NOTICE_DVB_T_DISABLED="DVB-T2 Live TV was not initially enabled during setup"
 # Repair/Reset in progress
 ICINGA2_NOTICE_REPAIR_RESET="A TVHeadend repair or reset process is already in progress"
 
@@ -56,6 +58,11 @@ ICINGA2_NOTICE_REPAIR_RESET="A TVHeadend repair or reset process is already in p
 #################
 #  MAIN SCRIPT  #
 #################
+# Quit if DVB-T2 Live TV was not enabled during initial setup
+if [[ ! -e $TVHEADEND_CONFIG_DIR/.dvbt_configured ]];
+echo "$ICINGA2_NOTICE_DVB_T_DISABLED"
+exit 0
+fi
 
 # Quit if TVHeadend is NOT running (Unknown state)
 if [[ "$(systemctl is-active tvheadend.service)" != "active" ]];
