@@ -15,7 +15,8 @@ PROJECT_ATTENDANT_USERNAME=zik
 PROJECT_ATTENDANT_HOSTNAME=kampala
 
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.19.6"
+KERNEL_VERSION="4.19.13"
+KERNEL_CONFIG_VERS=$(echo $KERNEL_VERSION | cut -d '.' -f1-2)
 
 PRODUCT_MODEL_NAME="$PROJECT_NAME"
 PRODUCT_DISK_SIZE=$(journalctl -b -o cat --no-pager | grep sda | grep logical | awk {'print $8'} | sed 's:(::')
@@ -1609,18 +1610,25 @@ fi
 kernel_patches () {
 # Change to kernel sources root directory
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
+
 # USB Core messages
-#patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel/linux_4.4.x_usb_core.message.patch
-patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel/linux_4.19.x_usb_core.message.patch
+# -----------------
+[[ -e $PROJECT_PATCHES_DIR/kernel/linux_${KERNEL_CONFIG_VERS}.x_usb_core.message.patch ]] && \
+	patch -p1 ./drivers/usb/core/message.c < $PROJECT_PATCHES_DIR/kernel/linux_${KERNEL_CONFIG_VERS}.x_usb_core.message.patch
+
 # DVB Core Frontend - Set dvb_powerdown_on_sleep = 0
-#patch -p1 ./drivers/media/dvb-core/dvb_frontend.c < $PROJECT_PATCHES_DIR/kernel/linux_4.4.x_dvb_core.frontend.patch
-patch -p1 ./drivers/media/dvb-core/dvb_frontend.c < $PROJECT_PATCHES_DIR/kernel/linux_4.19.x_dvb_core.frontend.patch
+# --------------------------------------------------
+[[ -e $PROJECT_PATCHES_DIR/kernel/linux_${KERNEL_CONFIG_VERS}.x_dvb_core.frontend.patch ]] && \
+	patch -p1 ./drivers/media/dvb-core/dvb_frontend.c < $PROJECT_PATCHES_DIR/kernel/linux_${KERNEL_CONFIG_VERS}.x_dvb_core.frontend.patch
+
 # Realtek WiFi
-#patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel/linux_4.4.x_rtlwifi.regdb.patch
-# USB TV Tuner - Gadmei
-#patch -p1 ./drivers/media/usb/usbtv/usbtv-core.c < $PROJECT_PATCHES_DIR/kernel/linux_4.4.x_usbtv_core.patch
+[[ -e $PROJECT_PATCHES_DIR/kernel/linux_${KERNEL_CONFIG_VERS}.x_rtlwifi.regdb.patch ]] && \
+	patch -p1 ./drivers/net/wireless/realtek/rtlwifi/regd.c < $PROJECT_PATCHES_DIR/kernel/linux_${KERNEL_CONFIG_VERS}.x_rtlwifi.regdb.patch
+
 # si2168 driver - DVB-T/T2 autodetect
-#patch -p1 ./drivers/media/dvb-frontends/si2168.c < $PROJECT_PATCHES_DIR/kernel/linux_4.4.x_dvb.si2168.patch
+# -----------------------------------
+[[ -e $PROJECT_PATCHES_DIR/kernel/linux_${KERNEL_CONFIG_VERS}.x_dvb.si2168.patch ]] && \
+	patch -p1 ./drivers/media/dvb-frontends/si2168.c < $PROJECT_PATCHES_DIR/kernel/linux_${KERNEL_CONFIG_VERS}.x_dvb.si2168.patch
 }
 
 kernel_install_notice () {
@@ -1708,6 +1716,7 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 # Source functions file
 . $PROJECT_BASE_DIR/functions
 KERNEL_VERSION=$NEW_KERNEL
+KERNEL_CONFIG_VERS=$(echo $KERNEL_VERSION | cut -d '.' -f1-2)
 
 # See how much space is left
 kernel_check_4_space
@@ -1737,7 +1746,7 @@ $KERNELS_SRC_DIR/drivers
 
 EOF
 
-_install_pause_check_4_errors_
+_install_pause_check_4_errors_ "Kernel Upgrade"
 
 # Change to kernel sources root directory
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
@@ -1745,16 +1754,16 @@ cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 # Remove stale .o files and dependencies lying around
 make mrproper
 # Add our .config file
-cp -v $PROJECT_CONFIGS_DIR/kernel.config .config
+cp -v $PROJECT_CONFIGS_DIR/kernel.config.${KERNEL_CONFIG_VERS}.x .config
 # Compile
 make oldconfig
 fi
 }
 
 kernel_upgrade_2 () {
-# Source functions file
-#
+# Set Linux kernel version
 KERNEL_VERSION=$NEW_KERNEL
+KERNEL_CONFIG_VERS=$(echo $KERNEL_VERSION | cut -d '.' -f1-2)
 #
 # Notice - Going to install
 kernel_install_notice
@@ -2394,7 +2403,8 @@ kernel_patches
 # Remove stale .o files and dependencies lying around
 make mrproper
 # Add our .config file
-cp -v $PROJECT_CONFIGS_DIR/kernel.config .config
+cp -v $PROJECT_CONFIGS_DIR/kernel.config.${KERNEL_CONFIG_VERS}.x .config
+#
 # Compile
 make oldconfig
 #
