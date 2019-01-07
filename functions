@@ -2910,7 +2910,7 @@ tar xvf $PROJECT_TARBALLS_DIR/mesa-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v mesa-* mesa
 # Compile all
 cd $INSTALL_SRC_DIR/mesa
-./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-fast-install --enable-vdpau --with-gallium-drivers="i915,nouveau,r600,svga,swrast" 
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-fast-install --enable-vdpau --with-gallium-drivers="i915" 
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
