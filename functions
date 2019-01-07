@@ -1296,6 +1296,27 @@ debug_print () {
 [[ "$DEBUG_MODE" = "yes" ]] && echo -e "$(date '+%b %d %T') | DEBUG | $1"
 }
 
+# Time taken
+estimate_complete_time () {
+TIME_TAKEN_NORMAL_SECONDS=$1
+#
+if [[ "x$TIME_TAKEN_NORMAL_SECONDS" != "x" ]];
+then
+TIME_START_EPOC=$(date +%s)
+TIME_END_EPOC=$(expr ${TIME_START_EPOC} + ${TIME_TAKEN_NORMAL_SECONDS})
+TIME_END_NORMAL=$(date -d@${TIME_END_EPOC} +'%d %B %Y at %I:%M%P')
+
+else
+TIME_END_NORMAL="Unknown"
+fi
+
+cat <<ET
+
+Estimated time of completion: $TIME_END_NORMAL
+
+ET
+}
+
 # Set Python version
 set_python_version () {
 case $PYTHON_VERSION_USED in
@@ -1638,6 +1659,8 @@ You are about to install the latest Linux kernel version [$KERNEL_VERSION],
 
 CAUTION:  This may take up to 1.5 hours or more to complete! 
 
+$(estimate_complete_time 5400)
+
 Enter to proceed ...
 EOF
 read
@@ -1685,7 +1708,7 @@ ssh $1@$2 /usr/bin/aplay /usr/share/sounds/purple/alert.wav > /dev/null 2>&1
 sleep 1
 ssh $1@$2 /usr/bin/aplay /usr/share/sounds/purple/alert.wav > /dev/null 2>&1
 # Popup message
-ssh $1@$2 /usr/bin/gxmessage -center -ontop -sticky -timeout 60 -title "$PROJECT_NAME" "Hi $1! Your attention is required by the program [$3] running at: $(hostname)"
+ssh $1@$2 /usr/bin/gxmessage -center -ontop -sticky -timeout 20 -title "$PROJECT_NAME" "Hi $1! Your attention is required by the program [$3] running at: $(hostname)"
 
 else
 echo "
@@ -2503,7 +2526,11 @@ cat <<EOF
  * WARNING *
  ***********
  Please be advised that this install process may take up to 11 hours or more
- to complete.  Please enter to proceed or press 'Ctrl+C to cancel' ...
+ to complete.  
+
+ $(estimate_complete_time 39600)
+
+ Please enter to proceed or press 'Ctrl+C to cancel' ...
 
 EOF
 read
