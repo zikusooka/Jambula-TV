@@ -2484,8 +2484,8 @@ make_install_jambulatv
 }
 
 perf_install () {
-cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME/tools/perf
-make_install_jambulatv
+cd $PREFIX
+make -C $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME/tools/perf install
 }
 
 linux_tools_install () {
