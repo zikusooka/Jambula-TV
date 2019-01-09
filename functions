@@ -19,7 +19,7 @@ KERNEL_VERSION="4.19.13"
 KERNEL_CONFIG_VERS=$(echo $KERNEL_VERSION | cut -d '.' -f1-2)
 
 PRODUCT_MODEL_NAME="$PROJECT_NAME"
-PRODUCT_DISK_SIZE=$(journalctl -b -o cat --no-pager | grep sda | grep logical | awk {'print $8'} | sed 's:(::')
+PRODUCT_DISK_SIZE=$(echo "scale=0; $(cat /sys/class/block/sda/size) * 512 / 1000000000" | bc -l)
 PRODUCT_MODEL_NUMBER=$(echo JTV$KERNEL_VERSION-$PRODUCT_DISK_SIZE | sed "s/\.//g")
 PRODUCT_SERIAL_NUMBER=$(uuid | cut -d - -f5)
 
