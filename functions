@@ -553,7 +553,7 @@ GRUB2_DEFAULT_FILE=/etc/default/grub
 
 #GRUB2_CMD_OPTIONS="acpi=off noapic"
 #GRUB2_CMD_OPTIONS="radeon.modeset=0"
-#GRUB2_CMD_OPTIONS="loglevel=3"
+#GRUB2_CMD_OPTIONS="loglevel=4 drm.debug=0xe log_buf_len=4M"
 GRUB2_CMD_OPTIONS="quiet"
 
 GRUB2_VIDEO_RESOLUTION=${RES1}x${DEPTH1}
