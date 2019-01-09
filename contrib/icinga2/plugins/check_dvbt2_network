@@ -60,6 +60,7 @@ ICINGA2_NOTICE_REPAIR_RESET="A TVHeadend repair or reset process is already in p
 #################
 # Quit if DVB-T2 Live TV was not enabled during initial setup
 if [[ ! -e $TVHEADEND_CONFIG_DIR/.dvbt_configured ]];
+then
 echo "$ICINGA2_NOTICE_DVB_T_DISABLED"
 exit 0
 fi

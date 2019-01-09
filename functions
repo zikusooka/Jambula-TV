@@ -12096,8 +12096,8 @@ chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/log/icinga2
 chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/cache/icinga2
 # Copy icinga2 systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/icinga2.service $SYSTEMD_UNITS_DIR_USER/
-systemctl enable icinga2.service
-systemctl start icinga2.service
+# Disable icinga2.service - IMPORTANT: Will be enabled after initial setup!
+systemctl disable icinga2.service
 # Allow icinga user to use 'sudo' ie: events_handler commands
 # IMPORTANT: Refine what icinga can execute !!!
 echo "Defaults:$ICINGA_USER    !requiretty

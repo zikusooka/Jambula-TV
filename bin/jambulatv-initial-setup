@@ -681,11 +681,12 @@ display_and_play_setup_message
 configure_internet_connection
 configure_wifi_mac_addresses
 
-configure_live_tv
+messaging_services_setup
+
+configure_live_tv # Run after setting up messaging services
 
 remove_current_qrcode
 
-messaging_services_setup
 flexget_secrets_setup
 asterisk_google_xmpp_setup
 
@@ -705,3 +706,6 @@ voice_assist_setup_completed_tutor_channel
 # Scan library
 create_video_music_db
 scan_video_music_db
+
+# Enable icinga2 systemd unit 
+systemctl enable icinga2.service
