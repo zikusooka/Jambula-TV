@@ -190,27 +190,27 @@ TVHEADEND_TIMESHIFT_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/timeshift
 TVHEADEND_TIMESHIFT_BUFFER_FILE=$TMPDIR/timeshift_buffer
 TVHEADEND_DVR_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/dvr/config
 TVHEADEND_DVR_LOG_DIR=$TVHEADEND_CONFIG_DIR/dvr/log
-TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE=/tmp/create_dvr_profile.sh
+TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE=$TMPDIR/create_dvr_profile.sh
 
 TVHEADEND_IMAGE_CACHE_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/imagecache
 
 TVHEADEND_ADAPTERS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/linuxdvb/adapters
 
-TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE=/tmp/tvheadend_reset_in_progress
-TVHEADEND_REPAIR_IN_PROGRESS_TEMP_FILE=/tmp/tvheadend_repair_in_progress
+TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE=$TMPDIR/tvheadend_reset_in_progress
+TVHEADEND_REPAIR_IN_PROGRESS_TEMP_FILE=$TMPDIR/tvheadend_repair_in_progress
 
 TVHEADEND_DVBT_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/dvb/networks
-TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE=/tmp/create_dvbt_network.sh
-TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE=/tmp/create_dvbt_multiplex.sh
+TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE=$TMPDIR/create_dvbt_network.sh
+TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE=$TMPDIR/create_dvbt_multiplex.sh
 
 TVHEADEND_IPTV_NETWORK_NAME=jambula-IPTV
 TVHEADEND_IPTV_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/iptv
-TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE=/tmp/create_iptv_network.sh
+TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE=$TMPDIR/create_iptv_network.sh
 
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
 TVHEADEND_CHANNELS_TAGS_DIR=$TVHEADEND_CONFIG_DIR/channel/tag
 
-TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE=/tmp/create_cctv_network.sh
+TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE=$TMPDIR/create_cctv_network.sh
 
 TVHEADEND_CCTV_NETWORK_NAME=jambula-Eyes
 TVHEADEND_CCTV_LOG_DIR=$TVHEADEND_IPTV_LOG_DIR
@@ -3817,7 +3817,7 @@ make_install_jambulatv
 #
 # libgoom2-devel
 # Unpack in temporary directory
-tar jxvf $PROJECT_TARBALLS_DIR/libgoom2-devel-*.tar.bz2 -C /tmp
+tar jxvf $PROJECT_TARBALLS_DIR/libgoom2-devel-*.tar.bz2 -C $TMPDIR
 # Move files to proper destinations
 rsync -avz $TMPDIR/usr/include/ $INCDIR/
 rsync -avz $TMPDIR/usr/lib/ $LIBDIR/
@@ -6841,7 +6841,7 @@ modprobe iwlwifi
 
 create_list_of_wireless_devices () {
 # Temp list file
-WIFI_DEVICES_RAW_LIST=/tmp/list_of_wireless_devices_raw
+WIFI_DEVICES_RAW_LIST=$TMPDIR/list_of_wireless_devices_raw
 # Remove existing wireless devices file
 [ -f $WIFI_DEVICES_RAW_LIST ] && rm -f $WIFI_DEVICES_RAW_LIST
 #
@@ -6874,8 +6874,8 @@ assign_roles_2_wireless_devices () {
 # Get raw list of wireless devies
 create_list_of_wireless_devices
 # Set temp file variables
-WIFI_DEVICES_SORTED_LIST=/tmp/list_of_wireless_devices_sorted
-WIFI_DEVICES_ROLES_LIST=/tmp/list_of_wireless_devices_roles
+WIFI_DEVICES_SORTED_LIST=$TMPDIR/list_of_wireless_devices_sorted
+WIFI_DEVICES_ROLES_LIST=$TMPDIR/list_of_wireless_devices_roles
 # Remove existing wireless device roles and sorted list files
 [ -f $WIFI_DEVICES_SORTED_LIST ] && rm -f $WIFI_DEVICES_SORTED_LIST
 [ -f $WIFI_DEVICES_ROLES_LIST ] && rm -f $WIFI_DEVICES_ROLES_LIST
@@ -8822,7 +8822,7 @@ echo "--- uam.sh.orig	2014-03-12 12:23:46.875850707 +0300
 -uamrootdir=/etc/chilli
 +uamrootdir=$COOVA_HTML_DIR
  uamwwwdir=\"\$uamrootdir/www\"
- tmpdir=\"/tmp\"" > $TMPDIR/coova_uamroot.patch 
+ tmpdir=\"$TMPDIR\"" > $TMPDIR/coova_uamroot.patch 
 # Apply uam file patch
 patch -p1 $COOVA_HTML_DIR/www/uam.sh < $TMPDIR/coova_uamroot.patch
 #
@@ -8832,9 +8832,9 @@ cat $PROJECT_PATCHES_DIR/coova_login_config_local.patch | \
 	sed "s:COOVACHILLI_DB_USER:$FREERADIUS_DB_USER:g" | \
 	sed "s:COOVACHILLI_DB_PASS:$FREERADIUS_DB_PASS:g" | \
 	sed "s:PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" \
-		> /tmp/coova_config_local.patch
+		> $TMPDIR/coova_config_local.patch
 # Apply patch
-patch -p1 $COOVA_HTML_DIR/www/config-local.sh < /tmp/coova_config_local.patch
+patch -p1 $COOVA_HTML_DIR/www/config-local.sh < $TMPDIR/coova_config_local.patch
 #
 # patch login.chi: Redirect to customized Jambula Splash Web Pages
 patch -p1 $COOVA_HTML_DIR/www/login.chi < $PROJECT_PATCHES_DIR/coova_login_chi.patch
@@ -10668,7 +10668,7 @@ sed -i "s:read yn:yn=y:" build-dep-libs.sh
 
 cepstral_plugin_add_2_unimrcp () {
 # unpack cepstral plugin
-tar zxvf $PROJECT_TARBALLS_DIR/Cepstral_Plugin_*.tar.gz -C /tmp
+tar zxvf $PROJECT_TARBALLS_DIR/Cepstral_Plugin_*.tar.gz -C $TMPDIR
 # Replace files acinclude.m4 and configure.ac 
 cp -f $TMPDIR/Cepstral_Plugin*/acinclude.m4 $INSTALL_SRC_DIR/unimrcp/
 cp -f $TMPDIR/Cepstral_Plugin*/configure.ac $INSTALL_SRC_DIR/unimrcp/
@@ -12952,7 +12952,7 @@ if [[ "x$FTP_REMOTE_DIR" = "x" || "x$FTP_REMOTE_FILE" = "x" || "x$FTP_LOCAL_DIR"
 then
 cat <<EOF
 Usage: $(basename $0) [FTP_REMOTE_DIR] [FTP_REMOTE_FILE] [FTP_LOCAL_DIR]
-   e.g $(basename $0) iptv/ jambula-iptv.m3u8 /tmp
+   e.g $(basename $0) iptv/ jambula-iptv.m3u8 $TMPDIR
 NOTE: Do not include root directory in path
 EOF
 exit 1
