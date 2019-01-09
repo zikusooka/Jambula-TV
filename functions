@@ -6652,10 +6652,13 @@ grub2-mkconfig -o $GRUB2_BOOT_FILE
 
 # Modify systemd-fsck-root.service unit file to prevent logging on console
 # We want boot screen to only have splash graphics i.e. plymouth
-[[ -e $SYSTEMD_UNITS_DIR_USER/systemd-fsck-root.service ]] || \
+#
+# Alternative: Add kernel parameter 'fsck.mode=skip' to grub2 settings
+#
+[[ -e $SYSTEMD_UNITS_DIR_USER/systemd-fsck@root.service ]] || \
 	cat $SYSTEMD_UNITS_DIR_SYSTEM/systemd-fsck@.service | \
         sed -e 's:StandardOutput=journal+console:StandardOutput=journal:' | \
-        sed '/^#/d' > $SYSTEMD_UNITS_DIR_USER/systemd-fsck-root.service       
+        sed '/^#/d' > $SYSTEMD_UNITS_DIR_USER/systemd-fsck@root.service       
 # Reload services daemon
 systemctl --system daemon-reload
 }
