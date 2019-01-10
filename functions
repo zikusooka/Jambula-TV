@@ -848,6 +848,7 @@ VIRT_WIFI_SUPPORT=2 # Disabled
 # WiFi AP/Station device names
 WIFI_AP_INTERFACE=jwlan0
 WIFI_STATION_INTERFACE=jwlan1
+WIFI_MONITOR_INTERFACE=jwlan2
 WIFI_PHY_DEV=0
 WIFI_WAIT_TIME=40
 
@@ -6965,6 +6966,17 @@ WIFI_STATION_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --o
 else
 WIFI_STATION_MACADDRESS=$(grep WIFI_ST $WIFI_DEVICES_ROLES_LIST | awk {'print $3'})
 fi
+#
+# MO
+WIFI_MONITOR_BIOSDEV_NAME=$(grep WIFI_MO $WIFI_DEVICES_ROLES_LIST | awk {'print $2'})
+# If configuring virtual interfaces, then set random AP/Station/Monitor MAC addresses
+# based on OEM/UUID
+if [ "$VIRT_WIFI_SUPPORT" = "0" ];
+then
+WIFI_MONITOR_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):02"
+else
+WIFI_MONITOR_MACADDRESS=$(grep WIFI_MO $WIFI_DEVICES_ROLES_LIST | awk {'print $3'})
+fi
 }
 
 create_wifi_ap_rule () {
@@ -6994,6 +7006,21 @@ fi
 /usr/sbin/udevadm control --reload && udevadm trigger --action=add
 }
 
+create_wifi_mo_rule () {
+# Import WiFi variables
+get_wireless_interface_parameters
+# Create MO rule if station device present
+if [ "x$WIFI_MONITOR_MACADDRESS" != "x" ];
+then
+cat >> $UDEV_RULES_WIFI_NET_DEVICES <<EOF
+# $WIFI_MONITOR_INTERFACE
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_MONITOR_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_MONITOR_INTERFACE"
+EOF
+fi
+# Reload Udev
+/usr/sbin/udevadm control --reload && udevadm trigger --action=add
+}
+
 wireless_interfaces_configure () {
 # See if WiFi interfaces were previously configured
 if [[ -e $UDEV_RULES_WIFI_NET_DEVICES ]];
@@ -7009,8 +7036,6 @@ EOT
 # Notify of the need for a removal and reboot break out
 
 else
-# Get wireless parameters
-get_wireless_interface_parameters
 # Get number of PCI/WiFi devices
 NUMBER_PCI_WIFI_DEVICES=$(grep PCI $WIFI_DEVICES_ROLES_LIST | wc -l)
 NUMBER_USB_WIFI_DEVICES=$(grep USB $WIFI_DEVICES_ROLES_LIST | wc -l)
@@ -7029,7 +7054,9 @@ cat << EOF
 ================================================================================
 
 EOF
-sleep 2
+
+# Get wireless parameters
+get_wireless_interface_parameters
 
 # 2 PCI Cards
 if [[ "$NUMBER_PCI_WIFI_DEVICES" = 2 ]];
@@ -7065,6 +7092,10 @@ create_wifi_ap_rule
 break
 
 fi
+
+# Add WiFi monitor device is available
+# -------------------------------------
+create_wifi_mo_rule
 fi
 }
 
