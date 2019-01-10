@@ -513,6 +513,13 @@ EMAIL_CONFIG_DIR=/etc/email
 EMAIL_SIGNATURE_FILE=$PROJECT_SYSTEM_CONF_DIR/email.signature
 EMAIL_GMAIL_CONFIG=$PROJECT_SYSTEM_CONF_DIR/email-gmail.cfg
 
+# Udev rules
+UDEV_RULES_WIFI_NET_DEVICES=$UDEV_RULES_DIR/96-jambulatv.wifi-net.rules
+UDEV_RULES_USB_REMOTES=$UDEV_RULES_DIR/96-jambulatv.usb-remotes.rules
+UDEV_RULES_USB_MODEMS=$UDEV_RULES_DIR/96-jambulatv.usb-modems.rules
+UDEV_RULES_USB_WEBCAMS=$UDEV_RULES_DIR/96-jambulatv.usb-webcams.rules
+UDEV_RULES_USB_HA_CONTROLLERS=$UDEV_RULES_DIR/96-jambulatv.usb-ha-controllers.rules
+
 MODPROBE_DIR=/etc/modprobe.d
 SUDOERS_DIR=/etc/sudoers.d
 
@@ -843,6 +850,11 @@ WIFI_AP_INTERFACE=jwlan0
 WIFI_STATION_INTERFACE=jwlan1
 WIFI_PHY_DEV=0
 WIFI_WAIT_TIME=40
+
+# Set temp file variables for available WiFi network devices
+WIFI_DEVICES_RAW_LIST=$TMPDIR/list_of_wireless_devices_raw
+WIFI_DEVICES_SORTED_LIST=$TMPDIR/list_of_wireless_devices_sorted
+WIFI_DEVICES_ROLES_LIST=$TMPDIR/list_of_wireless_devices_roles
 
 OUR_WIFI_DEVICES_FILE=$PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg
 	[[ -e $OUR_WIFI_DEVICES_FILE ]] && \
@@ -6325,7 +6337,7 @@ inputlirc_configure () {
 case "$IR_REMOTE" in
 vr-1100)
 # VR-1100
-cat > $UDEV_RULES_DIR/96-jambulatv.usb-remotes.rules <<EOF
+cat > $UDEV_RULES_USB_REMOTES <<EOF
 # VR-1100
 KERNEL=="event*",SUBSYSTEM=="input",ATTRS{idVendor}=="05a4",ATTRS{idProduct}=="9881",IMPORT{program}="input_id %p"
 KERNEL=="event*",SUBSYSTEM=="input",ATTRS{idVendor}=="05a4",ATTRS{idProduct}=="9881",ENV{ID_INPUT_KEYBOARD}=="1",SYMLINK="input/jambulatv-remote0"
@@ -6335,14 +6347,14 @@ EOF
 
 hauppauge)
 # Hauppauge
-cat > $UDEV_RULES_DIR/96-jambulatv.usb-remotes.rules <<EOF
+cat > $UDEV_RULES_USB_REMOTES <<EOF
 # Hauppauge WinTV MiniStick
 KERNEL=="event*", ATTRS{idVendor}=="2040", ATTRS{idProduct}=="c000", MODE="0666", SYMLINK="input/jambulatv-remote0"
 EOF
 ;;
 
 *)
-cat > $UDEV_RULES_DIR/96-jambulatv.usb-remotes.rules <<EOF
+cat > $UDEV_RULES_USB_REMOTES <<EOF
 # August DVB-T2
 KERNEL=="event*", ATTRS{idVendor}=="0572", ATTRS{idProduct}=="c688", MODE="0666", SYMLINK="input/jambulatv-remote0"
 # Pinnacle PCTV 290e
@@ -6397,7 +6409,7 @@ InputLirc / Remote
 
   LIRC_DEVICE="/dev/input/jambulatv-remote0 /dev/input/jambulatv-remote1"
 
-% Take a look at: $UDEV_RULES_DIR/96-jambulatv.usb-remotes.rules 
+% Take a look at: $UDEV_RULES_USB_REMOTES 
   and ensure that your remote devices will be renamed to the above after plugging in
 
   For help, use: ir-keytable
@@ -6722,7 +6734,7 @@ do
 [ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX
 done
 # Configure 3G modems to auto start Internet when plugged in
-cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-modems.rules $UDEV_RULES_DIR/
+cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-modems.rules $UDEV_RULES_USB_MODEMS
 # Reload udev
 /usr/sbin/udevadm control --reload && udevadm trigger --action=add
 #
@@ -6841,26 +6853,34 @@ modprobe iwlwifi
 
 create_list_of_wireless_devices () {
 # Temp list file
-WIFI_DEVICES_RAW_LIST=$TMPDIR/list_of_wireless_devices_raw
 # Remove existing wireless devices file
 [ -f $WIFI_DEVICES_RAW_LIST ] && rm -f $WIFI_DEVICES_RAW_LIST
-#
-# Extract detected wireless device information
-journalctl -b -o cat --no-pager | grep 'renamed from wlan' | awk {'print $3'} | sed 's/://g' | sort -u | while read LINE
+
+# Lookup WiFi IEEE 802.11 device paths
+find /sys/devices/pci0000\:00/ -iname phy[0-9] | while read DEVPATH
 do
+
+# Phy name/id
+PHY_NAME=$(cat ${DEVPATH}/name)
+PHY_ID=$(echo ${DEVPATH} | rev | cut -d '/' -f3 | rev)
+#
 # Get device biosdev name
-export WIFI_DEVICE=$LINE
-# Query MAC address
-export MAC_ADDRESS=$(/usr/sbin/ip link show dev ${WIFI_DEVICE} | grep 'link/ether' | awk {'print $2'})
+WIFI_DEVICE=$(journalctl -b -o cat --no-pager | grep "$PHY_ID" | grep -i "renamed from wlan" | awk {'print $3'} | sed 's/://g' | tail -1)
 #
 # Determine if device is USB or PCI based
-WIFI_DEVICE_CHARS=$(echo -n $WIFI_DEVICE | wc -c)
-if [ $WIFI_DEVICE_CHARS -gt 6 ]
+echo ${DEVPATH} | grep -i usb  > /dev/null 2>&1
+WIFI_DEVICE_IS_USB=$?
+#
+if [[ "$WIFI_DEVICE_IS_USB" = "0" ]]
 then
 export WIFI_DEVICE_TYPE=USB
 else
 export WIFI_DEVICE_TYPE=PCI
 fi
+#
+# Query MAC address
+MAC_ADDRESS=$(cat ${DEVPATH}/macaddress)
+#
 #
 # Generate temporary list of wireless devices
 cat >> $WIFI_DEVICES_RAW_LIST << EOF
@@ -6873,9 +6893,6 @@ done
 assign_roles_2_wireless_devices () {
 # Get raw list of wireless devies
 create_list_of_wireless_devices
-# Set temp file variables
-WIFI_DEVICES_SORTED_LIST=$TMPDIR/list_of_wireless_devices_sorted
-WIFI_DEVICES_ROLES_LIST=$TMPDIR/list_of_wireless_devices_roles
 # Remove existing wireless device roles and sorted list files
 [ -f $WIFI_DEVICES_SORTED_LIST ] && rm -f $WIFI_DEVICES_SORTED_LIST
 [ -f $WIFI_DEVICES_ROLES_LIST ] && rm -f $WIFI_DEVICES_ROLES_LIST
@@ -6903,11 +6920,16 @@ do
 # Quit if no line data
 [ "x$LINE" = "x" ] && break
 #
-if [ "$LINE_NUMBER" = 1 ];
+if [[ "$LINE_NUMBER" = 1 ]];
 then
 WIFI_DEVICE_ROLE=WIFI_AP
-else
+
+elif [[ "$LINE_NUMBER" = 2 ]];
+then
 WIFI_DEVICE_ROLE=WIFI_ST
+
+else
+WIFI_DEVICE_ROLE=WIFI_MO
 fi
 #
 # Generate list of wireless devices and their roles
@@ -6949,7 +6971,7 @@ create_wifi_ap_rule () {
 # Import WiFi variables
 get_wireless_interface_parameters
 # Create AP rule
-cat > $UDEV_RULES_DIR/96-jambulatv.wifi-net.rules <<EOF
+cat > $UDEV_RULES_WIFI_NET_DEVICES <<EOF
 # $WIFI_AP_INTERFACE
 SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_AP_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_AP_INTERFACE", TAG+="systemd", ENV{SYSTEMD_WANTS}+="coova-chilli.service"
 EOF
@@ -6963,7 +6985,7 @@ get_wireless_interface_parameters
 # Create ST rule if station device present
 if [ "x$WIFI_STATION_MACADDRESS" != "x" ];
 then
-cat >> $UDEV_RULES_DIR/96-jambulatv.wifi-net.rules <<EOF
+cat >> $UDEV_RULES_WIFI_NET_DEVICES <<EOF
 # $WIFI_STATION_INTERFACE
 SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_STATION_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_STATION_INTERFACE"
 EOF
@@ -6973,11 +6995,26 @@ fi
 }
 
 wireless_interfaces_configure () {
-# Get woreless parameters
+# See if WiFi interfaces were previously configured
+if [[ -e $UDEV_RULES_WIFI_NET_DEVICES ]];
+then
+clear
+cat <<EOT
+Warning: Oops, another udev rules file for wireless network devices already exists
+Please first remove the file below and then reboot for changes to take effect:
+
+$UDEV_RULES_WIFI_NET_DEVICES 
+
+EOT
+# Notify of the need for a removal and reboot break out
+
+else
+# Get wireless parameters
 get_wireless_interface_parameters
 # Get number of PCI/WiFi devices
 NUMBER_PCI_WIFI_DEVICES=$(grep PCI $WIFI_DEVICES_ROLES_LIST | wc -l)
 NUMBER_USB_WIFI_DEVICES=$(grep USB $WIFI_DEVICES_ROLES_LIST | wc -l)
+NUMBER_ALL_WIFI_DEVICES=$(expr $NUMBER_PCI_WIFI_DEVICES + $NUMBER_USB_WIFI_DEVICES)
 # Notify
 cat << EOF
 ================================================================================
@@ -6987,43 +7024,47 @@ cat << EOF
 	Number of [PCI] based WiFi devices detected:  $NUMBER_PCI_WIFI_DEVICES
 	Number of [USB] based WiFi devices detected:  $NUMBER_USB_WIFI_DEVICES
 
+					      TOTAL:  $NUMBER_ALL_WIFI_DEVICES
+
 ================================================================================
 
 EOF
+sleep 2
 
 # 2 PCI Cards
-if [ "$NUMBER_PCI_WIFI_DEVICES" = 2 ];
+if [[ "$NUMBER_PCI_WIFI_DEVICES" = 2 ]];
 then
 create_wifi_ap_rule
 create_wifi_st_rule
 break
 
 # 1 PCI Card + 0 USB Stick
-elif [ "$NUMBER_PCI_WIFI_DEVICES" = 1 ] && [ "$NUMBER_USB_WIFI_DEVICES" = 0 ];
+elif [[ "$NUMBER_PCI_WIFI_DEVICES" = 1 && "$NUMBER_USB_WIFI_DEVICES" = 0 ]];
 then
 create_wifi_ap_rule
 break
 
 # 1 PCI Card + 1 USB Stick
-elif [ "$NUMBER_PCI_WIFI_DEVICES" = 1 ] && [ "$NUMBER_USB_WIFI_DEVICES" = 1 ];
+elif [[ "$NUMBER_PCI_WIFI_DEVICES" = 1 && "$NUMBER_USB_WIFI_DEVICES" = 1 ]];
 then
 create_wifi_ap_rule
 create_wifi_st_rule
 break
 
 # 2 USB Sticks
-elif [ "$NUMBER_USB_WIFI_DEVICES" = 2 ];
+elif [[ "$NUMBER_USB_WIFI_DEVICES" = 2 ]];
 then
 create_wifi_ap_rule
 create_wifi_st_rule
 break
 
 # 1 USB Stick + 0 PCI Card
-elif [ "$NUMBER_USB_WIFI_DEVICES" = 1 ] || [ "$NUMBER_PCI_WIFI_DEVICES" = 0 ];
+elif [[ "$NUMBER_USB_WIFI_DEVICES" = 1 || "$NUMBER_PCI_WIFI_DEVICES" = 0 ]];
 then
 create_wifi_ap_rule
 break
 
+fi
 fi
 }
 
@@ -8099,7 +8140,7 @@ echo
 echo 
 echo "Did python module [$PYTHON_MODULE] install correctly?"
 echo 
-#_install_pause_check_4_errors_ $PYTHON_MODULE] install
+#_install_pause_check_4_errors_ [$PYTHON_MODULE] install
 echo
 #
 done
@@ -10892,7 +10933,7 @@ chown -R $DOMOTICZ_USER:$DOMOTICZ_GROUP $DOMOTICZ_HOME_DIR
 
 domoticz_configure () {
 # Copy udev rules 4 home automation controllers - ttyUSB*
-cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-ha-controllers.rules $UDEV_RULES_DIR
+cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-ha-controllers.rules $UDEV_RULES_USB_HA_CONTROLLERS
 # Reload udev
 /usr/sbin/udevadm control --reload && udevadm trigger --action=add
 # Allow domoticz user to access USB ports
@@ -11470,7 +11511,7 @@ EOF
 # USB Webcams
 #------------
 # Copy udev rules file for USB webcams - Naming scheme instead of /dev/videoX
-cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-webcams.rules $UDEV_RULES_DIR
+cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-webcams.rules $UDEV_RULES_USB_WEBCAMS
 # Reload udev
 /usr/sbin/udevadm control --reload && udevadm trigger --action=add
 
