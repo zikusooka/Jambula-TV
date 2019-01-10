@@ -728,7 +728,7 @@ PRESENCE_VIA_MIFI_CHECK_INTERVAL_SECS=60
 PRESENCE_VIA_MIFI_TEMP_FILE=$TMPDIR/presence_detection_via_mifi
 
 # Presence via trackerjacker
-TRACKERJACKER_INTERFACE=wlp0s20u4
+TRACKERJACKER_INTERFACE=jwlan2
 TRACKERJACKER_CMD=/usr/bin/trackerjacker
 TRACKERJACKER_LOG_LEVEL=INFO # DEBUG | INFO | WARNING | ERROR | CRITICAL
 TRACKERJACKER_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/trackerjacker.log
@@ -11078,8 +11078,19 @@ cat $PROJECT_INIT_SCRIPTS_DIR/presence-detection-via-trackerjacker.service | \
 	sed -e "s:MY_TRACKERJACKER_INTERFACE:$TRACKERJACKER_INTERFACE:g" | \
 	sed -e "s:MY_AUTOLOGIN_USER:$AUTOLOGIN_USER:g" | \
 	sed -e "s:MY_PRESENCE_DETECTION_VIA_TRACKER_TOOL:$PRESENCE_DETECTION_VIA_TRACKER_TOOL:g" > $SYSTEMD_UNITS_DIR_USER/presence-detection-via-trackerjacker.service
-# Enable and start presence-detection if needed
+#
+# Check for existence of 3rd WiFi device with a role of monitor i.e. WIFI_MO
+grep WIFI_MO $WIFI_DEVICES_ROLES_LIST > /dev/null 2>&1
+WIFI_MONITOR_DEVICE_EXISTS=$?
+#
+if [[ "$WIFI_MONITOR_DEVICE_EXISTS" = "0" ]];
+then
+# Enable presence via trackerjacker systemd unit
 systemctl enable presence-detection-via-trackerjacker.service
+else
+# Disable presence via trackerjacker systemd unit
+systemctl disable presence-detection-via-trackerjacker.service
+fi
 }
 
 openhab_install () {
