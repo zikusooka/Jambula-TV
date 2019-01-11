@@ -10,6 +10,7 @@ ExecStartPre=/bin/sh -c "[[ -d /run/prosody ]] || /usr/bin/mkdir /run/prosody"
 ExecStartPre=/usr/bin/chown prosody /run/prosody
 ExecStart=/usr/bin/sudo -u prosody /usr/bin/prosodyctl start
 ExecStop=/usr/bin/prosodyctl stop
+ExecStopPost=/bin/sh -c "/usr/bin/kill -9 $(ps auxw | grep -i [p]rosody | awk {'print $2'})"
 
 [Install]
 WantedBy=multi-user.target
