@@ -58,6 +58,7 @@ libxml2_install
 gcc4_install
 
 # General dependencies
+nasm_install
 giflib_install 
 
 # VA-API/VDPAU
