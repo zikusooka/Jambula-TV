@@ -72,6 +72,10 @@ expat_install
 # Install python3
 python3_install
 
+# Install meson/ninja
+meson_install
+ninja_install
+
 # Pick desired X11 video driver
 case $X11_DRIVER in
 intel)

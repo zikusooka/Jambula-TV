@@ -3182,6 +3182,28 @@ ln -s -v $PREFIX/local/lib/libpython${PYTHON_SETUP_VERSION}dm.so.1.0 $LIBDIR/lib
 python3_common_modules_install
 }
 
+meson_install () {
+PYTHON_VERSION_USED=3 && set_python_version
+tar zxvf $PROJECT_TARBALLS_DIR/meson-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v meson-* meson
+# Compile
+cd $INSTALL_SRC_DIR/meson 
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+}
+
+ninja_install () {
+PYTHON_VERSION_USED=3 && set_python_version
+tar zxvf $PROJECT_TARBALLS_DIR/ninja-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v ninja-* ninja
+# Compile
+cd $INSTALL_SRC_DIR/ninja 
+python3 configure.py --bootstrap
+install -vm755 ninja /usr/bin/
+install -vDm644 misc/ninja.vim /usr/share/vim/vim80/syntax/ninja.vim
+install -vDm644 misc/bash-completion /usr/share/bash-completion/completions/ninja
+install -vDm644 misc/zsh-completion /usr/share/zsh/site-functions/_ninja
+}
+
 intel_x11_driver_install () {
 # Remove any existing intel drivers
 yum -y remove xorg-x11-drv-intel-*
