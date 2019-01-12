@@ -2104,6 +2104,9 @@ uninstall_flexget () {
 systemctl stop flexget.service
 # Uninstall
 pip uninstall -y flexget
+# Remove flexget lingering binary files
+[[ -L $BINARY_PREFIX/flexget ]] && rm -f $BINARY_PREFIX/flexget
+# Remove flexget sources
 rm -rf $INSTALL_SRC_DIR/Flexget
 }
 
@@ -7788,7 +7791,9 @@ patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/input/rss.py < $PROJECT_PATCH
 cd $INSTALL_SRC_DIR/Flexget
 $PYTHON_INSTALL_CMD
 # Create symbolic link
-[ -x $BINARY_PREFIX/flexget ] || ln -s $PREFIX/local/bin/flexget $BINARY_PREFIX/flexget
+[[ -x $BINARY_PREFIX/flexget ]] || ln -s $PREFIX/local/bin/flexget $BINARY_PREFIX/flexget
+# Patch flexget binary to allow for connections to unverified SSL certificate sites
+patch -p1 $PREFIX/local/bin/flexget < $PROJECT_PATCHES_DIR/flexget.bin.patch
 #
 # Copy email templates in Python 3 installs
 cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \

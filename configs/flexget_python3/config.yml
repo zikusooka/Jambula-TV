@@ -247,7 +247,7 @@ templates:
           # Send text message of queued content via WhatsApp
           - /bin/sudo "{? whatsapp.send_script ?}" sendmessage "$(cat {{INFO_FILE}})" 
           # Download content poster
-          - /usr/bin/curl -s -o "{{IMAGE_FILE}}" "{{IMAGE_URL}}"
+          - /usr/bin/curl -k -L -s -o "{{IMAGE_FILE}}" "{{IMAGE_URL}}"
           # Send poster of queued content via WhatsApp
           - /bin/sudo "{? whatsapp.send_script ?}" sendimage "{{IMAGE_FILE}}" 
       on_exit:
@@ -268,7 +268,7 @@ templates:
           # Send text message of queued content via Telegram
           - /bin/sudo "{? telegram.send_script ?}" sendmessage "$(cat {{INFO_FILE}})" 
           # Download content poster
-          - /usr/bin/curl -s -o "{{IMAGE_FILE}}" "{{IMAGE_URL}}"
+          - /usr/bin/curl -k -L -s -o "{{IMAGE_FILE}}" "{{IMAGE_URL}}"
           # Send poster of queued content via Telegram
           - /bin/sudo "{? telegram.send_script ?}" sendimagedisk "{{IMAGE_FILE}}" 
       on_exit:
