@@ -134,6 +134,7 @@ libdvbcsa_install
 #
 aom_install
 x265_install
+libvpx_install
 
 ffmpeg_install
 x264_install

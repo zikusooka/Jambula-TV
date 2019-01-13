@@ -3977,6 +3977,21 @@ make -j$SYSTEM_CPU_CORES
 make_install_jambulatv
 }
 
+libvpx_install () {
+# Remove libvpx rpm installed package(s)
+for RPM_PKG in libvpx-devel libvpx
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+rsync -avz $PROJECT_GITHUB_DIR/libvpx/ $INSTALL_SRC_DIR/libvpx/
+# configure
+cd $INSTALL_SRC_DIR/libvpx
+./configure --prefix=$PREFIX --libdir=$LIBDIR \
+	--disable-examples --disable-unit-tests --enable-vp9-highbitdepth --as=yasm
+make_install_jambulatv
+}
+
 ffmpeg_install () {
 # Unpack
 tar xvf $PROJECT_TARBALLS_DIR/ffmpeg-$FFMPEG_VERSION_MAJOR*.xz -C $INSTALL_SRC_DIR
