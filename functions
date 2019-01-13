@@ -3941,6 +3941,19 @@ cd $INSTALL_SRC_DIR/libdvbcsa
 make_install_jambulatv
 }
 
+aom_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/aom/ $INSTALL_SRC_DIR/aom/
+# Build
+mkdir $INSTALL_SRC_DIR/aom/aom_build
+cd $INSTALL_SRC_DIR/aom/aom_build
+# cmake
+cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=$PREFIX \
+	-DENABLE_SHARED=off -DENABLE_NASM=on ../
+# make
+make -j$SYSTEM_CPU_CORES
+make_install_jambulatv
+}
+
 x264_install () {
 # Remove old x264
 yum -y remove x264-*

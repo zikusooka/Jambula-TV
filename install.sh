@@ -132,6 +132,7 @@ libdvbcsa_install
 # Uninstall already existing ffmpeg (without x264 libs) and install agian w/ x264
 #uninstall_src_pkgs ffmpeg && ffmpeg_install
 #
+aom_install
 ffmpeg_install
 x264_install
 vlc_install
