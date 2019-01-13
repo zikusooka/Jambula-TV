@@ -133,11 +133,12 @@ libdvbcsa_install
 #uninstall_src_pkgs ffmpeg && ffmpeg_install
 #
 aom_install
+x264_install
 x265_install
 libvpx_install
+dav1d_install
 
 ffmpeg_install
-x264_install
 vlc_install
 #xine_lib_install
 #xine_ui_install

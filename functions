@@ -3992,6 +3992,17 @@ cd $INSTALL_SRC_DIR/libvpx
 make_install_jambulatv
 }
 
+dav1d_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/dav1d/ $INSTALL_SRC_DIR/dav1d/
+# Build
+cd $INSTALL_SRC_DIR/dav1d
+meson --prefix=$PREFIX build --buildtype release
+cd $INSTALL_SRC_DIR/dav1d/build
+ninja
+# Install
+ninja install
+}
+
 ffmpeg_install () {
 # Unpack
 tar xvf $PROJECT_TARBALLS_DIR/ffmpeg-$FFMPEG_VERSION_MAJOR*.xz -C $INSTALL_SRC_DIR
