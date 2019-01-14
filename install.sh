@@ -122,22 +122,6 @@ openal_soft_install
 libass_install
 libvdpau_va_gl_install 
 ffmpeg_deps_install
-live555_install
-libdvdcss_install
-#libdvbpsi_install
-libdvbcsa_install
-#
-# Install ffmpeg first without x264 - will be removed and re-installed shortly
-#ffmpeg_install && x264_install 
-# Uninstall already existing ffmpeg (without x264 libs) and install agian w/ x264
-#uninstall_src_pkgs ffmpeg && ffmpeg_install
-#
-aom_install
-x264_install
-x265_install
-libvpx_install
-dav1d_install
-
 ffmpeg_install
 vlc_install
 #xine_lib_install

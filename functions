@@ -3795,32 +3795,34 @@ make_install_jambulatv
 #Add VDPAU_DRIVER=va_gl to your environment
 }
 
-ffmpeg_deps_install () {
-# vo-aacenc
+vo_aacenc_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/vo-aacenc-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v vo-aacenc-* vo-aacenc
 # Compile
 cd $INSTALL_SRC_DIR/vo-aacenc && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
 make_install_jambulatv
-#
-# vo-amrwbenc
+}
+
+vo_amrwbenc_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/vo-amrwbenc-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v vo-amrwbenc-* vo-amrwbenc
 # Compile
 cd $INSTALL_SRC_DIR/vo-amrwbenc && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
 make_install_jambulatv
-#
-# fdk-aac
+}
+
+fdk_aac_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/fdk-aac-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v fdk-aac-* fdk-aac
 # Compile
 cd $INSTALL_SRC_DIR/fdk-aac && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
 make_install_jambulatv
-#
-# libaacplus
+}
+
+libaacplus_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/libaacplus-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v libaacplus-* libaacplus
@@ -3831,15 +3833,17 @@ cd $INSTALL_SRC_DIR/libaacplus
 # Add 3gpp sources
 cp -v $PROJECT_ZIPS_DIR/26410-800.zip src/
 make_install_jambulatv
-#
-# gpac
+}
+
+gpac_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/gpac-*.tar.gz -C $INSTALL_SRC_DIR
 # Compile
 cd $INSTALL_SRC_DIR/gpac && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
 make_install_jambulatv
-#
-# nut
+}
+
+nut_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/nut-*.tar.gz -C $INSTALL_SRC_DIR
 # Compile
@@ -3849,24 +3853,27 @@ make_build_log
 # Make
 make PREFIX=/usr CFLAGS="-fPIC"
 make PREFIX=/usr CFLAGS="-fPIC" install
-#
-# xavs
+}
+
+xavs_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/xavs-*.tar.gz -C $INSTALL_SRC_DIR
 # Compile
 cd $INSTALL_SRC_DIR/xavs
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-pic
 make_install_jambulatv
-#
-# fluidsynth
+}
+
+fluidsynth_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/fluidsynth-*.tar.gz -C $INSTALL_SRC_DIR
 # Compile
 cd $INSTALL_SRC_DIR && mv -v fluidsynth-* fluidsynth
 cd $INSTALL_SRC_DIR/fluidsynth && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
 make_install_jambulatv
-#
-# libgoom2-devel
+}
+
+libgoom2_devel_install () {
 # Unpack in temporary directory
 tar jxvf $PROJECT_TARBALLS_DIR/libgoom2-devel-*.tar.bz2 -C $TMPDIR
 # Move files to proper destinations
@@ -3874,8 +3881,9 @@ rsync -avz $TMPDIR/usr/include/ $INCDIR/
 rsync -avz $TMPDIR/usr/lib/ $LIBDIR/
 # Remove temp files
 rm -rf $TMPDIR/usr
-#
-# libffms2-devel
+}
+
+libffms2_devel () {
 # Unpack in temporary directory
 tar jxvf $PROJECT_TARBALLS_DIR/libffms2-devel-*.tar.bz2 -C $TMPDIR
 # Move files to proper destinations
@@ -3883,6 +3891,69 @@ rsync -avz $TMPDIR/usr/include/ $INCDIR/
 rsync -avz $TMPDIR/usr/lib/ $LIBDIR/
 # Remove temp files
 rm -rf $TMPDIR/usr
+}
+
+aom_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/aom/ $INSTALL_SRC_DIR/aom/
+# Build
+mkdir $INSTALL_SRC_DIR/aom/aom_build
+cd $INSTALL_SRC_DIR/aom/aom_build
+# cmake
+cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=$PREFIX -DLIB_INSTALL_DIR=$LIBDIR \
+	-DENABLE_SHARED=off -DENABLE_NASM=on ../
+# make
+make -j$SYSTEM_CPU_CORES
+make_install_jambulatv
+}
+
+x264_install () {
+# Remove old x264
+yum -y remove x264-*
+# Unpack
+rsync -avz $PROJECT_GITHUB_DIR/x264/ $INSTALL_SRC_DIR/x264/
+# Configure
+cd $INSTALL_SRC_DIR/x264
+./configure --prefix=$PREFIX --enable-static --enable-pic --system-libx264 --enable-debug --libdir=$LIBDIR 
+make_install_jambulatv
+}
+
+x265_install () {
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/x265_*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v x265_* x265
+# Build
+cd $INSTALL_SRC_DIR/x265/build/linux
+cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=$PREFIX -DLIB_INSTALL_DIR=lib64 \
+	-DENABLE_SHARED=off ../../source
+# make
+make -j$SYSTEM_CPU_CORES
+make_install_jambulatv
+}
+
+libvpx_install () {
+# Remove libvpx rpm installed package(s)
+for RPM_PKG in libvpx-devel libvpx
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+rsync -avz $PROJECT_GITHUB_DIR/libvpx/ $INSTALL_SRC_DIR/libvpx/
+# configure
+cd $INSTALL_SRC_DIR/libvpx
+./configure --prefix=$PREFIX --libdir=$LIBDIR \
+	--disable-examples --disable-unit-tests --enable-vp9-highbitdepth --as=yasm
+make_install_jambulatv
+}
+
+dav1d_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/dav1d/ $INSTALL_SRC_DIR/dav1d/
+# Build
+cd $INSTALL_SRC_DIR/dav1d
+meson --prefix=$PREFIX build --buildtype release
+cd $INSTALL_SRC_DIR/dav1d/build
+ninja
+# Install
+ninja install
 }
 
 live555_install () {
@@ -3941,90 +4012,59 @@ cd $INSTALL_SRC_DIR/libdvbcsa
 make_install_jambulatv
 }
 
-aom_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/aom/ $INSTALL_SRC_DIR/aom/
-# Build
-mkdir $INSTALL_SRC_DIR/aom/aom_build
-cd $INSTALL_SRC_DIR/aom/aom_build
-# cmake
-cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=$PREFIX \
-	-DENABLE_SHARED=off -DENABLE_NASM=on ../
-# make
-make -j$SYSTEM_CPU_CORES
-make_install_jambulatv
-}
-
-x264_install () {
-# Remove old x264
-yum -y remove x264-*
-# Unpack
-rsync -avz $PROJECT_GITHUB_DIR/x264/ $INSTALL_SRC_DIR/x264/
-# Configure
-cd $INSTALL_SRC_DIR/x264
-./configure --prefix=$PREFIX --enable-shared --enable-pic --system-libx264 --enable-debug --libdir=$LIBDIR 
-make_install_jambulatv
-}
-
-x265_install () {
-# Unpack
-tar zxvf $PROJECT_TARBALLS_DIR/x265_*.tar.gz -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v x265_* x265
-# Build
-cd $INSTALL_SRC_DIR/x265/build/linux
-cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=$PREFIX -DENABLE_SHARED=off ../../source
-# make
-make -j$SYSTEM_CPU_CORES
-make_install_jambulatv
-}
-
-libvpx_install () {
-# Remove libvpx rpm installed package(s)
-for RPM_PKG in libvpx-devel libvpx
-do
-rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
-done
-#
-rsync -avz $PROJECT_GITHUB_DIR/libvpx/ $INSTALL_SRC_DIR/libvpx/
-# configure
-cd $INSTALL_SRC_DIR/libvpx
-./configure --prefix=$PREFIX --libdir=$LIBDIR \
-	--disable-examples --disable-unit-tests --enable-vp9-highbitdepth --as=yasm
-make_install_jambulatv
-}
-
-dav1d_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/dav1d/ $INSTALL_SRC_DIR/dav1d/
-# Build
-cd $INSTALL_SRC_DIR/dav1d
-meson --prefix=$PREFIX build --buildtype release
-cd $INSTALL_SRC_DIR/dav1d/build
-ninja
-# Install
-ninja install
+ffmpeg_deps_install () {
+# FFmpeg dependencies
+vo_aacenc_install
+vo_amrwbenc_install
+fdk_aac_install
+libaacplus_install
+gpac_install
+nut_install
+xavs_install
+fluidsynth_install
+libgoom2_devel_install
+libffms2_devel
+aom_install
+x264_install
+x265_install
+libvpx_install
+dav1d_install
+live555_install
+libdvdcss_install
+#libdvbpsi_install
+libdvbcsa_install
 }
 
 ffmpeg_install () {
 # Unpack
 tar xvf $PROJECT_TARBALLS_DIR/ffmpeg-$FFMPEG_VERSION_MAJOR*.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v ffmpeg-$FFMPEG_VERSION_MAJOR* ffmpeg
-cd $INSTALL_SRC_DIR/ffmpeg 
-# check for libx264
-which x264 > /dev/null 2>&1
-LIBX264_EXISTS=$?
-# Compile 
-if [ "$LIBX264_EXISTS" = "0" ];
-then
-# compile with x264 libraries
-./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --disable-podpages --disable-static --enable-shared --enable-gpl --enable-nonfree --enable-runtime-cpudetect --enable-pthreads --enable-vdpau --enable-gnutls --enable-libx264 
-
-else
-# compile withOUT x264 libraries
-./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --disable-podpages --disable-static --enable-shared --enable-gpl --enable-nonfree --enable-runtime-cpudetect --enable-pthreads --enable-vdpau --enable-gnutls
-fi
+# Patches
+# -------
+# libaom - make fails without this patch: BUG? looks like its fixed upstream
+patch -p1 $INSTALL_SRC_DIR/ffmpeg/libavcodec/libaomenc.c < $PROJECT_PATCHES_DIR/ffmepg.libaomenc.c.patch
 #
+# Configure
+cd $INSTALL_SRC_DIR/ffmpeg 
+./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-pthreads --disable-podpages --enable-gpl --enable-nonfree --enable-runtime-cpudetect --enable-vdpau --enable-gnutls --enable-libpulse --enable-libmp3lame --enable-libv4l2 --enable-libdrm --enable-libx264 --enable-libfdk-aac --enable-libopus --extra-libs="-lpthread" --pkg-config-flags=--static --enable-libx265 --enable-libvpx --enable-libaom
+
+# Without x265, libvpx libaom
+# --extra-libs="-lpthread" 
+# --pkg-config-flags=--static 
+# --enable-libx265 
+# --enable-libvpx
+# --enable-libaom 
+#./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-pthreads --disable-podpages --disable-static --enable-shared --enable-gpl --enable-nonfree --enable-runtime-cpudetect --enable-vdpau --enable-gnutls --enable-libpulse --enable-libmp3lame --enable-libv4l2 --enable-libdrm --enable-libx264 --enable-libfdk-aac --enable-libopus
+
+
+_install_pause_check_4_errors_ "Check FFmpeg configure"
+make -j$SYSTEM_CPU_CORES
+_install_pause_check_4_errors_ "Check FFmpeg make OK"
+
+
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 # Clean up - saves upto 300MB
-make clean
+#make clean
 }
 
 vlc_unpack_git () {
