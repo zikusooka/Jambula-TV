@@ -3902,8 +3902,7 @@ cd $INSTALL_SRC_DIR/aom/aom_build
 cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=$PREFIX -DLIB_INSTALL_DIR=$LIBDIR \
 	-DENABLE_SHARED=off -DENABLE_NASM=on ../
 # make
-make -j$SYSTEM_CPU_CORES
-make_install_jambulatv
+make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
 x264_install () {
