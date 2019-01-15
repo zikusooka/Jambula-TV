@@ -3913,8 +3913,10 @@ yum -y remove x264-*
 rsync -avz $PROJECT_GITHUB_DIR/x264/ $INSTALL_SRC_DIR/x264/
 # Configure
 cd $INSTALL_SRC_DIR/x264
-./configure --prefix=$PREFIX --enable-static --enable-pic --system-libx264 --enable-debug --libdir=$LIBDIR 
-make_install_jambulatv
+#./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-shared --enable-pic --system-libx264 --enable-debug 
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-static --enable-pic
+# Install
+make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
 x265_install () {
