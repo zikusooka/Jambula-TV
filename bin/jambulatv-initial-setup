@@ -79,6 +79,8 @@ JAMBULATV_SETUP_DB_TABLE=MY_JAMBULATV_SETUP_DB_TABLE
 
 PVR_STATUS_FILE=$(grep ^PVR_STATUS_FILE $KODI_CONTROLLER_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'})
 
+INITIAL_SETUP_LOG=$HOME/$PROJECT_NAME-initial-setup.log
+
 
 
 ###############
@@ -662,6 +664,8 @@ sudo $KODI_LIBRARY_TOOL scan
 
 check_if_setup_completed
 
+# Start logging to file
+exec 2>> $INITIAL_SETUP_LOG
 logger -s -t $(basename $0) "JambulaTV Setup: START"
 
 osd_turn_on_speakers
