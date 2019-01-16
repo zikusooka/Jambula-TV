@@ -3855,11 +3855,13 @@ make_install_jambulatv
 
 fdk_aac_install () {
 # Unpack
-tar zxvf $PROJECT_TARBALLS_DIR/fdk-aac-*.tar.gz -C $INSTALL_SRC_DIR
-cd $INSTALL_SRC_DIR && mv -v fdk-aac-* fdk-aac
+# Sync sources to install directory
+rsync -av --delete-after $PROJECT_GITHUB_DIR/fdk-aac/ $INSTALL_SRC_DIR/fdk-aac/
 # Compile
-cd $INSTALL_SRC_DIR/fdk-aac && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make_install_jambulatv
+cd $INSTALL_SRC_DIR/fdk-aac
+./autogen.sh
+./configure --prefix=$PREFIX --libdir=$LIBDIR --disable-shared 
+make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
 libaacplus_install () {
