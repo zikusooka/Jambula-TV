@@ -3835,6 +3835,23 @@ make_install_jambulatv
 #Add VDPAU_DRIVER=va_gl to your environment
 }
 
+lame_install () {
+# Remove lame rpm installed package(s)
+for RPM_PKG in lame-libs lame-devel
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/lame-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v lame-* lame
+# Compile
+cd $INSTALL_SRC_DIR/lame
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-nasm
+# Install
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
 vo_aacenc_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/vo-aacenc-*.tar.gz -C $INSTALL_SRC_DIR
@@ -4056,6 +4073,7 @@ make_install_jambulatv
 
 ffmpeg_deps_install () {
 # FFmpeg dependencies
+lame_install
 vo_aacenc_install
 vo_amrwbenc_install
 fdk_aac_install
