@@ -1304,28 +1304,67 @@ fi
 ######################
 #  HELPER FUNCTIONS  #
 ######################
-# Debugging
 debug_print () {
+# Debugging
 [[ "$DEBUG_MODE" = "yes" ]] && echo -e "$(date '+%b %d %T') | DEBUG | $1"
 }
 
-# Time taken
-estimate_complete_time () {
+set_fonts () { 
+if tty -s
+# TTY - Set font and colors
+then
+font_bold=$(tput bold)
+font_reset=$(tput sgr0)
+fi
+}
+
+set_completion_times () {
+# Set times taken based on number of cores
+case "$SYSTEM_CPU_CORES" in
+2)
+TIME_KERNAL_INSTALL=13140
+TIME_ENTIRE_INSTALL=59600
+;;
+4)
+TIME_KERNAL_INSTALL=5220
+TIME_ENTIRE_INSTALL=39600
+;;
+*)
+TIME_KERNAL_INSTALL=5220
+TIME_ENTIRE_INSTALL=39600
+;;
+esac
+}
+
+estimate_completion_time () {
+# Estimate taken to complete process
 TIME_TAKEN_NORMAL_SECONDS=$1
 #
 if [[ "x$TIME_TAKEN_NORMAL_SECONDS" != "x" ]];
 then
+# Set time to hours if applicable
+[[ "$TIME_TAKEN_NORMAL_SECONDS" -ge "3600" ]] && \
+TIME_TAKEN_NORMAL_STRING="$(echo "scale=1;$TIME_TAKEN_NORMAL_SECONDS/3600" | bc -l) hours"
+# Set time to minutes if applicable
+[[ "$TIME_TAKEN_NORMAL_SECONDS" -lt "3600" ]] && \
+TIME_TAKEN_NORMAL_STRING="$(echo "scale=0;$TIME_TAKEN_NORMAL_SECONDS/60" | bc -l) minutes"
+#
 TIME_START_EPOC=$(date +%s)
 TIME_END_EPOC=$(expr ${TIME_START_EPOC} + ${TIME_TAKEN_NORMAL_SECONDS})
-TIME_END_NORMAL=$(date -d@${TIME_END_EPOC} +'%d %B %Y at %I:%M%P')
-
+TIME_END_NORMAL=$(date -d@${TIME_END_EPOC} +'%a %d %b %Y  (%I:%M %P)')
 else
 TIME_END_NORMAL="Unknown"
 fi
-
+#
+# Set fonts
+set_fonts
+#
 cat <<ET
 
-Estimated time of completion: $TIME_END_NORMAL
+ CAUTION: This process may take ${font_bold}$TIME_TAKEN_NORMAL_STRING${font_reset} or more to complete!
+          Estimated to complete: ${font_bold}$TIME_END_NORMAL${font_reset}
+
+ **********************************************************************
 
 ET
 }
@@ -1666,15 +1705,17 @@ cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 }
 
 kernel_install_notice () {
+# Set times taken based on number of cores
+set_completion_times
+#
 clear
 cat <<EOF
-You are about to install the latest Linux kernel version [$KERNEL_VERSION], 
+ **********************************************************************
+ You are about to install the latest Linux kernel version [$KERNEL_VERSION]
+ $(estimate_completion_time ${TIME_KERNAL_INSTALL})
 
-CAUTION:  This may take up to 1.5 hours or more to complete! 
+ Enter to proceed ...
 
-$(estimate_complete_time 5400)
-
-Enter to proceed ...
 EOF
 read
 }
@@ -2526,25 +2567,24 @@ perf_install
 
 # Info about this install
 about_install () {
+# Set times taken based on number of cores
+set_completion_times
+#
+# Set fonts
+set_fonts
+#
 clear
 cat <<EOF
- ========================================================================================
-  $COMPANY_NAME Installation Program
- $COPYRIGHT_NOTICE
-
-  Product:	$PROJECT_NAME
-  Version:	$PROJECT_VERSION
-  Website: 	$PROJECT_URL
-
- ========================================================================================
-
- ***********
- * WARNING *
- ***********
- Please be advised that this install process may take up to 11 hours or more
- to complete.  
-
- $(estimate_complete_time 39600)
+ **********************************************************************
+ *  $COMPANY_NAME Installation Program				      *
+ * $COPYRIGHT_NOTICE		      *
+ *                                                                    *
+ *  Product:	${font_bold}$PROJECT_NAME${font_reset}					      *
+ *  Version:	${font_bold}$PROJECT_VERSION${font_reset}						      *
+ *  Website: 	${font_bold}$PROJECT_URL${font_reset}			      *
+ *                                                                    *
+ **********************************************************************
+ $(estimate_completion_time ${TIME_ENTIRE_INSTALL})
 
  Please enter to proceed or press 'Ctrl+C to cancel' ...
 
