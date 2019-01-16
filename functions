@@ -3852,6 +3852,23 @@ cd $INSTALL_SRC_DIR/lame
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
+opus_install () {
+# Remove opus rpm installed package(s)
+for RPM_PKG in opus-devel opus
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/opus-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v opus-* opus
+# Compile
+cd $INSTALL_SRC_DIR/opus
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+# Install
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
 vo_aacenc_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/vo-aacenc-*.tar.gz -C $INSTALL_SRC_DIR
@@ -4074,6 +4091,7 @@ make_install_jambulatv
 ffmpeg_deps_install () {
 # FFmpeg dependencies
 lame_install
+opus_install
 vo_aacenc_install
 vo_amrwbenc_install
 fdk_aac_install
