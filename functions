@@ -3869,6 +3869,40 @@ cd $INSTALL_SRC_DIR/opus
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
+ogg_install () {
+# Remove libogg rpm installed package(s)
+for RPM_PKG in libogg-devel libogg
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/libogg-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libogg-* libogg
+# Compile
+cd $INSTALL_SRC_DIR/libogg
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+# Install
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
+vorbis_install () {
+# Remove vorbis rpm installed package(s)
+for RPM_PKG in vorbis-tools libvorbis-devel libvorbis
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/libvorbis-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libvorbis-* libvorbis
+# Compile
+cd $INSTALL_SRC_DIR/libvorbis
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+# Install
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
 vo_aacenc_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/vo-aacenc-*.tar.gz -C $INSTALL_SRC_DIR
@@ -4092,6 +4126,8 @@ ffmpeg_deps_install () {
 # FFmpeg dependencies
 lame_install
 opus_install
+ogg_install
+vorbis_install
 vo_aacenc_install
 vo_amrwbenc_install
 fdk_aac_install
