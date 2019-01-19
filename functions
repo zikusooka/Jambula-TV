@@ -3187,7 +3187,8 @@ scapy \
 nose \
 coverage \
 Cython \
-docutils
+docutils \
+idna==2.7
 do
 # Install Python package
 pip3 install --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_PACKAGE
