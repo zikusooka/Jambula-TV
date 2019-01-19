@@ -8070,7 +8070,7 @@ $PYTHON_INSTALL_CMD
 # Create symbolic link
 [[ -x $BINARY_PREFIX/flexget ]] || ln -s $PREFIX/local/bin/flexget $BINARY_PREFIX/flexget
 # Patch flexget binary to allow for connections to unverified SSL certificate sites
-patch -p1 $PREFIX/local/bin/flexget < $PROJECT_PATCHES_DIR/flexget.bin.patch
+patch -p1 -R $PREFIX/local/bin/flexget < $PROJECT_PATCHES_DIR/flexget.bin.patch
 #
 # Copy email templates in Python 3 installs
 cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \
