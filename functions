@@ -3908,7 +3908,8 @@ vo_aacenc_install () {
 tar zxvf $PROJECT_TARBALLS_DIR/vo-aacenc-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v vo-aacenc-* vo-aacenc
 # Compile
-cd $INSTALL_SRC_DIR/vo-aacenc && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+cd $INSTALL_SRC_DIR/vo-aacenc
+./configure --prefix=$PREFIX --libdir=$LIBDIR 
 make_install_jambulatv
 }
 
@@ -3917,7 +3918,8 @@ vo_amrwbenc_install () {
 tar zxvf $PROJECT_TARBALLS_DIR/vo-amrwbenc-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v vo-amrwbenc-* vo-amrwbenc
 # Compile
-cd $INSTALL_SRC_DIR/vo-amrwbenc && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+cd $INSTALL_SRC_DIR/vo-amrwbenc
+./configure --prefix=$PREFIX --libdir=$LIBDIR 
 make_install_jambulatv
 }
 
@@ -3928,7 +3930,7 @@ rsync -av --delete-after $PROJECT_GITHUB_DIR/fdk-aac/ $INSTALL_SRC_DIR/fdk-aac/
 # Compile
 cd $INSTALL_SRC_DIR/fdk-aac
 ./autogen.sh
-./configure --prefix=$PREFIX --libdir=$LIBDIR --disable-shared 
+./configure --prefix=$PREFIX --libdir=$LIBDIR
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
@@ -3939,18 +3941,19 @@ cd $INSTALL_SRC_DIR && mv -v libaacplus-* libaacplus
 # Compile
 cd $INSTALL_SRC_DIR/libaacplus
 ./autogen.sh
-./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+./configure --prefix=$PREFIX --libdir=$LIBDIR 
 # Add 3gpp sources
 cp -v $PROJECT_ZIPS_DIR/26410-800.zip src/
-make_install_jambulatv
+make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
 gpac_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/gpac-*.tar.gz -C $INSTALL_SRC_DIR
 # Compile
-cd $INSTALL_SRC_DIR/gpac && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
-make_install_jambulatv
+cd $INSTALL_SRC_DIR/gpac
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
 nut_install () {
@@ -3979,7 +3982,8 @@ fluidsynth_install () {
 tar zxvf $PROJECT_TARBALLS_DIR/fluidsynth-*.tar.gz -C $INSTALL_SRC_DIR
 # Compile
 cd $INSTALL_SRC_DIR && mv -v fluidsynth-* fluidsynth
-cd $INSTALL_SRC_DIR/fluidsynth && ./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+cd $INSTALL_SRC_DIR/fluidsynth
+./configure --prefix=$PREFIX --libdir=$LIBDIR
 make_install_jambulatv
 }
 
@@ -4009,8 +4013,13 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/aom/ $INSTALL_SRC_DIR/aom/
 mkdir $INSTALL_SRC_DIR/aom/aom_build
 cd $INSTALL_SRC_DIR/aom/aom_build
 # cmake
-cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=$PREFIX -DLIB_INSTALL_DIR=$LIBDIR \
-	-DENABLE_SHARED=off -DENABLE_NASM=on ../
+cmake -G "Unix Makefiles" \
+	-DCMAKE_INSTALL_PREFIX=$PREFIX \
+	-DBUILD_SHARED_LIBS=ON \
+	-DENABLE_NASM=ON \
+	-DENABLE_EXAMPLES=OFF \
+	-DENABLE_TESTS=OFF \
+	..
 # make
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
@@ -4022,7 +4031,7 @@ yum -y remove x264-*
 rsync -avz $PROJECT_GITHUB_DIR/x264/ $INSTALL_SRC_DIR/x264/
 # Configure
 cd $INSTALL_SRC_DIR/x264
-./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-static
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-shared
 # Install
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
@@ -4034,7 +4043,7 @@ cd $INSTALL_SRC_DIR && mv -v x265_* x265
 # Build
 cd $INSTALL_SRC_DIR/x265/build/linux
 cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=$PREFIX -DLIB_INSTALL_DIR=lib64 \
-	-DENABLE_SHARED=off ../../source
+	-DENABLE_SHARED=on ../../source
 # Install
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
@@ -4050,7 +4059,7 @@ rsync -avz $PROJECT_GITHUB_DIR/libvpx/ $INSTALL_SRC_DIR/libvpx/
 # configure
 cd $INSTALL_SRC_DIR/libvpx
 ./configure --prefix=$PREFIX --libdir=$LIBDIR \
-	--disable-examples --disable-unit-tests --enable-vp9-highbitdepth --as=yasm
+	--enable-shared --disable-examples --disable-unit-tests --enable-vp9-highbitdepth
 # Install
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
@@ -4145,7 +4154,7 @@ vpx_install
 dav1d_install
 live555_install
 libdvdcss_install
-#libdvbpsi_install
+libdvbpsi_install
 libdvbcsa_install
 }
 
@@ -4155,30 +4164,45 @@ tar xvf $PROJECT_TARBALLS_DIR/ffmpeg-$FFMPEG_VERSION_MAJOR*.xz -C $INSTALL_SRC_D
 cd $INSTALL_SRC_DIR && mv -v ffmpeg-$FFMPEG_VERSION_MAJOR* ffmpeg
 # Patches
 # -------
+# libfdk-aacenc: Fix building with libfdk-aac v2 
+patch -p1 $INSTALL_SRC_DIR/ffmpeg/libavcodec/libfdk-aacenc.c < $PROJECT_PATCHES_DIR/ffmpeg.libfdk.aacenc.c.patch
 # libaom - make fails without this patch: BUG? looks like its fixed upstream
 patch -p1 $INSTALL_SRC_DIR/ffmpeg/libavcodec/libaomenc.c < $PROJECT_PATCHES_DIR/ffmepg.libaomenc.c.patch
 #
 # Configure
 cd $INSTALL_SRC_DIR/ffmpeg 
-./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-pthreads --disable-podpages --enable-gpl --enable-nonfree --enable-runtime-cpudetect --enable-vdpau --enable-gnutls --enable-libpulse --enable-libmp3lame --enable-libv4l2 --enable-libdrm --enable-libx264 --enable-libfdk-aac --enable-libopus --extra-libs="-lpthread" --pkg-config-flags=--static --enable-libx265 --enable-libvpx --enable-libaom
-
-# Without x265, libvpx libaom
-# --extra-libs="-lpthread" 
-# --pkg-config-flags=--static 
-# --enable-libx265 
-# --enable-libvpx
-# --enable-libaom 
-#./configure --prefix=$PREFIX --libdir=$LIBDIR --shlibdir=$LIBDIR --enable-pthreads --disable-podpages --disable-static --enable-shared --enable-gpl --enable-nonfree --enable-runtime-cpudetect --enable-vdpau --enable-gnutls --enable-libpulse --enable-libmp3lame --enable-libv4l2 --enable-libdrm --enable-libx264 --enable-libfdk-aac --enable-libopus
-
-
-_install_pause_check_4_errors_ "Check FFmpeg configure"
-make -j$SYSTEM_CPU_CORES
-_install_pause_check_4_errors_ "Check FFmpeg make OK"
-
-
+./configure \
+	--prefix=$PREFIX \
+	--libdir=$LIBDIR \
+	--shlibdir=$LIBDIR \
+	--enable-gnutls \
+	--enable-gpl \
+	--enable-nonfree \
+	--enable-runtime-cpudetect \
+	--enable-shared \
+	--enable-libaom \
+	--enable-libass \
+	--enable-libbluray \
+	--enable-libfdk-aac \
+	--enable-libfreetype \
+	--enable-libmp3lame \
+	--enable-libopus \
+	--enable-libpulse \
+	--enable-librtmp \
+	--enable-libtwolame \
+	--enable-libv4l2 \
+	--enable-libvorbis \
+	--enable-libvpx \
+	--enable-libx264 \
+	--enable-libx265 \
+	--enable-libxvid \
+	--enable-libxml2 \
+	--enable-openal \
+	--enable-libdrm
+# Install
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 # Clean up - saves upto 300MB
-#make clean
+make clean
 }
 
 vlc_unpack_git () {
@@ -4211,13 +4235,26 @@ esac
 cd $INSTALL_SRC_DIR/vlc
 # Compile
 [[ -e bootstrap ]] && ./bootstrap
-# Configure
-./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-debug --enable-run-as-root --enable-realrtsp --enable-wma-fixed --enable-shine --enable-omxil --enable-rpi-omxil --enable-merge-ffmpeg --enable-fdkaac --enable-tremor --enable-aa --enable-opensles --enable-lirc --disable-ncurses --disable-skins2 --enable-shine=no --enable-goom=no
-#
+# Configure: Disabled: aom | vpx | goom | shine | skins2 | ncurses
+./configure --prefix=$PREFIX --libdir=$LIBDIR \
+--enable-run-as-root \
+--enable-realrtsp \
+--enable-wma-fixed \
+--enable-omxil \
+--enable-rpi-omxil \
+--enable-merge-ffmpeg \
+--enable-tremor \
+--enable-aa \
+--enable-opensles \
+--enable-lirc \
+--enable-aom=no \
+--enable-vpx=no \
+--enable-goom=no \
+--enable-shine=no \
+--enable-skins2=no \
+--disable-ncurses
+# Install
 make_install_jambulatv -j$SYSTEM_CPU_CORES
-#
-# Cache recently shared libraries 
-ldconfig
 # Clean up - saves upto 100MB
 make clean
 }
