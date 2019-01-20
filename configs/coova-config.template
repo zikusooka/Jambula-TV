@@ -53,7 +53,7 @@ HS_UAMALIASNAME=chilli
 # HS_UAMAAAURL=http://my-site/script.php
 
 #   Put entire domains in the walled-garden with DNS inspection
-HS_UAMDOMAINS=".jambulatv.com,.jambula.net,.jambula.xyz,.jambula.co,.jambula-labs.xyz,.jambulaos.xyz"
+HS_UAMDOMAINS=".jambulatv.com,.jambula.net"
 
 #   Optional initial redirect and RADIUS settings
 HS_SSID=HOTSPOT_SSID	   # To send to the captive portal
@@ -185,7 +185,7 @@ HS_WWWBIN=/usr/share/JambulaTV/html/coova/wwwsh
 #   Some configurations used in certain user interfaces
 #
 HS_PROVIDER="Jambula Labs"
-HS_PROVIDER_LINK=http://www.jambula.xyz
+HS_PROVIDER_LINK=http://www.jambulalabs.com
 
 ###
 # Used in post_login_internet templates
