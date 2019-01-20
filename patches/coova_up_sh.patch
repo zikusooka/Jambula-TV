@@ -1,5 +1,5 @@
---- up.sh.orig	2016-10-27 16:24:09.037222253 +0300
-+++ up.sh	2016-10-27 17:37:03.225770843 +0300
+--- /usr/src/jambulatv/coova-chilli/conf/up.sh	2019-01-03 14:39:05.912281375 +0300
++++ /etc/chilli/up.sh	2019-01-21 15:22:45.475157731 +0300
 @@ -21,14 +21,25 @@
  run_up() {
      if [ -n "$TUNTAP" ]
@@ -9,11 +9,11 @@
 +  	# JambulaTV
 +        # ----------------------
 + 	# Turn on tun tap device
-+	ip link set $TUNTAP up    
++	/usr/sbin/ip link set $TUNTAP up    
 +        # tun tap device settings
-+        ip link set $TUNTAP mtu $MTU
++        /usr/sbin/ip link set $TUNTAP mtu $MTU
 +	# Turn on multicast and mDNS on tun tap device
-+	ip link set $TUNTAP multicast on
++	/usr/sbin/ip link set $TUNTAP multicast on
 +	# ----------------------
 +
  	if [ "$KNAME" != "" ]
@@ -23,7 +23,7 @@
  	    ipt -I FORWARD -i $TUNTAP -j ACCEPT
  	    ipt -I FORWARD -o $TUNTAP -j ACCEPT
 -	    [ -n "$DHCPLISTEN" ] && ifconfig $DHCPIF $DHCPLISTEN
-+	    [ -n "$DHCPLISTEN" ] && ip addr add $DHCPLISTEN dev $DHCPIF
++	    [ -n "$DHCPLISTEN" ] && /usr/sbin/ip addr add $DHCPLISTEN dev $DHCPIF
 +
  	else
  	    if [ "$LAYER3" != "1" ]
@@ -48,3 +48,16 @@
  		if [ "$ONLY8021Q" != "1" ]
  		then
  		    ipt -I INPUT -i $DHCPIF -j DROP
+@@ -91,8 +113,10 @@
+ 	fi
+     fi
+ 
+-    # site specific stuff optional
+-    [ -e /etc/chilli/ipup.sh ] && . /etc/chilli/ipup.sh
++    # --------------------
++    # Site specific script
++    # --------------------
++    [[ -e /etc/chilli/ipup.sh ]] && /etc/chilli/ipup.sh
+ }
+ 
+ 

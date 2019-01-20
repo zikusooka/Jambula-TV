@@ -9109,38 +9109,44 @@ patch -p1 $COOVA_CONFIG_DIR/up.sh < $PROJECT_PATCHES_DIR/coova_up_sh.patch
 
 # Create local ipup.sh script for chilli 
 # ***************************************
-echo "#!/bin/sh
-# Jambula Chilli IPUP Script
-# ----------------------------
-# 
-SYSCONFIG_DIR=/etc/sysconfig
-SYSCONFIG_NETWORK_SCRIPTS_DIR=\$SYSCONFIG_DIR/network-scripts
-NETWORK_ETHERNET_DEVICE=\`ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g'\`
-NETWORK_GATEWAY_ADDRESS=\`grep GATEWAY \$SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-\$NETWORK_ETHERNET_DEVICE | cut -d = -f2 | sed \"s/\\\"//g\"\`
-INTERNET_GATEWAY_DEV=\$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
-# Gateway device
-if [ \"x\$INTERNET_GATEWAY_DEV\" != \"x\" ];
-then
-INTERNET_GATEWAY_IP=\$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
-fi
+cat > $COOVA_CONFIG_DIR/ipup.sh <<EOT
+#!/bin/sh
+# Jambula chilli ipup script
+#
+# This script is used by coova-chilli to set the gateway device
+# and create the default route to the Internet
+# NOTE: It is not meant to be run as a standalone script 
+#
+# @copyright 2019-2020 Jambula Labs. All rights reserved
+
+
+# ----------
+#  Functions
+# ----------
 TUNTAP=\$(basename \$DEV)
 
+. /etc/chilli/functions
 
-
-#################
-#  MAIN SCRIPT  #
-#################
+# -------------
+#  MAIN SCRIPT 
+# -------------
 # Delete existing default route
-ip route del default > /dev/null 2>&1
+#/usr/sbin/ip route del default > /dev/null 2>&1
+
+# Get default gateway device and ip address
+get_default_gateway_dev_and_ip
+
 # Set new default route
-[ \"x\$INTERNET_GATEWAY_IP\" = \"x\" ] || ip route add default via \$INTERNET_GATEWAY_IP
-#
+[[ "x\$INTERNET_GATEWAY_IP" = "x" ]] || \\
+/usr/sbin/ip route add default via \$INTERNET_GATEWAY_IP
+
 # Allow IP masquerading through this box
-if [ \"x\$INTERNET_GATEWAY_DEV\" != \"x\" ];
+if [[ "x\$INTERNET_GATEWAY_DEV" != "x" ]];
 then
 /bin/echo 1 > /proc/sys/net/ipv4/ip_forward
 /usr/sbin/iptables -t nat -A POSTROUTING -o \$INTERNET_GATEWAY_DEV -j MASQUERADE
-fi" > $COOVA_CONFIG_DIR/ipup.sh
+fi
+EOT
 #
 # Make script executable
 chmod 755 $COOVA_CONFIG_DIR/ipup.sh

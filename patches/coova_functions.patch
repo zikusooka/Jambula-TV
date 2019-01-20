@@ -1,5 +1,5 @@
---- functions.orig	2016-10-27 16:05:47.832262434 +0300
-+++ functions	2016-10-27 16:57:54.380144020 +0300
+--- functions.orig	2019-01-03 14:39:05.892281375 +0300
++++ functions		2019-01-21 16:05:40.276025469 +0300
 @@ -5,9 +5,6 @@
  # http://coova.github.io/
  #
@@ -53,8 +53,30 @@
  	addconfig1 "dhcpgateway \"$HS_DHCPGATEWAY\""
  	addconfig1 "dhcprelayagent \"$HS_DHCPRELAYAGENT\""
      }
-@@ -367,4 +365,3 @@
-     fi
+@@ -368,3 +366,26 @@
      checkfornew
  }
--
+ 
++# ---------
++# JambulaTV
++# ---------
++get_default_gateway_dev_and_ip () {
++# Default ethernet device
++NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip -o -4 link show | awk -F': ' '/mode DEFAULT/ {print $2}' | grep -v lo | head -1)
++#
++# Test to see if there is a default gateway device
++/usr/sbin/ip -o -4 route show | grep -i '^default' > /dev/null 2>&1 && \
++DEFAULT_ROUTE_EXISTS=$?
++#
++if [[ "$DEFAULT_ROUTE_EXISTS" = "0" ]];
++then
++# Default gateway device
++INTERNET_GATEWAY_DEV=$(/usr/sbin/ip -o -4 route show | awk '$3 ~ /^[1-9]+/ {print $5}')
++# Default gateway IP address
++INTERNET_GATEWAY_IP=$(/usr/sbin/ip -o -4 route show | awk '$3 ~ /^[1-9]+/ {print $3}')
++
++else
++INTERNET_GATEWAY_DEV=$NETWORK_ETHERNET_DEVICE
++INTERNET_GATEWAY_IP=$(/usr/sbin/ip -o -4 addr show ${INTERNET_GATEWAY_DEV} | awk -F '[ /]+' '/global/ {print $4}')
++fi
++}

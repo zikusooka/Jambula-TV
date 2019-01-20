@@ -54,21 +54,35 @@ host -W 1 $REMOTE_DOMAIN_NAME $SECONDARY_DNS_SERVER > /dev/null 2>&1
 INTERNET_STATUS=$?
 }
 
+get_default_gateway_dev_and_ip () {
+# Default ethernet device
+NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip -o -4 link show | awk -F': ' '/mode DEFAULT/ {print $2}' | grep -v lo | head -1)
+#
+# Test to see if there is a default gateway device
+/usr/sbin/ip -o -4 route show | grep -i '^default' > /dev/null 2>&1 && \
+DEFAULT_ROUTE_EXISTS=$?
+#
+if [[ "$DEFAULT_ROUTE_EXISTS" = "0" ]];
+then
+# Default gateway device
+INTERNET_GATEWAY_DEV=$(/usr/sbin/ip -o -4 route show | awk '$3 ~ /^[1-9]+/ {print $5}')
+# Default gateway IP address
+INTERNET_GATEWAY_IP=$(/usr/sbin/ip -o -4 route show | awk '$3 ~ /^[1-9]+/ {print $3}')
+
+else
+INTERNET_GATEWAY_DEV=$NETWORK_ETHERNET_DEVICE
+INTERNET_GATEWAY_IP=$(/usr/sbin/ip -o -4 addr show ${INTERNET_GATEWAY_DEV} | awk -F '[ /]+' '/global/ {print $4}')
+fi
+}
+
 check_local_dns_status () {
 host -W 1 $REMOTE_DOMAIN_NAME > /dev/null 2>&1
 DNS_STATUS=$?
 }
 
 set_chilli_internet_device () {
-check_internet_status 
-# Based on connectivity, get default gateway device
-if [ "$INTERNET_STATUS" = "0" ];
-then
-INTERNET_GATEWAY_DEV=$(/usr/sbin/ip addr show | grep ether | awk {'print $2'} | head -1)
-else
-# Set to ethernet device - leaving it blank causes errors in coova up.sh scipt
-INTERNET_GATEWAY_DEV=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
-fi
+# Get default gateway device and ip address
+get_default_gateway_dev_and_ip
 #
 # Get previous HS_WANIF variable
 PREVIOUS_HS_WANIF=$(grep 'HS_WANIF=' $COOVA_CONFIG_FILE | awk {'print $1'})
