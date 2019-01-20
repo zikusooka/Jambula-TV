@@ -812,17 +812,17 @@ NETWORK_DNS_1=$CURRENT_DNS1
 NETWORK_DNS_2=$CURRENT_DNS2
 
 # Public DNS Servers
-GOOGLE_DNS_SERVER_IP_1=8.8.8.8
-GOOGLE_DNS_SERVER_IP_2=8.8.4.4
 CLOUDFARE_DNS_SERVER_IP_1=1.0.0.1
 CLOUDFARE_DNS_SERVER_IP_2=1.1.1.1
+GOOGLE_DNS_SERVER_IP_1=8.8.8.8
+GOOGLE_DNS_SERVER_IP_2=8.8.4.4
 OPEN_DNS_SERVER_IP_1=208.67.222.222
 COMODO_DNS_SERVER_IP_1=8.26.56.26
 YANDEX_DNS_SERVER_IP_1=77.88.8.8
 #
-PUBLIC_DNS_SERVERS="$GOOGLE_DNS_SERVER_IP_1 $CLOUDFARE_DNS_SERVER_IP_1 $OPEN_DNS_SERVER_IP_1 $COMODO_DNS_SERVER_IP_1"
+PUBLIC_DNS_SERVERS="$CLOUDFARE_DNS_SERVER_IP_1 $GOOGLE_DNS_SERVER_IP_1 $OPEN_DNS_SERVER_IP_1 $COMODO_DNS_SERVER_IP_1"
 #
-DNS_SERVER_IP_ADDRESS_DEFAULT=$GOOGLE_DNS_SERVER_IP_1
+DNS_SERVER_IP_ADDRESS_DEFAULT=$CLOUDFARE_DNS_SERVER_IP_1
 
 # Netdata
 NETDATA_PORT=$(grep -i 'netdata$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -7647,22 +7647,25 @@ make_install_jambulatv
 
 openresolv_configure () {
 # Create resolvconf.conf file
-echo "# JambulaTV: resolvconf file
+cat > $CONFDIR/resolvconf.conf <<EOT
+# JambulaTV: resolvconf file
 resolv_conf=$CONFDIR/resolv.conf
 
 name_servers=127.0.0.1
-name_servers_append=\"$NETWORK_DNS_1 $NETWORK_DNS_2 $PUBLIC_DNS_SERVERS\"
+name_servers_append="$NETWORK_DNS_1 $NETWORK_DNS_2 $PUBLIC_DNS_SERVERS"
 
 resolv_conf_local_only=no
 
 dnsmasq_conf=$CONFDIR/dnsmasq-conf.conf
-dnsmasq_resolv=$CONFDIR/dnsmasq-resolv.conf" > $CONFDIR/resolvconf.conf
+dnsmasq_resolv=$CONFDIR/dnsmasq-resolv.conf
+EOT
 #
 # Add to dnsmasq file
-echo "
+cat >> $CONFDIR/dnsmasq.conf <<EOT2
 # resolvconf stuff
 conf-file=$CONFDIR/dnsmasq-conf.conf
-resolv-file=$CONFDIR/dnsmasq-resolv.conf" >> $CONFDIR/dnsmasq.conf
+resolv-file=$CONFDIR/dnsmasq-resolv.conf
+EOT2
 #
 # Update resolvconf file
 /usr/sbin/resolvconf -u
