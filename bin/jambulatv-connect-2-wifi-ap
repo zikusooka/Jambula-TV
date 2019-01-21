@@ -16,7 +16,7 @@ HOST_2_PING=8.8.4.4 #192.168.8.1 #8.8.4.4
 # Available in functions file
 INTERNET_WIFI_ISP_CONFIG=/etc/JambulaTV/internet-mobile-wifi.cfg
 WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
-WIFI_INTERFACES_AVAILABLE=$(sudo ip link |grep jwlan | wc -l)
+WIFI_INTERFACES_AVAILABLE=$(sudo /usr/sbin/ip link |grep jwlan | wc -l)
 # Variable specific to this script
 WIFI_SSID=$(grep -i SSID $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 WIFI_SECURITY_KEY=$(grep -i SECURITY_KEY $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
@@ -95,10 +95,10 @@ check_4_wifi_dongle () {
 if [ "$IW_COMPATIBLE" = "yes" ];
 then
 # Using iw command
-iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
+/usr/sbin/iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
 else
 # Using iwconfig
-iwconfig ${WIFI_STATION_INTERFACE} | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
+/usr/sbin/iwconfig ${WIFI_STATION_INTERFACE} | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
 fi
 WIFI_STICK_PRESENT=$?
 until [ "$WIFI_STICK_PRESENT" = "0" ];
@@ -111,10 +111,10 @@ sleep 60
 if [ "$IW_COMPATIBLE" = "yes" ];
 then
 # Using iw command
-iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
+/usr/sbin/iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
 else
 # Using iwconfig command
-iwconfig ${WIFI_STATION_INTERFACE} | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
+/usr/sbin/iwconfig ${WIFI_STATION_INTERFACE} | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
 fi
 WIFI_STICK_PRESENT=$?
 done
@@ -122,13 +122,13 @@ done
 
 scan_4_wifi () {
 # Take station UP
-sudo ip link set $WIFI_STATION_INTERFACE up
+sudo /usr/sbin/ip link set $WIFI_STATION_INTERFACE up
 #
 # Scan for AP, and get scanned SSID
 if [ "$IW_COMPATIBLE" = "yes" ];
 then
 # Using iw command
-sudo iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: $WIFI_SSID" > /dev/null 2>&1
+sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: $WIFI_SSID" > /dev/null 2>&1
 AP_EXISTENCE=$?
 else
 # Using iwlist command
@@ -159,7 +159,7 @@ WPA_SUPPLICANT_PID=$(sudo ps auxw | grep wpa_supplicant | grep $WIFI_STATION_INT
 # Kill wpa_supplicant
 [ "x$WPA_SUPPLICANT_PID" = "x" ] || sudo kill $WPA_SUPPLICANT_PID >> /dev/null
 # Flush Wifi station interface
-sudo ip addr flush dev $WIFI_STATION_INTERFACE 
+sudo /usr/sbin/ip addr flush dev $WIFI_STATION_INTERFACE 
 }
 
 generate_wpa_config () {
@@ -186,10 +186,10 @@ check_link_status () {
 if [ "$IW_COMPATIBLE" = "yes" ];
 then
 # Using iw command
-WIFI_LINK_STATUS=$(sudo iw dev $WIFI_STATION_INTERFACE link)
+WIFI_LINK_STATUS=$(sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE link)
 else
 # Using iwconfig command
-WIFI_LINK_STATUS=$(sudo iwconfig $WIFI_STATION_INTERFACE | head -1 | awk {'print $2'})
+WIFI_LINK_STATUS=$(sudo /usr/sbin/iwconfig $WIFI_STATION_INTERFACE | head -1 | awk {'print $2'})
 fi
 #
 if [ "$WIFI_LINK_STATUS" = "Not connected." ] || [ "$WIFI_LINK_STATUS" = "unassociated" ];
@@ -210,7 +210,7 @@ DHCLIENT_FAILED_PID=$(ps auxw | grep dhclient | grep ${WIFI_STATION_INTERFACE} |
 # Kill existing dhclient process
 [ "x$DHCLIENT_FAILED_PID" = "x" ] || kill $DHCLIENT_FAILED_PID
 # Clear default route
-ip route del default
+/usr/sbin/ip route del default
 # Get IP Address/Gateway/DNS
 # NOTE: Run dhclient in background!
 sudo /sbin/dhclient -H $(hostname -s) -q -lf /var/lib/dhclient/dhclient--${WIFI_STATION_INTERFACE}.lease -pf /var/run/dhclient-${WIFI_STATION_INTERFACE}.pid ${WIFI_STATION_INTERFACE}

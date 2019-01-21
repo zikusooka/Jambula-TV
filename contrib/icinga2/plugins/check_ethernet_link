@@ -3,7 +3,7 @@
 # 
 # NOTE: You need to have your icinga environment properly setup
 #
-# Copyright (C) 2018-2018 Joseph Zikusooka.
+# Copyright (C) 2019-2020 Joseph Zikusooka.
 #
 # Contact me at: joseph AT zikusooka.com
 
@@ -22,9 +22,9 @@
 
 
 # Get ethernet device
-NETWORK_ETHERNET_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
+NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip -o -4 link show | awk -F': ' '/mode DEFAULT/ {print $2}' | grep -v lo | head -1)
 # Get ethernet IP Address
-NETWORK_IP_ADDRESS=$(ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
+NETWORK_IP_ADDRESS=$(/usr/sbin/ip -o -4 addr show ${NETWORK_ETHERNET_DEVICE} | awk -F '[ /]+' '/global/ {print $4}')
 # Get ethernet status
 NETWORK_ETHERNET_STATE=$(cat /sys/class/net/$NETWORK_ETHERNET_DEVICE/carrier)
 

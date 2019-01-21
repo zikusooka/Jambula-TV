@@ -7105,9 +7105,6 @@ IPV4_FAILURE_FATAL="yes"
 IPV6INIT=no
 EOF
 #
-# BUG: Patch network rc.d init file i.e. delay start with something
-patch -p1 $CONFDIR/rc.d/init.d/network  < $PROJECT_PATCHES_DIR/network.rc.init.patch
-# 
 # Post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #

@@ -2,7 +2,7 @@
 # Available in functions file
 INTERNET_WIFI_ISP_CONFIG=/etc/JambulaTV/internet-mobile-wifi.cfg
 WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
-WIFI_INTERFACES_AVAILABLE=$(sudo ip link |grep jwlan | wc -l)
+WIFI_INTERFACES_AVAILABLE=$(sudo /usr/sbin/ip link | grep jwlan | wc -l)
 # Variable specific to this script
 WIFI_SSID=$(grep -i SSID $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 # Set WiFi station Interface
@@ -37,13 +37,13 @@ fi
 
 scan_4_wifi () {
 # Take station UP
-sudo ip link set $WIFI_STATION_INTERFACE up
+sudo /usr/sbin/ip link set $WIFI_STATION_INTERFACE up
 #
 # Scan for AP, and get scanned SSID
 if [ "$IW_COMPATIBLE" = "yes" ];
 then
 # Using iw command
-sudo iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: $WIFI_SSID" > /dev/null 2>&1
+sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: $WIFI_SSID" > /dev/null 2>&1
 AP_EXISTENCE=$?
 else
 # Using iwlist command

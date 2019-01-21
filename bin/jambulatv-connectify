@@ -2,7 +2,7 @@
 WIFI_AP_INTERFACE=MY_WIFI_AP_INTERFACE
 WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 WIFI_OLD_INTERFACE=$(journalctl -b -o cat --no-pager | grep 'renamed network interface wlan' | awk '{print $NF}' | sort -u | head -1)
-WIFI_PHY_DEV=$(iw dev $WIFI_OLD_INTERFACE info | grep wiphy | awk {'print $2'})
+WIFI_PHY_DEV=$(/usr/sbin/iw dev $WIFI_OLD_INTERFACE info | grep wiphy | awk {'print $2'})
 WIFI_AP_MACADDRESS="MY_WIFI_AP_MACADDRESS"
 WIFI_STATION_MACADDRESS="MY_WIFI_STATION_MACADDRESS"
 
@@ -40,7 +40,7 @@ delete_virtual_interfaces () {
 for DEV in $WIFI_AP_INTERFACE $WIFI_STATION_INTERFACE;
 do
 echo "Removing $DEV:"
-iw dev $DEV del > /dev/null 2>&1
+/usr/sbin/iw dev $DEV del > /dev/null 2>&1
 done
 }
 
@@ -48,17 +48,17 @@ create_virtual_interfaces () {
 # Create station interface
 iw phy phy$WIFI_PHY_DEV interface add $WIFI_STATION_INTERFACE type station
 # Set MAC address
-ip link set dev $WIFI_STATION_INTERFACE address $WIFI_AP_MACADDRESS
+/usr/sbin/ip link set dev $WIFI_STATION_INTERFACE address $WIFI_AP_MACADDRESS
 
 # Take station UP
-ip link set $WIFI_STATION_INTERFACE up
+/usr/sbin/ip link set $WIFI_STATION_INTERFACE up
 # Create AP interface
 iw phy phy$WIFI_PHY_DEV interface add $WIFI_AP_INTERFACE type __ap
 # Set MAC Address
-ip link set dev $WIFI_AP_INTERFACE address $WIFI_STATION_MACADDRESS
+/usr/sbin/ip link set dev $WIFI_AP_INTERFACE address $WIFI_STATION_MACADDRESS
 
 # Take old interface DOWN
-ip link set $WIFI_OLD_INTERFACE down
+/usr/sbin/ip link set $WIFI_OLD_INTERFACE down
 }
 
 

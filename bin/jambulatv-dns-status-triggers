@@ -3,11 +3,13 @@
 # the Internet connection becomes either 'UP' or 'DOWN'. It is not meant
 # as a standalone CLI script but is used internally by JambulaTV services
 #
-# Jambula Labs @copyright 2018-2019 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
 #
 # Variables
-NETWORK_ETHERNET_DEVICE=$(ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
-NETWORK_IP_ADDRESS=$(ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
+# Get ethernet device
+NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip -o -4 link show | awk -F': ' '/mode DEFAULT/ {print $2}' | grep -v lo | head -1)
+# Get ethernet IP Address
+NETWORK_IP_ADDRESS=$(/usr/sbin/ip -o -4 addr show ${NETWORK_ETHERNET_DEVICE} | awk -F '[ /]+' '/global/ {print $4}')
 COOVA_SERVER_IP=`grep 'HS_UAMLISTEN=' /etc/chilli/config | cut -d = -f2 | awk {'print $1'}`
 COOVA_CONFIG_DIR=/etc/chilli
 COOVA_CONFIG_FILE=$COOVA_CONFIG_DIR/config
