@@ -26,9 +26,8 @@ fi
 
 # IP Settings
 # ***********
-NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
-NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
-
+NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip -o -4 link show | awk -F': ' '/mode DEFAULT/ {print $2}' | grep -v lo | head -1)
+NETWORK_IP_ADDRESS=$(/usr/sbin/ip -o -4 addr show ${NETWORK_ETHERNET_DEVICE} | awk -F '[ /]+' '/global/ {print $4}')
 NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
 # If No Gateway
 if [ "x$NETWORK_GATEWAY_ADDRESS" = "x" ];
@@ -54,8 +53,8 @@ CURRENT_DNS2=$CURRENT_DNS1
 fi
 #
 # WiFi AP and Client Chipsets
-WIFI_AP_CHIPSET=$(grep -i $(iw dev | grep -B2 -i 'type AP' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g') $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
-WIFI_CLIENT_CHIPSET=$(grep -i $(iw dev | grep -i -B2 'type managed' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g') $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
+WIFI_AP_CHIPSET=$(grep -i $(iw dev | grep -B2 -i 'type AP' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g' | head -1) $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
+WIFI_CLIENT_CHIPSET=$(grep -i $(iw dev | grep -i -B2 'type managed' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g' | head -1) $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
 
 # Check if Internet connection is up
 host -W 1 google.com 1.0.0.1 > /dev/null 2>&1
@@ -189,7 +188,7 @@ echo -e "${n}Private IP Address:${b} $NETWORK_IP_ADDRESS \t ${n}Public IP addres
 echo -e "${n}Private IP Gateway:${b} $NETWORK_GATEWAY_ADDRESS \t ${n}DNS Address:${b} $CURRENT_DNS1"
 
 # WiFi AP and Client Chipsets
-echo -e "${n}WiFi AP:${b} $WIFI_AP_CHIPSET \t ${n}WiFi Client:${b} $WIFI_CLIENT_CHIPSET"
+echo -e "${n}WiFi AP:${b} $WIFI_AP_CHIPSET \t\t ${n}WiFi Client:${b} $WIFI_CLIENT_CHIPSET"
 
 # CPU
 echo -e "${n}CPU Model:${b} $CPU_MODEL \t ${n}CPU Speed:${b} $CPU_SPEED"
