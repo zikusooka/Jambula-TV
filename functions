@@ -439,8 +439,9 @@ resource.uisounds.titan.modern \
 script.skinshortcuts \
 script.skin.helper.backgrounds \
 script.skin.helper.service \
-script.skin.helper.widgets \
-skin.titan.mod.beta.leia"
+script.skin.helper.widgets"
+# \
+#skin.titan.mod.beta.leia" # Now using Github clone
 
 # ----------------------------------------
 # Pick Addons depending on kodi codename
@@ -6429,8 +6430,7 @@ rsync -av $PROJECT_IMAGES_DIR/kodi/backgrounds/skin.$KODI_PREFERRED_SKIN/ \
 
 titan|titan.mod.beta.leia)
 # Copy preferred skin files to addons directory
-#rsync -av --delete-after $PROJECT_GITHUB_DIR/kodi-addons/skin.$KODI_PREFERRED_SKIN \
-#$KODI_USER_ADDONS/
+rsync -av --delete-after $PROJECT_GITHUB_DIR/kodi-addons/skin.$KODI_PREFERRED_SKIN $KODI_USER_ADDONS/
 
 # Set collection of skin addon packages
 if [[ "$PREFERRED_KODI_CODENAME" = "Krypton" ]];
@@ -6464,9 +6464,8 @@ done
 rsync -av $PROJECT_IMAGES_DIR/kodi/backgrounds/skin.$KODI_PREFERRED_SKIN/ \
 	$KODI_USER_ADDONS/resource.images.skinicons.wide/resources/
 
-# Adjust custom Logo image dimensions
-rsync -av $PROJECT_CONFIGS_DIR/kodi/skin.$KODI_PREFERRED_SKIN/IncludesHeader.xml \
-	$KODI_USER_ADDONS/skin.$KODI_PREFERRED_SKIN/1080i/
+# Apply patch to skin which adjusts custom Logo image dimensions
+patch -p1 $KODI_USER_ADDONS/skin.$KODI_PREFERRED_SKIN/1080i/IncludesHeader.xml < $PROJECT_PATCHES_DIR/kodi.skin.$KODI_PREFERRED_SKIN.IncludesHeader.xml.patch
 
 # Skin Settings
 [ -d $KODI_ADDON_DATA_DIR/skin.$KODI_PREFERRED_SKIN ] || mkdir -p $KODI_ADDON_DATA_DIR/skin.$KODI_PREFERRED_SKIN

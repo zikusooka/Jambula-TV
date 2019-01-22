@@ -1,0 +1,13 @@
+--- IncludesHeader.xml.orig	2019-01-22 16:37:00.429461316 +0300
++++ IncludesHeader.xml		2019-01-22 17:07:38.249529359 +0300
+@@ -903,8 +903,8 @@
+         <control type="image">
+             <posx>35</posx>
+             <posy>10</posy>
+-            <height>110</height>
+-            <width>375</width>
++            <height>306</height>
++            <width>779</width>
+             <aspectratio align="left">keep</aspectratio>
+             <texture background="true">$INFO[Skin.String(CustomLogoImage)]</texture>
+             <visible>Skin.String(CustomLogoImage) + String.IsEmpty(Control.GetLabel(198754))</visible>
