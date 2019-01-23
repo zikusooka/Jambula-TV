@@ -1,6 +1,6 @@
 #!/bin/sh
 # This is a wrapper script used by icinga2 to connect to a wireless access point
-# Jambula Labs @copyright 2017-2018 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
 
 # Argument from icinga2 script
 ICINGA2_AP_STATUS=$@
@@ -11,7 +11,7 @@ SETUP_COMPLETED_FILE=/usr/share/JambulaTV/html/setup/.initial-setup-completed
 
 PING_CMD=/usr/sbin/fping
 PING_CMD_OPTS="-l"
-HOST_2_PING=8.8.4.4 #192.168.8.1 #8.8.4.4
+HOST_2_PING=MY_HOST_2_PING
 
 # Available in functions file
 INTERNET_WIFI_ISP_CONFIG=/etc/JambulaTV/internet-mobile-wifi.cfg
@@ -204,6 +204,24 @@ $OSD_TOOL_CMD "$CONNECTED_MSG"
 fi
 }
 
+disable_dns_servers_assignment () {
+[[ -e /etc/dhcp/dhclient-enter-hooks ]] || \
+	cat > /etc/dhcp/dhclient-enter-hooks <<ET
+#!/bin/sh
+
+# Quit if interface is not WiFi station Interface
+[[ "\$interface" = "$WIFI_STATION_INTERFACE" ]] || exit 0
+
+make_resolv_conf () {
+:
+logger -s -t \$(basename \$0) "Info: JambulaTV will ignore any DNS server IP addresses assigned to \$interface ..."
+}
+ET
+
+# Make dhclient-enter-hooks script executable
+chmod 755 /etc/dhcp/dhclient-enter-hooks
+}
+
 get_ip_address () {
 # Remove previous/failed dhclient process 
 DHCLIENT_FAILED_PID=$(ps auxw | grep dhclient | grep ${WIFI_STATION_INTERFACE} | awk {'print $2'} | tail -1)
@@ -211,8 +229,9 @@ DHCLIENT_FAILED_PID=$(ps auxw | grep dhclient | grep ${WIFI_STATION_INTERFACE} |
 [ "x$DHCLIENT_FAILED_PID" = "x" ] || kill $DHCLIENT_FAILED_PID
 # Clear default route
 /usr/sbin/ip route del default
-# Get IP Address/Gateway/DNS
-# NOTE: Run dhclient in background!
+# Disable assignment of DNS servers by Access Point
+disable_dns_servers_assignment
+# Get IP/Gateway addresses, and other DHCP info (NOTE: Run dhclient in background!)
 sudo /sbin/dhclient -H $(hostname -s) -q -lf /var/lib/dhclient/dhclient--${WIFI_STATION_INTERFACE}.lease -pf /var/run/dhclient-${WIFI_STATION_INTERFACE}.pid ${WIFI_STATION_INTERFACE}
 }
 
