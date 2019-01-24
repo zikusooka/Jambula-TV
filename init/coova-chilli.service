@@ -4,9 +4,9 @@ After=hostapd.service
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/jambulatv-chilli start
-ExecReload=/usr/bin/jambulatv-chilli restart
-ExecStop=/usr/bin/jambulatv-chilli stop
+ExecStart=/bin/sh -c "/usr/bin/jambulatv-chilli start"
+ExecReload=/bin/sh -c "/usr/bin/jambulatv-chilli restart"
+ExecStop=/bin/sh -c "/usr/bin/jambulatv-chilli stop"
 User=root
 
 [Install]
