@@ -3118,7 +3118,7 @@ rsync -avz $PROJECT_GITHUB_DIR/intel-vaapi-driver/ $INSTALL_SRC_DIR/intel-vaapi-
 # configure
 cd $INSTALL_SRC_DIR/intel-vaapi-driver
 ./autogen.sh --prefix=$PREFIX --libdir=$LIBDIR 
-make_install_jambulatv
+make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
 vdpauinfo_install () {
