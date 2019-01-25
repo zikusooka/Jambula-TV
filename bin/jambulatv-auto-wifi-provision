@@ -3,23 +3,21 @@
 # Use it to autoconnect for first time Android users.  iOs clients can copy and paste
 # WiFi passphrase 
 # Requires: qrencode, VLC, convert (ImageMagick) utilities
-# Jambula Labs @copyright 2018-2019 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
 
 # Variables
 PROJECT_SYSTEM_SHARE_DIR=MY_SYSTEM_SHARE_DIR
-
 HOSTAPD_CONFIG_FILE=MY_HOSTAPD_DIR/hostapd.conf
-
+MY_WIFI_DEVICES_FILE=MY_OUR_WIFI_DEVICES_FILE
+MULTIMEDIA_USER=MY_MULTIMEDIA_USER
 WIRELESS_SSID=$(sudo grep '^ssid=' $HOSTAPD_CONFIG_FILE | sed 's:ssid=::')
 WIRELESS_PASSPHRASE=$(sudo grep '^wpa_passphrase=' $HOSTAPD_CONFIG_FILE | sed 's:wpa_passphrase=::')
-
 CONVERT_CMD=/usr/bin/convert
-
 SOUNDS_TOOL=MY_SOUNDS_TOOL
 OSD_TOOL=MY_OSD_TOOL
 OSDRUNFILE=$(grep ^OSDRUNFILE $OSD_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed "s/'//g")
-
 AUTO_WIFI_OSD_TEMP_SCRIPT=MY_TMPDIR/osd_4_auto_wifi_provision
+SETUP_COMPLETED_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.initial-setup-completed
 
 # QR Code variables
 QRCODE_CMD=/usr/bin/qrencode
@@ -70,6 +68,20 @@ clean_up () {
 rm -f $AUTO_WIFI_OSD_TEMP_SCRIPT
 }
 
+add_guest_2_my_wifi_devices () {
+WIFI_DEVICE_MAC_ADDR=$1
+grep -iw $WIFI_DEVICE_MAC_ADDR $MY_WIFI_DEVICES_FILE > /dev/null 2>&1
+MAC_ADDR_EXISTS=$?
+#
+# Add MAC address to My-WiFi devices file
+if [[ "$MAC_ADDR_EXISTS" != "0" ]];
+then
+cat >> $MY_WIFI_DEVICES_FILE <<EOT
+$WIFI_DEVICE_MAC_ADDR | Guest | no
+EOT
+fi
+}
+
 kill_qrcode_process () {
 # Set PID of current displayed qrcode process
 PID_AUTO_WIFI_QR=$(ps auxw | grep -Ev grep | grep ${QRCODE_IMAGE_FILENAME_ANDROID_IOS##*/} | awk {'print $2'})
@@ -97,19 +109,28 @@ PID_SOUNDS_TOOL=$(ps auxw | grep -Ev grep | grep setup-.*wav | awk {'print $2'})
 }
 
 destroy_auto_wifi_qrcode_and_osd () {
+# Change permissions so we can write to My WiFi devices file
+[[ -e $MY_WIFI_DEVICES_FILE ]] && sudo chown $MULTIMEDIA_USER $MY_WIFI_DEVICES_FILE
+
 # Wait for WiFi handshake, and when completed remove QR codes displayed
 /usr/bin/journalctl -b -f -o cat --no-pager | grep -m 1 -i "WPA: pairwise key handshake completed" | while read LINE
 do
+# Set MAC Address of WiFi device
+WIFI_DEVICE_MAC_ADDR=$(echo $LINE | awk {'print $3'})
+# Add guest user MAC address to My-WiFi devices file ONLY if setup was completed
+[[ -e $SETUP_COMPLETED_FILE ]] && \
+add_guest_2_my_wifi_devices $WIFI_DEVICE_MAC_ADDR
+#
 # Kill processes
 kill_qrcode_process
 kill_osd_process
 kill_voice_assistant
-done
-
+#
 # Notify of connected status - OSD
-$OSD_TOOL -m "Connected to JambulaTV" &
+$OSD_TOOL -m "The device $WIFI_DEVICE_MAC_ADDR connected to JambulaTV" &
 # Notify of connected status - voice assistant
 $SOUNDS_TOOL setup 3
+done
 }
 
 create_auto_wifi_qrcode_4_android_ios () {

@@ -9309,7 +9309,8 @@ usermod -a -G $HOSTAPD_GROUP $MULTIMEDIA_USER
 
 # Copy over auto wifi provisioning tool, if none exists in bin directory
 [ -e $AUTO_WIFI_PROVISION_TOOL ] || cat $PROJECT_BIN_DIR/jambulatv-auto-wifi-provision | \
-	sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
+	sed -e "s:MY_OUR_WIFI_DEVICES_FILE:$OUR_WIFI_DEVICES_FILE:g" | \
+	sed -e "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" | \
 	sed -e "s:MY_SOUNDS_TOOL:$SOUNDS_TOOL:g" | \
 	sed -e "s:MY_OSD_TOOL:$OSD_TOOL:g" | \
 	sed -e "s:MY_SYSTEM_SHARE_DIR:$PROJECT_SYSTEM_SHARE_DIR:g" | \
