@@ -1,5 +1,5 @@
---- /usr/src/jambulatv/coova-chilli/miniportal/config-local.sh	2015-11-22 08:57:46.247269748 +0300
-+++ config-local.sh	2016-06-26 20:39:02.158449736 +0300
+--- config-local.sh.orig	2019-01-03 14:39:06.291281375 +0300
++++ config-local.sh		2019-01-25 15:42:36.099426783 +0300
 @@ -23,8 +23,14 @@
  COOVA_SESSIONID=$CHI_SESSION_ID
  COOVA_CHALLENGE=$CHI_CHALLENGE
@@ -7,7 +7,7 @@
 -FORM_userurl=${FORM_userurl:-http://coova.github.io/}
 -    
 +FORM_userurl=${FORM_userurl:-$HS_PROVIDER_LINK}
-+ 
++
 +FREERADIUS_DB_NAME=COOVACHILLI_DB_NAME
 +FREERADIUS_DB_USER=COOVACHILLI_DB_USER
 +FREERADIUS_DB_PASS=COOVACHILLI_DB_PASS
@@ -117,7 +117,8 @@
 +# Check if remote MAC Address already exists in radius MySQL database
 +MAC_EXISTS_DB=$(echo "SELECT COUNT(*) FROM radcheck WHERE username = '$REMOTE_MAC';" | mysql -s -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME)
 +#
-+if [ "$MAC_EXISTS_DB" = 0 ] && [ "$MAC_EXISTS_FILE" = 0 ];
++# If user's MAC address exists in My-WiFI devices file, but does not exist in MySQL DB 
++if [[ "$MAC_EXISTS_FILE" = 0 && "$MAC_EXISTS_DB" != 0 ]];
 +then
 +# Add MAC Address of device that will ByPass Authentication 
 +echo "Adding $REMOTE_MAC to home and authenticated user database  ..."
@@ -125,7 +126,6 @@
 +echo "INSERT INTO radcheck (UserName, Attribute, Op, Value) VALUES ('$REMOTE_MAC', 'Auth-Type', ':=', 'Accept');" | mysql -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME
 +fi
 +}
-+
 +
  FORM_username="${FORM_username:-$FORM_UserName}"
  FORM_username="${FORM_username:-$FORM_Username}"
