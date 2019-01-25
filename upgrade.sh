@@ -273,7 +273,7 @@ live555_install
 
 #upgrade_kernel 4.20
 #upgrade_kernel 4.19.16
-#upgrade_kernel 4.4.170
+#upgrade_kernel 4.4.171
 
 #upgrade_openssl
 
