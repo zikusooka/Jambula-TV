@@ -1652,7 +1652,7 @@ make_build_log
 # Run Make - DONT use -j cores option
 # NOTE: If you want, add it like: 'make_install_jambulatv -j$SYSTEM_CPU_CORES'
 #make -s $@ 1>> $BUILD_LOG 2>&1
-make -s $@ >> $BUILD_LOG
+make -s 2>&1 $@ | tee -a $BUILD_LOG
 MAKE_EXIT_STATUS=$?
 if [ "$MAKE_EXIT_STATUS" = "0" ];
 then
