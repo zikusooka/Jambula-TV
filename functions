@@ -3166,37 +3166,8 @@ make_install_jambulatv
 }
 
 python3_common_modules_install () {
-for PYTHON_PACKAGE in \
-pip==18.1 \
-pytz==2017.2 \
-setuptools_scm \
-pytest-runner \
-beautifulsoup4 \
-pbr \
-pycodestyle \
-incremental \
-vcversioner \
-sqlalchemy==1.1.15 \
-chardet==3.0.4 \
-requests==2.18.4 \
-httplib2 \
-pyxmpp2 \
-sleekxmpp \
-jinja2==2.9.6 \
-certifi==2017.4.17 \
-six==1.10.0 \
-ruamel.yaml==0.15.80 \
-pyaml \
-scapy \
-nose \
-coverage \
-Cython \
-docutils \
-idna==2.7
-do
-# Install Python package
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_PACKAGE
-done
+# Install commonly used Python3 modules by all apps
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/common-requirements.txt
 }
 
 python3_install () {
@@ -11194,7 +11165,6 @@ PYTHON_VERSION_USED=3 && set_python_version
 
 # Unpack runtime
 unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/python_openzwave-*.zip
-
 # Remove external URL to github for downloading embedded version of openzwave
 # i.e. it is available locally
 sed -i \
@@ -11209,9 +11179,11 @@ $PYTHON_INSTALL_CMD
 homeassistant_pyozw_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 
+PYOZW_VERSION=$(awk -F'==' '/homeassistant-pyozw/ {print $2}' $INSTALL_SRC_DIR/home-assistant/requirements_all.txt)
+#
 # Unpack runtime
-unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/homeassistant_pyozw-*.zip
-
+unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/homeassistant_pyozw-${PYOZW_VERSION}.zip
+#
 # Remove external URL to github for downloading embedded version of openzwave
 # i.e. it is available locally
 sed -i \
