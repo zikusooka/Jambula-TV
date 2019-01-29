@@ -5,7 +5,7 @@
 #
 # Prerequisites: Linux using systemd
 #
-# Jambula Labs @copyright 2018-2019 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
 #
 # Variables
 PROJECT_NAME=JambulaTV
@@ -17,99 +17,139 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 
 
 
-# TTY - Set font and colors
+set_fonts_colors () {
 if tty -s
 then
-b=$(tput bold)
-n=$(tput sgr0)
+BOLD=$(tput bold)
+BLINK=$(tput blink)
+RST=$(tput sgr0)
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+BLUE=$(tput setaf 4)
+PURPLE=$(tput setaf 5)
+CYAN=$(tput setaf 6)
+WHITE=$(tput setaf 7)
 fi
+}
 
-# IP Settings
-# ***********
-NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip -o -4 link show | awk -F': ' '/mode DEFAULT/ {print $2}' | grep -v lo | head -1)
-NETWORK_IP_ADDRESS=$(/usr/sbin/ip -o -4 addr show ${NETWORK_ETHERNET_DEVICE} | awk -F '[ /]+' '/global/ {print $4}')
-NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
-# If No Gateway
-if [ "x$NETWORK_GATEWAY_ADDRESS" = "x" ];
-then
-NETWORK_GATEWAY_ADDRESS=000.000.000.000
-fi
-#
-# DNS Settings
-# *************
-# Current DNS 1
-CURRENT_DNS1=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 1'`
-#
-# Number of DNS settings
-NUMBER_OF_DNS=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | wc -l`
-#
-# Add second DNS if more than 1 setting
-if [ "$NUMBER_OF_DNS" -gt "1" ];
-then
-# Current DNS 2
-CURRENT_DNS2=`sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 2'` 
-else
-CURRENT_DNS2=$CURRENT_DNS1
-fi
-#
-# WiFi AP and Client Chipsets
-WIFI_AP_CHIPSET=$(grep -i $(iw dev | grep -B2 -i 'type AP' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g' | head -1) $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
-WIFI_CLIENT_CHIPSET=$(grep -i $(iw dev | grep -i -B2 'type managed' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g' | head -1) $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
+notice_gathering_info () {
+clear
+cat <<ET
+Gathering system information, please wait ...
+ET
+}
 
-# Check if Internet connection is up
-host -W 1 google.com 1.0.0.1 > /dev/null 2>&1
+check_if_internet_is_up () {
+ping -c $PING_COUNT -W $PING_TIMEOUT $GOOGLE_DNS_SERVER_IP_1 > /dev/null 2>&1
 INTERNET_ALIVE=$?
-if [ "$INTERNET_ALIVE" = "0" ];
-then
-INTERNET_STATE=UP↑
-#
-# Public IP Address
-# -----------------
-PUBLIC_IP_ADDRESS=$(curl --get -sS -m 60  -A "$DEFAULT_USER_AGENT" https://api.ipify.org)
+}
 
+check_for_updates () {
 # See if update is available
-/usr/lib64/nagios/plugins/check_updates > /dev/null 2>&1
+$MONITORING_PLUGINS_DIR/check_updates > /dev/null 2>&1
 UPDATE_STATUS=$?
 	if [ "$UPDATE_STATUS" = "0" ];
 	then
-	UPDATES_AVAILABLE="${n}<Good, You're Up to Date>"
+	UPDATES_AVAILABLE="${GREEN}Up to Date!${RST}"
 	else
-	UPDATES_AVAILABLE="${b}<<New Version Available>>"
+	UPDATES_AVAILABLE="${BLINK}Old version!${RST}"
 	fi
+}
+
+internet_service_checks () {
+# Check Internet connectivity
+check_if_internet_is_up
+
+if [ "$INTERNET_ALIVE" = "0" ];
+then
+# Status - UP
+INTERNET_STATE="${GREEN}UP↑${RST}"
+
+# Public IP Address
+PUBLIC_IP_ADDRESS=$($CURL_CMD $CURL_OPTS --get -S -m 60  -A "$DEFAULT_USER_AGENT" https://api.ipify.org)
+
+# Check for software updates
+check_for_updates
+
 else
-INTERNET_STATE=DOWN↓
-PUBLIC_IP_ADDRESS=Unknown
+# Status - DOWN
+INTERNET_STATE="${RED}DOWN↓${RST}"
+
+# Public IP Address
+PUBLIC_IP_ADDRESS="${RED}Unknown${RST}"
+
+# Temperature
 TEMPERATURE_C=0
+
+# City
 CITY=$([ -e /etc/timezone ] && cat /etc/timezone | cut -d / -f2)
+
+# Summary
 SUMMARY="Info not available"
-UPDATES_AVAILABLE="${b}Current Version Unknown"
+
+# No Updates
+UPDATES_AVAILABLE="${RED}?${RST}"
 fi
-# WiFi state
+}
+
+wifi_hardware () {
+# Access Point
+IEEE_OUI_COMPANY_ID_AP=$(iw dev | grep -B2 -i 'type AP' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g' | head -1) 
+if [[ "x$IEEE_OUI_COMPANY_ID_AP" != "x" ]];
+then
+WIFI_AP_CHIPSET=$(grep -i "$IEEE_OUI_COMPANY_ID_AP" $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
+else
+WIFI_AP_CHIPSET="${RED}No Access Point found${RST}"
+fi
+#
+# Station
+IEEE_OUI_COMPANY_ID_ST=$(iw dev | grep -i -B2 'type managed' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g' | head -1) 
+if [[ "x$IEEE_OUI_COMPANY_ID_ST" != "x" ]];
+then
+WIFI_CLIENT_CHIPSET=$(grep -i "$IEEE_OUI_COMPANY_ID_ST" $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5'})
+else
+WIFI_CLIENT_CHIPSET="${RED}No Client found${RST}"
+fi
+}
+
+wifi_status () {
 WIFI_STATUS=$(cat /sys/class/net/${WIFI_STATION_INTERFACE}/operstate)
 if [[ "$WIFI_STATUS" = "up" ]];
 then
-WIFI_CONNECTION_STATUS="Connected"
+WIFI_CONNECTION_STATUS="${GREEN}Connected${RST}"
 else
-WIFI_CONNECTION_STATUS="Not Connected"
+WIFI_CONNECTION_STATUS="${RED}Not Connected${RST}"
 fi
-# Geolocation
+}
+
+get_geolocation () {
 CITY=$(grep -i city $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2)
 COUNTRY=$(grep -i country $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2)
 LATITUDE=$(grep -i latitude $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2)
 LONGITUDE=$(grep -i longitude $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2) 
 GEOLOCATION="$CITY, $COUNTRY ($LATITUDE, $LONGITUDE)"
-# Install Date
+}
+
+install_setup_info () {
+# Date
 INSTALL_DATE=$(ls -dlct --time-style="+%d %B %Y" "/lost+found" | awk '{printf $9 " " $6 " "$7 " " $8}' | sed 's:/lost+found ::g')
+
 # Owner
 CONTACT_NAME=$(query_mysql_db contact_name)
+}
 
-# ------------------
-# Hardware variables
-# ------------------
+battery_info () {
 ACPI_BATTERY_DIR=/sys/class/power_supply/BAT0
-[[ -d $ACPI_BATTERY_DIR ]] && \
-BATTERY_CAPACITY="$(cat $ACPI_BATTERY_DIR/capacity)"
-#CPU_MODEL="$(cat /proc/cpuinfo | grep -i 'model name' | sort -u | cut -d ':' -f2)"
+if [[ -d $ACPI_BATTERY_DIR ]];
+then
+BATTERY_CAPACITY="$(cat $ACPI_BATTERY_DIR/capacity)%"
+else
+BATTERY_CAPACITY="No Battery"
+fi
+}
+
+cpu_info () {
 CPU_MODEL=$(awk -F ': | @' '/model name|Processor|^cpu model|chip type|^cpu type/ {printf $2; exit}' /proc/cpuinfo | awk {'print $1FS$2FS$3'})
 CPU_SPEED=$(awk -F ': | @' '/model name|Processor|^cpu model|chip type|^cpu type/ {printf $3; exit}' /proc/cpuinfo)
 CPUTIME=$(ps -eo pcpu | awk 'NR>1' | awk '{tot=tot+$1} END {print tot}')
@@ -118,8 +158,14 @@ CPU_USED=$(echo $CPUTIME / $CPUCORES | bc)%
 CPU_LOAD=$(cat /proc/loadavg | cut -d' ' -f1-3)
 CPU_VAMPIRE=$()
 CPU_VAMPIRE_USAGE=$(ps --no-header -e -o pcpu,args --sort -pcpu | sed '/^ 0.0 /d' | head -1 | awk {'print $1'} | cut -d . -f1)%
+}
+
+gpu_info () {
 GPU_NAME=$(/usr/sbin/lspci -mm | awk -F '\\"|\\" \\"' '/"Display|"3D|"VGA/ {print $3 " "}')
 GPU_DRIVER=$(/usr/bin/journalctl -b -o cat | grep -i '\[drm\] Initialized' | grep -i minor | sed 's:\[drm\] Initialized::g' | awk {'print $1'})
+}
+
+hard_disks_info () {
 # Disks
 DISKS_INSTALLED=$(cat /proc/diskstats | awk {'print $3'} | cut -c2,1,3 | sort -u | wc -l)
 # Disk 1
@@ -136,7 +182,9 @@ DISK2_SIZE=$(/usr/sbin/parted -l | grep -B1 $DISK2_LOGICAL_NAME | grep $DISK2_LO
 DISK2_MNT_POINT=$(df -h ${DISK2_LOGICAL_NAME}1 | awk {'print $6'} | tail -1)
 DISK2_AVAIL=$(df -h $DISK2_MNT_POINT | awk '{ a = $4 } END { print a }')
 DISK2_TEMP=$(/usr/sbin/hddtemp $DISK2_LOGICAL_NAME | cut -d : -f3 | sed 's: ::g')
+}
 
+memory_info () {
 MEMORY_SIZE_TOTAL=$(expr $(grep -i 'MemTotal' /proc/meminfo | awk {'print $2'}) / 1048576 | xargs printf '%.1f')GB
 # Memory Model
 MEMORY_VENDOR_0=$(dmidecode -t memory | grep -i Manufacturer | head -1 | awk {'print $2'} | sed 's/A0_Manufacturer0//')
@@ -145,92 +193,129 @@ MEMORY_CLOCK_SPEED_0=$(dmidecode -t memory | grep -i 'Configured Clock Speed' | 
 MEMORY_VENDOR_1=$(dmidecode -t memory | grep -i Manufacturer | tail -1 | awk {'print $2'} | sed 's/A1_Manufacturer1//')
 MEMORY_PART_NO_1=$(dmidecode -t memory | grep -i 'Part Number' | tail -1 | awk {'print $3'} | sed 's/Array1_PartNumber1//g')
 MEMORY_CLOCK_SPEED_1=$(dmidecode -t memory | grep -i 'Configured Clock Speed' | tail -1 | awk {'print $4 $5'})
-MEMORY_MODEL_B0="$MEMORY_VENDOR_0 $MEMORY_PART_NO_0"
-MEMORY_MODEL_B1="$MEMORY_VENDOR_1 $MEMORY_PART_NO_1"
+MEMORY_MODEL_B0=$(echo "$MEMORY_VENDOR_0 $MEMORY_PART_NO_0" | cut -c1-20)
+MEMORY_MODEL_B1=$(echo "$MEMORY_VENDOR_1 $MEMORY_PART_NO_1" | cut -c1-20)
 # Memory Size
 [[ "$(dmidecode -t memory | grep -i 'Size' | head -1 | awk {'print $2'})" = "No" ]] || \
-MEMORY_SIZE_B0=$(expr $(dmidecode -t memory | grep -i 'Size' | head -1 | awk {'print $2'}) / 1024 | xargs printf '%.1f')GB
+MEMORY_SIZE_B0=$(expr $(dmidecode -t memory | grep -i 'Size' | head -1 | awk {'print $2'}) / 1024 | xargs printf '%.0f')GB
 [[ "$(dmidecode -t memory | grep -i 'Size' | tail -1 | awk {'print $2'})" = "No" ]] || \
-MEMORY_SIZE_B1=$(expr $(dmidecode -t memory | grep -i 'Size' | tail -1 | awk {'print $2'}) / 1024 | xargs printf '%.1f')GB
+MEMORY_SIZE_B1=$(expr $(dmidecode -t memory | grep -i 'Size' | tail -1 | awk {'print $2'}) / 1024 | xargs printf '%.0f')GB
 # Memory available
 MEMORY_AVAIL=$(free -m | grep Mem: | awk {'print $4'})
-SCREEN_RESOLUTION=$(export DISPLAY=:0.0 && /usr/bin/xrandr --nograb --current | awk 'match($0,/[0-9]*\.[0-9]*\*/) {printf $1 " "}')
+}
 
+x11_info () {
+ps acxw | grep X > /dev/null 2>&1
+X11_IS_RUNNING=$?
+# Get screen resolution if X server is running
+if [[ "$X11_IS_RUNNING" = "0" ]];
+then
+SCREEN_RESOLUTION=$(export DISPLAY=:0.0 && /usr/bin/xrandr --nograb --current | awk 'match($0,/[0-9]*\.[0-9]*\*/) {printf $1 " "}')
+else
+SCREEN_RESOLUTION="${RED}No Xserver found${RST}"
+fi
+}
+
+print_system_info () {
+# Set font and colors
+set_fonts_colors
 
 # Top Border
 #echo -e "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #"
-# Header
-echo -e "\e[32;5;196m $([[ -e `which figlet` ]] && figlet $PROJECT_NAME $PROJECT_VERSION)"
-# Copyright
-echo -e "\t\e[32;5;196m\t$COPYRIGHT_NOTICE"
-echo -e ""
-# Internet
-echo -e "\t\t${n}Internet Status:\t${b} $INTERNET_STATE"
-# Current WiFi
-echo -e "\t\t${n}Current WiFi:\t\t${b} $WIFI_CONNECTION_STATUS"
-# Battery Level
-[[ -d $ACPI_BATTERY_DIR ]] && \
-echo -e "\t\t${n}Battery Level:\t\t${b} ${BATTERY_CAPACITY}%"
-# Current Location
-echo -e "\t\t${n}Current Location:\t${b} $GEOLOCATION"
-# Software/Updates/Model/Serial No.
-echo -e "\t\t${n}Platform Software:\t${b} $PROJECT_VERSION ${n}($(uname -r)) $UPDATES_AVAILABLE"
-echo -e "\t\t${n}Model Number:\t\t${b} $PRODUCT_MODEL_NUMBER"
-echo -e "\t\t${n}Serial Number:\t\t${b} $PRODUCT_SERIAL_NUMBER"
-echo -e "\t\t${n}Install Date:\t\t${b} $INSTALL_DATE"
-echo -e "\t\t${n}Owner:\t\t\t${b} $CONTACT_NAME"
-echo -e""
+# Print our logo
+cat -T <<EOT
+
+
+
+
+${WHITE}             .';:'  
+           .,::::,' 
+         .;::::,    
+   ;o.  ':::::,${RST}     
+${PURPLE}  ;OOOO.,::::;               _                 _           _      _______     __
+ 'OOOOOx.,:::.              | | __ _ _ __ ___ | |__  _   _| | __ |_   _\ \   / /
+ kOOOOOOko:,..           _  | |/ _\` | '_ \` _ \| '_ \| | | | |/ _\` || |  \ \ / /
+:OOOOOOOOOOk'..         | |_| | (_| | | | | | | |_) | |_| | | (_| || |   \ V / 
+xOOOOOOOOOOxoo;'..       \___/ \__,_|_| |_| |_|_.__/ \__,_|_|\__,_||_|    \_/   
+OOOOOOOOOOd   .',,  
+OOOOOOOOOO.         
+dOOOOOOOOd                     $COPYRIGHT_NOTICE
+ oOOOOOOOd          
+  'dOOOOOO:         
+    .kOOOOOkl,.     
+     .lkoc;.${RST}     
+
+EOT
+
+# Summary
+cat <<SUMMARY
+		Internet Status:	${BOLD} $INTERNET_STATE ${RST}
+		Current WiFi:		${BOLD} $WIFI_CONNECTION_STATUS ${RST}
+		Battery Level:		${BOLD} ${BATTERY_CAPACITY} ${RST}
+		Current Location:	${BOLD} $GEOLOCATION ${RST}
+		Platform Software:	${BOLD} $PROJECT_VERSION ${RST}($(uname -r)) $UPDATES_AVAILABLE
+		Model Number:		${BOLD} $PRODUCT_MODEL_NUMBER ${RST}
+		Serial Number:		${BOLD} $PRODUCT_SERIAL_NUMBER ${RST}
+		Install Date:		${BOLD} $INSTALL_DATE ${RST}
+		Owner:			${BOLD} $CONTACT_NAME ${RST}
+
+SUMMARY
+
 # Date
-echo -e "${n}Date:${b} $(date +'%A, %d %b %Y') \t\t ${n}Time:${b} $(uptime | awk {'print $1FS$2FS$3'} | sed 's/,//')" 
+echo -e "${RST}Date:${BOLD} $(date +'%A, %d %b %Y') \t\t ${RST}Time:${BOLD} $(uptime | awk {'print $1FS$2FS$3'} | sed 's/,//')" 
 # IP Addresses
-echo -e "${n}Private IP Address:${b} $NETWORK_IP_ADDRESS \t ${n}Public IP address:${b} $PUBLIC_IP_ADDRESS"
-echo -e "${n}Private IP Gateway:${b} $NETWORK_GATEWAY_ADDRESS \t ${n}DNS Address:${b} $CURRENT_DNS1"
+echo -e "${RST}Private IP Address:${BOLD} $NETWORK_IP_ADDRESS \t ${RST}Public IP address:${BOLD} $PUBLIC_IP_ADDRESS"
+# Gateway
+if [ "x$NETWORK_GATEWAY_ADDRESS" = "x" ];
+then
+NETWORK_GATEWAY_ADDRESS=000.000.000.000
+fi
+echo -e "${RST}Private IP Gateway:${BOLD} $NETWORK_GATEWAY_ADDRESS \t ${RST}DNS Address:${BOLD} $CURRENT_DNS1"
 
 # WiFi AP and Client Chipsets
-echo -e "${n}WiFi AP:${b} $WIFI_AP_CHIPSET \t\t ${n}WiFi Client:${b} $WIFI_CLIENT_CHIPSET"
+echo -e "${RST}WiFi AP:${BOLD} $WIFI_AP_CHIPSET \t\t ${RST}WiFi Client:${BOLD} $WIFI_CLIENT_CHIPSET"
 
 # CPU
-echo -e "${n}CPU Model:${b} $CPU_MODEL \t ${n}CPU Speed:${b} $CPU_SPEED"
-#echo -e "${n}CPU Usage:${b} $CPU_USED \t\t\t ${n}CPU Load:${b} $CPU_LOAD"
-echo -e "${n}CPU Usage:${b} $CPU_USED \t\t\t\t ${n}CPU used by JambulaTV:${b} $CPU_VAMPIRE_USAGE"
+echo -e "${RST}CPU Model:${BOLD} $CPU_MODEL \t ${RST}CPU Speed:${BOLD} $CPU_SPEED"
+echo -e "${RST}CPU Usage:${BOLD} $CPU_USED \t\t\t\t ${RST}CPU used by JambulaTV:${BOLD} $CPU_VAMPIRE_USAGE"
 
 # Graphics
-echo -e "${n}GPU Name:${b} $GPU_NAME \t\t ${n}GPU Driver:${b} $GPU_DRIVER"
+echo -e "${RST}GPU Name:${BOLD} $GPU_NAME \t\t ${RST}GPU Driver:${BOLD} $GPU_DRIVER"
 
 # Memory
-echo -e "${n}Memory Size:${b} $MEMORY_SIZE_TOTAL \t\t\t ${n}Bank 0:${b} $MEMORY_MODEL_B0 ($MEMORY_SIZE_B0)"
+echo -e "${RST}Memory Size:${BOLD} $MEMORY_SIZE_TOTAL \t\t\t ${RST}Bank 0:${BOLD} $MEMORY_MODEL_B0 ($MEMORY_SIZE_B0)"
 if [[ "x$MEMORY_SIZE_B1" = "x" ]];
 then
-echo -e "${n}Available Memory:${b} $MEMORY_AVAIL MB \t\t ${n}Bank 1:${b} None"
+echo -e "${RST}Available Memory:${BOLD} $MEMORY_AVAIL MB \t\t ${RST}Bank 1:${BOLD} None"
 else
-echo -e "${n}Available Memory:${b} $MEMORY_AVAIL MB \t\t ${n}Bank 1:${b} $MEMORY_MODEL_B1 ($MEMORY_SIZE_B1)"
+echo -e "${RST}Available Memory:${BOLD} $MEMORY_AVAIL MB \t\t ${RST}Bank 1:${BOLD} $MEMORY_MODEL_B1 ($MEMORY_SIZE_B1)"
 fi
 
 # Disks
 # -----
 # Number of disks installed and space left for root partition
-echo -e "${n}Disks installed:${b} $DISKS_INSTALLED \t\t\t ${n}Disk Space Left [System]: ${b}$DISK1_AVAIL_ROOT"
+echo -e "${RST}Disks installed:${BOLD} $DISKS_INSTALLED \t\t\t ${RST}Disk Space Left [System]: ${BOLD}$DISK1_AVAIL_ROOT"
 
 # Disk Model & Size
-echo -e "${n}Disk 1 Model:${b} $DISK1_MODEL \t\t ${n}Disk 1 Size:${b} $DISK1_SIZE"
+echo -e "${RST}Disk 1 Model:${BOLD} $DISK1_MODEL \t\t ${RST}Disk 1 Size:${BOLD} $DISK1_SIZE"
 [[ "$DISKS_INSTALLED" -gt "1" ]] && \
-echo -e "${n}Disk 2 Model:${b} $DISK2_MODEL \t\t ${n}Disk 2 Size:${b} $DISK2_SIZE"
+echo -e "${RST}Disk 2 Model:${BOLD} $DISK2_MODEL \t\t ${RST}Disk 2 Size:${BOLD} $DISK2_SIZE"
 
 # Disk Space left
 if [[ "$DISKS_INSTALLED" -gt "1" ]];
 then
-echo -e "${n}Disk 1 Space Left [/JambulaTV]: ${b}$DISK1_AVAIL_JAMBULA \t ${n}Disk 2 Space Left [$DISK2_MNT_POINT]: ${b}$DISK2_AVAIL"
+echo -e "${RST}Disk 1 Space Left [/JambulaTV]: ${BOLD}$DISK1_AVAIL_JAMBULA \t ${RST}Disk 2 Space Left [$DISK2_MNT_POINT]: ${BOLD}$DISK2_AVAIL"
 else
-echo -e "${n}Disk 1 Space Left [/JambulaTV]: ${b}$DISK1_AVAIL_JAMBULA"
+echo -e "${RST}Disk 1 Space Left [/JambulaTV]: ${BOLD}$DISK1_AVAIL_JAMBULA"
 fi
 
 # Disk Temperature(s)
 if [[ "$DISKS_INSTALLED" -gt "1" ]];
 then
-echo -e "${n}Disk Temperatures:${b} $DISK1_TEMP | $DISK2_TEMP \t\t ${n}Screen Resolution:${b} $SCREEN_RESOLUTION"
+echo -e "${RST}Disk Temperatures:${BOLD} $DISK1_TEMP | $DISK2_TEMP \t\t ${RST}Screen Resolution:${BOLD} $SCREEN_RESOLUTION"
 else
-echo -e "${n}Disk Temperature:${b} $DISK1_TEMP \t\t\t ${n}Screen Resolution:${b} $SCREEN_RESOLUTION"
+echo -e "${RST}Disk Temperature:${BOLD} $DISK1_TEMP \t\t\t ${RST}Screen Resolution:${BOLD} $SCREEN_RESOLUTION"
 fi
 
 echo -e "\e[0m"
@@ -239,8 +324,52 @@ echo -e "\e[0m"
 #echo -e ""
 
 # Bottom Border
-#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#echo -e "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #"
-#echo "Checking for system updates:"
-#while ps aux | grep -e [y]um > /dev/null; do echo -n .;sleep 1; done &
-#up=`yum -e0 -d0 check-update | awk '{print $1}'`
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Print notice
+notice_gathering_info
+
+# If Internet connection is up, fetch online based information
+internet_service_checks
+
+# WiFi Chipsets
+wifi_hardware
+
+# WiFi state
+wifi_status
+
+# Geolocation
+get_geolocation
+
+# Install Date
+install_setup_info
+
+# Battery info
+battery_info
+
+# CPU info
+cpu_info
+
+# GPU info
+gpu_info
+
+# Hard Disk info
+hard_disks_info
+
+# Memory Info
+memory_info
+
+# X11 Info
+x11_info
+
+# Print system information
+# -------------------------
+print_system_info | more
