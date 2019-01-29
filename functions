@@ -11279,9 +11279,6 @@ $PYTHON_INSTALL_CMD
 
 # Add Home assistant user to dialout so they can access ZWave stick
 usermod -a -G dialout $HOMEASSISTANT_USER
-
-# Install homeassistant-cli
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR homeassistant-cli
 }
 
 homeassistant_configure () {
@@ -11307,6 +11304,23 @@ chmod 755 $BINARY_PREFIX/jambulatv-homeassistant-secrets
 cp -v $PROJECT_INIT_SCRIPTS_DIR/home-assistant.service $SYSTEMD_UNITS_DIR_USER/
 # Enable and start home-assistant if needed
 systemctl enable home-assistant.service
+}
+
+home_assistant_cli () {
+PYTHON_VERSION_USED=3 && set_python_version
+
+# Install dependencies for Home-Assistant-CLI using pips specified in requirements
+pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/home-assistant-cli-requirements.txt
+
+# Sync sources to install directory
+rsync -av --delete-after $PROJECT_GITHUB_DIR/home-assistant-cli/ $INSTALL_SRC_DIR/home-assistant-cli/
+# Patches: Delete old requests version - probably left in setup.py repo file by accident
+sed -i "/'requests==2.20.1',/d" $INSTALL_SRC_DIR/home-assistant-cli/setup.py
+# Force our requirements
+cp -v $PROJECT_PIPS_REQUIRES_DIR/home-assistant-cli-requirements.txt $INSTALL_SRC_DIR/home-assistant-cli/requirements.txt
+# Install Home-Assistant
+cd $INSTALL_SRC_DIR/home-assistant-cli
+$PYTHON_INSTALL_CMD
 }
 
 home_automation_tools () {

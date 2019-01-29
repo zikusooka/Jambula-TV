@@ -432,6 +432,8 @@ home_automation_services
 # HomeAssistant
 homeassistant_install
 homeassistant_configure
+# HomeAssistant-CLI
+home_assistant_cli
 
 # ------------------------
 # Notifications/ Messaging
