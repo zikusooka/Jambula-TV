@@ -6924,10 +6924,12 @@ grub2-mkconfig -o $GRUB2_BOOT_FILE
 #
 # Alternative: Add kernel parameter 'fsck.mode=skip' to grub2 settings
 #
-[[ -e $SYSTEMD_UNITS_DIR_USER/systemd-fsck@root.service ]] || \
-	cat $SYSTEMD_UNITS_DIR_SYSTEM/systemd-fsck@.service | \
-        sed -e 's:StandardOutput=journal+console:StandardOutput=journal:' | \
-        sed '/^#/d' > $SYSTEMD_UNITS_DIR_USER/systemd-fsck@root.service       
+for SYSTEMD_FSCK_UNIT in systemd-fsck@ systemd-fsck-root
+do
+# Do not log to console for each unit
+[[ -e $SYSTEMD_UNITS_DIR_SYSTEM/${SYSTEMD_FSCK_UNIT}.service ]] && \
+	sed -i 's:StandardOutput=journal+console:StandardOutput=journal:g' $SYSTEMD_UNITS_DIR_SYSTEM/${SYSTEMD_FSCK_UNIT}.service 
+done
 # Reload services daemon
 systemctl --system daemon-reload
 }
