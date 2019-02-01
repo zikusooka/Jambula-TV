@@ -4028,10 +4028,10 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 
 vpx_install () {
 # Remove libvpx rpm installed package(s)
-for RPM_PKG in libvpx-devel libvpx
-do
-rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
-done
+#for RPM_PKG in libvpx-devel libvpx
+#do
+#rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+#done
 #
 rsync -avz $PROJECT_GITHUB_DIR/libvpx/ $INSTALL_SRC_DIR/libvpx/
 # configure
