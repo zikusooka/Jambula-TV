@@ -3914,13 +3914,15 @@ libaacplus_install () {
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/libaacplus-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v libaacplus-* libaacplus
+# Add 3gpp sources
+cp -v $PROJECT_ZIPS_DIR/26410-800.zip $INSTALL_SRC_DIR/libaacplus/src
 # Compile
 cd $INSTALL_SRC_DIR/libaacplus
 ./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR 
-# Add 3gpp sources
-cp -v $PROJECT_ZIPS_DIR/26410-800.zip src/
-make_install_jambulatv -j$SYSTEM_CPU_CORES
+# Install
+make # DO NOT use -j option
+make install
 }
 
 gpac_install () {
