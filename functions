@@ -7056,8 +7056,9 @@ echo "# JambulaTV IP-Hostname
 $NETWORK_IP_ADDRESS	$HOSTNAME $PROJECT_NAME" >> /etc/hosts
 # Remove IPv6 localhost address
 sed -i "s/::1/#::1/g" /etc/hosts
-# Configure dhclient so it picks up specific options from DHCP server on network. 
-cat > $DHCLIENT_CONFIG_FILE << EOF
+# Configure dhclient so it picks up specific options from DHCP server on network, if it
+# was not done at OS install time
+[[ -e $DHCLIENT_CONFIG_FILE ]] || cat > $DHCLIENT_CONFIG_FILE << EOF
 interface "$NETWORK_ETHERNET_DEVICE" {
            send host-name "$HOSTNAME";
            supersede domain-search $(for DOMAIN in $PROJECT_DOMAINS;do echo -n "\"$DOMAIN\", " | sed 's:,::';done);
