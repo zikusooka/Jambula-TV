@@ -2601,6 +2601,48 @@ update_dtv_scan_tables () {
 rsync -avz $PROJECT_GITHUB_DIR/dtv-scan-tables/ $DATAROOTDIR/dvb/
 }
 
+dvbt_query_network_and_tuner () {
+# ----------
+# TV Market
+# ----------
+FIND_DVBT_NETWORK=$(find $DATAROOTDIR/dvb/dvb-t -maxdepth 1 -iname "$TV_MARKET")
+[[ "x$FIND_DVBT_NETWORK" = "x" ]] || \
+DVBT_NETWORK_NAME=$(basename $FIND_DVBT_NETWORK)
+case $TV_MARKET in
+[Uu][Gg]-[Kk][Aa][Mm][Pp][Aa][Ll][Aa])
+DVBT_PNETWORK_NAME="UBC TX2"
+DVBT_MULTIPLEXES="$(awk /FREQUENCY/{'print $3'} $DATAROOTDIR/dvb/dvb-t/[Uu][Gg]-[Kk][Aa][Mm][Pp][Aa][Ll][Aa] | grep -Ex '[0-9]{9}' | paste -s -d " ")"
+;;
+
+[Kk][Ee]-[Nn][Aa][Ii][Rr][Oo][Bb][Ii])
+DVBT_PNETWORK_NAME="ADN"
+DVBT_MULTIPLEXES="$(awk /FREQUENCY/{'print $3'} $DATAROOTDIR/dvb/dvb-t/[Kk][Ee]-[Nn][Aa][Ii][Rr][Oo][Bb][Ii] | grep -Ex '[0-9]{9}' | paste -s -d " ")"
+;;
+
+esac
+# Export
+export DVBT_NETWORK_NAME DVBT_PNETWORK_NAME DVBT_MULTIPLEXES
+#
+# -----------------
+# TV Tuner chipset
+# -----------------
+DVBT_TUNER_NAME="Silicon Labs Si2168"
+if [ "x$DVBT_TUNER_NAME" = "x" ];
+then
+DVBT_TUNER_NAME=$DEFAULT_DVBT_TUNER_NAME
+fi
+#
+DVB_TUNER_ADAPTER=$(dmesg | grep "$DVBT_TUNER_NAME" | grep 'DVB: registering adapter' | cut -d : -f3 | awk {'print $3'})
+if [ "x$DVB_TUNER_ADAPTER" = "x" ];
+then
+DVBT_TUNER_NO=0
+else
+DVBT_TUNER_NO=$DVB_TUNER_ADAPTER
+fi
+# Export
+export DVBT_TUNER_NAME DVB_TUNER_ADAPTER DVBT_TUNER_NO
+}
+
 dvbt_ask_4_variables () {
 # ----------
 # TV Market
@@ -2706,49 +2748,14 @@ fi
 # Export
 export TVH_DVBT_CONFIG_REQUESTED
 
-# Set DVBT variables
-# ----------
-# TV Market
-# ----------
-FIND_DVBT_NETWORK=$(find $DATAROOTDIR/dvb/dvb-t -maxdepth 1 -iname "$TV_MARKET")
-[[ "x$FIND_DVBT_NETWORK" = "x" ]] || \
-DVBT_NETWORK_NAME=$(basename $FIND_DVBT_NETWORK)
-case $TV_MARKET in
-[Uu][Gg]-[Kk][Aa][Mm][Pp][Aa][Ll][Aa])
-DVBT_PNETWORK_NAME="UBC TX2"
-DVBT_MULTIPLEXES="$(awk /FREQUENCY/{'print $3'} $DATAROOTDIR/dvb/dvb-t/[Uu][Gg]-[Kk][Aa][Mm][Pp][Aa][Ll][Aa] | grep -Ex '[0-9]{9}' | paste -s -d " ")"
-;;
-
-[Kk][Ee]-[Nn][Aa][Ii][Rr][Oo][Bb][Ii])
-DVBT_PNETWORK_NAME="ADN"
-DVBT_MULTIPLEXES="$(awk /FREQUENCY/{'print $3'} $DATAROOTDIR/dvb/dvb-t/[Kk][Ee]-[Nn][Aa][Ii][Rr][Oo][Bb][Ii] | grep -Ex '[0-9]{9}' | paste -s -d " ")"
-;;
-
-esac
-# Export
-export DVBT_NETWORK_NAME DVBT_PNETWORK_NAME DVBT_MULTIPLEXES
-#
-# -----------------
-# TV Tuner chipset
-# -----------------
-DVBT_TUNER_NAME="Silicon Labs Si2168"
-if [ "x$DVBT_TUNER_NAME" = "x" ];
-then
-DVBT_TUNER_NAME=$DEFAULT_DVBT_TUNER_NAME
-fi
-#
-DVB_TUNER_ADAPTER=$(dmesg | grep "$DVBT_TUNER_NAME" | grep 'DVB: registering adapter' | cut -d : -f3 | awk {'print $3'})
-if [ "x$DVB_TUNER_ADAPTER" = "x" ];
-then
-DVBT_TUNER_NO=0
-else
-DVBT_TUNER_NO=$DVB_TUNER_ADAPTER
-fi
-# Export
-export DVBT_TUNER_NAME DVB_TUNER_ADAPTER DVBT_TUNER_NO
+# Query DVBT network and tuner hardware
+dvbt_query_network_and_tuner
 }
 
 dvbt_set_variables () {
+# Query DVBT network and tuner hardware
+dvbt_query_network_and_tuner
+
 # Copy to DVBT settings file
 # --------------------------
 cat > $PROJECT_DVBT_SETTINGS_FILE <<EOF
