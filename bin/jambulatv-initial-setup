@@ -1,6 +1,6 @@
 #!/bin/sh
 # This is the first time user setup tool for JambulaTV 
-# Jambula Labs @copyright 2018-2019 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
 #
 # Variables
 PROJECT_NAME=JambulaTV
@@ -79,7 +79,7 @@ JAMBULATV_SETUP_DB_TABLE=MY_JAMBULATV_SETUP_DB_TABLE
 
 PVR_STATUS_FILE=$(grep ^PVR_STATUS_FILE $KODI_CONTROLLER_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'})
 
-INITIAL_SETUP_LOG=$HOME/$PROJECT_NAME-initial-setup.log
+INITIAL_SETUP_LOG=$PROJECT_SYSTEM_LOG_DIR/setup-full.log
 
 
 
@@ -345,7 +345,7 @@ $KODI_CONTROLLER_TOOL addon_status pvr.hts > /dev/null 2>&1
 touch $KODI_USER_DATA/.pvrmanager_enabled 
 
 # 2) Add Jambula customized guisettings file with support for Live TV - Overrides previous install setting
-KODI_GUISETTINGS_FILE=$PROJECT_CONFIGS_DIR/kodi/guisettings.with.pvr.xml
+KODI_GUISETTINGS_FILE=$PROJECT_CONFIGS_DIR/kodi/skin.$KODI_PREFERRED_SKIN/guisettings.with.pvr.xml
 #
 cat $KODI_GUISETTINGS_FILE | \
 	sed -e "s:KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
@@ -625,7 +625,7 @@ email_system_info () {
 extract_setup_variables
 
 # Email system info and passwords for storage
-$SEND_EMAIL_TOOL $CONTACT_EMAIL "[JambulaTV] Setup completed" "Dear $CONTACT_NAME, 
+$EMAIL_VIA_GMAIL_TOOL $CONTACT_EMAIL "[JambulaTV] Setup completed" "Dear $CONTACT_NAME, 
 
 Congratulations! The initial setup of your JambulaTV completed successfully.
 
