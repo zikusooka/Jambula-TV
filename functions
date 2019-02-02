@@ -1326,15 +1326,15 @@ set_completion_times () {
 # Set times taken based on number of cores
 case "$SYSTEM_CPU_CORES" in
 2)
-TIME_KERNAL_INSTALL=13140
+TIME_KERNEL_INSTALL=13140
 TIME_ENTIRE_INSTALL=59600
 ;;
 4)
-TIME_KERNAL_INSTALL=5220
+TIME_KERNEL_INSTALL=5880
 TIME_ENTIRE_INSTALL=39600
 ;;
 *)
-TIME_KERNAL_INSTALL=5220
+TIME_KERNEL_INSTALL=5880
 TIME_ENTIRE_INSTALL=39600
 ;;
 esac
@@ -1716,7 +1716,7 @@ clear
 cat <<EOF
  **********************************************************************
  You are about to install the latest Linux kernel version [$KERNEL_VERSION]
- $(estimate_completion_time ${TIME_KERNAL_INSTALL})
+ $(estimate_completion_time ${TIME_KERNEL_INSTALL})
 
  Enter to proceed ...
 
