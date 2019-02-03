@@ -3174,7 +3174,13 @@ make_install_jambulatv
 
 python3_common_modules_install () {
 # Install commonly used Python3 modules by all apps
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/common-requirements.txt
+for PYTHON_MODULE in \
+"setuptools_scm>=3.1.0"
+do
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_MODULE
+done
+# Others
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/common-requirements.txt
 }
 
 python3_install () {
@@ -8030,7 +8036,7 @@ done
 flexget_python3_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 # Dependencies for Flexget - Install locally using wheels/pips specified in requirements
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt
 #
 # Flexget (Python3)
 # -----------------
@@ -8461,7 +8467,7 @@ $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 yowsup2_python3_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 # Dependencies for yowsup - Install locally using wheels specified in requirements
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/yowsup-requirements.txt
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/yowsup-requirements.txt
 #
 # Using yowsup github branch by AragurDEV
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup-AragurDEV/ $INSTALL_SRC_DIR/yowsup/
@@ -9822,7 +9828,7 @@ PYTHON_VERSION_USED=3 && set_python_version
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/trackerjacker/ $INSTALL_SRC_DIR/trackerjacker/
 
 # Install dependencies for trackerjacker using pips specified in requirements
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/trackerjacker-requirements.txt
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/trackerjacker-requirements.txt
 # Force our requirements
 cp -v $PROJECT_PIPS_REQUIRES_DIR/trackerjacker-requirements.txt \
         $INSTALL_SRC_DIR/trackerjacker/requirements.txt
@@ -11194,10 +11200,10 @@ $PYTHON_INSTALL_CMD
 homeassistant_pyozw_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 
-PYOZW_VERSION=$(awk -F'==' '/homeassistant-pyozw/ {print $2}' $INSTALL_SRC_DIR/home-assistant/requirements_all.txt)
-#
 # Unpack runtime
 unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/homeassistant_pyozw-${PYOZW_VERSION}.zip
+#
+PYOZW_VERSION=$(awk -F'==' '/homeassistant-pyozw/ {print $2}' $INSTALL_SRC_DIR/home-assistant/requirements_all.txt)
 #
 # Remove external URL to github for downloading embedded version of openzwave
 # i.e. it is available locally
@@ -11283,7 +11289,7 @@ HOME_ASSISTANT_TAG=$(git describe --abbrev=0 --tags)
 git archive --format tar.gz --prefix=home-assistant/ $HOME_ASSISTANT_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 
 # Install dependencies for Home-Assistant using pips specified in requirements
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
 
 # Install Home-Assistant
 cd $INSTALL_SRC_DIR/home-assistant
@@ -11325,7 +11331,7 @@ home_assistant_cli () {
 PYTHON_VERSION_USED=3 && set_python_version
 
 # Install dependencies for Home-Assistant-CLI using pips specified in requirements
-pip3 install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/home-assistant-cli-requirements.txt
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/home-assistant-cli-requirements.txt
 
 # Sync sources to install directory
 rsync -av --delete-after $PROJECT_GITHUB_DIR/home-assistant-cli/ $INSTALL_SRC_DIR/home-assistant-cli/
