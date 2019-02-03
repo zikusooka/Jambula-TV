@@ -7292,6 +7292,9 @@ fi
 }
 
 wireless_interfaces_configure () {
+# Get wireless parameters
+get_wireless_interface_parameters
+
 # See if WiFi interfaces were previously configured
 if [[ -e $UDEV_RULES_WIFI_NET_DEVICES ]];
 then
@@ -7324,9 +7327,6 @@ cat << EOF
 ================================================================================
 
 EOF
-
-# Get wireless parameters
-get_wireless_interface_parameters
 
 # 2 PCI Cards
 if [[ "$NUMBER_PCI_WIFI_DEVICES" = 2 ]];
