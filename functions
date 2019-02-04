@@ -8212,8 +8212,9 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/flexget.service $SYSTEMD_UNITS_DIR_USER/
 # Run flexget in daemon mode: add timezone file
 echo "$TIMEZONE" > $TIMEZONE_FILE
 #
-# Enable flexget systemd service
-systemctl enable flexget.service
+# Disable flexget.service - IMPORTANT: Will be enabled after initial setup!
+systemctl disable flexget.service
+#
 #
 # Display FlexGet's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF

@@ -620,6 +620,16 @@ echo "root:$SYSTEM_PASSWORD" | sudo /usr/sbin/chpasswd
 echo "$MULTIMEDIA_USER:$SYSTEM_PASSWORD" | sudo /usr/sbin/chpasswd
 }
 
+enable_systemd_units () {
+# Enable selected systemd units 
+for UNIT in \
+flexget \
+icinga2
+do
+sudo systemctl enable ${UNIT}.service
+done
+}
+
 email_system_info () {
 # Extract variables from mysql
 extract_setup_variables
@@ -700,6 +710,8 @@ news_headlines_setup
 
 reset_system_password
 
+enable_systemd_units
+
 email_system_info
 
 # End
@@ -710,6 +722,3 @@ voice_assist_setup_completed_tutor_channel
 # Scan library
 create_video_music_db
 scan_video_music_db
-
-# Enable icinga2 systemd unit 
-sudo systemctl enable icinga2.service
