@@ -1791,6 +1791,14 @@ read
 clear
 }
 
+_install_alert_operator_ () {
+# Notify at Local workstation i.e. Here
+beeps_notification
+
+# Notify at Remote workstation - gxmessage needed there
+remote_workstation_notification $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "$@"
+}
+
 kernel_upgrade_1 () {
 SOURCESDIR=/opt
 PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
@@ -1827,7 +1835,7 @@ $KERNELS_SRC_DIR/drivers
 
 EOF
 
-_install_pause_check_4_errors_ "Kernel Upgrade"
+_install_pause_check_4_errors_ "Kernel compilation"
 
 # Change to kernel sources root directory
 cd $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
@@ -1858,7 +1866,7 @@ make -j$SYSTEM_CPU_CORES install
 # Done
 # ----
 # Send notice to operator
-_install_pause_check_4_errors_ "Kernel Compilation"
+_install_alert_operator_ "Kernel upgraded"
 # Banner
 echo
 echo
@@ -2502,8 +2510,14 @@ make -j$SYSTEM_CPU_CORES install
 #
 # Clean up - saves upto 8GB
 make clean
-# Done - Banner
-clear
+#
+# Done
+# ----
+# Send notice to operator
+_install_alert_operator_ "Kernel installed"
+# Banner
+echo
+echo
 cat << EOF
 ###############################################################################
                                                                              
