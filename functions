@@ -3189,6 +3189,7 @@ make_install_jambulatv
 python3_common_modules_install () {
 # Install commonly used Python3 modules by all apps
 for PYTHON_MODULE in \
+"pip>=19.0.1" \
 "setuptools_scm>=3.1.0"
 do
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_MODULE
@@ -11213,10 +11214,11 @@ $PYTHON_INSTALL_CMD
 homeassistant_pyozw_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 
+# Set PyOZW version
+PYOZW_VERSION=$(awk -F'==' '/homeassistant-pyozw/ {print $2}' $PROJECT_GITHUB_DIR/home-assistant/requirements_all.txt)
+#
 # Unpack runtime
 unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/homeassistant_pyozw-${PYOZW_VERSION}.zip
-#
-PYOZW_VERSION=$(awk -F'==' '/homeassistant-pyozw/ {print $2}' $INSTALL_SRC_DIR/home-assistant/requirements_all.txt)
 #
 # Remove external URL to github for downloading embedded version of openzwave
 # i.e. it is available locally
