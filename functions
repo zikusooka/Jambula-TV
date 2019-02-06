@@ -7873,7 +7873,8 @@ EOF
 
 system_sounds_configure () {
 # Enable speaker beeps
-echo "alias platform:pcspkr pcspkr" > $MODPROBE_DIR/beep.conf
+[[ -e $MODPROBE_DIR/beep.conf ]] || \
+	echo "alias platform:pcspkr pcspkr" > $MODPROBE_DIR/beep.conf
 # Set suid bit for beep in order to allow use by non-root users
 chmod 4755 $BINARY_PREFIX/beep
 # Copy jambulatv-sounds script, if it does not exist in bin directory
