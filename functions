@@ -1224,7 +1224,7 @@ VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE="Alert: The VPN tunnel has been closed, r
 FTP_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 WGET_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 TVHEADEND_RESET_MESSAGE="Reset of TV server has been requested"
-TVHEADEND_NO_TUNER_FOUND_MESSAGE="No DVB-T Adapter was detected!  Please insert the DVB-T device before continuing. You must also ensure the TV Antenna is also hooked up properly"
+TVHEADEND_NO_TUNER_FOUND_MESSAGE="No DVB-T Adapter was detected!  Please insert the DVB-T device before continuing. You must also ensure the TV Antenna is hooked up properly"
 TVHEADEND_WAITING_4_SERVER_MESSAGE="Waiting for tvheadend.service to settle. Please be patient"
 AGREEMENT_DVBT_CONFIGURE_NO_MESSAGE="You did not agree to configuring DVB-T, so quitting"
 DVBT_NETWORK_EXISTS_MESSAGE="Warning: DVB-T network ($DVBT_NETWORK_NAME) already exists"
@@ -4611,10 +4611,15 @@ print_notification "$DVBT_MULTIPLEX_NOT_FOUND_MESSAGE" osd
 exit 0
 fi
 
-# Start tvheadend if adapter has been inserted
-if [ ! -d /dev/dvb/adapter${DVBT_TUNER_NO} ];
+# Check to see if initial setup tool is running
+ps auxw | grep -v grep | grep "${INITIAL_SETUP_TOOL##*/}" > /dev/null 2>&1
+INITIAL_SETUP_IS_ON=$?
+#
+# Alert if a DVB-T tuner does not exist + when initial setup is not in progress 
+if [[ ! -d /dev/dvb/adapter${DVBT_TUNER_NO} ]] && [[ "$INITIAL_SETUP_IS_ON" != "0" ]];
 then
-beep
+# Beeps
+beep; beep; beep
 # Source notification strings
 set_notifications
 # Print notifciation to stdout and systemd journal 
@@ -4623,8 +4628,26 @@ print_notification "$TVHEADEND_NO_TUNER_FOUND_MESSAGE" text
 print_notification "$TVHEADEND_NO_TUNER_FOUND_MESSAGE" osd
 
 read
+
+# Exit/Alert if a DVB-T tuner does not exist + when initial setup is in progress 
+elif [[ ! -d /dev/dvb/adapter${DVBT_TUNER_NO} ]] && [[ "$INITIAL_SETUP_IS_ON" = "0" ]];
+then
+# Beeps
+beep; beep; beep
+# Voice Assist - Setup No DVB-T tuner detected
+$SOUNDS_TOOL setup 7
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$TVHEADEND_NO_TUNER_FOUND_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$TVHEADEND_NO_TUNER_FOUND_MESSAGE" osd
+# Quit
+exit 0
 fi
+
 sleep 9
+# Start tvheadend if adapter has been inserted
 sudo systemctl restart tvheadend.service
 #
 # Wait until adapters directory has been populated
