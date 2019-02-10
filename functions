@@ -3188,13 +3188,6 @@ make_install_jambulatv
 
 python3_common_modules_install () {
 # Install commonly used Python3 modules by all apps
-for PYTHON_MODULE in \
-"pip>=19.0.1" \
-"setuptools_scm>=3.1.0"
-do
-pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_MODULE
-done
-# Others
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/common-requirements.txt
 }
 
