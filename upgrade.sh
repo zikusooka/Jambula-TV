@@ -186,6 +186,21 @@ domoticz_install
 domoticz_configure
 }
 
+upgrade_homeassistant () {
+# Set homeassistant tag
+if [[ "x$1" != "x" ]];
+then
+NEW_HOME_ASSISTANT_TAG=$1
+else
+NEW_HOME_ASSISTANT_TAG=$HOME_ASSISTANT_TAG
+fi
+# Uninstall old homeassistant
+uninstall_homeassistant
+# Install latest homeassistant
+HOME_ASSISTANT_TAG=$NEW_HOME_ASSISTANT_TAG && \
+	homeassistant_install 
+}
+
 upgrade_zoneminder () {
 uninstall_zoneminder
 #zoneminder_128_install
@@ -312,6 +327,8 @@ live555_install
 
 #upgrade_open_zwave
 #upgrade_domoticz
+
+#upgrade_homeassistant 0.87.1
 
 #upgrade_zoneminder
 
