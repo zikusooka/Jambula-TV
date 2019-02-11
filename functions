@@ -3186,6 +3186,18 @@ cd $INSTALL_SRC_DIR/expat
 make_install_jambulatv
 }
 
+python3_pip_install () {
+PYTHON_VERSION_USED=3 && set_python_version
+PIP_LATEST_TARBALL=$(basename $(ls -t $PROJECT_PIPS_DIR/pip-*.tar.gz | head -1))
+#
+# unpack latest pip tarball
+tar zxvf $PROJECT_PIPS_DIR/$PIP_LATEST_TARBALL -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v pip-* pip
+# Compile
+cd $INSTALL_SRC_DIR/pip 
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+}
+
 python3_common_modules_install () {
 # Install commonly used Python3 modules by all apps
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/common-requirements.txt
@@ -3227,6 +3239,9 @@ ln -s -v $PREFIX/local/bin/python${PYTHON_SETUP_VERSION} $PREFIX/local/bin/pytho
 ln -s -v $PREFIX/local/bin/pip${PYTHON_SETUP_VERSION} $PREFIX/local/bin/pip3
 # Create symlinks to python libraries
 ln -s -v $PREFIX/local/lib/libpython${PYTHON_SETUP_VERSION}dm.so.1.0 $LIBDIR/libpython${PYTHON_SETUP_VERSION}dm.so.1.0
+
+# Install the latest Python3 pip installer
+python3_pip_install
 
 # Install commonly used python3 modules
 python3_common_modules_install
