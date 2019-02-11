@@ -701,6 +701,7 @@ DOMOTICZ_PID_FILE=$RUNDIR/domoticz.pid
 DOMOTICZ_WWW_PORT=$(grep -i 'domoticz$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # Home Assistant
+HOME_ASSISTANT_TAG=0.87.1
 HOMEASSISTANT_USER=$MULTIMEDIA_USER
 HOMEASSISTANT_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/homeassistant
 
@@ -11325,13 +11326,9 @@ python_openzwave_install
 # hass_openzwave
 homeassistant_pyozw_install
 
-# Archive and Unpack specified home-assistant tag
-# -----------------------------------------------
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/home-assistant
-# Get latest home-assistant release tag
-HOME_ASSISTANT_TAG=$(git describe --abbrev=0 --tags)
-
+# Archive and Unpack specified home-assistant tag
 git archive --format tar.gz --prefix=home-assistant/ $HOME_ASSISTANT_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 
 # Install dependencies for Home-Assistant using pips specified in requirements
