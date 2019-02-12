@@ -1918,7 +1918,7 @@ uninstall_python_pkgs () {
 PYTHON_VERSION_USED=3 && set_python_version
 [[ -d $PYTHON_SITEDIR/$1 ]] && rm -rf $PYTHON_SITEDIR/$1
 [[ $(find $PYTHON_SITEDIR -type d -name "$1*.egg" | wc -l ) != "0" ]] && \
-	rm -rf $PYTHON_SITEDIR/$1*.egg-info
+	rm -rf $PYTHON_SITEDIR/$1*.egg
 [[ $(find $PYTHON_SITEDIR -type d -name "$1*.egg-info" | wc -l ) != "0" ]] && \
 	rm -rf $PYTHON_SITEDIR/$1*.egg-info
 whereis $1 > /dev/null
