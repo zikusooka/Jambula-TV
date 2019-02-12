@@ -201,6 +201,11 @@ HOME_ASSISTANT_TAG=$NEW_HOME_ASSISTANT_TAG && \
 	homeassistant_install 
 }
 
+upgrade_homeassistant_cli () {
+uninstall_homeassistant_cli
+homeassistant_cli_install
+}
+
 upgrade_zoneminder () {
 uninstall_zoneminder
 #zoneminder_128_install
@@ -329,6 +334,7 @@ live555_install
 #upgrade_domoticz
 
 #upgrade_homeassistant 0.87.1
+#upgrade_home_assistant_cli
 
 #upgrade_zoneminder
 

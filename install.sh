@@ -433,7 +433,7 @@ home_automation_services
 homeassistant_install
 homeassistant_configure
 # HomeAssistant-CLI
-home_assistant_cli_install
+homeassistant_cli_install
 
 # ------------------------
 # Notifications/ Messaging

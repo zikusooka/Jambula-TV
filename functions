@@ -2385,13 +2385,17 @@ rm -rf $INSTALL_SRC_DIR/domoticz
 }
 
 uninstall_homeassistant () {
-uninstall_python_pkgs homeassistant_cli 
-uninstall_python_pkgs home-assistant-cli
 uninstall_python_pkgs home_assistant_frontend
 uninstall_python_pkgs homeassistant
 uninstall_python_pkgs home-assistant
 uninstall_python_pkgs homeassistant_pyozw
-rm -rf `whereis hass`
+rm -rf $(whereis hass)
+}
+
+uninstall_homeassistant_cli () {
+uninstall_python_pkgs homeassistant_cli 
+uninstall_python_pkgs home-assistant-cli
+rm -rf $(whereis hass-cli)
 }
 
 uninstall_firefox () {
@@ -11366,7 +11370,7 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/home-assistant.service $SYSTEMD_UNITS_DIR_USER/
 systemctl enable home-assistant.service
 }
 
-home_assistant_cli_install () {
+homeassistant_cli_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 
 # Install dependencies for Home-Assistant-CLI using pips specified in requirements
