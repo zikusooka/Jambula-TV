@@ -11366,7 +11366,7 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/home-assistant.service $SYSTEMD_UNITS_DIR_USER/
 systemctl enable home-assistant.service
 }
 
-home_assistant_cli () {
+home_assistant_cli_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 
 # Install dependencies for Home-Assistant-CLI using pips specified in requirements
@@ -11377,8 +11377,9 @@ rsync -av --delete-after $PROJECT_GITHUB_DIR/home-assistant-cli/ $INSTALL_SRC_DI
 # Patches: Delete old requests version - probably left in setup.py repo file by accident
 sed -i "/'requests==2.20.1',/d" $INSTALL_SRC_DIR/home-assistant-cli/setup.py
 # Change click and pyyaml version
-sed -i "s/click==7.0/click>=6.7/" $INSTALL_SRC_DIR/home-assistant-cli/setup.py
 sed -i "s/pyyaml>=4.2b1/pyyaml>=3.13,<4/" $INSTALL_SRC_DIR/home-assistant-cli/setup.py
+sed -i "s/ruamel.yaml==0.15.87/ruamel.yaml==0.15.85/" $INSTALL_SRC_DIR/home-assistant-cli/setup.py
+
 # Force our requirements
 cp -v $PROJECT_PIPS_REQUIRES_DIR/home-assistant-cli-requirements.txt $INSTALL_SRC_DIR/home-assistant-cli/requirements.txt
 # Install Home-Assistant
