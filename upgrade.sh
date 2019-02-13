@@ -334,7 +334,7 @@ live555_install
 #upgrade_domoticz
 
 #upgrade_homeassistant 0.87.1
-#upgrade_home_assistant_cli
+#upgrade_homeassistant_cli
 
 #upgrade_zoneminder
 

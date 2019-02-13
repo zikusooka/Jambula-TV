@@ -2389,6 +2389,7 @@ uninstall_python_pkgs home_assistant_frontend
 uninstall_python_pkgs homeassistant
 uninstall_python_pkgs home-assistant
 uninstall_python_pkgs homeassistant_pyozw
+#uninstall_python_pkgs python_openzwave
 rm -rf $(whereis hass)
 }
 
@@ -11321,7 +11322,7 @@ homeassistant_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 
 # python_openzwave
-python_openzwave_install
+#python_openzwave_install
 
 # hass_openzwave
 homeassistant_pyozw_install
@@ -11383,7 +11384,6 @@ sed -i "/'requests==2.20.1',/d" $INSTALL_SRC_DIR/home-assistant-cli/setup.py
 # Change click and pyyaml version
 sed -i "s/pyyaml>=4.2b1/pyyaml>=3.13,<4/" $INSTALL_SRC_DIR/home-assistant-cli/setup.py
 sed -i "s/ruamel.yaml==0.15.87/ruamel.yaml==0.15.85/" $INSTALL_SRC_DIR/home-assistant-cli/setup.py
-
 # Force our requirements
 cp -v $PROJECT_PIPS_REQUIRES_DIR/home-assistant-cli-requirements.txt $INSTALL_SRC_DIR/home-assistant-cli/requirements.txt
 # Install Home-Assistant
