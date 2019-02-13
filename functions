@@ -12372,8 +12372,8 @@ set_www_user_group
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/icinga2
 # Get latest icinga2 tag
-ICINGA2_TAG=$(git describe --abbrev=0 --tags)
-
+ICINGA2_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+#
 # Unpack desired git branch/tag
 case $ICINGA2_TAG in
 master)
@@ -12561,7 +12561,7 @@ set_www_user_group
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/icingaweb2
 # Get latest icinga2 tag
-ICINGAWEB2_TAG=$(git describe --abbrev=0 --tags)
+ICINGAWEB2_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
 #
 # Unpack desired git branch/tag
 case $ICINGAWEB2_TAG in
