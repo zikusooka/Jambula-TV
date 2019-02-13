@@ -394,9 +394,9 @@ templates:
         - next_series_episodes:
             from_start: yes
       from:
-        - piratebay:
-            category: video
-            sort_by: seeds
+        #- piratebay:
+        #    category: video
+        #    sort_by: seeds
         - rarbg:
             category:
               - HDTV
@@ -522,9 +522,9 @@ templates:
         # locally requested
         - movie_list: locally_added
       from:
-        - piratebay:
-            category: video
-            sort_by: seeds
+        #- piratebay:
+        #    category: video
+        #    sort_by: seeds
         - rarbg:
             category:
               - HDTV
