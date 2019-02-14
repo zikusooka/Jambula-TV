@@ -292,7 +292,7 @@ live555_install
 #_install_pause_check_4_errors_ $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "Insert program name here"
 
 #upgrade_kernel 4.20
-#upgrade_kernel 4.19.20
+#upgrade_kernel 4.19.21
 #upgrade_kernel 4.4.174
 
 #upgrade_openssl
