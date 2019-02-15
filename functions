@@ -8099,14 +8099,18 @@ rsync -avz --delete-after $PROJECT_GITHUB_DIR/Flexget-current/ $INSTALL_SRC_DIR/
 # Force our requirements
 cp -v $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt \
 	$INSTALL_SRC_DIR/Flexget/requirements.txt
+#
 # Apply Patches
 # -------------
+# notify.py component
+patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/components/notify/notify.py < $PROJECT_PATCHES_DIR/flexget.components.notify.python3.patch
 # include plugin
 patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT_PATCHES_DIR/flexget.plugin.include.python3.patch
 # notifiers plugin
-patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/notifiers/notify.py < $PROJECT_PATCHES_DIR/flexget.plugin.notifiers.python3.patch
+#patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/notifiers/notify.py < $PROJECT_PATCHES_DIR/flexget.plugin.notifiers.python3.patch
 # rss plugin - extract podcast poster image URLs
 patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/input/rss.py < $PROJECT_PATCHES_DIR/flexget.plugin.input.rss.python3.patch
+#
 # Install
 cd $INSTALL_SRC_DIR/Flexget
 $PYTHON_INSTALL_CMD
