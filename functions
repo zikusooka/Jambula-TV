@@ -7465,6 +7465,7 @@ fi
 
 bash_configure () {
 cat >> $CONFDIR/bashrc << EOF
+
 # JambulaTV Bash Settings
 # -----------------------
 # Clock in terminal
@@ -11320,9 +11321,6 @@ systemctl start domoticz.service
 
 homeassistant_install () {
 PYTHON_VERSION_USED=3 && set_python_version
-
-# python_openzwave
-#python_openzwave_install
 
 # hass_openzwave
 homeassistant_pyozw_install
