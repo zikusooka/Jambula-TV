@@ -1989,7 +1989,7 @@ rm -rf $KODI_SYSTEM_ADDONS/$KODI_ADDON
 #
 echo
 echo "$KODI_ADDON removed from $KODI_SYSTEM_ADDONS"
-_install_pause_check_4_errors_ "$KODI_ADDON removed"
+echo
 #
 # Remove from user kodi addons share
 elif [ -d $KODI_ADDON_DATA_DIR/$KODI_ADDON ];

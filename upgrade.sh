@@ -52,8 +52,24 @@ upgrade_kodi_addons () {
 KODI_ADDONS_4_UPGRADE=$@
 # Uninstall Old
 uninstall_kodi_addons $KODI_ADDONS_4_UPGRADE
+#
 # Install New
-for KODI_ADDON in $KODI_ADDONS_4_UPGRADE; do kodi_addons_unpack $KODI_ADDON; echo; echo "$KODI_ADDON installed, please enter to proceed ..."; echo; read; done
+for KODI_ADDON in $KODI_ADDONS_4_UPGRADE
+do
+kodi_addons_unpack $KODI_ADDON
+echo
+echo "$KODI_ADDON installed, please enter to proceed ..."
+echo
+read
+#
+# Create script to enable addon 
+cat >> $TMPDIR/jambula_addons2enable <<EOT
+sqlite3 $KODI_USER_DATA/Database/Addons27.db 'update installed set enabled=1 where addonid=='"'$KODI_ADDON'"';'
+EOT
+done
+#
+# Run script i.e. enable addon
+sh $TMPDIR/jambula_addons2enable
 }
  
 upgrade_flexget_deps () {
