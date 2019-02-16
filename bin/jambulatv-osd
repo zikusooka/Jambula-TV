@@ -146,7 +146,7 @@ wait_if_already_running()
 create_run_file()
 
 # Poke screen if screensaver is active
-xbmc_poke_screen(KODI_HTTP_IP)
+#xbmc_poke_screen(KODI_HTTP_IP)
 
 # Display message on screen
 xbmc_osd_message(KODI_HTTP_IP)
