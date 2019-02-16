@@ -254,8 +254,9 @@ make_this_internet_gateway () {
 }
 
 start_presence_detection_via_mifi () {
-if [[ "$(systemctl is-enabled presence-detection-via-mifi.service)" = "enabled" && \
-      "$(systemctl is-active presence-detection-via-mifi.service)" != "active" ]];
+if [[ -e $SETUP_COMPLETED_FILE ]] && \
+	[[ "$(systemctl is-enabled presence-detection-via-mifi.service)" = "enabled" && \
+	"$(systemctl is-active presence-detection-via-mifi.service)" != "active" ]];
 then
 # Start presence detection using MiFi: Restart systemd unit if enabled but not active
 logger -s -t $(basename $0) "Starting Presence Detection using MiFi Router"

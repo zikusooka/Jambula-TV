@@ -90,7 +90,7 @@ TVH_DVBT_SETUP_LOG=$PROJECT_SYSTEM_LOG_DIR/setup-tvheadend-dvbt.log
 
 check_if_setup_completed () {
 # Quit if setup completed
-[ -e $SETUP_COMPLETED_FILE ] && exit 0
+[[ -e $SETUP_COMPLETED_FILE ]] && exit 0
 }
 
 jambula_addons_enable () {
