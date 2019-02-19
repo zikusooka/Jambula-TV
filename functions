@@ -7149,6 +7149,19 @@ interface "$NETWORK_ETHERNET_DEVICE" {
        }
 EOF
 #
+# Enable sound beep alerting when gateway's DHCP server assigns an IP address
+cat > $DHCLIENT_CONFIG_DIR/dhclient-exit-hooks <<ET
+#!/bin/sh
+#
+# Sound beeps alert when wired interface is assigned an IP address
+if [[ "\$interface" = "$NETWORK_ETHERNET_DEVICE" && \$reason = "REBOOT" ]];
+then
+	$SOUNDS_TOOL dhclient
+fi
+ET
+# Make script executable
+chmod 755 $DHCLIENT_CONFIG_DIR/dhclient-exit-hooks 
+#
 # Configure IP & DNS settings for wired interface - Use DHCP boot protocol
 cat > $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE << EOF
 # IP/DNS settings for $NETWORK_ETHERNET_DEVICE
