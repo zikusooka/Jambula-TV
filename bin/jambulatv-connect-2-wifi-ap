@@ -39,17 +39,28 @@ WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 
 # Check if script is already running and internet is off
 quit_if_already_running () {
-if [ -e "$SCRIPT_RUNNING_FILE" ] && [ -e "$INTERNET_OFF_FILE" ];
+
+# Check external DNS status
+check_external_dns_status 
+
+if [[ -e "$SCRIPT_RUNNING_FILE" ]] && [[ -e "$INTERNET_OFF_FILE" ]];
 then
 # Remove script running file and continue
 rm -f $SCRIPT_RUNNING_FILE
 
-elif [ -e "$INTERNET_OFF_FILE" ];
+elif [[ -e "$INTERNET_OFF_FILE" ]];
 then
 logger -s -t $(basename $0) "Internet is Off"
 break
 
-elif [ ! -e "$SETUP_COMPLETED_FILE" ];
+elif [[ "$DNS_STATUS" != "0" ]];
+then
+cat <<ET
+logger -s -t $(basename $0) "Connecting to the Internet using the WiFi Access Point (MiFi)"
+ET
+break 
+
+elif [[ ! -e "$SETUP_COMPLETED_FILE" ]];
 then
 logger -s -t $(basename $0) "Internet is Off"
 break
@@ -70,7 +81,7 @@ rm -f $SCRIPT_RUNNING_FILE
 
 number_of_interfaces () { 
 # Quit if less than 2 WiFi devices are detected
-if [ "$WIFI_INTERFACES_AVAILABLE" -lt "2" ];
+if [[ "$WIFI_INTERFACES_AVAILABLE" -lt "2" ]];
 then
 logger -s -t $(basename $0) "CRITICAL: Sorry, I did not find a second and/or usable WiFi interface "
 exit 2
@@ -82,7 +93,7 @@ type_of_station_interface () {
 journalctl -b -o cat --no-pager | grep $WIFI_STATION_INTERFACE | grep r8188eu > /dev/null 2>&1
 UNSUPPORTED=$?
 # Check to see if supported
-if [ "$UNSUPPORTED" = "0" ];
+if [[ "$UNSUPPORTED" = "0" ]];
 then
 IW_COMPATIBLE=no
 else
@@ -92,7 +103,7 @@ fi
 
 check_4_wifi_dongle () {
 # Test to see if WiFi stick is now present
-if [ "$IW_COMPATIBLE" = "yes" ];
+if [[ "$IW_COMPATIBLE" = "yes" ]];
 then
 # Using iw command
 /usr/sbin/iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
@@ -101,14 +112,14 @@ else
 /usr/sbin/iwconfig ${WIFI_STATION_INTERFACE} | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
 fi
 WIFI_STICK_PRESENT=$?
-until [ "$WIFI_STICK_PRESENT" = "0" ];
+until [[ "$WIFI_STICK_PRESENT" = "0" ]];
 do
 # Display success message on Screen
 $OSD_TOOL_CMD "$INSERT_WIFI_DONGLE_MSG"
 # Pause while waiting for insertion
 sleep 60
 # Test if WiFi stick is now present
-if [ "$IW_COMPATIBLE" = "yes" ];
+if [[ "$IW_COMPATIBLE" = "yes" ]];
 then
 # Using iw command
 /usr/sbin/iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
@@ -125,7 +136,7 @@ scan_4_wifi () {
 sudo /usr/sbin/ip link set $WIFI_STATION_INTERFACE up
 #
 # Scan for AP, and get scanned SSID
-if [ "$IW_COMPATIBLE" = "yes" ];
+if [[ "$IW_COMPATIBLE" = "yes" ]];
 then
 # Using iw command
 sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: $WIFI_SSID" > /dev/null 2>&1
@@ -137,7 +148,7 @@ AP_EXISTENCE=$?
 fi
 #
 # See if there's a match
-if [ "$AP_EXISTENCE" = "0" ];
+if [[ "$AP_EXISTENCE" = "0" ]];
 then
 WIFI_FOUND=yes
 # Notify
@@ -155,9 +166,9 @@ DHCLIENT_PID=$(sudo ps auxw | grep dhclient | grep $WIFI_STATION_INTERFACE | hea
 WPA_SUPPLICANT_PID=$(sudo ps auxw | grep wpa_supplicant | grep $WIFI_STATION_INTERFACE | head -1 | awk {'print $2'})
 #
 # Kill dhclient
-[ "x$DHCLIENT_PID" = "x" ] || sudo kill $DHCLIENT_PID >> /dev/null
+[[ "x$DHCLIENT_PID" = "x" ]] || sudo kill $DHCLIENT_PID >> /dev/null
 # Kill wpa_supplicant
-[ "x$WPA_SUPPLICANT_PID" = "x" ] || sudo kill $WPA_SUPPLICANT_PID >> /dev/null
+[[ "x$WPA_SUPPLICANT_PID" = "x" ]] || sudo kill $WPA_SUPPLICANT_PID >> /dev/null
 # Flush Wifi station interface
 sudo /usr/sbin/ip addr flush dev $WIFI_STATION_INTERFACE 
 }
@@ -168,7 +179,7 @@ PASSPHRASE_MATCH=$?
 grep "ssid=\"$WIFI_SSID\"" $WIFI_WPA_CONFIG_FILE > /dev/null 2>&1
 SSID_MATCH=$?
 # Generate a wpa/wpa2 configuration file if not yet set
-if [ "$PASSPHRASE_MATCH" != "0" ] || [ "$SSID_MATCH" != "0" ];
+if [[ "$PASSPHRASE_MATCH" != "0" ]] || [[ "$SSID_MATCH" != "0" ]];
 then
 sudo wpa_passphrase "$WIFI_SSID" "$WIFI_SECURITY_KEY" > $WIFI_WPA_CONFIG_FILE
 fi
@@ -183,7 +194,7 @@ sudo wpa_supplicant -B -i $WIFI_STATION_INTERFACE -c $WIFI_WPA_CONFIG_FILE
 
 check_link_status () {
 # Check link status
-if [ "$IW_COMPATIBLE" = "yes" ];
+if [[ "$IW_COMPATIBLE" = "yes" ]];
 then
 # Using iw command
 WIFI_LINK_STATUS=$(sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE link)
@@ -192,7 +203,7 @@ else
 WIFI_LINK_STATUS=$(sudo /usr/sbin/iwconfig $WIFI_STATION_INTERFACE | head -1 | awk {'print $2'})
 fi
 #
-if [ "$WIFI_LINK_STATUS" = "Not connected." ] || [ "$WIFI_LINK_STATUS" = "unassociated" ];
+if [[ "$WIFI_LINK_STATUS" = "Not connected." ]] || [[ "$WIFI_LINK_STATUS" = "unassociated" ]];
 then
 logger -s -t $(basename $0) "Connection to $WIFI_SSID failed!. Exiting ..."
 exit 1
@@ -208,10 +219,6 @@ disable_dns_servers_assignment () {
 [[ -e /etc/dhcp/dhclient-enter-hooks ]] || \
 	cat > /etc/dhcp/dhclient-enter-hooks <<ET
 #!/bin/sh
-
-# Quit if interface is not WiFi station Interface
-[[ "\$interface" = "$WIFI_STATION_INTERFACE" ]] || exit 0
-
 make_resolv_conf () {
 :
 logger -s -t \$(basename \$0) "Info: JambulaTV will ignore any DNS server IP addresses assigned to \$interface ..."
@@ -226,7 +233,7 @@ get_ip_address () {
 # Remove previous/failed dhclient process 
 DHCLIENT_FAILED_PID=$(ps auxw | grep dhclient | grep ${WIFI_STATION_INTERFACE} | awk {'print $2'} | tail -1)
 # Kill existing dhclient process
-[ "x$DHCLIENT_FAILED_PID" = "x" ] || kill $DHCLIENT_FAILED_PID
+[[ "x$DHCLIENT_FAILED_PID" = "x" ]] || kill $DHCLIENT_FAILED_PID
 # Clear default route
 /usr/sbin/ip route del default
 # Disable assignment of DNS servers by Access Point
@@ -276,13 +283,20 @@ keep_alive () {
 $PING_CMD $PING_CMD_OPTS $HOST_2_PING > /dev/null 2>&1 &
 }
 
+check_external_dns_status () {
+host -W1 $HOST_2_PING > /dev/null 2>&1
+DNS_STATUS=$?
+}
+
 
 
 #################
 #  MAIN SCRIPT  #
 #################
+
 # Quit if script is already running
 quit_if_already_running
+
 # Kill ping if keep_alive function is activated
 #killall fping
 
