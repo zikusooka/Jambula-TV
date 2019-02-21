@@ -1,25 +1,15 @@
---- functions.orig	2019-01-03 14:39:05.892281375 +0300
-+++ functions		2019-01-21 16:05:40.276025469 +0300
-@@ -5,9 +5,6 @@
- # http://coova.github.io/
- #
- 
--IPTABLES=/sbin/iptables
--IFCONFIG=/sbin/ifconfig
--
- CHILLI=/etc/chilli
- RUN_D=/var/run
- SBIN=/usr/sbin
-@@ -54,7 +51,7 @@
- HS_PAP_OK=${HS_PAP_OK:-on}
+--- functions.orig	2019-02-21 19:57:31.902408873 +0300
++++ functions	2019-02-21 20:23:08.865669220 +0300
+@@ -55,7 +55,7 @@
  HS_DNS1=${HS_DNS1:-$HS_DNS}
  HS_DNS1=${HS_DNS1:-$(grep '^nameserver' /etc/resolv.conf | head -n1 | awk '{print $2}')}
+ if [ $(uname) = "Linux" ]; then
 -HS_WANIF=${HS_WANIF:-$(route -n|grep '^0.0.0.0'|head -n1|awk '{print $8}')}
 +HS_WANIF=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
- 
- bailout() { echo $1; exit; }
- 
-@@ -63,12 +60,12 @@
+ else
+ HS_WANIF=${HS_WANIF:-$(route get default | grep interface | awk '{print $2}')}
+ fi
+@@ -67,12 +67,12 @@
  }
  
  configs1=/tmp/configs1.$$
@@ -34,26 +24,18 @@
  $*
  EOF
  }
-@@ -83,7 +80,7 @@
- uamlisten	$HS_UAMLISTEN
- uamport         $HS_UAMPORT
- dhcpif		$HS_LANIF
--uamallowed	"www.coova.org${HS_UAMSERVER:+,$HS_UAMSERVER}$webadmin$uamallow"
-+uamallowed	"$HS_UAMSERVER$webadmin$uamallow"
- uamanydns
- $(cat $configs1)
- $HS_RAW_CONFIG1
-@@ -125,7 +122,8 @@
-     addconfig1 ${HS_GID:+"gid \"$HS_GID\""}
+@@ -130,8 +130,8 @@
  
      [ -n "$HS_DHCPGATEWAY" ] && {
--	HS_DHCPRELAYAGENT=${HS_DHCPRELAYAGENT:-$(ifconfig $(route -n|grep '^0.0.0.0'|awk '{ print $8 }')|grep 'inet addr:'|cut -d: -f 2|cut -d' ' -f1)}
+ 	if [ $(uname) = "Linux" ]; then
+-	HS_DHCPRELAYAGENT=${HS_DHCPRELAYAGENT:-$(ifconfig $(route -n|grep '^0.0.0.0'| \
+-	awk '{ print $8 }')|grep 'inet addr:'|cut -d: -f 2|cut -d' ' -f1)}
 +        # Internet gateway ip address
 +	HS_DHCPRELAYAGENT=${HS_DHCPRELAYAGENT:-$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')}
- 	addconfig1 "dhcpgateway \"$HS_DHCPGATEWAY\""
- 	addconfig1 "dhcprelayagent \"$HS_DHCPRELAYAGENT\""
-     }
-@@ -368,3 +366,26 @@
+ 	else
+ 	HS_DHCPRELAYAGENT=${HS_DHCPRELAYAGENT:-$(ifconfig $(netstat -rn | grep 'default' | \
+ 	head -n1 | awk '{print$7}') | grep 'inet ' | cut -d/ -f 1 | cut -d' ' -f2)}
+@@ -382,3 +382,26 @@
      checkfornew
  }
  

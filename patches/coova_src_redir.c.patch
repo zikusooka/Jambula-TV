@@ -1,15 +1,16 @@
---- /opt/JambulaTV/src/github/coova-chilli/src/redir.c	2015-11-21 14:44:26.457413316 +0300
-+++ redir.c	2015-11-22 08:47:32.733866318 +0300
-@@ -2238,10 +2238,8 @@
+--- redir.c.orig	2019-02-21 02:18:14.661277991 +0300
++++ redir.c		2019-02-21 03:34:47.413026024 +0300
+@@ -2246,10 +2246,9 @@
  	  while (*p && isspace((int) *p)) p++;
  	  strlcpy(conn->s_state.redir.useragent,
                    p, sizeof(conn->s_state.redir.useragent));
 -#if(_debug_)
 -          if (_options.debug)
--            syslog(LOG_DEBUG, "User-Agent: %s",conn->s_state.redir.useragent);
+-            syslog(LOG_DEBUG, "%s(%d): User-Agent: %s", __FUNCTION__, __LINE__, conn->s_state.redir.useragent);
 -#endif
++
 +	    // Jambula Labs: Enable general logging of User-Agent
-+            syslog(LOG_INFO, "User-Agent: %s",conn->s_state.redir.useragent);
++            syslog(LOG_INFO, "User-Agent: %s", conn->s_state.redir.useragent);
  	}
  #endif
  #ifdef ENABLE_ACCEPTLANGUAGE

@@ -2264,9 +2264,9 @@ systemctl restart asterisk.service
 
 # uninstall chilli
 uninstall_coova_chilli () {
-systemctl stop coova-chilli.service
-mv -v $CONFDIR/chilli $CONFDIR/chilli.$(date +%Y%m%d)
-mv -v $COOVA_HTML_DIR $COOVA_HTML_DIR.$(date +%Y%m%d)
+systemctl stop coova-chilli.service && jambulatv-chilli stop
+[[ -d $CONFDIR/chilli ]] && mv -v $CONFDIR/chilli $CONFDIR/chilli-$(date +%Y%m%d-%s)
+[[ -d $COOVA_HTML_DIR ]] && mv -v $COOVA_HTML_DIR $COOVA_HTML_DIR-$(date +%Y%m%d-%s)
 # Remove systemd files
 rm -f $SYSTEMD_UNITS_DIR_USER/coova-chilli.service
 systemctl --system daemon-reload
@@ -9093,6 +9093,7 @@ patch -p1 $INSTALL_SRC_DIR/coova-chilli/src/Makefile.am < $PROJECT_PATCHES_DIR/c
 #
 # Patch redir.c to allow general logging of User-Agent
 patch -p1 $INSTALL_SRC_DIR/coova-chilli/src/redir.c < $PROJECT_PATCHES_DIR/coova_src_redir.c.patch
+#
 # Prepare install sources/directory
 cd $INSTALL_SRC_DIR/coova-chilli
 sh bootstrap

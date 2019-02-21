@@ -36,6 +36,8 @@ HS_RADSECRET=RADIUSSECRET # Set to be your RADIUS shared secret
 HS_UAMSECRET=HSSECRET     # Set to be your UAM secret
 HS_UAMALIASNAME=chilli
 
+HS_LAN_ACCESS=allow # Set to allow, otherwise firewall will block access
+
 #  Configure RADIUS proxy support (for 802.1x + captive portal support)
 # HS_RADPROXY=on
 # HS_RADPROXY_LISTEN=127.0.0.1
