@@ -233,7 +233,6 @@ freeradius_install
 freeradius_configure
 freeradius_attributes_configure
 freeradius_test
-daloradius_configure
 
 # --------
 # Content
@@ -373,6 +372,7 @@ hostapd_install
 hostapd_configure
 wpa_supplicant_install
 wpa_supplicant_configure
+daloradius_configure
 
 #------------------
 # System Monitoring
