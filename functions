@@ -11397,11 +11397,7 @@ pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJ
 
 # Sync sources to install directory
 rsync -av --delete-after $PROJECT_GITHUB_DIR/home-assistant-cli/ $INSTALL_SRC_DIR/home-assistant-cli/
-# Patches: Delete old requests version - probably left in setup.py repo file by accident
-sed -i "/'requests==2.20.1',/d" $INSTALL_SRC_DIR/home-assistant-cli/setup.py
-# Change click and pyyaml version
-sed -i "s/pyyaml>=4.2b1/pyyaml>=3.13,<4/" $INSTALL_SRC_DIR/home-assistant-cli/setup.py
-sed -i "s/ruamel.yaml==0.15.87/ruamel.yaml==0.15.85/" $INSTALL_SRC_DIR/home-assistant-cli/setup.py
+
 # Force our requirements
 cp -v $PROJECT_PIPS_REQUIRES_DIR/home-assistant-cli-requirements.txt $INSTALL_SRC_DIR/home-assistant-cli/requirements.txt
 # Install Home-Assistant
