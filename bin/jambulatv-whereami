@@ -108,33 +108,27 @@ fi
 [ -e $GEOLOCATION_REFRESH_FILE ] && . $GEOLOCATION_REFRESH_FILE
 }
 
-get_public_ip () {
-# Get public IP address
-PUBLIC_IP_ADDRESS=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" https://api.ipify.org)
-export PUBLIC_IP_ADDRESS
-}
-
 get_city_using_ip () {
 # Get city using public IP address
-CITY=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ipinfo.io/$PUBLIC_IP_ADDRESS/city)
+CITY=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ip-api.com/json | jq -r ".city")
 export CITY
 }
 
 get_country_using_ip () {
 # Get country using public IP address
-COUNTRY=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ipinfo.io/$PUBLIC_IP_ADDRESS/region)
+COUNTRY=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ip-api.com/json | jq -r ".country")
 export COUNTRY
 }
 
 get_isp_using_ip () {
 # Get ISP using public IP address
-ISP=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ipinfo.io/$PUBLIC_IP_ADDRESS/org | cut -d ' ' -f2-)
+ISP=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ip-api.com/json | jq -r ".isp")
 export ISP
 }
 
 get_latitude_longitude () {
-LATITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq -r '.[0] | .lat' | tr -d '"')
-LONGITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" "http://nominatim.openstreetmap.org/search?city=$CITY&country=$COUNTRY&format=json" | jq -r '.[0] | .lon' | tr -d '"')
+LATITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ip-api.com/json | jq -r ".lat")
+LONGITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ip-api.com/json | jq -r ".lon")
 }
 
 get_city_using_coordinates () {
@@ -343,7 +337,6 @@ then
 # Check for proxy in between connection
 detect_if_proxy_is_used
 #
-get_public_ip
 get_city_using_ip
 get_country_using_ip
 get_isp_using_ip
