@@ -43,6 +43,10 @@ ACTION=="remove", ENV{ID_SERIAL}=="HUAWEI_HUAWEI_Mobile", ENV{ID_VENDOR_ID}=="12
 # 3G USB dongles Used for Mobile Phone calls, SMS, and Geolocation services
 # -------------------------------------------------------------------------
 #
+# Huawei E303c
+# ------------
+SUBSYSTEM=="tty", ATTRS{idVendor}=="12d1", ATTRS{idProduct}=="14fe", SYMLINK+="ttyUSB-3G-Mobile" 
+#
 # Huawei E1750
 # ------------
 SUBSYSTEM=="tty", ATTRS{idVendor}=="12d1", ATTRS{idProduct}=="1446", SYMLINK+="ttyUSB-3G-Mobile" 
