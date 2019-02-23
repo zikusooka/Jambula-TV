@@ -7153,7 +7153,7 @@ cat > $DHCLIENT_CONFIG_DIR/dhclient-exit-hooks <<ET
 #!/bin/sh
 #
 # Sound beeps alert when wired interface is assigned an IP address
-if [[ "\$interface" = "$NETWORK_ETHERNET_DEVICE" && \$reason = "REBOOT" ]];
+if [[ "\$interface" = "$NETWORK_ETHERNET_DEVICE" && \$reason = "BOUND" || \$reason = "REBOOT" ]];
 then
 	$SOUNDS_TOOL dhclient
 fi
