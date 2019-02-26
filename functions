@@ -408,7 +408,7 @@ KODI_ADDONS_SPORTS="plugin.video.castaway plugin.video.prosport plugin.video.spo
 # Games
 KODI_ADDONS_GAMES="script.game.connect4 script.game.2048 plugin.game.blackjack plugin.game.match.cards plugin.game.tankshot"
 # Jambula Custom
-KODI_ADDONS_JAMBULA="plugin.audio.jambulaFMRadio plugin.video.jambulaLiveEvents plugin.video.jambulaIPTV plugin.video.youtube plugin.video.zoneminder script.doorbell script.jambulaConnect2WiFi script.service.kodi.callbacks script.service.pcmode"
+KODI_ADDONS_JAMBULA="plugin.audio.jambulaFMRadio plugin.video.jambulaLiveEvents plugin.video.jambulaIPTV plugin.video.netflix plugin.video.youtube plugin.video.zoneminder script.doorbell script.jambulaConnect2WiFi script.service.kodi.callbacks script.service.pcmode"
 # Miscellaneous
 KODI_ADDONS_MISC="script.xbmc.unpausejumpback"
 
@@ -5852,6 +5852,11 @@ unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$PREFERRED_KODI_C
 elif [ "$KODI_ADDON" = "script.module.beautifulsoup4" ];
 then
 unzip -o -d $KODI_SYSTEM_ADDONS/ $PROJECT_ZIPS_DIR/kodi-addons/$PREFERRED_KODI_CODENAME/script.module.beautifulsoup4-*.zip
+# plugin.video.netflix
+elif [ "$KODI_ADDON" = "plugin.video.netflix" ];
+then
+rsync -avz $PROJECT_GITHUB_DIR/kodi-addons/plugin.video.netflix/ \
+	$KODI_SYSTEM_ADDONS/plugin.video.netflix/
 # plugin.video.youtube
 elif [ "$KODI_ADDON" = "plugin.video.youtube" ];
 then
