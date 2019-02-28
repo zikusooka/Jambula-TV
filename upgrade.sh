@@ -349,7 +349,7 @@ live555_install
 #upgrade_open_zwave
 #upgrade_domoticz
 
-#upgrade_homeassistant 0.88.1
+#upgrade_homeassistant
 #upgrade_homeassistant_cli
 
 #upgrade_zoneminder
