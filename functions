@@ -11371,15 +11371,20 @@ patch -p1 $PREFIX/local/bin/hass < $PROJECT_PATCHES_DIR/hass.bin.patch
 #
 # Create symbolic link
 [ -x $BINARY_PREFIX/hass ] || ln -s $PREFIX/local/bin/hass $BINARY_PREFIX/hass
-
-# Add Home assistant user to dialout so they can access ZWave stick
-usermod -a -G dialout $HOMEASSISTANT_USER
 }
 
 homeassistant_configure () {
+# Copy udev rules 4 home automation controllers - ttyUSB*
+cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-ha-controllers.rules $UDEV_RULES_USB_HA_CONTROLLERS
+# Reload udev
+/usr/sbin/udevadm control --reload && udevadm trigger --action=add
+
+# Add Home assistant user to dialout so they can access USB ZWave stick
+usermod -a -G dialout $HOMEASSISTANT_USER
+
 # Copy homeassistant configuration files
 [[ -d $PROJECT_CONFIGS_DIR/homeassistant ]] && \
-	rsync -av -n $PROJECT_CONFIGS_DIR/homeassistant/ $HOMEASSISTANT_CONFIG_DIR/
+	rsync -av $PROJECT_CONFIGS_DIR/homeassistant/ $HOMEASSISTANT_CONFIG_DIR/
 
 # Change homeassistant config directory permissions
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_CONF_DIR/homeassistant
