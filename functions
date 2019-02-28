@@ -2388,7 +2388,14 @@ uninstall_python_pkgs home_assistant_frontend
 uninstall_python_pkgs homeassistant
 uninstall_python_pkgs home-assistant
 uninstall_python_pkgs homeassistant_pyozw
+uninstall_python_pkgs homeassistant-pyozw
 #uninstall_python_pkgs python_openzwave
+# Remove pyozw_* scripts
+for PYOZW_BIN in pyozw_check pyozw_shell
+do
+[[ -f $(which ${PYOZW_BIN}) ]] && rm -f $(which ${PYOZW_BIN})
+done
+# Remove hass binary file(s)
 rm -rf $(whereis hass)
 }
 
