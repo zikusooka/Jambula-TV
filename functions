@@ -1913,6 +1913,9 @@ PKG_LEFTOVERS_EXIST=$?
 }
 
 uninstall_python_pkgs () {
+# Attempt uninstall using pip tool
+pip uninstall -y $1
+# Manual uninstall for lingering files 
 #PYTHON_VERSION_USED=2 && set_python_version
 PYTHON_VERSION_USED=3 && set_python_version
 [[ -d $PYTHON_SITEDIR/$1 ]] && rm -rf $PYTHON_SITEDIR/$1
@@ -1968,6 +1971,7 @@ rm -f $PREFIX/local/lib/pkgconfig/python-3.*.pc
 rm -rf $PREFIX/local/include/python3.*dm
 rm -rf $PREFIX/local/share/man/man1/python3.*
 rm -rf $INSTALL_SRC_DIR/python3*
+rm -rf $INSTALL_SRC_DIR/pip*
 }
 
 # Uninstall kodi
