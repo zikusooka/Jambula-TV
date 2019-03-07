@@ -34,6 +34,21 @@ uninstall_python3
 python3_install
 }
 
+upgrade_scapy () {
+# Uninstall current scapy version
+uninstall_python_pkgs scapy
+uninstall_python_pkgs UTscapy
+#
+# Install scapy if it is not installed
+echo "Checking if scapy is installed ..."
+pip3 show scapy > /dev/null 2>&1
+SCAPY_EXISTS=$?
+if [[ "$SCAPY_EXISTS" != "0" ]];
+then
+scapy_install 
+fi
+}
+
 # Upgrade Kodi
 upgrade_kodi () {
 #uninstall_kodi17
@@ -314,6 +329,8 @@ live555_install
 #upgrade_openssl
 
 #upgrade_python3
+
+#upgrade_scapy
 
 #upgrade_kodi
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3

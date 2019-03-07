@@ -3235,6 +3235,26 @@ python3_common_modules_install () {
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/common-requirements.txt
 }
 
+scapy_install () {
+PYTHON_VERSION_USED=3 && set_python_version
+#
+# Sync sources to install directory
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/scapy/ $INSTALL_SRC_DIR/scapy/
+# Patch config.py module, as import of scapy.all causes python segmentation fault
+patch -p1 $INSTALL_SRC_DIR/scapy/scapy/config.py < $PROJECT_PATCHES_DIR/scapy.config_py.patch
+# Install
+cd $INSTALL_SRC_DIR/scapy
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+# Patch scapy i.e. scapy and UTscapy binaries to allow for connections to unverified 
+# SSL certificate sites and
+# Avoid unnecessary logging warnings after migration to python 3.6
+patch -p1 $PREFIX/local/bin/scapy < $PROJECT_PATCHES_DIR/scapy.bin.patch
+patch -p1 $PREFIX/local/bin/UTscapy < $PROJECT_PATCHES_DIR/UTscapy.bin.patch
+#
+# Create symbolic link in /usr/bin
+[ -x $BINARY_PREFIX/scapy ] || ln -s $PREFIX/local/bin/scapy $BINARY_PREFIX/scapy
+}
+
 python3_install () {
 # Remove existing python3 rpm based packages if any
 rpm -q python3-libs > /dev/null 2>&1 && rpm -e --nodeps python3-libs
@@ -3277,6 +3297,23 @@ python3_pip_install
 
 # Install commonly used python3 modules
 python3_common_modules_install
+
+# Install scapy if it is not installed
+echo "Checking if scapy is installed ..."
+pip3 show scapy > /dev/null 2>&1
+SCAPY_EXISTS=$?
+if [[ "$SCAPY_EXISTS" != "0" ]];
+then
+# Install fresh scapy
+scapy_install
+
+else
+# Uninstall current scapy version
+uninstall_python_pkgs scapy
+uninstall_python_pkgs UTscapy
+# Reinstall scapy
+scapy_install 
+fi
 }
 
 meson_install () {
