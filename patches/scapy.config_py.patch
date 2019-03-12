@@ -1,12 +1,12 @@
---- config.py.orig	2019-03-06 23:09:36.219465205 +0300
-+++ config.py		2019-03-06 23:11:43.999185582 +0300
-@@ -621,7 +621,8 @@
+--- config.py.orig	2018-03-27 10:00:20.000000000 +0300
++++ config.py		2019-03-12 02:49:05.637422259 +0300
+@@ -448,7 +448,8 @@
+                    "sctp", "vrrp", "ipsec", "lltd", "vxlan", "eap"]
      contribs = dict()
      crypto_valid = isCryptographyValid()
-     crypto_valid_recent = isCryptographyRecent()
--    crypto_valid_advanced = crypto_valid_recent and isCryptographyAdvanced()
-+    # JambulaTV: comment in line below, as it causes scapy to segfault python
-+    #crypto_valid_advanced = crypto_valid_recent and isCryptographyAdvanced()
+-    crypto_valid_advanced = isCryptographyAdvanced()
++    #JambulaTV: comment in line below, as it causes scapy to segfault python
++    #crypto_valid_advanced = isCryptographyAdvanced()
      fancy_prompt = True
      auto_crop_tables = True
-     recv_poll_rate = 0.05
+ 
