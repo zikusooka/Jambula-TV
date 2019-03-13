@@ -1,0 +1,21 @@
+--- yowsup-cli.orig	2019-03-12 20:54:22.474578304 +0300
++++ yowsup-cli		2019-03-12 20:56:09.373304677 +0300
+@@ -1,4 +1,18 @@
+ #!/usr/local/bin/python3
+ # EASY-INSTALL-SCRIPT: 'yowsup2==2.5.2','yowsup-cli'
++
++
++# JambulaTV patch
++# ---------------
++import os, ssl, warnings
++# Add support for unverified SSL connections
++if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
++    getattr(ssl, '_create_unverified_context', None)): 
++    ssl._create_default_https_context = ssl._create_unverified_context
++# Ignore all 'unclosed' warnings e.g. unclosed file or socket
++    warnings.filterwarnings(action="ignore", 
++                            message="unclosed", 
++                            category=ResourceWarning)
++
+ __requires__ = 'yowsup2==2.5.2'
+ __import__('pkg_resources').run_script('yowsup2==2.5.2', 'yowsup-cli')

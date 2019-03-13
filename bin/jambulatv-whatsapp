@@ -28,6 +28,8 @@ PING_IP_ADDRESS=8.8.8.8
 
 ANOTHER_INSTANCE_TEMP_FILE=/tmp/whatapp_processes_running
 
+YOWSUP_CONFIG_DIR=${HOME}/.yowsup 
+
 
 
 ###############
@@ -165,6 +167,11 @@ Hey there! It looks like you already registered.  If you want to re-register, pl
 
 "
 exit 0
+
+else
+# Backup i.e. move previous yowsup config file
+[[ -d ${YOWSUP_CONFIG_DIR} ]] && \
+	mv -v ${YOWSUP_CONFIG_DIR} ${YOWSUP_CONFIG_DIR}.$(date +%s)
 fi
 }
 
@@ -198,7 +205,7 @@ grep -i $COUNTRY $MCC_MNC_TABLE_FILE > $COUNTRY_MCC_MNC_RAW_FILE
 extract_network_info () {
 # Network
 clear
-DEFAULT_NETWORK_NUMBER=1
+DEFAULT_NETWORK_NUMBER=4
 read -p "Please select the mobile network in $COUNTRY that you will use for WhatsApp [$DEFAULT_NETWORK_NUMBER]
 
 $(cut -d , -f8 $COUNTRY_MCC_MNC_RAW_FILE | cat -n )
@@ -293,7 +300,7 @@ MOBILE_NETWORK_CODE=$MOBILE_NETWORK_CODE
 EOF
 
 # Request for PIN code using SMS
-$WHATSAPP_CMD registration -d -L $WHATSAPP_LOG_FILE -E android -m $MOBILE_COUNTRY_CODE -n $MOBILE_NETWORK_CODE -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -r $WHATSAPP_REGISTRATION_METHOD 2>&1 | grep -i "status: fail" 
+$WHATSAPP_CMD registration -d -E android -m $MOBILE_COUNTRY_CODE -n $MOBILE_NETWORK_CODE -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -r $WHATSAPP_REGISTRATION_METHOD 2>&1 | grep -Ei "(status: b'fail'|status: fail)"
 REQUEST_CODE_STATUS=$?
 if [[ "$REQUEST_CODE_STATUS" = "0" ]];
 then
@@ -317,7 +324,7 @@ echo "Error:  Please register this device for whatsapp first before you can conf
 exit 1
 fi
 # Confirm using sent PIN code
-$WHATSAPP_CMD registration -d -L $WHATSAPP_LOG_FILE -E android -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -R $WHATSAPP_REGISTRATION_CODE
+$WHATSAPP_CMD registration -d -E android -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -R $WHATSAPP_REGISTRATION_CODE
 }
 
 send_pre_check () {
