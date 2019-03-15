@@ -1,0 +1,221 @@
+#!/bin/sh
+# This script queries a UMEME Electricity Distribution server API(s) to get 
+# areas that are and will experience power outages today, tomorrow, and 
+# the day after tomorrow
+#
+# Disclaimer: I don not work for UMEME, neither do I have direct access to
+# their servers, so this script may break should there be changes to their
+# API
+#
+# Copyright (C) 2019-2020 Joseph Zikusooka.
+#
+# Find me on twitter @jzikusooka or email josephzik AT gmail.com
+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Variables
+CURL_CMD="/usr/bin/curl"
+CURL_OPTS="-s -S -L"
+HTTP_USER_AGENT="Dalvik/2.1.0 (Linux; U; Android 5.0.2; A0001"
+
+THIS_YEAR=$(date +%Y)
+THIS_MONTH_NAME_FULL=$(date +%B)
+THIS_MONTH_DIGIT=$(date +%m)
+
+# Set dates
+# ----------
+DATE_DIGIT_AFTER_TOMORROW=$(date --date='2 day' +'%e')
+DATE_DIGIT_TOMORROW=$(date --date='1 day' +'%e')
+DATE_DIGIT_TODAY=$(date +'%e')
+
+DaySuffix() {
+  case $DATE_DIGIT_TODAY in
+    1|21|31) echo "st";;
+    2|22)    echo "nd";;
+    3|23)    echo "rd";;
+    *)       echo "th";;
+  esac
+}
+
+# After Tomorrow
+DATE_AFTER_TOMORROW="${DATE_DIGIT_AFTER_TOMORROW}$(DaySuffix) $THIS_MONTH_NAME_FULL $THIS_YEAR"
+# Tomorrow
+DATE_TOMORROW="${DATE_DIGIT_TOMORROW}$(DaySuffix) $THIS_MONTH_NAME_FULL $THIS_YEAR" 
+# Today
+DATE_TODAY="${DATE_DIGIT_TODAY}$(DaySuffix) $THIS_MONTH_NAME_FULL $THIS_YEAR"
+#
+# UMEME outage files
+UMEME_OUTAGES_PLANNED_FILE=/tmp/UMEME-planned-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}.json
+MAXIMUM_AGE_OF_UMEME_OUTAGES_PLANNED_FILE=10800 #3 hours
+UMEME_OUTAGES_ONGOING_FILE=/tmp/UMEME-ongoing-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}-${DATE_DIGIT_TODAY}.json
+MAXIMUM_AGE_OF_UMEME_OUTAGES_ONGOING_FILE=1800 # 30 minutes
+
+UMEME_SELECTED_AREAS=$(echo ${@:2} | sed 's: ,:,:g' | sed 's:, :,:g')
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+check_internet_connectivity_ping () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+REMOTE_HOST_NAME="4.4.4.4"
+PING_COUNT=3
+PING_TIMEOUT=3
+#
+# Ping
+ping -c $PING_COUNT -W $PING_TIMEOUT $REMOTE_HOST_NAME > /dev/null 2>&1
+INTERNET_STATUS_VAL=$?
+#
+# Alert if there is no Internet
+if [[ "$INTERNET_STATUS_VAL" != "0" ]];
+then
+logger -s -t $(basename $0) "Warning: Unable to connect to the Internet.  UMEME outages file(s) can not be downloaded"
+exit 1
+fi
+}
+
+get_monthly_outages () {
+# If UMEME planned outages file is still fresh, set variable to yes
+[[ -e "$UMEME_OUTAGES_PLANNED_FILE" && "$(date -d "now - $(stat -c "%Y" $UMEME_OUTAGES_PLANNED_FILE) seconds" +%s)" -lt "$MAXIMUM_AGE_OF_UMEME_OUTAGES_PLANNED_FILE" ]] && UMEME_OUTAGES_PLANNED_FILE_IS_FRESH=yes
+#
+# Fetch UMEME planned outages file
+if [[ "$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" != "yes" ]];
+then
+check_internet_connectivity_ping
+logger -s -t $(basename $0) "INFO: Fetching UMEME monthly outages file ..."
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d main=Az8hHN9n7nBp98SN3xs341. http://41.84.213.50/umeme/access/phone_forty/get_monthly_outages.php > $UMEME_OUTAGES_PLANNED_FILE
+fi
+}
+
+get_ongoing_outages () {
+# If UMEME ongoing outages file is still fresh, set variable to yes
+[[ -e "$UMEME_OUTAGES_ONGOING_FILE" && "$(date -d "now - $(stat -c "%Y" $UMEME_OUTAGES_ONGOING_FILE) seconds" +%s)" -lt "$MAXIMUM_AGE_OF_UMEME_OUTAGES_ONGOING_FILE" ]] && UMEME_OUTAGES_ONGOING_FILE_IS_FRESH=yes
+#
+# Fetch UMEME planned outages file
+if [[ "$UMEME_OUTAGES_ONGOING_FILE_IS_FRESH" != "yes" ]];
+then
+check_internet_connectivity_ping
+logger -s -t $(basename $0) "INFO: Fetching UMEME ongoing outages file ..."
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d main=Az8hHN9n7nBp98SN3xs341. http://41.84.213.50/umeme/access/phone_forty/get_ongoing_outages.php > $UMEME_OUTAGES_ONGOING_FILE
+fi
+}
+
+
+# After Tomorrow
+# --------------
+after_tomorrow () {
+get_monthly_outages
+
+if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
+then
+# Output all areas if none was specified on command line
+cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_AFTER_TOMORROW"'")) |.["Areas & Customers to be Affected"]'
+
+else
+# Output only selected areas if specified on the command line
+IFS=","
+for AREA in $UMEME_SELECTED_AREAS
+do
+cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_AFTER_TOMORROW"'")) |.["Areas & Customers to be Affected"]' | grep -io "$AREA" | sed 's:^ ::g'
+done
+fi
+}
+
+# Tomorrow
+# ---------
+tomorrow () {
+get_monthly_outages
+
+if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
+then
+# Output all areas if none was specified on command line
+cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TOMORROW"'")) |.["Areas & Customers to be Affected"]'
+
+else
+# Output only selected areas if specified on the command line
+IFS=","
+for AREA in $UMEME_SELECTED_AREAS
+do
+cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TOMORROW"'")) |.["Areas & Customers to be Affected"]' | grep -io "$AREA" | sed 's:^ ::g'
+done
+fi
+}
+
+# Today
+# -----
+today () {
+get_monthly_outages
+
+if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
+then
+# Output all areas if none was specified on command line
+cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TODAY"'")) |.["Areas & Customers to be Affected"]'
+
+else
+# Output only selected areas if specified on the command line
+IFS=","
+for AREA in $UMEME_SELECTED_AREAS
+do
+cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TODAY"'")) |.["Areas & Customers to be Affected"]' | grep -io "$AREA" | sed 's:^ ::g'
+done
+fi
+}
+
+
+# Ongoing
+# -------
+ongoing () { 
+get_ongoing_outages
+
+if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
+then
+# Output all areas if none was specified on command line
+cat $UMEME_OUTAGES_ONGOING_FILE | jq -r '.[] |.["AREAS"]'
+
+else
+# Output only selected areas if specified on the command line
+IFS=","
+for AREA in $UMEME_SELECTED_AREAS
+do
+cat $UMEME_OUTAGES_ONGOING_FILE | jq -r '.[] |.["AREAS"]' | grep -io "$AREA" | sed 's:^ ::g'
+done
+fi
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+case $1 in
+after_tomorrow)
+after_tomorrow
+;;
+tomorrow)
+tomorrow
+;;
+today)
+today
+;;
+ongoing)
+ongoing 
+;;
+*)
+clear
+cat <<ET
+Usage: $(basename $0) [today|tomorrow|ongoing|after_tomorrow] [AREA1, AREA 2, AREA3]
+ET
+esac

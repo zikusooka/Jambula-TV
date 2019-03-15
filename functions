@@ -1156,6 +1156,7 @@ TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
 TEXT2SPEECH_TOOL=$BINARY_PREFIX/jambulatv-text2speech
 TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controller 
 TVHEADEND_PROCESSOR_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-processor
+UMEME_OUTAGES_TOOL=$BINARY_PREFIX/jambulatv-umeme-outages
 VLM_VOD_CREATE_TOOL=$BINARY_PREFIX/jambulatv-create-video-on-demand
 VLM_VOD_DELETE_TOOL=$BINARY_PREFIX/jambulatv-delete-video-on-demand
 WHATSAPP_TOOL=$BINARY_PREFIX/jambulatv-whatsapp
@@ -11488,7 +11489,8 @@ for TOOL_NAME in \
 ${LIGHTS_TOOL##*/} \
 ${PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL##*/} \
 ${PRESENCE_DETECTION_VIA_MIFI_TOOL##*/} \
-${PRESENCE_DETECTION_VIA_TRACKER_TOOL##*/}
+${PRESENCE_DETECTION_VIA_TRACKER_TOOL##*/} \
+${UMEME_OUTAGES_TOOL##*/}
 do
 # Copy script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/$TOOL_NAME ] || cp -v $PROJECT_BIN_DIR/$TOOL_NAME $BINARY_PREFIX/$TOOL_NAME
