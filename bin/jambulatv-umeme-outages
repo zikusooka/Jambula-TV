@@ -61,7 +61,7 @@ MAXIMUM_AGE_OF_UMEME_OUTAGES_PLANNED_FILE=10800 #3 hours
 UMEME_OUTAGES_ONGOING_FILE=/tmp/UMEME-ongoing-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}-${DATE_DIGIT_TODAY}.json
 MAXIMUM_AGE_OF_UMEME_OUTAGES_ONGOING_FILE=1800 # 30 minutes
 
-UMEME_SELECTED_AREAS=$(echo ${@:2} | sed 's: ,:,:g' | sed 's:, :,:g')
+UMEME_SELECTED_AREAS=$(echo ${@:2} | sed 's: ,:,:g' | sed 's:, :,:g' | sed 's: , :,:g')
 
 
 
