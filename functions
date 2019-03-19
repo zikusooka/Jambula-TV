@@ -3273,10 +3273,17 @@ cd $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}
 #
 if [[ "$PYTHON_SETUP_VERSION" = "3.6" ]];
 then
-# Python 3.6
+# Python 3.6 - patches
+# a) Fix an assertion error in :func:`format` in debug build for floating point
+# formatting with "n" format, zero padding and small width
+patch -p1 $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}/Lib/test/test_float.py < $PROJECT_PATCHES_DIR/python${PYTHON_SETUP_VERSION}.test_float.py.patch
+patch -p1 $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}/Objects/unicodeobject.c < $PROJECT_PATCHES_DIR/python${PYTHON_SETUP_VERSION}.unicodeobject.c.py.patch
+#
+# Python 3.6 - configure
 ./configure --prefix=$PREFIX/local LDFLAGS="-Wl,-rpath=$PREFIX/local/ssl/lib64" --enable-shared --with-system-expat --with-ensurepip=yes --with-pydebug RPATH=$PREFIX/local/ssl/lib64 
+
 else
-# Python 3.7
+# Python 3.7 - configure
 ./configure --prefix=$PREFIX/local LDFLAGS="-Wl,-rpath=$PREFIX/local/ssl/lib64" --with-openssl=$PREFIX/local --enable-shared --with-ssl-default-suites=python --with-system-expat --with-ensurepip=yes --with-pydebug
 fi
 # Patch python modules Setup file - This is mandatory
