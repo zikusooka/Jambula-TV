@@ -1947,6 +1947,9 @@ fi
 #
 # Remove sources
 [ -d $INSTALL_SRC_DIR/$1 ] && rm -rf $INSTALL_SRC_DIR/$1
+#
+# Remove .ccache in HOME directory to avoid errors during next install i.e. start afresh
+[[ -d $HOME/.ccache ]] && rm -rf $HOME/.ccache
 }
 
 # Uninstall python3
@@ -1982,6 +1985,7 @@ rm -rf $INSTALL_SRC_DIR/pip*
 uninstall_kodi17 () {
 # Stop kodi
 systemctl stop jambulatv@kodi.service
+
 # Uninstall kodi
 uninstall_src_pkgs kodi
 }
@@ -2012,6 +2016,9 @@ done
 }
 
 uninstall_kodi18 () {
+# Stop kodi
+systemctl stop jambulatv@kodi.service
+
 # Remove all kodi files and directories in cmake install manifest
 uninstall_cmake_pkgs kodi
 #
@@ -5874,7 +5881,8 @@ cmake .. \
 	-DLIBDVDNAV_URL="$KODI18_LIBDVDNAV_PACAKGE_NAME" \
 	-DLIBDVDREAD_URL="$KODI18_LIBDVDREAD_PACAKGE_NAME"
 # Cmake - Build
-cmake --build $KODI18_CORE_INSTALL_BUILD_DIR -- VERBOSE=1 -j$SYSTEM_CPU_CORES 
+# NOTE: Do not add -j$SYSTEM_CPU_CORES to cmake without testing first
+cmake --build $KODI18_CORE_INSTALL_BUILD_DIR -- VERBOSE=1 
 # Make - Install
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 
