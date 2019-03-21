@@ -4,7 +4,7 @@ Documentation=man:vnstatd(1) man:vnstat(1) man:vnstat.conf(5)
 After=network.target
 
 [Service]
-ExecStart=/usr/sbin/vnstatd -n --config MY_VNSTAT_CONFIG_FILE
+ExecStart=/usr/sbin/vnstatd -n --config MY_VNSTAT_CONFIG_FILE --alwaysadd
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 
