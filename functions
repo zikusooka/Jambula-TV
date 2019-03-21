@@ -2865,6 +2865,23 @@ install_dir_create () {
 chmod 755 $MULTIMEDIA_USER_HOME_DIR
 }
 
+sqlite_install () {
+# Remove sqlite rpm installed package(s)
+for RPM_PKG in sqlite-devel sqlite
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/sqlite-autoconf-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v sqlite-* sqlite
+# Compile
+cd $INSTALL_SRC_DIR/sqlite
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+# Make Install
+make_install_jambulatv -j$SYSTEM_CPU_CORES
+}
+
 images_add () {
 # Copy project images directory
 rsync -av $PROJECT_IMAGES_DIR $PROJECT_SYSTEM_SHARE_DIR/

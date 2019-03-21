@@ -39,6 +39,9 @@ exec 2>> $BUILD_LOG
 # Linux tools - selected linux kernel tools
 linux_tools_install
 
+# Install current sqlite
+sqlite_install
+
 # Install images and icons
 images_add
 
