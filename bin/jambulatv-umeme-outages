@@ -33,34 +33,15 @@ THIS_YEAR=$(date +%Y)
 THIS_MONTH_NAME_FULL=$(date +%B)
 THIS_MONTH_DIGIT=$(date +%m)
 
-# Set dates
-# ----------
 DATE_DIGIT_AFTER_TOMORROW=$(date --date='2 day' +'%e')
 DATE_DIGIT_TOMORROW=$(date --date='1 day' +'%e')
 DATE_DIGIT_TODAY=$(date +'%e')
 
-DaySuffix() {
-  case $DATE_DIGIT_TODAY in
-    1|21|31) echo "st";;
-    2|22)    echo "nd";;
-    3|23)    echo "rd";;
-    *)       echo "th";;
-  esac
-}
-
-# After Tomorrow
-DATE_AFTER_TOMORROW="${DATE_DIGIT_AFTER_TOMORROW}$(DaySuffix) $THIS_MONTH_NAME_FULL $THIS_YEAR"
-# Tomorrow
-DATE_TOMORROW="${DATE_DIGIT_TOMORROW}$(DaySuffix) $THIS_MONTH_NAME_FULL $THIS_YEAR" 
-# Today
-DATE_TODAY="${DATE_DIGIT_TODAY}$(DaySuffix) $THIS_MONTH_NAME_FULL $THIS_YEAR"
-#
 # UMEME outage files
 UMEME_OUTAGES_PLANNED_FILE=/tmp/UMEME-planned-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}.json
 MAXIMUM_AGE_OF_UMEME_OUTAGES_PLANNED_FILE=10800 #3 hours
 UMEME_OUTAGES_ONGOING_FILE=/tmp/UMEME-ongoing-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}-${DATE_DIGIT_TODAY}.json
 MAXIMUM_AGE_OF_UMEME_OUTAGES_ONGOING_FILE=1800 # 30 minutes
-
 UMEME_SELECTED_AREAS=$(echo ${@:2} | sed 's: ,:,:g' | sed 's:, :,:g' | sed 's: , :,:g')
 
 
@@ -68,6 +49,15 @@ UMEME_SELECTED_AREAS=$(echo ${@:2} | sed 's: ,:,:g' | sed 's:, :,:g' | sed 's: ,
 ###############
 #  FUNCTIONS  #
 ###############
+DaySuffix() {
+  case $DATE_DIGIT_OF_SPECIFIED_DAY in
+    1|21|31) echo "st";;
+    2|22)    echo "nd";;
+    3|23)    echo "rd";;
+    *)       echo "th";;
+  esac
+}
+
 check_internet_connectivity_ping () {
 # Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
 REMOTE_HOST_NAME="4.4.4.4"
@@ -116,8 +106,13 @@ fi
 # After Tomorrow
 # --------------
 after_tomorrow () {
+# Dates
+DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_AFTER_TOMORROW}
+DATE_AFTER_TOMORROW="${DATE_DIGIT_AFTER_TOMORROW}$(DaySuffix) $THIS_MONTH_NAME_FULL $THIS_YEAR"
+#
+# Fetch monthly outage list
 get_monthly_outages
-
+#
 if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
 then
 # Output all areas if none was specified on command line
@@ -136,8 +131,13 @@ fi
 # Tomorrow
 # ---------
 tomorrow () {
+# Dates
+DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_TOMORROW}
+DATE_TOMORROW="${DATE_DIGIT_TOMORROW}$(DaySuffix) $THIS_MONTH_NAME_FULL $THIS_YEAR" 
+#
+# Fetch monthly outage list
 get_monthly_outages
-
+#
 if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
 then
 # Output all areas if none was specified on command line
@@ -156,8 +156,13 @@ fi
 # Today
 # -----
 today () {
+# Dates
+DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_TODAY}
+DATE_TODAY="${DATE_DIGIT_TODAY}$(DaySuffix) $THIS_MONTH_NAME_FULL $THIS_YEAR"
+#
+# Fetch monthly outage list
 get_monthly_outages
-
+#
 if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
 then
 # Output all areas if none was specified on command line
