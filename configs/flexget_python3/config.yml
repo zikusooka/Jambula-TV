@@ -215,7 +215,7 @@ templates:
     verify_ssl_certificates: no
     domain_delay:
       rarbg.to: 5 seconds
-    magnets: yes
+    magnets: no
     torrent_scrub: rtorrent
     torrent_alive: yes
     notify:
@@ -394,19 +394,25 @@ templates:
         - next_series_episodes:
             from_start: yes
       from:
-        - piratebay:
-            category: video
-            sort_by: seeds
+        - torrentz: good
+        - 1337x:
+            order_by: seeders
         - rarbg:
             category:
-              - HDTV
+              - x264 720p
               - x264 1080p
               - XviD
               - SDTV
+              - HDTV
             sorted_by: seeders
+            ranked: True
             use_tvdb: True
-        - 1337x:
-            order_by: seeders
+            min_leechers: 1
+            min_seeders: 1
+        #- piratebay:
+            #category: video
+            #sort_by: seeds
+      interval: 1 hour
     max_reruns: 1
 
 
@@ -522,18 +528,24 @@ templates:
         # locally requested
         - movie_list: locally_added
       from:
-        - piratebay:
-            category: video
-            sort_by: seeds
+        - torrentz: good
+        - 1337x:
+            order_by: seeders
         - rarbg:
             category:
-              - HDTV
+              - x264 720p
               - x264 1080p
               - XviD
               - SDTV
+              - HDTV
             sorted_by: seeders
-        - 1337x:
-            order_by: seeders
+            ranked: True
+            use_tvdb: True
+            min_leechers: 1
+            min_seeders: 1
+        #- piratebay:
+            #category: video
+            #sort_by: seeds
       interval: 1 day
     max_reruns: 1
 
