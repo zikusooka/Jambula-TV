@@ -1341,6 +1341,13 @@ TIME_ENTIRE_INSTALL=40320
 esac
 }
 
+format_time_hms() {
+((h=$1/3600))
+((m=($1%3600)/60))
+((s=$1%60))
+printf "%02d:%02d:%02d\n" $h $m $s
+}
+
 estimate_completion_time () {
 # Estimate taken to complete process
 TIME_TAKEN_NORMAL_SECONDS=$1
@@ -13455,7 +13462,7 @@ Press 'Enter' to proceed reading this file ...
 
 Time
 ****
-Script runtime was $SCRIPT_RUNTIME seconds
+Script runtime: $(format_time_hms $SECONDS)
 
 EOT
 # Notify at Local workstation i.e. Here
