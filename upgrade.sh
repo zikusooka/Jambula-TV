@@ -315,6 +315,11 @@ uninstall_live555
 live555_install
 }
 
+upgrade_mesa () {
+uninstall_src_pkgs mesa
+mesa_install
+}
+
 
 
 #################
@@ -395,3 +400,5 @@ live555_install
 #upgrade_pulseaudio
 
 #upgrade_live555 
+
+#upgrade_mesa

@@ -3050,9 +3050,6 @@ mesa_install () {
 # Remove mesa rpms
 rpm -e --nodeps $(rpm -qa | grep -i mesa)
 #
-# Install mesa dependencies
-mesa_deps_install
-#
 # Unpack
 tar xvf $PROJECT_TARBALLS_DIR/mesa-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v mesa-* mesa

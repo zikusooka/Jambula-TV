@@ -49,6 +49,7 @@ images_add
 openssl111_install
 
 # Install current mesa
+mesa_deps_install
 mesa_install
 glu_install
 
