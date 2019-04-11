@@ -1657,10 +1657,17 @@ EOF
 make_install_jambulatv () {
 # Log to build file
 make_build_log
-# Run Make - DONT use -j cores option
-# NOTE: If you want, add it like: 'make_install_jambulatv -j$SYSTEM_CPU_CORES'
-#make -s $@ 1>> $BUILD_LOG 2>&1
+# Run Make:
+#           If spinner is available, use it
+#           DONT use -j cores option
+#           NOTE: If you want, add it like: 'make_install_jambulatv -j$SYSTEM_CPU_CORES'
+if [[ -x "$(which spinner)" ]];
+then
+spinner make -s 2>&1 $@ | tee -a $BUILD_LOG
+else
 make -s 2>&1 $@ | tee -a $BUILD_LOG
+fi
+#
 MAKE_EXIT_STATUS=$?
 if [ "$MAKE_EXIT_STATUS" = "0" ];
 then
