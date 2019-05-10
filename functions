@@ -3959,6 +3959,21 @@ make_install_jambulatv
 #Add VDPAU_DRIVER=va_gl to your environment
 }
 
+libbluray_install () {
+cd $PROJECT_GITHUB_DIR/libbluray
+git archive --format tar.gz --prefix=libbluray/ $LIBBLURAY_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+#
+# Add libudfread sources if they dont exist
+[[ -e $INSTALL_SRC_DIR/libbluray/contrib/libudfread/configure.ac ]] || \
+	rsync -av $PROJECT_GITHUB_DIR/libbluray/contrib/libudfread/ $INSTALL_SRC_DIR/libbluray/contrib/libudfread/
+#
+# Compile
+cd $INSTALL_SRC_DIR/libbluray
+./bootstrap 
+./configure --prefix=$PREFIX --libdir=$LIBDIR --disable-bdjava-jar
+make_install_jambulatv
+}
+
 lame_install () {
 # Remove lame rpm installed package(s)
 for RPM_PKG in lame-libs lame-devel
@@ -5578,21 +5593,6 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 #ldconfig
 }
 
-libbluray_install () {
-cd $PROJECT_GITHUB_DIR/libbluray
-git archive --format tar.gz --prefix=libbluray/ $LIBBLURAY_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
-#
-# Add libudfread sources if they dont exist
-[[ -e $INSTALL_SRC_DIR/libbluray/contrib/libudfread/configure.ac ]] || \
-	rsync -av $PROJECT_GITHUB_DIR/libbluray/contrib/libudfread/ $INSTALL_SRC_DIR/libbluray/contrib/libudfread/
-#
-# Compile
-cd $INSTALL_SRC_DIR/libbluray
-./bootstrap 
-./configure --prefix=$PREFIX --libdir=$LIBDIR --disable-bdjava-jar
-make_install_jambulatv
-}
-
 shairplay_install () {
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/shairplay/ $INSTALL_SRC_DIR/shairplay/
 cd $INSTALL_SRC_DIR/shairplay
@@ -5625,7 +5625,6 @@ swig_install
 libnfs_install
 libusb_install
 platform_install
-libbluray_install
 shairplay_install
 sndio_install
 }

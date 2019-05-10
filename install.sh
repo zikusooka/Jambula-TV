@@ -124,7 +124,8 @@ oss_devices_configure
 SDL_install
 openal_soft_install
 libass_install
-libvdpau_va_gl_install 
+libvdpau_va_gl_install
+libbluray_install
 ffmpeg_deps_install
 ffmpeg_install
 vlc_install
