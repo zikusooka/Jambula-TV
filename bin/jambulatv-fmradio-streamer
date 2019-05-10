@@ -1,8 +1,8 @@
 #!/bin/sh
-# This script startsup rtl_fm using SDR dongle, and streams it using vlc
+# This script starts up rtl_fm using SDR dongle, and streams it via vlc
 # You need: vlc, rtl_fm
 #
-# Copyright (C) 2017-2018 Joseph Zikusooka.
+# Copyright (C) 2019-2020 Joseph Zikusooka.
 #
 # Contact me at: joseph AT zikusooka.com
 
@@ -66,9 +66,22 @@ exit 1
 fi
 }
 
+check_pulseaudio () {
+pactl list sinks short > /dev/null 2>&1
+PACTL_STATUS=$?
+# Stop and restart pulseaudio if existing process is broken
+if [[ "$PACTL_STATUS" != "0" ]];
+then
+killall pulseaudio && /usr/bin/pulseaudio -D
+fi
+}
+
 stream_local () {
+# Start/Restart Pulseaudio if not running or existing process is broken
+check_pulseaudio
+#
 # Play locally if requested
-if [[ "$FMRADIO_STREAMER_CLIENT_LOCATION" = "local" ]]
+if [[ "$FMRADIO_STREAMER_CLIENT_LOCATION" = "local" ]];
 then
 PULSEAUDIO_USER=$MULTIMEDIA_USER && \
 	/usr/bin/mplayer -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 http://127.0.0.1:8543 > /dev/null &
@@ -84,7 +97,7 @@ $RTL_FM_CMD -d $RTL_FM_DEV -f ${FMRADIO_STREAMER_STATION}M -M fm -s 170k -A std 
 # Pause a bit to allow radio to settle
 sleep 3
 #
-VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep "sout=#http{mux=ffmpeg{mux=" | awk {'print $2'})
+VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep "sout #standard{access=http,mux=" | awk {'print $2'})
 FFMPEG_PID=$(ps auxw | grep -Ev grep | grep ffmpeg | grep "f s16le -ac 1 -i pipe:0 -acodec libmp3lame -ab 128k -f mpegts" | awk {'print $2'})
 RTLFM_PID=$(ps auxw | grep -Ev grep | grep rtl_fm | grep "M fm -s 170k -A std -l 0 -E deemp -r 44.1k" | awk {'print $2'})
 #
