@@ -171,6 +171,7 @@ kodi_jambulatv_service_configure
 # -----------------
 # System Settings
 # -----------------
+global_settings_configure
 bash_configure
 release_info_configure
 updates_server_info_configure

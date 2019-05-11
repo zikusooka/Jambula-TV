@@ -100,6 +100,7 @@ PROJECT_SYSTEM_ICONS_DIR=$PROJECT_SYSTEM_SHARE_DIR/picons
 PROJECT_VERSION=$(cd $PROJECT_BASE_DIR && git tag -l | tail -1)
 PROJECT_RELEASE_FILE=$PROJECT_SYSTEM_CONF_DIR/release
 PROJECT_DVBT_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/dvbt-settings.cfg
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 PROJECT_PARTITION=/$PROJECT_NAME
 LOCAL_SETTINGS_DIR=$PROJECT_PARTITION/local_settings
 
@@ -7572,6 +7573,23 @@ mount -a
 usermod -a -G cdrom $MULTIMEDIA_USER
 #
 fi
+}
+
+global_settings_configure () {
+# Get the default public DNS server to be used
+[[ "$DNS_SERVER_IP_ADDRESS_DEFAULT" =~ "$" ]] && \
+DNS_SERVER_IP_ADDRESS_DEFAULT=$(echo $DNS_SERVER_IP_ADDRESS_DEFAULT | sed 's/\$//g')
+
+# Add global settings to file
+cat >> $PROJECT_GLOBAL_SETTINGS_FILE <<GLOBAL
+# JambulaTV global settings
+# ---
+# IP address used by several tools to check for Internet connectivity
+PING_IP_ADDRESS=$DNS_SERVER_IP_ADDRESS_DEFAULT
+GLOBAL
+#
+# Give multimedia user permissions to global settings
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_GLOBAL_SETTINGS_FILE
 }
 
 bash_configure () {
