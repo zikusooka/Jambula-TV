@@ -7585,6 +7585,7 @@ cat >> $PROJECT_GLOBAL_SETTINGS_FILE <<GLOBAL
 # JambulaTV global settings
 # ---
 # IP address used by several tools to check for Internet connectivity
+PUBLIC_DNS_SERVERS="$PUBLIC_DNS_SERVERS"
 PING_IP_ADDRESS=$DNS_SERVER_IP_ADDRESS_DEFAULT
 GLOBAL
 #

@@ -1,9 +1,16 @@
 #!/bin/sh
 # This is an API for JambulaTV weather requests
-# Jambula Labs @copyright 2018-2019 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
 #
 # Usage: jambulatv-weather-api [LAT] [LONG] [current|today|later] [API] [debug (optiona)]
 
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
+# Variables
 # Database credentials
 JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
 JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
@@ -59,7 +66,7 @@ CURL_CMD="/usr/bin/curl"
 HTTP_USER_AGENT="MY_USER_AGENT"
 
 PING_TIMEOUT=3 #9
-PING_IP_ADDRESS=8.8.8.8
+PING_IP_ADDRESS=$PING_IP_ADDRESS
 
 TERM=xterm
 

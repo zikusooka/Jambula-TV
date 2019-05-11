@@ -3,9 +3,8 @@
 # areas that are and will experience power outages today, tomorrow, and 
 # the day after tomorrow
 #
-# Disclaimer: I don not work for UMEME, neither do I have direct access to
-# their servers, so this script may break should there be changes to their
-# API
+# Disclaimer: I do not work for UMEME, neither do I have direct access # to their servers, so this script may break should there be changes 
+# to their API
 #
 # Copyright (C) 2019-2020 Joseph Zikusooka.
 #
@@ -24,10 +23,18 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
 # Variables
 CURL_CMD="/usr/bin/curl"
 CURL_OPTS="-s -S -L"
 HTTP_USER_AGENT="Dalvik/2.1.0 (Linux; U; Android 5.0.2; A0001"
+
+PING_IP_ADDRESS=$PING_IP_ADDRESS
 
 THIS_YEAR=$(date +%Y)
 THIS_MONTH_NAME_FULL=$(date +%B)
@@ -60,7 +67,7 @@ DaySuffix() {
 
 check_internet_connectivity_ping () {
 # Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
-REMOTE_HOST_NAME="4.4.4.4"
+REMOTE_HOST_NAME=$PING_IP_ADDRESS
 PING_COUNT=3
 PING_TIMEOUT=3
 #

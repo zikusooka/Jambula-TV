@@ -1,9 +1,16 @@
 #!/bin/sh
 # This is the text-to-speech tool used for JambulaTV services.
 # Use it to read time, weather, etc
-# Jambula Labs @copyright 2018-2019 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
 
 # Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+
+# Source global settings
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
 TTS_PLAY_CMD="/usr/bin/ffplay"
 TTS_QUIT_CMD=""
 TTS_PLAY_CMD_OPTS="-loglevel quiet -vn -nodisp -autoexit"
@@ -14,7 +21,7 @@ TTS_ACTION=$2
 TTS_CUSTOM_MESSAGE=$3
 
 PING_TIMEOUT=2 #9
-PING_IP_ADDRESS=8.8.8.8
+PING_IP_ADDRESS=$PING_IP_ADDRESS
 
 JAMBULATV_SOUNDS_DIR="/usr/share/JambulaTV/sounds"
 SOUND_EFFECTS_WAITING="$JAMBULATV_SOUNDS_DIR/waiting-4-online-response.wav"

@@ -3,26 +3,15 @@
 # 
 # NOTE: You need to have your icinga environment properly setup
 #
-# Copyright (C) 2016-2017 Joseph Zikusooka.
+# Jambula Labs @copyright 2019-2020 All rights reserved
 #
-# Contact me at: joseph AT zikusooka.com
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
 
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-
-PROJECT_SYSTEM_CONF_DIR=/etc/JambulaTV
+# Variables
 JAMBULATV_UPDATES_FTP_SERVER_INFO_FILE=$PROJECT_SYSTEM_CONF_DIR/updates-ftp-server-cfg
 JAMBULATV_RELEASE_FILE=$PROJECT_SYSTEM_CONF_DIR/release
 JAMBULATV_UPDATES_TEMP_DIR=/tmp
@@ -36,7 +25,7 @@ WGET_CMD=wget
 WGET_TIMEOUT=20
 WGET_OPTS="-q --no-check-certificate --retr-symlinks -T $WGET_TIMEOUT --ftp-user=$JAMBULATV_FTP_USER --ftp-password=$JAMBULATV_FTP_PASS"
 PING_COUNT=1 #9
-PING_IP_ADDRESS=8.8.8.8
+PING_IP_ADDRESS=$PING_IP_ADDRESS
 
 
 

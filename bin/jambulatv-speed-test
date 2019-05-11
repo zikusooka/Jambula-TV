@@ -1,5 +1,14 @@
 #!/bin/sh
+# This is an Internet speed tester for JambulaTV 
+# Jambula Labs @copyright 2019-2020 All rights reserved
+#
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
 
+# Variables
 SPEED_TEST_SERVER="LON1" # AMS1 AMS2 NYC1 NYC2 SF1 SGP1 DALS1
 
 STATS_DIR=/tmp
@@ -7,7 +16,7 @@ WGET_CMD=/usr/bin/wget
 WGET_TIMEOUT=20
 WGET_OPTS="--no-check-certificate --retr-symlinks -T $WGET_TIMEOUT -O /dev/null"
 PING_COUNT=1 #9
-PING_IP_ADDRESS=8.8.8.8
+PING_IP_ADDRESS=$PING_IP_ADDRESS
 
 OSD_TOOL_CMD="sudo /usr/bin/jambulatv-osd -m"
 

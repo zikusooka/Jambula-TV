@@ -1,11 +1,19 @@
 #!/bin/sh
-# This is a wrapper AGI script for Text-2-Speech used in asterisk dialplans
+# This is a wrapper AGI script for Text-2-Speech used in asterisk 
+# dialplans
 # Choose appropraite AGI script depending on availability of Internet
-# Jambula Labs @copyright 2017-2018 All rights reserved
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Variables
 PING_TIMEOUT=3
-PING_IP_ADDRESS=8.8.8.8
+PING_IP_ADDRESS=$PING_IP_ADDRESS
 
 ASTERISK_AGI_BIN_DIR=/var/lib/asterisk/agi-bin
 

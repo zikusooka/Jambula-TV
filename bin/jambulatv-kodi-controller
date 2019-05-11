@@ -1,6 +1,12 @@
 #!/bin/sh
 # This is a general purpose script used in interacting with kodi API from the command line
-# Jambula Labs @copyright 2018-2019 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
+#
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Variables
 KODI_HTTP_IP=MY_KODI_HTTP_IP
@@ -21,7 +27,7 @@ OSD_MESSAGE="$2"
 KODI_ADDON="$2"
 
 PING_TIMEOUT=3 #9
-PING_IP_ADDRESS=8.8.8.8
+PING_IP_ADDRESS=$PING_IP_ADDRESS
 
 PVR_GROUP=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannelGroups", "params": {"channeltype":"tv"}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq '.result.channelgroups[] | select(.label=="All channels") | .channelgroupid')
 PVR_STOP_REC_SCRIPT=MY_TMPDIR/.stop_recording_tv_channel.sh

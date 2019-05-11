@@ -1,11 +1,23 @@
 #!/bin/sh
+# This tool is used by JambulaTV to send email messages using
+# Google (GMail) SMTP server
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+#
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
+# Variables
 EMAIL_TO_ADDRESS_REMOTE=$1
 EMAIL_SUBJECT="$2"
 EMAIL_BODY="$3"
 EMAIL_ATTACHMENT="$4"
-EMAIL_GMAIL_CONFIG=/etc/JambulaTV/email-gmail.cfg
+EMAIL_GMAIL_CONFIG=$PROJECT_SYSTEM_CONF_DIR/email-gmail.cfg
 
-# Import variables
+# Source email settings
 . $EMAIL_GMAIL_CONFIG
 
 # Set username and password
@@ -13,7 +25,7 @@ EMAIL_SMTP_AUTH_USERNAME=$EMAIL_SMTP_AUTH_USERNAME
 EMAIL_SMTP_AUTH_PASSWORD=$(echo $EMAIL_SMTP_AUTH_ENCRYPT | base64 -d)
 
 PING_COUNT=1 #9
-PING_IP_ADDRESS=8.8.8.8
+PING_IP_ADDRESS=$PING_IP_ADDRESS
 
 
 

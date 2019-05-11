@@ -1,9 +1,19 @@
 #!/bin/sh
+# This is a web scraper tool for fetching planned power outage
+# reports from Uganda's Electricity distributor - UMEME
 #
+
 # Prerequisites:
 # Install catdoc i.e. yum install catdoc
 # Install poppler-utils i.e. yum install poppler-utils
 #
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
+# Variables
 DATE_AFTER_TOMORROW_DAY_FORMAT=$(date --date='2 day' +'%A')
 DATE_TOMORROW_DAY_FORMAT=$(date --date='1 day' +'%A')
 
@@ -49,7 +59,7 @@ UMEME_OUTAGES_PLANNED_FILE_CSV=/JambulaTV/Downloads/UMEME-planned-outages-${THIS
 TELEGRAM_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-telegram.cfg
 
 PING_COUNT=1 #9
-PING_IP_ADDRESS=8.8.8.8
+PING_IP_ADDRESS=$PING_IP_ADDRESS
 
 LIST_OF_AREAS="$@"
 

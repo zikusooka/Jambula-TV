@@ -5,6 +5,12 @@
 #
 # Jambula Labs @copyright 2019-2020 All rights reserved
 #
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
 # Variables
 # Get ethernet device
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip -o -4 link show | awk -F': ' '/mode DEFAULT/ {print $2}' | grep -v lo | head -1)
@@ -32,7 +38,7 @@ DNS_STATUS=$1
 LAST_DNS_STATUS=$2
 
 RESOLVCONF_CONFIG=/etc/resolvconf.conf
-PUBLIC_DNS_SERVERS="8.8.8.8 208.67.222.222 8.26.56.26 107.170.95.180 77.88.8.8"
+PUBLIC_DNS_SERVERS="$PUBLIC_DNS_SERVERS"
 
 MONITORING_PLUGINS_DIR=/usr/lib64/nagios/plugins
 

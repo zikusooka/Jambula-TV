@@ -1,14 +1,22 @@
 #!/bin/sh
 # This is tool is used to determine where in the world the JambulaTV smart hub
 # is currently located i.e. Lookup the Country, City, and Neighborhood
-# Jambula Labs @copyright 2018-2019 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
 #
 # Usage: jambulatv-whereami [LAT] [LONG] (optional)
+
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Variables
 CURL_CMD="/usr/bin/curl"
 CURL_OPTS="-s -S -L -m 60 -k"
 HTTP_USER_AGENT="MY_USER_AGENT"
+
+PING_IP_ADDRESS=$PING_IP_ADDRESS
 
 JAMBULATV_SETUP_DB_NAME=MY_JAMBULATV_SETUP_DB_NAME
 JAMBULATV_SETUP_DB_USER=MY_JAMBULATV_SETUP_DB_USER
@@ -38,7 +46,7 @@ MOBILE_LAC_CID_TMP_FILE=/tmp/3g_network_lac_cid.tmp
 
 check_internet_connectivity_ping () {
 # Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
-REMOTE_HOST_NAME="4.4.4.4"
+REMOTE_HOST_NAME=$PING_IP_ADDRESS
 PING_COUNT=3
 PING_TIMEOUT=3
 # Set exit value specified on command line

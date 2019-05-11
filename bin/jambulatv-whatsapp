@@ -1,5 +1,9 @@
 #!/bin/sh
-# Use this script to register for whatsapp; and then to send and receive messages
+# This tool is used to register for whatsapp; and also to send and 
+# receive messages
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+
 # Variables
 PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
@@ -24,7 +28,7 @@ WHATSAPP_PHONE_NUMBER_RECIPIENT=$3
 WHATSAPP_REGISTRATION_METHOD=sms
 
 PING_TIMEOUT=3 #9
-PING_IP_ADDRESS=8.8.8.8
+PING_IP_ADDRESS=$DNS_SERVER_IP_ADDRESS_DEFAULT
 
 ANOTHER_INSTANCE_TEMP_FILE=/tmp/whatapp_processes_running
 
@@ -177,7 +181,7 @@ fi
 
 download_mcc_mnc_file () {
 # Check if Internet connection is up
-ping -c 1 8.8.8.8 > /dev/null 2>&1
+ping -c 1 $PING_IP_ADDRESS > /dev/null 2>&1
 INTERNET_ALIVE=$?
 # Download MCC-MNC table file if not present and Internet is up
 if [ ! -s $MCC_MNC_TABLE_FILE ] && [ "$INTERNET_ALIVE" = "0" ];
