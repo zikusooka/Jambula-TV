@@ -1,0 +1,196 @@
+#!/bin/sh
+# This script starts up an Internet stream
+#
+# Copyright (C) 2019-2020 Joseph Zikusooka.
+#
+# Contact me at: joseph AT zikusooka.com
+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+#
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+FFMPEG_CMD=/usr/bin/ffmpeg
+VLC_CMD=/usr/bin/cvlc
+MPLAYER_CMD=/usr/bin/mplayer
+
+WEBRADIO_STREAMER_PORT=MY_WEBRADIO_STREAMER_PORT
+WEBRADIO_STREAMER_PID_FILE=MY_TMPDIR/webradio_process_ids
+WEBRADIO_STREAMER_LOG_FILE=MY_PROJECT_SYSTEM_LOG_DIR/webradio-streamer.log
+WEBRADIO_STREAMER_NUMBER_OF_ARGS=$#
+WEBRADIO_STREAMER_TASK=$1
+WEBRADIO_STREAMER_STATION=$(/bin/echo "$2" | sed -e "s/[^0-9. ]*//g" -e  "s/ \+/ /g")
+WEBRADIO_STREAMER_CLIENT_LOCATION=${@:$WEBRADIO_STREAMER_NUMBER_OF_ARGS}
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage_all () {
+clear
+cat <<EOF
+Usage: ./$(basename $0) [start|stop|restart] [WEB_RADIO_STATION_ID] [local (Optional)]
+
+EOF
+exit 1
+}
+
+usage_start () {
+if [ "x$WEBRADIO_STREAMER_STATION" = "x" ];
+then
+clear
+cat <<EOF
+Usage: ./$(basename $0) $WEBRADIO_STREAMER_TASK [WEB_RADIO_STATION_ID e.g. 1] [local (Optional)]
+
+***************************************
+Online Radio Station IDs
+***************************************
+ 1.  SmoothJazz
+ 2.  Radio One (Uganda)
+
+EOF
+exit 1
+fi
+}
+
+get_webradio_url () {
+case $WEBRADIO_STREAMER_STATION in
+1)
+# Smooth Jazz
+WEBRADIO_STREAMER_URL=http://sj64.hnux.com
+;;
+
+2)
+# Family Life Radio
+#WEBRADIO_STREAMER_URL=http://stream.liquidcompass.net/4607/stream.pls
+WEBRADIO_STREAMER_URL="http://ic1.christiannetcast.com/kflr-fm?rnd=6026"
+;;
+
+*)
+exit 1
+;;
+esac
+}
+
+check_pulseaudio () {
+pactl list sinks short > /dev/null 2>&1
+PACTL_STATUS=$?
+# Stop and restart pulseaudio if existing process is broken
+if [[ "$PACTL_STATUS" != "0" ]];
+then
+killall pulseaudio && /usr/bin/pulseaudio -D
+fi
+}
+
+stream_local () {
+# Start/Restart Pulseaudio if not running or existing process is broken
+check_pulseaudio
+#
+# Play locally if requested
+if [[ "$WEBRADIO_STREAMER_CLIENT_LOCATION" = "local" ]];
+then
+PULSEAUDIO_USER=$MULTIMEDIA_USER && \
+	$MPLAYER_CMD -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 -loop 0 $WEBRADIO_STREAMER_URL > /dev/null &
+fi
+}
+
+stream_start () {
+# Usage
+usage_start
+#
+# Get web radio station URL
+get_webradio_url
+#
+# Start/Restart Pulseaudio if not running or existing process is broken
+check_pulseaudio
+#
+# Stream web radio
+ 
+
+
+
+PULSEAUDIO_USER=$MULTIMEDIA_USER && \
+	$MPLAYER_CMD -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 -loop 0 $WEBRADIO_STREAMER_URL > /dev/null &
+
+
+
+#
+# Pause a bit to allow radio to settle
+sleep 3
+#
+MPLAYER_PID=$(ps auxw | grep -Ev grep | grep mplayer | grep -E "(http|rtsp|rtmp)" | awk {'print $2'})
+VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep -E "(http|rtsp|rtmp)" | awk {'print $2'})
+FFMPEG_PID=$(ps auxw | grep -Ev grep | grep ffmpeg | grep "f s16le -ac 1 -i pipe:0 -acodec libmp3lame -ab 128k -f mpegts" | awk {'print $2'})
+#
+# Add PIDs for stopping processes
+cat > $WEBRADIO_STREAMER_PID_FILE <<EOF
+$MPLAYER_PID $VLC_PID $FFMPEG_PID
+EOF
+#
+# Stream locally if user requested
+#stream_local
+}
+
+stream_stop () {
+# Kill streamer processes
+[[ -e $WEBRADIO_STREAMER_PID_FILE ]] && sudo kill -15 $(cat $WEBRADIO_STREAMER_PID_FILE) > /dev/null 2>&1 &
+# Remove PIDs file
+[[ -e $WEBRADIO_STREAMER_PID_FILE ]] && sudo rm -f $WEBRADIO_STREAMER_PID_FILE
+}
+
+stream_restart () {
+usage_start
+# Stop previous station
+$0 stop
+# Pause a bit to allow radio to settle
+sleep 3
+# Stream new station
+$0 start $WEBRADIO_STREAMER_STATION $WEBRADIO_STREAMER_CLIENT_LOCATION
+#
+# Stream locally if user requested
+stream_local
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+case $WEBRADIO_STREAMER_TASK in
+
+start)
+stream_start
+;;
+
+stop)
+stream_stop
+;;
+
+restart)
+stream_restart
+;;
+
+*)
+usage_all
+;;
+
+esac
