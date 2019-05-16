@@ -1133,7 +1133,7 @@ CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
 EPG_GENERIC_TVGUIDE_TOOL=$BINARY_PREFIX/jambulatv-tvguide-fta-generic
 FETCH_NEWS_TOOL=$BINARY_PREFIX/jambulatv-fetch-news
-FMRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-fmradio-streamer
+FMRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-fm-radio-streamer
 GENERATE_LOCAL_CONF_TOOL=$BINARY_PREFIX/jambulatv-generate-local-conf
 INITIAL_SETUP_TOOL=$BINARY_PREFIX/jambulatv-initial-setup 
 KODI_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-kodi-controller 
@@ -9867,9 +9867,9 @@ make_install_jambulatv
 ldconfig
 }
 
-fmradio_streamer_setup () {
+fm_radio_streamer_setup () {
 [ -e $FMRADIO_STREAMER_TOOL ] || \
-	cat $PROJECT_BIN_DIR/jambulatv-fmradio-streamer | \
+	cat $PROJECT_BIN_DIR/jambulatv-fm-radio-streamer | \
 		sed -e "s:MY_FMRADIO_STREAMER_PORT:$FMRADIO_STREAMER_PORT:g" | \
 		sed -e "s:MY_PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
 		sed "s:MY_TMPDIR:$TMPDIR:g" \
