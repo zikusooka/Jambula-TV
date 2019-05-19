@@ -2,25 +2,8 @@
 # This script starts up rtl_fm using SDR dongle, and streams it via vlc
 # You need: vlc, rtl_fm
 #
-# Copyright (C) 2019-2020 Joseph Zikusooka.
-#
-# Contact me at: joseph AT zikusooka.com
+# Jambula Labs @copyright 2019-2020 All rights reserved
 
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-#
-#
 # Variables
 PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
@@ -33,6 +16,7 @@ RTL_FM_CMD=/usr/bin/rtl_fm
 RTL_FM_DEV=0
 FFMPEG_CMD=/usr/bin/ffmpeg
 VLC_CMD=/usr/bin/cvlc
+MPLAYER_CMD=/usr/bin/mplayer 
 
 FMRADIO_STREAMER_NUMBER_OF_ARGS=$#
 FMRADIO_STREAMER_TASK=$1
@@ -85,7 +69,7 @@ check_pulseaudio
 if [[ "$FMRADIO_STREAMER_CLIENT_LOCATION" = "local" ]];
 then
 PULSEAUDIO_USER=$MULTIMEDIA_USER && \
-	/usr/bin/mplayer -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 http://127.0.0.1:8543 > /dev/null &
+$MPLAYER_CMD -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 http://127.0.0.1:8543 > /dev/null &
 fi
 }
 
@@ -98,17 +82,18 @@ $RTL_FM_CMD -d $RTL_FM_DEV -f ${FMRADIO_STREAMER_STATION}M -M fm -s 170k -A std 
 # Pause a bit to allow radio to settle
 sleep 3
 #
+# Stream locally if user requested
+stream_local
+#
+# Add process ID (PID) numbers to temp file
+MPLAYER_PID=$(ps auxw | grep -Ev grep | grep mplayer| awk {'print $2'})
 VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep "sout #standard{access=http,mux=" | awk {'print $2'})
 FFMPEG_PID=$(ps auxw | grep -Ev grep | grep ffmpeg | grep "f s16le -ac 1 -i pipe:0 -acodec libmp3lame -ab 128k -f mpegts" | awk {'print $2'})
 RTLFM_PID=$(ps auxw | grep -Ev grep | grep rtl_fm | grep "M fm -s 170k -A std -l 0 -E deemp -r 44.1k" | awk {'print $2'})
 #
-# Add PIDs for stopping processes
 cat > $FMRADIO_STREAMER_PID_FILE <<EOF
-$VLC_PID $FFMPEG_PID $RTLFM_PID
+$MPLAYER_PID $VLC_PID $FFMPEG_PID $RTLFM_PID
 EOF
-#
-# Stream locally if user requested
-stream_local
 }
 
 stream_stop () {
@@ -126,9 +111,6 @@ $0 stop
 sleep 3
 # Stream new station
 $0 start $FMRADIO_STREAMER_STATION $FMRADIO_STREAMER_CLIENT_LOCATION
-#
-# Stream locally if user requested
-stream_local
 }
 
 

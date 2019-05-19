@@ -1,25 +1,8 @@
 #!/bin/sh
 # This script starts up an Internet stream
 #
-# Copyright (C) 2019-2020 Joseph Zikusooka.
-#
-# Contact me at: joseph AT zikusooka.com
+# Jambula Labs @copyright 2019-2020 All rights reserved
 
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-#
-#
 # Variables
 PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
@@ -124,24 +107,17 @@ get_webradio_url
 check_pulseaudio
 #
 # Stream web radio
- 
-
-
-
 PULSEAUDIO_USER=$MULTIMEDIA_USER && \
 	$MPLAYER_CMD -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 -loop 0 $WEBRADIO_STREAMER_URL > /dev/null &
-
-
-
 #
 # Pause a bit to allow radio to settle
 sleep 3
 #
-MPLAYER_PID=$(ps auxw | grep -Ev grep | grep mplayer | grep -E "(http|rtsp|rtmp)" | awk {'print $2'})
-VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep -E "(http|rtsp|rtmp)" | awk {'print $2'})
+# Add process ID (PID) numbers to temp file
+MPLAYER_PID=$(ps auxw | grep -Ev grep | grep mplayer | grep -E "(http|https|rtmp|rtsp)" | awk {'print $2'})
+VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep -E "(http|https|rtmp|rtsp)" | awk {'print $2'})
 FFMPEG_PID=$(ps auxw | grep -Ev grep | grep ffmpeg | grep "f s16le -ac 1 -i pipe:0 -acodec libmp3lame -ab 128k -f mpegts" | awk {'print $2'})
 #
-# Add PIDs for stopping processes
 cat > $WEBRADIO_STREAMER_PID_FILE <<EOF
 $MPLAYER_PID $VLC_PID $FFMPEG_PID
 EOF
