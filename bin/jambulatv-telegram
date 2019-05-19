@@ -13,6 +13,8 @@ TELEGRAM_METHOD_NAME=$1
 TELEGRAM_ARGUMENTS="$2"
 TELEGRAM_API_URL="https://api.telegram.org"
 
+ANOTHER_INSTANCE_TEMP_FILE=/tmp/telegram_processes_running
+
 FLEXGET_VARIABLES_FILE=/etc/JambulaTV/flexget/variables.yml
 
 # Source Telegram credentials
@@ -65,6 +67,49 @@ exit 1
 ;;
 esac
 fi
+}
+
+# Pre-start Tasks
+pre_start_tasks () {
+# Usage
+usage
+
+# Check connectivity to telegram servers
+check_internet_connectivity_ping 0 telegram.org
+
+# Test and see if filtering is going on i.e. ICMP ping requests were blocked 
+if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
+then
+# Source SSH server variables i.e. credentials
+[[ -e $REVERSE_SSH_CONFIG ]] && . $REVERSE_SSH_CONFIG
+#
+# Start a VPN tunnel using sshuttle
+vpn_connection_using_sshuttle start $MIDDLEMAN_SSH_SERVER $MIDDLEMAN_SSH_SERVER_PORT $MIDDLEMAN_SSH_SERVER_USER 0.0.0.0/0
+fi
+
+# Wait if another instance of me is running
+while [ -e "$ANOTHER_INSTANCE_TEMP_FILE" ];
+do
+logger -s -t $(basename $0) "Another Telegram instance is running, waiting a bit"
+sleep 10
+done
+#
+# Create temp file to prevent other Telegram instances from being started while
+# this one is in progress
+[[ -e "$ANOTHER_INSTANCE_TEMP_FILE" ]] || touch $ANOTHER_INSTANCE_TEMP_FILE
+}
+
+# Post-stop Tasks
+post_clean_up_tasks () {
+# Test and see if filtering is going on i.e. ICMP ping requests were blocked 
+if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
+then
+# Stop VPN tunnel using sshuttle
+vpn_connection_using_sshuttle stop
+fi
+
+# Remove temp instance file
+[[ -e "$ANOTHER_INSTANCE_TEMP_FILE" ]] && rm -f $ANOTHER_INSTANCE_TEMP_FILE
 }
 
 # Chat ID
@@ -215,9 +260,9 @@ echo
 #  MAIN SCRIPT  #
 #################
 
-usage
+trap post_clean_up_tasks EXIT
 
-check_internet_connectivity_ping 0 telegram.com
+pre_start_tasks
 
 case $TELEGRAM_METHOD_NAME in
 [Ss][Ee][Nn][Dd][Mm][Ee][Ss][Ss][Aa][Gg][Ee])
