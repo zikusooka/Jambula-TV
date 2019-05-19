@@ -450,6 +450,8 @@ EOF
 #  MAIN SCRIPT  #
 #################
 
+trap post_clean_up_tasks EXIT
+
 start_logging
 
 pre_start_tasks
@@ -477,5 +479,3 @@ echo "Usage:  ./`basename $0` [register]|[sendMessage]|[sendImage][sendVideo]
 exit 1
 ;;
 esac
-
-post_clean_up_tasks
