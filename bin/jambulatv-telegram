@@ -1,4 +1,8 @@
 #!/bin/sh
+# This tool is used to send and receive messages using Telegram
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+
 # Variables
 PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
@@ -12,7 +16,7 @@ TELEGRAM_TOOL=$0
 TELEGRAM_METHOD_NAME=$1
 TELEGRAM_ARGUMENTS="$2"
 TELEGRAM_API_URL="https://api.telegram.org"
-
+TELEGRAM_LOG_FILE=/var/log/JambulaTV/telegram.log
 ANOTHER_INSTANCE_TEMP_FILE=/tmp/telegram_processes_running
 
 FLEXGET_VARIABLES_FILE=/etc/JambulaTV/flexget/variables.yml
@@ -20,9 +24,25 @@ FLEXGET_VARIABLES_FILE=/etc/JambulaTV/flexget/variables.yml
 # Source Telegram credentials
 [ -e $TELEGRAM_CREDENTIALS_CONFIG ] && . $TELEGRAM_CREDENTIALS_CONFIG
 
-# Functions
-# ---------
-#
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+start_logging () {
+# If it already exists, make log file writeable by all
+[[ -e $TELEGRAM_LOG_FILE ]] && sudo chmod a+w $TELEGRAM_LOG_FILE
+# Start logging
+cat >> $TELEGRAM_LOG_FILE <<EOF
+
+------------------------------------
+Date:  $(date)
+------------------------------------
+EOF
+exec 2>> $TELEGRAM_LOG_FILE
+}
+
 usage () {
 clear
 if [ "x$TELEGRAM_METHOD_NAME" = "x" ];
@@ -91,7 +111,7 @@ fi
 while [ -e "$ANOTHER_INSTANCE_TEMP_FILE" ];
 do
 logger -s -t $(basename $0) "Another Telegram instance is running, waiting a bit"
-sleep 10
+sleep 5
 done
 #
 # Create temp file to prevent other Telegram instances from being started while
@@ -261,6 +281,8 @@ echo
 #################
 
 trap post_clean_up_tasks EXIT
+
+start_logging
 
 pre_start_tasks
 
