@@ -20,6 +20,7 @@ COUNTRY_MCC_MNC_RAW_FILE=/tmp/mcc_mnc_raw.csv
 WHATSAPP_TOOL=/usr/bin/jambulatv-whatsapp
 WHATSAPP_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-whatsapp.cfg
 WHATSAPP_CMD=$(which yowsup-cli)
+WHATSAPP_CONFIG_DIR=${HOME}/.config/yowsup
 WHATSAPP_LOG_FILE=/var/log/JambulaTV/whatsapp.log
 WHATSAPP_METHOD_NAME=$1
 WHATSAPP_TEXT_MESSAGE="$2"
@@ -32,8 +33,6 @@ PING_IP_ADDRESS=$DNS_SERVER_IP_ADDRESS_DEFAULT
 
 ANOTHER_INSTANCE_TEMP_FILE=/tmp/whatapp_processes_running
 
-YOWSUP_CONFIG_DIR=${HOME}/.yowsup 
-
 
 
 ###############
@@ -41,8 +40,8 @@ YOWSUP_CONFIG_DIR=${HOME}/.yowsup
 ###############
 
 start_logging () {
-# Make log file writeable by all
-sudo chmod a+w $WHATSAPP_LOG_FILE
+# If it already exists, make log file writeable by all
+[[ -e $WHATSAPP_LOG_FILE ]] && sudo chmod a+w $WHATSAPP_LOG_FILE
 # Start logging
 cat >> $WHATSAPP_LOG_FILE <<EOF
 
@@ -137,7 +136,7 @@ fi
 while [ -e "$ANOTHER_INSTANCE_TEMP_FILE" ];
 do
 logger -s -t $(basename $0) "Another WhatsApp instance is running, waiting a bit"
-sleep 10
+sleep 5
 done
 #
 # Create temp file to prevent other WhatsApp instances from being started while
@@ -161,21 +160,16 @@ registration_status () {
 # Source settings file
 [ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
 # Check if already registered
-if [ "x$WHATSAPP_ENCRYPTED_PASSWORD" != "x" ] && [ "x$WHATSAPP_REGISTRATION_CODE" != "x" ];
+if [[ -s $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json ]];
 then
 clear
 echo "
 Hey there! It looks like you already registered.  If you want to re-register, please remove the following file and run this script again.
 
-[$WHATSAPP_CREDENTIALS_CONFIG]
+[$WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json]
 
 "
 exit 0
-
-else
-# Backup i.e. move previous yowsup config file
-[[ -d ${YOWSUP_CONFIG_DIR} ]] && \
-	mv -v ${YOWSUP_CONFIG_DIR} ${YOWSUP_CONFIG_DIR}.$(date +%s)
 fi
 }
 
@@ -246,7 +240,7 @@ extract_country_info
 extract_network_info
 
 # Source settings file
-. $WHATSAPP_CREDENTIALS_CONFIG
+[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
 #
 # Ask for receiving phone number
 clear
@@ -304,7 +298,7 @@ MOBILE_NETWORK_CODE=$MOBILE_NETWORK_CODE
 EOF
 
 # Request for PIN code using SMS
-$WHATSAPP_CMD registration -d -E android -m $MOBILE_COUNTRY_CODE -n $MOBILE_NETWORK_CODE -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -r $WHATSAPP_REGISTRATION_METHOD 2>&1 | grep -Ei "(status: b'fail'|status: fail)"
+$WHATSAPP_CMD registration --debug --requestcode $WHATSAPP_REGISTRATION_METHOD --config-phone $WHATSAPP_PHONE_NUMBER_SENDER --config-cc $TELEPHONE_COUNTRY_CODE --config-mcc $MOBILE_COUNTRY_CODE --config-mnc $MOBILE_NETWORK_CODE 2>&1 | grep -Ei "(status: b'fail'|status: fail)"
 REQUEST_CODE_STATUS=$?
 if [[ "$REQUEST_CODE_STATUS" = "0" ]];
 then
@@ -318,28 +312,38 @@ fi
 
 registration_confirm () {
 # Source settings file
-. $WHATSAPP_CREDENTIALS_CONFIG
+[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
 #
 # Check if request for PIN Code was made
 if [ "x$WHATSAPP_REGISTRATION_CODE" = "x" ];
 then
 clear;
-echo "Error:  Please register this device for whatsapp first before you can confirm"
+cat <<ET
+Error:  Please request whatsapp code that will be used to confirm your
+registration
+
+ET
 exit 1
 fi
 # Confirm using sent PIN code
-$WHATSAPP_CMD registration -d -E android -p $WHATSAPP_PHONE_NUMBER_SENDER -C $TELEPHONE_COUNTRY_CODE -R $WHATSAPP_REGISTRATION_CODE
+$WHATSAPP_CMD registration --debug --register $WHATSAPP_REGISTRATION_CODE --config-phone $WHATSAPP_PHONE_NUMBER_SENDER
 }
 
 send_pre_check () {
 # Source settings file
-. $WHATSAPP_CREDENTIALS_CONFIG
-
-# Check if registration was done
-if [ "x$WHATSAPP_ENCRYPTED_PASSWORD" = "x" ];
+[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+#
+# Get whatsapp registered ID if available
+WHATSAPP_REGISTERED_ID=$([[ $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json ]] && jq -r .id $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json)
+#
+# Quit if device is not yet registered
+if [[ "x$WHATSAPP_REGISTERED_ID" = "x" ]];
 then
-clear;
-echo "Error:  Please register this device for whatsapp first before you can send"
+clear
+cat <<ET
+Error:  Please register this device for whatsapp first before you can send
+
+ET
 exit 1
 fi
 }
@@ -352,7 +356,7 @@ send_pre_check
 [[ "x$2" = "x" ]] || WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
 
 # Send message to Whatsapp recipient
-$WHATSAPP_CMD demos -d -L $WHATSAPP_LOG_FILE -l "$WHATSAPP_PHONE_NUMBER_SENDER:$WHATSAPP_ENCRYPTED_PASSWORD" -s $WHATSAPP_PHONE_NUMBER_RECIPIENT "$WHATSAPP_TEXT_MESSAGE"
+$WHATSAPP_CMD demos --debug --config $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json --send $WHATSAPP_PHONE_NUMBER_RECIPIENT "$WHATSAPP_TEXT_MESSAGE"
 }
 
 send_attachment () {
@@ -394,7 +398,7 @@ esac
 
 # Send image to Whatsapp recipient
 /usr/bin/expect -c "
-spawn $WHATSAPP_CMD demos -y -d -L $WHATSAPP_LOG_FILE -l \"$WHATSAPP_PHONE_NUMBER_SENDER:$WHATSAPP_ENCRYPTED_PASSWORD\"; 
+spawn $WHATSAPP_CMD demos -y --debug --config $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json; 
 expect \[offline\];
 
 # Connect/ Quick login
@@ -430,18 +434,6 @@ WHATSAPP_REGISTRATION_CODE=$PIN_CODE
 EOF
 #
 registration_confirm
-#
-# Ask for Password received
-echo
-echo ----------------------------------------------------------------
-echo
-read -p "Your password is shown above (the part that starts with 'pw:'), please Copy/Enter it here now:
-
-" PASSWORD
-# Copy password to settings file
-cat >> $WHATSAPP_CREDENTIALS_CONFIG << EOF
-WHATSAPP_ENCRYPTED_PASSWORD="$PASSWORD"
-EOF
 }
 
 
