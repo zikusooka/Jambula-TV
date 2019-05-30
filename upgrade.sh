@@ -290,8 +290,8 @@ squid_configure
 upgrade_yowsup () {
 uninstall_python_pkgs yowsup
 uninstall_python_pkgs yowsup-cli
-#yowsup2_install 
-yowsup2_python3_install
+yowsup3_python2_install 
+#yowsup2_python3_install
 }
 
 upgrade_netdata () {

@@ -511,6 +511,10 @@ OPENRESOLV_VERSION=3.5.7
 BEEP2_VERSION=1.2a
 GDATA_VERSION=2.0.17
 
+PYTHON_SETUPTOOLS_VERSION=41.0.1
+PYTHON_SETUPTOOLS_SCM_VERSION=3.3.3
+PYTHON_CONSONANCE_VERSION=0.1.3
+
 BUILD_LOG=$HOME/$PROJECT_NAME-build.log
 BEEP_CMD=beep 
 
@@ -3259,6 +3263,54 @@ cd $INSTALL_SRC_DIR/expat
 ./buildconf.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR --with-libbsd
 make_install_jambulatv
+}
+
+python_setuptools_install () {
+# Remove python-setuptools RPM based package if installed
+rpm -q python-setuptools > /dev/null 2>&1 && rpm -e --nodeps python-setuptools
+#
+# Set version
+PYTHON_SETUPTOOLS_VERSION=$1
+#
+# Unpack
+unzip -d $INSTALL_SRC_DIR $PROJECT_PIPS_DIR/setuptools-$PYTHON_SETUPTOOLS_VERSION.zip
+# Rename sources dir
+cd $INSTALL_SRC_DIR && mv -v setuptools* setuptools
+#
+# Install
+cd $INSTALL_SRC_DIR/setuptools
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+}
+
+python_setuptools_scm_install () {
+# Remove python-setuptools_scm RPM based package if installed
+rpm -q python-setuptools_scm > /dev/null 2>&1 && rpm -e --nodeps python-setuptools_scm
+#
+# Set version
+PYTHON_SETUPTOOLS_SCM_VERSION=$1
+#
+# Unpack
+tar zxvf $PROJECT_PIPS_DIR/setuptools_scm-$PYTHON_SETUPTOOLS_SCM_VERSION.tar.gz -C $INSTALL_SRC_DIR 
+# Rename sources dir
+cd $INSTALL_SRC_DIR && mv -v setuptools_scm* setuptools_scm
+#
+# Install
+cd $INSTALL_SRC_DIR/setuptools_scm
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+}
+
+python_consonance_install () {
+# Set version
+PYTHON_CONSONANCE_VERSION=$1
+#
+# Unpack
+tar zxvf $PROJECT_PIPS_DIR/consonance-$PYTHON_CONSONANCE_VERSION.tar.gz -C $INSTALL_SRC_DIR 
+# Rename sources dir
+cd $INSTALL_SRC_DIR && mv -v consonance* consonance
+#
+# Install
+cd $INSTALL_SRC_DIR/consonance
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 python3_pip_install () {
@@ -8593,60 +8645,37 @@ EOF
 [ -x $TELEGRAM_TOOL ] || chmod 755 $TELEGRAM_TOOL
 }
 
-yowsup2_deps_install () {
+yowsup3_deps_install () {
 PYTHON_VERSION_USED=2 && set_python_version
-for PYTHON_MODULE in \
-protobuf \
-python-axolotl-curve25519 \
-pycrypto \
-python-axolotl
-do
-# Set module's package filename & strip version from it
-MODULE_PKG=$(basename $(ls $PROJECT_TARBALLS_DIR/$PYTHON_MODULE* | head -1))
-MODULE_VERS=$(echo $MODULE_PKG|sed "s:$PYTHON_MODULE-::g"|sed "s:.tar.gz::g"|sed "s:.tar.bz2::g"|sed "s:.zip::g")
-# Remove any existing modules
-[ ! -d $INSTALL_SRC_DIR/$PYTHON_MODULE ] || rm -rf $INSTALL_SRC_DIR/$PYTHON_MODULE
-rm -rf $PYTHON_SITEDIR/$PYTHON_MODULE*
-# Install python module
-echo "Installing $PYTHON_MODULE ..."
-# Unpack using the appropriate tool for archive file format
-# gzip
-[ -e $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*gz ] && \
-   tar zxvf $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*gz -C $INSTALL_SRC_DIR
-# bz2
-[ -e $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*bz2 ] && \
-   tar jxvf $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*bz2 -C $INSTALL_SRC_DIR
-# zip
-[ -e $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*zip ] && \
-   unzip -d $INSTALL_SRC_DIR $PROJECT_TARBALLS_DIR/$PYTHON_MODULE-$MODULE_VERS*zip
-# Rename sources dir
-cd $INSTALL_SRC_DIR && mv -v *$PYTHON_MODULE-$MODULE_VERS* $PYTHON_MODULE
-# Install
-cd $INSTALL_SRC_DIR/$PYTHON_MODULE
-$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+
+# Install dependency python modules for Yowsup 3 using Python version 2
+# ---
+# setuptools
+python_setuptools_install $PYTHON_SETUPTOOLS_VERSION
+# setuptools_scm
+python_setuptools_scm_install $PYTHON_SETUPTOOLS_SCM_VERSION
 #
-# BUG: Change permissions on protobuf namespace_packages.txt file
-chmod 644 $PYTHON_SITEDIR/protobuf-*.egg/EGG-INFO/namespace_packages.txt
-# 
-#
-echo
-echo
-echo 
-echo "Did python module [$PYTHON_MODULE] install correctly?"
-echo 
-#_install_pause_check_4_errors_ [$PYTHON_MODULE] install
-echo
-#
-done
+pip-python --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/yowsup3-python2-requirements.txt
+# consonance
+python_consonance_install $PYTHON_CONSONANCE_VERSION
 }
 
-yowsup2_install () {
+yowsup3_python2_install () {
 PYTHON_VERSION_USED=2 && set_python_version
-yowsup2_deps_install
-#
+
+# Install yowsup python dependency modules using requirements file
+yowsup3_deps_install
+
+# Copy yowsup sources to install directory
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup/ $INSTALL_SRC_DIR/yowsup/
-# Patch env_android
-patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/env/env_android.py < $PROJECT_PATCHES_DIR/yowsup.env.android.patch
+#
+# Patch iq_keys_get_result.py
+patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/layers/axolotl/protocolentities/iq_keys_get_result.py < $PROJECT_PATCHES_DIR/yowsup.iq_keys_get_result.patch
+# Patch setup.py - remove strict dependencies
+patch -p1 $INSTALL_SRC_DIR/yowsup/setup.py < $PROJECT_PATCHES_DIR/yowsup.setup.py.patch
+# Patch env.py
+patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/env/env.py < $PROJECT_PATCHES_DIR/yowsup.env.py.patch
+#
 # Compile
 cd $INSTALL_SRC_DIR/yowsup
 $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
@@ -8654,11 +8683,12 @@ $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 
 yowsup2_python3_install () {
 PYTHON_VERSION_USED=3 && set_python_version
-# Dependencies for yowsup - Install locally using wheels specified in requirements
+
+# Install yowsup python dependency modules using requirements file
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/yowsup-requirements.txt
 #
-# Using yowsup github branch by AragurDEV
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup-AragurDEV/ $INSTALL_SRC_DIR/yowsup/
+# Copy yowsup sources to install directory
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup/ $INSTALL_SRC_DIR/yowsup/
 #
 # Patch env_android
 patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/env/env_android.py < $PROJECT_PATCHES_DIR/yowsup.env.android.patch

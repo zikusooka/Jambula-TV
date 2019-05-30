@@ -450,8 +450,8 @@ mosquitto_configure
 #sleekxmpp_install 
 python_telegram_bot_install
 telegram_messaging_configure
-yowsup2_python3_install
-
+yowsup3_python2_install 
+#yowsup2_python3_install
 whatsapp_messaging_configure
 
 # ---------------
