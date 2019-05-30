@@ -136,6 +136,10 @@ password $CHRONYC_PASSWD
 online
 EOF
 
+# JambulaTV: Restart HomeAssistant, so connection to online APIs occurs
+# ---------------------------------------------------------------------
+systemctl restart home-assistant.service
+
 # Update Youtube-DL: Critical in Youtube-based Live TV streams
 # ------------------------------------------------------------
 update_youtube_dl > /dev/null 2>&1
