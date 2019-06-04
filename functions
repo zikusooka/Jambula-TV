@@ -1537,6 +1537,24 @@ fi
 fi
 }
 
+lock_process_instance () {
+PROCESS_INSTANCE_LOCK_FILE=$TMPDIR/$1_process_instance.lock
+# Create lock file for this process instance
+exec {lock_fd}>$PROCESS_INSTANCE_LOCK_FILE 
+flock -n "$lock_fd" 
+PROCESS_INSTANCE_LOCK_STATUS=$?
+# Wait for running process instance lock file to clear
+while [[ "$PROCESS_INSTANCE_LOCK_STATUS" != 0 ]]; 
+do
+# Notification - another instance is running
+logger -s -t $(basename $0) "Another instance of this tool is running. Will proceed shortly after it completes ..."
+sleep 5
+# Check process instance lock status again
+flock -n "$lock_fd" 
+PROCESS_INSTANCE_LOCK_STATUS=$?
+done
+}
+
 download_asterisk_deps () {
 # Download updated asterisk sounds
 # ---------------------------------
