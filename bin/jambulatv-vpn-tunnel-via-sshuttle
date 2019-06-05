@@ -1,0 +1,108 @@
+#!/bin/sh
+# This tool is used to create (and later destroy) a temporary and 
+# secure SSH based VPN tunnel on the fly. Useful in situations where 
+# Internet restrictions and censorship are in place e.g. Governments 
+# blocking access to social media sites like WhatsApp and Telegram
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+# sshuttle
+SSHUTTLE_ACTION=$1
+SSHUTTLE_REMOTE_SERVER=$2
+SSHUTTLE_REMOTE_PORT=$3
+SSHUTTLE_REMOTE_USER=$4
+SSHUTTLE_REMOTE_SUBNET=$5
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage () {
+if [[ "x$SSHUTTLE_ACTION" = "x" ]];
+then
+clear
+cat <<ET
+Usage:	$(basename $0) [start|stop]
+
+ET
+exit 1
+
+elif [[ "$SSHUTTLE_ACTION" = "start" ]] && \
+[[ \
+"x$SSHUTTLE_REMOTE_SERVER" = "x" || \
+"x$SSHUTTLE_REMOTE_PORT" = "x" || \
+"x$SSHUTTLE_REMOTE_USER" = "x" || \
+"x$SSHUTTLE_REMOTE_SUBNET" = "x" \
+]];
+then
+clear
+cat <<ET
+Usage:	$(basename $0) $SSHUTTLE_ACTION [REMOTE_SSH_SERVER] [REMOTE_SSH_SERVER_PORT] [REMOTE_SSH_SERVER_USER] [REMOTE_SSH_SERVER_SUBNET]
+
+e.g. $(basename $0) $SSHUTTLE_ACTION remote1.jambulatv.com 222 USER1 0.0.0.0/0
+
+ET
+exit 1
+fi
+}
+
+vpn_connection_using_sshuttle () {
+case $SSHUTTLE_ACTION in
+
+start)
+# Lock sshuttle process instance so only one is running
+lock_process_instance sshuttle
+
+# Connect to remote SSH server using sshuttle
+$SSHUTTLE_CMD $SSHUTTLE_OPTS $SSHUTTLE_REMOTE_USER@$SSHUTTLE_REMOTE_SERVER:$SSHUTTLE_REMOTE_PORT $SSHUTTLE_REMOTE_SUBNET
+
+# Pause to allow new IP address to be setup
+sleep 3
+# Notify that VPN tunnel has been established
+# ---
+# Get name of VPN provider
+VPN_ISP=$($CURL_CMD $CURL_OPTS ipinfo.io/org | awk '{$1=""; print $0}' | sed 's/^ //')
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE" osd &
+;;
+
+stop)
+# Stop current sshuttle tunnel process
+[[ -e $SSHUTTLE_PID_FILE ]] && kill -15 $(cat $SSHUTTLE_PID_FILE)
+
+# Notify that VPN tunnel has been closed
+# ---
+# Get name of our local provider
+LOCAL_ISP=$($CURL_CMD $CURL_OPTS ipinfo.io/org | awk '{$1=""; print $0}' | sed 's/^ //')
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE" osd &
+;;
+esac
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+usage
+
+vpn_connection_using_sshuttle

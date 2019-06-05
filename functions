@@ -1167,6 +1167,7 @@ VLM_VOD_CREATE_TOOL=$BINARY_PREFIX/jambulatv-create-video-on-demand
 VLM_VOD_DELETE_TOOL=$BINARY_PREFIX/jambulatv-delete-video-on-demand
 WHATSAPP_TOOL=$BINARY_PREFIX/jambulatv-whatsapp
 XMPP_TOOL=$BINARY_PREFIX/jambulatv-xmpp
+VPN_TUNNEL_SSHUTTLE_TOOL=$BINARY_PREFIX/jambulatv-vpn-tunnel-via-sshuttle
 ZMEVENTSERVER_NOTIFICATION_DAEMON=$BINARY_PREFIX/zmeventnotification.pl
 ZONEMINDER_ALARM_NOTIFICATIONS_TOOL=$BINARY_PREFIX/jambulatv-zm-alarm-all-notifications 
 ZONEMINDER_ALARM_DAEMON=$BINARY_PREFIX/zmalarm_daemon.pl
@@ -1228,8 +1229,8 @@ set_notifications () {
 NO_INTERNET_NOTIFICATION_MESSAGE="Error: You are not connected to the Internet. Please check your router and try again later!"
 HOST_NOT_REACHEABLE_NOTIFICATION_MESSAGE="Error: The host $REMOTE_HOST_NAME is unreachable and may currently be down, please try again later!"
 HOST_IS_BLOCKED_NOTIFICATION_MESSAGE="Warning: Internet traffic to $REMOTE_HOST_NAME is being filtered either by your ISP or the remote server. Expect a degradation in this service."
-VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE="Alert: A secure VPN tunnel has been opened, re-routing all traffic through new connection"
-VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE="Alert: The VPN tunnel has been closed, re-routing all traffic back to default connection"
+VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE="Alert: A secure VPN tunnel has been opened, re-routing all traffic through new connection [$VPN_ISP]"
+VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE="Alert: The VPN tunnel has been closed, re-routing all traffic back to default connection [$LOCAL_ISP]"
 FTP_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 WGET_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 TVHEADEND_RESET_MESSAGE="Reset of TV server has been requested"
@@ -7773,6 +7774,14 @@ cd $INSTALL_SRC_DIR/sshuttle
 $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 # Create symbolic link in /usr/bin
 [ -x $BINARY_PREFIX/sshuttle ] || ln -s $PREFIX/local/bin/sshuttle $BINARY_PREFIX/sshuttle
+}
+
+vpn_tunnel_sshuttle_setup () {
+# Copy jambulatv-vpn-tunnel-via-sshuttle script, if it does not exist 
+# in bin directory
+[ -e $VPN_TUNNEL_SSHUTTLE_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-vpn-tunnel-via-sshuttle $VPN_TUNNEL_SSHUTTLE_TOOL
+# Make script executable
+chmod 755 $VPN_TUNNEL_SSHUTTLE_TOOL
 }
 
 cutter_install () {

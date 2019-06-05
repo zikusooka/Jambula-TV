@@ -298,6 +298,7 @@ google_sms_setup
 sms_tool_setup
 reverse_ssh_configure
 sshuttle_install
+vpn_tunnel_sshuttle_setup
 rtl_sdr_install
 fm_radio_streamer_setup
 internet_radio_streamer_setup 
