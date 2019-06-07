@@ -40,9 +40,9 @@ THIS_YEAR=$(date +%Y)
 THIS_MONTH_NAME_FULL=$(date +%B)
 THIS_MONTH_DIGIT=$(date +%m)
 
-DATE_DIGIT_AFTER_TOMORROW=$(date --date='2 day' +'%e')
-DATE_DIGIT_TOMORROW=$(date --date='1 day' +'%e')
-DATE_DIGIT_TODAY=$(date +'%e')
+DATE_DIGIT_AFTER_TOMORROW=$(date --date='2 day' +'%-d')
+DATE_DIGIT_TOMORROW=$(date --date='1 day' +'%-d')
+DATE_DIGIT_TODAY=$(date +'%-d')
 
 # UMEME outage files
 UMEME_OUTAGES_PLANNED_FILE=/tmp/UMEME-planned-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}.json
