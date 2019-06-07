@@ -6,7 +6,7 @@
 # Jambula Labs @copyright 2019-2020 All rights reserved
 #
 # Source global settings
-PROJECT_NAME=JambulaTV
+PROJECT_NAME=MY_PROJECT_NAME
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
 PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 . $PROJECT_GLOBAL_SETTINGS_FILE
@@ -24,11 +24,13 @@ CHRONYC_CMD=/usr/bin/chronyc
 CHRONY_KEYS_FILE=/etc/chrony.keys
 CHRONYC_PASSWD=`awk {'print $2'} $CHRONY_KEYS_FILE`
 HTTP_USER_AGENT="MY_USER_AGENT"
-MULTIMEDIA_USER=jambula
+MULTIMEDIA_USER=MY_MULTIMEDIA_USER
 
-SOUNDS_TOOL=/usr/bin/jambulatv-sounds
-SPEED_TEST_TOOL=/usr/bin/jambulatv-speed-test
-GEOLOCATION_TOOL=/usr/bin/jambulatv-whereami
+SOUNDS_TOOL=MY_SOUNDS_TOOL
+INTERNET_SPEED_TOOL=MY_INTERNET_SPEED_TOOL
+GEOLOCATION_TOOL=MY_GEOLOCATION_TOOL
+REVERSE_SSH_TOOL=MY_REVERSE_SSH_TOOL
+COOVA_CHILLI_TOOL=MY_COOVA_CHILLI_TOOL
 
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
 
@@ -76,6 +78,59 @@ sed -i "/name_servers=127.0.0.1/a name_servers_append=\"$SECONDARY_DNS_SERVER $T
 /usr/sbin/resolvconf -u
 }
 
+update_clock_time () {
+$CHRONYC_CMD <<EOF
+password $CHRONYC_PASSWD
+$1
+EOF
+}
+
+send_telegram_messages_spooled () {
+# If telegram spool directory exists, process queue as follows
+if [[ -d $TELEGRAM_SPOOL_DIR ]];
+then
+for MESSAGE in $(ls -x $TELEGRAM_SPOOL_DIR);
+do
+# If file is > 1 day, assume that message is now stale and delete it
+AGE_OF_MESSAGE=$(date -d "now - $(stat -c "%Y" $TELEGRAM_SPOOL_DIR/$MESSAGE) seconds" +%s)
+	if [[ "$AGE_OF_MESSAGE" -gt "86400" ]];
+  	then
+  	rm -f $TELEGRAM_SPOOL_DIR/$MESSAGE
+  	break
+
+	else
+	# Send message
+	sh $TELEGRAM_SPOOL_DIR/$MESSAGE
+	# Remove spool file
+	rm -f $TELEGRAM_SPOOL_DIR/$MESSAGE
+	fi
+done
+fi
+}
+
+send_whatsapp_messages_spooled () {
+# If whatsapp spool directory exists, process queue as follows
+if [[ -d $WHATSAPP_SPOOL_DIR ]];
+then
+for MESSAGE in $(ls -x $WHATSAPP_SPOOL_DIR);
+do
+# If file is > 1 day, assume that message is now stale and delete it
+AGE_OF_MESSAGE=$(date -d "now - $(stat -c "%Y" $WHATSAPP_SPOOL_DIR/$MESSAGE) seconds" +%s)
+	if [[ "$AGE_OF_MESSAGE" -gt "86400" ]];
+  	then
+  	rm -f $WHATSAPP_SPOOL_DIR/$MESSAGE
+  	break
+
+	else
+	# Send message
+	sh $WHATSAPP_SPOOL_DIR/$MESSAGE
+	# Remove spool file
+	rm -f $WHATSAPP_SPOOL_DIR/$MESSAGE
+	fi
+done
+fi
+}
+
 update_youtube_dl () {
 $YOUTUBE_DL_CMD -U | grep -i 'Updated youtube-dl' > /dev/null 2>&1
 YOUTUBE_DL_UPDATED=$?
@@ -96,7 +151,7 @@ UPDATES_STATUS=$?
 }
 
 reverse_ssh_tunnel () {
-sudo /usr/bin/jambulatv-reverse-ssh-tunnel
+sudo $REVERSE_SSH_TOOL
 }
 
 
@@ -131,10 +186,7 @@ sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=off:g" $COOVA_CONFIG_FIL
 
 # Take chrony on-line: Update clock time
 # --------------------------------------
-$CHRONYC_CMD <<EOF
-password $CHRONYC_PASSWD
-online
-EOF
+update_clock_time online
 
 # JambulaTV: Restart HomeAssistant, so connection to online APIs occurs
 # ---------------------------------------------------------------------
@@ -154,7 +206,7 @@ update_youtube_dl > /dev/null 2>&1
 
 # Test Internet speed
 # -------------------
-[ -x $SPEED_TEST_TOOL ] && $SPEED_TEST_TOOL
+[ -x $INTERNET_SPEED_TOOL ] && $INTERNET_SPEED_TOOL
 
 # JambulaTV: Check for available updates
 # --------------------------------------
@@ -164,6 +216,13 @@ check_4_updates
 # JambulaTV: Create a reverse SSH tunnel for remote connection when Internet is UP
 # --------------------------------------------------------------------------------
 reverse_ssh_tunnel
+
+# Clear instant messaging queues i.e. messages waiting in spool dir
+# -----------------------------------------------------------------
+# WhatsApp
+send_whatsapp_messages_spooled
+# Telegram
+send_telegram_messages_spooled
 
 
 
@@ -199,10 +258,7 @@ sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=on:g" $COOVA_CONFIG_FILE
 
 # Take chrony off-line
 # --------------------
-$CHRONYC_CMD <<EOF
-password $CHRONYC_PASSWD
-offline
-EOF
+update_clock_time offline
 
 # Sound alert beep
 # ----------------
@@ -234,7 +290,7 @@ fi
 # Run processes whenever there's a change in status i.e. UP or DOWN
 ###################################################################
 # 1) Restart coova-chilli in order to change default gateway device and DNS settings
-sudo /usr/bin/jambulatv-chilli restart
+sudo $COOVA_CHILLI_TOOL restart
 #
 # 2) Restart wireless access point: hostapd
 #systemctl restart hostapd
