@@ -1136,13 +1136,16 @@ BANDWIDTH_TOOL=$BINARY_PREFIX/jambulatv-bandwidth
 CALENDAR_EVENTS_TOOL=$BINARY_PREFIX/jambulatv-calendar-events
 CAMPLAYER_TOOL=$BINARY_PREFIX/jambulatv-camplayer
 CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
+COOVA_CHILLI_TOOL=$BINARY_PREFIX/jambulatv-chilli
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
 EPG_GENERIC_TVGUIDE_TOOL=$BINARY_PREFIX/jambulatv-tvguide-fta-generic
 FETCH_NEWS_TOOL=$BINARY_PREFIX/jambulatv-fetch-news
 FMRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-fm-radio-streamer
 WEBRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-internet-radio-streamer
 GENERATE_LOCAL_CONF_TOOL=$BINARY_PREFIX/jambulatv-generate-local-conf
+GEOLOCATION_TOOL=$BINARY_PREFIX/jambulatv-whereami
 INITIAL_SETUP_TOOL=$BINARY_PREFIX/jambulatv-initial-setup 
+INTERNET_SPEED_TOOL=$BINARY_PREFIX/jambulatv-speed-test
 KODI_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-kodi-controller 
 KODI_LIBRARY_TOOL=$BINARY_PREFIX/jambulatv-library
 KODI_STANDALONE_TOOL=$BINARY_PREFIX/kodi-standalone
@@ -1156,6 +1159,7 @@ PPP_DIAL_TOOL=$BINARY_PREFIX/jambulatv-ppp-dialer
 PRESENCE_DETECTION_VIA_MIFI_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-mifi
 PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-hostapd
 PRESENCE_DETECTION_VIA_TRACKER_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-trackerjacker
+REVERSE_SSH_TOOL=$BINARY_PREFIX/jambulatv-reverse-ssh-tunnel
 SCREEN_DISPLAY_TOOL=$BINARY_PREFIX/jambulatv-display
 SMS_TOOL=$BINARY_PREFIX/jambulatv-sms
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
@@ -7783,7 +7787,7 @@ REVERSE_SSH_NOTIFICATION_EMAIL=$REVERSE_SSH_NOTIFICATION_EMAIL
 EOF
 
 # Copy jambulatv-reverse-ssh-tunnel script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-reverse-ssh-tunnel ] || cp -v $PROJECT_BIN_DIR/jambulatv-reverse-ssh-tunnel $BINARY_PREFIX/
+[ -e $REVERSE_SSH_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-reverse-ssh-tunnel $REVERSE_SSH_TOOL
 
 # Display Reverse SSH's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
@@ -9296,7 +9300,7 @@ make_install_jambulatv
 
 coova_chilli_configure () {
 # Copy jambulatv-chilli script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-chilli ] || cp -v $PROJECT_BIN_DIR/jambulatv-chilli $BINARY_PREFIX/
+[ -e $COOVA_CHILLI_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-chilli $COOVA_CHILLI_TOOL
 
 # Modify chilli config file: UAM, radius passwords, etc...
 # *******************************************************
@@ -13429,16 +13433,16 @@ systemctl restart avahi-daemon.service
 
 geolocation_api () {
 # Add correct DB name, username and password credentials in geolocation-api tool
-[ -e $BINARY_PREFIX/jambulatv-whereami ] || \
+[ -e $GEOLOCATION_TOOL ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-whereami | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" | \
 		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" \
-			> $BINARY_PREFIX/jambulatv-whereami 
+			> $GEOLOCATION_TOOL 
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-whereami 
+chmod 755 $GEOLOCATION_TOOL 
 }
 
 weather_api () {
