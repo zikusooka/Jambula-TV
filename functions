@@ -1098,9 +1098,11 @@ JAMBULATV_UPDATES_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/updates
 
 # Telegram messaging
 TELEGRAM_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-telegram.cfg
+TELEGRAM_SPOOL_DIR=$SPOOLDIR/telegram
 
 # WhatsApp Info
 WHATSAPP_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-whatsapp.cfg
+WHATSAPP_SPOOL_DIR=$SPOOLDIR/whatsapp
 
 # Email messaging
 EMAIL_CREDENTIALS_CONFIG=$PROJECT_SYSTEM_CONF_DIR/messaging-email.cfg
@@ -1229,6 +1231,7 @@ set_notifications () {
 NO_INTERNET_NOTIFICATION_MESSAGE="Error: You are not connected to the Internet. Please check your router and try again later!"
 HOST_NOT_REACHEABLE_NOTIFICATION_MESSAGE="Error: The host $REMOTE_HOST_NAME is unreachable and may currently be down, please try again later!"
 HOST_IS_BLOCKED_NOTIFICATION_MESSAGE="Warning: Internet traffic to $REMOTE_HOST_NAME is being filtered either by your ISP or the remote server. Expect a degradation in this service."
+CRITICAL_JOB_SPOOLED_NOTIFICATION_MESSAGE="The requested job has been queued at $CRITICAL_JOBS_SPOOL_DIRECTORY/$$. It will be processed when the Internet becomes available"
 VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE="Alert: A secure VPN tunnel has been opened, re-routing all traffic through new connection [$VPN_ISP]"
 VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE="Alert: The VPN tunnel has been closed, re-routing all traffic back to default connection [$LOCAL_ISP]"
 FTP_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
@@ -1467,10 +1470,35 @@ INTERNET_STATUS_VAL=255
 fi
 }
 
+spool_critical_jobs_when_no_internet () {
+# Create spool directory if it does not exist
+[[ -d $CRITICAL_JOBS_SPOOL_DIRECTORY ]] || sudo mkdir -p $CRITICAL_JOBS_SPOOL_DIRECTORY
+# Give other apps permissions to spool directory
+sudo chmod -R 777 $CRITICAL_JOBS_SPOOL_DIRECTORY
+# Save run command and spool it for later processing
+[[ -d $CRITICAL_JOBS_SPOOL_DIRECTORY ]] && \
+cat > $CRITICAL_JOBS_SPOOL_DIRECTORY/$(date +%s) <<ET
+#!/bin/sh
+$CRITICAL_JOBS_SPOOL_COMMAND
+ET
+chmod 755 $CRITICAL_JOBS_SPOOL_DIRECTORY/$(date +%s)
+
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$CRITICAL_JOB_SPOOLED_NOTIFICATION_MESSAGE" text
+# Print to screen - above notices sent to file if logging is in effect
+cat <<ET
+$(basename $0): Job queued at: $CRITICAL_JOBS_SPOOL_DIRECTORY/$(date +%s)
+
+ET
+}
+
 check_internet_connectivity_ping () {
 DEFAULT_REMOTE_HOST_NAME_2_PING=$DNS_SERVER_IP_ADDRESS_DEFAULT # Use IP Address NOT DOMAIN NAME!!!
 PING_HOST_EXIT_STATUS_TO_BE_USED=$1
 PING_HOST_NAME=$2
+PING_FAIL_SPOOL=$3
 # Set exit value specified on command line
 if [[ "x$PING_HOST_EXIT_STATUS_TO_BE_USED" = "x" ]];
 then
@@ -1494,7 +1522,8 @@ INTERNET_IS_REACHEABLE=$?
 #
 if [[ "$INTERNET_IS_REACHEABLE" != "0" ]];
 then
-# 1. If there is NO Internet at all, notify and quit immediately
+# 1. If there is NO Internet at all, send to spool if applicable,
+# notify and quit immediately
 # ..............................................................
 # Source notification strings
 set_notifications
@@ -1502,6 +1531,10 @@ set_notifications
 print_notification "$NO_INTERNET_NOTIFICATION_MESSAGE" text
 # Print notification using OSD tool
 print_notification "$NO_INTERNET_NOTIFICATION_MESSAGE" osd
+#
+# Send critical jobs to spool if specified
+[[ "$PING_FAIL_SPOOL" = "spool" ]] && spool_critical_jobs_when_no_internet
+#
 # Quit script, since there's no internet
 exit $EXIT_VALUE
 fi
@@ -7615,6 +7648,10 @@ cat >> $PROJECT_GLOBAL_SETTINGS_FILE <<GLOBAL
 # IP address used by several tools to check for Internet connectivity
 PUBLIC_DNS_SERVERS="$PUBLIC_DNS_SERVERS"
 PING_IP_ADDRESS=$DNS_SERVER_IP_ADDRESS_DEFAULT
+
+# Spool directories for instant messaging apps
+TELEGRAM_SPOOL_DIR=$TELEGRAM_SPOOL_DIR
+WHATSAPP_SPOOL_DIR=$WHATSAPP_SPOOL_DIR
 GLOBAL
 #
 # Give multimedia user permissions to global settings
