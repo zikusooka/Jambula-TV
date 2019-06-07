@@ -1163,6 +1163,7 @@ REVERSE_SSH_TOOL=$BINARY_PREFIX/jambulatv-reverse-ssh-tunnel
 SCREEN_DISPLAY_TOOL=$BINARY_PREFIX/jambulatv-display
 SMS_TOOL=$BINARY_PREFIX/jambulatv-sms
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
+SPEAKER_VOLUME_TOOL=$BINARY_PREFIX/jambulatv-speaker-volume
 SYSINFO_TOOL=$BINARY_PREFIX/jambulatv-sysinfo
 TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
 TEXT2SPEECH_TOOL=$BINARY_PREFIX/jambulatv-text2speech
@@ -11620,6 +11621,7 @@ ${LIGHTS_TOOL##*/} \
 ${PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL##*/} \
 ${PRESENCE_DETECTION_VIA_MIFI_TOOL##*/} \
 ${PRESENCE_DETECTION_VIA_TRACKER_TOOL##*/} \
+${SPEAKER_VOLUME_TOOL##*/} \
 ${UMEME_OUTAGES_TOOL##*/}
 do
 # Copy script, if it does not exist in bin directory
