@@ -17,21 +17,20 @@ MCC_MNC_TABLE_FILE_URL=https://github.com/musalbas/mcc-mnc-table/raw/master/mcc-
 MCC_MNC_TABLE_FILE=/usr/share/JambulaTV/mobile_providers/mcc-mnc-table.csv
 COUNTRY_MCC_MNC_RAW_FILE=/tmp/mcc_mnc_raw.csv
 
-WHATSAPP_TOOL=/usr/bin/jambulatv-whatsapp
-WHATSAPP_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-whatsapp.cfg
 WHATSAPP_CMD=$(which yowsup-cli)
 WHATSAPP_CONFIG_DIR=${HOME}/.config/yowsup
-WHATSAPP_LOG_FILE=/var/log/JambulaTV/whatsapp.log
+WHATSAPP_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/whatsapp.log
 WHATSAPP_METHOD_NAME=$1
 WHATSAPP_TEXT_MESSAGE="$2"
 WHATSAPP_ATTACHMENT_FILE_PATH="$2"
 WHATSAPP_PHONE_NUMBER_RECIPIENT=$3
 WHATSAPP_REGISTRATION_METHOD=sms
 
+CRITICAL_JOBS_SPOOL_DIRECTORY=$WHATSAPP_SPOOL_DIR
+CRITICAL_JOBS_SPOOL_COMMAND="$WHATSAPP_TOOL $WHATSAPP_METHOD_NAME \"$WHATSAPP_TEXT_MESSAGE\""
+
 PING_TIMEOUT=3 #9
 PING_IP_ADDRESS=$DNS_SERVER_IP_ADDRESS_DEFAULT
-
-ANOTHER_INSTANCE_TEMP_FILE=/tmp/whatsapp_processes_running
 
 
 
@@ -120,7 +119,7 @@ pre_start_tasks () {
 usage
 
 # Check connectivity to WhatsApp servers
-check_internet_connectivity_ping 0 whatsapp.com
+check_internet_connectivity_ping 0 whatsapp.com spool
 
 # Test and see if filtering is going on i.e. ICMP ping requests were blocked 
 if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
@@ -129,19 +128,8 @@ then
 [[ -e $REVERSE_SSH_CONFIG ]] && . $REVERSE_SSH_CONFIG
 #
 # Start a VPN tunnel using sshuttle
-vpn_connection_using_sshuttle start $MIDDLEMAN_SSH_SERVER $MIDDLEMAN_SSH_SERVER_PORT $MIDDLEMAN_SSH_SERVER_USER 0.0.0.0/0
+$VPN_TUNNEL_SSHUTTLE_TOOL start $MIDDLEMAN_SSH_SERVER $MIDDLEMAN_SSH_SERVER_PORT $MIDDLEMAN_SSH_SERVER_USER 0.0.0.0/0
 fi
-
-# Wait if another instance of me is running
-while [ -e "$ANOTHER_INSTANCE_TEMP_FILE" ];
-do
-logger -s -t $(basename $0) "Another WhatsApp instance is running, waiting a bit"
-sleep 5
-done
-#
-# Create temp file to prevent other WhatsApp instances from being started while
-# this one is in progress
-[[ -e "$ANOTHER_INSTANCE_TEMP_FILE" ]] || touch $ANOTHER_INSTANCE_TEMP_FILE
 }
 
 post_clean_up_tasks () {
@@ -149,11 +137,8 @@ post_clean_up_tasks () {
 if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
 then
 # Stop VPN tunnel using sshuttle
-vpn_connection_using_sshuttle stop
+$VPN_TUNNEL_SSHUTTLE_TOOL stop
 fi
-
-# Remove temp instance file
-[[ -e "$ANOTHER_INSTANCE_TEMP_FILE" ]] && rm -f $ANOTHER_INSTANCE_TEMP_FILE
 }
 
 registration_status () {
@@ -441,6 +426,8 @@ registration_confirm
 #################
 #  MAIN SCRIPT  #
 #################
+
+lock_process_instance whatsapp
 
 trap post_clean_up_tasks EXIT
 
