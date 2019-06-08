@@ -1,6 +1,8 @@
 #!/bin/sh
 #
-# This is a general helper script used by other tools to generate sounds at certain points of processing
+# This is a general helper script used by other tools to generate 
+# sounds at certain points of processing
+#
 # Jambula Labs @copyright 2019-2020 All rights reserved
 
 # Variables
@@ -120,7 +122,6 @@ $BEEP_CMD -f 500 -l 155 -n -f 400 -l 155 -n -f 600 -l 155 -n -f 800 -l 155 -n -f
 
 offline)
 check_for_beep_command
-#$BEEP_CMD -f 330 -l 137 -n -f 330 -l 275 -n -f 330 -l 137 -d 137 -n -f 262 -l 137 -n -f 330 -l 275
 $BEEP_CMD -f 500 -n -f 500 -n -f 500 -n -f 500 -n -f 500 -n -f 500
 ;;
 
@@ -133,6 +134,11 @@ check_for_beep_command
 $BEEP_CMD -f 659 -l 460 -n -f 784 -l 340 -n -f 659 -l 230 -n -f 659 -l 110 -n -f 880 -l 230 -n -f 659 -l 230 -n -f 587 -l 230 -n -f 659 -l 460 -n -f 988 -l 340 -n -f 659 -l 230 -n -f 659 -l 110 -n -f 1047-l 230 -n -f 988 -l 230 -n -f 784 -l 230 -n -f 659 -l 230 -n -f 988 -l 230 -n -f 1318 -l 230 -n -f 659 -l 110 -n -f 587 -l 230 -n -f 587 -l 110 -n -f 494 -l 230 -n -f 740 -l 230 -n -f 659 -l 460
 ;;
 
+alarm)
+check_for_beep_command
+$BEEP_CMD -f 1000 -l 500 -n 200 -r 2
+;;
+
 start)
 check_for_beep_command
 $BEEP_CMD -f 65.4064 -l 100 -n -f 130.813 -l 100 -n -f 261.626 -l 100 -n -f 523.2
@@ -141,6 +147,11 @@ $BEEP_CMD -f 65.4064 -l 100 -n -f 130.813 -l 100 -n -f 261.626 -l 100 -n -f 523.
 stop)
 check_for_beep_command
 $BEEP_CMD -f 523.251 -l 100 -D 100 -n -f 391.995 -l 100 -D 100 -n -f 329.628 -l 10
+;;
+
+poweroff)
+check_for_beep_command
+$BEEP_CMD -f 330 -l 137 -n -f 330 -l 275 -n -f 330 -l 137 -d 137 -n -f 262 -l 137 -n -f 330 -l 275
 ;;
 
 misc)
