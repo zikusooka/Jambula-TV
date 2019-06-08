@@ -1178,6 +1178,7 @@ VPN_TUNNEL_SSHUTTLE_TOOL=$BINARY_PREFIX/jambulatv-vpn-tunnel-via-sshuttle
 ZMEVENTSERVER_NOTIFICATION_DAEMON=$BINARY_PREFIX/zmeventnotification.pl
 ZONEMINDER_ALARM_NOTIFICATIONS_TOOL=$BINARY_PREFIX/jambulatv-zm-alarm-all-notifications 
 ZONEMINDER_ALARM_DAEMON=$BINARY_PREFIX/zmalarm_daemon.pl
+ZONEMINDER_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-zoneminder-controller
 ZONEMINDER_ZMS_INETD_TOOL=$BINARY_PREFIX/jambulatv-zms-inetd
 
 # TTS/ASR
@@ -12087,6 +12088,14 @@ chown -R $WWW_USER:$WWW_GROUP $ZONEMINDER_CONFIG_DIR
 	chmod 644 $ZONEMINDER_CONFIG_DIR/zm.conf
 [[ -e $ZONEMINDER_CONFIG_DIR/conf.d/zmcustom.conf ]] && \
 	chmod 644 $ZONEMINDER_CONFIG_DIR/conf.d/zmcustom.conf
+
+# Copy jambulatv-zoneminder-controller script
+# -------------------------------------------
+[ -e $ZONEMINDER_CONTROLLER_TOOL ] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-zoneminder-controller \
+	$ZONEMINDER_CONTROLLER_TOOL
+# Make script executable
+chmod 755 $ZONEMINDER_CONTROLLER_TOOL
 
 # Setup utilities for Alarms
 # --------------------------
