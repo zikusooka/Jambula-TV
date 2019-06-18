@@ -296,6 +296,7 @@ email_via_gmail_setup
 gdata_install
 google_sms_setup
 sms_tool_setup
+twitter_client_setup
 reverse_ssh_configure
 sshuttle_install
 vpn_tunnel_sshuttle_setup

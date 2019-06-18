@@ -1,0 +1,10 @@
+--- /tmp/tweet.sh	2019-06-14 02:00:47.098605506 +0300
++++ /usr/bin/tweet.sh	2019-06-14 02:27:57.246806159 +0300
+@@ -1628,7 +1628,6 @@
+          --header \"$headers\" \
+          --data \"$params\" \
+          --silent \
+-         --http1.1 \
+          $debug_params \
+          $url"
+   fi

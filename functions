@@ -1167,8 +1167,8 @@ SPEAKER_VOLUME_TOOL=$BINARY_PREFIX/jambulatv-speaker-volume
 SYSINFO_TOOL=$BINARY_PREFIX/jambulatv-sysinfo
 TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
 TEXT2SPEECH_TOOL=$BINARY_PREFIX/jambulatv-text2speech
-TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controller 
-TVHEADEND_PROCESSOR_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-processor
+TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controllerTVHEADEND_PROCESSOR_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-processor
+TWITTER_TOOL=$BINARY_PREFIX/jambulatv-twitter
 UMEME_OUTAGES_TOOL=$BINARY_PREFIX/jambulatv-umeme-outages
 VLM_VOD_CREATE_TOOL=$BINARY_PREFIX/jambulatv-create-video-on-demand
 VLM_VOD_DELETE_TOOL=$BINARY_PREFIX/jambulatv-delete-video-on-demand
@@ -13083,6 +13083,25 @@ sms_tool_setup () {
 	cp -v $PROJECT_BIN_DIR/jambulatv-sms $BINARY_PREFIX
 # Make tool executable
 chmod 755 $SMS_TOOL
+}
+
+twitter_client_setup () {
+# Copy to binary path if non-existent
+if [[ ! -x $BINARY_PREFIX/tweet.sh ]];
+then
+cp -v $PROJECT_GITHUB_DIR/tweet.sh/tweet.sh $BINARY_PREFIX/
+# Make it executable
+chmod 755 $BINARY_PREFIX/tweet.sh
+# Patch binary and remove curl option http1.1 which is not available 
+# on older versions of curl
+patch -p1 $BINARY_PREFIX/tweet.sh < $PROJECT_PATCHES_DIR/tweet_sh.http1_1.patch
+#
+# Add our custom twitter search tool
+[[ -e $TWITTER_TOOL ]] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-twitter $TWITTER_TOOL
+# Make script executable
+chmod 755 $TWITTER_TOOL
+fi
 }
 
 vncserver_configure () {

@@ -1,0 +1,173 @@
+#!/bin/sh
+# This a wrapper tool for tweet.sh a command line and bash based 
+# Twitter client.  Use it to perform various tasks on a specified
+# Twitter account e.g. searches for keywords
+#
+# NOTE: The following Twitter API key, tokens, and secrets
+# are required. Sign up at https://apps.twitter.com/
+#
+# 		CONSUMER_KEY
+# 		CONSUMER_SECRET
+# 		ACCESS_TOKEN
+# 		ACCESS_TOKEN_SECRET
+# 
+# Jambula Labs @copyright 2019-2020 All rights reserved
+
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+TWITTER_CLIENT_CMD=/usr/bin/tweet.sh
+TWITTER_CLIENT_KEYS_FILE=$PROJECT_SYSTEM_CONF_DIR/twitter_client.key
+TWITTER_DATE=$(date +'%a %b %d')
+TWITTER_REPORTS_OUTPUT_FILE=$TMPDIR/twitter_reports_today
+
+TWITTER_VILLAGE_NAME=$1
+
+get_client_keys () {
+# Source Twitter client keys file if available
+if [[ -e $TWITTER_CLIENT_KEYS_FILE ]];
+then
+set -a
+source $TWITTER_CLIENT_KEYS_FILE
+set +a
+
+else
+clear
+cat <<ET
+The Twitter client keys file [$TWITTER_CLIENT_KEYS_FILE] is missing.
+
+Please set up your twitter keys there before proceeding as follows:
+
+MY_SCREEN_NAME=yourscreenname
+MY_LANGUAGE=en
+CONSUMER_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+CONSUMER_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxx
+ACCESS_TOKEN=123456-xxxxxxxxxxxxxxxxxxxxxx
+ACCESS_TOKEN_SECRET=xxxxxxxxxxxxxxxxxxxxxx
+
+ET
+exit 1
+fi
+}
+
+usage () {
+# CLI arguments
+clear
+if [ "x$TWITTER_VILLAGE_NAME" = "x" ];
+then
+echo "Usage:  ./`basename $0` [VILLAGE NAME]
+"
+exit 1
+fi
+}
+
+pre_start_tasks () {
+# Check connectivity to Twitter servers
+check_internet_connectivity_ping 0 twitter.com
+
+# Test and see if filtering is going on i.e. ICMP ping requests were blocked 
+if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
+then
+# Source SSH server variables i.e. credentials
+[[ -e $REVERSE_SSH_CONFIG ]] && . $REVERSE_SSH_CONFIG
+#
+# Start a VPN tunnel using sshuttle
+$VPN_TUNNEL_SSHUTTLE_TOOL start $MIDDLEMAN_SSH_SERVER $MIDDLEMAN_SSH_SERVER_PORT $MIDDLEMAN_SSH_SERVER_USER 0.0.0.0/0
+fi
+}
+
+post_clean_up_tasks () {
+# Test and see if filtering is going on i.e. ICMP ping requests were blocked 
+if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
+then
+# Stop VPN tunnel using sshuttle
+$VPN_TUNNEL_SSHUTTLE_TOOL stop
+fi
+}
+
+extract_newspaper_links () {
+# Daily monitor
+cat <<ET
+
+Daily Monitor (Uganda)
+ET
+$TWITTER_CLIENT_CMD search -q "DailyMonitor AND In+Daily+Monitor+Tomorrow..." | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
+# New Vision
+cat <<ET
+
+New Vision (Uganda)
+ET
+$TWITTER_CLIENT_CMD search -q "newvisionwire AND Get+the+details+in+New+Vision" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
+# RedPepper
+cat <<ET
+
+RedPepper (Uganda)
+ET
+$TWITTER_CLIENT_CMD search -q "RedPepperUG AND Edition OR On+The+Stall" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
+echo
+}
+
+# Water outage reports
+water_outage_reports () {
+$TWITTER_CLIENT_CMD search -q "Water AND $TWITTER_VILLAGE_NAME" | jq -r '.statuses[] | select(.created_at | contains("'"$TWITTER_DATE"'")) |.created_at,.text' | head -2
+echo
+}
+
+# Power outage reports
+power_outage_reports () {
+$TWITTER_CLIENT_CMD search -q "UmemeLtd AND $TWITTER_VILLAGE_NAME" | jq -r '.statuses[] | select(.created_at | contains("'"$TWITTER_DATE"'")) |.created_at,.text' | head -2
+echo
+}
+
+# Power outage alerts
+power_outage_alerts () {
+$TWITTER_CLIENT_CMD search -q "UmemeLtd AND OutageAlert" | jq -r '.statuses[] | select(.created_at | contains("'"$TWITTER_DATE"'")) |.created_at,.text' | head -2
+echo
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Source keys file
+get_client_keys
+
+# Usage
+usage
+
+# Post clean up tasks
+trap post_clean_up_tasks EXIT
+
+# Pre start tasks
+pre_start_tasks 
+
+# Create temp output file
+cat > $TWITTER_REPORTS_OUTPUT_FILE <<ET
+
+*NEWS PAPERS TODAY*
+$(extract_newspaper_links)
+
+
+*WATER REPORTS ($TWITTER_VILLAGE_NAME)*
+$(water_outage_reports)
+
+
+*POWER REPORTS ($TWITTER_VILLAGE_NAME)*
+$(power_outage_reports)
+
+
+*UMEME ALERTS (Everywhere)*
+$(power_outage_alerts)
+
+ET
+
+# Print output
+clear
+cat $TWITTER_REPORTS_OUTPUT_FILE
