@@ -69,7 +69,7 @@ check_if_root
 clear
 if [ "x$WHATSAPP_METHOD_NAME" = "x" ];
 then
-echo "Usage:  ./`basename $0` [register]|[sendMessage]|[sendImage][sendVideo]
+echo "Usage:  ./`basename $0` [register]|[sendMessage]|[sendFileContent]|[sendImage][sendVideo]
 "
 exit 1
 fi
@@ -82,6 +82,18 @@ case $WHATSAPP_METHOD_NAME in
 if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_TEXT_MESSAGE" = "x" ];
 then
 echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_TEXT_MESSAGE] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
+"
+exit 1
+fi
+;;
+
+[Ss][Ee][Nn][Dd][Ff][Ii][Ll][Ee][Cc][Oo][Nn][Tt][Ee][Nn][Tt])
+# Source settings file
+[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+# Test for blank message or recipient phone number
+if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_TEXT_MESSAGE" = "x" ];
+then
+echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [MESSAGE_FILE_PATH] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
 "
 exit 1
 fi
@@ -344,6 +356,20 @@ send_pre_check
 $WHATSAPP_CMD demos --debug --config $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json --send $WHATSAPP_PHONE_NUMBER_RECIPIENT "$WHATSAPP_TEXT_MESSAGE"
 }
 
+send_file_content () {
+# Pre-checks before sending
+send_pre_check
+
+# Where applicable, use recipient phone number specified on command line
+[[ "x$2" = "x" ]] || WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
+
+# Extract contents from file
+MESSAGE_FILE_PATH=$WHATSAPP_TEXT_MESSAGE
+FILE_CONTENTS=$(cat $MESSAGE_FILE_PATH)
+# Send file contents to Whatsapp recipient
+$WHATSAPP_CMD demos --debug --config $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json --send $WHATSAPP_PHONE_NUMBER_RECIPIENT "$FILE_CONTENTS"
+}
+
 send_attachment () {
 # Pre-checks before sending
 send_pre_check
@@ -444,6 +470,10 @@ register_4_whatsapp
 send_message "$2" "$3"
 ;;
 
+[Ss][Ee][Nn][Dd][Ff][Ii][Ll][Ee][Cc][Oo][Nn][Tt][Ee][Nn][Tt])
+send_file_content "$2" "$3"
+;;
+
 [Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee])
 send_attachment "$2" "$3"
 ;;
@@ -453,7 +483,7 @@ send_attachment "$2" "$3"
 ;;
 
 *)
-echo "Usage:  ./`basename $0` [register]|[sendMessage]|[sendImage][sendVideo]
+echo "Usage:  ./`basename $0` [register]|[sendMessage]|[sendFileContent]|[sendImage][sendVideo]
 "
 exit 1
 ;;
