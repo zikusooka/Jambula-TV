@@ -246,6 +246,10 @@ freeradius_test
 # DLNA/UPnP
 minidlna_install
 minidlna_configure
+# Install mopidy deps
+#mopidy_deps_install
+# Install mopidy
+#mopidy_install
 
 # VoD Streaming
 video_on_demand_configure

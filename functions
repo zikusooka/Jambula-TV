@@ -499,7 +499,6 @@ PYDVBSTREAMER_VERSION=0.1
 LIVEPAUSE_VERSION=1.1.1
 PYOSD_VERSION=0.2.14
 NODM_VERSION=0.7
-GSTREAMER_VERSION=1.1.3
 RYGEL_VERSION=0.19.4
 HEYU_VERSION=2.11-rc1
 LIBDBI_VERSION=0.9.0
@@ -2351,6 +2350,23 @@ CAUTION: Take care here - NextCloud data is about to be dropped !!!
 ====================================================================
 EOF
 mysqladmin -p$MYSQL_ROOT_PASSWORD drop $NEXTCLOUD_DB_NAME
+}
+
+uninstall_mopidy () {
+PYTHON_VERSION_USED=2 && set_python_version
+uninstall_python_pkgs mopidy
+}
+
+uninstall_mopidy_deps () {
+PYTHON_VERSION_USED=2 && set_python_version
+for DEP in \
+Pykka \
+tornado \
+singledispatch \
+backports_abc
+do
+uninstall_python_pkgs $DEP
+done
 }
 
 uninstall_gstreamer_plugins () {
@@ -9646,7 +9662,7 @@ chmod 755 $BINARY_PREFIX/jambulatv-youtube
 }
 
 gstreamer_install () {
-tar xvf $PROJECT_TARBALLS_DIR/gstreamer-$GSTREAMER_VERSION.tar.xz -C $INSTALL_SRC_DIR
+tar xvf $PROJECT_TARBALLS_DIR/gstreamer-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v gstreamer-* gstreamer
 # Compile
 cd $INSTALL_SRC_DIR/gstreamer && ./configure --prefix=$PREFIX --libdir=$LIBDIR \
@@ -9662,7 +9678,7 @@ bad \
 ugly 
 do
 # unpack
-tar xvf $PROJECT_TARBALLS_DIR/gst-plugins-$GST_PLUGIN-$GSTREAMER_VERSION.tar.xz -C $INSTALL_SRC_DIR
+tar xvf $PROJECT_TARBALLS_DIR/gst-plugins-$GST_PLUGIN-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v gst-plugins-$GST_PLUGIN-* gst-plugins-$GST_PLUGIN
 # configure
 cd $INSTALL_SRC_DIR/gst-plugins-$GST_PLUGIN && ./configure --prefix=$PREFIX \
@@ -9670,6 +9686,58 @@ cd $INSTALL_SRC_DIR/gst-plugins-$GST_PLUGIN && ./configure --prefix=$PREFIX \
 # compile
 make_install_jambulatv
 done
+}
+
+backports_abc_install () {
+PYTHON_VERSION_USED=2 && set_python_version
+tar zxvf $PROJECT_PIPS_DIR/backports_abc-0.5.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v backports_abc-* backports_abc
+# Compile
+cd $INSTALL_SRC_DIR/backports_abc 
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+}
+
+singledispatch_install () {
+PYTHON_VERSION_USED=2 && set_python_version
+tar zxvf $PROJECT_PIPS_DIR/singledispatch-3.4.0.3.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v singledispatch-* singledispatch
+# Compile
+cd $INSTALL_SRC_DIR/singledispatch 
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+}
+
+tornado_install () {
+PYTHON_VERSION_USED=2 && set_python_version
+tar zxvf $PROJECT_PIPS_DIR/tornado-4.4.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v tornado-* tornado
+# Compile
+cd $INSTALL_SRC_DIR/tornado 
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+}
+
+pykka_install () {
+PYTHON_VERSION_USED=2 && set_python_version
+tar zxvf $PROJECT_PIPS_DIR/Pykka-2.0.0.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v Pykka-* Pykka
+# Compile
+cd $INSTALL_SRC_DIR/Pykka 
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+}
+
+mopidy_deps_install () {
+backports_abc_install
+singledispatch_install
+tornado_install
+pykka_install
+}
+
+mopidy_install () {
+PYTHON_VERSION_USED=2 && set_python_version
+# Copy sources to install directory
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/mopidy/ $INSTALL_SRC_DIR/mopidy/
+# Install
+cd $INSTALL_SRC_DIR/mopidy
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 tumbler_install () {

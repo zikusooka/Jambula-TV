@@ -320,6 +320,13 @@ uninstall_src_pkgs mesa
 mesa_install
 }
 
+upgrade_mopidy () {
+uninstall_mopidy
+uninstall_mopidy_deps
+mopidy_deps_install
+mopidy_install
+}
+
 
 
 #################
@@ -402,3 +409,5 @@ mesa_install
 #upgrade_live555 
 
 #upgrade_mesa
+
+#upgrade_mopidy
