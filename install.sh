@@ -246,6 +246,7 @@ freeradius_test
 # DLNA/UPnP
 minidlna_install
 minidlna_configure
+mpd_install
 # Install mopidy deps
 #mopidy_deps_install
 # Install mopidy
