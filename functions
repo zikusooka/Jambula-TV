@@ -9752,6 +9752,24 @@ cd $INSTALL_SRC_DIR/libmpdclient && ./configure --prefix=$PREFIX \
 make_install_jambulatv
 }
 
+mpc_install () {
+# Install libmpdclient version: 2.9, a dependency for mpc
+libmpdclient_install
+
+# MPC version
+# IMPORTANT: Versions above 0.28 use the meson build system, which
+#            also requires gcc 6+
+MPC_VERSION=0.28
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/mpc-$MPC_VERSION.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v mpc-* mpc
+# Compile
+cd $INSTALL_SRC_DIR/mpc && ./configure --prefix=$PREFIX \
+--libdir=$LIBDIR --sysconfdir=$PROJECT_SYSTEM_CONF_DIR/mpc --localstatedir=$STATEDIR
+# Install
+make_install_jambulatv
+}
+
 gstreamer_install () {
 tar xvf $PROJECT_TARBALLS_DIR/gstreamer-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v gstreamer-* gstreamer

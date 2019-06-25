@@ -248,6 +248,7 @@ minidlna_install
 minidlna_configure
 mpd_install
 mpd_configure
+mpc_install
 # Install mopidy deps
 #mopidy_deps_install
 # Install mopidy
