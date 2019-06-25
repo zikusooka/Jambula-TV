@@ -9741,6 +9741,17 @@ MPD (Music Player Daemon
 EOF
 }
 
+libmpdclient_install () {
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/libmpdclient-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libmpdclient-* libmpdclient
+# Compile
+cd $INSTALL_SRC_DIR/libmpdclient && ./configure --prefix=$PREFIX \
+--libdir=$LIBDIR --sysconfdir=$PROJECT_SYSTEM_CONF_DIR/libmpdclient --localstatedir=$STATEDIR
+# Install
+make_install_jambulatv
+}
+
 gstreamer_install () {
 tar xvf $PROJECT_TARBALLS_DIR/gstreamer-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v gstreamer-* gstreamer
