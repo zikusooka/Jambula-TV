@@ -9770,6 +9770,17 @@ cd $INSTALL_SRC_DIR/mpc && ./configure --prefix=$PREFIX \
 make_install_jambulatv
 }
 
+snapcast_install () {
+# Copy sources to install directory
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/snapcast/ $INSTALL_SRC_DIR/snapcast/
+# Compile
+cd $INSTALL_SRC_DIR/snapcast
+make
+# Install snapserver and snapclient
+make installserver
+make installclient
+}
+
 gstreamer_install () {
 tar xvf $PROJECT_TARBALLS_DIR/gstreamer-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v gstreamer-* gstreamer
