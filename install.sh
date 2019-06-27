@@ -254,6 +254,7 @@ mpc_install
 # Install mopidy
 #mopidy_install
 snapcast_install 
+snapcast_configure
 
 # VoD Streaming
 video_on_demand_configure

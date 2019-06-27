@@ -64,6 +64,7 @@ CRONTABS_DIR=$SPOOLDIR/cron
 MANDIR1=$DATAROOTDIR/man/man1
 MANDIR3=$DATAROOTDIR/man/man3
 MANDIR8=$DATAROOTDIR/man/man8
+DEFAULT_CONFIG_DIR=$CONFDIR/default
 SYSCTL_DIR=$CONFDIR/sysctl.d
 UDEV_RULES_DIR=/etc/udev/rules.d
 LOGROTATE_CONF_DIR=$CONFDIR/logrotate.d
@@ -124,6 +125,13 @@ PLAYLISTS_DIRECTORY=$PROJECT_PARTITION/Playlists
 PLAYLISTS_PORT=$(grep -i 'playlists$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 PLAYLISTS_IPTV_WORLD_M3U_FILE=jambula-iptv.m3u8
 PLAYLISTS_CCTV_LOCAL_M3U_FILE=jambula-cctv.m3u8
+
+# Snapcast
+SNAPCAST_SERVER_PORT=$(grep -i 'snapcast server$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+SNAPCAST_CLIENT_PORT=$(grep -i 'snapcast client$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+SNAPCAST_DEFAULT_SERVER_FILE=$DEFAULT_CONFIG_DIR/snapserver
+SNAPCAST_DEFAULT_CLIENT_FILE=$DEFAULT_CONFIG_DIR/snapclient
+SNAPCAST_FIFO_FILE=$TMPDIR/snapfifo
 
 # MPD
 MPD_PORT=$(grep -i 'mpd$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -567,7 +575,7 @@ UUID_ROOT_PARTITION=`cat /etc/fstab | sed /^#/d | grep '1 1' | awk {'print $1'} 
 GRUB2_BOOT_DIR=/boot/grub2
 GRUB2_BOOT_FILE=$GRUB2_BOOT_DIR/grub.cfg
 GRUB2_CONFIG_DIR=/etc/grub.d
-GRUB2_DEFAULT_FILE=/etc/default/grub
+GRUB2_DEFAULT_FILE=$DEFAULT_CONFIG_DIR/grub
 
 #GRUB2_CMD_OPTIONS="acpi=off noapic"
 #GRUB2_CMD_OPTIONS="radeon.modeset=0"
@@ -9779,6 +9787,33 @@ make
 # Install snapserver and snapclient
 make installserver
 make installclient
+}
+
+snapcast_configure () {
+# Change snapcast server/client start options to suit our environment
+# Use template to generate snapcast server default file
+cat $PROJECT_CONFIGS_DIR/snapcast/snapserver.sample | \
+	sed -e "s:MY_SNAPCAST_SERVER_PORT:$SNAPCAST_SERVER_PORT:g" | \
+	sed -e "s:MY_SNAPCAST_CLIENT_PORT:$SNAPCAST_CLIENT_PORT:g" | \
+	sed -e "s:MY_SNAPCAST_FIFO_FILE:$SNAPCAST_FIFO_FILE:g" | \
+	sed "s:MY_PROJECT_NAME:$PROJECT_NAME:g" \
+		> $SNAPCAST_DEFAULT_SERVER_FILE
+
+# Use template to generate snapcast server default file
+cat $PROJECT_CONFIGS_DIR/snapcast/snapclient.sample | \
+	sed -e "s:MY_SNAPCAST_CLIENT_PORT:$SNAPCAST_CLIENT_PORT:g" | \
+	sed "s:MY_PROJECT_NAME:$PROJECT_NAME:g" \
+		> $SNAPCAST_DEFAULT_CLIENT_FILE
+#
+# Change permissions of default config files to users
+# snapserver
+chown snapserver:snapserver $SNAPCAST_DEFAULT_SERVER_FILE
+# snapclient
+chown snapclient:audio $SNAPCAST_DEFAULT_CLIENT_FILE
+
+# Enable snapcast server and client NOTE: Already enebled by default
+systemctl enable snapserver.service
+systemctl enable snapclient.service
 }
 
 gstreamer_install () {
