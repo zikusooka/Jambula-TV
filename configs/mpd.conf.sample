@@ -76,7 +76,7 @@ group				"mpd"
 # This setting can deny access to control of the daemon.
 #
 # For network
-bind_to_address		"any"
+bind_to_address		"0.0.0.0"
 #
 # And for Unix Socket
 #bind_to_address		"/run/mpd/socket"
@@ -276,13 +276,12 @@ input {
 #
 # An example of a pulseaudio output (streaming to a remote pulseaudio server)
 #
-audio_output {
-	type		"pulse"
-	name		"pulse audio"
-	#name		"My Pulse Output"
+#audio_output {
+#	type		"pulse"
+#	name		"PulseAudio"
 ##	server		"remote_server"		# optional
 ##	sink		"remote_server_sink"	# optional
-}
+#}
 #
 # An example of a winmm output (Windows multimedia API).
 #
@@ -323,6 +322,7 @@ audio_output {
 #	name		"My Null Output"
 #	mixer_type      "none"			# optional
 #}
+#
 #
 # If MPD has been compiled with libsamplerate support, this setting specifies 
 # the sample rate converter to use.  Possible values can be found in the 
@@ -441,4 +441,3 @@ audio_output {
 #}
 #
 ###############################################################################
-

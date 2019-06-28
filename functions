@@ -9814,6 +9814,30 @@ chown snapclient:audio $SNAPCAST_DEFAULT_CLIENT_FILE
 # Enable snapcast server and client NOTE: Already enebled by default
 systemctl enable snapserver.service
 systemctl enable snapclient.service
+
+# Configure MPD for use by Snapcast
+cat $PROJECT_CONFIGS_DIR/mpd.conf.sample | \
+	sed -e "s:MY_MPD_PORT:$MPD_PORT:g" | \
+	sed -e "s:MY_USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
+	sed -e "s:MY_PLAYLISTS_DIRECTORY:$PLAYLISTS_DIRECTORY:g" | \
+	sed -e "s:MY_PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
+	sed "s:MY_PROJECT_NAME:$PROJECT_NAME:g" \
+		> $PROJECT_SYSTEM_CONF_DIR/mpd/mpd.conf
+# Add Output type of fifo
+cat >> $PROJECT_SYSTEM_CONF_DIR/mpd/mpd.conf <<ET
+
+# $PROJECT_NAME: Audio Output for Snapcast
+audio_output {
+	type		"fifo"
+	name		"Snapcast"
+	path 		"$SNAPCAST_FIFO_FILE"
+	format 		"48000:16:2"
+	mixer_type 	"software"
+}
+ET
+#
+# Change permissions of config directory to owner
+chown -R mpd:mpd $PROJECT_SYSTEM_CONF_DIR/mpd
 }
 
 gstreamer_install () {
