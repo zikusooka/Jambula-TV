@@ -1,0 +1,9 @@
+[Socket]
+ListenStream=/run/mpd/socket
+ListenStream=MY_MPD_PORT
+Backlog=5
+KeepAlive=true
+PassCredentials=true
+
+[Install]
+WantedBy=sockets.target

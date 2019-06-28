@@ -4,7 +4,7 @@ Documentation=man:mpd(1) man:mpd.conf(5)
 After=network.target sound.target
 
 [Service]
-ExecStart=/usr/bin/mpd --no-daemon /etc/JambulaTV/mpd/mpd.conf
+ExecStart=/usr/bin/mpd --no-daemon MY_PROJECT_SYSTEM_CONF_DIR/mpd/mpd.conf
 
 [Install]
 WantedBy=multi-user.target

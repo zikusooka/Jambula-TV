@@ -9709,10 +9709,7 @@ mpd_configure () {
 # Create mpd config directory
 [[ -e $PROJECT_SYSTEM_CONF_DIR/mpd ]] || \
 	mkdir -p $PROJECT_SYSTEM_CONF_DIR/mpd
-# Add mpd config file
-if [[ ! -e $PROJECT_SYSTEM_CONF_DIR/mpd/mpd.conf ]];
-then
-# Use template to generate mpd.conf file
+# Use mpd config template to generate mpd.conf file
 cat $PROJECT_CONFIGS_DIR/mpd.conf.sample | \
 	sed -e "s:MY_MPD_PORT:$MPD_PORT:g" | \
 	sed -e "s:MY_USER_MUSIC_DIR:$USER_MUSIC_DIR:g" | \
@@ -9720,7 +9717,17 @@ cat $PROJECT_CONFIGS_DIR/mpd.conf.sample | \
 	sed -e "s:MY_PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
 	sed "s:MY_PROJECT_NAME:$PROJECT_NAME:g" \
 		> $PROJECT_SYSTEM_CONF_DIR/mpd/mpd.conf
-fi
+
+# Add Output type of pulse
+cat >> $PROJECT_SYSTEM_CONF_DIR/mpd/mpd.conf <<ET
+
+# $PROJECT_NAME: Audio Output for MPD
+audio_output {
+	type		"pulse"
+	name		"PulseAudio"
+}
+ET
+#
 # Change permissions of config directory to owner
 chown -R mpd:mpd $PROJECT_SYSTEM_CONF_DIR/mpd
 #
@@ -9729,8 +9736,14 @@ rsync -av $PROJECT_CONTRIB_DIR/music/playlists/ $PLAYLISTS_DIRECTORY/mpd/
 # Change permissions of mpd playlist directory to owner/group
 chown -R mpd:mpd $PLAYLISTS_DIRECTORY/mpd
 #
-# mpd service
-cp -v $PROJECT_INIT_SCRIPTS_DIR/mpd.service $SYSTEMD_UNITS_DIR_USER/
+# Generate our mpd systemd service unit file
+cat $PROJECT_INIT_SCRIPTS_DIR/mpd.service | \
+	sed "s:MY_PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" \
+		> $SYSTEMD_UNITS_DIR_USER/mpd.service
+# Generate our mpd systemd socket unit file
+cat $PROJECT_INIT_SCRIPTS_DIR/mpd.socket | \
+	sed "s:MY_MPD_PORT:$MPD_PORT:g" \
+		> $SYSTEMD_UNITS_DIR_USER/mpd.socket
 # Enable mpd if needed
 systemctl enable mpd.service
 #
