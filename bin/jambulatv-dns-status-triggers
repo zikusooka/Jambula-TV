@@ -202,7 +202,7 @@ update_youtube_dl > /dev/null 2>&1
 
 # Sound alert beep
 # ----------------
-[ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL online
+[ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL beep online
 
 # Test Internet speed
 # -------------------
@@ -262,7 +262,7 @@ update_clock_time offline
 
 # Sound alert beep
 # ----------------
-[ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL offline
+[ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL beep offline
 
 
 else

@@ -651,7 +651,7 @@ $IPTABLES -t nat -A POSTROUTING -o $PPP_INTERFACE -j MASQUERADE
 fi
 
 # Connection succeeded - alert using beep sounds
-[ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL online
+[ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL beep online
 
 
 # QUERY Modem when in On-Line state

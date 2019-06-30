@@ -6,6 +6,7 @@
 # Jambula Labs @copyright 2019-2020 All rights reserved
 
 # Variables
+SOUND_TYPE=$1
 JAMBULATV_SOUNDS_DIR="/usr/share/JambulaTV/sounds"
 DEFAULT_SOUND_EFFECTS_FILE="waiting-4-online-response.wav"
 #
@@ -21,7 +22,7 @@ SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
 SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep ${SOUND_EFFECTS_WAITING_PATH##*/} | awk {'print $2'}
 )
 SOUND_PLAYER_CMD="/usr/bin/mplayer"
-SOUND_PLAYER_OPTS="-ao pulse,oss,alsa -novideo -nolirc -really-quiet"
+SOUND_PLAYER_OPTS="-ao alsa,oss,pulse -novideo -nolirc -really-quiet"
 
 BEEP_CMD=/usr/bin/beep
 
@@ -99,7 +100,7 @@ SETUP_SOUND_FILE=setup-error-no-dvbt-tuner.wav
 ;;
 *)
 cat <<EOT
-Usage: `basename $0` setup [number e.g. 1]"
+Usage: `basename $0` $SOUND_TYPE [number e.g. 1]"
 EOT
 ;;
 esac
@@ -108,68 +109,95 @@ esac
 [[ -e $JAMBULATV_SOUNDS_DIR/$SETUP_SOUND_FILE ]] && $SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $JAMBULATV_SOUNDS_DIR/$SETUP_SOUND_FILE
 }
 
+alarm_sounds () {
+ALARM_SOUND_NUMBER=$1
+case $ALARM_SOUND_NUMBER in
+1)
+ALARM_SOUND_FILE=attention-motion-detected-00.wav
+;;
+2)
+ALARM_SOUND_FILE=attention-motion-detected-01.mp3
+;;
+3)
+ALARM_SOUND_FILE=attention-motion-detected-02.mp3
+;;
+4)
+ALARM_SOUND_FILE=attention-motion-detected-03.mp3
+;;
+*)
+cat <<EOT
+Usage: `basename $0` $SOUND_TYPE [number e.g. 1]"
+EOT
+;;
+esac
+
+# Play sound file if it exists
+[[ -e $JAMBULATV_SOUNDS_DIR/$ALARM_SOUND_FILE ]] && $SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $JAMBULATV_SOUNDS_DIR/$ALARM_SOUND_FILE
+}
+
 
 
 #################
 #  MAIN SCRIPT  #
 #################
-case $1 in
 
-online)
+if [[ "$SOUND_TYPE" = "beep" ]];
+then
 check_for_beep_command
+
+# Get argument to beeps
+case $2 in
+online)
 $BEEP_CMD -f 500 -l 155 -n -f 400 -l 155 -n -f 600 -l 155 -n -f 800 -l 155 -n -f 800 -l 1
 ;;
-
 offline)
-check_for_beep_command
 $BEEP_CMD -f 500 -n -f 500 -n -f 500 -n -f 500 -n -f 500 -n -f 500
 ;;
-
 dhclient)
 $BEEP_CMD -f 1000 -r 5 -n -r 5 -l 10
 ;;
-
 beethoven)
-check_for_beep_command
 $BEEP_CMD -f 659 -l 460 -n -f 784 -l 340 -n -f 659 -l 230 -n -f 659 -l 110 -n -f 880 -l 230 -n -f 659 -l 230 -n -f 587 -l 230 -n -f 659 -l 460 -n -f 988 -l 340 -n -f 659 -l 230 -n -f 659 -l 110 -n -f 1047-l 230 -n -f 988 -l 230 -n -f 784 -l 230 -n -f 659 -l 230 -n -f 988 -l 230 -n -f 1318 -l 230 -n -f 659 -l 110 -n -f 587 -l 230 -n -f 587 -l 110 -n -f 494 -l 230 -n -f 740 -l 230 -n -f 659 -l 460
 ;;
-
 alarm)
-check_for_beep_command
 $BEEP_CMD -f 1000 -l 500 -n 200 -r 2
 ;;
-
 start)
-check_for_beep_command
 $BEEP_CMD -f 65.4064 -l 100 -n -f 130.813 -l 100 -n -f 261.626 -l 100 -n -f 523.2
 ;;
-
 stop)
-check_for_beep_command
 $BEEP_CMD -f 523.251 -l 100 -D 100 -n -f 391.995 -l 100 -D 100 -n -f 329.628 -l 10
 ;;
-
 poweroff)
-check_for_beep_command
 $BEEP_CMD -f 330 -l 137 -n -f 330 -l 275 -n -f 330 -l 137 -d 137 -n -f 262 -l 137 -n -f 330 -l 275
 ;;
-
 misc)
-check_for_beep_command
 $BEEP_CMD -f 600 -l 155 -n -f 800 -l 155 -n -f 500 -l 155 -n -f 400 -l 155 -n -f 400 -l 1
 ;;
-
-api)
-waiting_4_online_response $2
-;;
-
-setup)
-initial_setup_sounds $2
-;;
-
 *)
+# Usage - beep types
 clear
-echo "Usage: `basename $0` [online|offline|dhclient|start|stop|beethoven|misc|api|setup]"
+echo "Usage: `basename $0` $SOUND_TYPE [online|offline|dhclient|start|stop|beethoven|misc]"
 ;;
-
 esac
+
+# API sounds
+elif [[ "$SOUND_TYPE" = "api" ]];
+then
+waiting_4_online_response $2
+
+# Setup sounds
+elif [[ "$SOUND_TYPE" = "setup" ]];
+then
+initial_setup_sounds $2
+
+# Alarm sounds
+elif [[ "$SOUND_TYPE" = "alarm" ]];
+then
+alarm_sounds $2
+
+else
+# Usage - all types
+clear
+echo "Usage: `basename $0` [beep|api|setup|alarm]"
+fi
