@@ -14,10 +14,14 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 FFMPEG_CMD=/usr/bin/ffmpeg
 VLC_CMD=/usr/bin/cvlc
 MPLAYER_CMD=/usr/bin/mplayer
+MPC_CMD=/usr/bin/mpc
+MPD_LOCAL_PORT=$MPD_PORT
 
 WEBRADIO_STREAMER_PORT=MY_WEBRADIO_STREAMER_PORT
 WEBRADIO_STREAMER_PID_FILE=MY_TMPDIR/webradio_process_ids
 WEBRADIO_STREAMER_LOG_FILE=MY_PROJECT_SYSTEM_LOG_DIR/webradio-streamer.log
+WEBRADIO_PLAYLIST_TEMP_DIR=$TMPDIR
+WEBRADIO_PLAYLIST_EXT=m3u8
 WEBRADIO_STREAMER_NUMBER_OF_ARGS=$#
 WEBRADIO_STREAMER_TASK=$1
 WEBRADIO_STREAMER_STATION=$(/bin/echo "$2" | sed -e "s/[^0-9. ]*//g" -e  "s/ \+/ /g")
@@ -47,8 +51,20 @@ Usage: ./$(basename $0) $WEBRADIO_STREAMER_TASK [WEB_RADIO_STATION_ID e.g. 1] [l
 ***************************************
 Online Radio Station IDs
 ***************************************
- 1.  SmoothJazz
- 2.  Radio One (Uganda)
+  1  SmoothJazz.com (Jazz)
+  2  Family Life (Christian)
+  3  Jazz 24 (Jazz)
+  4  K-Love (Christian)
+  5  Soma FM (Indie)
+  6  KEAN 105 (Country)
+  7  Hot 108 (Hip Hop)
+  8  NBSRadio (Party)
+  9  Radio Santa Claus (Christmas)
+ 10  Relax (Jazz)
+ 11  Relax (Latino)
+ 12  Relax (Life)
+ 13  Relax (Gold)
+ 14  Relax (Nature)
 
 EOF
 exit 1
@@ -64,8 +80,77 @@ WEBRADIO_STREAMER_URL=http://sj64.hnux.com
 
 2)
 # Family Life Radio
-#WEBRADIO_STREAMER_URL=http://stream.liquidcompass.net/4607/stream.pls
 WEBRADIO_STREAMER_URL="http://ic1.christiannetcast.com/kflr-fm?rnd=6026"
+;;
+
+3)
+# Jazz24
+WEBRADIO_NAME=Jazz24
+WEBRADIO_PLAYLIST_URL="https://live.wostreaming.net/manifest/ppm-jazz24aac-hlsc1.m3u8"
+WEBRADIO_PLAYLIST_FILE=$WEBRADIO_PLAYLIST_TEMP_DIR/$WEBRADIO_NAME.$WEBRADIO_PLAYLIST_EXT 
+# Download playlist locally - mplayer can not handle it remotely
+wget -c -O $WEBRADIO_PLAYLIST_FILE $WEBRADIO_PLAYLIST_URL
+WEBRADIO_STREAMER_URL="$WEBRADIO_PLAYLIST_FILE"
+;;
+
+4)
+# K-Love
+WEBRADIO_STREAMER_URL="http://emf.streamguys1.com/sk001_mp3_high_web"
+;;
+
+5)
+# SomaFM (Indie)
+WEBRADIO_STREAMER_URL="http://ice1.somafm.com/indiepop-128-mp3"
+;;
+
+6)
+# KEAN 105 (Country)
+WEBRADIO_NAME=KEAN_105
+WEBRADIO_PLAYLIST_URL="https://live.wostreaming.net/manifest/townsquare-keanfmaac-hlsc3.m3u8"
+WEBRADIO_PLAYLIST_FILE=$WEBRADIO_PLAYLIST_TEMP_DIR/$WEBRADIO_NAME.$WEBRADIO_PLAYLIST_EXT 
+# Download playlist locally - mplayer can not handle it remotely
+wget -c -O $WEBRADIO_PLAYLIST_FILE $WEBRADIO_PLAYLIST_URL
+WEBRADIO_STREAMER_URL="$WEBRADIO_PLAYLIST_FILE"
+;;
+
+7)
+# Hot 108 (Hip Hop)
+WEBRADIO_STREAMER_URL="http://listen.hot108.com/hot108"
+;;
+
+8)
+# NBSRadio (House/Party/Beats)
+WEBRADIO_STREAMER_URL="http://live.nsbradio.co.uk:8904/"
+;;
+
+9)
+# Radio Santa Claus (Christmas)
+WEBRADIO_STREAMER_URL="https://streaming.radiostreamlive.com/radiosantaclaus_devices"
+;;
+
+10)
+# Relax (Jazz)
+WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_2"
+;;
+
+11)
+# Relax (Latino)
+WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_3"
+;;
+
+12)
+# Relax (Life)
+WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_5"
+;;
+
+13)
+# Relax (Gold)
+WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_4"
+;;
+
+14)
+# Relax (Nature)
+WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_1"
 ;;
 
 *)
@@ -84,6 +169,39 @@ sudo killall pulseaudio && /usr/bin/pulseaudio -D
 fi
 }
 
+mpd_check_status () {
+# Check status of MPD server
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT status > /dev/null 2>&1
+MPC_EXIT_STATUS=$?
+}
+
+mpd_current_playlist_stop () {
+# Stop any running playlist, so we take over
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT stop
+# Clear previous added playlist
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT clear
+}
+
+mpd_now_playing () {
+# Get current playlist
+NAME_OF_STATION=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | awk -F: '{print $1}')
+NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | rev | awk -F' :' '{print $1}' | rev) 
+}
+
+internet_radio_via_mpd_start () {
+# Stop and clear current playlist
+mpd_current_playlist_stop
+# Add Internet Radio feed
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT add $WEBRADIO_STREAMER_URL
+# Play Internet Radio feed
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT play
+}
+
+internet_radio_via_mpd_stop () {
+# Stop and clear current playlist
+mpd_current_playlist_stop
+}
+
 remove_previous_log_file () {
 # Remove previous log file
 [[ -e $WEBRADIO_STREAMER_LOG_FILE ]] || sudo rm -f $WEBRADIO_STREAMER_LOG_FILE 
@@ -96,12 +214,24 @@ remove_previous_log_file
 # Start/Restart Pulseaudio if not running or existing process is broken
 check_pulseaudio
 #
+case $WEBRADIO_STREAMER_CLIENT_LOCATION in
 # Play locally if requested
-if [[ "$WEBRADIO_STREAMER_CLIENT_LOCATION" = "local" ]];
+local)
+# Check status of MPD server
+mpd_check_status
+#
+# Stream Internet Radio over mpd if server is running
+if [[ "$MPC_EXIT_STATUS" = "0" ]];
 then
+internet_radio_via_mpd_start
+
+else
+# Stream using CLI tool i.e. mplayer
 PULSEAUDIO_USER=$MULTIMEDIA_USER && \
 	$MPLAYER_CMD -noconsolecontrols -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 -loop 0 $WEBRADIO_STREAMER_URL > $WEBRADIO_STREAMER_LOG_FILE 2>&1 &
 fi
+;;
+esac
 }
 
 stream_start () {
@@ -117,16 +247,26 @@ check_pulseaudio
 # Get web radio station URL
 get_webradio_url
 #
-# Stream web radio
+# Check status of MPD server
+mpd_check_status
+#
+# Stream Internet Radio over mpd if server is running
+if [[ "$MPC_EXIT_STATUS" = "0" ]];
+then
+internet_radio_via_mpd_start
+
+else
+# Stream using CLI tool i.e. mplayer
 PULSEAUDIO_USER=$MULTIMEDIA_USER && \
 	$MPLAYER_CMD -noconsolecontrols -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 -loop 0 $WEBRADIO_STREAMER_URL > $WEBRADIO_STREAMER_LOG_FILE 2>&1 &
+fi
 #
 # Pause a bit to allow radio to settle
 sleep 3
 #
 # Add process ID (PID) numbers to temp file
-MPLAYER_PID=$(ps auxw | grep -Ev grep | grep mplayer | grep -E "(http|https|rtmp|rtsp)" | awk {'print $2'})
-VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep -E "(http|https|rtmp|rtsp)" | awk {'print $2'})
+MPLAYER_PID=$(ps auxw | grep -Ev grep | grep mplayer | grep -E "(http|https|rtmp|rtsp|$WEBRADIO_PLAYLIST_EXT|m3u|m3u8|pls)" | awk {'print $2'})
+VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep -E "(http|https|rtmp|rtsp|$WEBRADIO_PLAYLIST_EXT|m3u|m3u8|pls)" | awk {'print $2'})
 FFMPEG_PID=$(ps auxw | grep -Ev grep | grep ffmpeg | grep "f s16le -ac 1 -i pipe:0 -acodec libmp3lame -ab 128k -f mpegts" | awk {'print $2'})
 #
 cat > $WEBRADIO_STREAMER_PID_FILE <<EOF
@@ -138,6 +278,12 @@ EOF
 }
 
 stream_stop () {
+# Check status of MPD server
+mpd_check_status
+#
+# Stream Internet Radio over mpd if server is running
+[[ "$MPC_EXIT_STATUS" = "0" ]] && internet_radio_via_mpd_stop
+#
 # Kill streamer processes
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && sudo kill -15 $(cat $WEBRADIO_STREAMER_PID_FILE) > /dev/null 2>&1 &
 # Remove PIDs file
@@ -159,7 +305,7 @@ $0 start $WEBRADIO_STREAMER_STATION $WEBRADIO_STREAMER_CLIENT_LOCATION
 #stream_local
 }
 
-playing_now () {
+stream_now_playing () {
 # Get age of log file
 AGE_OF_WEBRADIO_STREAMER_LOG_FILE=$(date -d "now - $(stat -c "%Y" $WEBRADIO_STREAMER_LOG_FILE) seconds" +%s)
 # Only show 'now playing' if the age of log file is less than 1 minute
@@ -167,13 +313,29 @@ if [[ "$AGE_OF_WEBRADIO_STREAMER_LOG_FILE" -lt "60" ]];
 then
 NAME_OF_STATION=$(/usr/bin/awk '/Name   : / {print $3}' $WEBRADIO_STREAMER_LOG_FILE | /usr/bin/head -1 | /usr/bin/uniq)
 NAME_OF_SONG_ARTIST=$(/usr/bin/grep -a -oP "(?<=ICY Info: StreamTitle=').+?(?=';)" $WEBRADIO_STREAMER_LOG_FILE | /usr/bin/tail -1)
-# Print name of station, song, and artist
+fi
+}
+
+playing_now () {
+# Check status of MPD server
+mpd_check_status
+#
+# Fetch 'Now Playing' info if MPD server is running
+if [[ "$MPC_EXIT_STATUS" = "0" ]];
+then
+mpd_now_playing
+
+else
+# Get 'Now Playing' info 
+stream_now_playing
+fi
+
+# Print name of station, song, and artist if found
+if [[ "x$NAME_OF_STATION" != "x" || "x$NAME_OF_SONG_ARTIST" != "x" ]];
+then
 cat <<PLAYING
 ($NAME_OF_STATION) $NAME_OF_SONG_ARTIST
 PLAYING
-
-else
-:
 fi
 }
 
@@ -182,6 +344,9 @@ fi
 #################
 #  MAIN SCRIPT  #
 #################
+
+trap stream_stop SIGTERM
+
 case $WEBRADIO_STREAMER_TASK in
 
 start)
