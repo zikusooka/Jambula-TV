@@ -11,12 +11,20 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 
 # Source install functions
 . $PROJECT_FUNCTIONS_FILE
+#
+# Source Geo-location file used in extracting city and country of 
+# FM radio playlists
+[[ -e $GEOLOCATION_FILE ]] && . $GEOLOCATION_FILE
 
 RTL_FM_CMD=/usr/bin/rtl_fm
 RTL_FM_DEV=0
 FFMPEG_CMD=/usr/bin/ffmpeg
 VLC_CMD=/usr/bin/cvlc
 MPLAYER_CMD=/usr/bin/mplayer 
+MPC_CMD=/usr/bin/mpc
+
+MPD_PLAYLISTS_DIRECTORY=$PLAYLISTS_DIRECTORY/mpd
+MPD_LOCAL_PORT=$MPD_PORT
 
 FMRADIO_STREAMER_NUMBER_OF_ARGS=$#
 FMRADIO_STREAMER_TASK=$1
@@ -25,7 +33,7 @@ FMRADIO_STREAMER_CLIENT_LOCATION=${@:$FMRADIO_STREAMER_NUMBER_OF_ARGS}
 FMRADIO_STREAMER_PORT=MY_FMRADIO_STREAMER_PORT
 FMRADIO_STREAMER_PID_FILE=MY_TMPDIR/fmradio_process_ids
 FMRADIO_STREAMER_LOG_FILE=MY_PROJECT_SYSTEM_LOG_DIR/fmradio-streamer.log
-FMRADIO_STREAMER_MEDIA_INFO="title='JambulaTV-FM-Radio',author=$FMRADIO_STREAMER_STATION-FM,copyright=2017-2018-Jambula-Labs-All-rights-reserved,comment=Broadcasting-Live-FM-Radio-using-JambulaTV,rating=PG14"
+FMRADIO_STREAMER_MEDIA_INFO="title='JambulaTV-FM-Radio',author=$FMRADIO_STREAMER_STATION-FM,copyright=$COPYRIGHT_YEAR_START-$COPYRIGHT_YEAR_END-$(echo $COMPANY_NAME | sed 's: :-:g')-All-rights-reserved,comment=Broadcasting-Live-FM-Radio-using-$PROJECT_NAME,rating=PG14"
 
 
 
@@ -35,7 +43,7 @@ FMRADIO_STREAMER_MEDIA_INFO="title='JambulaTV-FM-Radio',author=$FMRADIO_STREAMER
 usage_all () {
 clear
 cat <<EOF
-Usage: ./$(basename $0) [start|stop|restart] [FM_STATION e.g. 93.3] [local (Optional)]
+Usage: ./$(basename $0) [start|stop|restart|playing] [FM_STATION e.g. 93.3] [local (Optional)]
 EOF
 exit 1
 }
@@ -61,16 +69,70 @@ killall pulseaudio && /usr/bin/pulseaudio -D
 fi
 }
 
+mpd_check_status () {
+# Check status of MPD server
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT status > /dev/null 2>&1
+MPC_EXIT_STATUS=$?
+}
+
+mpd_current_playlist_stop () {
+# Stop any running playlist, so we take over
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT stop
+# Clear previous added playlist
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT clear
+}
+
+fm_radio_via_mpd_start () {
+# Stop and clear current playlist
+mpd_current_playlist_stop
+
+# Create FM Radio Playlist
+cat > $MPD_PLAYLISTS_DIRECTORY/FM-Radio-$FMRADIO_STREAMER_STATION.m3u <<ET
+#EXTM3U
+#EXTINF:-1, $PROJECT_NAME FM Radio : $FMRADIO_STREAMER_STATION-FM - $CITY, $COUNTRY
+http://127.0.0.1:$FMRADIO_STREAMER_PORT
+ET
+#
+# Add FM Radio feed
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT load FM-Radio-$FMRADIO_STREAMER_STATION
+#
+# Play FM Radio feed
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT play
+}
+
+fm_radio_via_mpd_stop () {
+# Stop and clear current playlist
+mpd_current_playlist_stop
+}
+
+mpd_now_playing () {
+# Get current playlist
+NAME_OF_STATION=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | awk -F: '{print $1}')
+NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | rev | awk -F' :' '{print $1}' | rev) 
+}
+
 stream_local () {
 # Start/Restart Pulseaudio if not running or existing process is broken
 check_pulseaudio
 #
+case $FMRADIO_STREAMER_CLIENT_LOCATION in
 # Play locally if requested
-if [[ "$FMRADIO_STREAMER_CLIENT_LOCATION" = "local" ]];
+local)
+# Check status of MPD server
+mpd_check_status
+#
+# Stream FM Radio over mpd if server is running
+if [[ "$MPC_EXIT_STATUS" = "0" ]];
 then
+fm_radio_via_mpd_start
+
+else
+# Stream using CLI tool i.e. mplayer
 PULSEAUDIO_USER=$MULTIMEDIA_USER && \
-$MPLAYER_CMD -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 http://127.0.0.1:8543 > /dev/null &
+$MPLAYER_CMD -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 http://127.0.0.1:$FMRADIO_STREAMER_PORT > $FMRADIO_STREAMER_LOG_FILE 2>&1 &
 fi
+;;
+esac
 }
 
 stream_start () {
@@ -97,6 +159,12 @@ EOF
 }
 
 stream_stop () {
+# Check status of MPD server
+mpd_check_status
+#
+# Stream FM Radio over mpd if server is running
+[[ "$MPC_EXIT_STATUS" = "0" ]] && fm_radio_via_mpd_stop
+
 # Kill streamer processes
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && sudo kill -15 $(cat $FMRADIO_STREAMER_PID_FILE) > /dev/null 2>&1 &
 # Remove PIDs file
@@ -113,11 +181,48 @@ sleep 3
 $0 start $FMRADIO_STREAMER_STATION $FMRADIO_STREAMER_CLIENT_LOCATION
 }
 
+station_now_playing () {
+# Get age of log file
+AGE_OF_FMRADIO_STREAMER_LOG_FILE=$(date -d "now - $(stat -c "%Y" $FMRADIO_STREAMER_LOG_FILE) seconds" +%s)
+# Only show 'now playing' if the age of log file is less than 1 minute
+if [[ "$AGE_OF_FMRADIO_STREAMER_LOG_FILE" -lt "60" ]];
+then
+NAME_OF_STATION=$(/usr/bin/awk -F': ' '/title/ {print $2}' $FMRADIO_STREAMER_LOG_FILE | /usr/bin/tail -1 | sed 's:-: :g')
+NAME_OF_SONG_ARTIST=$(/usr/bin/grep -i author $FMRADIO_STREAMER_LOG_FILE | sed 's/ author: //g' | /usr/bin/tail -1)
+fi
+}
+
+playing_now () {
+# Check status of MPD server
+mpd_check_status
+#
+# Fetch 'Now Playing' info if MPD server is running
+if [[ "$MPC_EXIT_STATUS" = "0" ]];
+then
+mpd_now_playing
+
+else
+# Get 'Now Playing' info 
+station_now_playing
+fi
+
+# Print name of station, song, and artist if found
+if [[ "x$NAME_OF_STATION" != "x" || "x$NAME_OF_SONG_ARTIST" != "x" ]];
+then
+cat <<PLAYING
+($NAME_OF_STATION) $NAME_OF_SONG_ARTIST
+PLAYING
+fi
+}
+
 
 
 #################
 #  MAIN SCRIPT  #
 #################
+
+trap stream_stop SIGTERM
+
 case $FMRADIO_STREAMER_TASK in
 
 start)
@@ -130,6 +235,10 @@ stream_stop
 
 restart)
 stream_restart
+;;
+
+playing)
+playing_now
 ;;
 
 *)

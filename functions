@@ -10191,9 +10191,9 @@ ldconfig
 fm_radio_streamer_setup () {
 [ -e $FMRADIO_STREAMER_TOOL ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-fm-radio-streamer | \
-		sed -e "s:MY_FMRADIO_STREAMER_PORT:$FMRADIO_STREAMER_PORT:g" | \
-		sed -e "s:MY_PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
-		sed "s:MY_TMPDIR:$TMPDIR:g" \
+		sed -e "s:MY_FMRADIO_STREAMER_PORT:\$FMRADIO_STREAMER_PORT:g" | \
+		sed -e "s:MY_PROJECT_SYSTEM_LOG_DIR:\$PROJECT_SYSTEM_LOG_DIR:g" | \
+		sed "s:MY_TMPDIR:\$TMPDIR:g" \
 			> $FMRADIO_STREAMER_TOOL
 # Make script executable
 chmod 755 $FMRADIO_STREAMER_TOOL
