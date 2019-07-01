@@ -16,13 +16,13 @@ SPEAKER_VOLUME_LOCATION=$2
 SPEAKER_VOLUME_LEVEL=$3
 
 # PID files for streamer tools
-FMRADIO_STREAMER_TOOL_PATH=$FMRADIO_STREAMER_TOOL
-FMRADIO_STREAMER_PID_FILE=$(grep ^FMRADIO_STREAMER_PID_FILE= $FMRADIO_STREAMER_TOOL_PATH | cut -d '=' -f2 | head -1 | awk {'print $1'})
-#
-WEBRADIO_STREAMER_TOOL_PATH=$WEBRADIO_STREAMER_TOOL
-WEBRADIO_STREAMER_PID_FILE=$(grep ^WEBRADIO_STREAMER_PID_FILE= $WEBRADIO_STREAMER_TOOL_PATH | cut -d '=' -f2 | head -1 | awk {'print $1'})
+FMRADIO_STREAMER_PID_FILE=$TMPDIR/fmradio_process_ids
+WEBRADIO_STREAMER_PID_FILE=$TMPDIR/webradio_process_ids
 
 PACTL_CMD=/usr/bin/pactl
+
+MPC_CMD=/usr/bin/mpc
+MPD_LOCAL_PORT=$MPD_PORT
 
 
 
@@ -37,9 +37,8 @@ clear
 cat <<EOT
 Usage: ./$(basename $0) [SPEAKER_VOLUME_TYPE] [SPEAKER_VOLUME_LOCATION] [SPEAKER_VOLUME_LEVEL]
 
-NOTE: A level of 0% is equivalent to 'mute' volume
-
-e.g ./$(basename $0) webradio localhost 100%
+Example: 
+./$(basename $0) [fmradio|webradio|all] localhost [100%|mute|unmute]
 
 EOT
 exit 1
@@ -47,21 +46,62 @@ fi
 }
 
 
+# MPD
+# ---
+mpd_check_status () {
+# Check status of MPD server
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT status > /dev/null 2>&1
+MPC_EXIT_STATUS=$?
+}
+
+toggle_volume_mpd_localhost () {
+# Control MPD server volume
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT volume $1
+}
+
+
 # FM Radio
 # --------
 toggle_volume_fmradio_localhost () {
+# toggle/unmute volume using MPD if its server is running 
+mpd_check_status
+if [[ "$MPC_EXIT_STATUS" = "0" ]];
+then
+toggle_volume_mpd_localhost 100
+
+else
+# Toggle volume i.e. unmute
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
 $PACTL_CMD set-sink-input-mute $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') toggle
+fi
 }
 
 mute_volume_fmradio_localhost () {
+# Mute volume using mpd if its server is running 
+mpd_check_status
+if [[ "$MPC_EXIT_STATUS" = "0" ]];
+then
+toggle_volume_mpd_localhost 0
+
+else
 # If volume for FM radio is not muted, mute it
+[[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
 FMRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
 [[ "$FMRADIO_VOLUME_MUTED" = "yes" ]] || toggle_volume_fmradio_localhost
+fi
 }
 
 adjust_volume_fmradio_localhost () {
+# Adjust volume using MPD if its server is running 
+mpd_check_status
+case $MPC_EXIT_STATUS in
+0)
+toggle_volume_mpd_localhost $(echo $SPEAKER_VOLUME_LEVEL | sed 's:%::')
+;;
+
+*)
 # If volume for FM radio is muted, unmute it
+[[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
 FMRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
 if [[ "$FMRADIO_VOLUME_MUTED" = "yes" ]];
 then
@@ -70,6 +110,8 @@ else
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
 $PACTL_CMD set-sink-input-volume $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') $SPEAKER_VOLUME_LEVEL
 fi
+;;
+esac
 }
 
 control_volume_fmradio () {
@@ -98,18 +140,44 @@ esac
 # Internet Radio
 # --------------
 toggle_volume_webradio_localhost () {
+# toggle/unmute volume using MPD if its server is running 
+mpd_check_status
+if [[ "$MPC_EXIT_STATUS" = "0" ]];
+then
+toggle_volume_mpd_localhost 100
+
+else
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
 $PACTL_CMD set-sink-input-mute $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') toggle
+fi
 }
 
 mute_volume_webradio_localhost () {
+# Mute volume using mpd if its server is running 
+mpd_check_status
+if [[ "$MPC_EXIT_STATUS" = "0" ]];
+then
+toggle_volume_mpd_localhost 0
+
+else
 # If volume for Internet radio is not muted, mute it
+[[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
 WEBRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
 [[ "$WEBRADIO_VOLUME_MUTED" = "yes" ]] || toggle_volume_webradio_localhost
+fi
 }
 
 adjust_volume_webradio_localhost () {
+# Adjust volume using MPD if its server is running 
+mpd_check_status
+case $MPC_EXIT_STATUS in
+0)
+toggle_volume_mpd_localhost $(echo $SPEAKER_VOLUME_LEVEL | sed 's:%::')
+;;
+
+*)
 # If volume for Internet radio is muted, unmute it
+[[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
 WEBRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
 if [[ "$WEBRADIO_VOLUME_MUTED" = "yes" ]];
 then
@@ -118,6 +186,8 @@ else
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
 $PACTL_CMD set-sink-input-volume $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') $SPEAKER_VOLUME_LEVEL
 fi
+;;
+esac
 }
 
 control_volume_webradio () {
@@ -154,11 +224,54 @@ usage_all
 case $SPEAKER_VOLUME_TYPE in
 
 fmradio)
+if [[ "$SPEAKER_VOLUME_LEVEL" = "mute" ]];
+then
+# Mute FM radio volume
+mute_volume_fmradio_localhost
+
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
+then
+# Unmute FM radio volume
+toggle_volume_fmradio_localhost 
+
+else
 control_volume_fmradio
+fi
 ;;
 
 webradio)
+if [[ "$SPEAKER_VOLUME_LEVEL" = "mute" ]];
+then
+# Mute Internet radio volume
+mute_volume_webradio_localhost
+
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
+then
+# Unmute Internet radio volume
+toggle_volume_webradio_localhost
+
+else
 control_volume_webradio
+fi
+;;
+
+all)
+if [[ "$SPEAKER_VOLUME_LEVEL" = "mute" ]];
+then
+# Mute all volumes
+mute_volume_fmradio_localhost
+mute_volume_webradio_localhost
+
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
+then
+# Unmute all volumes
+toggle_volume_fmradio_localhost 
+toggle_volume_webradio_localhost
+
+else
+control_volume_fmradio
+control_volume_webradio
+fi
 ;;
 
 esac
