@@ -11,9 +11,12 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 # Source global settings
 . $PROJECT_GLOBAL_SETTINGS_FILE
 
-TTS_PLAY_CMD="/usr/bin/ffplay"
-TTS_QUIT_CMD=""
-TTS_PLAY_CMD_OPTS="-loglevel quiet -vn -nodisp -autoexit"
+# Play TTS audio using FFPlay
+#TTS_PLAY_CMD="/usr/bin/ffplay"
+#TTS_PLAY_CMD_OPTS="-loglevel quiet -vn -nodisp -autoexit -af volume=2.0"
+# Play TTS audio using MPlayer
+TTS_PLAY_CMD="/usr/bin/mplayer"
+TTS_PLAY_CMD_OPTS="-ao alsa,oss,pulse -novideo -nolirc -really-quiet"
 
 TTS_OUTPUT_FILE=/var/tmp/tts_output.wav # IMPORTANT: Must be on 'ext4' partition i.e. /var
 TTS_API=$1
@@ -46,10 +49,17 @@ then
 
 clear
 cat <<EOT
-Usage:  
+Usage:
+-----
 ./`basename $0` [Speech API] time
 ./`basename $0` [Speech API] weather [Period] [Weather API] [Debugging]
 ./`basename $0` [Speech API] custom [Message]
+
+	Speech API Engines
+	******************
+	1 - iSpeech (API key required)
+	2 - Google
+	3 - IBM Watson (API key required)
 
 EOT
 exit 1
@@ -65,6 +75,13 @@ EOT
 exit 1
 
 fi
+}
+
+query_mysql_db () {
+mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} 2> /dev/null << EOF
+USE ${JAMBULATV_SETUP_DB_NAME};
+SELECT $@ FROM ${JAMBULATV_SETUP_DB_TABLE} WHERE id = (SELECT MAX(id) FROM ${JAMBULATV_SETUP_DB_TABLE});
+EOF
 }
 
 check_internet_access () {
@@ -90,16 +107,25 @@ text2speech_pico () {
 /usr/bin/pico2wave --lang=en-US --wave=$TTS_OUTPUT_FILE "$@"
 }
 
-text2speech_acapela () {
-$CURL_CMD $CURL_OPTS $($CURL_CMD $CURL_OPTS -A "$USER_AGENT" -H "Keep-Alive:300" -H "Connection:keep-alive" -H "Content-type:application/x-www-form-urlencoded" -d MyLanguages=sonid10 -d MySelectedVoice=Sharon -d MyTextForTTS="$(echo "$1" | sed -e "s: :%20:g" | sed -e "s:'::g")" -d t=1 -d SendToVaaS="" "http://www.acapela-group.com/demo-tts/DemoHTML5Form_V2.php" | grep -o "http.*mp3") > $TTS_OUTPUT_FILE
+text2speech_ispeech () {
+# API Key
+ISPEECH_API_KEY=$(query_mysql_db ispeech_tts_api_key)
+# Connect to API Endpoint
+$CURL_CMD $CURL_OPTS -A "$USER_AGENT" -d apikey=$ISPEECH_API_KEY -d text="$1" -d voice=usenglishfemale -d format=mp3 -d frequency=44100 -d bitrate=128 -d speed=1 -d startpadding=1 -d endpadding=1 -d pitch=110 -d filename=$TTS_OUTPUT_FILE "http://api.ispeech.org/api/rest?action=convert"
 }
 
 text2speech_google () {
+# API Key
+GOOGLE_API_KEY=$(query_mysql_db google_tts_api_key)
+# Connect to API Endpoint
 $CURL_CMD $CURL_OPTS -A "$USER_AGENT" -o $TTS_OUTPUT_FILE "http://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q="$(echo "$1" | sed -e "s: :%20:g" | sed -e "s:'::g")"&tl=En-us"
 }
 
 text2speech_watson () {
-$CURL_CMD $CURL_OPTS -A "$USER_AGENT" -u "6aa3bbba-a513-42fe-954a-f6c23b7a5f8e":"DNAjnRVn5btV" -H "Content-Type: application/json" -H "Accept: audio/wav" -d "{\"text\":\"$1\"}" -o $TTS_OUTPUT_FILE "https://stream.watsonplatform.net/text-to-speech/api/v1/synthesize?voice=en-US_AllisonVoice"
+# API Key
+IBM_WATSON_API_KEY=$(query_mysql_db watson_tts_api_key)
+# Connect to API Endpoint
+$CURL_CMD $CURL_OPTS -A "$USER_AGENT" -u "apikey:$IBM_WATSON_API_KEY" -H "Content-Type: application/json" -H "Accept: audio/wav" -d "{\"text\":\"$1\"}" -o $TTS_OUTPUT_FILE "https://stream.watsonplatform.net/text-to-speech/api/v1/synthesize?voice=en-US_AllisonVoice"
 }
 
 query_text2speech_engine () {
@@ -110,7 +136,7 @@ text2speech_pico "$TTS_TEXT_MESSAGE"
 
 else
 
-# Set default API used > 1=acapella 2=google 3=watson
+# Set default API used > 1=iSpeech 2=google 3=watson
 API_SERVICE=$TTS_API
 if [[ "x$API_SERVICE" = "x" ]];
 then
@@ -125,9 +151,9 @@ CURL_OPTS="-s -S -L -m 60"
 # Select Internet TTS service to use
 case $API in
 1)
-# TTS using acapela
+# TTS using iSpeech
 TTS_CHARACTER_LIMIT=337
-text2speech_acapela "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
+text2speech_ispeech "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
 ;;
 
 2)
@@ -143,9 +169,9 @@ text2speech_watson "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
 ;;
 
 *)
-# TTS using acapela
-TTS_CHARACTER_LIMIT=337
-text2speech_acapela "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
+# TTS using google
+TTS_CHARACTER_LIMIT=200
+text2speech_google "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
 ;;
 esac
 
@@ -219,7 +245,6 @@ query_text2speech_engine
 #################
 #  MAIN SCRIPT  #
 #################
-
 # Usage
 usage
 
@@ -250,10 +275,17 @@ say_custom "$API" "$3"
 *)
 clear
 cat <<EOT
-Usage:  
+Usage:
+-----
 ./`basename $0` [Speech API] time
 ./`basename $0` [Speech API] weather [Period] [Weather API] [Debugging]
 ./`basename $0` [Speech API] custom [Message]
+
+	Speech API Engines
+	******************
+	1 - iSpeech (API key required)
+	2 - Google
+	3 - IBM Watson (API key required)
 
 EOT
 # Sound error
