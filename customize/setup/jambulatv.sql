@@ -69,7 +69,8 @@ wunderground_api_key VARCHAR(255) NOT NULL,
 openweathermap_api_key VARCHAR(255) NOT NULL,
 latitude_home DECIMAL(10, 8) NOT NULL,
 longitude_home DECIMAL(11, 8) NOT NULL,
-tts_api_key VARCHAR(255) NOT NULL,
-tts_api_id VARCHAR(255) NOT NULL,
+ispeech_tts_api_key VARCHAR(255) NOT NULL,
+google_tts_api_key VARCHAR(255) NOT NULL,
+watson_tts_api_key VARCHAR(255) NOT NULL,
 PRIMARY KEY (id)
 )

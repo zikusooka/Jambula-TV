@@ -75,12 +75,20 @@ For precise and reliable weather forecasts, please add your geolocation.  You ca
 <hr/>
 
  <h4>Text to Speech (Optional)</h4>
-In order to use the text-to-speech services provided by JambulaTV, please create an API key using: <br><a href="https://console.cloud.google.com/apis/api/texttospeech.googleapis.com" target="_blank">Google TTS</a>
+In order to use the text-to-speech services provided by JambulaTV, please register and create one or more API keys with the following providers:
+<br>
+<br><a href="https://www.ispeech.org/developers" target="_blank">iSpeech TTS</a>
+<br><a href="https://console.cloud.google.com/apis/api/texttospeech.googleapis.com" target="_blank">Google TTS</a>
+<br><a href="https://cloud.ibm.com/registration" target="_blank">IBM Watson TTS</a>
 <p>
- <label>TTS API Key :</label><br />
- <input name="tts_api_key" id="tts_api_key" type="text" value="" >
- <label>TTS API ID (If applicable) :</label><br />
- <input name="tts_api_id" id="tts_api_id" type="text" value="" >
+ <label>iSpeech TTS | API Key:</label><br />
+ <input name="ispeech_tts_api_key" id="ispeech_tts_api_key" type="text" value="" >
+ <label>Google TTS | API Key:</label><br />
+ <input name="google_tts_api_key" id="google_tts_api_key" type="text" value="" >
+ <label>IBM Watson TTS | API Key:</label><br />
+ <input name="watson_tts_api_key" id="watson_tts_api_key" type="text" value="" >
+
+
 
 <hr/>
 
