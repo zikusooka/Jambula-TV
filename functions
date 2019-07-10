@@ -9810,6 +9810,21 @@ make installclient
 }
 
 snapcast_configure () {
+# Give snapserver and snapclient users access to audio devices and
+# pulseaudio server
+for SNAPUSER in snapserver snapclient;
+do
+usermod -a -G audio,pulse,pulse-access $SNAPUSER
+done
+
+# Change home directory for snapclient user - needed for access to
+# pulseaudio server
+usermod -d /var/lib/snapclient snapclient
+# Create snapclient home directory if non-existent
+[[ -d /var/lib/snapclient ]] || mkdir /var/lib/snapclient
+# Give user the ownership of snapclient home directory
+chown snapclient /var/lib/snapclient
+
 # Change snapcast server/client start options to suit our environment
 # Use template to generate snapcast server default file
 cat $PROJECT_CONFIGS_DIR/snapcast/snapserver.sample | \
