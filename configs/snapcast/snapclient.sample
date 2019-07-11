@@ -17,6 +17,6 @@ START_SNAPCLIENT=true
 #   -i, --instance arg (=1)         instance id
 #   --hostID arg                    unique host id
 
-USER_OPTS="--user snapclient:audio"
+USER_OPTS="--user MY_MULTIMEDIA_USER:audio"
 
 SNAPCLIENT_OPTS="-p MY_SNAPCAST_CLIENT_PORT -s pulse"

@@ -9836,6 +9836,7 @@ cat $PROJECT_CONFIGS_DIR/snapcast/snapserver.sample | \
 
 # Use template to generate snapcast server default file
 cat $PROJECT_CONFIGS_DIR/snapcast/snapclient.sample | \
+	sed -e "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" | \
 	sed -e "s:MY_SNAPCAST_CLIENT_PORT:$SNAPCAST_CLIENT_PORT:g" | \
 	sed "s:MY_PROJECT_NAME:$PROJECT_NAME:g" \
 		> $SNAPCAST_DEFAULT_CLIENT_FILE
@@ -9844,7 +9845,7 @@ cat $PROJECT_CONFIGS_DIR/snapcast/snapclient.sample | \
 # snapserver
 chown snapserver:snapserver $SNAPCAST_DEFAULT_SERVER_FILE
 # snapclient
-chown snapclient:audio $SNAPCAST_DEFAULT_CLIENT_FILE
+chown $MULTIMEDIA_USER:audio $SNAPCAST_DEFAULT_CLIENT_FILE
 
 # Enable snapcast server and client NOTE: Already enebled by default
 systemctl enable snapserver.service
