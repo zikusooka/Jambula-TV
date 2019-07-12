@@ -12104,7 +12104,7 @@ cd $INSTALL_SRC_DIR/prosody
 ./configure --ostype=linux --prefix=$PREFIX --libdir=$LIBDIR \
 	--with-lua-include=/usr/include --with-ssl=ssl \
 	--sysconfdir=$PROJECT_SYSTEM_CONF_DIR/prosody \
-	--datadir=$PROJECT_SYSTEM_LOG_DIR/prosody
+	--datadir=/var/lib/prosody
 make_install_jambulatv 
 
 # Add prosody group and user
