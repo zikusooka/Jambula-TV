@@ -14,7 +14,7 @@
 # IMPORTANT: Please note that this tool requires an unused & dedicated wireless
 #            interface
 #
-# Jambula Labs @copyright 2018-2019 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
 
 PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
@@ -117,6 +117,11 @@ set_notifications
 $MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_PRESENCE_TRACKERJACKER/$WIFI_USER_MAC" -m "$SMARTHOME_PRESENCE_OUT_MESSAGE"
 }
 
+mqtt_publish_unknown () {
+# Publish blank to MQTT topic
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_PRESENCE_TRACKERJACKER/$WIFI_USER_MAC" -m "Unknown"
+}
+
 notify_via_logger_osd_home () {
 # Source notification strings
 set_notifications
@@ -152,6 +157,16 @@ mqtt_publish_away
 
 # Notify via logger and OSD
 notify_via_logger_osd_away
+}
+
+reset_presence_states () {
+# Process only WiFi devices used by our users that have their monitor flag preset to 'yes'
+awk '$5 == "yes" {print $0}' $OUR_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' | while read LINE
+do
+WIFI_USER_MAC=$(echo $LINE | cut -d '|' -f1 | sed 's/-/:/g'| sed 's:^ ::' | sed 's: *$::g' | tr [A-Z] [a-z])
+# Set presence state for all monitored devices to unknown
+mqtt_publish_unknown
+done
 }
 
 cleanup_presence_state_files () {
@@ -231,6 +246,9 @@ sudo $TRACKERJACKER_CMD $TRACKERJACKER_OPTS -c $TRACKERJACKER_CONFIG_FILE >> $TR
 # 2. JambulaTV Presence Detection
 # -------------------------------
 #
+# Reset presence states for all monitored devices
+reset_presence_states
+
 # Cleanup - Remove previous temp files for when user last seen as present or absent
 cleanup_presence_state_files
 
