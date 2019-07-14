@@ -2,7 +2,7 @@
 Description=WiFi user presence detection using trackerjacker 
 Requires = sys-subsystem-net-devices-MY_TRACKERJACKER_INTERFACE.device
 After = sys-subsystem-net-devices-MY_TRACKERJACKER_INTERFACE.device
-After = syslog.target network.target
+After = syslog.target network.target mosquitto.service
 
 [Service]
 User=MY_AUTOLOGIN_USER
