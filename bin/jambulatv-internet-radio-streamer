@@ -20,8 +20,6 @@ MPD_LOCAL_PORT=$MPD_PORT
 WEBRADIO_STREAMER_PORT=MY_WEBRADIO_STREAMER_PORT
 WEBRADIO_STREAMER_PID_FILE=MY_TMPDIR/webradio_process_ids
 WEBRADIO_STREAMER_LOG_FILE=MY_PROJECT_SYSTEM_LOG_DIR/webradio-streamer.log
-WEBRADIO_PLAYLIST_TEMP_DIR=$TMPDIR
-WEBRADIO_PLAYLIST_EXT=m3u8
 WEBRADIO_STREAMER_NUMBER_OF_ARGS=$#
 WEBRADIO_STREAMER_TASK=$1
 WEBRADIO_STREAMER_STATION=$(/bin/echo "$2" | sed -e "s/[^0-9. ]*//g" -e  "s/ \+/ /g")
@@ -54,17 +52,25 @@ Online Radio Station IDs
   1  SmoothJazz.com (Jazz)
   2  Family Life (Christian)
   3  Jazz 24 (Jazz)
-  4  K-Love (Christian)
-  5  Soma FM (Indie)
-  6  KEAN 105 (Country)
-  7  Hot 108 (Hip Hop)
-  8  NBSRadio (Party)
-  9  Radio Santa Claus (Christmas)
- 10  Relax (Jazz)
- 11  Relax (Latino)
- 12  Relax (Life)
- 13  Relax (Gold)
- 14  Relax (Nature)
+  4  Radio Swiss Jazz
+  5  K-Love (Christian)
+  6  Soma FM (Indie)
+  7  KEAN 105 (Country)
+  8  Hot 108 (Hip Hop)
+  9  NBSRadio (Party)
+ 10  Radio Santa Claus (Christmas)
+ 11  Relax (Jazz)
+ 12  Relax (Latino)
+ 13  Relax (Life)
+ 14  Relax (Gold)
+ 15  Relax (Nature)
+ 16  Radio Swiss Classic
+ 17  Radio Swiss Classique
+ 18 The Loop (Classic Rock)
+ 19 Black Gospel Radio (Gospel)
+ 20 WFMV - 95.3 FM (Gospel)
+ 21 Gospel Highway 11 (Gospel)
+ 22 WGOK Gospel 900 (Gospel)
 
 EOF
 exit 1
@@ -74,83 +80,113 @@ fi
 get_webradio_url () {
 case $WEBRADIO_STREAMER_STATION in
 1)
-# Smooth Jazz
+# Smooth Jazz (Jazz)
 WEBRADIO_STREAMER_URL=http://sj64.hnux.com
 ;;
 
 2)
-# Family Life Radio
+# Family Life Radio (Christian)
 WEBRADIO_STREAMER_URL="http://ic1.christiannetcast.com/kflr-fm?rnd=6026"
 ;;
 
 3)
-# Jazz24
-WEBRADIO_NAME=Jazz24
-WEBRADIO_PLAYLIST_URL="https://live.wostreaming.net/manifest/ppm-jazz24aac-hlsc1.m3u8"
-WEBRADIO_PLAYLIST_FILE=$WEBRADIO_PLAYLIST_TEMP_DIR/$WEBRADIO_NAME.$WEBRADIO_PLAYLIST_EXT 
-# Download playlist locally - mplayer can not handle it remotely
-wget -c -O $WEBRADIO_PLAYLIST_FILE $WEBRADIO_PLAYLIST_URL
-WEBRADIO_STREAMER_URL="$WEBRADIO_PLAYLIST_FILE"
+# Jazz24 (Jazz)
+WEBRADIO_STREAMER_URL="http://icy1.abacast.com:80/kplu-jazz24aac-64"
 ;;
 
-4)
-# K-Love
-WEBRADIO_STREAMER_URL="http://emf.streamguys1.com/sk001_mp3_high_web"
+4) 
+# Radio Swiss Jazz (Jazz)
+WEBRADIO_STREAMER_URL="http://stream.srg-ssr.ch:80/m/rsj/aacp_96"
 ;;
 
 5)
+# K-Love (Christian)
+WEBRADIO_STREAMER_URL="http://emf.streamguys1.com/sk001_mp3_high_web"
+;;
+
+6)
 # SomaFM (Indie)
 WEBRADIO_STREAMER_URL="http://ice1.somafm.com/indiepop-128-mp3"
 ;;
 
-6)
+7)
 # KEAN 105 (Country)
-WEBRADIO_NAME=KEAN_105
-WEBRADIO_PLAYLIST_URL="https://live.wostreaming.net/manifest/townsquare-keanfmaac-hlsc3.m3u8"
-WEBRADIO_PLAYLIST_FILE=$WEBRADIO_PLAYLIST_TEMP_DIR/$WEBRADIO_NAME.$WEBRADIO_PLAYLIST_EXT 
-# Download playlist locally - mplayer can not handle it remotely
-wget -c -O $WEBRADIO_PLAYLIST_FILE $WEBRADIO_PLAYLIST_URL
-WEBRADIO_STREAMER_URL="$WEBRADIO_PLAYLIST_FILE"
+WEBRADIO_STREAMER_URL="http://54.82.83.208/townsquare-keanfmaac-ibc3"
 ;;
 
-7)
+8)
 # Hot 108 (Hip Hop)
 WEBRADIO_STREAMER_URL="http://listen.hot108.com/hot108"
 ;;
 
-8)
+9)
 # NBSRadio (House/Party/Beats)
 WEBRADIO_STREAMER_URL="http://live.nsbradio.co.uk:8904/"
 ;;
 
-9)
+10)
 # Radio Santa Claus (Christmas)
 WEBRADIO_STREAMER_URL="https://streaming.radiostreamlive.com/radiosantaclaus_devices"
 ;;
 
-10)
+11)
 # Relax (Jazz)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_2"
 ;;
 
-11)
+12)
 # Relax (Latino)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_3"
 ;;
 
-12)
+13)
 # Relax (Life)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_5"
 ;;
 
-13)
+14)
 # Relax (Gold)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_4"
 ;;
 
-14)
+15)
 # Relax (Nature)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_1"
+;;
+
+16)
+# Radio Swiss Classic (Classical)
+WEBRADIO_STREAMER_URL="http://stream.srg-ssr.ch:80/m/rsc_de/aacp_96"
+;;
+
+17)
+# Radio Swiss Classique (Classical)
+WEBRADIO_STREAMER_URL="http://stream.srg-ssr.ch/m/rsc_fr/mp3_128"
+;;
+
+18)
+# WLUP-FM - The Loop 97.9 FM (Classic Rock)
+WEBRADIO_STREAMER_URL="http://17013.live.streamtheworld.com/WLUPFM.mp3"
+;;
+
+19)
+# Black Gospel Radio (Gospel)
+WEBRADIO_STREAMER_URL="http://ice64.securenetsystems.net/BGRLIVE"
+;;
+
+20)
+# WFMV - 95.3 FM (Gospel)
+WEBRADIO_STREAMER_URL="http://ice8.securenetsystems.net/WFMV"
+;;
+
+21)
+# WNAP - Gospel Highway 11 1110 AM (Gospel)
+WEBRADIO_STREAMER_URL="http://ice23.securenetsystems.net/WNAP"
+;;
+
+22)
+# WGOK Gospel 900 (Gospel)
+WEBRADIO_STREAMER_URL="http://17013.live.streamtheworld.com/WGOKAM.mp3"
 ;;
 
 *)
@@ -265,8 +301,8 @@ fi
 sleep 3
 #
 # Add process ID (PID) numbers to temp file
-MPLAYER_PID=$(ps auxw | grep -Ev grep | grep mplayer | grep -E "(http|https|rtmp|rtsp|$WEBRADIO_PLAYLIST_EXT|m3u|m3u8|pls)" | awk {'print $2'})
-VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep -E "(http|https|rtmp|rtsp|$WEBRADIO_PLAYLIST_EXT|m3u|m3u8|pls)" | awk {'print $2'})
+MPLAYER_PID=$(ps auxw | grep -Ev grep | grep mplayer | grep -E "(http|https|rtmp|rtsp|m3u|m3u8|pls)" | awk {'print $2'})
+VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep -E "(http|https|rtmp|rtsp|m3u|m3u8|pls)" | awk {'print $2'})
 FFMPEG_PID=$(ps auxw | grep -Ev grep | grep ffmpeg | grep "f s16le -ac 1 -i pipe:0 -acodec libmp3lame -ab 128k -f mpegts" | awk {'print $2'})
 #
 cat > $WEBRADIO_STREAMER_PID_FILE <<EOF
