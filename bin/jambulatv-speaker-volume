@@ -45,6 +45,21 @@ exit 1
 fi
 }
 
+# Snapcast
+# --------
+snapcast_check_status () {
+# Check status of snapcast client
+ps auxw | grep snapclient | grep pulse > /dev/null 2>&1
+SNAPCLIENT_EXIT_STATUS=$?
+}
+
+set_sink_input_mute_snapcast_localhost () {
+$PACTL_CMD set-sink-input-mute $($PACTL_CMD list sink-inputs | grep -B25 'application.process.binary = \"snapclient\"' | grep 'Sink Input #' | sed 's:Sink Input #::') $1
+}
+
+set_sink_input_volume_snapcast_localhost () {
+$PACTL_CMD set-sink-input-volume $($PACTL_CMD list sink-inputs | grep -B25 'application.process.binary = \"snapclient\"' | grep 'Sink Input #' | sed 's:Sink Input #::') $SPEAKER_VOLUME_LEVEL
+}
 
 # MPD
 # ---
@@ -54,64 +69,116 @@ $MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT status > /dev/null 2>&1
 MPC_EXIT_STATUS=$?
 }
 
-toggle_volume_mpd_localhost () {
+set_sink_input_mute_mpd_localhost () {
 # Control MPD server volume
 $MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT volume $1
 }
 
+set_sink_input_volume_mpd_localhost () {
+# Control MPD server volume
+$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT volume $(echo $SPEAKER_VOLUME_LEVEL | sed 's:%::')
+}
 
-# FM Radio
-# --------
-toggle_volume_fmradio_localhost () {
-# toggle/unmute volume using MPD if its server is running 
+# MPlayer
+# -------
+set_sink_input_mute_mplayer_localhost () {
+STREAMER_PID_FILE=$2
+$PACTL_CMD set-sink-input-mute $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') $1
+}
+
+set_sink_input_volume_mplayer_localhost () {
+STREAMER_PID_FILE=$2
+$PACTL_CMD set-sink-input-volume $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') $SPEAKER_VOLUME_LEVEL
+}
+
+
+# --------------
+# App selection
+# --------------
+app_used_localhost () {
+snapcast_check_status
 mpd_check_status
-if [[ "$MPC_EXIT_STATUS" = "0" ]];
+if [[ "$SNAPCLIENT_EXIT_STATUS" = "0" ]];
 then
-toggle_volume_mpd_localhost 100
-
+APP_USED_TO_PLAY=snapcast
+elif [[ "$MPC_EXIT_STATUS" = "0" ]];
+then
+APP_USED_TO_PLAY=mpd
 else
-# Toggle volume i.e. unmute
+APP_USED_TO_PLAY=mplayer
+fi
+}
+
+
+# ---------
+# FM Radio
+# ---------
+unmute_volume_fmradio_localhost () {
+if [[ "$APP_USED_TO_PLAY" = "snapcast" ]];
+then
+# toggle/unmute volume using snapcast if it is running 
+set_sink_input_mute_snapcast_localhost 0
+
+elif [[ "$APP_USED_TO_PLAY" = "mpd" ]];
+then
+# toggle/unmute volume using MPD if it is running 
+set_sink_input_mute_mpd_localhost 100
+
+elif [[ "$APP_USED_TO_PLAY" = "mplayer" ]];
+then
+# toggle/unmute volume using mplayer if it is running 
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
-$PACTL_CMD set-sink-input-mute $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') toggle
+set_sink_input_mute_mplayer_localhost 0 $FMRADIO_STREAMER_PID_FILE
+
 fi
 }
 
 mute_volume_fmradio_localhost () {
-# Mute volume using mpd if its server is running 
-mpd_check_status
-if [[ "$MPC_EXIT_STATUS" = "0" ]];
+if [[ "$APP_USED_TO_PLAY" = "snapcast" ]];
 then
-toggle_volume_mpd_localhost 0
+# Mute volume using snapcast if it is running
+set_sink_input_mute_snapcast_localhost 1
+elif [[ "$APP_USED_TO_PLAY" = "mpd" ]];
+then
+# Mute volume using mpd if it is running 
+set_sink_input_mute_mpd_localhost 0
 
-else
+elif [[ "$APP_USED_TO_PLAY" = "mplayer" ]];
+then
 # If volume for FM radio is not muted, mute it
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
 FMRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
-[[ "$FMRADIO_VOLUME_MUTED" = "yes" ]] || toggle_volume_fmradio_localhost
+[[ "$FMRADIO_VOLUME_MUTED" = "yes" ]] || 
+set_sink_input_mute_mplayer_localhost 1 $FMRADIO_STREAMER_PID_FILE
+
 fi
 }
 
 adjust_volume_fmradio_localhost () {
-# Adjust volume using MPD if its server is running 
-mpd_check_status
-case $MPC_EXIT_STATUS in
-0)
-toggle_volume_mpd_localhost $(echo $SPEAKER_VOLUME_LEVEL | sed 's:%::')
-;;
+if [[ "$APP_USED_TO_PLAY" = "snapcast" ]];
+then
+# Adjust volume using snapcast if its server is running 
+set_sink_input_volume_snapcast_localhost $SPEAKER_VOLUME_LEVEL
 
-*)
+elif [[ "$APP_USED_TO_PLAY" = "mpd" ]];
+then
+# Adjust volume using MPD if its server is running 
+set_sink_input_volume_mpd_localhost 
+
+elif [[ "$APP_USED_TO_PLAY" = "mplayer" ]];
+then
 # If volume for FM radio is muted, unmute it
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
 FMRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
 if [[ "$FMRADIO_VOLUME_MUTED" = "yes" ]];
 then
-toggle_volume_fmradio_localhost
+unmute_volume_fmradio_localhost
 else
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
-$PACTL_CMD set-sink-input-volume $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') $SPEAKER_VOLUME_LEVEL
+set_sink_input_volume_mplayer_localhost $SPEAKER_VOLUME_LEVEL $FMRADIO_STREAMER_PID_FILE
 fi
-;;
-esac
+
+fi
 }
 
 control_volume_fmradio () {
@@ -137,75 +204,92 @@ esac
 }
 
 
+# ---------------
 # Internet Radio
-# --------------
-toggle_volume_webradio_localhost () {
-# toggle/unmute volume using MPD if its server is running 
-mpd_check_status
-if [[ "$MPC_EXIT_STATUS" = "0" ]];
+# ---------------
+unmute_volume_webradio_localhost () {
+if [[ "$APP_USED_TO_PLAY" = "snapcast" ]];
 then
-toggle_volume_mpd_localhost 100
+# toggle/unmute volume using snapcast if it is running 
+set_sink_input_mute_snapcast_localhost 0
 
-else
+elif [[ "$APP_USED_TO_PLAY" = "mpd" ]];
+then
+# toggle/unmute volume using MPD if it is running 
+set_sink_input_mute_mpd_localhost 100
+
+elif [[ "$APP_USED_TO_PLAY" = "mplayer" ]];
+then
+# toggle/unmute volume using mplayer if it is running 
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
-$PACTL_CMD set-sink-input-mute $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') toggle
+set_sink_input_mute_mplayer_localhost 0 $WEBRADIO_STREAMER_PID_FILE
+
 fi
 }
 
 mute_volume_webradio_localhost () {
-# Mute volume using mpd if its server is running 
-mpd_check_status
-if [[ "$MPC_EXIT_STATUS" = "0" ]];
+if [[ "$APP_USED_TO_PLAY" = "snapcast" ]];
 then
-toggle_volume_mpd_localhost 0
+# Mute volume using snapcast if it is running 
+set_sink_input_mute_snapcast_localhost mute
+elif [[ "$APP_USED_TO_PLAY" = "mpd" ]];
+then
+# Mute volume using mpd if it is running 
+set_sink_input_mute_mpd_localhost 0
 
-else
+elif [[ "$APP_USED_TO_PLAY" = "mplayer" ]];
+then
 # If volume for Internet radio is not muted, mute it
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
 WEBRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
-[[ "$WEBRADIO_VOLUME_MUTED" = "yes" ]] || toggle_volume_webradio_localhost
+[[ "$WEBRADIO_VOLUME_MUTED" = "yes" ]] || set_sink_input_mute_mplayer_localhost 1 $WEBRADIO_STREAMER_PID_FILE
+
 fi
 }
 
 adjust_volume_webradio_localhost () {
-# Adjust volume using MPD if its server is running 
-mpd_check_status
-case $MPC_EXIT_STATUS in
-0)
-toggle_volume_mpd_localhost $(echo $SPEAKER_VOLUME_LEVEL | sed 's:%::')
-;;
+if [[ "$APP_USED_TO_PLAY" = "snapcast" ]];
+then
+# Adjust volume using snapcast if its server is running 
+set_sink_input_volume_snapcast_localhost $SPEAKER_VOLUME_LEVEL
 
-*)
+elif [[ "$APP_USED_TO_PLAY" = "mpd" ]];
+then
+# Adjust volume using MPD if its server is running 
+set_sink_input_volume_mpd_localhost
+
+elif [[ "$APP_USED_TO_PLAY" = "mplayer" ]];
+then
 # If volume for Internet radio is muted, unmute it
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
 WEBRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
 if [[ "$WEBRADIO_VOLUME_MUTED" = "yes" ]];
 then
-toggle_volume_webradio_localhost
+unmute_volume_webradio_localhost
 else
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
-$PACTL_CMD set-sink-input-volume $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') $SPEAKER_VOLUME_LEVEL
+set_sink_input_volume_mplayer_localhost $SPEAKER_VOLUME_LEVEL $WEBRADIO_STREAMER_PID_FILE
 fi
-;;
-esac
+
+fi
 }
 
 control_volume_webradio () {
 case $SPEAKER_VOLUME_LOCATION in
-# Control volume of internet radio for speakers at localhost
+# Control volume of fm radio for speakers at localhost
 localhost)
 # If volume level is set at '0' then assume 'mute' has been requested
 if [[ "$SPEAKER_VOLUME_LEVEL" = "0" ]];
 then
-# Mute volume for webradio
+# Mute volume for fmradio
 mute_volume_webradio_localhost
 else
-# Increase/Decrease volume for webradio
+# Increase/Decrease volume for fmradio
 adjust_volume_webradio_localhost
 fi
 ;;
 
-# Control volume of internet radio for speakers at remote host
+# Control volume of fm radio for speakers at remote host
 192.168.x.x)
 :
 ;;
@@ -217,8 +301,12 @@ esac
 #################
 #  MAIN SCRIPT  #
 #################
+
 # Usage for all
 usage_all
+
+# Get application used to play locally
+app_used_localhost
 
 # Volume control
 case $SPEAKER_VOLUME_TYPE in
@@ -232,7 +320,7 @@ mute_volume_fmradio_localhost
 elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
 then
 # Unmute FM radio volume
-toggle_volume_fmradio_localhost 
+unmute_volume_fmradio_localhost 
 
 else
 control_volume_fmradio
@@ -248,7 +336,7 @@ mute_volume_webradio_localhost
 elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
 then
 # Unmute Internet radio volume
-toggle_volume_webradio_localhost
+unmute_volume_webradio_localhost
 
 else
 control_volume_webradio
@@ -265,8 +353,8 @@ mute_volume_webradio_localhost
 elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
 then
 # Unmute all volumes
-toggle_volume_fmradio_localhost 
-toggle_volume_webradio_localhost
+unmute_volume_fmradio_localhost 
+unmute_volume_webradio_localhost
 
 else
 control_volume_fmradio
