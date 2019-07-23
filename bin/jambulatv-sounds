@@ -99,9 +99,11 @@ SETUP_SOUND_FILE=setup-completed-tutor-channel-restarting.wav
 SETUP_SOUND_FILE=setup-error-no-dvbt-tuner.wav
 ;;
 *)
+clear
 cat <<EOT
 Usage: `basename $0` $SOUND_TYPE [number e.g. 1]"
 EOT
+exit 1
 ;;
 esac
 
@@ -109,30 +111,35 @@ esac
 [[ -e $JAMBULATV_SOUNDS_DIR/$SETUP_SOUND_FILE ]] && $SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $JAMBULATV_SOUNDS_DIR/$SETUP_SOUND_FILE
 }
 
-alarm_sounds () {
-ALARM_SOUND_NUMBER=$1
-case $ALARM_SOUND_NUMBER in
+alert_sounds () {
+ALERT_SOUND_NUMBER=$1
+case $ALERT_SOUND_NUMBER in
 1)
-ALARM_SOUND_FILE=attention-motion-detected-00.wav
+ALERT_SOUND_FILE=attention-motion-detected-00.wav
 ;;
 2)
-ALARM_SOUND_FILE=attention-motion-detected-01.mp3
+ALERT_SOUND_FILE=attention-motion-detected-01.mp3
 ;;
 3)
-ALARM_SOUND_FILE=attention-motion-detected-02.mp3
+ALERT_SOUND_FILE=attention-motion-detected-02.mp3
 ;;
 4)
-ALARM_SOUND_FILE=attention-motion-detected-03.mp3
+ALERT_SOUND_FILE=attention-motion-detected-03.mp3
+;;
+5)
+ALERT_SOUND_FILE=attention-mifi-battery-low-recharge-01.mp3
 ;;
 *)
+clear
 cat <<EOT
 Usage: `basename $0` $SOUND_TYPE [number e.g. 1]"
 EOT
+exit 1
 ;;
 esac
 
 # Play sound file if it exists
-[[ -e $JAMBULATV_SOUNDS_DIR/$ALARM_SOUND_FILE ]] && $SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $JAMBULATV_SOUNDS_DIR/$ALARM_SOUND_FILE
+[[ -e $JAMBULATV_SOUNDS_DIR/$ALERT_SOUND_FILE ]] && $SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $JAMBULATV_SOUNDS_DIR/$ALERT_SOUND_FILE
 }
 
 
@@ -159,7 +166,7 @@ $BEEP_CMD -f 1000 -r 5 -n -r 5 -l 10
 beethoven)
 $BEEP_CMD -f 659 -l 460 -n -f 784 -l 340 -n -f 659 -l 230 -n -f 659 -l 110 -n -f 880 -l 230 -n -f 659 -l 230 -n -f 587 -l 230 -n -f 659 -l 460 -n -f 988 -l 340 -n -f 659 -l 230 -n -f 659 -l 110 -n -f 1047-l 230 -n -f 988 -l 230 -n -f 784 -l 230 -n -f 659 -l 230 -n -f 988 -l 230 -n -f 1318 -l 230 -n -f 659 -l 110 -n -f 587 -l 230 -n -f 587 -l 110 -n -f 494 -l 230 -n -f 740 -l 230 -n -f 659 -l 460
 ;;
-alarm)
+alert)
 $BEEP_CMD -f 1000 -l 500 -n 200 -r 2
 ;;
 start)
@@ -177,7 +184,10 @@ $BEEP_CMD -f 600 -l 155 -n -f 800 -l 155 -n -f 500 -l 155 -n -f 400 -l 155 -n -f
 *)
 # Usage - beep types
 clear
-echo "Usage: `basename $0` $SOUND_TYPE [online|offline|dhclient|start|stop|beethoven|misc]"
+cat <<EOT
+Usage: `basename $0` $SOUND_TYPE [online|offline|dhclient|alert|start|stop|beethoven|misc]
+EOT
+exit 1
 ;;
 esac
 
@@ -191,13 +201,16 @@ elif [[ "$SOUND_TYPE" = "setup" ]];
 then
 initial_setup_sounds $2
 
-# Alarm sounds
-elif [[ "$SOUND_TYPE" = "alarm" ]];
+# Alert sounds
+elif [[ "$SOUND_TYPE" = "alert" ]];
 then
-alarm_sounds $2
+alert_sounds $2
 
 else
 # Usage - all types
 clear
-echo "Usage: `basename $0` [beep|api|setup|alarm]"
+cat <<EOT
+Usage: `basename $0` [beep|api|setup|alert]
+EOT
+exit 1
 fi
