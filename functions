@@ -9749,6 +9749,14 @@ rsync -av $PROJECT_CONTRIB_DIR/music/playlists/ $PLAYLISTS_DIRECTORY/mpd/
 chmod -R 775 $PLAYLISTS_DIRECTORY/mpd
 chown -R mpd:audio $PLAYLISTS_DIRECTORY/mpd
 #
+# Add an mpd ignore file
+[[ -e $USER_MUSIC_DIR/.mpdignore ]] || \
+	touch $USER_MUSIC_DIR/.mpdignore
+#
+# Set permissions of Music directory to allow mpd to refresh database
+chmod 755 $(find $USER_MUSIC_DIR -type d)
+chown -R mpd:audio $USER_MUSIC_DIR
+#
 # Generate our mpd systemd service unit file
 cat $PROJECT_INIT_SCRIPTS_DIR/mpd.service | \
 	sed "s:MY_PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" \
