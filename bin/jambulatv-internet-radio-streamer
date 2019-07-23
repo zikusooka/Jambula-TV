@@ -71,6 +71,11 @@ Online Radio Station IDs
  20 WFMV - 95.3 FM (Gospel)
  21 Gospel Highway 11 (Gospel)
  22 WGOK Gospel 900 (Gospel)
+ 23 1.FM ReggaeTrade (Reggae)
+ 24 Reggae 141 (Reggae)
+ 25 Sun City 104.9 FM (Reggae)
+ 26 UFDV Radio (Reggae)
+ 27 FM Jamaica Radio (Reggae)
 
 EOF
 exit 1
@@ -188,6 +193,31 @@ WEBRADIO_STREAMER_URL="http://ice23.securenetsystems.net/WNAP"
 22)
 # WGOK Gospel 900 (Gospel)
 WEBRADIO_STREAMER_URL="http://17013.live.streamtheworld.com/WGOKAM.mp3"
+;;
+
+23)
+# 1.FM ReggaeTrade (Reggae)
+WEBRADIO_STREAMER_URL="http://strm112.1.fm/reggae_mobile_mp3"
+;;
+
+24)
+# Reggae 141 (Reggae)
+WEBRADIO_STREAMER_URL="http://hestia2.cdnstream.com/1301_128"
+;;
+
+25)
+# Sun City 104.9 FM (Reggae)
+WEBRADIO_STREAMER_URL="http://streams.suncityradio.fm:8000"
+;;
+
+26)
+# UFDV Radio (Reggae)
+WEBRADIO_STREAMER_URL="http://cp3.serverse.com:7059/stream"
+;;
+
+27)
+# FM Jamaica Radio (Reggae)
+WEBRADIO_STREAMER_URL="http://us5.internet-radio.com:8487"
 ;;
 
 *)
