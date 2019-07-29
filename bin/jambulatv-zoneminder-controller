@@ -14,7 +14,6 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 
 ZM_ACTION=$1
 ZM_CAMERA_ID=$2
-ZM_CAMERA_FUNCTION=$3
 
 
 
@@ -22,12 +21,28 @@ ZM_CAMERA_FUNCTION=$3
 #  FUNCTIONS  #
 ###############
 
+zm_camera_function () {
+ZM_CAMERA_FUNCTION=$1
+# Change state of specified monitor
+$CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
+	-d "Monitor[Function]=$ZM_CAMERA_FUNCTION" \
+		$ZONEMINDER_API_URL/monitors/$ZM_CAMERA_ID.json
+}
+
 zm_alarm_arm () {
+# Change function of specified monitor to 'Modect'
+zm_camera_function Modect
+#
+# Arm the specified camera
 $CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
 	$ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:on.json
 }
 
 zm_alarm_disarm () {
+# Change function of specified monitor to 'Monitor'
+zm_camera_function Monitor
+#
+# Disarm the specified camera
 $CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
 	$ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:off.json
 }
@@ -35,13 +50,6 @@ $CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
 zm_alarm_status () {
 $CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
 	$ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:status.json
-}
-
-zm_camera_function () {
-# Change state of Monitor Id 1
-$CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
-	-d "Monitor[Function]=$ZM_CAMERA_FUNCTION" \
-		$ZONEMINDER_API_URL/monitors/$ZM_CAMERA_ID.json
 }
 
 
@@ -55,41 +63,31 @@ zoneminder_login_using_api
 
 
 case $ZM_ACTION in
+
 arm)
-# Arm the alarm for Monitor specifies
+# Arm the alarm for specified monitor
 zm_alarm_arm
 ;;
 
 disarm)
-# Diasarm the alarm for Monitor specified
+# Diasarm the alarm for specified monitor
 zm_alarm_disarm
 ;;
 
 status)
-# Status of the alarm for Monitor specified
+# Status of the alarm for specified monitor
 zm_alarm_status
 ;;
 
-function)
-# Change function of Monitor specified
-zm_camera_function
-;;
-
 capture)
-# Change function to modetect
-$0 function $ZM_CAMERA_ID Modect
-
 # Arm alarm
 $0 arm $ZM_CAMERA_ID
 
 # Wait a bit
-sleep 30
+sleep 45
 
 # Disarm alarm
 $0 disarm $ZM_CAMERA_ID
-
-# Change function back to monitoring
-$0 function $ZM_CAMERA_ID Monitor
 ;;
 
 esac
