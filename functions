@@ -1200,6 +1200,8 @@ ZONEMINDER_ZMS_INETD_TOOL=$BINARY_PREFIX/jambulatv-zms-inetd
 # TTS/ASR
 [[ -e $TEXT2SPEECH_TOOL ]] && \
 TTS_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $TEXT2SPEECH_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'}) # IMPORTANT: Must be on 'ext4' partition i.e. /var
+# TTS provider
+TTS_PROVIDER_API=3 # Default API used > 1=iSpeech 2=google 3=watson
 
 # HTTP Headers
 # ------------
@@ -7697,6 +7699,9 @@ PING_IP_ADDRESS=$DNS_SERVER_IP_ADDRESS_DEFAULT
 # Spool directories for instant messaging apps
 TELEGRAM_SPOOL_DIR=$TELEGRAM_SPOOL_DIR
 WHATSAPP_SPOOL_DIR=$WHATSAPP_SPOOL_DIR
+
+# Text 2 Speech default API used # 1=iSpeech 2=google 3=watson
+TTS_PROVIDER_API=$TTS_PROVIDER_API
 GLOBAL
 #
 # Give multimedia user permissions to global settings
