@@ -48,7 +48,7 @@ WUNDERGROUND_APIURL="http://api.wunderground.com/api"
 DARKSKY_APIURL="https://api.darksky.net/forecast"
 OWM_APIURL="api.openweathermap.org/data/2.5"
 # Weather API Keys
-DEFAULT_WUNDERGROUND_APIKEY="55ead5b104f5c88d"
+DEFAULT_WUNDERGROUND_APIKEY="2b0d6572c90d3e4a"
 DEFAULT_DARKSKY_APIKEY="e1b066fec8590435bc79b3dd735b380c"
 DEFAULT_OWM_APIKEY="9141b00d5d6fcf3074a72efdb07d6135"
 
@@ -349,6 +349,39 @@ LATER_WIND_BEARING:		$LATER_WIND_BEARING
 ")
 }
 
+probabiblity_of_rain_mm_workaround () {
+if [[ "$RAINFALL_AMOUNT" -lt "1" ]];
+then
+WORKAROUND_PRECIP_PROBABILITY=20
+elif [[ "$RAINFALL_AMOUNT" -gt "1" && "$RAINFALL_AMOUNT" -le "2" ]];
+then
+WORKAROUND_PRECIP_PROBABILITY=30
+elif [[ "$RAINFALL_AMOUNT" -gt "2" && "$RAINFALL_AMOUNT" -le "2" ]];
+then
+WORKAROUND_PRECIP_PROBABILITY=40
+elif [[ "$RAINFALL_AMOUNT" -gt "2" && "$RAINFALL_AMOUNT" -le "3" ]];
+then
+WORKAROUND_PRECIP_PROBABILITY=50
+elif [[ "$RAINFALL_AMOUNT" -gt "3" && "$RAINFALL_AMOUNT" -le "4" ]];
+then
+WORKAROUND_PRECIP_PROBABILITY=60
+
+elif [[ "$RAINFALL_AMOUNT" -gt "4" && "$RAINFALL_AMOUNT" -le "5" ]];
+then
+WORKAROUND_PRECIP_PROBABILITY=70
+elif [[ "$RAINFALL_AMOUNT" -gt "5" && "$RAINFALL_AMOUNT" -le "6" ]];
+then
+WORKAROUND_PRECIP_PROBABILITY=80
+elif [[ "$RAINFALL_AMOUNT" -gt "6" && "$RAINFALL_AMOUNT" -lt "7" ]];
+then
+WORKAROUND_PRECIP_PROBABILITY=90
+elif [[ "$RAINFALL_AMOUNT" -gt "7" ]];
+then
+WORKAROUND_PRECIP_PROBABILITY=100
+fi
+}
+
+
 
 # --------------
 #  Weather APIs
@@ -373,7 +406,7 @@ weather_underground () {
 # Curl options: Keep here
 CURL_OPTS="-G -s -S -L -m 60 -k"
 # Set API Name
-WEATHER_API_NAME="Weather Underground"
+WEATHER_API_NAME="Weather Under Ground"
 # Set weather API key
 weather_api_endpoints_and_keys
 # Check age of previous weather data files
@@ -430,7 +463,7 @@ weather_openweathermap () {
 # Curl options: Keep here
 CURL_OPTS="-G -s -S -L -m 60 -k"
 # Set API Name
-WEATHER_API_NAME="OpenWeatherMap"
+WEATHER_API_NAME="Open Weather Map"
 # Set Latitude/Longitude
 LATITUDE=$(echo "$LATITUDE" | xargs printf '%.3f')
 LONGITUDE=$(echo "$LONGITUDE" | xargs printf '%.3f')
@@ -460,64 +493,42 @@ CURRENT_WIND_SPEED=$(jq -r ".wind.speed" $CURRENT_WEATHER_RAW_DATA_FILE | xargs 
 CURRENT_WIND_BEARING=$(jq -r ".wind.deg" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 #
 # Set today weather variables
-TODAY_PERIOD=3
-TODAY_TITLE=$(jq -r ".list[$TODAY_PERIOD].dt_txt" $TODAY_WEATHER_RAW_DATA_FILE)
-TODAY_SUMMARY=$(jq -r ".list[$TODAY_PERIOD].weather[0].description" $TODAY_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
-TODAY_TEMPERATURE_MAX=$(jq -r ".list[$TODAY_PERIOD].main.temp_max" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-TODAY_TEMPERATURE_MIN=$(jq -r ".list[$TODAY_PERIOD].main.temp_min" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-TODAY_HUMIDITY=$(jq -r ".list[$TODAY_PERIOD].main.humidity" $TODAY_WEATHER_RAW_DATA_FILE)
+TODAY_PERIOD=0
+TODAY_TITLE=$(jq -r ".list[$TODAY_PERIOD].dt_txt" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d")
+TODAY_SUMMARY=$(jq -r ".list[$TODAY_PERIOD].weather[0].description" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d" | cut -d '.' -f1)
+TODAY_TEMPERATURE_MAX=$(jq -r ".list[$TODAY_PERIOD].main.temp_max" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
+TODAY_TEMPERATURE_MIN=$(jq -r ".list[$TODAY_PERIOD].main.temp_min" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
+TODAY_HUMIDITY=$(jq -r ".list[$TODAY_PERIOD].main.humidity" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d")
 
 # Fix! - Rain in mm
-#TODAY_PRECIP_PROBABILITY=$(echo "$(jq -r ".list[$TODAY_PERIOD].rain" $TODAY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
+#TODAY_PRECIP_PROBABILITY=$(echo "$(jq -r ".list[$TODAY_PERIOD].rain" $TODAY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 1" | bc | xargs printf '%.0f')
+# For now - rough estimates
+RAINFALL_AMOUNT=$(echo "$(jq -r ".list[$TODAY_PERIOD].rain" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d" | awk {'print $2'} | sed 's:[,|"]::g') * 1" | bc | xargs printf '%.0f')
+# Use workaround function to set percentages instead of millimeters 
+probabiblity_of_rain_mm_workaround
+TODAY_PRECIP_PROBABILITY=$WORKAROUND_PRECIP_PROBABILITY
 
-TODAY_WIND_SPEED=$(jq -r ".list[$TODAY_PERIOD].wind.speed" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-TODAY_WIND_BEARING=$(jq -r ".list[$TODAY_PERIOD].wind.deg" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+TODAY_WIND_SPEED=$(jq -r ".list[$TODAY_PERIOD].wind.speed" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
+TODAY_WIND_BEARING=$(jq -r ".list[$TODAY_PERIOD].wind.deg" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
 #
 # Set later weather variables
-LATER_PERIOD=2
-LATER_TITLE=$(jq -r ".list[$LATER_PERIOD].dt_txt" $LATER_WEATHER_RAW_DATA_FILE)
-LATER_SUMMARY=$(jq -r ".list[$LATER_PERIOD].weather[0].description" $LATER_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
-LATER_TEMPERATURE_MAX=$(jq -r ".list[$LATER_PERIOD].main.temp_max" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-LATER_TEMPERATURE_MIN=$(jq -r ".list[$LATER_PERIOD].main.temp_min" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-LATER_HUMIDITY=$(jq -r ".list[$LATER_PERIOD].main.humidity" $LATER_WEATHER_RAW_DATA_FILE)
+LATER_PERIOD=1
+LATER_TITLE=$(jq -r ".list[$LATER_PERIOD].dt_txt" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d")
+LATER_SUMMARY=$(jq -r ".list[$LATER_PERIOD].weather[0].description" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d" | cut -d '.' -f1)
+LATER_TEMPERATURE_MAX=$(jq -r ".list[$LATER_PERIOD].main.temp_max" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
+LATER_TEMPERATURE_MIN=$(jq -r ".list[$LATER_PERIOD].main.temp_min" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
+LATER_HUMIDITY=$(jq -r ".list[$LATER_PERIOD].main.humidity" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d")
 
 # Fix! - Rain in mm
 #LATER_PRECIP_PROBABILITY=$(echo "$(jq -r ".list[$LATER_PERIOD].rain" $LATER_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 1" | bc | xargs printf '%.0f')
 # For now - rough estimates
-RAINFALL_AMOUNT=$(echo "$(jq -r ".list[$LATER_PERIOD].rain" $LATER_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 1" | bc | xargs printf '%.0f')
-#
-if [[ "$RAINFALL_AMOUNT" -lt "1" ]];
-then
-LATER_PRECIP_PROBABILITY=20
-elif [[ "$RAINFALL_AMOUNT" -gt "1" && "$RAINFALL_AMOUNT" -le "2" ]];
-then
-LATER_PRECIP_PROBABILITY=30
-elif [[ "$RAINFALL_AMOUNT" -gt "2" && "$RAINFALL_AMOUNT" -le "2" ]];
-then
-LATER_PRECIP_PROBABILITY=40
-elif [[ "$RAINFALL_AMOUNT" -gt "2" && "$RAINFALL_AMOUNT" -le "3" ]];
-then
-LATER_PRECIP_PROBABILITY=50
-elif [[ "$RAINFALL_AMOUNT" -gt "3" && "$RAINFALL_AMOUNT" -le "4" ]];
-then
-LATER_PRECIP_PROBABILITY=60
+RAINFALL_AMOUNT=$(echo "$(jq -r ".list[$LATER_PERIOD].rain" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d" | awk {'print $2'} | sed 's:[,|"]::g') * 1" | bc | xargs printf '%.0f')
+# Use workaround function to set percentages instead of millimeters 
+probabiblity_of_rain_mm_workaround
+LATER_PRECIP_PROBABILITY=$WORKAROUND_PRECIP_PROBABILITY
 
-elif [[ "$RAINFALL_AMOUNT" -gt "4" && "$RAINFALL_AMOUNT" -le "5" ]];
-then
-LATER_PRECIP_PROBABILITY=70
-elif [[ "$RAINFALL_AMOUNT" -gt "5" && "$RAINFALL_AMOUNT" -le "6" ]];
-then
-LATER_PRECIP_PROBABILITY=80
-elif [[ "$RAINFALL_AMOUNT" -gt "6" && "$RAINFALL_AMOUNT" -lt "7" ]];
-then
-LATER_PRECIP_PROBABILITY=90
-elif [[ "$RAINFALL_AMOUNT" -gt "7" ]];
-then
-LATER_PRECIP_PROBABILITY=100
-fi
-
-LATER_WIND_SPEED=$(jq -r ".list[$LATER_PERIOD].wind.speed" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-LATER_WIND_BEARING=$(jq -r ".list[$LATER_PERIOD].wind.deg" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+LATER_WIND_SPEED=$(jq -r ".list[$LATER_PERIOD].wind.speed" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
+LATER_WIND_BEARING=$(jq -r ".list[$LATER_PERIOD].wind.deg" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
 }
 
 weather_darksky_net () {
