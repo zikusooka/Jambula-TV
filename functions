@@ -11705,6 +11705,7 @@ text2speech_setup () {
 [ -e $TEXT2SPEECH_TOOL ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-text2speech | \
 		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" | \
+		sed -e "s:MY_SPEAKER_VOLUME_TOOL:$SPEAKER_VOLUME_TOOL:g" | \
 		sed "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
 			> $TEXT2SPEECH_TOOL 
 # Make script executable
