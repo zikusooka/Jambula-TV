@@ -37,6 +37,8 @@ USER_AGENT="MY_USER_AGENT"
 
 CURL_CMD="/usr/bin/curl"
 
+SPEAKER_VOLUME_TOOL=MY_SPEAKER_VOLUME_TOOL
+
 
 
 ###############
@@ -140,7 +142,8 @@ else
 API_SERVICE=$TTS_API
 if [[ "x$API_SERVICE" = "x" ]];
 then
-API=1
+# Use default API provided in global settings file
+API=$TTS_PROVIDER_API
 else
 API=$API_SERVICE
 fi
@@ -300,8 +303,19 @@ esac
 # Kill waiting sound effects 
 [ "x$SOUND_EFFECTS_TEMP_SCRIPT_PID" = "x" ] || kill $SOUND_EFFECTS_TEMP_SCRIPT_PID
 
+# Begin announcement
+if [[ -e $TTS_OUTPUT_FILE ]];
+then
+# Mute speaker volume
+$SPEAKER_VOLUME_TOOL all localhost mute
+#
 # Play saved TTS audio
-[[ -e $TTS_OUTPUT_FILE ]] && $TTS_PLAY_CMD $TTS_PLAY_CMD_OPTS $TTS_OUTPUT_FILE
+$TTS_PLAY_CMD $TTS_PLAY_CMD_OPTS $TTS_OUTPUT_FILE
+#
+# Unmute speaker volume
+$SPEAKER_VOLUME_TOOL all localhost unmute
 
+else
 # Add bogus sound effects file to stop beep if no TTS audio file found
-[[ -e $TTS_OUTPUT_FILE ]] || touch $TTS_OUTPUT_FILE
+touch $TTS_OUTPUT_FILE
+fi
