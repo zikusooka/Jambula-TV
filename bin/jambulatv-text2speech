@@ -19,7 +19,14 @@ TTS_PLAY_CMD="/usr/bin/cvlc"
 TTS_PLAY_CMD_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --no-video --no-sout-display-video"
 
 TTS_OUTPUT_FILE=/var/tmp/tts_output.wav # IMPORTANT: Must be on 'ext4' partition i.e. /var
+#
+if [[ "x$1" = "x" ]];
+then
+TTS_API=$TTS_PROVIDER_API
+else
 TTS_API=$1
+fi
+#
 TTS_ACTION=$2
 TTS_CUSTOM_MESSAGE=$3
 
