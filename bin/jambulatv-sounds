@@ -113,6 +113,7 @@ esac
 
 alert_sounds () {
 ALERT_SOUND_NUMBER=$1
+#
 case $ALERT_SOUND_NUMBER in
 1)
 ALERT_SOUND_FILE=attention-motion-detected-00.wav
@@ -132,17 +133,66 @@ ALERT_SOUND_FILE=attention-mifi-battery-low-recharge-01.wav
 6)
 ALERT_SOUND_FILE=attention-mifi-battery-full-unplug-01.wav
 ;;
+7)
+ALERT_SOUND_FILE=battery_low_01.mp3
+;;
+8)
+ALERT_SOUND_FILE=battery_charging_01.mp3
+;;
+9)
+ALERT_SOUND_FILE=phone_one_ring_01.mp3
+;;
+10)
+ALERT_SOUND_FILE=rain_heavy_01.mp3
+;;
+11)
+ALERT_SOUND_FILE=thunder_rain_01.mp3
+;;
+12)
+ALERT_SOUND_FILE=wake_alarm_clock_gentle_01.mp3
+;;
+14)
+ALERT_SOUND_FILE=incoming-phone-call-for.mp3
+;;
+15)
+ALERT_SOUND_FILE=phone_battery_recharge_for.mp3
+;;
+16)
+ALERT_SOUND_FILE=phone_battery_charging_complete_for.mp3
+;;
+17)
+ALERT_SOUND_FILE=thunderstorms_observed_rainfall_likely.mp3
+;;
+[Aa-Zz]*)
+if [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]];
+then
+ALERT_SOUND_FILE=${ALERT_SOUND_NUMBER}.mp3
+elif [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.wav ]];
+then
+ALERT_SOUND_FILE=${ALERT_SOUND_NUMBER}.wav
+else
+ALERT_SOUND_FILE=$ALERT_SOUND_NUMBER
+fi
+;;
 *)
 clear
 cat <<EOT
-Usage: `basename $0` $SOUND_TYPE [number e.g. 1]"
+Usage: `basename $0` $SOUND_TYPE [number|pattern]
 EOT
 exit 1
-;;
 esac
 
 # Play sound file if it exists
-[[ -e $JAMBULATV_SOUNDS_DIR/$ALERT_SOUND_FILE ]] && $SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $JAMBULATV_SOUNDS_DIR/$ALERT_SOUND_FILE
+if [[ -e $JAMBULATV_SOUNDS_DIR/$ALERT_SOUND_FILE ]];
+then
+$SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $JAMBULATV_SOUNDS_DIR/$ALERT_SOUND_FILE
+
+else
+clear
+cat <<ET
+Error: No applicable sound format was found for [$ALERT_SOUND_FILE]
+ET
+fi
 }
 
 
