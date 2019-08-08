@@ -994,7 +994,7 @@ AUTOSSH_GATETIME=0
 # sshuttle
 SSHUTTLE_CMD="/usr/bin/sshuttle"
 SSHUTTLE_PID_FILE="$RUNDIR/sshuttle.pid"
-SSHUTTLE_OPTS="-D --dns --pidfile $SSHUTTLE_PID_FILE -r"
+SSHUTTLE_OPTS="-D --disable-ipv6 --dns --pidfile $SSHUTTLE_PID_FILE -r"
 
 # OpenVPN
 OPENVPN_CLIENT_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/openvpn
