@@ -11854,12 +11854,15 @@ homeassistant_pyozw_install
 # Copy homeassistant sources to install directory
 rsync -av --delete-after $PROJECT_GITHUB_DIR/home-assistant/ $INSTALL_SRC_DIR/home-assistant/
 
-# Install PyNaCl==1.3.0 using installed system sodium library i.e. libsodium
+# Install PyNaCl==1.3.0 using installed system sodium library 
+# i.e. libsodium
 SODIUM_INSTALL=system pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR PyNaCl==1.3.0
-
+#
 # Install dependencies for Home-Assistant using pips specified in requirements
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
-
+# Install snapcast which is somewhat left out 
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR snapcast==2.0.10
+#
 # Install Home-Assistant
 cd $INSTALL_SRC_DIR/home-assistant
 $PYTHON_INSTALL_CMD
