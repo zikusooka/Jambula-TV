@@ -9748,6 +9748,10 @@ ET
 # Change permissions of config directory to owner
 chown -R mpd:mpd $PROJECT_SYSTEM_CONF_DIR/mpd
 #
+# Create symbolic link to podcasts directory so we can play using MPD
+[[ -L $USER_MUSIC_DIR/podcasts ]] || \
+	ln -s $PODCASTS_DIRECTORY $USER_MUSIC_DIR/podcasts
+#
 # Add contributed music playlists to mpd playlists directory
 rsync -av $PROJECT_CONTRIB_DIR/music/playlists/ $PLAYLISTS_DIRECTORY/mpd/
 # Change permissions of mpd playlist directory to owner/group
