@@ -130,11 +130,12 @@ GOOGLE_API_KEY=$(query_mysql_db google_tts_api_key)
 $CURL_CMD $CURL_OPTS -A "$USER_AGENT" -o $TTS_OUTPUT_FILE "http://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q="$(echo "$1" | sed -e "s: :%20:g" | sed -e "s:'::g")"&tl=En-us"
 }
 
-text2speech_watson () {
+text2speech_ibm () {
 # API Key
-IBM_WATSON_API_KEY=$(query_mysql_db watson_tts_api_key)
+IBM_API_KEY=$(query_mysql_db watson_tts_api_key)
+IBM_API_ENDPOINT="https://gateway-lon.watsonplatform.net/text-to-speech/api"
 # Connect to API Endpoint
-$CURL_CMD $CURL_OPTS -A "$USER_AGENT" -u "apikey:$IBM_WATSON_API_KEY" -H "Content-Type: application/json" -H "Accept: audio/wav" -d "{\"text\":\"$1\"}" -o $TTS_OUTPUT_FILE "https://stream.watsonplatform.net/text-to-speech/api/v1/synthesize?voice=en-US_AllisonVoice"
+$CURL_CMD $CURL_OPTS -A "$USER_AGENT" -u "apikey:$IBM_API_KEY" -H "Content-Type: application/json" -H "Accept: audio/wav" -d "{\"text\":\"$1\"}" -o $TTS_OUTPUT_FILE "$IBM_API_ENDPOINT/v1/synthesize?voice=en-US_AllisonVoice"
 }
 
 query_text2speech_engine () {
@@ -173,9 +174,9 @@ text2speech_google "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
 ;;
 
 3)
-# TTS using watson
+# TTS using ibm
 TTS_CHARACTER_LIMIT=337
-text2speech_watson "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
+text2speech_ibm "$(echo $TTS_TEXT_MESSAGE | cut -c1-$TTS_CHARACTER_LIMIT)"
 ;;
 
 *)
@@ -193,15 +194,21 @@ fi
 # Tell-the-Time
 # --------------
 say_time() {
-# Get current hour and min
+# Get current hour
 TIME_HOUR=$(date +%-I)
+# Get current minute
+if [[ "$(date +%M)" = "00" ]];
+then
+TIME_MIN=""
+else
 TIME_MIN=$(date +%M)
+fi
 
 # Manipulate time format depending on availability of Internet
 if [ "$INTERNET_ALIVE" = "0" ];
 then
 # Time AM/PM format when using cloud TTS service e.g. google
-TIME_AMPM="$(date +%p | cut -c 1)+$(date +%p | cut -c 2)"
+TIME_AMPM="$(date +%p | cut -c 1) $(date +%p | cut -c 2)"
 else
 # Time AM/PM format when using - Use local TTS service i.e. PicoTTS
 TIME_AMPM="$(date +%p | cut -c 1) $(date +%p | cut -c 2)"
