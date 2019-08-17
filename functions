@@ -800,9 +800,6 @@ MOTION_DB_NAME=motion
 MOTION_DB_USER=jambulatv
 MOTION_DB_PASS=jambulatvmotion3
 
-# Pocketsphinx ASR
-POCKETSPHINX_DATA_DIR=$PROJECT_SYSTEM_SHARE_DIR/pocketsphinx
-
 JAMBULATV_SETUP_DB_NAME=jambulatv
 JAMBULATV_SETUP_DB_USER=jambula_setup
 JAMBULATV_SETUP_DB_PASS=eng8Na
@@ -1180,6 +1177,7 @@ SCREEN_DISPLAY_TOOL=$BINARY_PREFIX/jambulatv-display
 SMS_TOOL=$BINARY_PREFIX/jambulatv-sms
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
 SPEAKER_VOLUME_TOOL=$BINARY_PREFIX/jambulatv-speaker-volume
+SPEECH2TEXT_TOOL=$BINARY_PREFIX/jambulatv-speech2text
 SYSINFO_TOOL=$BINARY_PREFIX/jambulatv-sysinfo
 TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
 TEXT2SPEECH_TOOL=$BINARY_PREFIX/jambulatv-text2speech
@@ -1202,6 +1200,10 @@ ZONEMINDER_ZMS_INETD_TOOL=$BINARY_PREFIX/jambulatv-zms-inetd
 TTS_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $TEXT2SPEECH_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'}) # IMPORTANT: Must be on 'ext4' partition i.e. /var
 # TTS provider
 TTS_PROVIDER_API=3 # Default API used > 1=iSpeech 2=google 3=watson
+# Skills 
+ASR_SKILLS_FILE=$BINARY_PREFIX/jambulatv-asr-skills
+# Pocketsphinx
+POCKETSPHINX_DATA_DIR=$PROJECT_SYSTEM_SHARE_DIR/pocketsphinx
 
 # HTTP Headers
 # ------------
@@ -13629,21 +13631,21 @@ pocketsphinx_configure () {
 rsync -av $PROJECT_CONTRIB_DIR/speech_tts_asr/pocketsphinx/ $POCKETSPHINX_DATA_DIR/
 
 # Copy jambulatv-speech2text script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-speech2text ] || \
+[[ -e $SPEECH2TEXT_TOOL ]] || \
 	cat $PROJECT_BIN_DIR/jambulatv-speech2text | \
 		sed -e "s:MY_PREFIX:$PREFIX:g" | \
 		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
 		sed -e "s:MY_POCKETSPHINX_DATA_DIR:$POCKETSPHINX_DATA_DIR:g" | \
 		sed -e "s:MY_JAMBULATV_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" \
-			> $BINARY_PREFIX/jambulatv-speech2text
+			> $SPEECH2TEXT_TOOL
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-speech2text
+chmod 755 $SPEECH2TEXT_TOOL
 
 # Copy jambulatv-asr-skills script, if it does not exist in bin directory
-[ -e $BINARY_PREFIX/jambulatv-asr-skills ] || \
-	cp -v $PROJECT_BIN_DIR/jambulatv-asr-skills $BINARY_PREFIX/jambulatv-asr-skills
+[[ -e $ASR_SKILLS_FILE ]] || \
+	cp -v $PROJECT_BIN_DIR/jambulatv-asr-skills $ASR_SKILLS_FILE
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-asr-skills
+chmod 755 $ASR_SKILLS_FILE
 
 # Copy jambulatv-fetch-news helper tool for headlines ASR skill
 [ -e $FETCH_NEWS_TOOL ] || \
