@@ -35,10 +35,10 @@ if [[ "xSPEAKER_VOLUME_TYPE" = "x" || "x$SPEAKER_VOLUME_LOCATION" = "x" || "x$SP
 then
 clear
 cat <<EOT
-Usage: ./$(basename $0) [SPEAKER_VOLUME_TYPE] [SPEAKER_VOLUME_LOCATION] [SPEAKER_VOLUME_LEVEL]
+Usage: ./$(basename $0) [SPEAKER_VOLUME_TYPE] [SPEAKER_VOLUME_LOCATION] [SPEAKER_VOLUME_LEVEL or STATUS]
 
 Example: 
-./$(basename $0) [fmradio|webradio|all] localhost [100%|mute|unmute]
+./$(basename $0) [fmradio|webradio|jtvradio|all] localhost [100%|mute|unmute|status]
 
 EOT
 exit 1
@@ -53,12 +53,18 @@ ps auxw | grep snapclient | grep pulse > /dev/null 2>&1
 SNAPCLIENT_EXIT_STATUS=$?
 }
 
+get_sink_input_index_snapcast () {
+SINK_INPUT_INDEX=$($PACTL_CMD list sink-inputs | grep -B25 'application.process.binary = \"snapclient\"' | grep 'Sink Input #' | sed 's:Sink Input #::')
+}
+
 set_sink_input_mute_snapcast_localhost () {
-$PACTL_CMD set-sink-input-mute $($PACTL_CMD list sink-inputs | grep -B25 'application.process.binary = \"snapclient\"' | grep 'Sink Input #' | sed 's:Sink Input #::') $1
+get_sink_input_index_snapcast
+[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PACTL_CMD set-sink-input-mute $SINK_INPUT_INDEX $1
 }
 
 set_sink_input_volume_snapcast_localhost () {
-$PACTL_CMD set-sink-input-volume $($PACTL_CMD list sink-inputs | grep -B25 'application.process.binary = \"snapclient\"' | grep 'Sink Input #' | sed 's:Sink Input #::') $SPEAKER_VOLUME_LEVEL
+get_sink_input_index_snapcast
+[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PACTL_CMD set-sink-input-volume $SINK_INPUT_INDEX $SPEAKER_VOLUME_LEVEL
 }
 
 # MPD
@@ -81,14 +87,18 @@ $MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT volume $(echo $SPEAKER_VOLUME_LEVEL 
 
 # MPlayer
 # -------
+get_sink_input_index_mplayer () {
+SINK_INPUT_INDEX=$($PACTL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' | grep 'Sink Input #' | sed 's:Sink Input #::')
+}
+
 set_sink_input_mute_mplayer_localhost () {
-STREAMER_PID_FILE=$2
-$PACTL_CMD set-sink-input-mute $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') $1
+get_sink_input_index_mplayer
+[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PACTL_CMD set-sink-input-mute $SINK_INPUT_INDEX $1
 }
 
 set_sink_input_volume_mplayer_localhost () {
-STREAMER_PID_FILE=$2
-$PACTL_CMD set-sink-input-volume $($PACTL_CMD list | grep -B20 $(awk {'print $1'} $STREAMER_PID_FILE) | grep 'Sink Input #' | sed 's:Sink Input #::') $SPEAKER_VOLUME_LEVEL
+get_sink_input_index_mplayer
+[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PACTL_CMD set-sink-input-volume $SINK_INPUT_INDEX $SPEAKER_VOLUME_LEVEL
 }
 
 
@@ -128,7 +138,7 @@ elif [[ "$APP_USED_TO_PLAY" = "mplayer" ]];
 then
 # toggle/unmute volume using mplayer if it is running 
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
-set_sink_input_mute_mplayer_localhost 0 $FMRADIO_STREAMER_PID_FILE
+set_sink_input_mute_mplayer_localhost 0
 
 fi
 }
@@ -138,6 +148,7 @@ if [[ "$APP_USED_TO_PLAY" = "snapcast" ]];
 then
 # Mute volume using snapcast if it is running
 set_sink_input_mute_snapcast_localhost 1
+
 elif [[ "$APP_USED_TO_PLAY" = "mpd" ]];
 then
 # Mute volume using mpd if it is running 
@@ -149,7 +160,7 @@ then
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
 FMRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
 [[ "$FMRADIO_VOLUME_MUTED" = "yes" ]] || 
-set_sink_input_mute_mplayer_localhost 1 $FMRADIO_STREAMER_PID_FILE
+set_sink_input_mute_mplayer_localhost 1
 
 fi
 }
@@ -175,7 +186,7 @@ then
 unmute_volume_fmradio_localhost
 else
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
-set_sink_input_volume_mplayer_localhost $SPEAKER_VOLUME_LEVEL $FMRADIO_STREAMER_PID_FILE
+set_sink_input_volume_mplayer_localhost $SPEAKER_VOLUME_LEVEL
 fi
 
 fi
@@ -203,6 +214,27 @@ fi
 esac
 }
 
+status_volume_fmradio () {
+case $SPEAKER_VOLUME_LOCATION in
+# Status of volume for fm radio on speakers at localhost
+localhost)
+$PACTL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay > /dev/null 2>&1
+PULSE_SINK_INPUT_STATUS=$?
+if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]] && [[ -e $FMRADIO_STREAMER_PID_FILE ]];
+then
+echo "FM Radio Status:	Active"
+else
+echo "FM Radio Status:	Idle"
+fi
+;;
+
+# Status of volume for fm radio on speakers at remote host
+192.168.x.x)
+:
+;;
+esac
+}
+
 
 # ---------------
 # Internet Radio
@@ -222,7 +254,7 @@ elif [[ "$APP_USED_TO_PLAY" = "mplayer" ]];
 then
 # toggle/unmute volume using mplayer if it is running 
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
-set_sink_input_mute_mplayer_localhost 0 $WEBRADIO_STREAMER_PID_FILE
+set_sink_input_mute_mplayer_localhost 0
 
 fi
 }
@@ -231,7 +263,8 @@ mute_volume_webradio_localhost () {
 if [[ "$APP_USED_TO_PLAY" = "snapcast" ]];
 then
 # Mute volume using snapcast if it is running 
-set_sink_input_mute_snapcast_localhost mute
+set_sink_input_mute_snapcast_localhost 1
+
 elif [[ "$APP_USED_TO_PLAY" = "mpd" ]];
 then
 # Mute volume using mpd if it is running 
@@ -242,7 +275,7 @@ then
 # If volume for Internet radio is not muted, mute it
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
 WEBRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
-[[ "$WEBRADIO_VOLUME_MUTED" = "yes" ]] || set_sink_input_mute_mplayer_localhost 1 $WEBRADIO_STREAMER_PID_FILE
+[[ "$WEBRADIO_VOLUME_MUTED" = "yes" ]] || set_sink_input_mute_mplayer_localhost 1
 
 fi
 }
@@ -268,7 +301,7 @@ then
 unmute_volume_webradio_localhost
 else
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
-set_sink_input_volume_mplayer_localhost $SPEAKER_VOLUME_LEVEL $WEBRADIO_STREAMER_PID_FILE
+set_sink_input_volume_mplayer_localhost $SPEAKER_VOLUME_LEVEL
 fi
 
 fi
@@ -276,20 +309,153 @@ fi
 
 control_volume_webradio () {
 case $SPEAKER_VOLUME_LOCATION in
-# Control volume of fm radio for speakers at localhost
+# Control volume of web radio for speakers at localhost
 localhost)
 # If volume level is set at '0' then assume 'mute' has been requested
 if [[ "$SPEAKER_VOLUME_LEVEL" = "0" ]];
 then
-# Mute volume for fmradio
+# Mute volume for webradio
 mute_volume_webradio_localhost
 else
-# Increase/Decrease volume for fmradio
+# Increase/Decrease volume for webradio
 adjust_volume_webradio_localhost
 fi
 ;;
 
-# Control volume of fm radio for speakers at remote host
+# Control volume of web radio for speakers at remote host
+192.168.x.x)
+:
+;;
+esac
+}
+
+status_volume_webradio () {
+case $SPEAKER_VOLUME_LOCATION in
+# Status of volume for Internet radio on speakers at localhost
+localhost)
+$PACTL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay > /dev/null 2>&1
+PULSE_SINK_INPUT_STATUS=$?
+if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]] && [[ -e $WEBRADIO_STREAMER_PID_FILE ]];
+then
+echo "Internet Radio Status:	Active"
+else
+echo "Internet Radio Status: 	Idle"
+fi
+;;
+
+# Status of volume for Internet radio on speakers at remote host
+192.168.x.x)
+:
+;;
+esac
+}
+
+
+# -----------------------------------
+# JambulaTV Radio (File based player)
+# -----------------------------------
+unmute_volume_jtvradio_localhost () {
+if [[ "$APP_USED_TO_PLAY" = "snapcast" ]];
+then
+# toggle/unmute volume using snapcast if it is running 
+set_sink_input_mute_snapcast_localhost 0
+
+elif [[ "$APP_USED_TO_PLAY" = "mpd" ]];
+then
+# toggle/unmute volume using MPD if it is running 
+set_sink_input_mute_mpd_localhost 100
+
+elif [[ "$APP_USED_TO_PLAY" = "mplayer" ]];
+then
+# toggle/unmute volume using mplayer if it is running 
+set_sink_input_mute_mplayer_localhost 0
+
+fi
+}
+
+mute_volume_jtvradio_localhost () {
+if [[ "$APP_USED_TO_PLAY" = "snapcast" ]];
+then
+
+# Mute volume using snapcast if it is running 
+set_sink_input_mute_snapcast_localhost 1
+
+elif [[ "$APP_USED_TO_PLAY" = "mpd" ]];
+then
+# Mute volume using mpd if it is running 
+set_sink_input_mute_mpd_localhost 0
+
+elif [[ "$APP_USED_TO_PLAY" = "mplayer" ]];
+then
+# If volume for JambulaTV radio is not muted, mute it
+JTVRADIO_VOLUME_MUTED=$($PACTL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"'  | grep -i Mute | awk -F': ' {'print $2'})
+[[ "$JTVRADIO_VOLUME_MUTED" = "yes" ]] || set_sink_input_mute_mplayer_localhost 1
+
+fi
+}
+
+adjust_volume_jtvradio_localhost () {
+if [[ "$APP_USED_TO_PLAY" = "snapcast" ]];
+then
+# Adjust volume using snapcast if its server is running 
+set_sink_input_volume_snapcast_localhost $SPEAKER_VOLUME_LEVEL
+
+elif [[ "$APP_USED_TO_PLAY" = "mpd" ]];
+then
+# Adjust volume using MPD if its server is running 
+set_sink_input_volume_mpd_localhost
+
+elif [[ "$APP_USED_TO_PLAY" = "mplayer" ]];
+then
+# If volume for JambulaTV radio is muted, unmute it
+JTVRADIO_VOLUME_MUTED=$($PACTL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"'  | grep -i Mute | awk -F': ' {'print $2'})
+if [[ "$JTVRADIO_VOLUME_MUTED" = "yes" ]];
+then
+unmute_volume_jtvradio_localhost
+else
+set_sink_input_volume_mplayer_localhost $SPEAKER_VOLUME_LEVEL
+fi
+
+fi
+}
+
+control_volume_jtvradio () {
+case $SPEAKER_VOLUME_LOCATION in
+# Control volume of JambulaTV radio for speakers at localhost
+localhost)
+# If volume level is set at '0' then assume 'mute' has been requested
+if [[ "$SPEAKER_VOLUME_LEVEL" = "0" ]];
+then
+# Mute volume for jtvradio
+mute_volume_jtvradio_localhost
+else
+# Increase/Decrease volume for jtvradio
+adjust_volume_jtvradio_localhost
+fi
+;;
+
+# Control volume of JambulaTV radio for speakers at remote host
+192.168.x.x)
+:
+;;
+esac
+}
+
+status_volume_jtvradio () {
+case $SPEAKER_VOLUME_LOCATION in
+# Status of volume for JambulaTV radio on speakers at localhost
+localhost)
+$PACTL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay > /dev/null 2>&1
+PULSE_SINK_INPUT_STATUS=$?
+if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]];
+then
+echo "JambulaTV Radio Status:	Active"
+else
+echo "JambulaTV Radio Status:	Idle"
+fi
+;;
+
+# Status of volume for JambulaTV radio on speakers at remote host
 192.168.x.x)
 :
 ;;
@@ -322,6 +488,11 @@ then
 # Unmute FM radio volume
 unmute_volume_fmradio_localhost 
 
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
+then
+# Status of all volumes
+status_volume_fmradio
+
 else
 control_volume_fmradio
 fi
@@ -338,8 +509,34 @@ then
 # Unmute Internet radio volume
 unmute_volume_webradio_localhost
 
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
+then
+# Status of all volumes
+status_volume_webradio
+
 else
 control_volume_webradio
+fi
+;;
+
+jtvradio)
+if [[ "$SPEAKER_VOLUME_LEVEL" = "mute" ]];
+then
+# Mute JambulaTV radio volume
+mute_volume_jtvradio_localhost
+
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
+then
+# Unmute JambulaTV radio volume
+unmute_volume_jtvradio_localhost
+
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
+then
+# Status of all volumes
+status_volume_jtvradio
+
+else
+control_volume_jtvradio
 fi
 ;;
 
@@ -349,16 +546,26 @@ then
 # Mute all volumes
 mute_volume_fmradio_localhost
 mute_volume_webradio_localhost
+mute_volume_jtvradio_localhost
 
 elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
 then
 # Unmute all volumes
 unmute_volume_fmradio_localhost 
 unmute_volume_webradio_localhost
+unmute_volume_jtvradio_localhost
+
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
+then
+# Status of all volumes
+status_volume_fmradio
+status_volume_webradio
+status_volume_jtvradio
 
 else
 control_volume_fmradio
 control_volume_webradio
+control_volume_jtvradio
 fi
 ;;
 
