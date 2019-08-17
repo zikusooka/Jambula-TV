@@ -28,6 +28,8 @@ BEEP_CMD=/usr/bin/beep
 
 MULTIMEDIA_USER=jambula
 
+SPEAKER_VOLUME_TOOL=/usr/bin/jambulatv-speaker-volume
+
 
 
 ###############
@@ -58,9 +60,17 @@ WAITED_FOR_FILE=$1
 # Play sound while waiting
 while [ ! -e \$WAITED_FOR_FILE ];
 do
-[[ -e $SOUND_EFFECTS_WAITING_PATH ]] && \
+
+# Play beeps only if there's NO audio running on local speakers
+$SPEAKER_VOLUME_TOOL all localhost status | grep -i Active > /dev/null 2>&1
+SPEAKER_AUDIO_STATUS=\$?
+if [[ "\$SPEAKER_AUDIO_STATUS" != "0" ]] && [[ -e $SOUND_EFFECTS_WAITING_PATH ]];
+then
 $SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $SOUND_EFFECTS_WAITING_PATH
+fi
+
 sleep 2
+
 done
 EOF
 # Make script executable
@@ -163,6 +173,56 @@ ALERT_SOUND_FILE=phone_battery_charging_complete_for.mp3
 17)
 ALERT_SOUND_FILE=thunderstorms_observed_rainfall_likely.mp3
 ;;
+18)
+ALERT_SOUND_FILE=flash_briefing.mp3
+;;
+19)
+ALERT_SOUND_FILE=coming-flash-briefing-today.wav
+;;
+20)
+DAY=$(date +%A) 
+# Select sound based on day of week
+if [[ "$DAY" = "Monday" ]];
+then
+ALERT_SOUND_FILE=happy_monday.mp3
+elif [[ "$DAY" = "Tuesday" ]];
+then
+ALERT_SOUND_FILE=happy_tuesday.mp3
+elif [[ "$DAY" = "Wednesday" ]];
+then
+ALERT_SOUND_FILE=happy_wednesday.mp3
+elif [[ "$DAY" = "Thursday" ]];
+then
+ALERT_SOUND_FILE=happy_thursday.mp3
+elif [[ "$DAY" = "Friday" ]];
+then
+ALERT_SOUND_FILE=happy_friday.mp3
+elif [[ "$DAY" = "Saturday" ]];
+then
+ALERT_SOUND_FILE=happy_saturday.mp3
+elif [[ "$DAY" = "Sunday" ]];
+then
+ALERT_SOUND_FILE=happy_sunday.mp3
+fi
+;;
+21)
+HOUR=$(date +%-H) 
+# Select greeting sound based on the time of day
+if [[ "$HOUR" -lt "5" ]];
+then
+ALERT_SOUND_FILE=goodnight.mp3
+elif [[ "$HOUR" -lt "12" ]];
+then
+ALERT_SOUND_FILE=goodmorning.mp3
+elif [[ "$HOUR" -lt "18" ]];
+then
+ALERT_SOUND_FILE=goodafternoon.mp3
+elif [[ "$HOUR" -ge "18" ]];
+then
+ALERT_SOUND_FILE=goodevening.mp3
+fi
+;;
+
 [Aa-Zz]*)
 if [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]];
 then
