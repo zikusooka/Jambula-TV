@@ -1,8 +1,8 @@
 #!/bin/sh
 # This is a set of voice recognition skills used by JambulaTV 
-# It is used by the Speech-2-Text tool
+# It is used by the Speech-to-Text tool
 #
-# Jambula Labs @copyright 2018-2019 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
 
 # Variables
 PROJECT_NAME=JambulaTV
@@ -18,11 +18,52 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 #  SKILLS  #
 ############
 
+mute_speakers_localhost () {
+$SPEAKER_VOLUME_TOOL all localhost status | grep -i Active > /dev/null 2>&1
+SPEAKER_AUDIO_STATUS=$?
+[[ "$SPEAKER_AUDIO_STATUS" = "0" ]] && \
+$SPEAKER_VOLUME_TOOL all localhost mute
+}
+
+unmute_speakers_localhost () {
+$SPEAKER_VOLUME_TOOL all localhost status | grep -i Active > /dev/null 2>&1
+SPEAKER_AUDIO_STATUS=$?
+[[ "$SPEAKER_AUDIO_STATUS" = "0" ]] && \
+$SPEAKER_VOLUME_TOOL all localhost unmute
+}
+
+sound_alert () {
+# Mute house speakers if there's audio playing
+mute_speakers_localhost
+# Play alert sound specified
+$SOUNDS_TOOL alert $1
+# Unmute house speakers if there's audio playing
+unmute_speakers_localhost
+}
+
+sound_effect_flash () {
+sound_alert 18
+}
+
+sound_upcoming_briefing () {
+sound_alert 19
+}
+
+sound_greeting () {
+# Say time of day
+sound_alert 21
+}
+
+sound_happy_day () {
+# Say Happy 'Day of Week'
+sound_alert 20
+}
+
 skill_time () {
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
-# Say weather
-$TEXT2SPEECH_TOOL '2' time
+# Say Time
+$TEXT2SPEECH_TOOL "" time
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 }
@@ -31,7 +72,7 @@ skill_weather_currently () {
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say weather
-$TEXT2SPEECH_TOOL '' weather current 3
+$TEXT2SPEECH_TOOL "" weather current 3
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 }
@@ -40,7 +81,7 @@ skill_weather_today () {
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say weather
-$TEXT2SPEECH_TOOL '' weather today 1
+$TEXT2SPEECH_TOOL "" weather today 1
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 }
@@ -49,7 +90,7 @@ skill_weather_later () {
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say weather
-$TEXT2SPEECH_TOOL '' weather later 2
+$TEXT2SPEECH_TOOL "" weather later 2
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 }
@@ -61,7 +102,7 @@ skill_weather_currently
 
 skill_headlines_start () {
 # Header voice
-$TEXT2SPEECH_TOOL "" custom "Here's whats making news today"
+$TEXT2SPEECH_TOOL "" custom "Here is whats making news today"
 # Fetch news
 $FETCH_NEWS_TOOL
 }
@@ -104,20 +145,28 @@ $TEXT2SPEECH_TOOL "" custom "That is all for $CALENDAR_EVENT_ASR_PERIOD"
 }
 
 skill_motd () {
-$TEXT2SPEECH_TOOL "1" custom "Today's message of the day is \"\\pau=1000\\\" $(/usr/bin/fortune -s -n 80)"
+$TEXT2SPEECH_TOOL "" custom "Today's message of the day is \"\\pau=1000\\\" $(/usr/bin/fortune -s -n 80)"
 }
 
 skill_flash_briefing () {
-# Get registered name, etc
-get_contact_details
-# Daily Digest
-$TEXT2SPEECH_TOOL "" custom "Hello $CONTACT_FIRST_NAME here is your daily digest for today $(date "+%A %d %B %Y")"
+# Play sound effects for flash briefing
+sound_effect_flash
+# Say greeting
+sound_greeting
+# Play sound - upcoming flash briefing
+sound_upcoming_briefing
+# Read reminders
 skill_reminders
+# Read weather
 skill_weather
+# Read news headlines
 skill_headlines
+# Read message of the day
 skill_motd
+# Say time
 skill_time
-$TEXT2SPEECH_TOOL "" custom "Happy $(date "+%A")"
+# Wish a good day
+sound_happy_day
 }
 
 skill_lights_on () {
@@ -180,7 +229,7 @@ $KODI_CONTROLLER_TOOL tv_record_status
 if [ "$TV_RECORDING_CURRENT_STATUS" = "true" ];
 then
 # Let user know there's already a recording and quit
-$TEXT2SPEECH_TOOL "2" custom "Am sorry, there is already another recording in progress. To end that recording, please say \"\\pau=1000\\\" STOP RECORDING TV CHANNEL. \"\\pau=1000\\\"  Then repeat your request"
+$TEXT2SPEECH_TOOL "" custom "Am sorry, there is already another recording in progress. To end that recording, please say \"\\pau=1000\\\" STOP RECORDING TV CHANNEL. \"\\pau=1000\\\"  Then repeat your request"
 # Quit
 exit 1
 
@@ -505,7 +554,7 @@ kill $TTS_PID
 }
 
 skill_mute_speech_recognition () {
-$TEXT2SPEECH_TOOL "1" custom "Geeez \"\\pau=1000\\\" Am I that noisy? \"\\pau=1000\\\" OK \"\\pau=500\\\" I will go off line for now"
+$TEXT2SPEECH_TOOL "" custom "Geeez \"\\pau=1000\\\" Am I that noisy? \"\\pau=1000\\\" OK \"\\pau=500\\\" I will go off line for now"
 [ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
 touch $TEXT_2_SPEECH_OUTPUT_FILE
 sudo chattr +i $TEXT_2_SPEECH_OUTPUT_FILE
@@ -514,7 +563,7 @@ sudo chattr +i $TEXT_2_SPEECH_OUTPUT_FILE
 skill_unmute_speech_recognition () {
 sudo chattr -i $TEXT_2_SPEECH_OUTPUT_FILE 
 [ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
-$TEXT2SPEECH_TOOL "1" custom "You missed me \"\\pau=500\\\" Right? \"\\pau=1000\\\" OK \"\\pau=500\\\"  I am baack"
+$TEXT2SPEECH_TOOL "" custom "You missed me \"\\pau=500\\\" Right? \"\\pau=1000\\\" OK \"\\pau=500\\\"  I am baack"
 }
 
 skill_unknown () {
