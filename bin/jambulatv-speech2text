@@ -10,11 +10,16 @@ WATCH_OPTS="-n 0 -F -s $WATCH_INTERVAL"
 #
 # Mic Sources
 # -----------
+PS_MIC_SOURCE=
+#
 # Run the following command to find your default source
 #pactl list sources short && exit
 #
+# OmniVision Technologies - Sony Playstation Eye
+#PS_MIC_SOURCE="alsa_input.usb-OmniVision_Technologies__Inc._USB_Camera-B4.09.24.1-01-CameraB409241.multichannel-input"
+#
 # Logitech - C200
-PS_MIC_SOURCE="alsa_input.usb-046d_0802_8CB73750-02-U0x46d0x802.analog-mono" 
+#PS_MIC_SOURCE="alsa_input.usb-046d_0802_8CB73750-02-U0x46d0x802.analog-mono" 
 #
 # Logitech - QuickCam Communicate STX
 #PS_MIC_SOURCE="alsa_input.usb-046d_08d7-01-U0x46d0x8d7.analog-mono"
