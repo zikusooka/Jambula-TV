@@ -200,10 +200,10 @@ then
 WIFI_LINK_STATUS=$(sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE link)
 else
 # Using iwconfig command
-WIFI_LINK_STATUS=$(sudo /usr/sbin/iwconfig $WIFI_STATION_INTERFACE | head -1 | awk {'print $2'})
+WIFI_LINK_STATUS=$(sudo /usr/sbin/iwconfig $WIFI_STATION_INTERFACE | awk -F':' '/Access Point/ {print $3}' | awk '{print $1}')
 fi
 #
-if [[ "$WIFI_LINK_STATUS" = "Not connected." ]] || [[ "$WIFI_LINK_STATUS" = "unassociated" ]];
+if [[ "$WIFI_LINK_STATUS" = "Not connected." ]] || [[ "$WIFI_LINK_STATUS" = "Not-Associated" ]];
 then
 logger -s -t $(basename $0) "Connection to $WIFI_SSID failed!. Exiting ..."
 exit 1
