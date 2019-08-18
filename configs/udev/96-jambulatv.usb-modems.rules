@@ -47,6 +47,10 @@ ACTION=="remove", ENV{ID_SERIAL}=="HUAWEI_HUAWEI_Mobile", ENV{ID_VENDOR_ID}=="12
 # ------------
 SUBSYSTEM=="tty", ATTRS{idVendor}=="12d1", ATTRS{idProduct}=="14fe", SYMLINK+="ttyUSB-3G-Mobile" 
 #
+SUBSYSTEM=="tty", ATTRS{idVendor}=="12d1", ATTRS{idProduct}=="150f", SYMLINK+="ttyUSB-3G-Mobile" 
+KERNEL=="ttyUSB[1-3]*", MODE="0666", OWNER="asterisk"
+
+#
 # Huawei E1750
 # ------------
 SUBSYSTEM=="tty", ATTRS{idVendor}=="12d1", ATTRS{idProduct}=="1446", SYMLINK+="ttyUSB-3G-Mobile" 
