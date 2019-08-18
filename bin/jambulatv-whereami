@@ -267,8 +267,8 @@ cat > $GEOLOCATION_FILE <<EOF
 #  $(date)
 # -----------------------------------------------------------------------------
 
-CITY=$CITY
-COUNTRY=$COUNTRY
+CITY="$CITY"
+COUNTRY="$COUNTRY"
 LATITUDE=$LATITUDE
 LONGITUDE=$LONGITUDE
 EOF
