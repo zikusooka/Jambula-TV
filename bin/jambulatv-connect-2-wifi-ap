@@ -333,7 +333,8 @@ check_4_wifi_dongle
 # Go futher if there's available AP
 generate_wpa_config
 connect_2_access_point 
-sleep 5
+# IMPORTANT: Wait for access point link to settle before checking state
+sleep 15
 check_link_status
 get_ip_address
 wait_4_ip_address
