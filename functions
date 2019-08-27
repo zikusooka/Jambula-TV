@@ -65,6 +65,7 @@ MANDIR1=$DATAROOTDIR/man/man1
 MANDIR3=$DATAROOTDIR/man/man3
 MANDIR8=$DATAROOTDIR/man/man8
 DEFAULT_CONFIG_DIR=$CONFDIR/default
+SYSV_INIT_DIR=$CONFDIR/rc.d/init.d
 SYSCTL_DIR=$CONFDIR/sysctl.d
 UDEV_RULES_DIR=/etc/udev/rules.d
 LOGROTATE_CONF_DIR=$CONFDIR/logrotate.d
@@ -673,13 +674,20 @@ FREERADIUS_SITES_AVAIL_INNER_TUNNEL_FILE=$FREERADIUS_SITES_AVAIL/inner-tunnel
 COOVA_CONFIG_DIR=/etc/chilli
 COOVA_CONFIG_FILE=$COOVA_CONFIG_DIR/config
 COOVA_HTML_DIR=$WWW_HTML_DIR/coova
-
 COOVA_OPEN_TCP_PORTS="22 80 81 82 83 84 85 443 1735 1736 1737 1738 1739 1740 5222 6969 8080 8082 8083 8084 8085" 
 
 UPNP_MDNS_ENABLE=y
 CHILLI_DHCP_START=50
 CHILLI_DHCP_END=99
 
+NODOGSPLASH_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/nodogsplash
+NODOGSPLASH_CONFIG_FILE=$NODOGSPLASH_CONFIG_DIR/nodogsplash.conf
+NODOGSPLASH_FUNCTIONS_FILE=$NODOGSPLASH_CONFIG_DIR/functions
+NODOGSPLASH_LOGIN_SCRIPT=$NODOGSPLASH_CONFIG_DIR/login.sh
+NODOGSPLASH_HTML_DIR=$WWW_HTML_DIR/nodogsplash
+NODOGSPLASH_SERVER_PORT=2050
+NODOGSPLASH_WEBROOT_DIR=
+NODOGSPLASH_PRIVILEGED_MAC=
 
 HOSTAPD_DIR=/etc/hostapd
 HOSTAPD_GROUP=hostapd
@@ -887,6 +895,9 @@ NETWORK_WIRELESS_CHANNEL_NO=11
 NETWORK_WIRELESS_PASSPHRASE=$(pwgen -A -v -N1 12)
 NETWORK_WIRELESS_TUNTAP_DEV=$(ip tuntap | awk -F: {'print $1'} | head -1)
 NETWORK_WIRELESS_NET_MASK=$(/usr/sbin/ip addr show $NETWORK_WIRELESS_TUNTAP_DEV | awk '$1=="inet"{print $2}')
+NETWORK_WIRELESS_HOTSPOT_IP=172.16.0.1
+NETWORK_WIRELESS_HOTSPOT_PREFIX=16
+NETWORK_WIRELESS_DHCP_RANGE="172.16.0.10,172.16.0.49"
 NETWORK_DHCP_RANGE="192.168.0.100,192.168.0.199"
 
 IEEE_OUI_HWDATA_DIR=$PROJECT_SYSTEM_SHARE_DIR/hwdata
@@ -901,7 +912,6 @@ FREERADIUS_ADMIN_PASS=lled371
 
 COOVA_NORMAL_USER_LOGIN=coovuser
 COOVA_NORMAL_USER_PASSWORD=coovpass
-COOVA_SERVER_IP=172.16.0.1
 COOVA_UAM_SECRET=lled371
 COOVA_PRIVILEGED_MAC="00:21:5c:25:32:5b,00:02:2D:53:66:21,00:0E:9B:15:98:8E"
 
@@ -6996,7 +7006,7 @@ fi
 [[ -d $QRCODE_DIR ]] || mkdir -p $QRCODE_DIR
 # Create qrcode containing Yatse host settings for JambulaTV
 $QRCODE_CMD -s 9 -o $QRCODE_DIR/yatse_host_settings.png <<ET
-{"source":"Yatse","version":"3","data":{"name":"JambulaTV","color":"#883662","type":5,"api":"xbmckrypton","ip":"$COOVA_SERVER_IP","port1":$KODI_HTTP_PORT,"port2":9090,"port3":9777,"port4":5600,"port5":0,"mac":"$NETWORK_MAC_ADDRESS","login":"$KODI_HTTP_USER","pass":"$KODI_HTTP_PASS","pi1":-1,"pi2":0,"pi3":0,"pi4":0,"pi5":0,"i1":"","i2":"","i3":"","ps1":"","ps2":"","ps3":"","ps4":"","ps5":"","wonly":true,"wssid":"","desc":"","uid":"$SYSTEM_UUID"}}
+{"source":"Yatse","version":"3","data":{"name":"JambulaTV","color":"#883662","type":5,"api":"xbmckrypton","ip":"$NETWORK_WIRELESS_HOTSPOT_IP","port1":$KODI_HTTP_PORT,"port2":9090,"port3":9777,"port4":5600,"port5":0,"mac":"$NETWORK_MAC_ADDRESS","login":"$KODI_HTTP_USER","pass":"$KODI_HTTP_PASS","pi1":-1,"pi2":0,"pi3":0,"pi4":0,"pi5":0,"i1":"","i2":"","i3":"","ps1":"","ps2":"","ps3":"","ps4":"","ps5":"","wonly":true,"wssid":"","desc":"","uid":"$SYSTEM_UUID"}}
 ET
 }
 
@@ -7536,7 +7546,7 @@ get_wireless_interface_parameters
 # Create AP rule
 cat > $UDEV_RULES_WIFI_NET_DEVICES <<EOF
 # $WIFI_AP_INTERFACE
-SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_AP_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_AP_INTERFACE", TAG+="systemd", ENV{SYSTEMD_WANTS}+="coova-chilli.service"
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_AP_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_AP_INTERFACE", TAG+="systemd", ENV{SYSTEMD_WANTS}+=""
 EOF
 # Reload Udev
 /usr/sbin/udevadm control --reload && udevadm trigger --action=add
@@ -7575,6 +7585,9 @@ fi
 wireless_interfaces_configure () {
 # Get wireless parameters
 get_wireless_interface_parameters
+
+# Assign static IP to wireless network device
+
 
 # See if WiFi interfaces were previously configured
 if [[ -e $UDEV_RULES_WIFI_NET_DEVICES ]];
@@ -7648,6 +7661,27 @@ fi
 # -------------------------------------
 create_wifi_mo_rule
 fi
+}
+
+assign_ip_2_wifi_gateway_and_enable_nat () {
+# Backup existing init network script
+[[ -e $SYSV_INIT_DIR/network ]] && mv -v $SYSV_INIT_DIR/network $SYSV_INIT_DIR/network.orig
+# Modify sysv init network script and add IP assignment to wireless
+# hotspot interface plus iptables firewall masquerading
+cat $PROJECT_INIT_SCRIPTS_DIR/network | \
+	sed -e "s:MY_WIFI_AP_INTERFACE:$WIFI_AP_INTERFACE:g" | \
+	sed -e "s:MY_NETWORK_WIRELESS_HOTSPOT_IP:$NETWORK_WIRELESS_HOTSPOT_IP:g" | \
+	sed -e "s:MY_NETWORK_WIRELESS_HOTSPOT_PREFIX:$NETWORK_WIRELESS_HOTSPOT_PREFIX:g" | \
+	sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" | \
+	sed -e "s:MY_NETWORK_ETHERNET_DEVICE:$NETWORK_ETHERNET_DEVICE:g" \
+> $SYSV_INIT_DIR/network
+#
+# Make init script executable
+chmod 755 $SYSV_INIT_DIR/network
+#
+# Enable systemd unit
+systemctl enable network.service
+#systemctl restart network.service
 }
 
 optical_disc_drive_configure () {
@@ -7901,10 +7935,11 @@ cat $PROJECT_CONFIGS_DIR/dnsmasq.conf.sample | \
    sed -e "s:NETWORK_ETHERNET_DEVICE:$NETWORK_ETHERNET_DEVICE:g" | \
    sed -e "s:WIFI_AP_INTERFACE:$WIFI_AP_INTERFACE:g" | \
    sed -e "s:NETWORK_IP_ADDRESS:$NETWORK_IP_ADDRESS:g" | \
-   sed -e "s:WIFI_IP_ADDRESS:$COOVA_SERVER_IP:g" | \
+   sed -e "s:WIFI_IP_ADDRESS:$NETWORK_WIRELESS_HOTSPOT_IP:g" | \
    sed -e "s:NETWORK_DOMAIN:$NETWORK_DOMAIN:g" | \
    sed -e "s:SRV_HOSTNAME:$PROJECT_NAME:g" | \
-   sed -e "s:NETWORK_DHCP_RANGE:$NETWORK_DHCP_RANGE:g" \
+   sed -e "s:NETWORK_DHCP_RANGE:$NETWORK_DHCP_RANGE:g" | \
+   sed -e "s:NETWORK_WIRELESS_DHCP_RANGE:$NETWORK_WIRELESS_DHCP_RANGE:g" \
 	> $CONFDIR/dnsmasq.conf
 # Make dnsmasq server as primary DNS server 
 sed -i /DNS/d $SYSCONFIG_NETWORK_SCRIPTS_DIR/ifcfg-$NETWORK_ETHERNET_DEVICE
@@ -7923,8 +7958,6 @@ fi
 systemctl enable dnsmasq.service
 # Reload dnsmasq
 systemctl restart dnsmasq.service
-# Reload network - DONT!!! Remote SSH connections are lost as a result
-#systemctl restart network.service
 }
 
 openresolv_install () {
@@ -9357,8 +9390,8 @@ sed -e "s/INTERNET_GATEWAY_DEV/$NETWORK_ETHERNET_DEVICE/" | \
 sed -e "s/WIRELESS_DEV/$WIFI_AP_INTERFACE/" | \
 sed -e "s/HSSECRET/$COOVA_UAM_SECRET/" | \
 sed -e "s/RADIUSSECRET/$FREERADIUS_DB_PASS/" | \
-sed -e "s/HOST_IP/$COOVA_SERVER_IP/" | \
-sed -e "s/JAMBULATV/$COOVA_SERVER_IP/" | \
+sed -e "s/HOST_IP/$NETWORK_WIRELESS_HOTSPOT_IP/" | \
+sed -e "s/JAMBULATV/$NETWORK_WIRELESS_HOTSPOT_IP/" | \
 sed -e "s/NETWORKSSID/$NETWORK_WIRELESS_SSID/" | \
 sed -e "s/jambulatv.com/$NETWORK_DOMAIN/" | \
 sed -e "s/DNS_SERVER_1/$NETWORK_DNS_1/" | \
@@ -9367,7 +9400,7 @@ sed -e "s/HOTSPOT_SSID/$NETWORK_WIRELESS_SSID/" | \
 sed -e "s/HOTSPOT_LOCATION/$COMPANY_NAME/" | \
 sed -e "s/HOTSPOT_NETWORK/$NETWORK_WIRELESS_SSID/" | \
 sed -e "s/NAS_MAC_ADDRESS/$WIFI_AP_MACADDRESS/" | \
-sed -e "s/NAS_IP_ADDRESS/$COOVA_SERVER_IP/" | \
+sed -e "s/NAS_IP_ADDRESS/$NETWORK_WIRELESS_HOTSPOT_IP/" | \
 sed -e "s/# HS_ADMUSR=chillispot/HS_ADMUSR=$FREERADIUS_ADMIN_USER/" | \
 sed -e "s/# HS_ADMPWD=chillispot/HS_ADMPWD=$FREERADIUS_ADMIN_PASS/" | \
 sed -e "s/# HS_TCP_PORTS=\"80 443\"/HS_TCP_PORTS=\"$COOVA_OPEN_TCP_PORTS\"/" | \
@@ -9523,6 +9556,88 @@ Coova-Chilli
  jambulatv-ssl-certificate-signing-request $COOVA_CONFIG_DIR/ssl
 #
 EOF
+}
+
+nodogsplash_install () {
+# Sync nodogsplash sources to install directory
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/nodogsplash/ $INSTALL_SRC_DIR/nodogsplash/
+#
+# Patch redir.c to allow general logging of User-Agent
+patch -p1 $INSTALL_SRC_DIR/nodogsplash/src/fw_iptables.c < $PROJECT_PATCHES_DIR/nodogsplash_fw_iptables.c.patch
+#
+# Prepare install sources/directory
+cd $INSTALL_SRC_DIR/nodogsplash
+# Install
+make_install_jambulatv
+}
+
+nodogsplash_configure () {
+# Create nodogsplash config directory
+[[ -d $NODOGSPLASH_CONFIG_DIR ]] || mkdir -p $NODOGSPLASH_CONFIG_DIR
+# 
+if [[ -d $CONFDIR/nodogsplash ]];
+then
+# Move install files to our nodogsplash config directory
+mv -v $CONFDIR/nodogsplash/* $NODOGSPLASH_CONFIG_DIR/
+# Remove empty directory
+rmdir $CONFDIR/nodogsplash
+fi
+#
+# Customize nodogsplash config file to suit our environment and copy
+# to project's system config directory
+[[ -e $NODOGSPLASH_CONFIG_FILE ]] && mv -v $NODOGSPLASH_CONFIG_FILE ${NODOGSPLASH_CONFIG_FILE}.bak
+cat $PROJECT_CONFIGS_DIR/nodogsplash/nodogsplash-conf.template | \
+sed -e "s:MY_NODOGSPLASH_WIRELESS_DEV:$WIFI_AP_INTERFACE:g" | \
+sed -e "s:MY_NODOGSPLASH_CONFIG_DIR:$NODOGSPLASH_CONFIG_DIR:g" | \
+sed -e "s:MY_NODOGSPLASH_SERVER_IP:$NETWORK_WIRELESS_HOTSPOT_IP:g" | \
+sed -e "s:MY_NODOGSPLASH_SERVER_PORT:$NODOGSPLASH_SERVER_PORT:g" | \
+sed -e "s:MY_NODOGSPLASH_PROJECT_NAME:$PROJECT_NAME:g" | \
+sed -e "s:MY_NODOGSPLASH_HTML_DIR:$NODOGSPLASH_HTML_DIR:g" | \
+sed -e "s:MY_NODOGSPLASH_ALLOWED_MAC_ADDRESSES:\"$NODOGSPLASH_PRIVILEGED_MAC\":g" \
+	> $NODOGSPLASH_CONFIG_FILE
+#
+# Copy custom nodogsplash functions file to project's system directory
+[[ -e $NODOGSPLASH_FUNCTIONS_FILE ]] && mv -v $NODOGSPLASH_FUNCTIONS_FILE ${NODOGSPLASH_FUNCTIONS_FILE}.bak
+cat $PROJECT_CONFIGS_DIR/nodogsplash/functions.template | \
+sed -e "s:MY_NODOGSPLASH_BINARY_PREFIX:$BINARY_PREFIX:g" | \
+sed -e "s:MY_NODOGSPLASH_RUNDIR:$RUNDIR:g" | \
+sed -e "s:MY_NODOGSPLASH_HTML_DIR:$NODOGSPLASH_HTML_DIR:g" | \
+sed -e "s:MY_NODOGSPLASH_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
+sed -e "s:MY_OUR_WIFI_DEVICES_FILE:$OUR_WIFI_DEVICES_FILE:g" \
+	> $NODOGSPLASH_FUNCTIONS_FILE
+# Make functions executable
+chmod 755 $NODOGSPLASH_FUNCTIONS_FILE
+#
+# Copy custom nodogsplash login script to project's system directory
+[[ -e $NODOGSPLASH_LOGIN_SCRIPT ]] && mv -v $NODOGSPLASH_LOGIN_SCRIPT ${NODOGSPLASH_LOGIN_SCRIPT}.bak
+cp -v $PROJECT_CONFIGS_DIR/nodogsplash/login.sh $NODOGSPLASH_LOGIN_SCRIPT
+# Make script executable
+chmod 755 $NODOGSPLASH_LOGIN_SCRIPT
+#
+# Customize and copy nodogsplash systemd file 
+[[ -e $SYSTEMD_UNITS_DIR_USER/nodogsplash.service ]] | \
+cat $PROJECT_INIT_SCRIPTS_DIR/nodogsplash.service | \
+sed -e "s:MY_NODOGSPLASH_CONFIG_FILE:$NODOGSPLASH_CONFIG_FILE:g" | \
+sed -e "s:MY_NODOGSPLASH_BINARY_PREFIX:$BINARY_PREFIX:g" | \
+sed -e "s:MY_NODOGSPLASH_RUNDIR:$RUNDIR:g" \
+	> $SYSTEMD_UNITS_DIR_USER/nodogsplash.service
+#
+# Enable nodogsplash if needed
+systemctl enable nodogsplash.service
+}
+
+nodogsplash_customization () {
+# Get WWW User and Group
+set_www_user_group
+#
+# Create WWW directory if non-existent
+[ -d $NODOGSPLASH_HTML_DIR ] || mkdir -p $NODOGSPLASH_HTML_DIR
+# Move nodogsplash htdocs directory and files to our landing diretory
+mv -v $NODOGSPLASH_CONFIG_DIR/htdocs $NODOGSPLASH_HTML_DIR/
+# Add landing pages & custom html files to WWW
+rsync -av $PROJECT_CUSTOMIZATION_DIR/nodogsplash/html/ $NODOGSPLASH_HTML_DIR/
+# Change ownership of nodogsplash HTML directory
+chown -R $WWW_USER:$WWW_GROUP $NODOGSPLASH_HTML_DIR
 }
 
 internet_connectivity_monitoring () {
@@ -10139,7 +10254,7 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_CONF_DIR/xupnpd
 # Use template to generate xupnpd.lua file
 cat $PROJECT_CONFIGS_DIR/xupnpd.lua.sample | \
 	sed -e "s/WIRELESS_DEV/$WIFI_AP_INTERFACE/" | \
-	sed -e "s/MULTICAST_PROXY_IP/$COOVA_SERVER_IP/" | \
+	sed -e "s/MULTICAST_PROXY_IP/$NETWORK_WIRELESS_HOTSPOT_IP/" | \
 	sed -e "s:USER_TV_SHOWS_DIR:$USER_TV_SHOWS_DIR:g" | \
 	sed -e "s:USER_MOVIES_DIR:$USER_MOVIES_DIR:g" | \
 	sed -e "s:PODCASTS_DIRECTORY:$PODCASTS_DIRECTORY:g" | \
@@ -10603,7 +10718,7 @@ cat > $OWNCLOUD_CONFIG_FILE << EOF
   'instanceid' => '$OWNCLOUD_INSTANCE_ID',
   'trusted_domains' => 
   array (
-    0 => '$NETWORK_IP_ADDRESS', '$COOVA_SERVER_IP', '$OWNCLOUD_WWW_SERVER_NAME'
+    0 => '$NETWORK_IP_ADDRESS', '$NETWORK_WIRELESS_HOTSPOT_IP', '$OWNCLOUD_WWW_SERVER_NAME'
   ),
   'datadirectory' => '$OWNCLOUD_DATA_DIRECTORY',
   'overwrite.cli.url' => 'http://$NETWORK_IP_ADDRESS:$(grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})',
@@ -10748,7 +10863,7 @@ cat > $NEXTCLOUD_CONFIG_FILE << EOF
   'trusted_domains' => 
   array (
     0 => '$NETWORK_IP_ADDRESS', 
-    1 => '$COOVA_SERVER_IP', 
+    1 => '$NETWORK_WIRELESS_HOTSPOT_IP', 
     2 => '$NEXTCLOUD_WWW_SERVER_NAME'
   ),
   'datadirectory' => '$NEXTCLOUD_DATA_DIRECTORY',

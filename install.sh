@@ -181,6 +181,7 @@ ieee_oui_configure
 wired_interfaces_configure
 wireless_drivers_support
 wireless_interfaces_configure
+assign_ip_2_wifi_gateway_and_enable_nat
 openssl_configure
 wol_configure 
 system_sounds_configure
@@ -382,10 +383,13 @@ pocketsphinx_configure
 # Wireless Access Point (HotSpot)
 # IMPORTANT Install After FreePBX/Asterisk
 # -----------------------------------------
-coova_chilli_install
-haserl_install
-coova_chilli_configure
-coova_chilli_customization
+#coova_chilli_install
+#haserl_install
+#coova_chilli_configure
+#coova_chilli_customization
+nodogsplash_install
+nodogsplash_configure
+nodogsplash_customization 
 hostapd_install
 hostapd_configure
 wpa_supplicant_install

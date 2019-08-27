@@ -1,6 +1,6 @@
 [Unit]
 Description=MiniDLNA is a DLNA/UPnP-AV server software
-After=syslog.target local-fs.target network.target coova-chilli.service
+After=syslog.target local-fs.target network.target
 
 [Service]
 Type=forking

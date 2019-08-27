@@ -35,13 +35,11 @@ enable-dbus
 #user=
 #group=
 
-#interface=NETWORK_ETHERNET_DEVICE
 #interface= # DON'T enable - Remote DNS lookups will fail!!!
 
 #except-interface=
 listen-address=127.0.0.1, NETWORK_IP_ADDRESS, WIFI_IP_ADDRESS
 #no-dhcp-interface=
-no-dhcp-interface=WIFI_AP_INTERFACE
 
 #bind-interfaces
 
@@ -55,7 +53,8 @@ domain=NETWORK_DOMAIN
 #domain=wireless.thekelleys.org.uk,192.168.2.0/24
 #domain=reserved.thekelleys.org.uk,192.68.3.100,192.168.3.200
 
-dhcp-range=NETWORK_DHCP_RANGE,12h
+dhcp-range=interface:NETWORK_ETHERNET_DEVICE,NETWORK_DHCP_RANGE,12h
+dhcp-range=interface:WIFI_AP_INTERFACE,NETWORK_WIRELESS_DHCP_RANGE,12h
 
 #enable-ra
 
@@ -75,7 +74,9 @@ dhcp-range=NETWORK_DHCP_RANGE,12h
 
 #read-ethers
 
-dhcp-option=3,NETWORK_IP_ADDRESS
+dhcp-option=NETWORK_ETHERNET_DEVICE,3,NETWORK_IP_ADDRESS
+dhcp-option=WIFI_AP_INTERFACE,3,WIFI_IP_ADDRESS
+
 #dhcp-option=option:router,192.168.0.250
 #dhcp-option=3
 #dhcp-option=option:ntp-server,192.168.0.4,10.10.0.5
