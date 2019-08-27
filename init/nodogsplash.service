@@ -1,0 +1,11 @@
+[Unit]
+Description=Captive Portal that offers a simple way to provide restricted access to the Internet
+
+After=network-online.target hostapd.service dnsmasq.service
+
+[Service]
+Type=forking
+ExecStart=MY_NODOGSPLASH_BINARY_PREFIX/nodogsplash -d 1 -c MY_NODOGSPLASH_CONFIG_FILE -w MY_NODOGSPLASH_RUNDIR/nodogsplash.socket
+
+[Install]
+WantedBy=multi-user.target

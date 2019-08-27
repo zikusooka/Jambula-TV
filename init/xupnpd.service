@@ -1,6 +1,6 @@
 [Unit]
 Description=Lightweight DLNA IPTV Media Server
-After=syslog.target local-fs.target network.target coova-chilli.service
+After=syslog.target local-fs.target network.target
 
 [Service]
 User=jambula

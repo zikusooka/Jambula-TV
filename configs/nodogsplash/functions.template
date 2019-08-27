@@ -1,0 +1,84 @@
+#!/bin/sh
+# These functions are used by nodogsplash 'login.sh' script to 
+# dynamically generate HTML-based web pages for captive portal
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+
+
+# Fixed variables
+NDS_CMD=MY_NODOGSPLASH_BINARY_PREFIX/ndsctl
+NDS_RUN_SOCKET=MY_NODOGSPLASH_RUNDIR/nodogsplash.socket
+NDS_CONTROL_CMD="$NDS_CMD -s $NDS_RUN_SOCKET"
+NDS_HTML_DIR=MY_NODOGSPLASH_HTML_DIR
+NDS_LOG_FILE=MY_NODOGSPLASH_LOG_DIR/nodogsplash-clients.log
+REMOTE_DOMAIN_NAME=google.com
+SYSTEM_DNS_SERVER=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | awk 'NR == 1')
+MY_WIFI_DEVICES_FILE=MY_OUR_WIFI_DEVICES_FILE
+
+
+
+# JambulaTV functions
+# -------------------
+jambula_body_template_path () {
+    HTML_TEXT_FILE="$NDS_HTML_DIR/$1.txt"
+    HTML_TEMPLATE_FILE="$NDS_HTML_DIR/$1.tmpl"
+    [[ -s $HTML_TEXT_FILE ]] && HTML_TEMPLATE_FILE=$HTML_TEXT_FILE
+    [[ "x$1" = "x" ]] || echo $HTML_TEMPLATE_FILE
+}
+
+jambula_body_template () {
+jambula_body_template_path
+    HTML_TEMPLATE_FILE=$(jambula_body_template_path $1)
+    [[ "$2" = "1" ]] && echo "<div id=\"$1\">"
+
+    eval "cat <<EOF
+$(cat $HTML_TEMPLATE_FILE)
+EOF
+"
+    [[ "$2" = "1" ]] && echo "</div>"
+}
+
+jambula_header() {
+jambula_body_template "landing/header" 1 
+}
+
+jambula_footer() {
+jambula_body_template "landing/footer" 1 
+}
+
+jambula_already_logged_in () {
+jambula_header
+echo "<p><big-red>You are already logged in and have access to the Internet.</big-red></p>"
+echo "<hr>"
+echo "<p><italic-black>You can use your Browser, Email and other network Apps as you normally would.</italic-black></p>"
+jambula_footer
+}
+
+jambula_portal_busy () {
+jambula_header 
+echo "<big-red>Sorry!</big-red><italic-black> The portal is busy, please try again.</italic-black><hr>"
+jambula_footer
+}
+
+jambula_check_dns() {
+host -W 1 $REMOTE_DOMAIN_NAME $SYSTEM_DNS_SERVER > /dev/null 2>&1
+DNS_STATUS=$?
+}
+
+jambula_add_legal_device () {
+REMOTE_MAC=$(echo "$1" | sed "s/:/-/g") 
+# Check if remote MAC address is in My-WiFi devices file
+grep -iw $REMOTE_MAC $MY_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' > /dev/null 2>&1
+MAC_EXISTS_IN_FILE=$?
+
+# If user's MAC address exists in My-WiFI devices file
+if [[ "$MAC_EXISTS_IN_FILE" = "0" ]] && [[ "x$1" != "x" ]];
+then
+# Add MAC Address of device that will ByPass Authentication 
+$NDS_CONTROL_CMD trust $1 > /dev/null 2>&1
+fi
+}
+
+jambula_log_clients () {
+echo "$(date) mac address=$1" >> $NDS_LOG_FILE
+}
