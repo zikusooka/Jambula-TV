@@ -1,0 +1,11 @@
+--- CurlFile.cpp.orig		2019-08-28 16:42:06.238915875 +0300
++++ CurlFile.cpp		2019-08-28 16:42:16.904915875 +0300
+@@ -629,7 +629,7 @@
+     g_curlInterface.easy_setopt(h, CURLOPT_SSL_CIPHER_LIST, m_cipherlist.c_str());
+ 
+   // enable HTTP2 support. default: CURL_HTTP_VERSION_1_1. Curl >= 7.62.0 defaults to CURL_HTTP_VERSION_2TLS
+-  g_curlInterface.easy_setopt(h, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
++  g_curlInterface.easy_setopt(h, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+ 
+ }
+ 
