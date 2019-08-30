@@ -253,7 +253,7 @@ KODI17_TAG=$KODI17_VERSION-$KODI17_CODENAME
 KODI17_SOURCES_TYPE=tarball 
 KODI17_CORE_INSTALL_ROOT_DIR=$INSTALL_SRC_DIR/kodi
 
-KODI18_VERSION=18.1
+KODI18_VERSION=18.3
 KODI18_CODENAME=Leia
 KODI18_TAG=$KODI18_VERSION-$KODI18_CODENAME
 KODI18_SOURCES_TYPE=git
@@ -265,13 +265,14 @@ KODI18_BINARY_ADDONS_DOWNLOAD_DIR=$KODI18_BINARY_ADDONS_BUILD_DIR/download
 #KODI18_BINARY_ADDONS_TO_BUILD="all"
 KODI18_BINARY_ADDONS_TO_BUILD="pvr.hts"
 
+KODI18_FFMPEG_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/4.0.3-Leia-18.2.tar.gz
 KODI18_CROSSGUID_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/crossguid-8f399e8bd4.tar.gz
 KODI18_FLATBUFFERS_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/flatbuffers-1.9.0.tar.gz
 KODI18_LIBDVDCSS_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/libdvdcss-1.4.1-Leia-Beta-3.tar.gz
 KODI18_LIBDVDNAV_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/libdvdnav-6.0.0-Leia-Alpha-3.tar.gz
 KODI18_LIBDVDREAD_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/libdvdread-6.0.0-Leia-Alpha-3.tar.gz
 
-KODI18_PVR_HTS_TAG="4.4.14-Leia"
+KODI18_PVR_HTS_TAG="4.4.18-Leia"
 
 #KODI18_CMAKE_EXTRA_OPTIONS="-DADDON_TARBALL_CACHING=ON -DADDON_SRC_PREFIX=$KODI18_BINARY_ADDONS_BUILD_DIR"
 ##KODI18_CMAKE_EXTRA_OPTIONS="-DADDON_TARBALL_CACHING=ON -DTARBALLS_LOCATION=$KODI18_BINARY_ADDONS_DOWNLOAD_DIR -DTARBALL_DIR=$KODI18_BINARY_ADDONS_DOWNLOAD_DIR"
@@ -2098,6 +2099,9 @@ rm -rf $KODI_CONFIG_DIR
 # Pvr.hts
 [[ -d $INSTALL_SRC_DIR/kodi-pvr.hts ]] && \
 	rm -rf $INSTALL_SRC_DIR/kodi-pvr.hts
+# kodi-platform
+[[ -d $INSTALL_SRC_DIR/kodi-platform ]] && \
+	rm -rf $INSTALL_SRC_DIR/kodi-platform
 }
 
 uninstall_oss () {
@@ -4454,7 +4458,8 @@ cd $INSTALL_SRC_DIR/ffmpeg
 	--enable-libxvid \
 	--enable-libxml2 \
 	--enable-openal \
-	--enable-libdrm
+	--enable-libdrm \
+	--disable-libaom
 # Install
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 # Clean up - saves upto 300MB
@@ -5994,6 +5999,11 @@ kodi18_unpack_tarball
 ;;
 esac
 
+# Apply patches
+# -------------
+# a) Use curl HTTP 1.1 instead of 2.0 
+patch -p1 $KODI18_CORE_INSTALL_ROOT_DIR/xbmc/filesystem/CurlFile.cpp < $PROJECT_PATCHES_DIR/kodi.curlfile.cpp.patch
+
 # Create build directory if non existent
 [[ -d $KODI18_CORE_INSTALL_BUILD_DIR ]] || \
 	mkdir -p $KODI18_CORE_INSTALL_BUILD_DIR
@@ -6017,6 +6027,7 @@ cmake .. \
 	-DENABLE_VAAPI=ON \
 	-DENABLE_VDPAU=OFF \
 	-DVERBOSE=ON \
+	-DFFMPEG_URL="$KODI18_FFMPEG_PACAKGE_NAME" \
 	-DCROSSGUID_URL="$KODI18_CROSSGUID_PACAKGE_NAME" \
 	-DFLATBUFFERS_URL="$KODI18_FLATBUFFERS_PACAKGE_NAME" \
 	-DLIBDVDCSS_URL="$KODI18_LIBDVDCSS_PACAKGE_NAME" \
@@ -6028,7 +6039,6 @@ cmake --build $KODI18_CORE_INSTALL_BUILD_DIR -- VERBOSE=1
 # Make - Install
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 
-
 # Copy Kodi binary-addons and dependencies to download directories
 #rsync -aAXv $PROJECT_TARBALLS_DIR/kodi/ $KODI18_CORE_INSTALL_ROOT_DIR/
 
@@ -6037,7 +6047,6 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 #	PREFIX=$PREFIX CMAKE_EXTRA="$KODI18_CMAKE_EXTRA_OPTIONS" \
 #	LIBDIR=$LIBDIR/kodi \
 #	ADDONS="$KODI18_BINARY_ADDONS_TO_BUILD"
-
 
 # Install other important addons
 # ------------------------------
@@ -11981,8 +11990,8 @@ SODIUM_INSTALL=system pip3 --log $BUILD_LOG install --no-index --find-links $PRO
 #
 # Install dependencies for Home-Assistant using pips specified in requirements
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
-# Install snapcast which is somewhat left out 
-pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR snapcast==2.0.10
+# Install other dependencies that are somewhat left out during install
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r home-assistant-requirements.txt
 #
 # Install Home-Assistant
 cd $INSTALL_SRC_DIR/home-assistant
@@ -12381,7 +12390,6 @@ rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMi
 sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > $TMPDIR/zmdc.pl.patch
 # Fixes to zmdc.pl
 patch -p1 $INSTALL_SRC_DIR/ZoneMinder/scripts/zmdc.pl.in < $TMPDIR/zmdc.pl.patch
-
 
 # API Bugs - Remove these patches when fixed
 # ------------------------------------------
