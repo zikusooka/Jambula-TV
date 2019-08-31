@@ -238,10 +238,11 @@ homeassistant_cli_install
 }
 
 upgrade_zoneminder () {
+ZM_ADD_DEFAULT_MONITORS=yes 
 uninstall_zoneminder
-#zoneminder_128_install
 zoneminder_130_install
-zoneminder_configure
+zoneminder_configure 
+zoneminder_zms_inetd
 zmeventserver_configure
 }
 
