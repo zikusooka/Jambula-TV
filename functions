@@ -792,6 +792,7 @@ ZONEMINDER_CONTENT_DIR=$MULTIMEDIA_USER_HOME_DIR/CCTV
 ZONEMINDER_SOUNDS_DIR=$PROJECT_SYSTEM_SHARE_DIR/sounds/zoneminder
 ZONEMINDER_WWW_ROOT_DIR=$WWW_HTML_DIR/zm
 ZONEMINDER_WEB_URL="http://${ZONEMINDER_DB_HOST}:${ZONEMINDER_WWW_PORT}"
+ZONEMINDER_API_VERSION=2
 ZONEMINDER_API_URL=$ZONEMINDER_WEB_URL/api
 ZONEMINDER_CCTV_MONITORS_CONFIGS_DIR=$PROJECT_CONTRIB_DIR/cameras
 ZONEMINDER_CCTV_MONITORS="logitech_quickcam_communicate_stx logitech_c200"
@@ -2236,6 +2237,7 @@ rm -rf $CACHEDIR/zoneminder
 rm -rf $ZONEMINDER_SOUNDS_DIR
 rm -rf $INSTALL_SRC_DIR/ZoneMinder
 rm -f $ZMEVENTSERVER_NOTIFICATION_DAEMON
+rm -f $BINARY_PREFIX/zmalarm_daemon.pl
 }
 
 uninstall_flexget () {
@@ -12353,6 +12355,31 @@ cd $INSTALL_SRC_DIR && mv Crypt-MySQL* perl_Crypt-MySQL
 cd $INSTALL_SRC_DIR/perl_Crypt-MySQL
 perl Makefile.PL
 make_install_jambulatv
+
+# Data-Float module
+tar zxvf $PROJECT_TARBALLS_DIR/Data-Float-*.tar.gz -C $INSTALL_SRC_DIR
+# Change to perl_Data-Float directory
+cd $INSTALL_SRC_DIR && mv Data-Float* perl_Data-Float
+cd $INSTALL_SRC_DIR/perl_Data-Float
+perl Build.PL
+./Build
+./Build install
+
+# Crypt-Rijndael module
+tar zxvf $PROJECT_TARBALLS_DIR/Crypt-Rijndael-*.tar.gz -C $INSTALL_SRC_DIR
+# Change to perl_Crypt-Rijndael directory
+cd $INSTALL_SRC_DIR && mv Crypt-Rijndael* perl_Crypt-Rijndael
+cd $INSTALL_SRC_DIR/perl_Crypt-Rijndael
+perl Makefile.PL
+make_install_jambulatv
+
+# Data-Entropy module
+tar zxvf $PROJECT_TARBALLS_DIR/Data-Entropy-*.tar.gz -C $INSTALL_SRC_DIR
+# Change to perl_Data-Entropy directory
+cd $INSTALL_SRC_DIR && mv Data-Entropy* perl_Data-Entropy
+cd $INSTALL_SRC_DIR/perl_Data-Entropy
+perl Makefile.PL
+make_install_jambulatv
 }
 
 zoneminder_128_install () {
@@ -12600,7 +12627,7 @@ cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-webcams.rules $UDEV_RULES_USB_W
 
 # ZM Monitors
 # -----------
-[[ "$ZM_ADD_DEFAULT_MONITORS" = "yes" ]] && zoneminder_add_monitors_using_api
+[[ "$ZM_ADD_DEFAULT_MONITORS" = "yes" ]] && zoneminder_add_monitors_using_api_v${ZONEMINDER_API_VERSION}
 
 # Setup Systemd
 # -------------
@@ -12640,7 +12667,14 @@ $CURL_CMD -XPOST $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
 		$ZONEMINDER_WEB_URL/index.php > /dev/null 2>&1
 }
 
-zoneminder_add_monitors_using_api () {
+zoneminder_get_api_v2_credentials () {
+# API credentials for new API v2.0
+ZONEMINDER_API_ACCESS_TOKEN=$($CURL_CMD $CURL_OPTS -c $CURL_COOKIE_JAR_FILE -d user=$ZONEMINDER_ADMIN_USER -d pass=$ZONEMINDER_ADMIN_PASS $ZONEMINDER_API_URL/host/login.json | jq -r .access_token)
+ZONEMINDER_API_REFRESH_TOKEN=$($CURL_CMD $CURL_OPTS -c $CURL_COOKIE_JAR_FILE -d user=$ZONEMINDER_ADMIN_USER -d pass=$ZONEMINDER_ADMIN_PASS $ZONEMINDER_API_URL/host/login.json | jq -r .refresh_token)
+ZONEMINDER_API_AUTH=$($CURL_CMD $CURL_OPTS -c $CURL_COOKIE_JAR_FILE -d user=$ZONEMINDER_ADMIN_USER -d pass=$ZONEMINDER_ADMIN_PASS $ZONEMINDER_API_URL/host/login.json | jq -r .credentials | cut -d = -f2)
+}
+
+zoneminder_add_monitors_using_api_v1 () {
 # Log into Zoneminder using API
 zoneminder_login_using_api
 
@@ -12825,15 +12859,201 @@ done
 zoneminder_logout_using_api
 }
 
+zoneminder_add_monitors_using_api_v2 () {
+# Get ZoneMinder API v2 credentials
+zoneminder_get_api_v2_credentials
+
+# Add ZoneMinder Monitor(s)
+# -------------------------
+for MONITOR in $ZONEMINDER_CCTV_MONITORS;
+do
+
+if [[ -e $ZONEMINDER_CCTV_MONITORS_CONFIGS_DIR/$MONITOR ]];
+then
+# Source variables for this monitor
+. $ZONEMINDER_CCTV_MONITORS_CONFIGS_DIR/$MONITOR
+
+# Add selected monitor if its config file is found
+$CURL_CMD $CURL_OPTS \
+	-d token=$ZONEMINDER_API_ACCESS_TOKEN \
+	-d "Monitor[Id]=$Id" \
+	-d "Monitor[Name]=$Name" \
+	-d "Monitor[ServerId]=null" \
+	-d "Monitor[StorageId]=1" \
+	-d "Monitor[Type]=$Type" \
+	-d "Monitor[Function]=$Function" \
+	-d "Monitor[Enabled]=$Enabled" \
+	-d "Monitor[LinkedMonitors]=null" \
+	-d "Monitor[Triggers]=" \
+	-d "Monitor[Device]=$Device" \
+	-d "Monitor[Channel]=0" \
+	-d "Monitor[Format]=$Format" \
+	-d "Monitor[V4LMultiBuffer]=false" \
+	-d "Monitor[V4LCapturesPerFrame]=1" \
+	-d "Monitor[Protocol]=$Protocol" \
+	-d "Monitor[Method]=$Method" \
+	-d "Monitor[Host]=$Host" \
+	-d "Monitor[Port]=$Port" \
+	-d "Monitor[SubPath]=" \
+	-d "Monitor[Path]=$Path" \
+	-d "Monitor[Options]=$Options" \
+	-d "Monitor[User]=$User" \
+	-d "Monitor[Pass]=$Path" \
+	-d "Monitor[Width]=$Width" \
+	-d "Monitor[Height]=$Height" \
+	-d "Monitor[Colours]=$Colours" \
+	-d "Monitor[Palette]=$Palette" \
+	-d "Monitor[Orientation]=0" \
+	-d "Monitor[Deinterlacing]=0" \
+	-d "Monitor[SaveJPEGs]=0" \
+	-d "Monitor[VideoWriter]=1" \
+	-d "Monitor[EncoderParameters]=" \
+	-d "Monitor[RecordAudio]=0" \
+	-d "Monitor[RTSPDescribe]=false" \
+	-d "Monitor[Brightness]=-1" \
+	-d "Monitor[Contrast]=-1" \
+	-d "Monitor[Hue]=-1" \
+	-d "Monitor[Colour]=-1" \
+	-d "Monitor[EventPrefix]=$Name -" \
+	-d "Monitor[LabelFormat]=  %A    %d %B, %Y        %I:%M:%S %p" \
+	-d "Monitor[LabelX]=0" \
+	-d "Monitor[LabelY]=0" \
+	-d "Monitor[LabelSize]=1" \
+	-d "Monitor[ImageBufferCount]=20" \
+	-d "Monitor[WarmupCount]=0" \
+	-d "Monitor[PreEventCount]=0" \
+	-d "Monitor[PostEventCount]=5" \
+	-d "Monitor[StreamReplayBuffer]=0" \
+	-d "Monitor[AlarmFrameCount]=1" \
+	-d "Monitor[SectionLength]=600" \
+	-d "Monitor[FrameSkip]=0" \
+	-d "Monitor[MotionFrameSkip]=0" \
+	-d "Monitor[AnalysisFPSLimit]=null" \
+	-d "Monitor[AnalysisUpdateDelay]=0" \
+	-d "Monitor[MaxFPS]=$MaxFPS" \
+	-d "Monitor[AlarmMaxFPS]=$AlarmMaxFPS" \
+	-d "Monitor[FPSReportInterval]=100" \
+	-d "Monitor[RefBlendPerc]=6" \
+	-d "Monitor[AlarmRefBlendPerc]=6" \
+	-d "Monitor[Controllable]=0" \
+	-d "Monitor[ControlId]=null" \
+	-d "Monitor[ControlDevice]=null" \
+	-d "Monitor[ControlAddress]=null" \
+	-d "Monitor[AutoStopTimeout]=null" \
+	-d "Monitor[TrackMotion]=0" \
+	-d "Monitor[TrackDelay]=null" \
+	-d "Monitor[ReturnLocation]=-1" \
+	-d "Monitor[ReturnDelay]=null" \
+	-d "Monitor[DefaultView]=Events" \
+	-d "Monitor[DefaultRate]=100" \
+	-d "Monitor[DefaultScale]=100" \
+	-d "Monitor[SignalCheckPoints]=10" \
+	-d "Monitor[SignalCheckColour]=#0000c0" \
+	-d "Monitor[WebColour]=red" \
+	-d "Monitor[Exif]=false" \
+	-d "Monitor[Sequence]=1" \
+		$ZONEMINDER_API_URL/monitors.json | grep -i "\"success\": false," > /dev/null 2>&1
+MONITOR_ADDED_STATUS=$?
+# Notify of added monitor
+[[ "$MONITOR_ADDED_STATUS" = "0" ]] || \
+	logger -s -t $(basename $0) "Info: CCTV monitor [$MONITOR] has been added"
+# Notify of error adding monitor
+[[ "$MONITOR_ADDED_STATUS" = "0" ]] && \
+	logger -s -t $(basename $0) "Error: CCTV monitor [$MONITOR] could not be added"
+
+# Add corresponding Zones(s)
+# --------------------------
+# Set sensitivity levels first
+case $ZONEMINDER_CCTV_ZONE_SENSITIVITY_DEFAULT in
+best-low)
+FILTERX=7
+FILTERY=7
+MINALARMPIXELS=27648
+MINBLOBPIXELS=15360
+MINFILTERPIXELS=18432
+MINPIXELTHRESHOLD=60
+;;
+best-medium)
+FILTERX=5
+FILTERY=5
+MINALARMPIXELS=12288
+MINBLOBPIXELS=7680
+MINFILTERPIXELS=9216
+MINPIXELTHRESHOLD=40
+;;
+best-high)
+FILTERX=3
+FILTERY=3
+MINALARMPIXELS=6144
+MINBLOBPIXELS=3840
+MINFILTERPIXELS=4608
+MINPIXELTHRESHOLD=20
+;;
+*)
+FILTERX=3
+FILTERY=3
+MINALARMPIXELS=6144
+MINBLOBPIXELS=3840
+MINFILTERPIXELS=4608
+MINPIXELTHRESHOLD=20
+;;
+esac
+#
+# Add Zone for Monitor Id 1
+$CURL_CMD $CURL_OPTS \
+	-d token=$ZONEMINDER_API_ACCESS_TOKEN \
+	-d "Zone[MonitorId]=$Id" \
+	-d "Zone[Name]=$Name" \
+	-d "Zone[Id]=" \
+	-d "Zone[Type]=Active" \
+	-d "Zone[Units]=Percent" \
+	-d "Zone[NumCoords]=4" \
+	-d "Zone[Coords]=0,0 319,0 319,239 0,239" \
+	-d "Zone[Area]=76800" \
+	-d "Zone[AlarmRGB]=16711680" \
+	-d "Zone[CheckMethod]=Blobs" \
+	-d "Zone[MinPixelThreshold]=$MINPIXELTHRESHOLD" \
+	-d "Zone[MaxPixelThreshold]=null" \
+	-d "Zone[MinAlarmPixels]=$MINALARMPIXELS" \
+	-d "Zone[MaxAlarmPixels]=57600" \
+	-d "Zone[FilterX]=$FILTERX" \
+	-d "Zone[FilterY]=$FILTERY" \
+	-d "Zone[MinFilterPixels]=$MINFILTERPIXELS" \
+	-d "Zone[MaxFilterPixels]=57600" \
+	-d "Zone[MinBlobPixels]=$MINBLOBPIXELS" \
+	-d "Zone[MaxBlobPixels]=null" \
+	-d "Zone[MinBlobs]=1" \
+	-d "Zone[MaxBlobs]=null" \
+	-d "Zone[OverloadFrames]=0" \
+	-d "Zone[ExtendAlarmFrames]=0" \
+		$ZONEMINDER_API_URL/zones.json | grep -i "\"success\": false," > /dev/null 2>&1
+ZONE_ADDED_STATUS=$?
+# Notify of added monitor
+[[ "$ZONE_ADDED_STATUS" = "0" ]] || \
+	logger -s -t $(basename $0) "Info: Zone for [$MONITOR] has been added"
+# Notify of error adding monitor
+[[ "$ZONE_ADDED_STATUS" = "0" ]] && \
+	logger -s -t $(basename $0) "Error: Zone for [$MONITOR] could not be added"
+
+else
+# Notify of missing config file for monitor
+logger -s -t $(basename $0) "Warning: The config file for CCTV monitor [$MONITOR] was not found"
+fi
+
+done
+}
+
 zoneminder_zms_inetd () {
 # Get WWW User and Group
 set_www_user_group
 #
-# Add port to services
+# Add port to services if not existent
+grep zms-inetd $CONFDIR/services > /dev/null 2>&1 || \
 echo "
 zms-inetd	$ZONEMINDER_ZMS_INETD_PORT/tcp		# Zoneminder ZMS inetd-wrapper" >> $CONFDIR/services
 #
-# Add xinetd file
+# Add xinetd file if not existent
+[[ -e $CONFDIR/xinetd.d/zms ]] || \
 cat > $CONFDIR/xinetd.d/zms <<EOF
 # description: zms
 #
@@ -12851,7 +13071,7 @@ service zms-inetd
 EOF
 #
 # Copy jambulatv-zms-inetd script, if it does not exist in bin directory
-[ -e $ZONEMINDER_ZMS_INETD_TOOL ] || \
+[[ -e $ZONEMINDER_ZMS_INETD_TOOL ]] || \
 	cat $PROJECT_BIN_DIR/jambulatv-zms-inetd | \
 		sed -e "s:MY_ZONEMINDER_CONFIG_DIR:$ZONEMINDER_CONFIG_DIR:g" \
 			> $ZONEMINDER_ZMS_INETD_TOOL
