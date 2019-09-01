@@ -1,0 +1,42 @@
+# The darksky platform uses the Dark Sky web service as a source for
+# meteorological data for your location.
+#
+# https://www.home-assistant.io/components/sensor.darksky/
+#
+platform: darksky
+api_key: !secret darksky_api_key
+name: DarkSky
+forecast:
+ - 0
+monitored_conditions:
+  - summary
+  - icon
+  - temperature
+  - apparent_temperature
+  - temperature_high
+  - temperature_low
+  - apparent_temperature_high
+  - apparent_temperature_low
+  - precip_probability
+  - minutely_summary
+  - hourly_summary
+
+
+# Conditions
+# ----------
+# A human-readable text summary
+# A machine-readable text summary, suitable for selecting an icon for display
+# The air temperature
+# The apparent (or “feels like”) temperature
+# The daytime high temperature.
+# The overnight low temperature                           
+# The daytime high apparent temperature
+# The overnight low apparent temperature
+# The probability of precipitation occurring, in percents
+# A human-readable text summary for the next hour
+# A human-readable text summary for the next two days
+
+
+
+
+

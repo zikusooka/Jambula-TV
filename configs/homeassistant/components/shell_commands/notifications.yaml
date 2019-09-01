@@ -1,0 +1,14 @@
+# Telegram (General)
+send_telegram_text: sudo /usr/bin/jambulatv-telegram sendmessage """*[JambulaTV]* {{message}}""" {{phone}}
+send_telegram_image: sudo /usr/bin/jambulatv-telegram sendImageDisk """{{image_path}} {{phone}}"""
+
+# WhatsApp (General)
+send_whatsapp_image: sudo /usr/bin/jambulatv-whatsapp sendImage """{{image_path}} {{phone}}"""
+send_whatsapp_text: sudo /usr/bin/jambulatv-whatsapp sendMessage """*[JambulaTV]* {{message}}""" {{phone}}
+
+
+# WhatsApp (Twitter reports)
+send_twitter_reports_whatsapp: sudo /usr/bin/jambulatv-whatsapp sendFileContent {{reports_file}} {{phone}}
+
+# Telegram (Twitter reports)
+send_twitter_reports_telegram: sudo /usr/bin/jambulatv-telegram sendFileContent {{reports_file}} {{phone}}

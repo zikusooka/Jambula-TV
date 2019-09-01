@@ -1,0 +1,25 @@
+alias: "Media player playing"
+trigger:
+  - platform: state
+    entity_id: media_player.jambulatv_living_room
+    to: 'playing'
+    from: 'idle'
+#condition:
+#  - condition: state
+#     entity_id: sun.sun
+#     state: 'below_horizon'
+
+condition:
+  condition: and
+  conditions:
+
+  - condition: state
+    entity_id: sun.sun
+    state: 'below_horizon'
+
+  - condition: template 
+    value_template: '{{ states.media_player.jambulatv_living_room.attributes.media_content_type == "tvshow" }}'
+
+action:
+  - service: scene.turn_on
+    entity_id: scene.LivingRoom_Off

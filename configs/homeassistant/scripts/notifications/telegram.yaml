@@ -1,0 +1,22 @@
+send_telegram:
+  sequence:
+
+    # Telegram - image
+    - service: shell_command.send_telegram_image
+      data_template:
+        image_path: '{{telegram_image}}'
+        phone: '{{telegram_recipient_phone}}'
+
+    # IMPORTANT: Pause a bit to allow previous notification to be sent
+    - delay:
+        seconds: 10
+
+    # Telegram - text
+    - service: shell_command.send_telegram_text
+      data_template: 
+        message: '{{telegram_text}}'
+        phone: '{{telegram_recipient_phone}}'
+
+    # IMPORTANT: Pause a bit to allow previous notification to be sent
+    - delay:
+        seconds: 10

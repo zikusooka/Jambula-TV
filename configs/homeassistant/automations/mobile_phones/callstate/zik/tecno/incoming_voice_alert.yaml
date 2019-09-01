@@ -1,0 +1,44 @@
+# Phone call - Incoming (Voice Alert)
+alias: "Play voice alert when phone call is incoming for Zik (Tecno)"
+initial_state: True
+
+
+trigger:
+  - platform: state
+    entity_id: sensor.phone_call_status_for_zik_tecno
+    to: 'ringing'
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  # a) Merge audio files
+  - service: shell_command.ffmpeg_concat_two_mp3
+    data_template:
+      input_directory: !secret jambulatv_sounds_dir
+      input_file1: 'incoming-phone-call-for.mp3'
+      input_file2: 'zik.mp3'
+      output_directory: !secret jambulatv_temp_dir
+      output_file: 'incoming_phone_call_4_zik.mp3'
+
+  # b) Mute speaker volume if there is already audio playing
+  - service: shell_command.speaker_volume_mute
+  # Pause for a second - Needed - DO NOT REMOVE unless you have a fix!
+  - delay:
+      seconds: 1
+
+  # c) Phone call ring using house speakers
+  - service: shell_command.play_phone_call_incoming_ring
+
+  # d) Play merged audio file using house speakers
+  - service: shell_command.play_merged_audio_file
+    data_template:
+      merged_audio_dir: !secret jambulatv_temp_dir
+      merged_audio_file: 'incoming_phone_call_4_zik.mp3'
+
+  # e) Unmute speaker volume 
+  - service: shell_command.speaker_volume_unmute 

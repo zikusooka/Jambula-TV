@@ -1,0 +1,26 @@
+alias: Zik left - alert via jabber
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: person.zik
+    to: 'Away'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Last triggered more than 5 minute(s) ago
+    - condition: template
+      value_template: '{{ (as_timestamp(now()) - as_timestamp(states.person.zik.attributes.last_triggered | default(0)) | int > 300)}}'
+
+
+action:
+
+  - service: notify.jambulatv
+    data_template:
+      title: '[JambulaTV]'
+      message: 'Zik has left'

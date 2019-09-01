@@ -1,0 +1,39 @@
+alias: Daily digest (Zik)
+initial_state: True
+
+trigger:
+
+  - platform: time_pattern
+    minutes: 5
+
+
+condition:
+  condition: and
+  conditions:
+
+    # After sunrise
+    - condition: sun
+      after: sunrise
+      before: sunset
+      
+    # Internet state
+    - condition: template
+      value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+    # Internet state became 'on' more than 10 minutes ago
+    - condition: template
+      value_template: '{{ (as_timestamp(now()) - as_timestamp(states.binary_sensor.internet.attributes.last_triggered | default(0)) | int > 600)}}'
+
+    # Automation was last triggered more than 24 hours ago
+    - condition: template
+      #value_template: '{{ (as_timestamp(now()) - as_timestamp(states.automation.daily_digest_zik.attributes.last_triggered | default(0)) | int > 86400)}}'
+      value_template: '{{ (as_timestamp(now()) - as_timestamp(states.automation.daily_digest_zik.attributes.last_triggered | default(0)) | int > 43200)}}'
+
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    data:
+      entity_id: script.daily_digest_notify

@@ -1,0 +1,35 @@
+# Battery - Full (Voice Alert)
+alias: "Play voice alert when MiFi battery is full"
+initial_state: True
+
+
+trigger:
+  - platform: state
+    entity_id: sensor.mifi_battery_level
+    to: 'Full'
+
+
+#condition:
+  #condition: and
+  #conditions:
+
+    # Internet state
+    #- condition: template
+      #value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+
+action:
+
+  # Task 1 - sound alert notice using Intercom i.e. paging
+  # ------------------------------------------------------
+  # a) Mute speaker volume if there is already audio playing
+  - service: shell_command.speaker_volume_mute
+  # Pause for a second - Needed - DO NOT REMOVE unless you have a fix!
+  - delay:
+      seconds: 1
+  # b) Full battery sound effect using house speakers
+  - service: shell_command.play_battery_low_sound_effect
+  # c) Voice alert using house speakers
+  - service: shell_command.play_battery_full_voice_alert
+  # d) Unmute speaker volume 
+  - service: shell_command.speaker_volume_unmute 

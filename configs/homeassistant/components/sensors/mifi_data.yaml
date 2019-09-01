@@ -1,0 +1,4 @@
+platform: command_line
+name: "MiFi Data Balance"
+command: "/usr/bin/jambulatv-mifi-query $(/usr/bin/jambulatv-homeassistant-secrets mifi_address mifi_username mifi_password) data | grep -i 'Data Status' | awk {'print $3'}"
+scan_interval: 900

@@ -1,0 +1,68 @@
+alias: Rainfall coming
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.pws_weather_1h
+    to: 'Chance of a Thunderstorm'
+
+  - platform: state
+    entity_id: weather.dark_sky
+    to: 'rainy'
+
+condition:
+  condition: and
+  conditions:
+
+    # Internet state
+    - condition: template
+      value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+    # Time of day
+    - condition: time
+      after: '06:00:00'
+      before: '21:59:59'
+      weekday:
+        - sun
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+        - sat
+
+
+action:
+
+  # VOICE ALERT - sound alert notice using Intercom i.e. paging
+  # -----------------------------------------------------------
+  # a) Mute speaker volume if there is already audio playing
+  - service: shell_command.speaker_volume_mute
+  # Pause for a second - Needed - DO NOT REMOVE unless you have a fix!
+  - delay:
+      seconds: 1
+  # b) Chime alert using house speakers
+  - service: shell_command.play_chime_alert
+  # c) Rain and thunderstorm sound effect using house speakers
+  - service: shell_command.play_rainfall_is_nearby_sound_effect
+  # d) Voice alert using house speakers
+  - service: shell_command.play_rainfall_is_nearby_voice_alert
+  # e) Unmute speaker volume 
+  - service: shell_command.speaker_volume_unmute 
+
+  # Text weather reports
+  # --------------------
+  
+  # a) WhatsApp
+  - service: script.send_whatsapp
+    data_template:        
+      whatsapp_text: !include ../../templates/weather/rainfall_coming_notification_message.yaml
+      whatsapp_image: '/usr/share/JambulaTV/images/hass/rain_today.png'
+      whatsapp_recipient_phone: ''
+   # b) Telegram
+  - service: script.send_telegram
+    data_template: 
+      telegram_text: !include ../../templates/weather/rainfall_coming_notification_message.yaml
+      telegram_image: '/usr/share/JambulaTV/images/hass/rain_today.png'
+      telegram_recipient_phone: ''

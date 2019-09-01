@@ -1,0 +1,27 @@
+# Battery - Low (Send XMPP message)
+alias: "Send XMPP message when MiFi battery is low"
+initial_state: True
+
+
+trigger:
+  - platform: state
+    entity_id: sensor.mifi_battery_level
+    from: 'Warning'
+    to: 'Critical'
+
+
+#condition:
+  #condition: and
+  #conditions:
+
+    # Internet state
+    #- condition: template
+      #value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+
+action:
+
+  - service: notify.jambulatv
+    data_template:
+      title: '[JambulaTV]'
+      message: '{{"MiFi Battery Levels: Critical - Please Plug in Battery Charger"}}'

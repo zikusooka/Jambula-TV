@@ -1,0 +1,3 @@
+platform: command_line
+name: "Reminders"
+command: "/usr/bin/remind -ujambula -h /JambulaTV/Reminders | grep -Ev -e 'Reminders for' -e  '(#.*$)' | sed 's:^$:*:g'"

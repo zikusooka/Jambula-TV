@@ -1,0 +1,21 @@
+homeassistant:
+  name: !secret homeassistant_name
+  latitude: !secret homeassistant_latitude
+  longitude: !secret homeassistant_longitude
+  elevation: !secret homeassistant_elevation
+  unit_system: !secret homeassistant_unit_system
+  time_zone: !secret homeassistant_time_zone
+
+  packages: !include_dir_named components/packages
+
+# MQTT servers 
+mqtt:
+  broker: !secret mqtt_server
+  port: !secret mqtt_port
+  #username: !secret mqtt_username
+  #password: !secret mqtt_password
+  keepalive: !secret mqtt_keepalive
+  #client_id: !secret mqtt_client_id
+
+
+#notify: !include_dir_list components/notifiers
