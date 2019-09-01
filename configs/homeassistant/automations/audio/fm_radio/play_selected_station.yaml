@@ -1,0 +1,17 @@
+# Play selected FM radio station  
+alias: "Play selected FM radio station"
+initial_state: True
+
+trigger:
+  - platform: state
+    entity_id: input_select.fm_radio_station
+
+
+action:
+  # Turn off Internet radio if on
+  - service: shell_command.internet_radio_stop
+
+  # Turn on FM Radio
+  - service: shell_command.fm_radio_play_selected_station
+    data_template:
+      station: "{{ states('input_select.fm_radio_station') }}"

@@ -1,0 +1,11 @@
+# This is a custom Umeme outages sensor. This command_line sensor 
+# indicates if there is a planned power outage today in our 
+# specified area
+#
+# https://www.home-assistant.io/components/command_line/
+
+platform: command_line
+name: "Power outage (Today)"
+command: "echo $(/usr/bin/jambulatv-umeme-outages today $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq) | sed '/^$/d'"
+command_timeout: 15
+scan_interval: 180

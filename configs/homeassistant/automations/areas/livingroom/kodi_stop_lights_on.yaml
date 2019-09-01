@@ -1,0 +1,13 @@
+alias: "Media player stopped"
+trigger:
+  - platform: state
+    entity_id: media_player.jambulatv_living_room
+    from: 'playing'
+    to: 'idle'
+condition:
+  - condition: state
+    entity_id: sun.sun
+    state: 'below_horizon'
+action:
+  - service: scene.turn_on
+    entity_id: scene.LivingRoom_Normal

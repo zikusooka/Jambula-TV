@@ -1,0 +1,16 @@
+# This is a custom internet status sensor. This command_line binary 
+# sensor indicates if the connection to the Internet is UP or DOWN
+#
+# This is pretty useful for a lot of automations.
+#
+#
+# https://www.home-assistant.io/components/command_line/
+
+platform: command_line
+name: Internet
+command: 'ping -c 1 -W 2 1.0.0.1  > /dev/null 2>&1 && echo UP || echo DOWN'
+command_timeout: 15
+scan_interval: 60
+device_class: connectivity
+payload_on: "UP"
+payload_off: "DOWN"

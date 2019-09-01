@@ -1,0 +1,62 @@
+flash_light:
+  sequence:
+
+    - service: light.toggle
+      entity_id: light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level
+
+    - delay:
+        seconds: 0
+
+    - service: light.toggle
+      entity_id: light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level
+
+    - delay:
+        seconds: 0
+
+    - service: light.toggle
+      entity_id: light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level
+
+    - delay:
+        seconds: 0
+
+    - service: light.toggle
+      entity_id: light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level
+
+    - delay:
+        seconds: 0
+
+    - service: light.toggle
+      entity_id: light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level
+
+    - delay:
+        seconds: 0
+
+    - service: light.toggle
+      entity_id: light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level
+
+    - delay:
+        seconds: 0
+
+    - service: light.toggle
+      entity_id: light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level
+
+    - service: light.toggle
+      entity_id: light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level
+
+    - delay:
+        seconds: 0
+
+    - service: light.toggle
+      entity_id: light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level
+
+    - delay:
+        seconds: 0
+
+    - service: light.turn_on
+      entity_id: light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level
+
+
+flash_light_repeat:
+  sequence:
+    - service: script.turn_on
+      entity_id: script.flash_light

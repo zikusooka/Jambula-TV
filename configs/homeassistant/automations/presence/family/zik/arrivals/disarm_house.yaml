@@ -1,0 +1,25 @@
+alias: Demilitarize house while away
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: person.zik
+    to: 'Home'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Last triggered more than 5 minute(s) ago
+    - condition: template
+      value_template: '{{ (as_timestamp(now()) - as_timestamp(states.person.zik.attributes.last_triggered | default(0)) | int > 300)}}'
+
+
+action:
+
+  - service: shell_command.zoneminder_camera_disarm
+    data_template:
+      camera_id: !secret zoneminder_camera_002

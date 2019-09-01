@@ -1,0 +1,31 @@
+romantic_visit_secular:
+  sequence:
+
+    # INTERNET RADIO
+    # --------------
+    #
+    # Play Jazz
+    - service: shell_command.internet_radio_play_selected_station
+      data_template:
+        station: '1'
+
+    # Wait for 20 minutes
+    - delay:
+        seconds: 1200
+
+    # Play Reggae
+    - service: shell_command.internet_radio_play_selected_station
+      data_template:
+        station: '23'
+
+    # Wait for 20 minutes
+    - delay:
+        seconds: 1200
+
+
+    # LIGHTING
+    # --------
+    #
+    # Dim light
+    - service: scene.turn_on
+      entity_id: scene.romantic_mode

@@ -1,0 +1,1037 @@
+{
+    "data": [
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "FM Radio",
+                    "icon": "mdi:radio",
+                    "options": [
+                        "Select station",
+                        "87.9 (AKaboozi)",
+                        "88.2 (Sanyu Radio)",
+                        "88.5 (Super FM)",
+                        "88.8 (CBS Radio)",
+                        "89.2 (CBS Radio)",
+                        "89.6 (Top Radio)",
+                        "90.0 (Radio One)",
+                        "90.4 (Ddembe Radio)",
+                        "91.3 (Capital FM)",
+                        "93.3 (KFM Radio)",
+                        "94.4 (Radio Sapientia)",
+                        "94.8 (New Vision Radio)",
+                        "95.9 (Touch FM)",
+                        "96.3 (Beat FM)",
+                        "97.3 (Simba FM)",
+                        "98.0 (UBC Radio)",
+                        "99.0 (East Africa Radio)",
+                        "101.3 (BBC Radio)",
+                        "104.1 (Power FM)"
+                    ]
+                },
+                "context": {
+                    "id": "79a51f5738c64c21b98cc0f1b578b4e7",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "input_select.fm_radio_station",
+                "last_changed": "2019-08-27T10:31:21.615277+00:00",
+                "last_updated": "2019-08-27T10:31:21.615277+00:00",
+                "state": "Select station"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Internet Radio",
+                    "icon": "mdi:earth",
+                    "options": [
+                        "Select station",
+                        "1 SmoothJazz (Jazz)",
+                        "2 Family Life (Christian)",
+                        "3 Jazz 24 (Jazz)",
+                        "4 Radio Swiss Jazz (Jazz)",
+                        "5 K-Love (Christian)",
+                        "6 Soma FM (Indie)",
+                        "7 KEAN 105 (Country)",
+                        "8 Hot 108 (Hip Hop)",
+                        "9 NBSRadio (Party)",
+                        "10 Santa Claus (Xmas)",
+                        "11 Relax (Jazz)",
+                        "12 Relax (Latino)",
+                        "13 Relax (Life)",
+                        "14 Relax (Gold)",
+                        "15 Relax (Nature)",
+                        "16 Radio Swiss Classic (Classical)",
+                        "17 Radio Swiss Classique (Classical)",
+                        "18 Loop, Chicago (Classic Rock)",
+                        "19 Black Gospel Radio (Gospel)",
+                        "20 WFMV - 95.3 FM (Gospel)",
+                        "21 Gospel Highway 11 (Gospel)",
+                        "22 WGOK Gospel 900 (Gospel)",
+                        "23 1.FM ReggaeTrade (Reggae)",
+                        "24 Reggae 141 (Reggae)",
+                        "25 Sun City 104.9 FM (Reggae)",
+                        "26 UFDV Radio (Reggae)",
+                        "27 FM Jamaica Radio (Reggae)"
+                    ]
+                },
+                "context": {
+                    "id": "df1dd089bacf4598b6e7d51cfa7e4cc2",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "input_select.internet_radio_station",
+                "last_changed": "2019-08-27T10:31:21.616890+00:00",
+                "last_updated": "2019-08-27T10:31:21.616890+00:00",
+                "state": "Select station"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Guest Mode",
+                    "icon": "mdi:hotel"
+                },
+                "context": {
+                    "id": "5cd1ef2189404dd49fc5ea89a9086a66",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "input_boolean.guest_mode",
+                "last_changed": "2019-08-27T10:31:21.618287+00:00",
+                "last_updated": "2019-08-27T10:31:21.618287+00:00",
+                "state": "off"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Internet Radio (Volume)",
+                    "icon": "mdi:volume-high",
+                    "initial": 80.0,
+                    "max": 150.0,
+                    "min": 0.0,
+                    "mode": "slider",
+                    "step": 10.0,
+                    "unit_of_measurement": "%"
+                },
+                "context": {
+                    "id": "4930a905fd214ceea33d7c4525b0ffea",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "input_number.internet_radio_volume",
+                "last_changed": "2019-08-27T10:31:21.619754+00:00",
+                "last_updated": "2019-08-27T10:31:21.619754+00:00",
+                "state": "80.0"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "FM Radio (Volume)",
+                    "icon": "mdi:volume-high",
+                    "initial": 80.0,
+                    "max": 150.0,
+                    "min": 0.0,
+                    "mode": "slider",
+                    "step": 10.0,
+                    "unit_of_measurement": "%"
+                },
+                "context": {
+                    "id": "b9f1e3c18b0f43a8910bc1993ba58af7",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "input_number.fm_radio_volume",
+                "last_changed": "2019-08-27T10:31:21.621023+00:00",
+                "last_updated": "2019-08-27T10:31:21.621023+00:00",
+                "state": "80.0"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "editable": false,
+                    "friendly_name": "Angie",
+                    "id": "angiemuks",
+                    "source": "device_tracker.angie_mifi"
+                },
+                "context": {
+                    "id": "08ba92243506435db1415e089f0017fb",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "person.angie",
+                "last_changed": "2019-08-27T10:31:35.607769+00:00",
+                "last_updated": "2019-08-27T10:31:35.607769+00:00",
+                "state": "not_home"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "editable": false,
+                    "friendly_name": "Zik",
+                    "gps_accuracy": 0,
+                    "icon": "mdi:account",
+                    "id": "josephzik",
+                    "latitude": 0.416943,
+                    "longitude": 32.642587,
+                    "source": "device_tracker.kampala"
+                },
+                "context": {
+                    "id": "b9bfa61913434c82940d155c45789347",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "person.zik",
+                "last_changed": "2019-08-27T10:31:21.624228+00:00",
+                "last_updated": "2019-08-27T10:31:35.609716+00:00",
+                "state": "home"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "editable": false,
+                    "friendly_name": "Lenovo T61",
+                    "gps_accuracy": 0,
+                    "id": "lenovo_t61_laptop",
+                    "latitude": 0.416943,
+                    "longitude": 32.642587,
+                    "source": "device_tracker.kampala"
+                },
+                "context": {
+                    "id": "a4633ce957a3497ba75e43b782cecc0d",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "person.lenovo_t61",
+                "last_changed": "2019-08-27T10:31:21.625553+00:00",
+                "last_updated": "2019-08-27T10:31:35.617927+00:00",
+                "state": "home"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "System Default Theme",
+                    "last_triggered": "2019-08-27T10:31:36.091080+00:00"
+                },
+                "context": {
+                    "id": "9d7c2cb5b0ae42609f6784b71a6a86f3",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.system_default_theme",
+                "last_changed": "2019-08-27T10:31:25.858851+00:00",
+                "last_updated": "2019-08-27T10:31:36.100457+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Control the volume of Internet Radio speakers",
+                    "last_triggered": "2019-08-26T21:12:10.694176+00:00"
+                },
+                "context": {
+                    "id": "3d6eca83a6674c4a9efc9d245c4c121e",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.control_the_volume_of_internet_radio_speakers",
+                "last_changed": "2019-08-27T10:31:25.861362+00:00",
+                "last_updated": "2019-08-27T10:31:25.861362+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Militarize house while away",
+                    "last_triggered": "2019-08-13T12:49:17.545678+00:00"
+                },
+                "context": {
+                    "id": "f8c25a8b82074bb0a9cb4577b9b9e78a",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.militarize_house_while_away",
+                "last_changed": "2019-08-27T10:31:25.863652+00:00",
+                "last_updated": "2019-08-27T10:31:25.863652+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Play voice alert when MiFi battery is low",
+                    "last_triggered": "2019-08-26T22:29:09.050108+00:00"
+                },
+                "context": {
+                    "id": "6bca192d1b8e43b488d92e72a9c58621",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.play_voice_alert_when_mifi_battery_is_low",
+                "last_changed": "2019-08-27T10:31:25.865940+00:00",
+                "last_updated": "2019-08-27T10:31:25.865940+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Play selected Internet radio station",
+                    "last_triggered": "2019-08-26T20:34:18.814239+00:00"
+                },
+                "context": {
+                    "id": "95963aa655234bcdb1a1b0e3d9f977ac",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.play_selected_internet_radio_station",
+                "last_changed": "2019-08-27T10:31:25.868287+00:00",
+                "last_updated": "2019-08-27T10:31:25.868287+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Zik arrived - alert via jabber",
+                    "last_triggered": "2019-08-24T14:25:59.177086+00:00"
+                },
+                "context": {
+                    "id": "4865323fdcab4b8eab0423503be4a29d",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.zik_arrived_alert_via_jabber",
+                "last_changed": "2019-08-27T10:31:25.870524+00:00",
+                "last_updated": "2019-08-27T10:31:25.870524+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Send telegram message when MiFi data Balance is critical",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "527e6cced32e43069a4e92e41f611cc7",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.send_telegram_message_when_mifi_data_balance_is_critical",
+                "last_changed": "2019-08-27T10:31:25.872620+00:00",
+                "last_updated": "2019-08-27T10:31:25.872620+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Heal Z-Wave Network",
+                    "last_triggered": "2019-08-26T02:01:00.048609+00:00"
+                },
+                "context": {
+                    "id": "510332862f284e109c609832d36fccc6",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.heal_z_wave_network",
+                "last_changed": "2019-08-27T10:31:25.874534+00:00",
+                "last_updated": "2019-08-27T10:31:25.874534+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Rainfall coming",
+                    "last_triggered": "2019-08-24T12:28:06.954851+00:00"
+                },
+                "context": {
+                    "id": "52358e49e2da4017b661b6be33b7d0ac",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.rainfall_coming",
+                "last_changed": "2019-08-27T10:31:25.876192+00:00",
+                "last_updated": "2019-08-27T10:31:25.876192+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Demilitarize house while away",
+                    "last_triggered": "2019-08-24T14:26:43.186105+00:00"
+                },
+                "context": {
+                    "id": "ee777016823e474cabf0da2e52a1879e",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.demilitarize_house_while_away",
+                "last_changed": "2019-08-27T10:31:25.877833+00:00",
+                "last_updated": "2019-08-27T10:31:25.877833+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Send telegram message when MiFi data balance is low",
+                    "last_triggered": "2019-08-26T20:47:46.562767+00:00"
+                },
+                "context": {
+                    "id": "ef8738e36a9347b6b62d9507406c75d1",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.send_telegram_message_when_mifi_data_balance_is_low",
+                "last_changed": "2019-08-27T10:31:25.879592+00:00",
+                "last_updated": "2019-08-27T10:31:25.879592+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Rainfall today",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "f8929806bc4342dc9944f2e30494f972",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.rainfall_today",
+                "last_changed": "2019-08-27T10:31:25.880991+00:00",
+                "last_updated": "2019-08-27T10:31:25.880991+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Daily digest (Zik)",
+                    "last_triggered": "2019-08-27T11:05:00.190162+00:00"
+                },
+                "context": {
+                    "id": "7422628574c546ccb0a0dffac05c701d",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.daily_digest_zik",
+                "last_changed": "2019-08-27T10:31:25.882557+00:00",
+                "last_updated": "2019-08-27T11:05:00.191410+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Send telegram message when MiFi data balance is warning",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "77063196789440bbbfca135065993ae5",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.send_telegram_message_when_mifi_data_balance_is_warning",
+                "last_changed": "2019-08-27T10:31:25.884040+00:00",
+                "last_updated": "2019-08-27T10:31:25.884040+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Wakeup for Zik",
+                    "last_triggered": "2019-08-19T13:13:52.325738+00:00"
+                },
+                "context": {
+                    "id": "4a7560d95773483188a826c03ceb150b",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.wakeup_for_zik",
+                "last_changed": "2019-08-27T10:31:25.885670+00:00",
+                "last_updated": "2019-08-27T10:31:25.885670+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Media player paused",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "56264b9f240d41f2a4aafe39efb3e400",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.media_player_paused",
+                "last_changed": "2019-08-27T10:31:25.886963+00:00",
+                "last_updated": "2019-08-27T10:31:25.886963+00:00",
+                "state": "off"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Rainfall tomorrow",
+                    "last_triggered": "2019-08-13T20:48:30.793825+00:00"
+                },
+                "context": {
+                    "id": "6c6bc5e16f8844e88e979b581f906928",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.rainfall_tomorrow",
+                "last_changed": "2019-08-27T10:31:25.888471+00:00",
+                "last_updated": "2019-08-27T10:31:25.888471+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Bedtime for Zik",
+                    "last_triggered": "2019-08-18T02:47:48.198343+00:00"
+                },
+                "context": {
+                    "id": "debc54f2d8064373ac9d4b3d36cf5270",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.bedtime_for_zik",
+                "last_changed": "2019-08-27T10:31:25.890079+00:00",
+                "last_updated": "2019-08-27T10:31:25.890079+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Send XMPP message when MiFi battery is low",
+                    "last_triggered": "2019-08-26T22:29:08.169024+00:00"
+                },
+                "context": {
+                    "id": "b84c488c21eb4c18b7f6398334a6e531",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.send_xmpp_message_when_mifi_battery_is_low",
+                "last_changed": "2019-08-27T10:31:25.891797+00:00",
+                "last_updated": "2019-08-27T10:31:25.891797+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Media player playing",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "361a4c7a32804fcf818f6226f9443343",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.media_player_playing",
+                "last_changed": "2019-08-27T10:31:25.893129+00:00",
+                "last_updated": "2019-08-27T10:31:25.893129+00:00",
+                "state": "off"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Play voice alert when phone battery for Zik (Tecno) is full",
+                    "last_triggered": "2019-08-19T13:49:14.121565+00:00"
+                },
+                "context": {
+                    "id": "e09a98051d42495798167eb0ac205e55",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.play_voice_alert_when_phone_battery_for_zik_tecno_is_full",
+                "last_changed": "2019-08-27T10:31:25.894952+00:00",
+                "last_updated": "2019-08-27T10:31:25.894952+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Unplanned power outage on-going",
+                    "last_triggered": "2019-08-24T03:09:07.336692+00:00"
+                },
+                "context": {
+                    "id": "f7494ed6986b4786be03ce69cd6ecf06",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.unplanned_power_outage_on_going",
+                "last_changed": "2019-08-27T10:31:25.896638+00:00",
+                "last_updated": "2019-08-27T10:31:25.896638+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Media player stopped",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "a4258f8afe5b44beb6d04662ff5c20ea",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.media_player_stopped",
+                "last_changed": "2019-08-27T10:31:25.897954+00:00",
+                "last_updated": "2019-08-27T10:31:25.897954+00:00",
+                "state": "off"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Play voice alert when phone battery for Zik (Tecno) is low",
+                    "last_triggered": "2019-08-11T10:54:44.990300+00:00"
+                },
+                "context": {
+                    "id": "a38c87e1e081488fa508665c659b57c4",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.play_voice_alert_when_phone_battery_for_zik_tecno_is_low",
+                "last_changed": "2019-08-27T10:31:25.899533+00:00",
+                "last_updated": "2019-08-27T10:31:25.899533+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Planned power outage today",
+                    "last_triggered": "2019-08-19T21:05:20.050487+00:00"
+                },
+                "context": {
+                    "id": "5208da266bd9427f848ffd979c32b72c",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.planned_power_outage_today",
+                "last_changed": "2019-08-27T10:31:25.901236+00:00",
+                "last_updated": "2019-08-27T10:31:25.901236+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Media player unpaused",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "552a5d7530624b40ab95e0edf602adac",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.media_player_unpaused",
+                "last_changed": "2019-08-27T10:31:25.902576+00:00",
+                "last_updated": "2019-08-27T10:31:25.902576+00:00",
+                "state": "off"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Play voice alert when phone call is incoming for Zik (Tecno)",
+                    "last_triggered": "2019-08-10T16:53:49.191422+00:00"
+                },
+                "context": {
+                    "id": "4411aed287af4a8690410d720e619ff2",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.play_voice_alert_when_phone_call_is_incoming_for_zik_tecno",
+                "last_changed": "2019-08-27T10:31:25.904119+00:00",
+                "last_updated": "2019-08-27T10:31:25.904119+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Planned power outage tomorrow",
+                    "last_triggered": "2019-08-16T18:35:14.137053+00:00"
+                },
+                "context": {
+                    "id": "3903bd39e0da414fa00f05a93d576bf0",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.planned_power_outage_tomorrow",
+                "last_changed": "2019-08-27T10:31:25.913506+00:00",
+                "last_updated": "2019-08-27T10:31:25.913506+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Flash inside lights when motion is detected outside",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "5ea73481c5b444b5a2e801bcab7e294c",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.flash_inside_lights_when_motion_is_detected_outside",
+                "last_changed": "2019-08-27T10:31:25.915155+00:00",
+                "last_updated": "2019-08-27T10:31:25.915155+00:00",
+                "state": "off"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Arrival alert (Resident 4)",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "cc35d5ca79884bdd9f561de6610a1b37",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.arrival_alert_resident_4",
+                "last_changed": "2019-08-27T10:31:25.916548+00:00",
+                "last_updated": "2019-08-27T10:31:25.916548+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Send telegram message when MiFi battery is full",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "39f1d56c41104c37b98e2ac9441c7da1",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.send_telegram_message_when_mifi_battery_is_full",
+                "last_changed": "2019-08-27T10:31:25.918470+00:00",
+                "last_updated": "2019-08-27T10:31:25.918470+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Turn on inside lights when motion is detected outside",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "9ee4f232ba8843ceaea98b309ee5c65d",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.turn_on_inside_lights_when_motion_is_detected_outside",
+                "last_changed": "2019-08-27T10:31:25.920665+00:00",
+                "last_updated": "2019-08-27T10:31:25.920665+00:00",
+                "state": "off"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Arrival alert (Resident 2)",
+                    "last_triggered": "2019-08-27T00:58:14.316905+00:00"
+                },
+                "context": {
+                    "id": "ea1c311558194b1ca05b3f18109c1eda",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.arrival_alert_resident_2",
+                "last_changed": "2019-08-27T10:31:25.922937+00:00",
+                "last_updated": "2019-08-27T10:31:25.922937+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Send XMPP message when MiFi battery is full",
+                    "last_triggered": "2019-08-27T00:47:14.563695+00:00"
+                },
+                "context": {
+                    "id": "28632ffa2ab6430fbedba3f2db020af6",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.send_xmpp_message_when_mifi_battery_is_full",
+                "last_changed": "2019-08-27T10:31:25.925114+00:00",
+                "last_updated": "2019-08-27T10:31:25.925114+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Make some noise when motion is detected",
+                    "last_triggered": "2019-08-27T10:40:32.193031+00:00"
+                },
+                "context": {
+                    "id": "98c9a11945874b339fe3ea03bdb5af38",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.make_some_noise_when_motion_is_detected",
+                "last_changed": "2019-08-27T10:42:15.485515+00:00",
+                "last_updated": "2019-08-27T10:42:15.485515+00:00",
+                "state": "off"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Arrival alert (Resident 3)",
+                    "last_triggered": null
+                },
+                "context": {
+                    "id": "da2d266278c44a30bb5df01c240b7e0c",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.arrival_alert_resident_3",
+                "last_changed": "2019-08-27T10:31:25.928677+00:00",
+                "last_updated": "2019-08-27T10:31:25.928677+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Play voice alert when MiFi battery is full",
+                    "last_triggered": "2019-08-27T00:47:15.716373+00:00"
+                },
+                "context": {
+                    "id": "dcf719e3737243e0bdad910896022d11",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.play_voice_alert_when_mifi_battery_is_full",
+                "last_changed": "2019-08-27T10:31:25.930541+00:00",
+                "last_updated": "2019-08-27T10:31:25.930541+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Turn on the lights when the sun sets",
+                    "last_triggered": "2019-08-22T14:56:17.059050+00:00"
+                },
+                "context": {
+                    "id": "45364569c24b44518234fce4cd3bc164",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.turn_on_the_lights_when_the_sun_sets",
+                "last_changed": "2019-08-27T10:31:25.932373+00:00",
+                "last_updated": "2019-08-27T10:31:25.932373+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Play FM Radio at start time",
+                    "last_triggered": "2019-08-27T10:31:44.360935+00:00"
+                },
+                "context": {
+                    "id": "525814fb40814d4f819c67fcb7fd766d",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.play_fm_radio_at_start_time",
+                "last_changed": "2019-08-27T10:31:25.934098+00:00",
+                "last_updated": "2019-08-27T10:31:44.364358+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Arrival alert (Resident 1)",
+                    "last_triggered": "2019-08-24T20:37:31.219961+00:00"
+                },
+                "context": {
+                    "id": "595ea64ca25a4ba0a722c8c81d91e839",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.arrival_alert_resident_1",
+                "last_changed": "2019-08-27T10:31:25.935836+00:00",
+                "last_updated": "2019-08-27T10:31:25.935836+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Flash light when MiFi battery is low",
+                    "last_triggered": "2019-08-26T22:29:08.158004+00:00"
+                },
+                "context": {
+                    "id": "b0542a8fc4844445b486d05cb26716da",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.flash_light_when_mifi_battery_is_low",
+                "last_changed": "2019-08-27T10:31:25.937963+00:00",
+                "last_updated": "2019-08-27T10:31:25.937963+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Zik left - alert via jabber",
+                    "last_triggered": "2019-08-24T17:17:07.777312+00:00"
+                },
+                "context": {
+                    "id": "bab037e834054aab906e7ea90f8c52d0",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.zik_left_alert_via_jabber",
+                "last_changed": "2019-08-27T10:31:25.939661+00:00",
+                "last_updated": "2019-08-27T10:31:25.939661+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Play selected FM radio station",
+                    "last_triggered": "2019-08-15T19:00:50.789905+00:00"
+                },
+                "context": {
+                    "id": "28f69494d80f4a4e8f35ac5dc2de76d6",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.play_selected_fm_radio_station",
+                "last_changed": "2019-08-27T10:31:25.941336+00:00",
+                "last_updated": "2019-08-27T10:31:25.941336+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Send telegram message when MiFi battery is low",
+                    "last_triggered": "2019-08-26T22:29:17.489368+00:00"
+                },
+                "context": {
+                    "id": "da11a29ae27b47feb748cfc0d81111f8",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.send_telegram_message_when_mifi_battery_is_low",
+                "last_changed": "2019-08-27T10:31:25.942981+00:00",
+                "last_updated": "2019-08-27T10:31:25.942981+00:00",
+                "state": "on"
+            }
+        },
+        {
+            "last_seen": "2019-08-27T12:16:40.018959+00:00",
+            "state": {
+                "attributes": {
+                    "friendly_name": "Control the volume of FM Radio speakers",
+                    "last_triggered": "2019-08-17T20:36:47.537919+00:00"
+                },
+                "context": {
+                    "id": "a9c4bb374dff4c6baea412055d02f656",
+                    "parent_id": null,
+                    "user_id": null
+                },
+                "entity_id": "automation.control_the_volume_of_fm_radio_speakers",
+                "last_changed": "2019-08-27T10:31:25.944750+00:00",
+                "last_updated": "2019-08-27T10:31:25.944750+00:00",
+                "state": "on"
+            }
+        }
+    ],
+    "key": "core.restore_state",
+    "version": 1
+}

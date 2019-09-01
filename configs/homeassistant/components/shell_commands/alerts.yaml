@@ -1,0 +1,22 @@
+# Alert using Beeps
+play_alert_at_remote_workstation: /usr/bin/ssh {{ssh_username}}@{{ssh_host}} {{alert_command}}
+play_alert_at_local_server: /usr/bin/jambulatv-sounds beep alert
+
+# Mute/Unmute speaker volume
+speaker_volume_mute: /usr/bin/jambulatv-speaker-volume all localhost mute
+speaker_volume_unmute: /usr/bin/jambulatv-speaker-volume all localhost unmute
+
+# Sound alerts
+play_chime_alert: sudo /usr/bin/jambulatv-sounds alert 1
+play_voice_alert: sudo /usr/bin/jambulatv-sounds alert 3
+bedtime_greeting: sudo /usr/bin/jambulatv-sounds alert goodnight {{person}}
+wakeup_greeting: sudo /usr/bin/jambulatv-sounds alert goodmorning {{person}}
+
+# Turn off monitor at remote workstation
+turn_off_monitor_at_remote_workstation: /usr/bin/ssh {{ssh_username}}@{{ssh_host}} {{monitor_off_command}}
+
+# Turn back on monitor at remote workstation
+turn_on_monitor_at_remote_workstation: /usr/bin/ssh {{ssh_username}}@{{ssh_host}} {{monitor_on_command}}
+
+
+

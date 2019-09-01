@@ -1,0 +1,150 @@
+id: upstairs
+title: Boven
+icon: mdi:stairs
+cards:
+  - !include ../cards/compact_custom_header.yaml
+  - type: vertical-stack
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: light
+            entity: light.bedroom_master_ceiling
+          - type: light
+            entity: light.bedroom_master_bedside
+      - type: horizontal-stack
+        cards:
+          - type: light
+            entity: light.bedroom_master_bedside_frenck
+          - type: light
+            entity: light.bedroom_master_bedside_daphne
+
+  - type: vertical-stack
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: "custom:button-card"
+            entity: switch.attic_ventilation_speed_low
+            icon: mdi:fan-off
+            action: service
+            service:
+              domain: fan
+              action: turn_off
+              data:
+                entity_id: fan.attic_ventilation
+          - type: "custom:button-card"
+            entity: switch.attic_ventilation_speed_medium
+            icon: mdi:fan
+            action: service
+            service:
+              domain: fan
+              action: set_speed
+              data:
+                entity_id: fan.attic_ventilation
+                speed: medium
+          - type: "custom:button-card"
+            entity: switch.attic_ventilation_speed_high
+            icon: mdi:weather-windy
+            action: service
+            service:
+              domain: fan
+              action: set_speed
+              data:
+                entity_id: fan.attic_ventilation
+                speed: high
+          - type: "custom:button-card"
+            entity: switch.attic_ventilation_manual_mode
+            icon: mdi:lock-open
+            state:
+              - value: 'on'
+                icon: mdi:lock-alert
+                color: orange
+
+      - type: horizontal-stack
+        cards:
+          - type: custom:mini-graph-card
+            entities: sensor.bathroom_temperature
+            line_color: red
+            line_width: 8
+            font_size: 75
+          - type: custom:mini-graph-card
+            entities: sensor.bathroom_humidity
+            line_color: var(--primary-color)
+            line_width: 8
+            font_size: 75
+
+  - type: entities
+    tile: Upstrairs
+    entities:
+      - light.landing_ceiling
+
+  - type: custom:mini-graph-card
+    entities: sensor.lilly_thermostat_temperature
+    location_icon: left
+    location_state: center
+    show:
+      fill: false
+      extrema: true
+    height: 75
+    animate: true
+    hour24: true
+    line_color: var(--primary-color)
+    line_color_above:
+      - value: 19
+        color: red
+    line_color_below:
+      - value: 15
+        color: white
+  - type: custom:popup-card
+    entity: sensor.lilly_thermostat_temperature
+    title: Thermostaat Lilly
+    card:
+      type: thermostat
+      entity: climate.bedroom_lilly_thermostat
+
+  - type: custom:mini-graph-card
+    entities: sensor.flynn_thermostat_temperature
+    location_icon: left
+    location_state: center
+    show:
+      fill: false
+      extrema: true
+    height: 75
+    animate: true
+    hour24: true
+    line_color: var(--primary-color)
+    line_color_above:
+      - value: 19
+        color: red
+    line_color_below:
+      - value: 15
+        color: white
+  - type: custom:popup-card
+    entity: sensor.flynn_thermostat_temperature
+    title: Thermostaat Flynn
+    card:
+      type: thermostat
+      entity: climate.bedroom_flynn_thermostat
+
+  - type: custom:mini-graph-card
+    entities: sensor.bedroom_master_thermostat_temperature
+    location_icon: left
+    location_state: center
+    show:
+      fill: false
+      extrema: true
+    height: 75
+    animate: true
+    hour24: true
+    line_color: var(--primary-color)
+    line_color_above:
+      - value: 20
+        color: red
+    line_color_below:
+      - value: 15
+        color: white
+  - type: custom:popup-card
+    entity: sensor.bedroom_master_thermostat_temperature
+    title: Thermostaat Masterbedroom
+    card:
+      type: thermostat
+      entity: climate.bedroom_master_thermostat

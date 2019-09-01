@@ -1,0 +1,18 @@
+# Set the default theme on start up of Home Assistant.
+#
+# This, of course, only affects machine that do not
+# have a theme set.
+#
+alias: System Default Theme
+initial_state: True
+
+
+trigger:
+  platform: homeassistant
+  event: start
+
+
+action:
+  service: frontend.set_theme
+  data:
+    name: darkblue

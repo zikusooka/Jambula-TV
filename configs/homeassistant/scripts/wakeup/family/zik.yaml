@@ -1,0 +1,35 @@
+wakeup_zik:
+  sequence:
+
+
+  # 1. Say wakeup greeting for zik
+  # ------------------------------
+    # a) Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        output_directory: !secret jambulatv_temp_dir
+        input_file1: 'hello.mp3'
+        input_file2: 'zik.mp3'
+        output_file: 'hello_zik.mp3'
+
+    # b) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+    # Pause for a second - Needed> DO NOT REMOVE unless you have a fix!
+    - delay:
+        seconds: 1
+
+    # c) Play merged audio file using house speakers
+    - service: shell_command.play_merged_audio_file
+      data_template:
+        merged_audio_dir: !secret jambulatv_temp_dir
+        merged_audio_file: 'hello_zik.mp3'
+
+    # d) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute
+
+
+  # 2. Read flash briefing for zik
+  # ------------------------------
+    #  Play daily flash briefing using house speakers
+    - service: shell_command.play_flash_briefing

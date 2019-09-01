@@ -1,0 +1,5 @@
+platform: mqtt
+name: "Phone last connected for Zik (Tecno)"
+state_topic: "JambulaTV/Phones/Zik/Tecno/sensor/android_tecno_f1_availability/attributes"
+value_template: "{{ value_json.state }}"
+json_attributes_topic: "JambulaTV/Phones/Zik/Tecno/sensor/android_tecno_f1_availability/attributes"

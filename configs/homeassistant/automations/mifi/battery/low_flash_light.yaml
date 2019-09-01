@@ -1,0 +1,21 @@
+# Battery - Low (Flash lights)
+alias: "Flash light when MiFi battery is low"
+initial_state: True
+
+
+trigger:
+  - platform: state
+    entity_id: sensor.mifi_battery_level
+    from: 'Warning'
+    to: 'Critical'
+
+
+condition:
+  - condition: state
+    entity_id: sun.sun
+    state: 'below_horizon'
+
+
+action:
+  - service: script.turn_on
+    entity_id: script.flash_light_repeat

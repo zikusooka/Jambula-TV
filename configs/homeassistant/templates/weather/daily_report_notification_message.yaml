@@ -1,0 +1,45 @@
+"Here's the Weather forecast for your area:
+\r
+\r
+Weather Underground
+--------------------------------
+\r
+Rain Chance: *{{states('sensor.pws_precip_1d')|int}}%*
+\r
+\r
+Temperature (Current): *{{states('sensor.pws_temp_c')|int}}*
+\r
+\r
+Temperature (High): *{{states('sensor.pws_temp_high_1d_c')|int}}*
+\r
+\r
+Temperature (Low): *{{states('sensor.pws_temp_low_1d_c')|int}}*
+\r
+\r
+Summary (Day): *{{states('sensor.pws_weather_1d_metric')}}*
+\r
+\r
+Summary (Hour): *{{states('sensor.pws_weather_1h')}}*
+\r
+\r
+Dark Sky
+--------------
+\r
+\r
+Rain Chance: *{{states('sensor.darksky_precip_probability_0d')|int}}%*
+\r
+\r
+Temperature (Current): *{{states('sensor.darksky_temperature')|int}}*
+\r
+\r
+Temperature (High): *{{states('sensor.darksky_daytime_high_temperature_0d')|int}}*
+\r
+\r
+Temperature (Overnight Low): *{{states('sensor.darksky_overnight_low_temperature_0d')|int}}*
+\r
+\r
+Summary (Later): *{{states('sensor.darksky_summary_0d')}}*
+\r
+\r
+Summary (Current): *{{states('sensor.darksky_summary')}}*
+"

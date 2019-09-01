@@ -1,0 +1,42 @@
+# Power outages today - planned
+alias: "Planned power outage today"
+initial_state: True
+
+
+trigger:
+
+  - platform: time
+    at: '00:05:00'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Power outage state not null
+    - condition: template
+      value_template: "{{ not is_state('sensor.power_outage_today', '') }}"
+
+    # Time of day
+    - condition: time
+      before: '11:59:59'
+
+
+action:
+
+  # Text power outage reports
+  # -------------------------
+  
+    # a) WhatsApp
+    - service: script.send_whatsapp
+      data_template:        
+        whatsapp_text: !include ../../templates/power_outages/umeme_today_notification_message.yaml
+        whatsapp_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
+        whatsapp_recipient_phone: ''
+
+    # b) Telegram
+    - service: script.send_telegram
+      data_template: 
+        telegram_text: !include ../../templates/power_outages/umeme_today_notification_message.yaml
+        telegram_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
+        telegram_recipient_phone: ''

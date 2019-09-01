@@ -1,0 +1,26 @@
+# Battery - Full (Send telegram message)
+alias: "Send telegram message when MiFi battery is full"
+initial_state: True
+
+
+trigger:
+  - platform: state
+    entity_id: sensor.mifi_battery_level
+    from: 'Warning'
+    to: 'Full'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Internet state
+    - condition: template
+      value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+
+action:
+  - service: shell_command.send_telegram_text
+    data_template:
+      message: '{{"MiFi Battery Levels: Full - Please UnPlug Battery Charger"}}'
+      phone: ''

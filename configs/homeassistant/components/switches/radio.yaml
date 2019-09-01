@@ -1,0 +1,31 @@
+platform: command_line
+switches:
+
+# FM Radio
+# --------
+# Streamer - On/Off
+  fmradio_streamer:
+    command_on: "/usr/bin/jambulatv-fm-radio-streamer restart 101.3 local"
+    command_off: "/usr/bin/jambulatv-fm-radio-streamer stop"
+    friendly_name: "FM Radio (Streamer)"
+
+# Volume Mute - On/Off
+  fmradio_volume:
+    command_on: "/usr/bin/jambulatv-speaker-volume fmradio localhost 100%"
+    command_off: "/usr/bin/jambulatv-speaker-volume fmradio localhost 0%"
+    friendly_name: "FM Radio (Mute)"
+
+
+# Internet Radio
+# --------------
+# Streamer - On/Off
+  webradio_streamer:
+    command_on: "/usr/bin/jambulatv-internet-radio-streamer restart 1 local"
+    command_off: "/usr/bin/jambulatv-internet-radio-streamer stop"
+    friendly_name: "Internet Radio (Streamer)"
+
+# Volume Mute - On/Off
+  webradio_volume:
+    command_on: "/usr/bin/jambulatv-speaker-volume webradio localhost 100%"
+    command_off: "/usr/bin/jambulatv-speaker-volume webradio localhost 0%"
+    friendly_name: "Internet Radio (Mute)"
