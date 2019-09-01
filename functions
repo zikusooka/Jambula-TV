@@ -11992,8 +11992,9 @@ SODIUM_INSTALL=system pip3 --log $BUILD_LOG install --no-index --find-links $PRO
 #
 # Install dependencies for Home-Assistant using pips specified in requirements
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
+#
 # Install other dependencies that are somewhat left out during install
-pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r home-assistant-requirements.txt
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/home-assistant-requirements.txt
 #
 # Install Home-Assistant
 cd $INSTALL_SRC_DIR/home-assistant
