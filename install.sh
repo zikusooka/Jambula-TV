@@ -490,6 +490,8 @@ auto_updates_configure
 # Functions
 # ---------
 # Copy functions file to project config directory i.e. /etc/JambulaTV
+# only if it does not exist
+[[ -e $PROJECT_SYSTEM_CONF_DIR/functions ]] || \
 cp -v $PROJECT_BASE_DIR/functions $PROJECT_SYSTEM_CONF_DIR
 
 # -----
