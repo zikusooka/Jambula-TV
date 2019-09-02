@@ -1,0 +1,179 @@
+#!/bin/sh
+# This script backs up data of an entire filesystem of any PC client 
+# such as a laptop located remotely on to a portable disk plugged in
+# to this server
+#
+# Requires: sudo passwordless access for: ssh, ssh-copy, mount, umount
+# rsync commands
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+
+# Variables
+BACKUP_CLIENT=kampala
+BACKUP_CLIENT_USER=root
+BACKUP_CLIENT_PORT=22
+
+BACKUP_DISK_ID=ata-ST9250315AS_5VC137BW-part1
+BACKUP_DISK_PARTITION=/dev/disk/by-id/$BACKUP_DISK_ID
+BACKUP_MOUNT_POINT=/KAMPALA-BACKUP
+
+BACKUP_SOURCE=/
+BACKUP_DESTINATION=$BACKUP_MOUNT_POINT/THINKPAD_T61/
+
+RSYNC_CMD=/usr/bin/rsync
+#RSYNC_OPTS="-aAXv --delete -e \"ssh -p $BACKUP_CLIENT_PORT\""         
+RSYNC_OPTS="-aAXv --delete" 
+#RSYNC_OPTS="-aAXv --delete --size-only -n" 
+
+RSYNC_EXCLUDES="--exclude=/dev --exclude=/proc --exclude=/sys --exclude=/tmp --exclude=/run --exclude=/mnt --exclude=/media --exclude=/lost+found --exclude=$BACKUP_MOUNT_POINT"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+check_4_connectivity_2_backup_client () {
+# Ping remote backup client
+ping -c 3 -W 3 $BACKUP_CLIENT > /dev/null 2>&1
+HOST_STATUS_VAL=$?
+if [ $HOST_STATUS_VAL != 0 ];
+then
+logger -s -t $(basename $0) "Failed: Can not connect to $BACKUP_CLIENT"
+exit 1
+fi
+}
+
+create_ssh_public_key () {
+# Create public key if none exists
+[ -e $HOME/.ssh/id_rsa.pub ] || ssh-keygen -t rsa -f $HOME/.ssh/id_rsa -N ""
+}
+
+check_if_ssh_passwordless_login_works () {
+# Create public key if none exists
+create_ssh_public_key
+# See if setup of passwordless logins worked
+sudo ssh -o BatchMode=yes -o NumberOfPasswordPrompts=1 -p $BACKUP_CLIENT_PORT $BACKUP_CLIENT_USER@$BACKUP_CLIENT "/bin/echo OK" > /dev/null 2>&1
+SSH_EXIT=$?
+export SSH_EXIT
+}
+
+passwordless_ssh_login_2_backup_client () {
+check_if_ssh_passwordless_login_works 
+if [ "$SSH_EXIT" != "0" ];
+then
+clear
+cat <<ET
+Enter the password for $BACKUP_CLIENT_USER at $BACKUP_CLIENT
+
+ET
+read BACKUP_CLIENT_PASS
+# Setup passwordless access to SSH server i.e. Copy local SSH public key to remote server.
+expect -c "set timeout $EXPECT_TIMEOUT; 
+spawn sudo ssh-copy-id -i $HOME/.ssh/id_rsa.pub -o NumberOfPasswordPrompts=1 -p $BACKUP_CLIENT_PORT $BACKUP_CLIENT_USER@$BACKUP_CLIENT; expect ?;
+send yes\n;
+expect assword;
+send $BACKUP_CLIENT_PASS\n;
+interact"
+fi
+}
+
+quit_if_connect_2_backup_client_failed () {
+check_if_ssh_passwordless_login_works 
+if [ "$SSH_EXIT" != "0" ];
+then
+cat << EOF
+SSH connection to $BACKUP_CLIENT failed. Possible causes:
+
+1. The information you provided is incorrect or the SSH account 
+   was not setup on the remote server at $BACKUP_CLIENT:$BACKUP_CLIENT_PORT
+   Please contact support and provide them with the credentials 
+   listed below:
+
+	Username:	$BACKUP_CLIENT_USER
+	Password:	$BACKUP_CLIENT_PASS
+
+2. Port $BACKUP_CLIENT_PORT, which is required to connect, is blocked by your 
+   network's firewall rules.  Please allow SSH access on that 
+   port
+
+EOF
+#
+# Quit script
+exit
+fi
+}
+
+check_backup_partition_exists () {
+if [[ -e $BACKUP_DISK_PARTITION ]];
+then
+# Create mountpoint if not existent
+[[ -d $BACKUP_MOUNT_POINT ]] || sudo mkdir -p $BACKUP_MOUNT_POINT
+
+else
+# Quit
+logger -s -t $(basename $0) "Error: Backup disk partition was not found. Quitting ..."
+exit
+fi
+}
+
+backup_disk_already_mounted () {
+df -h | grep -i $BACKUP_MOUNT_POINT > /dev/null 2>&1
+MOUNTED_ALREADY=$?
+}
+
+mount_backup_disk () {
+backup_disk_already_mounted
+#
+if [[ "$MOUNTED_ALREADY" = "0" ]];
+then
+MOUNT_EXIT_VAL=0
+else
+sudo mount $BACKUP_DISK_PARTITION $BACKUP_MOUNT_POINT
+MOUNT_EXIT_VAL=$?
+fi
+}
+
+sync_data_of_backup_client () {
+sudo $RSYNC_CMD $RSYNC_OPTS $RSYNC_EXCLUDES $BACKUP_CLIENT_USER@$BACKUP_CLIENT:$BACKUP_SOURCE $BACKUP_DESTINATION
+}
+
+unmount_backup_disk () {
+sudo umount $BACKUP_DISK_PARTITION
+}
+
+run_backup_processes () {
+# Check if backup partition exists i.e. disk was plugged in
+check_backup_partition_exists
+
+# Mount Backup disk
+mount_backup_disk
+#
+if [[ "$MOUNT_EXIT_VAL" = "0" ]];
+then
+# Backup and Sync Data
+sync_data_of_backup_client
+#
+# Un-Mount Backup disk
+unmount_backup_disk
+
+else
+# Could not proceed with backup,  Quit
+logger -s -t $(basename $0) "Error: Backup failed. Quitting ..."
+exit 1
+fi
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+check_4_connectivity_2_backup_client
+
+passwordless_ssh_login_2_backup_client
+
+quit_if_connect_2_backup_client_failed
+
+run_backup_processes
