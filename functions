@@ -26,7 +26,7 @@ PRODUCT_SERIAL_NUMBER=$(uuid | cut -d - -f5)
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
-AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer, /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd, /usr/bin/chattr, /usr/sbin/asterisk, /usr/sbin/iftop, /usr/bin/bwm-ng, /usr/bin/socat, /usr/bin/trackerjacker, /usr/sbin/rtcwake"
+AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer, /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd, /usr/bin/chattr, /usr/sbin/asterisk, /usr/sbin/iftop, /usr/bin/bwm-ng, /usr/bin/socat, /usr/bin/trackerjacker, /usr/sbin/rtcwake, /usr/bin/mount, /usr/bin/umount, /usr/bin/rsync, /usr/bin/ssh, /usr/bin/ssh-copy-id"
 MULTIMEDIA_USER=$AUTOLOGIN_USER
 MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
 BACKUPS_DIR=$ROOT_DIR/Backups
@@ -1157,6 +1157,7 @@ ARIA2_DOWNLOAD_STOP_TOOL=
 # JambulaTV Tools
 # ---------------
 AUTO_WIFI_PROVISION_TOOL=$BINARY_PREFIX/jambulatv-auto-wifi-provision 
+BACKUP_REMOTE_PC_TO_USB_DISK_TOOL=$BINARY_PREFIX/jambulatv-backup-remote-pc-data-2-local-usb-disk
 BANDWIDTH_TOOL=$BINARY_PREFIX/jambulatv-bandwidth
 CALENDAR_EVENTS_TOOL=$BINARY_PREFIX/jambulatv-calendar-events
 CAMPLAYER_TOOL=$BINARY_PREFIX/jambulatv-camplayer
@@ -12080,10 +12081,13 @@ ${PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL##*/} \
 ${PRESENCE_DETECTION_VIA_MIFI_TOOL##*/} \
 ${PRESENCE_DETECTION_VIA_TRACKER_TOOL##*/} \
 ${SPEAKER_VOLUME_TOOL##*/} \
+${BACKUP_REMOTE_PC_TO_USB_DISK_TOOL##*/} \
 ${UMEME_OUTAGES_TOOL##*/}
 do
 # Copy script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/$TOOL_NAME ] || cp -v $PROJECT_BIN_DIR/$TOOL_NAME $BINARY_PREFIX/$TOOL_NAME
+# Make script executable
+chmod 755 $BINARY_PREFIX/$TOOL_NAME
 done
 } 
 
