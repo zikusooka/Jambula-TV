@@ -53,15 +53,16 @@ fi
 }
 
 capture_motion_event () {
-# Log into ZM API
-zoneminder_login_using_api
+# Get ZoneMinder API v2 credentials
+zoneminder_get_api_v2_credentials
 #
 # Remove previous event data output file
 [[ -e $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE ]] && sudo rm -f $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE 
-
+#
 # Query ZM event data using API
-$CURL_CMD $CURL_OPTS -o $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE -b $CURL_COOKIE_JAR_FILE \
-	$ZONEMINDER_API_URL/events/${ZM_CAMERA_EVENT_ID}.json 
+$CURL_CMD $CURL_OPTS -o $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE \
+	-d token=$ZONEMINDER_API_ACCESS_TOKEN \
+		$ZONEMINDER_API_URL/events/${ZM_CAMERA_EVENT_ID}.json
 # Set attributes
 ZM_EVENT_CAUSE=$(jq -r '. [].Event.Cause' $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE)
 ZM_EVENT_TIMESTAMP_START=$(jq -r '. [].Event.StartTime' $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE)
@@ -72,9 +73,6 @@ ZM_EVENT_VIDEO_FILE=$ZM_EVENT_VIDEO_DIR/$ZM_CAMERA_EVENT_ID-video.mp4
 #
 # Source ZM subject and message notifications
 set_notifications
-#
-# Logout of ZM API
-zoneminder_logout_using_api
 }
 
 generate_message_4_notice () {
