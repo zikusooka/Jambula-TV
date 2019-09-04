@@ -21,12 +21,24 @@ ZM_CAMERA_ID=$2
 #  FUNCTIONS  #
 ###############
 
+usage () {
+if [[ "x$ZM_ACTION" = "x" || "x$ZM_CAMERA_ID" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) [ZM_ACTION] [ZM_CAMERA_ID]
+
+ET
+exit 1
+fi
+}
+
 zm_camera_function () {
 ZM_CAMERA_FUNCTION=$1
 # Change state of specified monitor
-$CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
-	-d "Monitor[Function]=$ZM_CAMERA_FUNCTION" \
-		$ZONEMINDER_API_URL/monitors/$ZM_CAMERA_ID.json
+$CURL_CMD $CURL_OPTS \
+	-d token=$ZONEMINDER_API_ACCESS_TOKEN \
+	-d "Monitor[Function]=$ZM_CAMERA_FUNCTION&Monitor[Enabled]=1" \
+	$ZONEMINDER_API_URL/monitors/$ZM_CAMERA_ID.json
 }
 
 zm_alarm_arm () {
@@ -34,7 +46,8 @@ zm_alarm_arm () {
 zm_camera_function Modect
 #
 # Arm the specified camera
-$CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
+$CURL_CMD $CURL_OPTS \
+	-d token=$ZONEMINDER_API_ACCESS_TOKEN \
 	$ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:on.json
 }
 
@@ -43,12 +56,14 @@ zm_alarm_disarm () {
 zm_camera_function Monitor
 #
 # Disarm the specified camera
-$CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
+$CURL_CMD $CURL_OPTS \
+	-d token=$ZONEMINDER_API_ACCESS_TOKEN \
 	$ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:off.json
 }
 
 zm_alarm_status () {
-$CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
+$CURL_CMD $CURL_OPTS \
+	-d token=$ZONEMINDER_API_ACCESS_TOKEN \
 	$ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:status.json
 }
 
@@ -58,9 +73,11 @@ $CURL_CMD $CURL_OPTS -b $CURL_COOKIE_JAR_FILE \
 #  MAIN SCRIPT  #
 #################
 
-# Login
-zoneminder_login_using_api
+# Usage
+usage
 
+# Get ZoneMinder API v2 credentials
+zoneminder_get_api_v2_credentials
 
 case $ZM_ACTION in
 
@@ -91,7 +108,3 @@ $0 disarm $ZM_CAMERA_ID
 ;;
 
 esac
-
-
-# Logout
-zoneminder_logout_using_api

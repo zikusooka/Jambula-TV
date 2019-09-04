@@ -12426,11 +12426,11 @@ patch -p1 $INSTALL_SRC_DIR/ZoneMinder/scripts/zmdc.pl.in < $TMPDIR/zmdc.pl.patch
 # API Bugs - Remove these patches when fixed
 # ------------------------------------------
 # Set require_once - includes to full path
-patch -p1 $INSTALL_SRC_DIR/ZoneMinder/web/api/app/Config/bootstrap.php.in < $PROJECT_PATCHES_DIR/zoneminder.api.bootstrap.patch
+#patch -p1 $INSTALL_SRC_DIR/ZoneMinder/web/api/app/Config/bootstrap.php.in < $PROJECT_PATCHES_DIR/zoneminder.api.bootstrap.patch
 # Also set to full path in '../api/app/Controller/HostController.php'
 #
 # Add/Edit/Delete of Monitors produces 'Insufficient privileges' errors 
-patch -p1 $INSTALL_SRC_DIR/ZoneMinder/web/api/app/Controller/MonitorsController.php < $PROJECT_PATCHES_DIR/zoneminder.api.MonitorsController.patch
+#patch -p1 $INSTALL_SRC_DIR/ZoneMinder/web/api/app/Controller/MonitorsController.php < $PROJECT_PATCHES_DIR/zoneminder.api.MonitorsController.patch
 
 
 # Get WWW User and Group
