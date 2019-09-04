@@ -16,10 +16,7 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip -o -4 link show | awk -F': ' '/mode DEFAULT/ {print $2}' | grep -v lo | head -1)
 # Get ethernet IP Address
 NETWORK_IP_ADDRESS=$(/usr/sbin/ip -o -4 addr show ${NETWORK_ETHERNET_DEVICE} | awk -F '[ /]+' '/global/ {print $4}')
-COOVA_SERVER_IP=`grep 'HS_UAMLISTEN=' /etc/chilli/config | cut -d = -f2 | awk {'print $1'}`
-COOVA_CONFIG_DIR=/etc/chilli
-COOVA_CONFIG_FILE=$COOVA_CONFIG_DIR/config
-COOVA_MAIN_CONFIG_FILE=$COOVA_CONFIG_DIR/main.conf
+NETWORK_WIRELESS_HOTSPOT_IP=172.16.0.1
 CHRONYC_CMD=/usr/bin/chronyc
 CHRONY_KEYS_FILE=/etc/chrony.keys
 CHRONYC_PASSWD=`awk {'print $2'} $CHRONY_KEYS_FILE`
@@ -30,7 +27,6 @@ SOUNDS_TOOL=MY_SOUNDS_TOOL
 INTERNET_SPEED_TOOL=MY_INTERNET_SPEED_TOOL
 GEOLOCATION_TOOL=MY_GEOLOCATION_TOOL
 REVERSE_SSH_TOOL=MY_REVERSE_SSH_TOOL
-COOVA_CHILLI_TOOL=MY_COOVA_CHILLI_TOOL
 
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
 
@@ -173,13 +169,6 @@ update_dns_servers
 # Restart dnsmasq.service
 systemctl restart dnsmasq.service
 
-# Configure CoovaChilli DomainDNSlocal
-# ------------------------------------
-# Get previous domains dns local value
-PREVIOUS_HS_DOMAINDNSLOCAL=`grep 'HS_DOMAINDNSLOCAL=' $COOVA_CONFIG_FILE | awk {'print $1'}`
-# Set chilli domain DNS locals to 'off' since internet on
-sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=off:g" $COOVA_CONFIG_FILE 
-
 
 # Since Internet is now UP -  Do other stuff that requires connectivity
 #######################################################################
@@ -238,7 +227,7 @@ echo "$(date): New State = Down | Old State = Up" >> $DEBUG_FILE
 # Add entries to dnsmasq for local resolution
 # --------------------------------------------
 cat > $INTERNET_OFF_FILE <<EOT
-address=/#/$COOVA_SERVER_IP
+address=/#/$NETWORK_WIRELESS_HOTSPOT_IP
 EOT
 # Add Wired ethernet IP address if link is UP
 [[ "x$NETWORK_IP_ADDRESS" = "x" ]] || \
@@ -246,12 +235,6 @@ EOT
 # Restart dnsmasq.service
 systemctl restart dnsmasq.service
 
-# Configure CoovaChilli DomainDNSlocal
-# ------------------------------------
-# Get previous domains dns local value
-PREVIOUS_HS_DOMAINDNSLOCAL=`grep 'HS_DOMAINDNSLOCAL=' $COOVA_CONFIG_FILE | awk {'print $1'}`
-# Set chilli domain DNS locals to 'on' since internet off
-sed -i "s:$PREVIOUS_HS_DOMAINDNSLOCAL:HS_DOMAINDNSLOCAL=on:g" $COOVA_CONFIG_FILE 
 
 #  Since Internet is now down - Stop stuff that requires connectivity 
 ######################################################################
@@ -272,7 +255,7 @@ echo "$(date): Unknown - New State = [$DNS_STATUS] | Old State = [$LAST_DNS_STAT
 # Add entries to dnsmasq for local resolution
 # --------------------------------------------
 cat > $INTERNET_OFF_FILE <<EOT
-address=/#/$COOVA_SERVER_IP
+address=/#/$NETWORK_WIRELESS_HOTSPOT_IP
 EOT
 # Add Wired ethernet IP address if link is UP
 [[ "x$NETWORK_IP_ADDRESS" = "x" ]] || \
@@ -289,10 +272,7 @@ fi
 
 # Run processes whenever there's a change in status i.e. UP or DOWN
 ###################################################################
-# 1) Restart coova-chilli in order to change default gateway device and DNS settings
-#sudo $COOVA_CHILLI_TOOL restart
-
-# Restart nodogsplash.service
+# 1) Restart nodogsplash in order to change default gateway device and # DNS settings
 systemctl restart nodogsplash.service
 #
 # 2) Restart wireless access point: hostapd
