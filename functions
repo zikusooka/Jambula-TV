@@ -1194,7 +1194,8 @@ SPEECH2TEXT_TOOL=$BINARY_PREFIX/jambulatv-speech2text
 SYSINFO_TOOL=$BINARY_PREFIX/jambulatv-sysinfo
 TELEGRAM_TOOL=$BINARY_PREFIX/jambulatv-telegram
 TEXT2SPEECH_TOOL=$BINARY_PREFIX/jambulatv-text2speech
-TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controllerTVHEADEND_PROCESSOR_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-processor
+TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controller
+TVHEADEND_PROCESSOR_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-processor
 TWITTER_TOOL=$BINARY_PREFIX/jambulatv-twitter
 UMEME_OUTAGES_TOOL=$BINARY_PREFIX/jambulatv-umeme-outages
 VLM_VOD_CREATE_TOOL=$BINARY_PREFIX/jambulatv-create-video-on-demand
@@ -5300,7 +5301,7 @@ tvheadend_create_dvr_profile_mkv
 # TVHeadend tools
 # ---------------
 # Generate jambulatv-tvheadend-processor tool which is used to process tvheadend processes like recordings
-[ -e $BINARY_PREFIX/jambulatv-tvheadend-processor ] || \
+[[ -e $BINARY_PREFIX/jambulatv-tvheadend-processor ]] || \
 	cp -v $PROJECT_BIN_DIR/jambulatv-tvheadend-processor $TVHEADEND_PROCESSOR_TOOL
 # Make script executable
 chmod 755 $TVHEADEND_PROCESSOR_TOOL
@@ -5309,7 +5310,7 @@ chmod 755 $TVHEADEND_PROCESSOR_TOOL
 [ -e $BINARY_PREFIX/jambulatv-dvbt-scan ] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/
 #
 # Generate jambulatv-tvheadend-controller script
-[ -e $TVHEADEND_CONTROLLER_TOOL ] || \
+[[ -e $TVHEADEND_CONTROLLER_TOOL ]] || \
 	cat $PROJECT_BIN_DIR/jambulatv-tvheadend-controller | \
 		sed "s:MY_PLAYLISTS_PORT:$PLAYLISTS_PORT:g" \
 			> $TVHEADEND_CONTROLLER_TOOL
