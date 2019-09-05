@@ -12038,6 +12038,11 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_CONF_DIR/homeassistan
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-homeassistant-secrets
 
+# Copy homeassistant sound files
+cp -rv $PROJECT_CONTRIB_DIR/sounds/homeassistant/* $PROJECT_SYSTEM_SHARE_DIR/sounds/
+# Change ownership of sounds directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/sounds
+
 # Copy home-assistant systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/home-assistant.service $SYSTEMD_UNITS_DIR_USER/
 # Enable and start home-assistant if needed
