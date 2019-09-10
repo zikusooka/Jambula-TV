@@ -71,6 +71,7 @@ UDEV_RULES_DIR=/etc/udev/rules.d
 LOGROTATE_CONF_DIR=$CONFDIR/logrotate.d
 FIRMWARE_DIR=$PREFIX/lib/firmware
 POST_INSTALL_NOTES=$ROOT_DIR/post_install_notes
+LOCK_FILES_DIR=$TMPDIR
 # Source directories
 PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 PROJECT_PATCHES_DIR=$PROJECT_BASE_DIR/patches
@@ -1273,7 +1274,9 @@ HOST_NOT_REACHEABLE_NOTIFICATION_MESSAGE="Error: The host $REMOTE_HOST_NAME is u
 HOST_IS_BLOCKED_NOTIFICATION_MESSAGE="Warning: Internet traffic to $REMOTE_HOST_NAME is being filtered either by your ISP or the remote server. Expect a degradation in this service."
 CRITICAL_JOB_SPOOLED_NOTIFICATION_MESSAGE="The requested job has been queued at $CRITICAL_JOBS_SPOOL_DIRECTORY/$$. It will be processed when the Internet becomes available"
 VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE="Alert: A secure VPN tunnel has been opened, re-routing all traffic through new connection [$VPN_ISP]"
+VPN_TUNNEL_ALREADY_OPEN_NOTIFICATION_MESSAGE="Info: A VPN tunnel already exists, re-routing all traffic through it"
 VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE="Alert: The VPN tunnel has been closed, re-routing all traffic back to default connection [$LOCAL_ISP]"
+VPN_TUNNEL_NOT_CLOSED_NOTIFICATION_MESSAGE="The VPN tunnel is being used by another process(es) and can not be closed at this time"
 FTP_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 WGET_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 TVHEADEND_RESET_MESSAGE="Reset of TV server has been requested"
@@ -1611,22 +1614,96 @@ fi
 fi
 }
 
+create_ssh_public_key () {
+# Create public key if none exists
+[ -e $1/.ssh/id_rsa.pub ] || ssh-keygen -t rsa -f $1/.ssh/id_rsa -N ""
+}
+
+check_if_ssh_passwordless_login_works () {
+# Create public key if none exists
+create_ssh_public_key /root
+# See if setup of passwordless logins worked
+sudo ssh -o BatchMode=yes -o NumberOfPasswordPrompts=1 -p $1 $2@$3 "/bin/echo OK" > /dev/null 2>&1
+SSH_EXIT=$?
+export SSH_EXIT
+}
+
 lock_process_instance () {
-PROCESS_INSTANCE_LOCK_FILE=$TMPDIR/$1_process_instance.lock
-# Create lock file for this process instance
+PROCESS_INSTANCE_NAME=$1
+PROCESS_INSTANCE_LOCK_TYPE=$2
+PROCESS_INSTANCE_LOCK_FILE=$TMPDIR/${PROCESS_INSTANCE_NAME}_process_instance.lock
+# 
+# Create exclusive lock file for this process instance
+if [[ "$PROCESS_INSTANCE_LOCK_TYPE" = "exclusive" ]];
+then
+exec {lock_fd}>$PROCESS_INSTANCE_LOCK_FILE 
+flock -x -n "$lock_fd" 
+
+# Create shared lock file for this process instance
+elif [[ "$PROCESS_INSTANCE_LOCK_TYPE" = "shared" ]];
+then
+exec {lock_fd}>$PROCESS_INSTANCE_LOCK_FILE 
+flock -s -n "$lock_fd" 
+
+# Create nonblock lock file for this process instance
+else
 exec {lock_fd}>$PROCESS_INSTANCE_LOCK_FILE 
 flock -n "$lock_fd" 
+fi
+
+# Set exit status value
 PROCESS_INSTANCE_LOCK_STATUS=$?
+}
+
+wait_if_another_process_instance_is_running () {
+lock_process_instance $1 $2
+#
 # Wait for running process instance lock file to clear
 while [[ "$PROCESS_INSTANCE_LOCK_STATUS" != 0 ]]; 
 do
 # Notification - another instance is running
-logger -s -t $(basename $0) "Another instance of this tool is running. Will proceed shortly after it completes ..."
+logger -s -t $(basename $0) "Another instance of this tool [$1] is running. Will proceed shortly after it completes ..."
 sleep 5
+
 # Check process instance lock status again
-flock -n "$lock_fd" 
+lock_process_instance $1 $2
 PROCESS_INSTANCE_LOCK_STATUS=$?
 done
+}
+
+start_sshuttle_vpn_tunnel () {
+# Get the status of VPN tunnel if filtering is going on 
+# i.e. ICMP ping requests were blocked 
+[[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]] && \
+VPN_PROCESS_STATUS=$($VPN_TUNNEL_SSHUTTLE_TOOL status | awk -F': ' '{print $2}')
+
+# If filtering is going on i.e. ICMP ping requests were blocked 
+if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" && "$VPN_PROCESS_STATUS" = "Closed" ]];
+then
+# Source SSH server variables i.e. credentials
+[[ -e $REVERSE_SSH_CONFIG ]] && . $REVERSE_SSH_CONFIG
+#
+# Start a VPN tunnel using sshuttle
+$VPN_TUNNEL_SSHUTTLE_TOOL start $MIDDLEMAN_SSH_SERVER $MIDDLEMAN_SSH_SERVER_PORT $MIDDLEMAN_SSH_SERVER_USER 0.0.0.0/0
+
+# If VPN tunnel is already Open
+elif [[ "$VPN_PROCESS_STATUS" = "Open" ]];
+then
+# Acquire a shared lock on the running sshuttle process
+lock_process_instance sshuttle shared
+fi
+}
+
+stop_sshuttle_vpn_tunnel () {
+# Get the status of VPN tunnel
+VPN_PROCESS_STATUS=$($VPN_TUNNEL_SSHUTTLE_TOOL status | awk -F': ' '{print $2}')
+#
+# If VPN tunnel is Open 
+if [[ "$VPN_PROCESS_STATUS" = "Open" ]];
+then
+# Stop VPN tunnel using sshuttle
+$VPN_TUNNEL_SSHUTTLE_TOOL stop
+fi
 }
 
 download_asterisk_deps () {
