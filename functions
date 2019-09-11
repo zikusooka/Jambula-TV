@@ -8828,10 +8828,10 @@ cat > $TELEGRAM_CREDENTIALS_CONFIG << EOF
 TELEGRAM_TOOL="$TELEGRAM_TOOL"
 EOF
 # Copy Telegram Script if it does not exists
-[ -e $TELEGRAM_TOOL ] || \
+[[ -e $TELEGRAM_TOOL ]] || \
 	cp -v $PROJECT_BIN_DIR/jambulatv-telegram $TELEGRAM_TOOL
 # Make script executable
-[ -x $TELEGRAM_TOOL ] || chmod 755 $TELEGRAM_TOOL
+[[ -x $TELEGRAM_TOOL ]] || chmod 755 $TELEGRAM_TOOL
 }
 
 yowsup3_deps_install () {
@@ -8897,7 +8897,7 @@ patch -p1 $PREFIX/local/bin/yowsup-cli < $PROJECT_PATCHES_DIR/yowsup-cli.bin.pat
 
 whatsapp_messaging_configure () {
 # Copy WhatsApp tool, if it does not exist in bin directory
-[ -e $WHATSAPP_TOOL ] || \
+[[ -e $WHATSAPP_TOOL ]] || \
 	cp -v $PROJECT_BIN_DIR/jambulatv-whatsapp $WHATSAPP_TOOL
 # Make script executable
 chmod 755 $WHATSAPP_TOOL

@@ -133,24 +133,13 @@ usage
 # Check connectivity to WhatsApp servers
 check_internet_connectivity_ping 0 whatsapp.com spool
 
-# Test and see if filtering is going on i.e. ICMP ping requests were blocked 
-if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
-then
-# Source SSH server variables i.e. credentials
-[[ -e $REVERSE_SSH_CONFIG ]] && . $REVERSE_SSH_CONFIG
-#
-# Start a VPN tunnel using sshuttle
-$VPN_TUNNEL_SSHUTTLE_TOOL start $MIDDLEMAN_SSH_SERVER $MIDDLEMAN_SSH_SERVER_PORT $MIDDLEMAN_SSH_SERVER_USER 0.0.0.0/0
-fi
+# Start VPN tunnel if not running else aquire lock
+start_sshuttle_vpn_tunnel
 }
 
 post_clean_up_tasks () {
-# Test and see if filtering is going on i.e. ICMP ping requests were blocked 
-if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
-then
-# Stop VPN tunnel using sshuttle
-$VPN_TUNNEL_SSHUTTLE_TOOL stop
-fi
+# Stop VPN tunnel if it is running 
+stop_sshuttle_vpn_tunnel
 }
 
 registration_status () {
@@ -453,7 +442,7 @@ registration_confirm
 #  MAIN SCRIPT  #
 #################
 
-lock_process_instance whatsapp
+wait_if_another_process_instance_is_running whatsapp exclusive
 
 trap post_clean_up_tasks EXIT
 
