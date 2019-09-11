@@ -96,7 +96,6 @@ esac
 fi
 }
 
-# Pre-start Tasks
 pre_start_tasks () {
 # Usage
 usage
@@ -104,28 +103,15 @@ usage
 # Check connectivity to telegram servers - Spool message if no Internet
 check_internet_connectivity_ping 0 telegram.org spool
 
-# Test and see if filtering is going on i.e. ICMP ping requests were blocked 
-if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
-then
-# Source SSH server variables i.e. credentials
-[[ -e $REVERSE_SSH_CONFIG ]] && . $REVERSE_SSH_CONFIG
-#
-# Start a VPN tunnel using sshuttle
-$VPN_TUNNEL_SSHUTTLE_TOOL start $MIDDLEMAN_SSH_SERVER $MIDDLEMAN_SSH_SERVER_PORT $MIDDLEMAN_SSH_SERVER_USER 0.0.0.0/0
-fi
+# Start VPN tunnel if not running else aquire lock
+start_sshuttle_vpn_tunnel
 }
 
-# Post-stop Tasks
 post_clean_up_tasks () {
-# Test and see if filtering is going on i.e. ICMP ping requests were blocked 
-if [[ "$PING_ICMP_REQUESTS_BLOCKED" = "yes" ]];
-then
-# Stop VPN tunnel using sshuttle
-$VPN_TUNNEL_SSHUTTLE_TOOL  stop
-fi
+# Stop VPN tunnel if it is running 
+stop_sshuttle_vpn_tunnel
 }
 
-# Chat ID
 get_chat_id () {
 CHAT_ID=$(curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/getUpdates | jq . | grep \"id\": | sort -u | head -1 | awk {'print $2'})
 if [ "x$CHAT_ID" = "x" ];
@@ -134,12 +120,10 @@ CHAT_ID=$TELEGRAM_CHAT_ID
 fi
 }
 
-# Username
 get_username () {
 CHAT_USERNAME=$(curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/getUpdates | jq . | grep \"username\": | sort -u | awk {'print $2'} | sed s:[\",]::g)
 }
 
-# Create Bot
 create_api_bot () {
 clear
 cat << EOF
@@ -226,7 +210,6 @@ sleep 2
 sed -i "s/$OLD_USERNAME/$NEW_USERNAME/g" $FLEXGET_VARIABLES_FILE
 }
 
-# Send
 send_message () {
 curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/sendMessage \
 	-d chat_id=$TELEGRAM_CHAT_ID \
@@ -282,7 +265,7 @@ echo
 #  MAIN SCRIPT  #
 #################
 
-lock_process_instance telegram
+wait_if_another_process_instance_is_running telegram exclusive
 
 trap post_clean_up_tasks EXIT
 
