@@ -9727,7 +9727,7 @@ chown -R $WWW_USER:$WWW_GROUP $NODOGSPLASH_HTML_DIR
 }
 
 internet_connectivity_monitoring () {
-[ -e $BINARY_PREFIX/jambulatv-dns-status-triggers ] || \
+[[ -e $BINARY_PREFIX/jambulatv-dns-status-triggers ]] || \
 	cat $PROJECT_BIN_DIR/jambulatv-dns-status-triggers | \
 		sed -e "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
 		sed -e "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" | \
@@ -9735,14 +9735,14 @@ internet_connectivity_monitoring () {
 		sed -e "s:MY_INTERNET_SPEED_TOOL:$INTERNET_SPEED_TOOL:g" | \
 		sed -e "s:MY_GEOLOCATION_TOOL:$GEOLOCATION_TOOL:g" | \
 		sed -e "s:MY_REVERSE_SSH_TOOL:$REVERSE_SSH_TOOL:g" | \
-		sed -e "s:MY_COOVA_CHILLI_TOOL:$COOVA_CHILLI_TOOL:g" | \
+		sed -e "s:MY_RUNDIR:$RUNDIR:g" | \
 		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" \
 			> $BINARY_PREFIX/jambulatv-dns-status-triggers 
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-dns-status-triggers 
 #
 # Copy jambulatv-speed-test helper script
-[ -e $BINARY_PREFIX/jambulatv-speed-test ] || \
+[[ -e $BINARY_PREFIX/jambulatv-speed-test ]] || \
 	cp -v $PROJECT_BIN_DIR/jambulatv-speed-test $BINARY_PREFIX/
 }
 
