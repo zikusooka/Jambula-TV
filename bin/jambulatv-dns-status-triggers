@@ -43,6 +43,9 @@ MONITORING_PLUGINS_DIR=/usr/lib64/nagios/plugins
 OSD_TOOL_CMD="sudo /usr/bin/jambulatv-osd -m"
 UPDATE_AVAIL_MSG="Software Updates: A new version of JambulaTV software is available. Please update as soon as possible"
 
+SSHUTTLE_PID_FILE=MY_RUNDIR/sshuttle.pid
+SSHUTTLE_PID=$(ps auxw | grep -Ev grep | grep 'sshuttle -D' | grep python | awk {'print $2'} | tail -1)
+
 
 
 ###############
@@ -246,6 +249,13 @@ update_clock_time offline
 # Sound alert beep
 # ----------------
 [ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL beep offline
+
+# Stop any existing VPN tunnel processes
+# --------------------------------------
+# Kill using PID in PID run file
+[[ -e $SSHUTTLE_PID_FILE ]] && kill -15 $(cat $SSHUTTLE_PID_FILE)
+# Kill using PID obtained y grep
+[[ "x$SSHUTTLE_PID" != "x" ]] && kill -15 $SSHUTTLE_PID
 
 
 else
