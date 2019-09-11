@@ -7988,7 +7988,7 @@ $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 vpn_tunnel_sshuttle_setup () {
 # Copy jambulatv-vpn-tunnel-via-sshuttle script, if it does not exist 
 # in bin directory
-[ -e $VPN_TUNNEL_SSHUTTLE_TOOL ] || cp -v $PROJECT_BIN_DIR/jambulatv-vpn-tunnel-via-sshuttle $VPN_TUNNEL_SSHUTTLE_TOOL
+[[ -e $VPN_TUNNEL_SSHUTTLE_TOOL ]] || cp -v $PROJECT_BIN_DIR/jambulatv-vpn-tunnel-via-sshuttle $VPN_TUNNEL_SSHUTTLE_TOOL
 # Make script executable
 chmod 755 $VPN_TUNNEL_SSHUTTLE_TOOL
 }

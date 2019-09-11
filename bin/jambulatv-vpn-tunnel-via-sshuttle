@@ -20,6 +20,7 @@ SSHUTTLE_REMOTE_SERVER=$2
 SSHUTTLE_REMOTE_PORT=$3
 SSHUTTLE_REMOTE_USER=$4
 SSHUTTLE_REMOTE_SUBNET=$5
+SSHUTTLE_PID=$(ps auxw | grep -Ev grep | grep 'sshuttle -D' | grep python | awk {'print $2'} | tail -1)
 
 
 
@@ -31,7 +32,7 @@ if [[ "x$SSHUTTLE_ACTION" = "x" ]];
 then
 clear
 cat <<ET
-Usage:	$(basename $0) [start|stop]
+Usage:	$(basename $0) [start|stop|status]
 
 ET
 exit 1
@@ -55,16 +56,22 @@ exit 1
 fi
 }
 
-vpn_connection_using_sshuttle () {
-case $SSHUTTLE_ACTION in
-
-start)
-# Lock sshuttle process instance so only one is running
-lock_process_instance sshuttle
-
+open_sshuttle_vpn_tunnel () {
+# If there's NOT an already existing sshuttle process
+if [[ ! -s $SSHUTTLE_PID_FILE ]];
+then
+# Check to see if ssh user can automatically connect to remote server
+check_if_ssh_passwordless_login_works $SSHUTTLE_REMOTE_PORT $SSHUTTLE_REMOTE_USER $SSHUTTLE_REMOTE_SERVER
+#
+if [[ "$SSH_EXIT" != "0" ]];
+then
+logger -s -t $(basename $0) "Failed: Please first setup SSH passwordless login for $SSHUTTLE_REMOTE_USER at $SSHUTTLE_REMOTE_SERVER"
+exit 1
+fi
+#
 # Connect to remote SSH server using sshuttle
 $SSHUTTLE_CMD $SSHUTTLE_OPTS $SSHUTTLE_REMOTE_USER@$SSHUTTLE_REMOTE_SERVER:$SSHUTTLE_REMOTE_PORT $SSHUTTLE_REMOTE_SUBNET
-
+#
 # Pause to allow new IP address to be setup
 sleep 3
 # Notify that VPN tunnel has been established
@@ -77,11 +84,38 @@ set_notifications
 print_notification "$VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE" text
 # Print notification using OSD tool
 print_notification "$VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE" osd &
-;;
 
-stop)
-# Stop current sshuttle tunnel process
+else
+# Notify that VPN tunnel already exists
+# ---
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$VPN_TUNNEL_ALREADY_OPEN_NOTIFICATION_MESSAGE" text
+fi
+}
+
+close_sshuttle_vpn_tunnel () {
+# Number of lock files that were associated with the PID of sshuttle
+[[ -e $SSHUTTLE_PID_FILE ]] && \
+PROCESS_NUMBER_USING_LOCK=$(/usr/sbin/lsof -t $LOCK_FILES_DIR/*.lock | grep $(cat $SSHUTTLE_PID_FILE) | wc -l)
+#
+[[ "x$SSHUTTLE_PID" != "x" ]] && \
+PROCESS_NUMBER_USING_LOCK=$(/usr/sbin/lsof -t $LOCK_FILES_DIR/*.lock | grep $SSHUTTLE_PID | wc -l)
+#
+if [[ "x$PROCESS_NUMBER_USING_LOCK" = "x" ]];
+then
+# Quit if no processes are found
+exit 0
+#
+# Stop current sshuttle tunnel process ONLY if no other process is
+# using the lock file
+elif [[ "$PROCESS_NUMBER_USING_LOCK" -le "1" ]];
+then
+# Kill using PID in PID run file
 [[ -e $SSHUTTLE_PID_FILE ]] && kill -15 $(cat $SSHUTTLE_PID_FILE)
+# Kill using PID obtained y grep
+[[ "x$SSHUTTLE_PID" != "x" ]] && kill -15 $SSHUTTLE_PID
 
 # Notify that VPN tunnel has been closed
 # ---
@@ -93,8 +127,25 @@ set_notifications
 print_notification "$VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE" text
 # Print notification using OSD tool
 print_notification "$VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE" osd &
-;;
-esac
+
+else
+# Notify that VPN tunnel has NOT been closed
+# ---
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$VPN_TUNNEL_NOT_CLOSED_NOTIFICATION_MESSAGE" text
+fi
+}
+
+status_sshuttle_vpn_tunnel () {
+if [[ -e $SSHUTTLE_PID_FILE ]] || [[ "x$SSHUTTLE_PID" != "x" ]];
+then
+echo "VPN Tunnel: Open"
+
+else
+echo "VPN Tunnel: Closed"
+fi
 }
 
 
@@ -103,6 +154,28 @@ esac
 #  MAIN SCRIPT  #
 #################
 
+# Usage
 usage
 
-vpn_connection_using_sshuttle
+# Setup VPN Tunnel using sshuttle 
+case $SSHUTTLE_ACTION in
+
+start)
+# Quit if there is no Internet
+check_internet_connectivity_ping
+[[ "$INTERNET_STATUS_VAL" = "0" ]] || exit 1
+
+# Start VPN tunnel if none exists
+open_sshuttle_vpn_tunnel
+;;
+
+stop)
+# Stop VPN tunnel if no one is using it
+close_sshuttle_vpn_tunnel
+;;
+
+status)
+status_sshuttle_vpn_tunnel
+;;
+
+esac
