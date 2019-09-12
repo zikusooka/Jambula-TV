@@ -2072,6 +2072,26 @@ PKG_LEFTOVERS_EXIST=$?
 [[ -e $PREFIX/local/share/man/man1/$1.1.gz ]] && rm -f $PREFIX/local/share/man/man1/$1.1.gz
 }
 
+uninstall_perl_Text_Template () {
+uninstall_src_pkgs perl_Text-Template
+#
+rm -f "/usr/local/share/man/man3/Text::Template.3pm"
+rm -f "/usr/local/share/man/man3/Text::Template::Preprocess.3pm"
+rm -f "/usr/local/share/perl5/Text/Template.pm"
+rm -f "/usr/local/share/perl5/Text/Template/Preprocess.pm"
+rm -f "/usr/local/lib64/perl5/auto/Text/Template/.packlist"
+}
+
+uninstall_openssl111 () {
+# Uninstall perl_Text-Template
+uninstall_perl_Text_Template
+#
+cd $INSTALL_SRC_DIR/openssl
+make uninstall
+rm -rf $INSTALL_SRC_DIR/openssl
+[[ -d $PREFIX/local/ssl ]] && rm -rf $PREFIX/local/ssl
+}
+
 uninstall_cmake_pkgs () {
 echo "Uninstalling the package: $1 ..."
 # Check for manifest in root path
@@ -3082,13 +3102,35 @@ openssl x509 -req -in $SERVER_CSR_FILE -CA $CA_CERT_FILE -CAkey $CA_KEY_FILE \
   -CAcreateserial -out $SERVER_CERT_FILE -days $CERTIFICATES_DAYS
 }
 
+openssl_deps_install () {
+# perl-Text-Template module required for openssl
+tar zxvf $PROJECT_TARBALLS_DIR/Text-Template-*.tar.gz -C $INSTALL_SRC_DIR
+# Change to perl_Text-Template directory
+cd $INSTALL_SRC_DIR && mv Text-Template* perl_Text-Template
+cd $INSTALL_SRC_DIR/perl_Text-Template
+perl Makefile.PL
+make_install_jambulatv
+}
+
 openssl111_install () {
+# Install required dependencies for OpenSSL
+openssl_deps_install
 # Unpack
 tar zxvf $PROJECT_TARBALLS_DIR/openssl-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v openssl-* openssl
 # Compile
 cd $INSTALL_SRC_DIR/openssl
-./Configure --prefix=$PREFIX/local/ssl --libdir=$PREFIX/local/ssl/lib64 -Wl,-rpath=$PREFIX/local/ssl/lib64 --openssldir=$PREFIX/local/ssl shared zlib-dynamic linux-x86_64
+#./Configure --prefix=$PREFIX/local/ssl --libdir=$PREFIX/local/ssl/lib64 -Wl,-rpath=$PREFIX/local/ssl/lib64 --openssldir=$PREFIX/local/ssl shared zlib-dynamic linux-x86_64
+# Add custom version file
+cat > openssl.ld <<ET
+OPENSSL_1.1.1_JambulaTV {
+    global:
+        X509_get0_authority_issuer;
+        X509_get0_authority_serial;
+};
+ET
+# Configure
+./Configure --prefix=$PREFIX/local/ssl --libdir=$PREFIX/local/ssl/lib64 -Wl,-rpath=$PREFIX/local/ssl/lib64 --openssldir=$PREFIX/local/ssl -Wl,--version-script=openssl.ld -Wl,-Bsymbolic-functions -fPIC shared zlib-dynamic linux-x86_64
 # Add -fPIC flag to Mafile
 sed -i.orig '/^CFLAG/s/$/ -fPIC/' Makefile
 # Make Install

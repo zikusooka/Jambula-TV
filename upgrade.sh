@@ -24,7 +24,7 @@ kernel_upgrade_2
 
 # Upgrade OpenSSL
 upgrade_openssl () {
-uninstall_src_pkgs openssl
+uninstall_openssl111
 openssl111_install
 }
 
