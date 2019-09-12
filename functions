@@ -1872,6 +1872,40 @@ SELECT $@ FROM ${JAMBULATV_SETUP_DB_TABLE} WHERE id = (SELECT MAX(id) FROM ${JAM
 EOF
 }
 
+openssl_switch_version_101_to_111 () {
+# Switch OpenSSL libraries and includes to version 1.1.1
+# ---
+# libssl
+[[ -L $LIBDIR/libssl.so.1.1 ]] && rm -f $LIBDIR/libssl.so.1.1
+[[ -L $LIBDIR/libssl.so ]] && rm -f $LIBDIR/libssl.so
+ln -s $PREFIX/local/ssl/lib64/libssl.so.1.1 $LIBDIR/libssl.so.1.1
+ln -s $LIBDIR/libssl.so.1.1 $LIBDIR/libssl.so
+# libcrypto
+[[ -L $LIBDIR/libcrypto.so.1.1 ]] && rm -f $LIBDIR/libcrypto.so.1.1
+[[ -L $LIBDIR/libcrypto.so ]] && rm -f $LIBDIR/libcrypto.so
+ln -s $PREFIX/local/ssl/lib64/libcrypto.so.1.1 $LIBDIR/libcrypto.so.1.1
+ln -s $LIBDIR/libcrypto.so.1.1 $LIBDIR/libcrypto.so
+# includes
+[[ -d $INCDIR/openssl_101 ]] || \
+	mv -v $INCDIR/openssl $INCDIR/openssl_101
+[[ -L $INCDIR/openssl ]] && rm -f $INCDIR/openssl
+ln -s $PREFIX/local/ssl/include/openssl $INCDIR/openssl
+}
+
+openssl_switch_version_111_to_101 () {
+# Switch OpenSSL libraries and includes back to version 1.0.1 
+# ---
+# libssl
+[[ -L $LIBDIR/libssl.so ]] && rm -f $LIBDIR/libssl.so
+ln -s $LIBDIR/libssl.so.10 $LIBDIR/libssl.so
+# libcrypto
+[[ -L $LIBDIR/libcrypto.so ]] && rm -f $LIBDIR/libcrypto.so
+ln -s $LIBDIR/libcrypto.so.10 $LIBDIR/libcrypto.so
+# includes
+[[ -L $INCDIR/openssl ]] && rm -f $INCDIR/openssl
+ln -s $INCDIR/openssl_101 $INCDIR/openssl
+}
+
 
 
 ############
