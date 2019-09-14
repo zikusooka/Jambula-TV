@@ -22,7 +22,8 @@ SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
 SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep ${SOUND_EFFECTS_WAITING_PATH##*/} | awk {'print $2'}
 )
 SOUND_PLAYER_CMD="/usr/bin/cvlc"
-SOUND_PLAYER_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --no-video --no-sout-display-video"
+SOUND_PLAYER_AUDIO_GAIN=2
+SOUND_PLAYER_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --gain $SOUND_PLAYER_AUDIO_GAIN --no-video --no-sout-display-video"
 
 BEEP_CMD=/usr/bin/beep
 
