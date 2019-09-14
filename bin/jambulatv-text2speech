@@ -16,7 +16,8 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 #TTS_PLAY_CMD_OPTS="-loglevel quiet -vn -nodisp -autoexit -af volume=2.0"
 # Play TTS audio using VLC
 TTS_PLAY_CMD="/usr/bin/cvlc"
-TTS_PLAY_CMD_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --no-video --no-sout-display-video"
+TTS_PLAY_CMD_AUDIO_GAIN=2
+TTS_PLAY_CMD_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --gain $SOUND_PLAYER_AUDIO_GAIN --no-video --no-sout-display-video"
 
 TTS_OUTPUT_FILE=/var/tmp/tts_output.wav # IMPORTANT: Must be on 'ext4' partition i.e. /var
 #
