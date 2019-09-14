@@ -1,0 +1,21 @@
+alias: "Lamp switch turned on"
+initial_state: True
+
+trigger:
+  - platform: state
+    entity_id: light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level
+    to: 'initializing'
+
+action:
+
+  # Task 1 - sound alert notice using Intercom i.e. paging
+  # ------------------------------------------------------
+  # a) Mute speaker volume if there is already audio playing
+  - service: shell_command.speaker_volume_mute
+  # Pause for a second - Needed - DO NOT REMOVE unless you have a fix!
+  - delay:
+      seconds: 1
+  # b) Play chime using house speakers
+  - service: shell_command.play_chime_alert
+  # c) Unmute speaker volume 
+  - service: shell_command.speaker_volume_unmute 
