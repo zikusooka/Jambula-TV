@@ -48,7 +48,13 @@ bedtime_zik:
         telegram_recipient_phone: ''
 
 
-  # 3. Shutdown this system
+  # 3. Backup up remote PC i.e. Laptop
+  # ----------------------------------
+
+    - service: shell_command.backup_remote_pc_data_2_usb_disk
+
+
+  # 4. Shutdown this system
   # -----------------------
   
     # a) Set wake up time before shutting down system
