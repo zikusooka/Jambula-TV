@@ -12444,9 +12444,9 @@ cd $INSTALL_SRC_DIR/prosody
 	--datadir=/var/lib/prosody
 make_install_jambulatv 
 
-# Add prosody group and user
+# Add prosody group and user - Assign home directory = /var/lib/prosody
 groupadd -r prosody
-useradd -r -M -c "Prosody XMPP (Jabber) Server User" -g prosody prosody -s /sbin/nologin
+useradd -r -M -c "Prosody XMPP (Jabber) Server User" -d $VARLIBDIR/prosody -g prosody prosody -s /sbin/nologin
 }
 
 prosody_configure () {
@@ -12465,6 +12465,7 @@ ssl_cert_key_generate $PROJECT_SYSTEM_CONF_DIR/prosody/certs/JambulaTV.crt $PROJ
 [[ -e $PROJECT_SYSTEM_LOG_DIR/prosody ]] || touch $PROJECT_SYSTEM_LOG_DIR/prosody
 #
 # Give prosody user the ownership to config and data/log directories
+chown -R prosody:prosody $VARLIBDIR/prosody
 chown -R prosody:prosody $PROJECT_SYSTEM_CONF_DIR/prosody
 chown -R prosody:prosody $PROJECT_SYSTEM_LOG_DIR/prosody
 #
