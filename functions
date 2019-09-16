@@ -3669,7 +3669,7 @@ fi
 #
 # Compile all
 cd $INSTALL_SRC_DIR/xf86-video-intel
-./configure --prefix=$PREFIX --libdir=$LIBDIR --with-xorg-module-dir=$LIBDIR/xorg/modules
+./configure --prefix=$PREFIX --libdir=$LIBDIR --with-xorg-module-dir=$LIBDIR/xorg/modules --disable-sna
 make_install_jambulatv
 }
 
