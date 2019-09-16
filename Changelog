@@ -1,0 +1,64 @@
+
+Changes since v6.2
+--------------------
+
+* JambulaTV: Upgrade Kodi to the latest github version of 18.3 plus            Update pvr.hts addons to latest version of 4.4.18-Leia 
+
+* JambulaTV: Upgrade ZoneMinder to the latest github version: 1.33.14 
+
+* JambulaTV: Update the install times for platform software and the            latest Linux kernels 
+
+* JambulaTV: Re-instate sample configuration files for Home Assistant            to project's config directory. These do not contain any            sensitive data like secrets that forced as to remove in            earlier commit: 6e8ec9af96ee821f38145392465c1e3d9f934959 
+
+* JambulaTV: Fix issue where some critical Home-Assistant Python module            dependencies are skipped and not installed during initial            install.  Issue caused by typo i.e. Add missing path of            directory that houses requirements file 
+
+* JambulaTV: Add new helper tool that automates backup of data from a            remote PC to a locally plugged in USB portables disk i.e.            jambulatv-backup-remote-pc-data-2-local-usb-disk 
+
+* JambulaTV: At completion of initial install, copy functions file to            project config directory but only if it does not exist            i.e. Update 'install.sh' file 
+
+* JambulaTV: Switch to new tokens based API v2 when using ZoneMinder            controller tools i.e. jambulatv-zoneminder-controller            and jambulatv-zm-alarm-all-notifications 
+
+* JambulaTV: Remove references to disabled Coova-Chilli code in the            Internet and DNS monitoring tool i.e.           'jambulatv-dns-status-triggers' 
+
+* JambulaTV: Add 'colorlog==4.0.2' to list of required Python module            dependencies for Home-Assistant-CLI i.e. Update file:            'home-assistant-cli-requirements.txt' 
+
+* JambulaTV: Fix issue where DVB-T2 based Live TV is not configured            during initial setup 
+
+* JambulaTV: Copy sound files generally used by Home-Assistant during            configuration i.e. Update homeassistant_configure 
+
+* JambulaTV: Several bug fixes in initial install and main functions 
+
+* JambulaTV: Several VPN tunnel related updates in initial and main            functions 
+
+* JambulaTV: Update and refactor the sshuttle based VPN tunnel tool            i.e. jambulatv-vpn-tunnel-via-sshuttle 
+
+* JambulaTV: Refactor Telegram and WhatsApp messaging tools so that            they use the recently added VPN tunnel enhancements i.e.            Update 'jambulatv-telegram' and 'jambulatv-whatsapp' 
+
+* JambulaTV: Stop any existing VPN tunnel process when the Internet            goes down i.e. Update 'jambulatv-dns-status-triggers'            tool 
+
+* JambulaTV: Upgrade OpenSSL to the latest version of 1.1.1d and add            more configure options which make it play nice with            default installation 
+
+* JambulaTV: Add the following helper functions, to select the latest            OpenSSL version when installing some packages 
+
+* JambulaTV: Fix issue where Yowsup CLI tool (yowsup-cli) fails to run            because the cryptography python 2 module uses the system            default and older OpenSSL library versions i.e. 1.0.1x 
+
+* JambulaTV: Fix bug issue where FlexGet fails to start due to error            in one of the 'ExecStartPre' service options 
+
+* JambulaTV: Fix issue where Prosody XMPP user addition process fails 
+
+* JambulaTV: Add support for audio gain in the Sounds and Text-2-Speech            tools i.e. 'jambulatv-sounds' and 'jambulatv-text2speech' 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Upgrade Linux kernel (4.19 branch) to version 4.19.72 
+
+* JambulaTV: Upgrade TVHeadend github sources to the latest version:            4.3-1804~gebb0968-dirty 
+
+* JambulaTV: Sync ZoneMinder sources with the latest upstream Github            repository commits 
+
+* JambulaTV: Upgrade Kodi to the latest github version of 18.4 
+
+* JambulaTV: Upgrade Intel X11 (Xorg) driver i.e. xf86-video-intel to            the latest upstream git version 
+
+* JambulaTV: Upgrade Linux kernel (4.19 branch) to version 4.19.73 
+

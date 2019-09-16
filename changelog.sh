@@ -30,7 +30,13 @@ exit 1
 fi
 
 # changes since specified-from-tag to current HEAD
-git log --decorate ${SPECIFIED_FROM_TAGGED_VERSION}..HEAD
+cat <<ET
+
+Changes since ${SPECIFIED_FROM_TAGGED_VERSION}
+--------------------
+
+ET
+git log --reverse --abbrev-commit --pretty=tformat:"* %s %n" ${SPECIFIED_FROM_TAGGED_VERSION}..HEAD
 ;;
 
 between-specific-versions)
