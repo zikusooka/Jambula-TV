@@ -22,8 +22,17 @@ SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
 SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep ${SOUND_EFFECTS_WAITING_PATH##*/} | awk {'print $2'}
 )
 SOUND_PLAYER_CMD="/usr/bin/cvlc"
-SOUND_PLAYER_AUDIO_GAIN=2
-SOUND_PLAYER_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --gain $SOUND_PLAYER_AUDIO_GAIN --no-video --no-sout-display-video"
+ALERT_SOUND_AUDIO_GAIN=$(echo $@ | awk -F'=' '/gain/ {print $2}')
+# 
+if [[ "x$ALERT_SOUND_AUDIO_GAIN" = "x" ]];
+then
+# No audio gain
+SOUND_PLAYER_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --no-video --no-sout-display-video"
+
+else
+# With audio gain
+SOUND_PLAYER_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --gain $ALERT_SOUND_AUDIO_GAIN --no-video --no-sout-display-video"
+fi
 
 BEEP_CMD=/usr/bin/beep
 
@@ -223,6 +232,9 @@ then
 ALERT_SOUND_FILE=goodevening.mp3
 fi
 ;;
+22)
+ALERT_SOUND_FILE=chime_big_ben.mp3
+;;
 
 [Aa-Zz]*)
 if [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]];
@@ -238,7 +250,7 @@ fi
 *)
 clear
 cat <<EOT
-Usage: `basename $0` $SOUND_TYPE [number|pattern]
+Usage: `basename $0` $SOUND_TYPE [number|pattern] [audio gain (optional)]
 EOT
 exit 1
 esac
