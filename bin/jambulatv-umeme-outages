@@ -50,12 +50,24 @@ MAXIMUM_AGE_OF_UMEME_OUTAGES_PLANNED_FILE=10800 #3 hours
 UMEME_OUTAGES_ONGOING_FILE=/tmp/UMEME-ongoing-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}-${DATE_DIGIT_TODAY}.json
 MAXIMUM_AGE_OF_UMEME_OUTAGES_ONGOING_FILE=1800 # 30 minutes
 UMEME_SELECTED_AREAS=$(echo ${@:2} | sed 's: ,:,:g' | sed 's:, :,:g' | sed 's: , :,:g')
+SCRIPT_USER=$(whoami)
 
 
 
 ###############
 #  FUNCTIONS  #
 ###############
+
+pre_cleanup () {
+# Give user permissions i.e. write access to existing outage files 
+# Planned
+[[ -e $UMEME_OUTAGES_PLANNED_FILE ]] && \
+	sudo chown $SCRIPT_USER $UMEME_OUTAGES_PLANNED_FILE > /dev/null 2>&1
+# Ongoing
+[[ -e $UMEME_OUTAGES_ONGOING_FILE ]] && \
+	sudo chown $SCRIPT_USER $UMEME_OUTAGES_ONGOING_FILE > /dev/null 2>&1
+}
+
 DaySuffix() {
   case $DATE_DIGIT_OF_SPECIFIED_DAY in
     1|21|31) echo "st";;
@@ -189,19 +201,24 @@ fi
 # Ongoing
 # -------
 ongoing () { 
+# Dates
+DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_TODAY}
+DATE_TODAY="${DATE_DIGIT_TODAY}-$THIS_MONTH_DIGIT-$THIS_YEAR"
+#
+# Fetch ongoing outage list
 get_ongoing_outages
 
 if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
 then
 # Output all areas if none was specified on command line
-cat $UMEME_OUTAGES_ONGOING_FILE | jq -r '.[] |.["AREAS"]'
+cat $UMEME_OUTAGES_ONGOING_FILE | jq -r '.[] | select(.CREATED_DATE | contains("'"$DATE_TODAY"'")) |.["AREAS"]'
 
 else
 # Output only selected areas if specified on the command line
 IFS=","
 for AREA in $UMEME_SELECTED_AREAS
 do
-cat $UMEME_OUTAGES_ONGOING_FILE | jq -r '.[] |.["AREAS"]' | grep -io "$AREA" | sed 's:^ ::g'
+cat $UMEME_OUTAGES_ONGOING_FILE | jq -r '.[] | select(.CREATED_DATE | contains("'"$DATE_TODAY"'")) |.["AREAS"]' | grep -io "$AREA" | sed 's:^ ::g'
 done
 fi
 }
@@ -211,6 +228,8 @@ fi
 #################
 #  MAIN SCRIPT  #
 #################
+
+pre_cleanup
 
 case $1 in
 after_tomorrow)
