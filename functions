@@ -8927,7 +8927,7 @@ pip-python --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r
 # ---
 # Switch OpenSSL libraries and includes to version 1.1.1
 openssl_switch_version_101_to_111
-pip-python --log $BUILD_LOG install --upgrade --no-index --find-links $PROJECT_PIPS_DIR cryptography==2.7
+pip-python --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR cryptography==2.7
 # Switch OpenSSL libraries and includes back to version 1.0.1 
 openssl_switch_version_111_to_101
 #
