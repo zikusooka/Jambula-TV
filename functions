@@ -588,7 +588,7 @@ GRUB2_CMD_OPTIONS="quiet"
 GRUB2_VIDEO_RESOLUTION=${RES1}x${DEPTH1}
 GRUB2_BEEP_SOUND="480 440 1"
 
-PULSE_HOME_DIR=$STATEDIR/run/pulse
+PULSE_HOME_DIR=$STATEDIR/lib/pulse
 PULSE_SYSTEM_CONFIG=$CONFDIR/pulse/system.pa
 PULSE_DEFAULT_CONFIG=$CONFDIR/pulse/default.pa
 PULSE_ROOT_CONFIG_DIR=/root/.config/pulse
@@ -3992,7 +3992,7 @@ default-server = 127.0.0.1" > $PULSE_ROOT_CONFIG_DIR/client.conf
 # Create pulse dir if it does not exist
 [ -d $PULSE_HOME_DIR ] || mkdir -p $PULSE_HOME_DIR
 # Change ownership to pulse user
-chown -R pulse $PULSE_HOME_DIR
+chown -R pulse:pulse $PULSE_HOME_DIR
 # Backup system and default pulse files
 cp -v $PULSE_DEFAULT_CONFIG $PULSE_DEFAULT_CONFIG.orig
 # Add multimedia user to video,audio and pulse groups
