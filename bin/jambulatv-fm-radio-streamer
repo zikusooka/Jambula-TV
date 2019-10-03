@@ -141,6 +141,19 @@ usage_start
 #
 $RTL_FM_CMD -d $RTL_FM_DEV -f ${FMRADIO_STREAMER_STATION}M -M fm -s 170k -A std  -l 0 -E deemp -r 44.1k  | $FFMPEG_CMD -nostats -loglevel fatal -f s16le -ac 1 -i pipe:0 -acodec libmp3lame -ab 128k -f mpegts pipe:1 | $VLC_CMD - --sout '#standard{access=http,mux='asf'{'$FMRADIO_STREAMER_MEDIA_INFO'},dst=:'$FMRADIO_STREAMER_PORT'}' > ${FMRADIO_STREAMER_LOG_FILE} 2>&1 &
 #
+# Quit if rtl_fm process did not start
+ps auxw | grep -Ev grep | grep $RTL_FM_CMD > /dev/null 2>&1
+RTL_FM_EXIT_STATUS=$?
+if [[ "$RTL_FM_EXIT_STATUS" != "0" ]];
+then
+logger -s -t $(basename $0) "Error: The FM radio process failed to start, check that tuner device exists"
+#
+# Kill VLC process
+VLC_PID=$(ps auxw | grep -Ev grep | grep vlc | grep "sout #standard{access=http,mux=" | awk {'print $2'})
+kill $VLC_PID
+exit 1
+fi
+#
 # Pause a bit to allow radio to settle
 sleep 3
 #
