@@ -38,7 +38,7 @@ cat <<EOT
 Usage: ./$(basename $0) [SPEAKER_VOLUME_TYPE] [SPEAKER_VOLUME_LOCATION] [SPEAKER_VOLUME_LEVEL or STATUS]
 
 Example: 
-./$(basename $0) [fmradio|webradio|jtvradio|all] localhost [100%|mute|unmute|status]
+./$(basename $0) [fmradio|webradio|jtvradio|system|all] localhost [100%|mute|unmute|status]
 
 EOT
 exit 1
@@ -222,9 +222,18 @@ $PACTL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e 
 PULSE_SINK_INPUT_STATUS=$?
 if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]] && [[ -e $FMRADIO_STREAMER_PID_FILE ]];
 then
-echo "FM Radio Status:	Active"
+FMRADIO_VOLUME=$($PACTL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay | awk '/Volume/ {print $5}')
+cat <<ET
+Local FM Radio Status	:	Active
+               Volume	:	$FMRADIO_VOLUME
+
+ET
+
 else
-echo "FM Radio Status:	Idle"
+cat <<ET
+Local FM Radio Status	:	Idle
+
+ET
 fi
 ;;
 
@@ -337,9 +346,18 @@ $PACTL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e 
 PULSE_SINK_INPUT_STATUS=$?
 if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]] && [[ -e $WEBRADIO_STREAMER_PID_FILE ]];
 then
-echo "Internet Radio Status:	Active"
+WEBRADIO_VOLUME=$($PACTL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay | awk '/Volume/ {print $5}')
+cat <<ET
+Internet Radio Status	:	Active
+               Volume	:	$WEBRADIO_VOLUME
+
+ET
+
 else
-echo "Internet Radio Status: 	Idle"
+cat <<ET
+Internet Radio Status	:	Idle
+
+ET
 fi
 ;;
 
@@ -449,13 +467,60 @@ $PACTL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e 
 PULSE_SINK_INPUT_STATUS=$?
 if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]];
 then
-echo "JambulaTV Radio Status:	Active"
+JTVRADIO_VOLUME=$($PACTL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay | awk '/Volume/ {print $5}')
+cat <<ET
+JambulaTV Radio Status	:	Active
+                Volume	:	$JTVRADIO_VOLUME
+
+ET
+
 else
-echo "JambulaTV Radio Status:	Idle"
+cat <<ET
+JambulaTV Radio Status	:	Idle
+
+ET
 fi
 ;;
 
 # Status of volume for JambulaTV radio on speakers at remote host
+192.168.x.x)
+:
+;;
+esac
+}
+
+
+# ----------------------------------------
+# System Volume (Speakers used for alerts)
+# ----------------------------------------
+status_volume_system () {
+case $SPEAKER_VOLUME_LOCATION in
+# Status of system volume for speakers at localhost
+localhost)
+$PACTL_CMD list sinks | grep -i Volume > /dev/null 2>&1
+PULSE_SINK_STATUS=$?
+#
+[[ "$PULSE_SINK_STATUS" = "0" ]] && \
+SYSTEM_VOLUME=$($PACTL_CMD list sinks | grep -A8 'Driver: module-alsa-card.c' | awk -F'/ ' '/Volume: front-left: / {print $2}' | awk '{print $1}' | head -1)
+#
+if [[ "$PULSE_SINK_STATUS" = "0" ]];
+then
+SYSTEM_VOLUME_STATE=$($PACTL_CMD list sinks | grep -B6 'Driver: module-alsa-card.c' | awk -F': ' '/State:/ {print $2}' | awk '{print $1}' | head -1)
+cat <<ET
+System Speakers Status	:	$SYSTEM_VOLUME_STATE
+                Volume	:	$SYSTEM_VOLUME
+
+ET
+
+else
+cat <<ET
+System Speakers Status	:	$SYSTEM_VOLUME_STATE
+
+ET
+fi
+;;
+
+# Status of system volume for speakers at remote host
 192.168.x.x)
 :
 ;;
@@ -490,7 +555,7 @@ unmute_volume_fmradio_localhost
 
 elif [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
 then
-# Status of all volumes
+# Status of FM radio volume
 status_volume_fmradio
 
 else
@@ -511,7 +576,7 @@ unmute_volume_webradio_localhost
 
 elif [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
 then
-# Status of all volumes
+# Status of Internet radio volume
 status_volume_webradio
 
 else
@@ -532,11 +597,19 @@ unmute_volume_jtvradio_localhost
 
 elif [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
 then
-# Status of all volumes
+# Status of JambulaTV radio volume
 status_volume_jtvradio
 
 else
 control_volume_jtvradio
+fi
+;;
+
+system)
+if [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
+then
+# Status of system volume
+status_volume_system
 fi
 ;;
 
@@ -561,6 +634,7 @@ then
 status_volume_fmradio
 status_volume_webradio
 status_volume_jtvradio
+status_volume_system
 
 else
 control_volume_fmradio
