@@ -1,4 +1,10 @@
 #!/bin/sh
+# This is the main functions file used by JambulaTV initial install
+# It is also sourced by several utilities and tools during runtime
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+
+# Variables
 PROJECT_NAME=JambulaTV
 PROJECT_URL="http://www.jambulatv.com"
 PROJECT_DOMAINS="jambulatv.com, jambula.net" 
@@ -7747,9 +7753,6 @@ fi
 wireless_interfaces_configure () {
 # Get wireless parameters
 get_wireless_interface_parameters
-
-# Assign static IP to wireless network device
-
 
 # See if WiFi interfaces were previously configured
 if [[ -e $UDEV_RULES_WIFI_NET_DEVICES ]];

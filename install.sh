@@ -1,4 +1,9 @@
 #!/bin/sh
+# This is the initial file used by JambulaTV installation program.
+# It mainly sources routines from the main functions file
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+
 # Variables
 PROJECT_NAME=JambulaTV
 SOURCESDIR=/opt
