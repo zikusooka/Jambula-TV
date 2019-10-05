@@ -1,10 +1,13 @@
 #!/bin/sh
-# This script backs up data of an entire filesystem of any PC client 
+# This script backs up data on an entire filesystem from any PC client 
 # such as a laptop located remotely on to a portable disk plugged in
 # to this server
 #
-# Requires: sudo passwordless access for: ssh, ssh-copy, mount, umount
-# rsync commands
+# Requires: sudo (passwordless) access for: ssh, ssh-copy, mount, 
+# umount, and rsync commands
+#
+# Also, make sure the root user already has an SSH public key i.e.
+# /root/.ssh/id_rsa.pub 
 #
 # Jambula Labs @copyright 2019-2020 All rights reserved
 
@@ -44,14 +47,7 @@ exit 1
 fi
 }
 
-create_ssh_public_key () {
-# Create public key if none exists
-[ -e $HOME/.ssh/id_rsa.pub ] || ssh-keygen -t rsa -f $HOME/.ssh/id_rsa -N ""
-}
-
 check_if_ssh_passwordless_login_works () {
-# Create public key if none exists
-create_ssh_public_key
 # See if setup of passwordless logins worked
 sudo ssh -o BatchMode=yes -o NumberOfPasswordPrompts=1 -p $BACKUP_CLIENT_PORT $BACKUP_CLIENT_USER@$BACKUP_CLIENT "/bin/echo OK" > /dev/null 2>&1
 SSH_EXIT=$?
@@ -70,7 +66,7 @@ ET
 read BACKUP_CLIENT_PASS
 # Setup passwordless access to SSH server i.e. Copy local SSH public key to remote server.
 expect -c "set timeout $EXPECT_TIMEOUT; 
-spawn sudo ssh-copy-id -i $HOME/.ssh/id_rsa.pub -o NumberOfPasswordPrompts=1 -p $BACKUP_CLIENT_PORT $BACKUP_CLIENT_USER@$BACKUP_CLIENT; expect ?;
+spawn sudo ssh-copy-id -i /root/.ssh/id_rsa.pub -o NumberOfPasswordPrompts=1 -p $BACKUP_CLIENT_PORT $BACKUP_CLIENT_USER@$BACKUP_CLIENT; expect ?;
 send yes\n;
 expect assword;
 send $BACKUP_CLIENT_PASS\n;
