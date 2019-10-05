@@ -24,19 +24,39 @@ condition:
 
 action:
 
-  # Text power outage reports
-  # -------------------------
-  
-    # a) WhatsApp
-    - service: script.send_whatsapp
-      data_template:        
-        whatsapp_text: !include ../../templates/power_outages/umeme_ongoing_notification_message.yaml
-        whatsapp_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
-        whatsapp_recipient_phone: ''
+# Alert via house speakers 
+# -------------------------
 
-    # b) Telegram
-    - service: script.send_telegram
-      data_template: 
-        telegram_text: !include ../../templates/power_outages/umeme_ongoing_notification_message.yaml
-        telegram_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
-        telegram_recipient_phone: ''
+  # a) Mute speaker volume if there is already audio playing
+  - service: shell_command.speaker_volume_mute
+  # Pause for a second - Needed - DO NOT REMOVE unless you have a fix!
+  - delay:
+      seconds: 1
+  # b) Chime alert using house speakers
+  - service: shell_command.play_battery_low_sound_effect
+  # c) Use Text2Speech to alert 
+  - service: shell_command.say_custom_text_using_text2speech
+    data_template:
+      tts_text: "Please be advised that an unplanned power outage is likely in your area any minute from now. Please backup your work"
+      tts_engine: ""
+      tts_audio_gain: "0.3"
+  # d) Unmute speaker volume 
+  - service: shell_command.speaker_volume_unmute 
+
+
+# Text power outage reports
+# -------------------------
+
+  # a) WhatsApp
+  - service: script.send_whatsapp
+    data_template:        
+      whatsapp_text: !include ../../templates/power_outages/umeme_ongoing_notification_message.yaml
+      whatsapp_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
+      whatsapp_recipient_phone: ''
+
+  # b) Telegram
+  - service: script.send_telegram
+    data_template: 
+      telegram_text: !include ../../templates/power_outages/umeme_ongoing_notification_message.yaml
+      telegram_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
+      telegram_recipient_phone: ''
