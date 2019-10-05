@@ -1,0 +1,39 @@
+alias: Say time at the top of the hour
+initial_state: True
+
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '59'
+    seconds: '56'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Day of week
+    - condition: time
+      after: '08:00:00'
+      before: '18:00:00'
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+
+
+action:
+
+  # Wait for bell to finish ringing
+  - service_template: >
+        # Internet is On
+        {% if is_state('binary_sensor.internet', 'on') %}
+          script.say_time_internet_on
+
+        # Internet is Off
+        {% else %}
+          script.say_time_internet_off
+        {% endif %}

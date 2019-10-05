@@ -42,4 +42,11 @@ Summary (Later): *{{states('sensor.darksky_summary_0d')}}*
 \r
 \r
 Summary (Current): *{{states('sensor.darksky_summary')}}*
-"
+\r
+\r
+\r
+-------------------------------------------------
+\r
+This message was generated
+\r
+at: *{{states('sensor.time')}}* on *{{states('sensor.date')}}*"

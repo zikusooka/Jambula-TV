@@ -10,4 +10,12 @@ A planned power outage is scheduled for the following area(s) today:
 Power will be gone from 8:00am until 5:00pm.
 \r
 \r
-Please plan your day accordingly"
+Please plan your day accordingly
+\r
+\r
+\r
+-------------------------------------------------
+\r
+This message was generated
+\r
+at: *{{states('sensor.time')}}* on *{{states('sensor.date')}}*"

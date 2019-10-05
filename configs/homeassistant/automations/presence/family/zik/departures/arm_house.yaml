@@ -27,4 +27,4 @@ action:
 
   - service: shell_command.zoneminder_camera_arm
     data_template:
-      camera_id: !secret zoneminder_camera_002
+      camera_id: !secret zoneminder_camera_001

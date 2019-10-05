@@ -10,4 +10,12 @@ Weather forecast services indicate that rainfall is very likely today.
 *{{states('sensor.pws_precip_1d')}}% chance of rainfall* (Wunderground)
 \r 
 \r
-Please remember to carry an umbrella today!"
+Please remember to carry an umbrella today!
+\r
+\r
+\r
+-------------------------------------------------
+\r
+This message was generated
+\r
+at: *{{states('sensor.time')}}* on *{{states('sensor.date')}}*"

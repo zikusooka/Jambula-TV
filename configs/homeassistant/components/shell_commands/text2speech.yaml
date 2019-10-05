@@ -1,0 +1,2 @@
+say_current_time_using_text2speech: /usr/bin/jambulatv-text2speech '{{tts_engine}}' time gain='{{tts_audio_gain}}'
+say_custom_text_using_text2speech: /usr/bin/jambulatv-text2speech '{{tts_engine}}' custom '{{tts_text}}' gain='{{tts_audio_gain}}'

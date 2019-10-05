@@ -4,9 +4,9 @@ initial_state: True
 
 trigger:
 
-  - platform: state
-    entity_id: sensor.vision_security_zp3102_pir_motion_sensor_alarm_level
-    to: '255'
+#  - platform: state
+#    entity_id: sensor.vision_security_zp3102_pir_motion_sensor_alarm_level
+#    to: '255'
 
   - platform: state
     entity_id: sensor.vision_security_zp3102_pir_motion_sensor_burglar
@@ -34,7 +34,7 @@ action:
   # Arm camera alarm
   - service: shell_command.zoneminder_camera_arm
     data_template:
-      camera_id: !secret zoneminder_camera_002
+      camera_id: !secret zoneminder_camera_001
 
   # Task 2 - sound alarm notice using Intercom i.e. paging
   # ------------------------------------------------------
@@ -58,7 +58,7 @@ action:
   # b) Disarm camera alarm
   #- service: shell_command.zoneminder_camera_disarm
    # data_template:
-    #  camera_id: !secret zoneminder_camera_002
+    #  camera_id: !secret zoneminder_camera_001
 
 
   # Other examples
