@@ -101,6 +101,35 @@ get_sink_input_index_mplayer
 [[ "x$SINK_INPUT_INDEX" = "x" ]] || $PACTL_CMD set-sink-input-volume $SINK_INPUT_INDEX $SPEAKER_VOLUME_LEVEL
 }
 
+# System
+# ------
+check_pulse_sinks_status () {
+$PACTL_CMD list sinks | grep 'Driver: module-alsa-card.c' > /dev/null 2>&1
+PULSE_SINK_STATUS=$?
+}
+
+check_pulse_sinks_volume_mute_status () {
+check_pulse_sinks_status
+[[ "$PULSE_SINK_STATUS" = "0" ]] && \
+SYSTEM_VOLUME_MUTED=$($PACTL_CMD list sinks | grep -A8 'Driver: module-alsa-card.c' | awk -F': ' '/Mute/ {print $2}')
+}
+
+get_sink_index_system () {
+check_pulse_sinks_status
+[[ "$PULSE_SINK_STATUS" = "0" ]] && \
+SINK_INDEX=$($PACTL_CMD list sinks | grep -B8 'Driver: module-alsa-card.c' | awk -F'#' '/Sink #/ {print $2}')
+}
+
+set_sink_mute_system_localhost () {
+get_sink_index_system 
+[[ "x$SINK_INDEX" = "x" ]] || $PACTL_CMD set-sink-mute $SINK_INDEX $1
+}
+
+set_sink_volume_system_localhost () {
+get_sink_index_system 
+[[ "x$SINK_INDEX" = "x" ]] || $PACTL_CMD set-sink-volume $SINK_INDEX $SPEAKER_VOLUME_LEVEL
+}
+
 
 # --------------
 # App selection
@@ -184,8 +213,10 @@ FMRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_S
 if [[ "$FMRADIO_VOLUME_MUTED" = "yes" ]];
 then
 unmute_volume_fmradio_localhost
-else
-[[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
+fi
+# If there's a volume level specified, adjust volume accordingly
+if [[ -e $FMRADIO_STREAMER_PID_FILE ]] && [[ "x$SPEAKER_VOLUME_LEVEL" != "x" ]];
+then
 set_sink_input_volume_mplayer_localhost $SPEAKER_VOLUME_LEVEL
 fi
 
@@ -197,7 +228,7 @@ case $SPEAKER_VOLUME_LOCATION in
 # Control volume of fm radio for speakers at localhost
 localhost)
 # If volume level is set at '0' then assume 'mute' has been requested
-if [[ "$SPEAKER_VOLUME_LEVEL" = "0" ]];
+if [[ "$SPEAKER_VOLUME_LEVEL" = "0" || "$SPEAKER_VOLUME_LEVEL" = "0%" ]];
 then
 # Mute volume for fmradio
 mute_volume_fmradio_localhost
@@ -224,14 +255,20 @@ if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]] && [[ -e $FMRADIO_STREAMER_PID_FILE ]]
 then
 FMRADIO_VOLUME=$($PACTL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay | awk '/Volume/ {print $5}')
 cat <<ET
-Local FM Radio Status	:	Active
-               Volume	:	$FMRADIO_VOLUME
+-----------------------------
+FM Radio
+-----------------------------
+Status	:	Active
+Volume	:	$FMRADIO_VOLUME
 
 ET
 
 else
 cat <<ET
-Local FM Radio Status	:	Idle
+-----------------------------
+FM Radio
+-----------------------------
+Status	:	Idle
 
 ET
 fi
@@ -308,8 +345,10 @@ WEBRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO
 if [[ "$WEBRADIO_VOLUME_MUTED" = "yes" ]];
 then
 unmute_volume_webradio_localhost
-else
-[[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
+fi
+# If there's a volume level specified, adjust volume accordingly
+if [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && [[ "x$SPEAKER_VOLUME_LEVEL" != "x" ]];
+then
 set_sink_input_volume_mplayer_localhost $SPEAKER_VOLUME_LEVEL
 fi
 
@@ -321,7 +360,7 @@ case $SPEAKER_VOLUME_LOCATION in
 # Control volume of web radio for speakers at localhost
 localhost)
 # If volume level is set at '0' then assume 'mute' has been requested
-if [[ "$SPEAKER_VOLUME_LEVEL" = "0" ]];
+if [[ "$SPEAKER_VOLUME_LEVEL" = "0" || "$SPEAKER_VOLUME_LEVEL" = "0%" ]];
 then
 # Mute volume for webradio
 mute_volume_webradio_localhost
@@ -348,14 +387,20 @@ if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]] && [[ -e $WEBRADIO_STREAMER_PID_FILE ]
 then
 WEBRADIO_VOLUME=$($PACTL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay | awk '/Volume/ {print $5}')
 cat <<ET
-Internet Radio Status	:	Active
-               Volume	:	$WEBRADIO_VOLUME
+-----------------------------
+Internet Radio
+-----------------------------
+Status	:	Active
+Volume	:	$WEBRADIO_VOLUME
 
 ET
 
 else
 cat <<ET
-Internet Radio Status	:	Idle
+-----------------------------
+Internet Radio
+-----------------------------
+Status	:	Idle
 
 ET
 fi
@@ -430,9 +475,10 @@ JTVRADIO_VOLUME_MUTED=$($PACTL_CMD list sink-inputs | grep -B40 -e 'application.
 if [[ "$JTVRADIO_VOLUME_MUTED" = "yes" ]];
 then
 unmute_volume_jtvradio_localhost
-else
-set_sink_input_volume_mplayer_localhost $SPEAKER_VOLUME_LEVEL
 fi
+# If there's a volume level specified, adjust volume accordingly
+[[ "x$SPEAKER_VOLUME_LEVEL" = "x" ]] || \
+set_sink_input_volume_mplayer_localhost $SPEAKER_VOLUME_LEVEL
 
 fi
 }
@@ -442,7 +488,7 @@ case $SPEAKER_VOLUME_LOCATION in
 # Control volume of JambulaTV radio for speakers at localhost
 localhost)
 # If volume level is set at '0' then assume 'mute' has been requested
-if [[ "$SPEAKER_VOLUME_LEVEL" = "0" ]];
+if [[ "$SPEAKER_VOLUME_LEVEL" = "0" || "$SPEAKER_VOLUME_LEVEL" = "0%" ]];
 then
 # Mute volume for jtvradio
 mute_volume_jtvradio_localhost
@@ -469,14 +515,20 @@ if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]];
 then
 JTVRADIO_VOLUME=$($PACTL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay | awk '/Volume/ {print $5}')
 cat <<ET
-JambulaTV Radio Status	:	Active
-                Volume	:	$JTVRADIO_VOLUME
+-----------------------------
+JambulaTV Radio
+-----------------------------
+Status	:	Active
+Volume	:	$JTVRADIO_VOLUME
 
 ET
 
 else
 cat <<ET
-JambulaTV Radio Status	:	Idle
+-----------------------------
+JambulaTV Radio
+-----------------------------
+Status	:	Idle
 
 ET
 fi
@@ -493,6 +545,51 @@ esac
 # ----------------------------------------
 # System Volume (Speakers used for alerts)
 # ----------------------------------------
+unmute_volume_system_localhost () {
+# toggle/unmute volume using system if it is running 
+set_sink_mute_system_localhost 0
+}
+
+mute_volume_system_localhost () {
+check_pulse_sinks_volume_mute_status
+# If volume for System is not muted, mute it
+[[ "$SYSTEM_VOLUME_MUTED" = "yes" ]] || set_sink_mute_system_localhost 1
+}
+
+adjust_volume_system_localhost () {
+check_pulse_sinks_volume_mute_status
+# If volume for System is muted, unmute it
+if [[ "$SYSTEM_VOLUME_MUTED" = "yes" ]];
+then
+unmute_volume_system_localhost
+fi
+# If there's a volume level specified, adjust volume accordingly
+[[ "x$SPEAKER_VOLUME_LEVEL" = "x" ]] || \
+set_sink_volume_system_localhost $SPEAKER_VOLUME_LEVEL
+}
+
+control_volume_system () {
+case $SPEAKER_VOLUME_LOCATION in
+# Control volume of System for speakers at localhost
+localhost)
+# If volume level is set at '0' then assume 'mute' has been requested
+if [[ "$SPEAKER_VOLUME_LEVEL" = "0" || "$SPEAKER_VOLUME_LEVEL" = "0%" ]];
+then
+# Mute volume for system
+mute_volume_system_localhost
+else
+# Increase/Decrease volume for system
+adjust_volume_system_localhost
+fi
+;;
+
+# Control volume of System for speakers at remote host
+192.168.x.x)
+:
+;;
+esac
+}
+
 status_volume_system () {
 case $SPEAKER_VOLUME_LOCATION in
 # Status of system volume for speakers at localhost
@@ -507,14 +604,20 @@ if [[ "$PULSE_SINK_STATUS" = "0" ]];
 then
 SYSTEM_VOLUME_STATE=$($PACTL_CMD list sinks | grep -B6 'Driver: module-alsa-card.c' | awk -F': ' '/State:/ {print $2}' | awk '{print $1}' | head -1)
 cat <<ET
-System Speakers Status	:	$SYSTEM_VOLUME_STATE
-                Volume	:	$SYSTEM_VOLUME
+-----------------------------
+System Speakers (Pulseaudio)
+-----------------------------
+Status	:	$SYSTEM_VOLUME_STATE
+Volume	:	$SYSTEM_VOLUME
 
 ET
 
 else
 cat <<ET
-System Speakers Status	:	$SYSTEM_VOLUME_STATE
+-----------------------------
+System Speakers (Pulseaudio)
+-----------------------------
+Status	:	DEAD
 
 ET
 fi
@@ -606,24 +709,37 @@ fi
 ;;
 
 system)
-if [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
+if [[ "$SPEAKER_VOLUME_LEVEL" = "mute" ]];
+then
+# Mute System volume
+mute_volume_system_localhost
+
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
+then
+# Unmute System volume
+unmute_volume_system_localhost
+
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
 then
 # Status of system volume
 status_volume_system
+
+else
+control_volume_system
 fi
 ;;
 
 all)
 if [[ "$SPEAKER_VOLUME_LEVEL" = "mute" ]];
 then
-# Mute all volumes
+# Mute all volumes - Except System Speaker
 mute_volume_fmradio_localhost
 mute_volume_webradio_localhost
 mute_volume_jtvradio_localhost
 
 elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
 then
-# Unmute all volumes
+# Unmute all volumes - Except System Speaker
 unmute_volume_fmradio_localhost 
 unmute_volume_webradio_localhost
 unmute_volume_jtvradio_localhost
@@ -640,6 +756,7 @@ else
 control_volume_fmradio
 control_volume_webradio
 control_volume_jtvradio
+control_volume_system
 fi
 ;;
 
