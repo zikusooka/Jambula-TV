@@ -7446,8 +7446,7 @@ jambulatv-ppp-dialer \
 jambulatv-ppp-init \
 jambulatv-ppp-modem-add \
 jambulatv-ppp-modem-remove \
-jambulatv-ppp-signal-strength \
-jambulatv-ussd-query-load-airtime
+jambulatv-ppp-signal-strength
 do
 [ -e $BINARY_PREFIX/$SCRIPT ] || cp -v $PROJECT_BIN_DIR/$SCRIPT $BINARY_PREFIX
 done
