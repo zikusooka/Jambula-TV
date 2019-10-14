@@ -11807,6 +11807,7 @@ EOF
 asterisk_agi_scripts_install () {
 # Copy jambulatv agi sripsts to asterisk agi-bin directory
 for AGI_SCRIPT in \
+jambulatv-gsm-ussd-ug.sh \
 jambulatv-tts.agi \
 jambulatv-recording.sh
 do
