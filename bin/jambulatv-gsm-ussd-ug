@@ -1,0 +1,401 @@
+#!/bin/sh
+#
+# - Query voice airtime, and Internet data (standard & promotional)
+# - Look up the phone number registered to the SIM card installed
+# - Look up the name of the mobile money recipient i.e. Caller ID
+# - Load SMS bundles
+#
+# Mobile networks supported:
+# - Uganda (MTN, Airtel)
+#                 
+# For mobile money transactions:
+# You need a minimum amount in sender's Mobile Money wallet
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+#
+#
+# Variables
+# ---------
+MOBILE_ACTION=$1
+MOBILE_PROVIDER=$2
+MOBILE_EXTRA_ARG=$3
+MODEM_INDICES="$(mmcli -L | grep Modem | cut -d / -f6 | cut -d ' ' -f1)"
+MM_MIN_AMOUNT=500
+
+
+
+# ------------------------
+# Modem Manager functions
+# -----------------------
+#
+get_modem_index () {
+for INDEX in $MODEM_INDICES
+do
+# Enable modem
+mmcli -m $INDEX -e > /dev/null 2>&1
+mmcli -m $INDEX | awk -F': ' '/operator name/ {print $2}' | sed "s:'::g" | grep -i "$MOBILE_PROVIDER" > /dev/null 2>&1
+PROVIDER_FOUND=$?
+# Break off if mobile provider's modem index is found
+if [[ "$PROVIDER_FOUND" = "0" ]];
+then
+MODEM_INDEX=$INDEX
+break
+fi
+done
+}
+
+ussd_initiate_session_command () {
+mmcli -m $MODEM_INDEX --3gpp-ussd-initiate="$@"
+}
+
+ussd_respond_session_command () {
+mmcli -m $MODEM_INDEX --3gpp-ussd-respond="$@"
+}
+
+ussd_cancel_session_command () {
+mmcli -m $MODEM_INDEX --3gpp-ussd-cancel > /dev/null 2>&1
+}
+
+
+# ----
+# MTN
+# ----
+#
+query_voice_balance_mtn_standard () {
+ussd_initiate_session_command '*131#' | awk -F'Airtime;' '/new reply from network/ {print $1}' | awk -F"Y'ello. You have " '{print $2}' | sed 's:/-::g'
+}
+
+query_data_balance_mtn_standard () {
+ussd_initiate_session_command '*131#' | awk -F'Internet;' '/new reply from network/ {print $1}' | awk -F"Airtime;  and " '{print $2}' | sed 's:/-::g'
+}
+
+query_data_balance_mtn_promotion () {
+query_data_balance_mtn_standard
+}
+
+query_phone_number_mtn () {
+ussd_initiate_session_command '*160**7#' > /dev/null 2>&1
+ussd_respond_session_command '1'  | awk -F'Your current number is: ' '/Your current number is/ {print $2}' | cut -d. -f1
+}
+
+query_mobile_money_recipient_name_mtn () {
+MM_RECIPIENT_NUMBER=$MOBILE_EXTRA_ARG
+ussd_initiate_session_command "*185**1**1#" > /dev/null 2>&1
+ussd_respond_session_command "$MM_RECIPIENT_NUMBER" > /dev/null 2>&1
+ussd_respond_session_command "$MM_MIN_AMOUNT" | grep 'insufficient funds' > /dev/null 2>&1
+INSUFFICIENT_FUNDS=$?
+if [[ "$INSUFFICIENT_FUNDS" = "0" ]];
+then
+logger -s -t $(basename $0) "You have insufficient funds in your mobile money wallet. Please make the minimum deposit, and re-run this tool"
+ussd_cancel_session_command
+exit 1
+fi
+ussd_respond_session_command 'Not Applicable' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=$MM_MIN_AMOUNT to ).+(?= on )"
+ussd_cancel_session_command
+}
+
+buy_sms_on_net_mtn () {
+ussd_initiate_session_command '*160*2*4*1#' | sed "s/USSD session initiated; new reply from network: //g" | sed "s:'::g"
+# Ask user to select an option
+cat <<ET
+
+Please enter the SMS bundle you wish to buy [1, 2, 3, 4, ...]
+ET
+read SMS_ON_NET_BUNDLE 
+clear
+# Enter bundle number slected
+ussd_respond_session_command "$SMS_ON_NET_BUNDLE" | sed "s/response successfully sent in USSD session; new reply from network: 'Y'ello. //g" | sed "s/'//g"
+ussd_cancel_session_command
+}
+
+buy_sms_off_net_mtn () {
+# Currently no available.  Use On-Net
+buy_sms_on_net_mtn
+}
+
+
+# -------
+# AIRTEL
+# -------
+#
+query_voice_balance_airtel_standard () {
+ussd_initiate_session_command '*131#' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=Ush).+(?=.)" | awk {'print $1'} | sed "s:\.::g"
+}
+
+query_voice_balance_airtel_promotion () {
+ussd_initiate_session_command '*170#' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=').+(?=')" | sed "s:\.::g"
+}
+
+query_data_balance_airtel_standard () {
+ussd_initiate_session_command '*175*4#' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=').+(?=')"
+}
+
+query_data_balance_airtel_promotion () {
+query_data_balance_airtel_standard
+}
+
+query_phone_number_airtel () {
+ussd_initiate_session_command '*120#' | awk -F';' '/new reply from network/ {print $2}' | cut -d"'" -f2
+#
+# Alternative
+#ussd_initiate_session_command '*100**7#' > /dev/null 2>&1
+#ussd_respond_session_command '2' | awk -F': ' '/new reply from network/ {print $3}' | sed "s:'::g"
+}
+
+query_mobile_money_recipient_name_airtel () {
+MM_RECIPIENT_NUMBER=$MOBILE_EXTRA_ARG
+ussd_initiate_session_command "*185#" | grep -i "SET PIN" > /dev/null 2>&1
+INACTIVE_ACCOUNT=$?
+if [[ "$INACTIVE_ACCOUNT" = "0" ]];
+then
+logger -s -t $(basename $0) "You have activated your mobile money account. Please set the PIN code, and re-run this tool"
+ussd_cancel_session_command
+exit 1
+fi
+
+
+exit
+
+
+ussd_respond_session_command "$MM_RECIPIENT_NUMBER" > /dev/null 2>&1
+ussd_respond_session_command "$MM_MIN_AMOUNT" | grep 'insufficient funds' > /dev/null 2>&1
+INSUFFICIENT_FUNDS=$?
+if [[ "$INSUFFICIENT_FUNDS" = "0" ]];
+then
+logger -s -t $(basename $0) "You have insufficient funds in your mobile money wallet. Please make the minimum deposit, and re-run this tool"
+ussd_cancel_session_command
+exit 1
+fi
+ussd_respond_session_command 'Not Applicable' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=$MM_MIN_AMOUNT to ).+(?= on )"
+ussd_cancel_session_command
+}
+
+buy_sms_on_net_airtel () {
+ussd_initiate_session_command '*180*1#' | sed "s/USSD session initiated; new reply from network: //g" | sed "s:'::g"
+# Ask user to select an option
+cat <<ET
+
+Please enter the SMS bundle you wish to buy [1, 2, 3, 4, ...]
+ET
+read SMS_ON_NET_BUNDLE 
+clear
+# Enter bundle number slected
+ussd_respond_session_command "$SMS_ON_NET_BUNDLE" > /dev/null 2>&1
+# Ontime-only/ confirm
+ussd_respond_session_command '2' | sed "s/response successfully sent in USSD session; new reply from network: //g" | sed "s/'//g"
+ussd_cancel_session_command
+}
+
+buy_sms_off_net_airtel () {
+ussd_initiate_session_command '*180*2#' | sed "s/USSD session initiated; new reply from network: //g" | sed "s:'::g"
+# Ask user to select an option
+cat <<ET
+
+Please enter the SMS bundle you wish to buy [1, 2, 3, 4, ...]
+ET
+read SMS_ON_NET_BUNDLE 
+clear
+# Enter bundle number slected
+ussd_respond_session_command "$SMS_ON_NET_BUNDLE" > /dev/null 2>&1
+# Ontime-only/ confirm
+ussd_respond_session_command '2' | sed "s/response successfully sent in USSD session; new reply from network: //g" | sed "s/'//g"
+ussd_cancel_session_command
+}
+
+
+usage () {
+case $MOBILE_ACTION in
+voice-balance|data-balance)
+if [[ "x$MOBILE_PROVIDER" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $MOBILE_ACTION [MOBILE_PROVIDER] [standard|promotion (optional)]
+ET
+exit 1
+#
+fi
+;;
+
+phone-number|sms-on-net|sms-off-net)
+if [[ "x$MOBILE_PROVIDER" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $MOBILE_ACTION [MOBILE_PROVIDER]
+ET
+exit 1
+fi
+;;
+
+callerid-name)
+if [[ "x$MOBILE_PROVIDER" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $MOBILE_ACTION [MOBILE_PROVIDER] [PHONE NUMBER]
+ET
+exit 1
+#
+elif [[ "x$MOBILE_EXTRA_ARG" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $MOBILE_ACTION $MOBILE_PROVIDER [PHONE NUMBER]
+ET
+exit 1
+#
+fi
+;;
+
+*)
+cat <<ET
+Usage: $(basename $0) [voice-balance|data-balance|phone-number|callerid-name|sms-on-net|sms-off-net]
+ET
+exit 1
+;;
+
+esac
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Usage
+usage
+
+# Find modem Index for requested mobile provider
+get_modem_index
+
+# Cancel any active session
+ussd_cancel_session_command
+
+case $MOBILE_ACTION in
+voice-balance)
+# MTN 
+# ---
+# Voice - standard
+if [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] && "$MOBILE_EXTRA_ARG" = "standard" ]] || [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] && "x$MOBILE_EXTRA_ARG" = "x" ]];
+then
+query_voice_balance_mtn_standard
+
+# Voice - promotion
+elif [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] && "$MOBILE_EXTRA_ARG" = "promotion" ]];
+then
+query_voice_balance_mtn_standard
+
+# Airtel
+# ------
+# Voice - standard
+elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] && "$MOBILE_EXTRA_ARG" = "standard" ]] || [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] && "x$MOBILE_EXTRA_ARG" = "x" ]];
+then
+query_voice_balance_airtel_standard
+
+# Voice - promotion
+elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] && "$MOBILE_EXTRA_ARG" = "promotion" ]];
+then
+query_voice_balance_airtel_promotion
+
+fi
+;;
+
+data-balance)
+# MTN 
+# ---
+# Data - standard
+if [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] && "$MOBILE_EXTRA_ARG" = "standard" ]] || [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] && "x$MOBILE_EXTRA_ARG" = "x" ]];
+then
+query_data_balance_mtn_standard
+
+# Data - promotion
+elif [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] && "$MOBILE_EXTRA_ARG" = "promotion" ]];
+then
+query_data_balance_mtn_promotion
+
+# Airtel
+# ------
+# Data - standard
+elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] && "$MOBILE_EXTRA_ARG" = "standard" ]] || [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] && "x$MOBILE_EXTRA_ARG" = "x" ]];
+then
+query_data_balance_airtel_standard
+
+# Data - promotion
+elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] && "$MOBILE_EXTRA_ARG" = "promotion" ]];
+then
+query_data_balance_airtel_promotion
+
+fi
+;;
+
+phone-number)
+# MTN 
+# ---
+# Phone number
+if [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] ]];
+then
+query_phone_number_mtn
+
+# Airtel
+# ------
+# Phone number 
+elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] ]];
+then
+query_phone_number_airtel
+
+fi
+;;
+
+callerid-name)
+# MTN 
+# ---
+# Mobile Money - recipient's name AKA Caller ID
+if [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] ]];
+then
+query_mobile_money_recipient_name_mtn
+
+# Airtel
+# ------
+# Mobile Money - recipient's name AKA Caller ID
+elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] ]];
+then
+query_mobile_money_recipient_name_airtel
+
+fi
+;;
+
+sms-on-net)
+# MTN 
+# ---
+# SMS (On-Net)
+if [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] ]];
+then
+buy_sms_on_net_mtn
+
+# Airtel
+# ------
+# SMS (On-Net)
+elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] ]];
+then
+buy_sms_on_net_airtel
+
+fi
+;;
+
+sms-off-net)
+# MTN 
+# ---
+# SMS (Off-Net)
+if [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] ]];
+then
+buy_sms_off_net_mtn
+
+# Airtel
+# ------
+# SMS (Off-Net)
+elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] ]];
+then
+buy_sms_off_net_airtel
+
+fi
+;;
+
+esac

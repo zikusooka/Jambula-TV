@@ -1174,7 +1174,6 @@ EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email
 EPG_GENERIC_TVGUIDE_TOOL=$BINARY_PREFIX/jambulatv-tvguide-fta-generic
 FETCH_NEWS_TOOL=$BINARY_PREFIX/jambulatv-fetch-news
 FMRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-fm-radio-streamer
-WEBRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-internet-radio-streamer
 GENERATE_LOCAL_CONF_TOOL=$BINARY_PREFIX/jambulatv-generate-local-conf
 GEOLOCATION_TOOL=$BINARY_PREFIX/jambulatv-whereami
 INITIAL_SETUP_TOOL=$BINARY_PREFIX/jambulatv-initial-setup 
@@ -1205,8 +1204,10 @@ TVHEADEND_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-controller
 TVHEADEND_PROCESSOR_TOOL=$BINARY_PREFIX/jambulatv-tvheadend-processor
 TWITTER_TOOL=$BINARY_PREFIX/jambulatv-twitter
 UMEME_OUTAGES_TOOL=$BINARY_PREFIX/jambulatv-umeme-outages
+USSD_CONTROLLER_TOOL=$BINARY_PREFIX/jambulatv-gsm-ussd-ug
 VLM_VOD_CREATE_TOOL=$BINARY_PREFIX/jambulatv-create-video-on-demand
 VLM_VOD_DELETE_TOOL=$BINARY_PREFIX/jambulatv-delete-video-on-demand
+WEBRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-internet-radio-streamer
 WHATSAPP_TOOL=$BINARY_PREFIX/jambulatv-whatsapp
 XMPP_TOOL=$BINARY_PREFIX/jambulatv-xmpp
 VPN_TUNNEL_SSHUTTLE_TOOL=$BINARY_PREFIX/jambulatv-vpn-tunnel-via-sshuttle
@@ -12250,7 +12251,8 @@ ${PRESENCE_DETECTION_VIA_MIFI_TOOL##*/} \
 ${PRESENCE_DETECTION_VIA_TRACKER_TOOL##*/} \
 ${SPEAKER_VOLUME_TOOL##*/} \
 ${BACKUP_REMOTE_PC_TO_USB_DISK_TOOL##*/} \
-${UMEME_OUTAGES_TOOL##*/}
+${UMEME_OUTAGES_TOOL##*/} \
+${USSD_CONTROLLER_TOOL##*/}
 do
 # Copy script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/$TOOL_NAME ] || cp -v $PROJECT_BIN_DIR/$TOOL_NAME $BINARY_PREFIX/$TOOL_NAME
