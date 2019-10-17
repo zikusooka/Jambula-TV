@@ -1,0 +1,257 @@
+#!/bin/sh
+# The purpose of this tool is to send, list, retrieve, and delete 
+# SMS messages using installed 3/4G GSM Card i.e. It is a wrapper
+# for SMS messaging that uses ModemManager's CLI tool i.e. mmcli
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+#
+# Variables
+# ---------
+SMS_ACTION=$1
+SMS_PROVIDER=$2
+SMS_EXTRA_ARG_1=$3
+SMS_EXTRA_ARG_2=$4
+MODEM_INDICES="$(mmcli -L | grep Modem | cut -d / -f6 | cut -d ' ' -f1)"
+
+
+
+# ------------------------
+# Modem Manager functions
+# -----------------------
+#
+get_modem_index () {
+for INDEX in $MODEM_INDICES
+do
+# Enable modem
+mmcli -m $INDEX -e > /dev/null 2>&1
+mmcli -m $INDEX | awk -F': ' '/operator name/ {print $2}' | sed "s:'::g" | grep -i "$SMS_PROVIDER" > /dev/null 2>&1
+PROVIDER_FOUND=$?
+# Break off if mobile provider's modem index is found
+if [[ "$PROVIDER_FOUND" = "0" ]];
+then
+MODEM_INDEX=$INDEX
+break
+fi
+done
+}
+
+sms_last_created_index () {
+SMS_INDEX_UNKNOWN=$(mmcli -m $MODEM_INDEX --messaging-list-sms | grep -i unknown | tail -1 | cut -d/ -f6 | awk {'print $1'})
+}
+
+sms_last_sent_index () {
+SMS_INDEX_SENT=$(mmcli -m $MODEM_INDEX --messaging-list-sms | grep -i sent | tail -1 | cut -d/ -f6 | awk {'print $1'})
+}
+
+send_sms_new () {
+SMS_RECIPIENT_NUMBER="$SMS_EXTRA_ARG_1"
+SMS_MESSAGE="$SMS_EXTRA_ARG_2"
+#
+# Create SMS message
+# ---
+# SMS centers (Uganda)
+# Waridtel +256700000088
+# Uganda Telecom & TeleChoice +25671000050
+# Zain +25675010004
+# MTN +25677110005 
+#
+mmcli -m $MODEM_INDEX --messaging-create-sms="text='$SMS_MESSAGE',number='$SMS_RECIPIENT_NUMBER'" > /dev/null 2>&1
+# Get index number of SMS message just created
+sms_last_created_index
+# Send SMS message
+mmcli -m $MODEM_INDEX -s $SMS_INDEX_UNKNOWN --send
+}
+
+sms_listing () {
+if [[ "$1" = "all" ]];
+then
+SMS_INDICES=$(mmcli -m $MODEM_INDEX --messaging-list-sms | awk -F'/' '{print $6}' | awk {'print $1'})
+else
+SMS_INDICES=$(mmcli -m $MODEM_INDEX --messaging-list-sms | grep $1 | awk -F'/' '{print $6}' | awk {'print $1'})
+fi
+#
+for SMS_INDEX in $SMS_INDICES
+do
+DATE_EPOCH=$(mmcli -m $MODEM_INDEX -s $SMS_INDEX | awk -F':' '/timestamp/ {print $2}' | sed "s/'//g" | cut -d'+' -f1)
+[[ "x$DATE_EPOCH" = "x" ]] || \
+DATE_HUMAN=$(date --date @"$DATE_EPOCH" '+%d-%b-%T')
+NUMBER=$(mmcli -m $MODEM_INDEX -s $SMS_INDEX | awk -F':' '/number/ {print $2}' | sed "s/'//g")
+MESSAGE=$(mmcli -m $MODEM_INDEX -s $SMS_INDEX | awk -F':' '/text/ {print $2}' | sed "s/'//g" | cut -c1-30)
+#
+if [[ "$1" = "sent" ]];
+then
+cat <<ET
+$SMS_INDEX | $NUMBER | $MESSAGE
+ET
+
+else
+cat <<ET
+$SMS_INDEX | $DATE_HUMAN | $NUMBER | $MESSAGE
+ET
+fi
+done
+}
+
+sms_retrieve () {
+SMS_INDEX_SELECTED=$SMS_EXTRA_ARG_1
+# Retrieve SMS details
+mmcli -m $MODEM_INDEX -s $SMS_INDEX_SELECTED
+}
+
+sms_delete () {
+SMS_PATH_BASE=$(mmcli -m $MODEM_INDEX --messaging-list-sms | awk {'print $1'} | rev | cut -d'/' -f2- | rev | uniq | tail -1)
+#
+if [[ "$SMS_EXTRA_ARG_1" = "last" ]];
+then
+# Get index number of SMS message last sent
+sms_last_sent_index 
+#
+SMS_INDEX_SELECTED=$SMS_INDEX_SENT
+# Delete SMS message last sent
+mmcli -m $MODEM_INDEX --messaging-delete-sms=$SMS_PATH_BASE/$SMS_INDEX_SELECTED 
+
+else
+# Select one or more SMS numbers 
+for SMS_INDEX_SELECTED in $(echo $SMS_EXTRA_ARG_1 | sed "s:,: :g")
+do
+# Delete SMS
+mmcli -m $MODEM_INDEX --messaging-delete-sms=$SMS_PATH_BASE/$SMS_INDEX_SELECTED
+done
+
+fi
+}
+
+usage_main () {
+if [[ "x$SMS_ACTION" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) [send|list|retrieve|delete] [SMS_PROVIDER]
+ET
+exit 1
+
+elif [[ "x$SMS_PROVIDER" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $SMS_ACTION [SMS_PROVIDER]
+ET
+exit 1
+fi
+}
+
+usage_send () {
+if [[ "x$SMS_EXTRA_ARG_1" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $SMS_ACTION $SMS_PROVIDER [SMS RECEIPIENT e.g +256770123456] [SMS MESSAGE] 
+ET
+exit 1
+
+elif [[ "x$SMS_EXTRA_ARG_2" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $SMS_ACTION $SMS_PROVIDER $SMS_EXTRA_ARG_1 [SMS MESSAGE] 
+ET
+exit 1
+fi
+}
+
+usage_listing () {
+cat <<ET
+Usage: $(basename $0) $SMS_ACTION $SMS_PROVIDER [all|received|sent] 
+ET
+exit 1
+}
+
+usage_retrieve () {
+cat << ET
+Usage: $(basename $0) $SMS_ACTION $SMS_PROVIDER [SMS INDEX e.g. 1] 
+ET
+exit 1
+}
+
+usage_delete () {
+cat << ET
+Usage: $(basename $0) $SMS_ACTION $SMS_PROVIDER [SMS INDEX e.g. 1,2,3] 
+ET
+exit 1
+}
+
+usage () {
+usage_main
+
+# Specific case usages
+case $SMS_ACTION in
+send)
+usage_send
+;;
+
+list)
+if [[ "x$SMS_EXTRA_ARG_1" = "x" || "$SMS_EXTRA_ARG_1" = "all" || "$SMS_EXTRA_ARG_1" = "received" || "$SMS_EXTRA_ARG_1" = "sent" ]];
+then
+:
+else
+usage_listing
+fi
+;;
+
+retrieve)
+if [[ "x$SMS_EXTRA_ARG_1" = "x" ]];
+then
+usage_retrieve
+fi
+;;
+
+delete)
+if [[ "x$SMS_EXTRA_ARG_1" = "x" ]];
+then
+usage_delete
+fi
+;;
+
+esac
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Usage
+usage
+
+# Get modem device index
+get_modem_index
+
+case $SMS_ACTION in
+
+send)
+# Send a new SMS message
+send_sms_new
+;;
+
+list)
+# Get listing of SMS messages
+if [[ "$SMS_EXTRA_ARG_1" = "received" ]];
+then
+sms_listing received
+
+elif [[ "$SMS_EXTRA_ARG_1" = "sent" ]];
+then
+sms_listing sent
+
+elif [[ "$SMS_EXTRA_ARG_1" = "all" || "x$SMS_EXTRA_ARG_1" = "x" ]];
+then
+sms_listing all
+fi
+;;
+
+retrieve)
+sms_retrieve
+;;
+
+delete)
+sms_delete
+;;
+
+esac
