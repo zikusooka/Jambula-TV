@@ -1193,7 +1193,8 @@ PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL=$BINARY_PREFIX/jambulatv-presence-detec
 PRESENCE_DETECTION_VIA_TRACKER_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-trackerjacker
 REVERSE_SSH_TOOL=$BINARY_PREFIX/jambulatv-reverse-ssh-tunnel
 SCREEN_DISPLAY_TOOL=$BINARY_PREFIX/jambulatv-display
-SMS_TOOL=$BINARY_PREFIX/jambulatv-sms
+SMS_VIA_MODEMMANAGER_TOOL=$BINARY_PREFIX/jambulatv-sms-via-modemmanager
+SMS_WRAPPER_TOOL=$BINARY_PREFIX/jambulatv-sms-wrapper
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
 SPEAKER_VOLUME_TOOL=$BINARY_PREFIX/jambulatv-speaker-volume
 SPEECH2TEXT_TOOL=$BINARY_PREFIX/jambulatv-speech2text
@@ -1328,7 +1329,6 @@ BANDWIDTH_QUERY_USED_MESSAGE="*[JambulaTV]* The Internet data used $(echo $QUERY
 BANDWIDTH_QUERY_STANDBY_GENERATING_DATA_MESSAGE="Please standby for a minute while I gather your data bandwidth stats ..."
 BANDWIDTH_QUERY_SENDING_WHATSAPP_TELEGRAM_MESSAGE="Sending data bandwidth usage stats to Telegram and WhatsApp, please be patient ..."
 BANDWIDTH_GRAPHS_ATTACHED_MESSAGE="Attached are graphs showing total bandwidth used by your JambulaTV"
-SMS_UNKNOWN_SEND_METHOD_MESSAGE="Error: Could not send SMS message. Do not know which method to use"
 ZONEMINDER_NOTIFICATION_SUBJECT="*[JambulaTV] CCTV Security Alert #$ZM_CAMERA_EVENT_ID: $ZM_EVENT_CAUSE detected on $ZM_CAMERA_NAME camera*"
 ZONEMINDER_NOTIFICATION_MESSAGE="$ZM_EVENT_CAUSE was detected by camera No.$ZM_CAMERA_ID ($ZM_CAMERA_NAME) at $ZM_CAMERA_EVENT_TIME. (No. $ZM_CAMERA_EVENT_ID)"
 SMARTHOME_PRESENCE_IN_MESSAGE="Home"
@@ -13936,12 +13936,34 @@ cp -v $PROJECT_GITHUB_DIR/google-sms/google-sms.py $BINARY_PREFIX/
 chmod 755 $BINARY_PREFIX/google-sms.py
 }
 
-sms_tool_setup () {
-# Add jambulatv-sms tool - Send SMS messages using MiFi router, 3G dongle, etc
-[[ -e $SMS_TOOL ]] || \
-	cp -v $PROJECT_BIN_DIR/jambulatv-sms $BINARY_PREFIX
+sms_tools_setup () {
+# Add the following SMS messaging tools:
+#
+# 1. jambulatv-sms-via-modemmanager - Send SMS messages using 
+#    ModemManager
+# ---
+for TOOL_NAME in \
+${SMS_VIA_MODEMMANAGER_TOOL##*/}
+do
+# Copy tool, if it does not exist in bin directory
+[[ -e $BINARY_PREFIX/$TOOL_NAME ]] || cp -v $PROJECT_BIN_DIR/$TOOL_NAME $BINARY_PREFIX/
 # Make tool executable
-chmod 755 $SMS_TOOL
+chmod 755 $BINARY_PREFIX/$TOOL_NAME
+done
+
+# 2. jambulatv-sms-wrapper - Send SMS messages using various
+#    channels e.g. ModemManager, MiFi router, Asterisk, etc
+# ---
+# Add jambulatv SMS wrapper tool to bin directory if it does not exist
+[[ -e $BINARY_PREFIX/${SMS_WRAPPER_TOOL##*/} ]] || \
+	cat $PROJECT_BIN_DIR/${SMS_WRAPPER_TOOL##*/} | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_USER:$JAMBULATV_SETUP_DB_USER:g" | \
+		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" \
+			> $BINARY_PREFIX/${SMS_WRAPPER_TOOL##*/} 
+# Make script executable
+chmod 755 $BINARY_PREFIX/${SMS_WRAPPER_TOOL##*/}
 }
 
 twitter_client_setup () {

@@ -1,0 +1,128 @@
+#!/usr/local/bin/python3
+#
+# This is a wrapper used in selecting appropriate tool used to
+# send SMS messages
+# 
+# SMS messages can be sent using any of the following methods:
+# 1. ModemManager (3/4G GSM modem)
+# 2. Mifi Router
+# 3. Chan_dongle (3/4G GSM modem)
+
+# Others (Not yet implemented)
+# ------
+# 4. GSM network gateway - WebSMS
+# 5. Chan_mobile
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+
+import sys
+import argparse
+import subprocess
+import mysql.connector 
+import textwrap
+
+# Copyright
+__author__ = 'Joseph Zikusooka'
+__copyright__ = 'Jambula Labs @copyright 2019-2020 All rights reserved'
+__credits__ = ["JambulaTV", "https://www.jambulatv.com"]
+__license__ = "GPL"
+__version__ = "1.0.0"
+__email__ = 'josephzik@gmail.com'
+__status__ = "Production"
+
+# Variables
+# ---
+SMS_VIA_MODEMMANAGER_TOOL = '/usr/bin/jambulatv-sms-via-modemmanager'
+MIFI_QUERY_TOOL = '/usr/bin/jambulatv-mifi-query'
+ASTERISK_CMD = '/usr/sbin/asterisk'
+ASTERISK_DEV = 'dongle0'
+ALL_SMS_CHANNELS = '[modemmanager|mifiapp|asterisk]'
+#
+# MySQL database credentials
+JAMBULATV_SETUP_DB_HOST = 'localhost'
+JAMBULATV_SETUP_DB_USER = 'MY_JAMBULATV_SETUP_DB_USER'
+JAMBULATV_SETUP_DB_PASS = 'MY_JAMBULATV_SETUP_DB_PASS'
+JAMBULATV_SETUP_DB_NAME = 'MY_JAMBULATV_SETUP_DB_NAME'
+JAMBULATV_SETUP_DB_TABLE = 'MY_JAMBULATV_SETUP_DB_TABLE'
+
+
+
+# Parse arguments/ message
+parser = argparse.ArgumentParser(description='JambulaTV: Send SMS messages')
+parser.add_argument('-c','--channel', help='The method used to send the SMS message %s' %ALL_SMS_CHANNELS,type=str,required=True)
+parser.add_argument('-n','--network', help='The SMS network provider [airtel|mtn]',type=str,required=True)
+parser.add_argument('-p','--phone', help='The phone number of the SMS recipient e.g. +256770123123',type=str,required=True)
+parser.add_argument('-m','--message', help='The SMS message',type=str,required=True)
+args = parser.parse_args()
+
+SMS_METHOD = args.channel
+SMS_PHONE_NETWORK = args.network
+SMS_PHONE_NUMBER = args.phone
+SMS_MESSAGE = args.message
+#
+SMS_MESSAGE_TRIMMED = textwrap.shorten(SMS_MESSAGE, width=160, placeholder=' ...')
+
+
+
+class Connect_2_JambulaTV_DB(object):
+    # Connect to JambulaTV MySQL database
+    jtv_db = mysql.connector.connect(
+      host = JAMBULATV_SETUP_DB_HOST,
+      user = JAMBULATV_SETUP_DB_USER,
+      passwd = JAMBULATV_SETUP_DB_PASS,
+      database = JAMBULATV_SETUP_DB_NAME
+    )
+    mifi_ip = jtv_db.cursor()
+    # Query credentials for MiFi router from initial setup table
+    mifi_ip.execute("SELECT mifi_ip_address, mifi_admin_user, mifi_admin_pass FROM setup")
+    # Extract MiFi IP address, Username, Password
+    MIFI_CREDENTIALS = mifi_ip.fetchone()
+
+
+def send_sms_using_modemmanager ():
+  try:
+      print ('Sending SMS messsage using ModemManager ...')
+      subprocess.check_call([SMS_VIA_MODEMMANAGER_TOOL, 'send', SMS_PHONE_NETWORK, SMS_PHONE_NUMBER, SMS_MESSAGE_TRIMMED])
+  except subprocess.CalledProcessError as error:
+      print (error.output)
+
+
+def send_sms_using_mifiapp ():
+  # MiFi access and login credentials
+  MIFI_WIFI_IP_ADDRESS = Connect_2_JambulaTV_DB.MIFI_CREDENTIALS[0]
+  MIFI_WIFI_ADMIN_USER = Connect_2_JambulaTV_DB.MIFI_CREDENTIALS[1]
+  MIFI_WIFI_ADMIN_PASS = Connect_2_JambulaTV_DB.MIFI_CREDENTIALS[2]
+
+  try:
+      print ('Sending SMS messsage using MiFiApp ...')
+      subprocess.check_call([MIFI_QUERY_TOOL, MIFI_WIFI_IP_ADDRESS, MIFI_WIFI_ADMIN_USER, MIFI_WIFI_ADMIN_PASS, 'sms_send', SMS_PHONE_NUMBER, SMS_MESSAGE_TRIMMED])
+  except subprocess.CalledProcessError as error:
+      print (error.output)
+
+
+def send_sms_using_asterisk ():
+  try:
+      print ('Sending SMS messsage using Asterisk ...')
+      subprocess.check_call([ASTERISK_CMD, "-rx", "dongle sms %s %s %s" %(ASTERISK_DEV, SMS_PHONE_NUMBER, SMS_MESSAGE_TRIMMED)])
+  except subprocess.CalledProcessError as error:
+      print (error.output)
+
+
+def unknown_selected_sms_method ():
+  print ('Please select the correct SMS channel/method to use i.e.', ALL_SMS_CHANNELS)
+
+
+
+# Send SMS message using specified channel/method
+# ---
+if SMS_METHOD == 'modemmanager':
+  send_sms_using_modemmanager ()
+
+elif SMS_METHOD == 'mifiapp':
+  send_sms_using_mifiapp ()
+
+elif SMS_METHOD == 'asterisk':
+  send_sms_using_asterisk ()
+
+else:
+  unknown_selected_sms_method ()
