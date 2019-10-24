@@ -12830,11 +12830,10 @@ zoneminder_login_using_api () {
 [[ -e $CURL_COOKIE_JAR_FILE ]] && sudo rm -f $CURL_COOKIE_JAR_FILE
 # Login for ZoneMinder < v1.32.0
 $CURL_CMD $CURL_OPTS -c $CURL_COOKIE_JAR_FILE \
-	-d view=console \
-	-d action=login \
 	-d username=$ZONEMINDER_ADMIN_USER \
 	-d password=$ZONEMINDER_ADMIN_PASS \
-		$ZONEMINDER_WEB_URL/index.php
+	-d stateful=1 \
+		$ZONEMINDER_API_URL/host/login.json
 }
 
 zoneminder_logout_using_api () {
