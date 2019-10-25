@@ -1336,6 +1336,7 @@ BANDWIDTH_QUERY_SENDING_WHATSAPP_TELEGRAM_MESSAGE="Sending data bandwidth usage 
 BANDWIDTH_GRAPHS_ATTACHED_MESSAGE="Attached are graphs showing total bandwidth used by your JambulaTV"
 ZONEMINDER_NOTIFICATION_SUBJECT="*[JambulaTV] CCTV Security Alert #$ZM_CAMERA_EVENT_ID: $ZM_EVENT_CAUSE detected on $ZM_CAMERA_NAME camera*"
 ZONEMINDER_NOTIFICATION_MESSAGE="$ZM_EVENT_CAUSE was detected by camera No.$ZM_CAMERA_ID ($ZM_CAMERA_NAME) at $ZM_CAMERA_EVENT_TIME. (No. $ZM_CAMERA_EVENT_ID)"
+ZONEMINDER_EVENT_RETRIEVAL_FAILED_MESSAGE="Failed to retrieve ZoneMinder details for event"
 SMARTHOME_PRESENCE_IN_MESSAGE="Home"
 SMARTHOME_PRESENCE_OUT_MESSAGE="Away"
 NO_NETWORK_INTERFACE_4_TRACKING_FOUND_NOTIFICATION_MESSAGE="The specified network card was not found"
@@ -12787,9 +12788,9 @@ cat $PROJECT_CONTRIB_DIR/scripts/zoneminder_alarm_daemon.pl | \
 chmod 755 $ZONEMINDER_ALARM_DAEMON
 #
 # Copy ZoneMinder script to send out all types of notifications/alerts upon ZM alarms
-[ -e $ZONEMINDER_ALARM_NOTIFICATIONS_TOOL ] || \
-	cp -v $PROJECT_BIN_DIR/jambulatv-zm-alarm-all-notifications \
-		$ZONEMINDER_ALARM_NOTIFICATIONS_TOOL
+[[ -e $ZONEMINDER_ALARM_NOTIFICATIONS_TOOL ]] || \
+cp -v $PROJECT_BIN_DIR/${ZONEMINDER_ALARM_NOTIFICATIONS_TOOL##*/} \
+	$ZONEMINDER_ALARM_NOTIFICATIONS_TOOL
 # Make script executable
 chmod 755 $ZONEMINDER_ALARM_NOTIFICATIONS_TOOL
 #

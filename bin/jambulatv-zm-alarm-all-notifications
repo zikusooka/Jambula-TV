@@ -2,6 +2,7 @@
 PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
 PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 
 # Source install functions
 . $PROJECT_FUNCTIONS_FILE
@@ -9,11 +10,17 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 # Source CCTV settings
 . $ZONEMINDER_CCTV_SETTINGS_FILE
 
+# Source global settings
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
 # Variables
 ZM_CAMERA_ID=$1
 ZM_CAMERA_NAME="$2"
 ZM_CAMERA_EVENT_ID=$3
 ZM_CAMERA_EVENT_TIME="$4"
+ZM_EXTRA_ARG_1="$5"
+ZM_EXTRA_ARG_2="$6"
+ZM_EXTRA_ARG_3="$7"
 
 
 
@@ -21,7 +28,39 @@ ZM_CAMERA_EVENT_TIME="$4"
 #  FUNCTIONS  #
 ###############
 
+set_sms_variables () {
+# SMS method
+if [[ "x$ZM_EXTRA_ARG_1" != "x" ]];
+then
+SMS_METHOD=$ZM_EXTRA_ARG_1
+else
+SMS_METHOD=$SMS_METHOD
+fi
+
+# SMS phone network
+if [[ "x$ZM_EXTRA_ARG_2" != "x" ]];
+then
+SMS_PHONE_NETWORK=$ZM_EXTRA_ARG_2
+else
+SMS_PHONE_NETWORK=$SMS_PHONE_NETWORK
+fi
+
+# SMS recipient phone number
+if [[ "x$ZM_EXTRA_ARG_3" != "x" ]];
+then
+SMS_PHONE_NUMBER=$ZM_EXTRA_ARG_3
+elif [[ "x$SMS_PHONE_NUMBER" != "x" ]];
+then
+SMS_PHONE_NUMBER=$SMS_PHONE_NUMBER
+else
+SMS_PHONE_NUMBER=$(query_mysql_db contact_phone)
+fi
+}
+
 usage () {
+# Set SMS variables
+set_sms_variables
+
 # Camera ID
 if [ "x$ZM_CAMERA_ID" = "x" ];
 then
@@ -50,6 +89,25 @@ echo "Usage:  ./`basename $0` $ZM_CAMERA_ID $ZM_CAMERA_NAME $ZM_CAMERA_EVENT_ID 
 "
 exit 1
 fi
+# If SMS requested, ask for method, network provider and phone number
+if [[ "$CCTV_SMS" = "1" ]] && [[ "x$SMS_METHOD" = "x" ]];
+then
+echo "Usage:  ./`basename $0` $ZM_CAMERA_ID $ZM_CAMERA_NAME $ZM_CAMERA_EVENT_ID $ZM_CAMERA_EVENT_TIME [SMS_METHOD] [SMS_PHONE_NETWORK] [SMS_PHONE_NUMBER]
+"
+exit 1
+
+elif [[ "$CCTV_SMS" = "1" ]] && [[ "x$SMS_PHONE_NETWORK" = "x" ]];
+then
+echo "Usage:  ./`basename $0` $ZM_CAMERA_ID $ZM_CAMERA_NAME $ZM_CAMERA_EVENT_ID $ZM_CAMERA_EVENT_TIME $SMS_METHOD [SMS_PHONE_NETWORK] [SMS_PHONE_NUMBER]
+"
+exit 1
+
+elif [[ "$CCTV_SMS" = "1" ]] && [[ "x$SMS_PHONE_NUMBER" = "x" ]];
+then
+echo "Usage:  ./`basename $0` $ZM_CAMERA_ID $ZM_CAMERA_NAME $ZM_CAMERA_EVENT_ID $ZM_CAMERA_EVENT_TIME $SMS_METHOD $SMS_PHONE_NETWORK [SMS_PHONE_NUMBER]
+"
+exit 1
+fi
 }
 
 capture_motion_event () {
@@ -60,10 +118,23 @@ zoneminder_get_api_v2_credentials
 [[ -e $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE ]] && sudo rm -f $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE 
 #
 # Query ZM event data using API
-$CURL_CMD $CURL_OPTS -o $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE \
+$CURL_CMD -GET $CURL_OPTS \
+	-o $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE \
 	-d token=$ZONEMINDER_API_ACCESS_TOKEN \
 		$ZONEMINDER_API_URL/events/${ZM_CAMERA_EVENT_ID}.json
-# Set attributes
+# Check if retrieval of data for event succeeded
+grep -i -e "\"message\"\:\"Error\"" -e "\"success\":false" $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE > /dev/null 2>&1
+EVENT_DATA_RETRIEVED=$?
+# Quit if event data retrieval failed
+if [[ "$EVENT_DATA_RETRIEVED" = "0" ]];
+then
+# Source ZM notification messages
+set_notifications
+# Print retrieval failure log
+logger -s -t $(basename $0) "$ZONEMINDER_EVENT_RETRIEVAL_FAILED_MESSAGE $ZM_CAMERA_EVENT_ID"
+exit 1
+fi
+# Set attributes if we have data for events
 ZM_EVENT_CAUSE=$(jq -r '. [].Event.Cause' $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE)
 ZM_EVENT_TIMESTAMP_START=$(jq -r '. [].Event.StartTime' $ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE)
 ZM_EVENT_DATE=$(echo $ZM_EVENT_TIMESTAMP_START | awk {'print $1'})
@@ -131,9 +202,8 @@ sudo $WHATSAPP_TOOL sendvideo $ZM_EVENT_VIDEO_FILE $WHATSAPP_PHONE_NUMBER_RECIPI
 }
 
 cctv_alarm_send_sms () {
-SMS_PHONE_NUMBER=$(query_mysql_db contact_phone)
-# SendMesage
-$SMS_TOOL "Subject: $ZONEMINDER_NOTIFICATION_SUBJECT Details: $ZONEMINDER_NOTIFICATION_MESSAGE" $SMS_PHONE_NUMBER > /dev/null 2>&1
+# Send mesage using SMS wrapper tool
+$SMS_WRAPPER_TOOL -c $SMS_METHOD -n $SMS_PHONE_NETWORK -p $SMS_PHONE_NUMBER -m "${ZONEMINDER_NOTIFICATION_SUBJECT}. ${ZONEMINDER_NOTIFICATION_MESSAGE}"
 }
 
 kodi_screensaver_status () {
