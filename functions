@@ -11411,6 +11411,8 @@ chmod -R 754 $ASTERISK_CONF_DIR
 chan_dongle_install () {
 # Unpack
 unzip -d $INSTALL_SRC_DIR $PROJECT_ZIPS_DIR/asterisk-chan-dongle*.zip
+# Add 7-bit modems like E303C to AT response
+patch -p1 $INSTALL_SRC_DIR/asterisk-chan-dongle-asterisk11/at_response.c < $PROJECT_PATCHES_DIR/chan_dongle_7bit_at_response.patch
 cd $INSTALL_SRC_DIR/asterisk-chan-dongle-asterisk11
 # Compile
 aclocal && autoconf && automake -a
