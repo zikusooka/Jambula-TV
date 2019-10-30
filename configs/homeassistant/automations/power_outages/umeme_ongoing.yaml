@@ -39,7 +39,7 @@ action:
     data_template:
       tts_text: "Please be advised that an unplanned power outage is likely in your area any minute from now. Please backup your work"
       tts_engine: ""
-      tts_audio_gain: "0.3"
+      tts_audio_gain: "0.5"
   # d) Unmute speaker volume 
   - service: shell_command.speaker_volume_unmute 
 

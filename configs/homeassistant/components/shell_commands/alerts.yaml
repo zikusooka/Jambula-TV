@@ -7,9 +7,9 @@ speaker_volume_mute: /usr/bin/jambulatv-speaker-volume all localhost mute
 speaker_volume_unmute: /usr/bin/jambulatv-speaker-volume all localhost unmute
 
 # Sound alerts
-play_chime_alert: /usr/bin/jambulatv-sounds alert 1
-play_chime_big_ben_alert: /usr/bin/jambulatv-sounds alert 22 'gain=0.2'
-play_voice_alert: /usr/bin/jambulatv-sounds alert 3 'gain=0.3'
+play_chime_alert: /usr/bin/jambulatv-sounds alert 1 'gain=0.5'
+play_chime_big_ben_alert: /usr/bin/jambulatv-sounds alert 22 'gain=0.5'
+play_voice_alert: /usr/bin/jambulatv-sounds alert 3 'gain=0.5'
 bedtime_greeting: /usr/bin/jambulatv-sounds alert goodnight {{person}}
 wakeup_greeting: /usr/bin/jambulatv-sounds alert goodmorning {{person}}
 

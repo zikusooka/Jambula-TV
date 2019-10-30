@@ -29,11 +29,9 @@ action:
 
   # Wait for bell to finish ringing
   - service_template: >
-        # Internet is On
         {% if is_state('binary_sensor.internet', 'on') %}
           script.say_time_internet_on
 
-        # Internet is Off
         {% else %}
           script.say_time_internet_off
         {% endif %}
