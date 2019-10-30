@@ -32,6 +32,9 @@ CRITICAL_JOBS_SPOOL_COMMAND="$WHATSAPP_TOOL $WHATSAPP_METHOD_NAME \"$WHATSAPP_TE
 PING_TIMEOUT=3 #9
 PING_IP_ADDRESS=$DNS_SERVER_IP_ADDRESS_DEFAULT
 
+TIMEOUT_CMD="/usr/bin/timeout"
+TIMEOUT_DURATION_SEND_MESSAGE="15s"
+
 
 
 ###############
@@ -52,7 +55,7 @@ exec 2>> $WHATSAPP_LOG_FILE
 }
 
 check_if_root () {
-if [ "`whoami`" != "root" ];
+if [[ "`whoami`" != "root" ]];
 then
 clear
 logger -s -t $(basename $0) "Incorrect user! You need to run this tool as root. Try again using sudo" 
@@ -67,7 +70,7 @@ check_if_root
 
 # CLI arguments
 clear
-if [ "x$WHATSAPP_METHOD_NAME" = "x" ];
+if [[ "x$WHATSAPP_METHOD_NAME" = "x" ]];
 then
 echo "Usage:  ./`basename $0` [register]|[sendMessage]|[sendFileContent]|[sendImage][sendVideo]
 "
@@ -77,9 +80,9 @@ fi
 case $WHATSAPP_METHOD_NAME in
 [Ss][Ee][Nn][Dd][Mm][Ee][Ss][Ss][Aa][Gg][Ee])
 # Source settings file
-[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+[[ -e $WHATSAPP_CREDENTIALS_CONFIG ]] && . $WHATSAPP_CREDENTIALS_CONFIG
 # Test for blank message or recipient phone number
-if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_TEXT_MESSAGE" = "x" ];
+if [[ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" || "x$WHATSAPP_TEXT_MESSAGE" = "x" ]];
 then
 echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_TEXT_MESSAGE] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
 "
@@ -89,9 +92,9 @@ fi
 
 [Ss][Ee][Nn][Dd][Ff][Ii][Ll][Ee][Cc][Oo][Nn][Tt][Ee][Nn][Tt])
 # Source settings file
-[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+[[ -e $WHATSAPP_CREDENTIALS_CONFIG ]] && . $WHATSAPP_CREDENTIALS_CONFIG
 # Test for blank message or recipient phone number
-if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_TEXT_MESSAGE" = "x" ];
+if [[ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" || "x$WHATSAPP_TEXT_MESSAGE" = "x" ]];
 then
 echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [MESSAGE_FILE_PATH] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
 "
@@ -101,9 +104,9 @@ fi
 
 [Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee])
 # Source settings file
-[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+[[ -e $WHATSAPP_CREDENTIALS_CONFIG ]] && . $WHATSAPP_CREDENTIALS_CONFIG
 # Test for blank message or recipient phone number
-if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_ATTACHMENT_FILE_PATH" = "x" ];
+if [[ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" || "x$WHATSAPP_ATTACHMENT_FILE_PATH" = "x" ]];
 then
 echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_IMAGE_FILE_PATH] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
 "
@@ -113,9 +116,9 @@ fi
 
 [Ss][Ee][Nn][Dd][Vv][Ii][Dd][Ee][Oo])
 # Source settings file
-[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+[[ -e $WHATSAPP_CREDENTIALS_CONFIG ]] && . $WHATSAPP_CREDENTIALS_CONFIG
 # Test for blank message or recipient phone number
-if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ] || [ "x$WHATSAPP_ATTACHMENT_FILE_PATH" = "x" ];
+if [[ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" || "x$WHATSAPP_ATTACHMENT_FILE_PATH" = "x" ]];
 then
 echo "Usage:  ./`basename $0` $WHATSAPP_METHOD_NAME [WHATSAPP_VIDEO_FILE_PATH] [WHATSAPP_PHONE_NUMBER_RECIPIENT]
 "
@@ -144,7 +147,7 @@ stop_sshuttle_vpn_tunnel
 
 registration_status () {
 # Source settings file
-[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+[[ -e $WHATSAPP_CREDENTIALS_CONFIG ]] && . $WHATSAPP_CREDENTIALS_CONFIG
 # Check if already registered
 if [[ -s $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json ]];
 then
@@ -164,7 +167,7 @@ download_mcc_mnc_file () {
 ping -c 1 $PING_IP_ADDRESS > /dev/null 2>&1
 INTERNET_ALIVE=$?
 # Download MCC-MNC table file if not present and Internet is up
-if [ ! -s $MCC_MNC_TABLE_FILE ] && [ "$INTERNET_ALIVE" = "0" ];
+if [[ ! -s $MCC_MNC_TABLE_FILE && "$INTERNET_ALIVE" = "0" ]];
 then
 wget -c -O $MCC_MNC_TABLE_FILE $MCC_MNC_TABLE_FILE_URL 
 fi
@@ -174,10 +177,13 @@ extract_country_info () {
 # Country
 clear
 DEFAULT_COUNTRY=Uganda
-read -p "Please enter the name of your country [$DEFAULT_COUNTRY]
-" COUNTRY
+cat <<ET
+Please enter the name of your country [$DEFAULT_COUNTRY]
+
+ET
+read COUNTRY
 # If empty set to default
-if [ "x$COUNTRY" = "x" ];
+if [[ "x$COUNTRY" = "x" ]];
 then
 COUNTRY=$DEFAULT_COUNTRY
 fi
@@ -190,13 +196,15 @@ extract_network_info () {
 # Network
 clear
 DEFAULT_NETWORK_NUMBER=4
-read -p "Please select the mobile network in $COUNTRY that you will use for WhatsApp [$DEFAULT_NETWORK_NUMBER]
+cat <<ET
+Please select the mobile network in $COUNTRY that you will use for WhatsApp [$DEFAULT_NETWORK_NUMBER]
 
 $(cut -d , -f8 $COUNTRY_MCC_MNC_RAW_FILE | cat -n )
 
-" NETWORK_NUMBER
+ET
+read NETWORK_NUMBER
 # If empty set to default
-if [ "x$NETWORK_NUMBER" = "x" ];
+if [[ "x$NETWORK_NUMBER" = "x" ]];
 then
 NETWORK_NUMBER=$DEFAULT_NETWORK_NUMBER
 fi
@@ -214,7 +222,7 @@ MOBILE_NETWORK_CODE=$(awk "NR==$NETWORK_NUMBER" $COUNTRY_MCC_MNC_RAW_FILE | cut 
 
 registration_request_code () {
 # Check if registered before
-registration_status 
+registration_status
 
 # Download mcc_mnc file
 download_mcc_mnc_file
@@ -226,16 +234,19 @@ extract_country_info
 extract_network_info
 
 # Source settings file
-[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+[[ -e $WHATSAPP_CREDENTIALS_CONFIG ]] && . $WHATSAPP_CREDENTIALS_CONFIG
 #
 # Ask for receiving phone number
 clear
 DEFAULT_WHATSAPP_PHONE_NUMBER_RECIPIENT=$WHATSAPP_PHONE_NUMBER_RECIPIENT
-read -p "Please enter the phone number you will use to receive WhatsApp messages (Include country code [$DEFAULT_WHATSAPP_PHONE_NUMBER_RECIPIENT])
-" WHATSAPP_PHONE_NUMBER_RECIPIENT
+cat <<ET
+Please enter the phone number you will use to receive WhatsApp messages (Include country code [$DEFAULT_WHATSAPP_PHONE_NUMBER_RECIPIENT])
+
+ET
+read WHATSAPP_PHONE_NUMBER_RECIPIENT
 
 # If empty set to default
-if [ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ];
+if [[ "x$WHATSAPP_PHONE_NUMBER_RECIPIENT" = "x" ]];
 then
 WHATSAPP_PHONE_NUMBER_RECIPIENT=$DEFAULT_WHATSAPP_PHONE_NUMBER_RECIPIENT
 fi
@@ -243,10 +254,13 @@ fi
 # Ask for sending phone number
 clear
 DEFAULT_WHATSAPP_PHONE_NUMBER_SENDER=$WHATSAPP_PHONE_NUMBER_SENDER
-read -p "Please enter the phone number you will use to send WhatsApp messages (Include country code [$DEFAULT_WHATSAPP_PHONE_NUMBER_SENDER])
-" WHATSAPP_PHONE_NUMBER_SENDER
+cat <<ET
+Please enter the phone number you will use to send WhatsApp messages (Include country code [$DEFAULT_WHATSAPP_PHONE_NUMBER_SENDER])
+
+ET
+read WHATSAPP_PHONE_NUMBER_SENDER
 # If empty set to default
-if [ "x$WHATSAPP_PHONE_NUMBER_SENDER" = "x" ];
+if [[ "x$WHATSAPP_PHONE_NUMBER_SENDER" = "x" ]];
 then
 WHATSAPP_PHONE_NUMBER_SENDER=$DEFAULT_WHATSAPP_PHONE_NUMBER_SENDER
 fi
@@ -289,19 +303,17 @@ REQUEST_CODE_STATUS=$?
 if [[ "$REQUEST_CODE_STATUS" = "0" ]];
 then
 # Notify of failure and quit
-cat <<EOF
 logger -s -t $(basename $0) "Failed to get registration code.  Please check for actual Yowsup error message"
-EOF
 exit 1
 fi
 }
 
 registration_confirm () {
 # Source settings file
-[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+[[ -e $WHATSAPP_CREDENTIALS_CONFIG ]] && . $WHATSAPP_CREDENTIALS_CONFIG
 #
 # Check if request for PIN Code was made
-if [ "x$WHATSAPP_REGISTRATION_CODE" = "x" ];
+if [[ "x$WHATSAPP_REGISTRATION_CODE" = "x" ]];
 then
 clear;
 cat <<ET
@@ -317,7 +329,7 @@ $WHATSAPP_CMD registration --debug --register $WHATSAPP_REGISTRATION_CODE --conf
 
 send_pre_check () {
 # Source settings file
-[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && . $WHATSAPP_CREDENTIALS_CONFIG
+[[ -e $WHATSAPP_CREDENTIALS_CONFIG ]] && . $WHATSAPP_CREDENTIALS_CONFIG
 #
 # Get whatsapp registered ID if available
 WHATSAPP_REGISTERED_ID=$([[ $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json ]] && jq -r .id $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json)
@@ -338,20 +350,24 @@ send_message () {
 # Pre-checks before sending
 send_pre_check
 
-# Where applicable, use recipient phone number specified on command line
+# If applicable, use recipient phone number specified on command line
 [[ "x$2" = "x" ]] || WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
-
-# Send message to Whatsapp recipient
-$WHATSAPP_CMD demos --debug --config $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json --send $WHATSAPP_PHONE_NUMBER_RECIPIENT "$WHATSAPP_TEXT_MESSAGE"
+# Send message to Whatsapp recipient - Timeout after specified period
+$TIMEOUT_CMD $TIMEOUT_DURATION_SEND_MESSAGE $WHATSAPP_CMD demos --debug --config $WHATSAPP_CONFIG_DIR/$WHATSAPP_PHONE_NUMBER_SENDER/config.json --send $WHATSAPP_PHONE_NUMBER_RECIPIENT "$WHATSAPP_TEXT_MESSAGE" 2>&1 >> $WHATSAPP_LOG_FILE | grep -i -e 'failure reason'
+SEND_MESSAGE_STATUS=$?
+# Notify if a failure to send error message was returned
+if [[ "$SEND_MESSAGE_STATUS" = "0" ]];
+then
+logger -s -t $(basename $0) "Failed to send your message to $WHATSAPP_PHONE_NUMBER_RECIPIENT. Please check for actual Yowsup error message"
+fi
 }
 
 send_file_content () {
 # Pre-checks before sending
 send_pre_check
 
-# Where applicable, use recipient phone number specified on command line
+# If applicable, use recipient phone number specified on command line
 [[ "x$2" = "x" ]] || WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
-
 # Extract contents from file
 MESSAGE_FILE_PATH=$WHATSAPP_TEXT_MESSAGE
 FILE_CONTENTS=$(cat $MESSAGE_FILE_PATH)
@@ -363,9 +379,8 @@ send_attachment () {
 # Pre-checks before sending
 send_pre_check
 
-# Where applicable, use recipient phone number specified on command line
+# If applicable, use recipient phone number specified on command line
 [[ "x$2" = "x" ]] || WHATSAPP_PHONE_NUMBER_RECIPIENT=$2
-
 # Determine file format from path name - May be use the 'file' command
 WHATSAPP_ATTACHMENT_FILE_EXT="${WHATSAPP_ATTACHMENT_FILE_PATH##*.}"
 case $WHATSAPP_ATTACHMENT_FILE_EXT in
@@ -426,8 +441,11 @@ registration_request_code
 #
 # Ask for PIN Code
 clear
-read -p "An SMS message with a PIN Code has been sent to your phone number $WHATSAPP_PHONE_NUMBER_SENDER.  Please Enter it here now:
-" PIN_CODE
+cat <<ET
+An SMS message with a PIN Code has been sent to your phone number $WHATSAPP_PHONE_NUMBER_SENDER.  Please Enter it here now:
+
+ET
+read PIN_CODE
 # Copy PIN code to settings file
 cat >> $WHATSAPP_CREDENTIALS_CONFIG << EOF
 WHATSAPP_REGISTRATION_CODE=$PIN_CODE
