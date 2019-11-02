@@ -3528,6 +3528,7 @@ $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 python_consonance_install () {
+PYTHON_VERSION_USED=2 && set_python_version
 # Set version
 PYTHON_CONSONANCE_VERSION=$1
 #
