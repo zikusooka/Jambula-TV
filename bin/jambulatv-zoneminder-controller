@@ -46,9 +46,7 @@ zm_alarm_arm () {
 zm_camera_function Modect
 #
 # Arm the specified camera
-$CURL_CMD $CURL_OPTS \
-	-d token=$ZONEMINDER_API_ACCESS_TOKEN \
-	$ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:on.json
+$CURL_CMD $CURL_OPTS $ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:on.json?token=$ZONEMINDER_API_ACCESS_TOKEN
 }
 
 zm_alarm_disarm () {
@@ -56,15 +54,11 @@ zm_alarm_disarm () {
 zm_camera_function Monitor
 #
 # Disarm the specified camera
-$CURL_CMD $CURL_OPTS \
-	-d token=$ZONEMINDER_API_ACCESS_TOKEN \
-	$ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:off.json
+$CURL_CMD $CURL_OPTS $ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:off.json?token=$ZONEMINDER_API_ACCESS_TOKEN
 }
 
 zm_alarm_status () {
-$CURL_CMD $CURL_OPTS \
-	-d token=$ZONEMINDER_API_ACCESS_TOKEN \
-	$ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:status.json
+$CURL_CMD $CURL_OPTS $ZONEMINDER_API_URL/monitors/alarm/id:$ZM_CAMERA_ID/command:status.json?token=$ZONEMINDER_API_ACCESS_TOKEN
 }
 
 
