@@ -93,6 +93,12 @@ check_if_setup_completed () {
 [[ -e $SETUP_COMPLETED_FILE ]] && exit 0
 }
 
+lock_process_exclusively () {
+# Grab an exclusive non-blocking lock (using the script itself as
+# the lock file) 
+[[  "${FLOCKER}"  !=  "$0" ]] && exec env FLOCKER="$0" flock -en "$0" "$0" "$@" || :
+}
+
 jambula_addons_enable () {
 # Enable our custom addons
 if [[ ! -e $KODI_USER_DATA/Database/.jambula_addons_enabled && \
@@ -674,6 +680,8 @@ sudo $KODI_LIBRARY_TOOL scan
 #################
 
 check_if_setup_completed
+
+lock_process_exclusively
 
 # Start logging to file
 exec 2>> $INITIAL_SETUP_LOG
