@@ -12250,8 +12250,8 @@ cat setup.py.orig | \
 	sed -e "s:dateparser==:dateparser>=:g" | \
 	sed -e "s:jsonpath-rw==:jsonpath-rw>=:g" | \
 	sed -e "s:netdisco==2.6.0:netdisco:g" | \
-	sed -e "s:regex==2019.04.14:regex:g" | \
-	sed -e "s:ruamel.yaml==:ruamel.yaml>=:g" | \
+	sed -e "s:regex>=2019.08.19:regex:g" | \
+	sed -e "s:ruamel.yaml>=0.16.5,<0.17:ruamel.yaml:g" | \
 	sed -e "s:requests==:requests>=:g" | \
 	sed -e "s:tabulate==:tabulate>=:g" \
 		> setup.py
