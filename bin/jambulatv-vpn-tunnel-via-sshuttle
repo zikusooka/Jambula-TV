@@ -57,6 +57,9 @@ fi
 }
 
 open_sshuttle_vpn_tunnel () {
+# Source notification strings
+set_notifications
+
 # If there's NOT an already existing sshuttle process
 if [[ ! -s $SSHUTTLE_PID_FILE ]];
 then
@@ -65,7 +68,10 @@ check_if_ssh_passwordless_login_works $SSHUTTLE_REMOTE_PORT $SSHUTTLE_REMOTE_USE
 #
 if [[ "$SSH_EXIT" != "0" ]];
 then
-logger -s -t $(basename $0) "Failed: Please first setup SSH passwordless login for $SSHUTTLE_REMOTE_USER at $SSHUTTLE_REMOTE_SERVER"
+# Print notifciation to stdout and systemd journal 
+print_notification "$SSH_SERVER_CONNECTION_FAILED_NOTIFICATION_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$SSH_SERVER_CONNECTION_FAILED_NOTIFICATION_MESSAGE" osd &
 exit 1
 fi
 #
@@ -78,8 +84,6 @@ sleep 3
 # ---
 # Get name of VPN provider
 VPN_ISP=$($CURL_CMD $CURL_OPTS ipinfo.io/org | awk '{$1=""; print $0}' | sed 's/^ //')
-# Source notification strings
-set_notifications
 # Print notifciation to stdout and systemd journal 
 print_notification "$VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE" text
 # Print notification using OSD tool
