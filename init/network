@@ -66,8 +66,36 @@ case "$1" in
 	# bring up loopback interface
 	action $"Bringing up loopback interface: " ./ifup ifcfg-lo
 
+	# Wait for wireless hotspot interface device to be initialized
+	NETWORK_WIRELESS_HOTSPOT_IP=MY_NETWORK_WIRELESS_HOTSPOT_IP
+	NETWORK_WIRELESS_HOTSPOT_PREFIX=MY_NETWORK_WIRELESS_HOTSPOT_PREFIX
+	WIFI_AP_IP_MASK=$NETWORK_WIRELESS_HOTSPOT_IP/$NETWORK_WIRELESS_HOTSPOT_PREFIX
+	WIFI_AP_INTERFACE=MY_WIFI_AP_INTERFACE
+	NUMBER_OF_TIMES_TRIED=0
+	NUMBER_OF_TIMES_LIMIT=5
+	#
+	# Check current status of wireless hotspot interface
+	/usr/sbin/ip link show dev $WIFI_AP_INTERFACE > /dev/null 2>&1
+	WIFI_DEV_STATE=$?
+	while [[ "$WIFI_DEV_STATE" != "0" && "$NUMBER_OF_TIMES_TRIED" -le "$NUMBER_OF_TIMES_LIMIT" ]];
+	do
+	sleep 1
+	(( NUMBER_OF_TIMES_TRIED++ ))
+	done
+	#
+	# Check current status of wireless hotspot interface
+	/usr/sbin/ip link show dev $WIFI_AP_INTERFACE > /dev/null 2>&1
+	WIFI_DEV_STATE=$?
+	if [[ "$WIFI_DEV_STATE" != "0" ]];
+	then
+	# Notify about failure to initialize wireless hotspot interface
+	MY_SOUNDS_TOOL beep offline
+	/usr/bin/logger "Error: Failed to initialize the hotspot wireless interface $WIFI_AP_INTERFACE"
+	else
 	# Assign IP address to wireless hotspot interface
-	action $"Bringing up wireless hostspot interface: " /usr/sbin/ip -4 addr add MY_NETWORK_WIRELESS_HOTSPOT_IP/MY_NETWORK_WIRELESS_HOTSPOT_PREFIX dev MY_WIFI_AP_INTERFACE
+	action $"Bringing up wireless hostspot interface: " /usr/sbin/ip -4 addr add $WIFI_AP_IP_MASK dev $WIFI_AP_INTERFACE
+	fi
+
 
 	case "$IPX" in
 	  yes|true)
