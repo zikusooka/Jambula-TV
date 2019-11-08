@@ -9663,11 +9663,6 @@ chmod 755 $COOVA_CONFIG_DIR/ipup.sh
 
 # Create Chilli User in radius MySql database
 echo "INSERT INTO radcheck (UserName, Attribute, Value, Op) VALUES ('$COOVA_NORMAL_USER_LOGIN', 'Cleartext-Password', '$COOVA_NORMAL_USER_PASSWORD', ':=');" | mysql -u $FREERADIUS_DB_USER -p$FREERADIUS_DB_PASS $FREERADIUS_DB_NAME
-# Add Our Wifi devices config file
-cat > $OUR_WIFI_DEVICES_FILE << EOF
-#   MAC address   | User  | Monitor 
-00-00-00-00-00-00 | Sarah | yes
-EOF
 }
 
 coova_chilli_customization () {
@@ -9917,6 +9912,12 @@ chmod 755 $AUTO_WIFI_PROVISION_TOOL
 	cp -v $PROJECT_BIN_DIR/jambulatv-hotspot-query $BINARY_PREFIX
 # Make tool executable
 chmod 755 $MIFI_HOTSPOT_TOOL
+#
+# Add Our Wifi devices config file
+cat > $OUR_WIFI_DEVICES_FILE << EOF
+#   MAC address   | User  | Monitor 
+00-00-00-00-00-00 | Sarah | yes
+EOF
 #
 # Display WiFi SSID and Passphrase post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
