@@ -45,6 +45,17 @@ SPEAKER_VOLUME_TOOL=/usr/bin/jambulatv-speaker-volume
 ###############
 #  FUNCTIONS  #
 ###############
+
+check_pulseaudio () {
+pactl list sinks short > /dev/null 2>&1
+PACTL_STATUS=$?
+# Stop and restart pulseaudio if existing process is broken
+if [[ "$PACTL_STATUS" != "0" ]];
+then
+sudo killall pulseaudio && /usr/bin/pulseaudio -D
+fi
+}
+
 waiting_4_online_response () {
 if [ "x$1" = "x" ];
 then
@@ -273,6 +284,10 @@ fi
 #################
 #  MAIN SCRIPT  #
 #################
+
+# Check pulseaudio if playing non-beep sounds
+[[ "$SOUND_TYPE" = "beep" ]] || \
+check_pulseaudio
 
 if [[ "$SOUND_TYPE" = "beep" ]];
 then
