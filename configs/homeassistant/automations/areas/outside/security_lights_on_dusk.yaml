@@ -4,9 +4,12 @@ initial_state: True
 
 trigger:
 
-  - platform: sun
-    event: sunset
-    offset: "-00:15:00"
+#  - platform: sun
+#    event: sunset
+#    offset: "-00:15:00"
+
+  - platform: time
+    at: "18:55:00"
 
 
 condition:
