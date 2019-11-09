@@ -362,7 +362,10 @@ mpd_check_status
 # Kill streamer processes
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && sudo kill -15 $(cat $WEBRADIO_STREAMER_PID_FILE) > /dev/null 2>&1 &
 # Remove PIDs file
-[[ -e $WEBRADIO_STREAMER_PID_FILE ]] && sudo rm -f $WEBRADIO_STREAMER_PID_FILE
+if [[ -e $WEBRADIO_STREAMER_PID_FILE ]];
+then
+sudo rm -f $WEBRADIO_STREAMER_PID_FILE
+fi
 # Remove previous log file
 remove_previous_log_file
 }
