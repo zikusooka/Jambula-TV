@@ -44,8 +44,16 @@ cat /tmp/.guisettings.xml | \
 sed -e "s:<fvolumelevel>0.000000</fvolumelevel>:<fvolumelevel>1.000000</fvolumelevel>:g" | sed -e "s:<mute>true</mute>:<mute>false</mute>:g" \
  	> $KODI_GUI_SETTINGS
 
+# Check if pulseaudio is running and not broken
+/usr/bin/pactl list sinks short > /dev/null 2>&1
+PACTL_STATUS=$?
+# Stop and restart pulseaudio if existing process is broken
+if [[ "$PACTL_STATUS" != "0" ]];
+then
 # Start pulseaudio if not running
-/usr/bin/pulseaudio --check || /usr/bin/pulseaudio -D
+sudo killall pulseaudio && /usr/bin/pulseaudio -D
+fi
+#
 # Set Audio Mixer Levels
 /usr/bin/amixer -q sset Master 100% unmute && sudo /usr/sbin/alsactl store
 #
