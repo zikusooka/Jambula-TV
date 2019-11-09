@@ -181,7 +181,10 @@ mpd_check_status
 # Kill streamer processes
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && sudo kill -15 $(cat $FMRADIO_STREAMER_PID_FILE) > /dev/null 2>&1 &
 # Remove PIDs file
-[[ -e $FMRADIO_STREAMER_PID_FILE ]] && sudo rm -f $FMRADIO_STREAMER_PID_FILE
+if [[ -e $FMRADIO_STREAMER_PID_FILE ]];
+then
+sudo rm -f $FMRADIO_STREAMER_PID_FILE
+fi
 }
 
 stream_restart () {
