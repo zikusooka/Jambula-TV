@@ -15,11 +15,12 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 # MCC/MNC table is pulled from http://mcc-mnc.com
 MCC_MNC_TABLE_FILE_URL=https://github.com/musalbas/mcc-mnc-table/raw/master/mcc-mnc-table.csv
 MCC_MNC_TABLE_FILE=/usr/share/JambulaTV/mobile_providers/mcc-mnc-table.csv
-COUNTRY_MCC_MNC_RAW_FILE=/tmp/mcc_mnc_raw.csv
+COUNTRY_MCC_MNC_RAW_FILE=/$TMPDIR/mcc_mnc_raw.csv
 
 WHATSAPP_CMD=$(which yowsup-cli)
 WHATSAPP_CONFIG_DIR=${HOME}/.config/yowsup
 WHATSAPP_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/whatsapp.log
+WHATSAPP_REGISTRATION_LOG_FILE=$TMPDIR/whatsapp_registration.log
 WHATSAPP_METHOD_NAME=$1
 WHATSAPP_TEXT_MESSAGE="$2"
 WHATSAPP_ATTACHMENT_FILE_PATH="$2"
@@ -297,13 +298,23 @@ MOBILE_COUNTRY_CODE=$MOBILE_COUNTRY_CODE
 MOBILE_NETWORK_CODE=$MOBILE_NETWORK_CODE
 EOF
 
+# Remove existing registration log file if any
+[[ ! -e $WHATSAPP_REGISTRATION_LOG_FILE ]] || sudo rm -f $WHATSAPP_REGISTRATION_LOG_FILE
 # Request for PIN code using SMS
-$WHATSAPP_CMD registration --debug --requestcode $WHATSAPP_REGISTRATION_METHOD --config-phone $WHATSAPP_PHONE_NUMBER_SENDER --config-cc $TELEPHONE_COUNTRY_CODE --config-mcc $MOBILE_COUNTRY_CODE --config-mnc $MOBILE_NETWORK_CODE 2>&1 | grep -Ei "(status: b'fail'|status: fail)"
-REQUEST_CODE_STATUS=$?
-if [[ "$REQUEST_CODE_STATUS" = "0" ]];
+$WHATSAPP_CMD registration --debug --requestcode $WHATSAPP_REGISTRATION_METHOD --config-phone $WHATSAPP_PHONE_NUMBER_SENDER --config-cc $TELEPHONE_COUNTRY_CODE --config-mcc $MOBILE_COUNTRY_CODE --config-mnc $MOBILE_NETWORK_CODE 2>&1 > $WHATSAPP_REGISTRATION_LOG_FILE
+# Extract registration status from log file
+REGISTRATION_STATUS=$(awk -F': ' '/status:/ {print $2}' $WHATSAPP_REGISTRATION_LOG_FILE)
+REGISTRATION_FAIL_REASON=$(awk -F': ' '/reason:/ {print $2}' $WHATSAPP_REGISTRATION_LOG_FILE)
+REGISTRATION_LOGIN=$(awk -F': ' '/login:/ {print $2}' $WHATSAPP_REGISTRATION_LOG_FILE)
+# Check if status is NOT 'sent'
+if [[ "$REGISTRATION_STATUS" != "sent" ]];
 then
 # Notify of failure and quit
-logger -s -t $(basename $0) "Failed to get registration code.  Please check for actual Yowsup error message"
+clear
+cat <<ET
+Error: Failed to get registration code for $REGISTRATION_LOGIN. The WhatsApp server responded with a reason of [$REGISTRATION_FAIL_REASON]"
+
+ET
 exit 1
 fi
 }
