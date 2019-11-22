@@ -43,7 +43,7 @@ usage_start () {
 if [ "x$WEBRADIO_STREAMER_STATION" = "x" ];
 then
 clear
-cat <<EOF
+less <<EOF
 Usage: ./$(basename $0) $WEBRADIO_STREAMER_TASK [WEB_RADIO_STATION_ID e.g. 1] [local (Optional)]
 
 ***************************************
@@ -66,17 +66,28 @@ Online Radio Station IDs
  15  Relax (Nature)
  16  Radio Swiss Classic
  17  Radio Swiss Classique
- 18 The Loop (Classic Rock)
- 19 Black Gospel Radio (Gospel)
- 20 WFMV - 95.3 FM (Gospel)
- 21 Gospel Highway 11 (Gospel)
- 22 WGOK Gospel 900 (Gospel)
- 23 1.FM ReggaeTrade (Reggae)
- 24 Reggae 141 (Reggae)
- 25 Sun City 104.9 FM (Reggae)
- 26 UFDV Radio (Reggae)
- 27 FM Jamaica Radio (Reggae)
-
+ 18  The Loop (Classic Rock)
+ 19  Black Gospel Radio (Gospel)
+ 20  WFMV - 95.3 FM (Gospel)
+ 21  Gospel Highway 11 (Gospel)
+ 22  WGOK Gospel 900 (Gospel)
+ 23  1.FM ReggaeTrade (Reggae)
+ 24  Reggae 141 (Reggae)
+ 25  Sun City 104.9 FM (Reggae)
+ 26  UFDV Radio (Reggae)
+ 27  FM Jamaica Radio (Reggae)
+ 28  NPR (News)
+ 29  BBC World Service (News)
+ 30  KFM (Uganda)
+ 31  Radio One (Uganda)
+ 32  Sanyu FM (Uganda)
+ 33  Capital FM (Uganda)
+ 34  Next Radio (Uganda)
+ 35  Simba FM (Uganda)
+ 36  Beat FM (Uganda)
+ 37  CBS Radio (Uganda)
+ 38  Power FM (Uganda)
+ 39  Impact FM (Uganda)
 EOF
 exit 1
 fi
@@ -226,6 +237,66 @@ WEBRADIO_STREAMER_URL="http://cp3.serverse.com:7059/stream"
 27)
 # FM Jamaica Radio (Reggae)
 WEBRADIO_STREAMER_URL="http://us5.internet-radio.com:8487"
+;;
+
+28)
+# NPR - National Public Radio (News)
+WEBRADIO_STREAMER_URL="https://npr-ice.streamguys1.com/live.mp3"
+;;
+
+29)
+# BBC World Service (News)
+WEBRADIO_STREAMER_URL="http://bbcwssc.ic.llnwd.net/stream/bbcwssc_mp1_ws-eieuk"
+;;
+
+30) 
+# KFM (Uganda)
+WEBRADIO_STREAMER_URL="http://81.199.17.51:8000/stream"
+;;
+
+31)
+# Radio One (Uganda)
+WEBRADIO_STREAMER_URL="http://162.244.80.52:8740/stream/1"
+;;
+
+32)
+# Sanyu FM (Uganda)
+WEBRADIO_STREAMER_URL="http://s44.myradiostream.com:8138"
+;;
+
+33)
+# Capital FM (Uganda)
+WEBRADIO_STREAMER_URL="http://144.217.203.226:8316/stream/1"
+;;
+
+34)
+# Next Radio (Uganda)
+WEBRADIO_STREAMER_URL="http://streams.radio.co/see104bedb/listen"
+;;
+
+35)
+# Simba FM (Uganda)
+WEBRADIO_STREAMER_URL="http://www.radiosimba.ug:8000/stream"
+;;
+
+36)
+# Beat FM (Uganda)
+WEBRADIO_STREAMER_URL="http://5230.cloudrad.io:8354"
+;;
+
+37)
+# CBS Radio (Uganda)
+WEBRADIO_STREAMER_URL="http://41.202.239.38:88/broadwavehigh.mp3"
+;;
+
+38) 
+# Power FM (Uganda)
+WEBRADIO_STREAMER_URL=""
+;;
+
+39)
+# Impact FM (Uganda)
+WEBRADIO_STREAMER_URL=""
 ;;
 
 *)
