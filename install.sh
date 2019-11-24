@@ -53,10 +53,15 @@ images_add
 # Install current openssl
 openssl111_install
 
-# Install current mesa
-mesa_deps_install
-mesa_install
-glu_install
+# Install expat - needed for python3
+expat_install
+
+# Install python3
+python3_install
+
+# Install meson/ninja
+meson_install
+ninja_install
 
 # Install current libxml2
 libxml2_install
@@ -70,21 +75,16 @@ gcc4_install
 nasm_install
 giflib_install 
 
+# Install current mesa
+mesa_deps_install
+mesa_install
+glu_install
+
 # VA-API/VDPAU
 libva_install
 libva_utils_install 
 intel_vaapi_driver_install
 vdpauinfo_install
-
-# Install expat - needed for python3
-expat_install
-
-# Install python3
-python3_install
-
-# Install meson/ninja
-meson_install
-ninja_install
 
 # Pick desired X11 video driver
 case $X11_DRIVER in
