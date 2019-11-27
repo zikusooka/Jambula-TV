@@ -23,7 +23,7 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 
 TWITTER_CLIENT_CMD=/usr/bin/tweet.sh
 TWITTER_CLIENT_KEYS_FILE=$PROJECT_SYSTEM_CONF_DIR/twitter_client.key
-TWITTER_DATE=$(date +'%a %b %d')
+TWITTER_DATE=$(date -u +'%a %b %d')
 TWITTER_REPORTS_OUTPUT_FILE=$TMPDIR/twitter_reports_today
 
 TWITTER_VILLAGE_NAME=$1
@@ -96,13 +96,19 @@ cat <<ET
 
 Daily Monitor (Uganda)
 ET
-$TWITTER_CLIENT_CMD search -q "DailyMonitor AND In+Daily+Monitor+Tomorrow..." | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
+$TWITTER_CLIENT_CMD search -q "DailyMonitor AND In+Daily+Monitor+Tomorrow... OR Saturday+Monitor OR Sunday+Monitor" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
+# The Observer
+cat <<ET
+
+The Observer (Uganda)
+ET
+$TWITTER_CLIENT_CMD search -q "@observerug AND In AND >> AND :" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
 # New Vision
 cat <<ET
 
 New Vision (Uganda)
 ET
-$TWITTER_CLIENT_CMD search -q "newvisionwire AND Get+the+details+in+New+Vision" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
+$TWITTER_CLIENT_CMD search -q "newvisionwire AND TODAY+IN+THE+NEW+VISION OR Get+the+details+in+New+Vision OR daily+is+out OR Details+and+more OR in+the+Saturday+Vision OR in+the+Sunday+Vision" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
 # RedPepper
 cat <<ET
 
@@ -127,6 +133,12 @@ echo
 # Power outage alerts
 power_outage_alerts () {
 $TWITTER_CLIENT_CMD search -q "UmemeLtd AND OutageAlert" | jq -r '.statuses[] | select(.created_at | contains("'"$TWITTER_DATE"'")) |.created_at,.text' | head -2
+echo
+}
+
+# Power outage alerts - UETCL
+power_outage_alerts_uetcl () {
+$TWITTER_CLIENT_CMD search -q "@uetcl AND @UmemeLtd AND @ERA_Uganda AND @ntvuganda AND @nbstv AND @newvisionwire AND @ubctvuganda" | jq -r '.statuses[] | select(.created_at | contains("'"$TWITTER_DATE"'")) |.created_at,.text' | head -2
 echo
 }
 
@@ -165,6 +177,10 @@ $(power_outage_reports)
 
 *UMEME ALERTS (Everywhere)*
 $(power_outage_alerts)
+
+
+*UETCL ALERTS (Kampala)*
+$(power_outage_alerts_uetcl)
 
 ET
 
