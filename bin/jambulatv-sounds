@@ -40,11 +40,36 @@ MULTIMEDIA_USER=jambula
 
 SPEAKER_VOLUME_TOOL=/usr/bin/jambulatv-speaker-volume
 
+PROCESS_INSTANCE_LOCK_FILE=/tmp/sounds_process_instance.lock
+
 
 
 ###############
 #  FUNCTIONS  #
 ###############
+
+lock_sounds_process () {
+sudo chown $MULTIMEDIA_USER:audio $PROCESS_INSTANCE_LOCK_FILE
+exec {lock_fd}>$PROCESS_INSTANCE_LOCK_FILE 
+flock -x -n "$lock_fd" 
+PROCESS_INSTANCE_LOCK_STATUS=$?
+}
+
+wait_if_another_process_instance_is_running () {
+lock_sounds_process
+#
+# Wait for running process instance lock file to clear
+while [[ "$PROCESS_INSTANCE_LOCK_STATUS" != 0 ]]; 
+do
+# Notification - another instance is running
+logger -s -t $(basename $0) "Another instance of this tool [$1] is running. Will proceed shortly after it completes ..."
+sleep 5
+
+# Check process instance lock status again
+lock_sounds_process
+PROCESS_INSTANCE_LOCK_STATUS=$?
+done
+}
 
 check_pulseaudio () {
 pactl list sinks short > /dev/null 2>&1
@@ -289,6 +314,9 @@ fi
 #################
 #  MAIN SCRIPT  #
 #################
+
+# Prevent another instance of this tool from running at the same time
+wait_if_another_process_instance_is_running
 
 # Check pulseaudio if playing non-beep sounds
 [[ "$SOUND_TYPE" = "beep" ]] || \
