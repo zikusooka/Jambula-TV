@@ -10147,14 +10147,22 @@ for SNAPUSER in snapserver snapclient;
 do
 usermod -a -G audio,pulse,pulse-access $SNAPUSER
 done
-
-# Change home directory for snapclient user - needed for access to
-# pulseaudio server
-usermod -d /var/lib/snapclient snapclient
+# snapserver
+# ---
+# Create snapserver home directory if non-existent
+[[ -d /var/lib/snapserver ]] || mkdir /var/lib/snapserver
+# Give user the ownership of snapserver home directory
+chown -R snapserver:snapserver /var/lib/snapserver
+# Change home directory and shell for snapserver user
+usermod -d /var/lib/snapserver -s /sbin/nologin snapserver
+# snapclient
+# --
 # Create snapclient home directory if non-existent
 [[ -d /var/lib/snapclient ]] || mkdir /var/lib/snapclient
 # Give user the ownership of snapclient home directory
-chown snapclient /var/lib/snapclient
+chown -R snapclient:audio /var/lib/snapclient
+# Change home directory and shell for snapclient user
+usermod -d /var/lib/snapclient -s /sbin/nologin snapclient
 
 # Change snapcast server/client start options to suit our environment
 # Use template to generate snapcast server default file
