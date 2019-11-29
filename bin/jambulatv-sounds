@@ -246,7 +246,12 @@ fi
 22)
 ALERT_SOUND_FILE=chime_big_ben.mp3
 ;;
-
+23)
+ALERT_SOUND_FILE=internet_has_gone_off.mp3
+;;
+24)
+ALERT_SOUND_FILE=internet_is_back_on.mp3
+;;
 [Aa-Zz]*)
 if [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]];
 then
