@@ -10,7 +10,11 @@
 # 		CONSUMER_SECRET
 # 		ACCESS_TOKEN
 # 		ACCESS_TOKEN_SECRET
-# 
+#
+# HELP: For a comprehensive list of standard search operators, 
+# please visit the following website:
+# https://developer.twitter.com/en/docs/tweets/rules-and-filtering/overview/standard-operators 
+#
 # Jambula Labs @copyright 2019-2020 All rights reserved
 
 # Variables
@@ -24,6 +28,7 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 TWITTER_CLIENT_CMD=/usr/bin/tweet.sh
 TWITTER_CLIENT_KEYS_FILE=$PROJECT_SYSTEM_CONF_DIR/twitter_client.key
 TWITTER_DATE=$(date -u +'%a %b %d')
+TWITTER_DATE_YESTERDAY=$(date -u -d yesterday +'%Y-%m-%d')
 TWITTER_REPORTS_OUTPUT_FILE=$TMPDIR/twitter_reports_today
 
 TWITTER_VILLAGE_NAME=$1
@@ -92,53 +97,69 @@ fi
 
 extract_newspaper_links () {
 # Daily monitor
+# ---
+DAILY_MONITOR_SEARCH_STRING="Monitor+Today OR Monitor+Tomorrow OR Saturday+Monitor OR Sunday+Monitor OR In+your+copy+of+the+Daily+Monitor"
+# 
 cat <<ET
 
 Daily Monitor (Uganda)
 ET
-$TWITTER_CLIENT_CMD search -q "DailyMonitor AND In+Daily+Monitor+Tomorrow... OR Saturday+Monitor OR Sunday+Monitor" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
+$TWITTER_CLIENT_CMD search -c 1 -q "from:DailyMonitor since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $DAILY_MONITOR_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
+
 # The Observer
+# ---
+OBSERVER_SEARCH_STRING="In+@observerug: OR In+@observerug+tomorrow: AND >>"
+#
 cat <<ET
 
 The Observer (Uganda)
 ET
-$TWITTER_CLIENT_CMD search -q "@observerug AND In AND >> AND :" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
+$TWITTER_CLIENT_CMD search -c 1 -q "from:observerug since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $OBSERVER_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
+
 # New Vision
+# ---
+NEW_VISION_SEARCH_STRING="TODAY+IN+THE+NEW OR Get+the+details+in OR daily+is+out OR Details+and+more OR Saturday OR Sunday OR Get+yourself+a+copy+of+the AND Vision"
+#
 cat <<ET
 
 New Vision (Uganda)
 ET
-$TWITTER_CLIENT_CMD search -q "newvisionwire AND TODAY+IN+THE+NEW+VISION OR Get+the+details+in+New+Vision OR daily+is+out OR Details+and+more OR in+the+Saturday+Vision OR in+the+Sunday+Vision" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
+$TWITTER_CLIENT_CMD search -c 1 -q "from:newvisionwire since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $NEW_VISION_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
+
 # RedPepper
+# ---
+REDPEPPER_SEARCH_STRING="Edition OR On+The+Stall"
+#
 cat <<ET
 
 RedPepper (Uganda)
 ET
-$TWITTER_CLIENT_CMD search -q "RedPepperUG AND Edition OR On+The+Stall" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | head -1
+$TWITTER_CLIENT_CMD search -c 1 -q "from:RedPepperUG since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $REDPEPPER_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
+
 echo
 }
 
 # Water outage reports
 water_outage_reports () {
-$TWITTER_CLIENT_CMD search -q "Water AND $TWITTER_VILLAGE_NAME" | jq -r '.statuses[] | select(.created_at | contains("'"$TWITTER_DATE"'")) |.created_at,.text' | head -2
+$TWITTER_CLIENT_CMD search -c 2 -q "@nwscug since:$TWITTER_DATE_YESTERDAY $TWITTER_VILLAGE_NAME" | jq -r '.statuses[] |.created_at,.text'
 echo
 }
 
 # Power outage reports
 power_outage_reports () {
-$TWITTER_CLIENT_CMD search -q "UmemeLtd AND $TWITTER_VILLAGE_NAME" | jq -r '.statuses[] | select(.created_at | contains("'"$TWITTER_DATE"'")) |.created_at,.text' | head -2
+$TWITTER_CLIENT_CMD search -c 2 -q "@UmemeLtd since:$TWITTER_DATE_YESTERDAY $TWITTER_VILLAGE_NAME" | jq -r '.statuses[] |.created_at,.text'
 echo
 }
 
 # Power outage alerts
 power_outage_alerts () {
-$TWITTER_CLIENT_CMD search -q "UmemeLtd AND OutageAlert" | jq -r '.statuses[] | select(.created_at | contains("'"$TWITTER_DATE"'")) |.created_at,.text' | head -2
+$TWITTER_CLIENT_CMD search -c 2 -q "from:UmemeLtd since:$TWITTER_DATE_YESTERDAY Outage Alert OR token generation" | jq -r '.statuses[] |.created_at,.text'
 echo
 }
 
 # Power outage alerts - UETCL
 power_outage_alerts_uetcl () {
-$TWITTER_CLIENT_CMD search -q "@uetcl AND @UmemeLtd AND @ERA_Uganda AND @ntvuganda AND @nbstv AND @newvisionwire AND @ubctvuganda" | jq -r '.statuses[] | select(.created_at | contains("'"$TWITTER_DATE"'")) |.created_at,.text' | head -2
+$TWITTER_CLIENT_CMD search -c 2 -q "from:uetcl since:$TWITTER_DATE_YESTERDAY @UmemeLtd @ERA_Uganda @ntvuganda @nbstv @newvisionwire @ubctvuganda" | jq -r '.statuses[] |.created_at,.text'
 echo
 }
 
