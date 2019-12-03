@@ -318,7 +318,7 @@ live555_install
 
 upgrade_mesa () {
 uninstall_src_pkgs mesa
-mesa_install
+mesa18_install
 }
 
 upgrade_mopidy () {

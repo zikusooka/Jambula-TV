@@ -3290,8 +3290,9 @@ libxshmfence_install
 libvdpau_install
 }
 
-mesa_install () {
+mesa18_install () {
 # Remove mesa rpms
+[[ "x$(rpm -qa | grep -i mesa)" = "x" ]] || \
 rpm -e --nodeps $(rpm -qa | grep -i mesa)
 #
 # Unpack
@@ -3299,7 +3300,7 @@ tar xvf $PROJECT_TARBALLS_DIR/mesa-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v mesa-* mesa
 # Compile all
 cd $INSTALL_SRC_DIR/mesa
-./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-fast-install --enable-vdpau --with-gallium-drivers="i915" 
+./configure --prefix=$PREFIX --libdir=$LIBDIR --enable-fast-install --enable-vdpau --with-gallium-drivers="i915" --enable-llvm=no
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
