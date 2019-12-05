@@ -972,6 +972,7 @@ PING_OPTS="-n -c $PING_COUNT -W $PING_TIMEOUT"
 NMAP_CMD='/usr/bin/nmap'
 NMAP_OPTS_GENERAL='-n'
 NMAP_OPTS_PING_SCAN='-sn -Pn -oG -' 
+NMAP_OPTS_ONLINE_SCAN='-Pn -oG -' 
 
 # Icingaweb2
 ICINGAWEB2_DB_NAME=icingaweb2
@@ -1598,22 +1599,24 @@ print_notification "$NO_INTERNET_NOTIFICATION_MESSAGE" osd
 exit $EXIT_VALUE
 fi
 
-# 2. If there is an Internet connection, check to see if is unfiltered
-# ....................................................................
-$PING_CMD $PING_OPTS $REMOTE_HOST_NAME > /dev/null 2>&1
-INTERNET_STATUS_VAL=$?
-
-if [[ "$INTERNET_STATUS_VAL" = "0" ]];
+# 2. If there's an Internet connection, check to see if the HTTPS port
+# (443) is closed i.e. Internet is being filtered
+# .....................................................................
+HTTPS_PORT_CLOSED=$($NMAP_CMD $NMAP_OPTS_GENERAL $NMAP_OPTS_ONLINE_SCAN -p 443 $REMOTE_HOST_NAME 2>&1 | awk -F':' '/closed/ {print $3}' | cut -d '/' -f2)
+#
+# Check if HTTPS port is closed even if we can ping and reach host
+if [[ "$HTTPS_PORT_CLOSED" != "closed" && "$INTERNET_IS_REACHEABLE" = "0" ]];
 then
 # Back out and continue with the rest of the tasks
 break
 
 else
-# 3. Use nmap to do a ping scan of the remote as ICMP ping requests may be either
-# blocked by server or the ISP is filtering access to this host
-# ...............................................................................
+# 3. Use nmap to do a ping scan of the remote as ICMP ping requests 
+# may be either blocked by server or the ISP is filtering access to 
+# this host
+# .....................................................................
 probe_remote_host_using_nmap $REMOTE_HOST_NAME
-
+#
 if [[ "$INTERNET_STATUS_VAL" != "0" ]];
 then
 # Notify and quit when remote host is not alive i.e. dead
