@@ -181,6 +181,7 @@ kodi_jambulatv_service_configure
 global_settings_configure
 bash_configure
 release_info_configure
+oem_info_configure
 updates_server_info_configure
 motd_configure
 nfs_server_configure

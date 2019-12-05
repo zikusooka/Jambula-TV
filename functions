@@ -6,10 +6,12 @@
 
 # Variables
 PROJECT_NAME=JambulaTV
-PROJECT_URL="http://www.jambulatv.com"
+PROJECT_NICKNAME=Bulindo
+PROJECT_URL="https://www.jambulatv.com"
+PROJECT_TRACKER_URL="https://issues.jambulatv.com"
 PROJECT_DOMAINS="jambulatv.com, jambula.net" 
 COMPANY_NAME="Jambula Labs"
-COMPANY_URL="http://www.jambulalabs.com"
+COMPANY_URL="https://www.jambulalabs.com"
 COMPANY_WORKGROUP="JAMBULA"
 COPYRIGHT_YEAR_START=$(date '+%Y')
 COPYRIGHT_YEAR_END=$(date '+%Y' --date='12 months')
@@ -8056,6 +8058,38 @@ done
 			> $BINARY_PREFIX/jambulatv-whoami 
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-whoami 
+}
+
+oem_info_configure () {
+# oem variables
+OEM_INFO_COMPANY=$(echo $COMPANY_NAME | tr '[:upper:]' '[:lower:]' |sed 's: ::g')
+OEM_INFO_PROJECT=$(echo $PROJECT_NAME | tr '[:upper:]' '[:lower:]')
+OEM_INFO_VERSION=$(echo $PROJECT_VERSION | sed 's:v::g')
+OEM_INFO_VERSION_MAJOR=$(echo $OEM_INFO_VERSION | cut -d '.' -f1)
+OEM_INFO_VERSION_MINOR=$(echo $OEM_INFO_VERSION | cut -d '.' -f2-)
+#
+# os-release
+cat > $CONFDIR/os-release <<ET
+NAME=$PROJECT_NAME
+VERSION="$OEM_INFO_VERSION ($PROJECT_NICKNAME)"
+ID=$OEM_INFO_PROJECT
+VERSION_ID=$OEM_INFO_VERSION_MAJOR
+PRETTY_NAME="$PROJECT_NAME $OEM_INFO_VERSION ($PROJECT_NICKNAME)"
+ANSI_COLOR="0;34"
+CPE_NAME="cpe:/h:$OEM_INFO_COMPANY:$OEM_INFO_PROJECT:$OEM_INFO_VERSION_MAJOR:$OEM_INFO_VERSION_MINOR"
+HOME_URL="$PROJECT_URL"
+BUG_REPORT_URL="$PROJECT_TRACKER_URL"
+ET
+#
+# system-release-cpe
+cat > $CONFDIR/system-release-cpe <<ET
+cpe:/h:$OEM_INFO_COMPANY:$OEM_INFO_PROJECT:$OEM_INFO_VERSION_MAJOR:$OEM_INFO_VERSION_MINOR
+ET
+#
+# fedora-release
+cat > $CONFDIR/fedora-release <<ET
+$PROJECT_NAME $OEM_INFO_VERSION ($PROJECT_NICKNAME)
+ET
 }
 
 updates_server_info_configure () {
