@@ -3196,6 +3196,33 @@ cd $INSTALL_SRC_DIR/pcre
 make_install_jambulatv
 }
 
+llvm_install () {
+tar xvf $PROJECT_TARBALLS_DIR/llvm-*src.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v llvm-* llvm
+# Build
+mkdir $INSTALL_SRC_DIR/llvm/build
+cd $INSTALL_SRC_DIR/llvm/build
+cmake -Wno-dev -G Ninja \
+	-DCMAKE_INSTALL_PREFIX=$PREFIX \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_C_FLAGS="-g1 -fno-omit-frame-pointer" \
+	-DCMAKE_CXX_FLAGS="-g1 -fno-omit-frame-pointer" \
+	-DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON \
+	-DLLVM_LIBDIR_SUFFIX=64 \
+	-DLLVM_TARGETS_TO_BUILD="host;AMDGPU;BPF" \
+	-DLLVM_BUILD_LLVM_DYLIB=ON \
+	-DLLVM_LINK_LLVM_DYLIB=ON \
+	-DLLVM_ENABLE_FFI=ON \
+	-DLLVM_ENABLE_RTTI=ON \
+	-DLLVM_INCLUDE_EXAMPLES=OFF \
+	-DLLVM_INCLUDE_TESTS=OFF \
+	-DLLVM_BUILD_DOCS=OFF \
+	..
+ninja -j$SYSTEM_CPU_CORES
+# Install
+ninja install
+}
+
 libdrm_install () {
 # Remove libdrm rpm installed package(s)
 rpm -q libdrm-devel > /dev/null 2>&1 && rpm -e --nodeps libdrm-devel

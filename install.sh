@@ -75,7 +75,8 @@ gcc4_install
 nasm_install
 giflib_install 
 
-# Install current mesa
+# mesa
+#llvm_install
 mesa_deps_install
 mesa18_install
 #mesa19_install
