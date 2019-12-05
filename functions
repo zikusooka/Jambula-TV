@@ -3304,6 +3304,42 @@ cd $INSTALL_SRC_DIR/mesa
 make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
+mesa19_install () {
+# Remove mesa rpms
+[[ "x$(rpm -qa | grep -i mesa)" = "x" ]] || \
+rpm -e --nodeps $(rpm -qa | grep -i mesa)
+#
+# Unpack
+tar xvf $PROJECT_TARBALLS_DIR/mesa-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v mesa-* mesa
+mkdir $INSTALL_SRC_DIR/mesa/build
+cd $INSTALL_SRC_DIR/mesa/build
+# Build
+meson -Dprefix=$PREFIX \
+	-Dlibdir=$LIBDIR \
+	-Dsysconfdir=$CONFDIR \
+	-Dbuildtype=release \
+	-Dplatforms=x11,drm \
+	-Dgallium-drivers=i915 \
+	-Ddri-drivers=i965 \
+	-Dvulkan-drivers= \
+	-Dllvm=false \
+	-Dshared-llvm=false \
+	-Ddri3=false \
+	-Dvalgrind=false \
+	-Dgallium-nine=false \
+	-Dglx=dri \
+	-Dosmesa=none \
+	-Dshared-glapi=true \
+	..
+ninja -j$SYSTEM_CPU_CORES
+
+_install_pause_check_4_errors_
+
+# Install
+ninja install
+}
+
 glu_install () {
 # Remove mesa-libGLU rpm installed package(s)
 rpm -q mesa-libGLU-devel > /dev/null 2>&1 && rpm -e --nodeps mesa-libGLU-devel

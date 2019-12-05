@@ -78,6 +78,7 @@ giflib_install
 # Install current mesa
 mesa_deps_install
 mesa18_install
+#mesa19_install
 glu_install
 
 # VA-API/VDPAU
