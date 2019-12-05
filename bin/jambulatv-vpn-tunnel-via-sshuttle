@@ -80,14 +80,15 @@ $SSHUTTLE_CMD $SSHUTTLE_OPTS $SSHUTTLE_REMOTE_USER@$SSHUTTLE_REMOTE_SERVER:$SSHU
 #
 # Pause to allow new IP address to be setup
 sleep 3
+#
 # Notify that VPN tunnel has been established
 # ---
 # Get name of VPN provider
-VPN_ISP=$($CURL_CMD $CURL_OPTS ipinfo.io/org | awk '{$1=""; print $0}' | sed 's/^ //')
+VPN_ISP=$($CURL_CMD $CURL_OPTS https://ipapi.co/org)
 # Print notifciation to stdout and systemd journal 
-print_notification "$VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE" text
+print_notification "$VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE [$VPN_ISP]" text
 # Print notification using OSD tool
-print_notification "$VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE" osd &
+print_notification "$VPN_TUNNEL_OPENED_NOTIFICATION_MESSAGE [$VPN_ISP]" osd &
 
 else
 # Notify that VPN tunnel already exists
@@ -120,17 +121,20 @@ then
 [[ -e $SSHUTTLE_PID_FILE ]] && kill -15 $(cat $SSHUTTLE_PID_FILE)
 # Kill using PID obtained y grep
 [[ "x$SSHUTTLE_PID" != "x" ]] && kill -15 $SSHUTTLE_PID
-
+#
+# Pause to allow default ISP settings to be setup
+sleep 2
+#
 # Notify that VPN tunnel has been closed
 # ---
 # Get name of our local provider
-LOCAL_ISP=$($CURL_CMD $CURL_OPTS ipinfo.io/org | awk '{$1=""; print $0}' | sed 's/^ //')
+LOCAL_ISP=$($CURL_CMD $CURL_OPTS https://ipapi.co/org)
 # Source notification strings
 set_notifications
 # Print notifciation to stdout and systemd journal 
-print_notification "$VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE" text
+print_notification "$VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE [$LOCAL_ISP]" text
 # Print notification using OSD tool
-print_notification "$VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE" osd &
+print_notification "$VPN_TUNNEL_CLOSED_NOTIFICATION_MESSAGE [$LOCAL_ISP]" osd &
 
 else
 # Notify that VPN tunnel has NOT been closed
@@ -167,7 +171,7 @@ case $SSHUTTLE_ACTION in
 start)
 # Quit if there is no Internet
 check_internet_connectivity_ping
-[[ "$INTERNET_STATUS_VAL" = "0" ]] || exit 1
+[[ "$INTERNET_IS_REACHEABLE" = "0" ]] || exit 1
 
 # Start VPN tunnel if none exists
 open_sshuttle_vpn_tunnel
