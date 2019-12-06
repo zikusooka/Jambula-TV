@@ -7,6 +7,7 @@ trigger:
     entity_id: binary_sensor.internet
     from: 'off'
     to: 'on'
+    for: '00:03:00'
 
 condition:
   condition: and
