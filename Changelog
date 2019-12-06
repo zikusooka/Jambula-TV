@@ -1,3 +1,94 @@
+Changes since v6.4
+--------------------
+* JambulaTV: Fix issue in WhatsApp tool where sending of message(s)            and account registration hang i.e. jambulatv-whatsapp 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Update Python installer (pip3) to the latest version            i.e. pip-19.3.1 
+
+* JambulaTV: Fix issue where installation of consonance, a Python 2            dependency module for yowsup fails 
+
+* JambulaTV: Switch from using 'plain' to 'hashed' method when relaying            authentication information in ZoneMinder 
+
+* JambulaTV: Fix issue where forcing alarms on monitor(s) in zoneminder            fail: https://github.com/ZoneMinder/zoneminder/issues/2744 
+
+* JambulaTV: Upgrade Home-Assistant to the latest Github version:            0.102.0.dev0 
+
+* JambulaTV: Upgrade some of the python3 dependency modules needed by            Flexget. This is necessary due to recent upgrade of            Home-Assistant requirements 
+
+* JambulaTV: Upgrade Home-Assistant-CLI to latest Github version:            0.8.0.dev20191031231051 
+
+* JambulaTV: Add exclusive and non-blocking lock to initial setup            tool i.e. Add 'lock_process_exclusively' routine            functions to jambulatv-initial-setup 
+
+* JambulaTV: Add support for text and OSD message notifications when            the sshuttle based VPN tunnel tool fails to connect to            the remote SSH server.  This error may occur before the            setup of passwordless login at remote SSH server has            been done i.e. Update jambulatv-vpn-tunnel-via-sshuttle 
+
+* JambulaTV: Fix issue where IP address is not assigned to the wireless            hotspot interface device during system boot 
+
+* JambulaTV: Add pycparser Python2 module dependency for Yowsup3            i.e. Update file: yowsup3-python2-requirements.txt 
+
+* JambulaTV: Fix issue where Home-Assistant is not properly installed            due to missing Python3 module dependencies 
+
+* JambulaTV: Move setup of wifi devices file i.e. my-wifi-devices.cfg            from 'coova_chilli_customization' to 'hostapd_configure'            routines in main functions 
+
+* JambulaTV: Before sounds tool runs, check if pulseaudio is properly            running.  Start or restart pulseaudio if it is not or if            existing process is broken i.e. Add 'check_pulseaudio'            function routines to 'jambulatv-sounds' 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Fix issue where stopping of FM radio process terminates            with a non-zero exit status leading to errors in other            applications like Home-Assistant 
+
+* JambulaTV: Fix issue where stopping of Internet stream radio process            may terminate with a non-zero exit status and leading to            errors in other applications like Home-Assistant 
+
+* JambulaTV: Update /usr/bin/JambulaTV tool that is run when kodi            starts. Refactor code that checks if pulseaudio is            running properly, and if not restart process 
+
+* JambulaTV: Improve WhatsApp registration process i.e Update WhatsApp            tool 'jambulatv-whatsapp' 
+
+* JambulaTV: Upgrade Linux kernel (4.19 branch) to version 4.19.84 
+
+* JambulaTV: Upgrade Intel X11 (Xorg) driver i.e. xf86-video-intel to            the latest upstream git version 
+
+* JambulaTV: Add the following World News and Ugandan based FM radio            stations to the Internet radio streamer tool i.e.            jambulatv-internet-radio-streamer and the MPD playlists 
+
+* JambulaTV: Upgrade meson build system to latest version: 0.52.0 
+
+* JambulaTV: Upgrade libdrm to latest version: 2.4.100 
+
+* JambulaTV: Add Mako, a mesa requirement to the list of commonly used            python3 dependency modules that are installed initially            i.e. Update requirements file: common-requirements.txt 
+
+* JambulaTV: Install Python 3 and Meson before installing Mesa i.e.            Re-order and update initial install file: install.sh 
+
+* JambulaTV: Upgrade ninja build system to latest version: 1.9.0 
+
+* JambulaTV: Sync and update the tweet.sh sources with upstream Github            repository plus update our Twitter query tool i.e.            jambulatv-twitter 
+
+* JambulaTV: Fix issue where snapclient is not started properly leading            to no audio e.g. when playing music 
+
+* JambulaTV: Add support for voice alert notifications in situations            where the Internet connection has gone off or when it            comes back on 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Prevent two or more voice alerts from being read out at            the same time by the sounds tool i.e. jambulatv-sounds 
+
+* JambulaTV: Improve twitter searches of daily newspaper clips i.e.            Update 'jambulatv-twitter' tool 
+
+* JambulaTV: Add initial support for latest Linux kernel 5.4.x versions 
+
+* JambulaTV: Update install routines for mesa package i.e. Rename            functions from 'mesa_install' to 'mesa18_install' 
+
+* JambulaTV: Add support for installation of recent and current mesa 3D            packages i.e. add 'mesa19_install' to initial install and            functions files 
+
+* JambulaTV: Add support for LLVM installation using the latest sources            i.e. Add 'llvm_install' routines to initial install and            functions files 
+
+* JambulaTV: Add OEM identification information to the following system            files: os-release, fedora-release, and system-release-cpe            i.e. Add the following configure routines to initial and            functions file: 'oem_info_configure' 
+
+* JambulaTV: Improve the detection of Internet filtering by ISPs in            situations where ICMP pings to filtered hosts like            Twitter and Facebook still work giving the impression            that there is unfettered Internet access 
+
+* JambulaTV: Fix issue where processes hang when VPN tunnel is started 
+
+* JambulaTV: Upgrade Linux kernel (4.19 branch) to version 4.19.88 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+
 Changes since v6.3
 --------------------
 
