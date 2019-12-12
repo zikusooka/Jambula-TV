@@ -2,7 +2,7 @@
 # This script is used to create DVB-T and IPTV channels in TVHeadend using CLI.
 # Use it after services for both have been generated
 # Also used in forcing IPTV network to scan from the command line
-# Jambula Labs @copyright 2018-2019 All rights reserved
+# Jambula Labs @copyright 2019-2020 All rights reserved
 
 # Variables
 PROJECT_NAME=JambulaTV
@@ -106,12 +106,12 @@ usage_and_pre_start_iptv () {
 if [[ "x$TV_TASK" = "x" ]];
 then
 clear
-echo "Usage:  ./`basename $0` iptv [scan|map|all|m3u|epg|icons]
+echo "Usage:  ./`basename $0` iptv [scan|map|all|m3u|epg|icons|enable|disable]
 "
 exit 1
 
 # Don't proceed if TV_TASK is m3u, epg, icons)
-elif [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]];
+elif [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" || "$TV_TASK" = "enable" || "$TV_TASK" = "disable" ]];
 then
 # Notify when TV server controller process has been initiated
 notify_tv_server_controller_initiated
@@ -823,6 +823,28 @@ fi
 iptv_scan_add_muxes 
 }
 
+enable_iptv_network () {
+TVHEADEND_IPTV_NETWORK_STATE=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") |.enabled')
+TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid')
+#
+# Enable IPTV network
+[[ "$TVHEADEND_IPTV_NETWORK_STATE" = "false" ]] && \
+	sed -i 's/"enabled": false,/"enabled": true,/g' $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config
+# Restart tvheadend for changes to take effect
+tvheadend_restart_server
+}
+
+disable_iptv_network () {
+TVHEADEND_IPTV_NETWORK_STATE=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") |.enabled')
+TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid')
+#
+# Disable IPTV network
+[[ "$TVHEADEND_IPTV_NETWORK_STATE" = "true" ]] && \
+	sed -i 's/"enabled": true,/"enabled": false,/g' $TVHEADEND_IPTV_NETWORK_CONFIG_DIR/$TVHEADEND_IPTV_NETWORK_UUID/config
+# Restart tvheadend for changes to take effect
+tvheadend_restart_server
+}
+
 iptv_test_stream () {
 # Stream variables
 MUX_URL="$TVHEADEND_PLAY_STREAM_URL/mux/$MUX_UUID"
@@ -1385,8 +1407,10 @@ iptv)
 usage_and_pre_start_iptv
 
 # Check for Internet connectivity if not mapping
-[[ "$TV_TASK" != "map" ]] && \
-	check_internet_connectivity_ping 1
+if [[ "$TV_TASK" != "map" && "$TV_TASK" != "enable" && "$TV_TASK" != "disable" ]];
+then
+check_internet_connectivity_ping 1
+fi
 
 # Fetch fresh playlist if m3u is requested
 [[ "$TV_TASK" = "m3u" ]] && \
@@ -1412,6 +1436,14 @@ usage_and_pre_start_iptv
 # Refresh TV icons
 [[ "$TV_TASK" = "icons" ]] && \
 	refresh_tvh_kodi_icons
+
+# Enable IPTV network
+[[ "$TV_TASK" = "enable" ]] && \
+	enable_iptv_network
+
+# Disable IPTV network
+[[ "$TV_TASK" = "disable" ]] && \
+	disable_iptv_network
 
 # All tasks {m3u+scan+map+epg} 
 [[ "$TV_TASK" = "all" ]] && \
