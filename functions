@@ -3664,32 +3664,33 @@ cd $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}
 if [[ "$PYTHON_SETUP_VERSION" = "3.6" ]];
 then
 # Python 3.6 - patches
-# a) Fix an assertion error in :func:`format` in debug build for floating point
-# formatting with "n" format, zero padding and small width
+# Fix an assertion error in :func:`format` in debug build for floating
+# point formatting with "n" format, zero padding and small width
 patch -p1 $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}/Lib/test/test_float.py < $PROJECT_PATCHES_DIR/python${PYTHON_SETUP_VERSION}.test_float.py.patch
 patch -p1 $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}/Objects/unicodeobject.c < $PROJECT_PATCHES_DIR/python${PYTHON_SETUP_VERSION}.unicodeobject.c.py.patch
-#
-# Python 3.6 - configure
-./configure --prefix=$PREFIX/local LDFLAGS="-Wl,-rpath=$PREFIX/local/ssl/lib64" --enable-shared --with-system-expat --with-ensurepip=yes --with-pydebug RPATH=$PREFIX/local/ssl/lib64 
-
-else
-# Python 3.7 - configure
-./configure --prefix=$PREFIX/local LDFLAGS="-Wl,-rpath=$PREFIX/local/ssl/lib64" --with-openssl=$PREFIX/local --enable-shared --with-ssl-default-suites=python --with-system-expat --with-ensurepip=yes --with-pydebug
 fi
+#
+# Compile
+./configure --prefix=$PREFIX/local LDFLAGS="-Wl,-rpath=$PREFIX/local/ssl/lib64" --enable-shared --with-system-expat --with-ensurepip=yes --with-pydebug RPATH=$PREFIX/local/ssl/lib64 
+# The following needed for python 3.7+?
+#--with-openssl=$PREFIX/local 
+#--with-ssl-default-suites=python 
+#
 # Patch python modules Setup file - This is mandatory
 patch -p1 $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}/Modules/Setup < $PROJECT_PATCHES_DIR/python${PYTHON_SETUP_VERSION}.modules.setup.patch
 # make and install in alternate locations
 make && make altinstall
-
+#
 # Create symlinks to python binaries
 [[ -L $PREFIX/local/bin/python3 ]] && rm -f $PREFIX/local/bin/python3
 ln -s -v $PREFIX/local/bin/python${PYTHON_SETUP_VERSION} $PREFIX/local/bin/python3
 # Create symlinks to pip binaries
 [[ -L $PREFIX/local/bin/pip3 ]] && rm -f $PREFIX/local/bin/pip3
 ln -s -v $PREFIX/local/bin/pip${PYTHON_SETUP_VERSION} $PREFIX/local/bin/pip3
-# Create symlinks to python libraries
-ln -s -v $PREFIX/local/lib/libpython${PYTHON_SETUP_VERSION}dm.so.1.0 $LIBDIR/libpython${PYTHON_SETUP_VERSION}dm.so.1.0
-
+# Create symlinks to python library i.e. libpython
+LIBPYTHON_FILE=$(basename $PREFIX/local/lib/libpython${PYTHON_SETUP_VERSION}*.so.*)
+ln -s -v $PREFIX/local/lib/$LIBPYTHON_FILE $LIBDIR/$LIBPYTHON_FILE
+#
 # Install the latest Python3 pip installer
 python3_pip_install
 
