@@ -1,3 +1,11 @@
 # Internet alerts
 internet_has_gone_off: /usr/bin/jambulatv-sounds alert 23
 internet_is_back_on: /usr/bin/jambulatv-sounds alert 24
+
+# Internet data saver - Commands
+internet_data_saver_on: /usr/bin/jambulatv-internet-data-saver on
+internet_data_saver_off: /usr/bin/jambulatv-internet-data-saver off
+
+# Internet data saver - Voice alerts
+internet_data_saver_was_enabled: /usr/bin/jambulatv-sounds alert 25
+internet_data_saver_was_disabled: /usr/bin/jambulatv-sounds alert 26
