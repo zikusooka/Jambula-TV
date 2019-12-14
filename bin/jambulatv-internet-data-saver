@@ -1,0 +1,76 @@
+#!/bin/sh
+# Internet Data Saver: Use this tool in situations where the cost of
+# Internet is high and hence you need to save data that is used and 
+# only connect to the Internet for low data needs
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+
+DATA_SAVER_ACTION=$1
+# Services to disable
+IPTV=yes
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+usage () {
+cat <<EOT
+Usage: $(basename $0) [on|off]
+
+EOT
+exit 1
+}
+
+internet_data_saver_on () {
+if [[ "$IPTV" = "yes" ]];
+then
+for UNIT in \
+	jambulatv-iptv-maintenance.service \
+	jambulatv-iptv-maintenance.timer
+do
+# Disable IPTV services
+sudo /usr/bin/systemctl stop $UNIT
+# Stop IPTV service & timer
+sudo /usr/bin/systemctl disable $UNIT
+done
+fi
+#
+# Disable IPTV network in TVHeadend
+sudo /usr/bin/jambulatv-tvheadend-controller iptv disable > /dev/null > /dev/null 2>&1
+}
+
+internet_data_saver_off () {
+if [[ "$IPTV" = "yes" ]];
+then
+for UNIT in \
+	jambulatv-iptv-maintenance.timer \
+	jambulatv-iptv-maintenance.service
+do
+# Enable IPTV services
+sudo /usr/bin/systemctl enable $UNIT
+done
+# Start IPTV timer
+sudo /usr/bin/systemctl start jambulatv-iptv-maintenance.timer
+fi
+#
+# Enable IPTV network in TVHeadend
+sudo /usr/bin/jambulatv-tvheadend-controller iptv enable > /dev/null 2>&1
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+case $DATA_SAVER_ACTION in
+[Oo][Ff][Ff])
+internet_data_saver_off
+;;
+[Oo][Nn])
+internet_data_saver_on
+;;
+*)
+usage
+;;
+esac
