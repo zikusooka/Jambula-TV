@@ -339,7 +339,7 @@ mopidy_install
 
 #upgrade_kernel 5.4.1
 #upgrade_kernel 4.20
-#upgrade_kernel 4.19.88
+#upgrade_kernel 4.19.89
 #upgrade_kernel 4.4.174
 
 #upgrade_openssl
