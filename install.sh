@@ -333,6 +333,7 @@ bandwidth_measurement_setup
 trackerjacker_install
 trackerjacker_configure
 adb_install
+adb_sync_setup
 
 # ----------------
 # Communications 
