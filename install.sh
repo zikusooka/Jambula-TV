@@ -332,6 +332,7 @@ bwm_ng_install
 bandwidth_measurement_setup
 trackerjacker_install
 trackerjacker_configure
+adb_install
 
 # ----------------
 # Communications 
