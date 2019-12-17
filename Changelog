@@ -1,5 +1,33 @@
+Changes since v6.5
+------------------
+
+* JambulaTV: Upgrade Python 3 to latest version: 3.8.0 
+
+* JambulaTV: Upgrade Kodi to the latest github version of 18.5 
+
+* JambulaTV: Upgrade pvr.hts kodi addon to latest version: 4.4.20-Leia 
+
+* JambulaTV: Upgrade Flexget to the latest release version: 3.0.16 
+
+* JambulaTV: Add support for enabling and disabling of IPTV network            services using the tvheadend controller tool i.e.            Update 'jambulatv-tvheadend-controller' 
+
+* JambulaTV: Add support for minimizing and saving of Internet data in            situations where the cost of Internet is high and hence            the need to save data that is used by the system i.e. Add            new tool: jambulatv-internet-data-saver 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Upgrade Linux kernel (4.19 branch) to version 4.19.89 
+
+* JambulaTV: Add support for Android Debug Bridge (ADB). This tool will            be used to perform various functions on android phones            e.g. Do data backups 
+
+* JambulaTV: Add support for adb-sync, a tool to synchronize files            between a PC and an Android device using the Android            Debug Bridge (ADB) tool 
+
+* JambulaTV: Fix issue where already existing remind data files are            overwritten 
+
+* JambulaTV: Add support for backing up of data from mobile phones            attached to USB port. No Internet or Cloud services            needed! Currently supports android based devices i.e. 
+
+
 Changes since v6.4
---------------------
+------------------
 * JambulaTV: Fix issue in WhatsApp tool where sending of message(s)            and account registration hang i.e. jambulatv-whatsapp 
 
 * JambulaTV: Update Home-Assistant configuration files 
