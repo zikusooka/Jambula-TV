@@ -1,0 +1,219 @@
+#!/bin/sh
+# This tool backs up data from a mobile smart phone plugged into a
+# USB port using Android Debug Bridge (ADB) 
+#
+# Prerequisites: 
+# --------------
+# 1) Install Android SDK platform tools containing adb tool
+#
+# 2) Add udev rule as follows: 
+#
+# cat >> /etc/udev/rules.d/96-jambulatv.usb-phones.rules <<ET
+# Tecno F1
+# ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="201c", ATTR{serial}=="034621591A10841203", OWNER="root", GROUP="root", MODE="0770", RUN+="/usr/bin/jambulatv-backup-mobile-phone-data '$attr{serial}' '$attr{product}' '$attr{manufacturer}'"
+# ET
+#
+# Jambula Labs @copyright 2019-2020 All rights reserved
+#
+# Variables
+PHONE_SERIAL_NUMBER=$1
+PHONE_MODEL=$2
+PHONE_MANUFACTURER=$3
+PHONE_PRETTY_NAME=$(echo $PHONE_MODEL | sed 's: :_:g')
+PHONE_BACKUP_NAME=backup_${PHONE_SERIAL_NUMBER}.ab
+PHONE_BACKUP_DIR=/JambulaTV/Backups/Phones/${PHONE_PRETTY_NAME}
+PHONE_BACKUP_FILE=$PHONE_BACKUP_DIR/${PHONE_BACKUP_NAME}
+
+MULTIMEDIA_USER=jambula
+PROJECT_SYSTEM_LOG_DIR=/var/log/JambulaTV
+PHONE_BACKUP_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/$(echo $(basename $0) | sed 's:jambulatv-::g').log
+
+ADB_CMD=/usr/bin/adb
+ADB_BACKUP_OPTS="-shared -apk -all" # (DO NOT USE -system or -nosystem)
+
+DD_CMD=/usr/bin/dd
+STAT_CMD=/usr/bin/stat
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+notification_enable_usb_debugging () {
+logger -s -t $(basename $0) "Please enable USB Debugging (Developer options) on your phone ($PHONE_MODEL - $PHONE_SERIAL_NUMBER) before connecting it to the server"
+}
+
+notification_authorize_connection () {
+logger -s -t $(basename $0) "Please accept the prompt currently displayed on your phone screen. Save it to 'always' allow USB debugging with this specific server"
+}
+
+notification_timed_out_waiting_4_input () {
+logger -s -t $(basename $0) "Time out - failed to get user input. Quitting ..."
+}
+
+notification_start () {
+logger -s -t $(basename $0) "Starting backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER"
+}
+
+notification_unlock_confirm () {
+logger -s -t $(basename $0) "Please unlock your device and confirm the backup operation"
+}
+
+notification_disconnect_phone () {
+logger -s -t $(basename $0) "Feel free to unplug your phone, while we complete the rest of the backup processes"
+}
+
+notification_end () {
+logger -s -t $(basename $0) "Completed backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER"
+}
+
+start_logging () {
+# If it already exists, make log file writeable by all
+[[ -e $PHONE_BACKUP_LOG_FILE ]] && sudo chmod a+w $PHONE_BACKUP_LOG_FILE
+# Start logging
+cat >> $PHONE_BACKUP_LOG_FILE <<EOF
+
+-----------------------------------------------------------------------
+$(date): $PHONE_MODEL $PHONE_SERIAL_NUMBER ($PHONE_MANUFACTURER)
+-----------------------------------------------------------------------
+EOF
+exec 2>> $PHONE_BACKUP_LOG_FILE
+}
+
+setup_backup_directories () {
+if [[ -d $PHONE_BACKUP_DIR ]];
+then
+sudo chown -R $(whoami) $PHONE_BACKUP_DIR
+else
+# Create backups directory if non-existent
+mkdir -p $PHONE_BACKUP_DIR
+fi
+}
+
+start_adb_server () {
+ps auxw | grep adb | grep -v grep > /dev/null 2>&1
+ADB_STATUS=$?
+[[ "$ADB_STATUS" = "0" ]] || $ADB_CMD start-server
+}
+
+query_if_device_is_connected () {
+# Check to see if device is connected and USB debugging is enabled
+DETECTED_SERIAL_NUMBER=$($ADB_CMD devices | awk "/${PHONE_SERIAL_NUMBER}/ {print \$1}")
+#
+if [[ -z $DETECTED_SERIAL_NUMBER ]];
+then
+# Alert to enable USB debugging on phone
+notification_enable_usb_debugging
+exit 2
+fi
+#
+# Check to see if permissions have been granted to access the phone
+$ADB_CMD -s "${PHONE_SERIAL_NUMBER}" get-state > /dev/null 2>&1 && \
+PHONE_STATE=$($ADB_CMD -s "${PHONE_SERIAL_NUMBER}" get-state)
+# Set maximum number of times to check
+NO_TIMES_CHECKED_MAX=7
+# Set initial number of times checked
+NO_TIMES_CHECKED=0
+#
+while [[ "$PHONE_STATE" != "device" ]];
+do
+# Alert to authorize connection
+notification_authorize_connection
+# Pause before retrying
+sleep 15
+# Re-check permissions
+$ADB_CMD -s "${PHONE_SERIAL_NUMBER}" get-state > /dev/null 2>&1 && \
+PHONE_STATE=$($ADB_CMD -s "${PHONE_SERIAL_NUMBER}" get-state)
+# Set number of times checked
+NO_TIMES_CHECKED=$((NO_TIMES_CHECKED + 1))
+#
+# Quit if it exceeded number of allowable tries
+if [[ "$NO_TIMES_CHECKED" -ge "$NO_TIMES_CHECKED_MAX" ]];
+then
+# Alert when failed to get user input
+notification_timed_out_waiting_4_input
+exit 1
+fi
+done
+}
+
+backup_old_archive () {
+if [[ -e $PHONE_BACKUP_FILE ]];
+then
+DATE_OF_PREVIOUS_ARCHIVE=$($STAT_CMD $PHONE_BACKUP_FILE | awk -F': ' '/Modify/ {print $2}'| awk {'print $1'} | sed 's:-::g')
+#
+mv -v ${PHONE_BACKUP_FILE} ${PHONE_BACKUP_FILE}_${DATE_OF_PREVIOUS_ARCHIVE}
+fi
+}
+
+backup_pre_tasks () {
+# Start logging to file
+start_logging
+
+# Create, or if it already exists, make backups directory accessible
+setup_backup_directories
+
+# Start ADB server if it is not running
+start_adb_server
+
+# Query device existence
+query_if_device_is_connected
+
+# Backup old android formatted .ab archive
+backup_old_archive
+}
+
+backup_create_archive () {
+# Alert at start of backup
+notification_start
+# Alert to unlock and confirm backup
+notification_unlock_confirm
+
+# Create backup using adb tool
+$ADB_CMD -s ${PHONE_SERIAL_NUMBER} backup $ADB_BACKUP_OPTS -f $PHONE_BACKUP_FILE
+
+# Alert to unplug/disconnect the phone
+notification_disconnect_phone
+}
+
+backup_extract_archive () {
+if [[ -e $PHONE_BACKUP_FILE ]];
+then
+cd $PHONE_BACKUP_DIR && \
+	$DD_CMD if=$PHONE_BACKUP_FILE bs=24 skip=1 | \
+	openssl zlib -d | \
+	tar -xvf -
+fi
+# Change ownership of extracted files to multimedia user i.e. jambula 
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER {apps,shared}
+}
+
+backup_post_tasks () {
+# Remove android archive files that are 2 weeks+ old to save space
+DAYS_OLD=14
+find $PHONE_BACKUP_DIR -type f -name "${PHONE_BACKUP_NAME}*" -mtime +${DAYS_OLD} -exec rm -f {} \;
+
+# Alert at completion of backup
+notification_end
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Pre-setup tasks
+backup_pre_tasks
+
+# Backup and create android formated .ab archive
+backup_create_archive
+
+# Unpack archive
+backup_extract_archive
+
+# Post-cleanup tasks
+backup_post_tasks
+
+exit 0

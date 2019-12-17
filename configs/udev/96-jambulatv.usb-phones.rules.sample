@@ -1,0 +1,2 @@
+# Tecno F1
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="201c", ATTR{serial}=="034621591A10841203", OWNER="root", GROUP="root", MODE="0770", RUN+="/usr/bin/jambulatv-backup-mobile-phone-data '$attr{serial}' '$attr{product}' '$attr{manufacturer}'"
