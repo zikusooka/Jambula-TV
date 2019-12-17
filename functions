@@ -14380,9 +14380,9 @@ $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 
 remind_configure () {
 # Create reminder directory
-[ -d $REMINDERS_DIRECTORY ] || mkdir -p $REMINDERS_DIRECTORY
+[[ -d $REMINDERS_DIRECTORY ]] || mkdir -p $REMINDERS_DIRECTORY
 # Add sample remind files
-rsync -av $PROJECT_CONTRIB_DIR/remind/ $REMINDERS_DIRECTORY/
+rsync -av --ignore-existing $PROJECT_CONTRIB_DIR/remind/ $REMINDERS_DIRECTORY/
 # Give multimedia user permissions to reminder directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $REMINDERS_DIRECTORY
 # Copy jambulatv-remind script, if it does not exist in bin directory
