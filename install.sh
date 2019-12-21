@@ -460,6 +460,7 @@ nextcloud_configure
 # JambulaTV
 home_automation_tools
 home_automation_services
+backup_mobile_phones_setup
 #
 # HomeAssistant
 homeassistant_install

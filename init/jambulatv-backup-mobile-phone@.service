@@ -1,0 +1,10 @@
+[Unit]
+Description=backup of mobile phone (%i)
+
+[Service]
+Type=simple
+User=MY_MULTIMEDIA_USER
+ExecStart=/bin/sh -c "/usr/bin/jambulatv-backup-mobile-phone %i"
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+--- 51-android.rules.orig	2019-12-20 16:52:35.252859887 +0300
++++ 51-android.rules		2019-12-19 19:18:13.238804400 +0300
+@@ -686,8 +686,8 @@
+ ENV{adb_adb}=="yes", ENV{adb_user}="yes", SYMLINK+="android_adb"
+ ENV{adb_fast}=="yes", ENV{adb_user}="yes", SYMLINK+="android_fastboot"
+ 
+-# Enable device as a user device if found (add an "android" SYMLINK)
+-ENV{adb_user}=="yes", MODE="0660", GROUP="adbusers", TAG+="uaccess", SYMLINK+="android"
++# Run systemd service to backup mobile phone data and add a SYMLINK
++ENV{adb_user}=="yes", MODE="0660", GROUP="adbusers", SYMLINK+="phone_android_$env{ID_MODEL}_$env{ID_SERIAL_SHORT}", TAG+="systemd", ENV{SYSTEMD_WANTS}+="MY_BACKUP_MOBILE_PHONE_TOOL@$env{ID_SERIAL_SHORT}.service"
+ 
+ # Devices listed here {begin...end} are connected by USB
+ LABEL="android_usb_rules_end"

@@ -6,19 +6,17 @@
 # --------------
 # 1) Install Android SDK platform tools containing adb tool
 #
-# 2) Add udev rule as follows: 
+# 2) Add the following rule to udev file: '51-android.rules' 
+#    See: https://github.com/M0Rf30/android-udev-rules
 #
-# cat >> /etc/udev/rules.d/96-jambulatv.usb-phones.rules <<ET
-# Tecno F1
-# ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="201c", ATTR{serial}=="034621591A10841203", OWNER="root", GROUP="root", MODE="0770", RUN+="/usr/bin/jambulatv-backup-mobile-phone-data '$attr{serial}' '$attr{product}' '$attr{manufacturer}'"
-# ET
+#ENV{adb_user}=="yes", MODE="0660", GROUP="adbusers", SYMLINK+="phone_android_$env{ID_MODEL}_$env{ID_SERIAL_SHORT}", TAG+="systemd", ENV{SYSTEMD_WANTS}+="jambulatv-backup-mobile-phone@$env{ID_SERIAL_SHORT}.service"
 #
 # Jambula Labs @copyright 2019-2020 All rights reserved
 #
 # Variables
 PHONE_SERIAL_NUMBER=$1
-PHONE_MODEL=$2
-PHONE_MANUFACTURER=$3
+PHONE_MODEL=$(/usr/bin/journalctl -b -r | grep -m 1 -A3 "SerialNumber: $PHONE_SERIAL_NUMBER" | grep "Product:" | cut -d':' -f6- | sed 's:^ ::g')
+PHONE_MANUFACTURER=$(/usr/bin/journalctl -b -r | grep -m 1 -A3 "SerialNumber: $PHONE_SERIAL_NUMBER" | grep "Manufacturer:" | cut -d':' -f6- | sed 's:^ ::g')
 PHONE_PRETTY_NAME=$(echo $PHONE_MODEL | sed 's: :_:g')
 PHONE_BACKUP_NAME=backup_${PHONE_SERIAL_NUMBER}.ab
 PHONE_BACKUP_DIR=/JambulaTV/Backups/Phones/${PHONE_PRETTY_NAME}
@@ -28,11 +26,15 @@ MULTIMEDIA_USER=jambula
 PROJECT_SYSTEM_LOG_DIR=/var/log/JambulaTV
 PHONE_BACKUP_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/$(echo $(basename $0) | sed 's:jambulatv-::g').log
 
-ADB_CMD=/usr/bin/adb
+ADB_CMD="sudo /usr/bin/adb"
 ADB_BACKUP_OPTS="-shared -apk -all" # (DO NOT USE -system or -nosystem)
-
-DD_CMD=/usr/bin/dd
+DD_CMD="sudo /usr/bin/dd"
 STAT_CMD=/usr/bin/stat
+LOGGER_CMD=/usr/bin/logger
+OPENSSL_CMD=/usr/bin/openssl
+TAR_CMD=/usr/bin/tar
+SOUNDS_TOOL=/usr/bin/jambulatv-sounds
+SOUNDS_ENABLE=1
 
 
 
@@ -40,32 +42,61 @@ STAT_CMD=/usr/bin/stat
 #  FUNCTIONS  #
 ###############
 
+notification_not_a_phone () {
+$LOGGER_CMD -s -t $(basename $0) "This is not a phone, so backup not necessary. Quitting ..."
+}
+
+notification_backup_dir_is_not_accessible () {
+$LOGGER_CMD -s -t $(basename $0) "The backup directory [$PHONE_BACKUP_DIR] is not accessible.  Please ensure that the user $(whoami) has sufficient permissions to access it"
+}
+
 notification_enable_usb_debugging () {
-logger -s -t $(basename $0) "Please enable USB Debugging (Developer options) on your phone ($PHONE_MODEL - $PHONE_SERIAL_NUMBER) before connecting it to the server"
+# Alert using console
+$LOGGER_CMD -s -t $(basename $0) "Please enable USB Debugging (Developer options) on your phone ($PHONE_MODEL - $PHONE_SERIAL_NUMBER) before connecting it to the server"
+# Alert using voice
+[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 30
 }
 
 notification_authorize_connection () {
-logger -s -t $(basename $0) "Please accept the prompt currently displayed on your phone screen. Save it to 'always' allow USB debugging with this specific server"
+# Alert using console
+$LOGGER_CMD -s -t $(basename $0) "Please accept the prompt currently displayed on your phone screen. Save it to 'always' allow USB debugging with this specific server"
+# Alert using voice
+[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 32
 }
 
 notification_timed_out_waiting_4_input () {
-logger -s -t $(basename $0) "Time out - failed to get user input. Quitting ..."
+# Alert using console
+$LOGGER_CMD -s -t $(basename $0) "Time out - failed to get user input. Quitting ..."
+# Alert using voice
+[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 33
 }
 
 notification_start () {
-logger -s -t $(basename $0) "Starting backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER"
+# Alert using console
+$LOGGER_CMD -s -t $(basename $0) "Starting backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER"
+# Alert using voice
+[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 27
 }
 
 notification_unlock_confirm () {
-logger -s -t $(basename $0) "Please unlock your device and confirm the backup operation"
+# Alert using console
+$LOGGER_CMD -s -t $(basename $0) "Please unlock your phone and confirm the backup operation"
+# Alert using voice
+[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 31
 }
 
 notification_disconnect_phone () {
-logger -s -t $(basename $0) "Feel free to unplug your phone, while we complete the rest of the backup processes"
+# Alert using console
+$LOGGER_CMD -s -t $(basename $0) "Feel free to unplug your phone, while we complete the rest of the backup processes"
+# Alert using voice
+[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 29
 }
 
 notification_end () {
-logger -s -t $(basename $0) "Completed backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER"
+# Alert using console
+$LOGGER_CMD -s -t $(basename $0) "Completed backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER"
+# Alert using voice
+[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 28
 }
 
 start_logging () {
@@ -81,13 +112,32 @@ EOF
 exec 2>> $PHONE_BACKUP_LOG_FILE
 }
 
-setup_backup_directories () {
-if [[ -d $PHONE_BACKUP_DIR ]];
+check_if_a_phone () {
+if [[ "x$PHONE_MODEL" = "x" || "$PHONE_MANUFACTURER" = "$PHONE_MODEL" ]];
 then
-sudo chown -R $(whoami) $PHONE_BACKUP_DIR
-else
+# Alert if not phone
+notification_not_a_phone
+# Quit
+exit 0
+fi
+}
+
+check_if_backup_dir_exists_and_is_accessible () {
+if [[ ! -d $PHONE_BACKUP_DIR ]];
+then
 # Create backups directory if non-existent
-mkdir -p $PHONE_BACKUP_DIR
+sudo mkdir -p $PHONE_BACKUP_DIR
+#
+# Give ownership of backup directory to multimedia user i.e. jambula
+sudo chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PHONE_BACKUP_DIR/
+
+elif [[ ! -x $PHONE_BACKUP_DIR ]];
+then
+# Alert using console if backup directory is not accessible
+notification_backup_dir_is_not_accessible
+#
+# Quit
+exit 0
 fi
 }
 
@@ -95,6 +145,12 @@ start_adb_server () {
 ps auxw | grep adb | grep -v grep > /dev/null 2>&1
 ADB_STATUS=$?
 [[ "$ADB_STATUS" = "0" ]] || $ADB_CMD start-server
+}
+
+stop_adb_server () {
+ps auxw | grep adb | grep -v grep > /dev/null 2>&1
+ADB_STATUS=$?
+[[ "$ADB_STATUS" = "0" ]] && $ADB_CMD kill-server
 }
 
 query_if_device_is_connected () {
@@ -105,7 +161,10 @@ if [[ -z $DETECTED_SERIAL_NUMBER ]];
 then
 # Alert to enable USB debugging on phone
 notification_enable_usb_debugging
-exit 2
+# Stop ADB server if it is running
+stop_adb_server
+# Quit
+exit 0
 fi
 #
 # Check to see if permissions have been granted to access the phone
@@ -133,7 +192,10 @@ if [[ "$NO_TIMES_CHECKED" -ge "$NO_TIMES_CHECKED_MAX" ]];
 then
 # Alert when failed to get user input
 notification_timed_out_waiting_4_input
-exit 1
+# Stop ADB server if it is running
+stop_adb_server
+# Quit
+exit 0
 fi
 done
 }
@@ -141,6 +203,7 @@ done
 backup_old_archive () {
 if [[ -e $PHONE_BACKUP_FILE ]];
 then
+# Set date of previous archive
 DATE_OF_PREVIOUS_ARCHIVE=$($STAT_CMD $PHONE_BACKUP_FILE | awk -F': ' '/Modify/ {print $2}'| awk {'print $1'} | sed 's:-::g')
 #
 mv -v ${PHONE_BACKUP_FILE} ${PHONE_BACKUP_FILE}_${DATE_OF_PREVIOUS_ARCHIVE}
@@ -151,8 +214,11 @@ backup_pre_tasks () {
 # Start logging to file
 start_logging
 
+# Check to see if device is actually a phone.  If not quit
+check_if_a_phone
+
 # Create, or if it already exists, make backups directory accessible
-setup_backup_directories
+check_if_backup_dir_exists_and_is_accessible
 
 # Start ADB server if it is not running
 start_adb_server
@@ -182,17 +248,20 @@ if [[ -e $PHONE_BACKUP_FILE ]];
 then
 cd $PHONE_BACKUP_DIR && \
 	$DD_CMD if=$PHONE_BACKUP_FILE bs=24 skip=1 | \
-	openssl zlib -d | \
-	tar -xvf -
+	$OPENSSL_CMD zlib -d | \
+	$TAR_CMD -xvf -
 fi
 # Change ownership of extracted files to multimedia user i.e. jambula 
-chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER {apps,shared}
+sudo chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PHONE_BACKUP_DIR/*
 }
 
 backup_post_tasks () {
 # Remove android archive files that are 2 weeks+ old to save space
 DAYS_OLD=14
 find $PHONE_BACKUP_DIR -type f -name "${PHONE_BACKUP_NAME}*" -mtime +${DAYS_OLD} -exec rm -f {} \;
+
+# Stop ADB server if it is running
+stop_adb_server
 
 # Alert at completion of backup
 notification_end
