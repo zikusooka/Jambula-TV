@@ -3412,6 +3412,9 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 rm -f $LIBDIR/libstdc++.so.*-gdb.py
 # Cache recently shared libraries
 ldconfig
+#
+# Remove build directory to save on space
+rm -rf $INSTALL_SRC_DIR/gcc8/build
 }
 
 gcc5_install () {
@@ -3429,6 +3432,9 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 rm -f $LIBDIR/libstdc++.so.*-gdb.py
 # Cache recently shared libraries
 ldconfig
+#
+# Remove build directory to save on space
+rm -rf $INSTALL_SRC_DIR/gcc5/build
 }
 
 gcc4_install () {
@@ -3446,6 +3452,9 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 rm -f $LIBDIR/libstdc++.so.*-gdb.py
 # Cache recently shared libraries
 ldconfig
+#
+# Remove build directory to save on space
+rm -rf $INSTALL_SRC_DIR/gcc4/build
 }
 
 nasm_install () {
