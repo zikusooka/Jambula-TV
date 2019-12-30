@@ -1,0 +1,18 @@
+/var/log/asterisk/debug /var/log/asterisk/console /var/log/asterisk/full /var/log/asterisk/messages /var/log/asterisk/*log {
+	daily
+	missingok
+	rotate 5
+	compress
+	delaycompress
+        maxage 7
+        size 2M
+	notifempty
+        dateext
+        dateformat .%Y%m%d
+	su asterisk asterisk
+	create 0640 asterisk asterisk
+	sharedscripts
+	postrotate
+		/usr/sbin/asterisk -rx 'logger reload' > /dev/null 2> /dev/null	
+	endscript
+} 

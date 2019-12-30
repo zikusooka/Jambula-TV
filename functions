@@ -11563,6 +11563,9 @@ chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/jssip
 # Set ownership/permissions on asterisk custom directory
 chown -R $ASTERISK_FILES_USER:$WWW_USER $ASTERISK_CONF_DIR
 chmod -R 754 $ASTERISK_CONF_DIR
+
+# Copy logrotate file to reduce size of asterisk logs
+cp -v $PROJECT_CONFIGS_DIR/logrotate/asterisk $LOGROTATE_CONF_DIR
 }
 
 chan_dongle_install () {
