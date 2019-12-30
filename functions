@@ -9352,6 +9352,9 @@ rsync -av $PROJECT_CONFIGS_DIR/nginx/sites-enabled/ $NGINX_CONF_DIR/sites-enable
 mkdir $NGINX_CONF_DIR/ssl
 # Create SSL certificates and keys
 ssl_cert_key_generate $NGINX_CONF_DIR/ssl/cert.pem $NGINX_CONF_DIR/ssl/cert.key 7300
+#
+# Copy logrotate file to reduce size of nginx httpd access logs
+cp -v $PROJECT_CONFIGS_DIR/logrotate/nginx $LOGROTATE_CONF_DIR
 }
 
 nginx_customization () {
