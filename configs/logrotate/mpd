@@ -1,0 +1,17 @@
+MY_PROJECT_SYSTEM_LOG_DIR/mpd.log {
+  daily
+  rotate 5
+  maxage 1
+  size 3M
+  missingok
+  compress
+  delaycompress
+  notifempty
+  dateext
+  dateformat .%Y%m%d
+  create 664 mpd mpd
+  sharedscripts
+  postrotate
+    /usr/bin/killall -HUP mpd
+  endscript
+}

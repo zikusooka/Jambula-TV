@@ -10203,6 +10203,11 @@ cat $PROJECT_INIT_SCRIPTS_DIR/mpd.socket | \
 # Enable mpd if needed
 systemctl enable mpd.service
 #
+# Copy logrotate file to reduce size of mpd log
+cat $PROJECT_CONFIGS_DIR/logrotate/mpd | \
+	sed "s:MY_PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" \
+		> $LOGROTATE_CONF_DIR/mpd
+#
 # Display mpd's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
