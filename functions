@@ -13041,6 +13041,11 @@ cat $PROJECT_INIT_SCRIPTS_DIR/zoneminder.service | \
 systemctl enable zoneminder.service
 # Start zoneminder
 systemctl start zoneminder.service
+
+# Copy logrotate file to reduce size of zoneminder logs
+cat $PROJECT_CONFIGS_DIR/logrotate/zoneminder | \
+	sed "s:MY_PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" \
+		> $LOGROTATE_CONF_DIR/zoneminder
 }
 
 zoneminder_login_using_api () {
