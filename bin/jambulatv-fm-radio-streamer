@@ -65,7 +65,7 @@ PACTL_STATUS=$?
 # Stop and restart pulseaudio if existing process is broken
 if [[ "$PACTL_STATUS" != "0" ]];
 then
-killall pulseaudio && /usr/bin/pulseaudio -D
+sudo killall pulseaudio && /usr/bin/pulseaudio -D
 fi
 }
 
