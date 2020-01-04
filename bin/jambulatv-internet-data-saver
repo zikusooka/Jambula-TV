@@ -8,6 +8,7 @@
 DATA_SAVER_ACTION=$1
 # Services to disable
 IPTV=yes
+INTERNET_SPEED_TOOL=/usr/bin/jambulatv-speed-test
 
 
 ###############
@@ -38,6 +39,9 @@ fi
 #
 # Disable IPTV network in TVHeadend
 sudo /usr/bin/jambulatv-tvheadend-controller iptv disable > /dev/null > /dev/null 2>&1
+
+# Do not run speed tests i.e. disable speed test tool
+sudo chmod a-x $INTERNET_SPEED_TOOL
 }
 
 internet_data_saver_off () {
@@ -56,6 +60,9 @@ fi
 #
 # Enable IPTV network in TVHeadend
 sudo /usr/bin/jambulatv-tvheadend-controller iptv enable > /dev/null 2>&1
+
+# Enable speed test tool i.e. OK to run speed tests 
+sudo chmod a+x $INTERNET_SPEED_TOOL
 }
 
 
