@@ -304,6 +304,24 @@ ALERT_SOUND_FILE=phone_backup_accept_prompt_save.mp3
 33)
 ALERT_SOUND_FILE=phone_backup_failed_2_get_input_quit.mp3
 ;;
+34)
+ALERT_SOUND_FILE=night_mode_activating.mp3
+;;
+35)
+ALERT_SOUND_FILE=night_mode_deactivated.mp3
+;;
+36)
+ALERT_SOUND_FILE=vacation_holiday_mode_activating.mp3
+;;
+37)
+ALERT_SOUND_FILE=vacation_holiday_mode_deactivated.mp3
+;;
+38)
+ALERT_SOUND_FILE=guest_visitor_mode_activating.mp3
+;;
+39)
+ALERT_SOUND_FILE=guest_visitor_mode_deactivated.mp3
+;;
 [Aa-Zz]*)
 if [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]];
 then
