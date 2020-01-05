@@ -1,0 +1,12 @@
+jazz:
+    sequence:
+    - service: media_player.play_media
+      data:
+        entity_id: media_player.main
+        media_content_type: playlist
+        media_content_id: Jazz
+
+    - service: media_player.volume_set
+      data:
+        entity_id: media_player.main
+        volume_level: 0.60

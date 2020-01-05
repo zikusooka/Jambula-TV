@@ -1,0 +1,10 @@
+# This is an input boolean to use in scenarios when Users are either
+# on Vacation or during the Holidays.  We want to turn off the 
+# work environment 
+#
+# https://www.home-assistant.io/components/input_boolean/
+#
+vacation_mode:
+  name: Vacation | Holiday
+  initial: false
+  icon: mdi:beach

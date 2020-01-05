@@ -1,0 +1,22 @@
+alias: Night Mode (On)
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: input_boolean.night_mode
+    to: 'on'
+
+condition:
+  condition: and
+  conditions:
+
+    # Someone at home
+    #- condition: template
+    #  value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+
+action:
+
+  # Run night mode (on) script
+  - service: script.night_mode_on

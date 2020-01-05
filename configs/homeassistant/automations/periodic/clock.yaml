@@ -13,6 +13,11 @@ condition:
   condition: and
   conditions:
  
+    # Vacation mode
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+
     # Day of week
     - condition: time
       after: '08:00:00'
