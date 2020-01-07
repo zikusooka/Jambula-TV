@@ -5,5 +5,4 @@ install snd-pcm /sbin/modprobe --ignore-install snd-pcm && /sbin/modprobe snd-pc
 #options snd_hda_intel id=Generic,VT82xx index=2,0
 #
 # USB Audio device for webcam
-options snd_usb_audio index=5
-
+options snd_usb_audio index=5 ignore_ctl_error=1 

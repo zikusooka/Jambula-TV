@@ -601,7 +601,10 @@ GRUB2_BEEP_SOUND="480 440 1"
 PULSE_HOME_DIR=$STATEDIR/lib/pulse
 PULSE_SYSTEM_CONFIG=$CONFDIR/pulse/system.pa
 PULSE_DEFAULT_CONFIG=$CONFDIR/pulse/default.pa
+PULSE_CLIENT_CONFIG=$CONFDIR/pulse/client.conf
+PULSE_DAEMON_CONFIG=$CONFDIR/pulse/daemon.conf
 PULSE_ROOT_CONFIG_DIR=/root/.config/pulse
+PULSE_SERVER_SOCKET=$TMPDIR/pulse-server
 
 CHRONY_KEYS_FILE=/etc/chrony.keys
 CHRONYC_CMD=$BINARY_PREFIX/chronyc
@@ -906,15 +909,16 @@ NUMBER_OF_OUR_WIFI_DEVICES=$(awk '$5 == "yes" {print $0}' $OUR_WIFI_DEVICES_FILE
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
 NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
-NETWORK_MASK_PREFIX=24
+NETWORK_WIRED_PREFIX=24
+NETWORK_WIRED_MASK=$(echo $NETWORK_IP_ADDRESS | cut -d '.' -f1-3).0/$NETWORK_WIRED_PREFIX
 NETWORK_DOMAIN=jambulatv.com
 NETWORK_WIRELESS_SSID="$PROJECT_NAME-$(echo $SYSTEM_IDENTIFIER | cut -c 1-5)"
 NETWORK_WIRELESS_CHANNEL_NO=11
 NETWORK_WIRELESS_PASSPHRASE=$(pwgen -A -v -N1 12)
 NETWORK_WIRELESS_TUNTAP_DEV=$(ip tuntap | awk -F: {'print $1'} | head -1)
-NETWORK_WIRELESS_NET_MASK=$(/usr/sbin/ip addr show $NETWORK_WIRELESS_TUNTAP_DEV | awk '$1=="inet"{print $2}')
 NETWORK_WIRELESS_HOTSPOT_IP=172.16.0.1
 NETWORK_WIRELESS_HOTSPOT_PREFIX=16
+NETWORK_WIRELESS_MASK=$(echo $NETWORK_WIRELESS_HOTSPOT_IP | cut -d '.' -f1-3).0/$NETWORK_WIRELESS_HOTSPOT_PREFIX
 NETWORK_WIRELESS_DHCP_RANGE="172.16.0.10,172.16.0.49"
 NETWORK_DHCP_RANGE="192.168.0.100,192.168.0.199"
 
@@ -4041,23 +4045,33 @@ $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 pulseaudio_query () {
-# Start pulseaudio temporarily in system mode if not running
-ps auxw | grep pulseaudio > /dev/null 2>&1
+# Start pulseaudio temporarily if server is not running
+ps auxw | grep [p]ulseaudio > /dev/null 2>&1
 PULSEAUDIO_STATE=$?
-[ "$PULSEAUDIO_STATE" = "0" ] || $BINARY_PREFIX/pulseaudio --system --disallow-module-loading --disallow-exit -D > /dev/null 2>&1
-#
-# Default sink
-PULSE_DEFAULT_SINK=$(su -l $MULTIMEDIA_USER -c "pactl list sinks short" | awk {'print $2'} | head -1)
-PULSE_DEFAULT_SOURCE=$(su -l $MULTIMEDIA_USER -c "pactl list sources short" | grep monitor | head -1 | awk {'print $2'})
-# V4L TV Card Loopback device
-TV_AUDIO_SOURCE=$(su -l $MULTIMEDIA_USER -c "pactl list" | grep -B1 'SAA713' | grep alsa_input | cut -d : -f2 | sed 's/ //g')
+if [[ "$PULSEAUDIO_STATE" != "0" ]];
+then
+# Remove exiting pulseaudio config directory
+[[ -d $PULSE_ROOT_CONFIG_DIR ]] && rm -rf $PULSE_ROOT_CONFIG_DIR
+# Create fresh pulseaudio home config directory for root user
+mkdir -p $PULSE_ROOT_CONFIG_DIR
+
+# Allow root to access pulseaudio server using pactl tool
+cat > $PULSE_ROOT_CONFIG_DIR/client.conf <<ET
+default-server = 127.0.0.1
+ET
+
+# Launch accessible pulseaudio with a minimal set of modules using dbus
+$BINARY_PREFIX/dbus-launch $BINARY_PREFIX/pulseaudio -D -n --load="module-udev-detect" --load="module-native-protocol-unix auth-anonymous=1" --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1"
+fi
+
+# Default sink, source, tvcard loopback device (if any)
+PULSE_DEFAULT_SINK=$(unset DISPLAY; $BINARY_PREFIX/pactl info | awk -F': ' '/Default Sink/ {print $2}')
+PULSE_DEFAULT_SOURCE=$(unset DISPLAY; $BINARY_PREFIX/pactl info | awk -F': ' '/Default Source/ {print $2}')
+TV_AUDIO_SOURCE=$(unset DISPLAY; $BINARY_PREFIX/pactl list | grep -B1 'SAA713' | grep alsa_input | cut -d : -f2 | sed 's/ //g')
 
 # Notify of missing sinks or sources
 if [[ "x$PULSE_DEFAULT_SINK" = "x" ]] || [[ "x$PULSE_DEFAULT_SOURCE" = "x" ]];
 then
-# Force error to be displayed in log
-su -l $MULTIMEDIA_USER -c "pactl list sinks short" && \
-	su -l $MULTIMEDIA_USER -c "pactl list sources short"
 # Add error to post install notes
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
@@ -4072,7 +4086,8 @@ Pulseaudio Sinks/Sources not configured
  
 % TIP: Ensure pulseaudio is running first and then execute the following commands:
 
-  pactl list sinks short; pactl list sources short  
+  $BINARY_PREFIX/pactl info | awk -F': ' '/Default Sink/ {print $2}'
+   $BINARY_PREFIX/pactl info | awk -F': ' '/Default Source/ {print $2}'
 
 #
 EOF
@@ -4080,27 +4095,26 @@ fi
 }
 
 pulseaudio_configure () {
-# Create user root pulse config directory
-[ -d $PULSE_ROOT_CONFIG_DIR ] || mkdir -p $PULSE_ROOT_CONFIG_DIR
-# Allow root user to access pulseaudio server started by Multimedia User
-# Don't put in /etc/pulse/client.conf!!!
-echo "# Allow root user to access pulseaudio server started by $MULTIMEDIA_USER
-default-server = 127.0.0.1" > $PULSE_ROOT_CONFIG_DIR/client.conf
-#
-# Create pulse dir if it does not exist
-[ -d $PULSE_HOME_DIR ] || mkdir -p $PULSE_HOME_DIR
-# Change ownership to pulse user
+# Setup pulseuadio user i.e. pulse
+# ---
+# Create pulseaudio home dir if it does not exist
+[[ -d $PULSE_HOME_DIR ]] || mkdir -p $PULSE_HOME_DIR
+# Change ownership of pulseaudio home directory to pulse user
 chown -R pulse:pulse $PULSE_HOME_DIR
-# Backup system and default pulse files
-cp -v $PULSE_DEFAULT_CONFIG $PULSE_DEFAULT_CONFIG.orig
-# Add multimedia user to video,audio and pulse groups
+# Add pulseaudio user to pulseaudio groups
+usermod -a -G pulse-access pulse
+
+# Add multimedia user to video,audio and pulseaudio groups
 usermod -a -G video,audio,pulse,pulse-access $MULTIMEDIA_USER
 
 # Get needed pulseaudio variables
 pulseaudio_query
 
+# Backup system and default pulse files
+[[ -e ${PULSE_DEFAULT_CONFIG} ]] && \
+	cp -v ${PULSE_DEFAULT_CONFIG} ${PULSE_DEFAULT_CONFIG}.orig
+#
 # Create customized default.pa file
-# **********************************
 cat > $PULSE_DEFAULT_CONFIG << EOF
 #!$BINARY_PREFIX/pulseaudio -nF
 
@@ -4122,19 +4136,19 @@ load-module module-udev-detect
 .endif
 
 ### Automatically load driver modules for Bluetooth hardware
-.ifexists module-bluetooth-policy.so
-load-module module-bluetooth-policy
-.endif
+#.ifexists module-bluetooth-policy.so
+#load-module module-bluetooth-policy
+#.endif
 
-.ifexists module-bluetooth-discover.so
-load-module module-bluetooth-discover
-.endif
+#.ifexists module-bluetooth-discover.so
+#load-module module-bluetooth-discover
+#.endif
 
 ### Load several protocols
 .ifexists module-esound-protocol-unix.so
 load-module module-esound-protocol-unix
 .endif
-load-module module-native-protocol-unix
+load-module module-native-protocol-unix auth-group-enable=1 auth-group=pulse-access socket=$PULSE_SERVER_SOCKET
 
 ### Network access 
 load-module module-zeroconf-publish
@@ -4196,7 +4210,7 @@ set-default-source $PULSE_DEFAULT_SOURCE
 ### Allow access to this pulseaudio server i.e. Network audio server
 ### -----------------------------------------------------------------
 load-module module-esound-protocol-tcp auth-anonymous=1
-load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;192.168.0.0/16
+load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;$NETWORK_WIRED_MASK;$NETWORK_WIRELESS_MASK 
 
 # Where INPUT will be played at i.e. Music Source
 #-------------------------------------------------
@@ -4207,7 +4221,44 @@ load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;192.168.0.0/16
 #load-module module-combine sink_name=all_speakers slaves=$PULSE_DEFAULT_SINK,backend
 #set-default-sink all_speakers
 EOF
-#
+
+# Update pulseaudio config file: client.conf
+# ---
+# Backup existing file 
+[[ -e ${PULSE_CLIENT_CONFIG} ]] && \
+	cp -v ${PULSE_CLIENT_CONFIG} ${PULSE_CLIENT_CONFIG}.orig
+# Allow all users in pulse-access group to access pulseaudio server 
+cat > $PULSE_CLIENT_CONFIG <<ET
+autospawn = no
+default-server = unix:$PULSE_SERVER_SOCKET
+enable-memfd = yes
+ET
+
+# Update pulseaudio config file: daemon.conf
+# ---
+# Backup existing file
+[[ -e ${PULSE_DAEMON_CONFIG} ]] && \
+	cp -v ${PULSE_DAEMON_CONFIG} ${PULSE_DAEMON_CONFIG}.orig
+# Prevent pulseaudio server from exiting after an idle timeout
+cat > ${PULSE_DAEMON_CONFIG} <<ET
+exit-idle-time = -1
+ET
+
+# Setup systemd unit
+# ---
+if [[ ! -e $SYSTEMD_UNITS_DIR_USER/pulseaudio.service ]];
+then
+# Configure and copy systemd unit (.service) file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/pulseaudio.service ]] || \
+	cat $PROJECT_INIT_SCRIPTS_DIR/pulseaudio.service | \
+		sed -e "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
+			> $SYSTEMD_UNITS_DIR_USER/pulseaudio.service
+# Enable systemd unit
+systemctl enable pulseaudio.service
+fi
+
+# Alsa Utilities
+# ---
 # Add asoundrc file
 cat > $CONFDIR/asound.conf <<EOF
 pcm.!default {
@@ -4227,6 +4278,9 @@ ctl.pulse_monitor {
   device $PULSE_DEFAULT_SOURCE
 }
 EOF
+#
+# Give ownership of asound.conf file to multimedia user i.e. jambula
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $CONFDIR/asound.conf
 }
 
 portaudio_install () {

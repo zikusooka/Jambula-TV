@@ -1,0 +1,13 @@
+[Unit]
+After=sound.target network.target avahi-daemon.service
+Requires=sound.target
+Wants=avahi-daemon.service
+Description=pulseAudio sound server
+
+[Service]
+User=MY_MULTIMEDIA_USER
+ExecStart=/usr/bin/dbus-launch --exit-with-session /usr/bin/pulseaudio
+Restart=always
+
+[Install]
+WantedBy=default.target

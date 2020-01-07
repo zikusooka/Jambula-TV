@@ -157,7 +157,7 @@ top)
 clear
 logger -s -t $(basename $0) "$BANDWIDTH_QUERY_STANDBY_GENERATING_DATA_MESSAGE"
 # Collect data bandwidth info
-sudo $IFTOP_CMD -i $WIFI_STATION_INTERFACE -t -n -N  -F $NETWORK_WIRELESS_NET_MASK -s 60 2>/dev/null > $BANDWIDTH_USED_RAW_FILE 2>&1
+sudo $IFTOP_CMD -i $WIFI_STATION_INTERFACE -t -n -N  -F $NETWORK_WIRELESS_MASK -s 60 2>/dev/null > $BANDWIDTH_USED_RAW_FILE 2>&1
 # Calculate top user and data
 CURRENT_TOP_USER=$(awk '$1 == "1" {print $2,$7}' $BANDWIDTH_USED_RAW_FILE)
 # Print top user and data if available
