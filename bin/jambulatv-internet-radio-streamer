@@ -305,16 +305,6 @@ exit 1
 esac
 }
 
-check_pulseaudio () {
-pactl list sinks short > /dev/null 2>&1
-PACTL_STATUS=$?
-# Stop and restart pulseaudio if existing process is broken
-if [[ "$PACTL_STATUS" != "0" ]];
-then
-sudo killall pulseaudio && /usr/bin/pulseaudio -D
-fi
-}
-
 mpd_check_status () {
 # Check status of MPD server
 $MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT status > /dev/null 2>&1
@@ -357,9 +347,6 @@ stream_local () {
 # Pre stream start tasks
 remove_previous_log_file
 #
-# Start/Restart Pulseaudio if not running or existing process is broken
-check_pulseaudio
-#
 case $WEBRADIO_STREAMER_CLIENT_LOCATION in
 # Play locally if requested
 local)
@@ -386,9 +373,6 @@ usage_start
 #
 # Remove previous log file
 remove_previous_log_file
-#
-# Start/Restart Pulseaudio if not running or existing process is broken
-check_pulseaudio
 #
 # Get web radio station URL
 get_webradio_url

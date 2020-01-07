@@ -71,16 +71,6 @@ PROCESS_INSTANCE_LOCK_STATUS=$?
 done
 }
 
-check_pulseaudio () {
-pactl list sinks short > /dev/null 2>&1
-PACTL_STATUS=$?
-# Stop and restart pulseaudio if existing process is broken
-if [[ "$PACTL_STATUS" != "0" ]];
-then
-sudo killall pulseaudio && /usr/bin/pulseaudio -D
-fi
-}
-
 waiting_4_online_response () {
 if [ "x$1" = "x" ];
 then
@@ -362,10 +352,6 @@ fi
 
 # Prevent another instance of this tool from running at the same time
 wait_if_another_process_instance_is_running
-
-# Check pulseaudio if playing non-beep sounds
-[[ "$SOUND_TYPE" = "beep" ]] || \
-check_pulseaudio
 
 if [[ "$SOUND_TYPE" = "beep" ]];
 then

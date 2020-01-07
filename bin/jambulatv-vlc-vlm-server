@@ -29,8 +29,6 @@ then
 echo "Error: The device [$TV_STREAMING_DEVICE] is currently in use" > $VLM_VOD_LOG_FILE 2>&1
 exit 1
 fi
-# Killall pulseaudio for now
-killall pulseaudio > /dev/null 2>&1 || killall -9 pulseaudio > /dev/null 2>&1
 # start VLM server
 /usr/bin/cvlc -vvv --x11-display :0 -I telnet --vlm-conf $VLM_VOD_CONFIG_FILE --telnet-host $NETWORK_IP_ADDRESS --telnet-port 4212 --telnet-password videolan --rtsp-host 0.0.0.0 --rtsp-port 554 --rtsp-throttle-users 0 --rtsp-session-timeout 10 > $VLM_VOD_LOG_FILE 2>&1 &
 }
@@ -39,8 +37,6 @@ killall pulseaudio > /dev/null 2>&1 || killall -9 pulseaudio > /dev/null 2>&1
 vlm_server_stop () {
 # Kill VLM server
 killall vlc > /dev/null 2>&1 || killall -9 vlc > /dev/null 2>&1
-# Restart pulseaudio
-/usr/bin/pulseaudio --system --disallow-module-loading --disallow-exit -D > /dev/null 2>&1 &
 }
 
 

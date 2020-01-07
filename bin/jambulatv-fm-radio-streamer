@@ -59,16 +59,6 @@ exit 1
 fi
 }
 
-check_pulseaudio () {
-pactl list sinks short > /dev/null 2>&1
-PACTL_STATUS=$?
-# Stop and restart pulseaudio if existing process is broken
-if [[ "$PACTL_STATUS" != "0" ]];
-then
-sudo killall pulseaudio && /usr/bin/pulseaudio -D
-fi
-}
-
 mpd_check_status () {
 # Check status of MPD server
 $MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT status > /dev/null 2>&1
@@ -112,9 +102,6 @@ NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | rev | a
 }
 
 stream_local () {
-# Start/Restart Pulseaudio if not running or existing process is broken
-check_pulseaudio
-#
 case $FMRADIO_STREAMER_CLIENT_LOCATION in
 # Play locally if requested
 local)
