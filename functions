@@ -1109,7 +1109,7 @@ OWNCLOUD_ADMIN_PASS=3jambulatv
 OWNCLOUD_CONFIG_DIR=$WWW_HTML_DIR/owncloud/config
 OWNCLOUD_CONFIG_FILE=$OWNCLOUD_CONFIG_DIR/config.php
 OWNCLOUD_DATA_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Cloud
-OWNCLOUD_WWW_SERVER_NAME=$(grep server_name $PROJECT_CONFIGS_DIR/nginx/sites-enabled/owncloud | awk {'print $2'} | sed 's/;//')
+OWNCLOUD_WWW_SERVER_NAME=$([[ -e $PROJECT_CONFIGS_DIR/nginx/sites-enabled/owncloud ]] && grep server_name $PROJECT_CONFIGS_DIR/nginx/sites-enabled/owncloud | awk {'print $2'} | sed 's/;//')
 
 # Nextcloud
 NEXTCLOUD_VERSION="9.0.58.1"
