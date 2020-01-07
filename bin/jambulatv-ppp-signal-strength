@@ -1,5 +1,7 @@
 #!/bin/sh
 # Get current PPP signal strength
+#
+# Jambula Labs @copyright 2020-2021 All rights reserved
 
 # Variables
 MODEM_INDEX=$(mmcli -L | grep Modem | cut -d / -f6 | cut -d " " -f1)

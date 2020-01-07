@@ -1,4 +1,7 @@
 #!/bin/sh
+#
+# Jambula Labs @copyright 2020-2021 All rights reserved
+
 # Variables
 PROJECT_NAME=JambulaTV
 SOURCESDIR=/opt

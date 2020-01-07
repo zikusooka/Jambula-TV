@@ -1,4 +1,7 @@
 #!/bin/sh
+#
+# Jambula Labs @copyright 2020-2021 All rights reserved
+
 WIFI_AP_INTERFACE=MY_WIFI_AP_INTERFACE
 WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 WIFI_OLD_INTERFACE=$(journalctl -b -o cat --no-pager | grep 'renamed network interface wlan' | awk '{print $NF}' | sort -u | head -1)

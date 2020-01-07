@@ -11,7 +11,7 @@
 #
 #ENV{adb_user}=="yes", MODE="0660", GROUP="adbusers", SYMLINK+="phone_android_$env{ID_MODEL}_$env{ID_SERIAL_SHORT}", TAG+="systemd", ENV{SYSTEMD_WANTS}+="jambulatv-backup-mobile-phone@$env{ID_SERIAL_SHORT}.service"
 #
-# Jambula Labs @copyright 2019-2020 All rights reserved
+# Jambula Labs @copyright 2020-2021 All rights reserved
 #
 # Variables
 PHONE_SERIAL_NUMBER=$1
