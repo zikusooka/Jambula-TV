@@ -59,6 +59,16 @@ fi
 #
 # Start kodi using xinit
 $JAMBULATV_START_CMD
+#
+# Check if kodi was started
+sleep 5
+ps acx | grep [k]odi
+KODI_STATUS=$?
+# Kill Xinit processes if kodi failed to start
+if [[ "$KODI_STATUS" != "0" ]];
+then
+sudo killall xinit
+fi
 ;;
 
 # LXDE
