@@ -312,6 +312,9 @@ ALERT_SOUND_FILE=guest_visitor_mode_activating.mp3
 39)
 ALERT_SOUND_FILE=guest_visitor_mode_deactivated.mp3
 ;;
+40)
+ALERT_SOUND_FILE=its_time_4_news.mp3
+;;
 [Aa-Zz]*)
 if [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]];
 then
