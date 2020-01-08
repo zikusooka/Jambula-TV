@@ -11294,8 +11294,13 @@ EOF
 # Add empty .ocdata file to nextcloud data directory - its required
 touch $NEXTCLOUD_DATA_DIRECTORY/.ocdata
 # Change permissions on data directory
-chmod -R 775 $NEXTCLOUD_DATA_DIRECTORY
+chmod -R 770 $NEXTCLOUD_DATA_DIRECTORY
 chown -R $WWW_USER:$WWW_GROUP $NEXTCLOUD_DATA_DIRECTORY
+
+# Add multimedia user i.e. jambula to http server group i.e. nginx
+# This ensures that multimedia user has access to Nextcloud's
+# Datadirectory i.e. /JambulaTV/Cloud
+usermod -a -G $WWW_GROUP $MULTIMEDIA_USER
 
 # Patch nextcloud Calendar App to enable successful connections/subscriptions to external calendars like Google
 patch -p1 $WWW_HTML_DIR/nextcloud/apps/calendar/controller/proxycontroller.php < $PROJECT_PATCHES_DIR/nextcloud.proxycontroller.patch
