@@ -1,0 +1,49 @@
+alias: Its time for news
+initial_state: True
+
+
+trigger:
+
+  # Local News at 7pm
+  - platform: time
+    at: '19:59:00'
+
+  # Local News at 9pm
+  - platform: time
+    at: '20:59:00'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Vacation mode
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+
+    # Day of week
+    - condition: time
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+
+
+action:
+
+  # a) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+  # Pause for a second - Needed - DO NOT REMOVE unless you have a fix!
+    - delay:
+        seconds: 1
+  # b) Chime alert using house speakers
+    - service: shell_command.play_chime_alert
+
+  # c) Its time for news sound effect using house speakers
+    - service: shell_command.its_time_4_news
+
+  # d) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute

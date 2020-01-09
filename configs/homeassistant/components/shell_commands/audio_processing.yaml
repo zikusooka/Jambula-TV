@@ -3,3 +3,5 @@ ffmpeg_concat_two_wav: /usr/bin/ffmpeg -i "concat:{{input_directory}}/{{input_fi
 ffmpeg_concat_two_mp3: /usr/bin/ffmpeg -i "concat:{{input_directory}}/{{input_file1}}|{{input_directory}}/{{input_file2}}" -acodec mp3 {{output_directory}}/{{output_file}}
 
 play_merged_audio_file: /usr/bin/cvlc --quiet --nodaemon --play-and-exit --aout pulse --gain 2 --no-video --no-sout-display-video {{merged_audio_dir}}/{{merged_audio_file}}
+
+create_local_music_playlist: /bin/sh -c "/usr/bin/find {{music_dir}}/{{genre}} -type f > {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; exit 0"

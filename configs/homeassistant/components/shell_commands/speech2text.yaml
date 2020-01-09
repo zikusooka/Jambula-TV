@@ -1,1 +1,1 @@
-play_flash_briefing: /bin/echo "READ MY FLASH BRIEFING" >> /tmp/results
+play_flash_briefing: /bin/sh -c "/bin/echo 'READ MY FLASH BRIEFING' >> /tmp/results"

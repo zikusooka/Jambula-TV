@@ -1,4 +1,4 @@
-music_play_jazz:
+music_play_all:
   sequence:
 
     # Generate playlist
@@ -6,14 +6,14 @@ music_play_jazz:
       data_template:
         music_dir: !secret jambulatv_music_dir
         mpd_playlists_dir: !secret jambulatv_playlists_mpd_dir
-        genre: 'Jazz'
+        genre: '*'
 
     # Play 
     - service: media_player.play_media
       data:
         entity_id: media_player.jambulatv_now_playing
         media_content_type: playlist
-        media_content_id: 'Local-Music-Jazz'
+        media_content_id: 'Local-Music-*'
 
     # set volume
     - service: media_player.volume_set
