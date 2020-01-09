@@ -1933,6 +1933,11 @@ ln -s $LIBDIR/libcrypto.so.10 $LIBDIR/libcrypto.so
 ln -s $INCDIR/openssl_101 $INCDIR/openssl
 }
 
+python3_module_local_install () {
+PYTHON_MODULE=$1
+pip3 --disable-pip-version-check download --no-binary :all: --only-binary none -d $TMPDIR/python_tarballs $PYTHON_MODULE
+}
+
 
 
 ############
