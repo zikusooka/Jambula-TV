@@ -1,10 +1,8 @@
 #!/bin/sh
 # This script queries all the udev associated properties for an inserted  USB device 
 #
-# Copyright (C) 2015-2016 Joseph Zikusooka.
+# Jambula Labs @copyright 2020-2021 All rights reserved
 #
-# Contact me at: joseph AT zikusooka.com
-
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
@@ -32,4 +30,5 @@ exit 1
 fi
 #
 
-udevadm info -a -p `udevadm info -q path -n $DEVICE_NODE`
+#udevadm info -a -p $(udevadm info -q path -n $DEVICE_NODE)
+udevadm info --query property $DEVICE_NODE
