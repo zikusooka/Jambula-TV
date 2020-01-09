@@ -1892,6 +1892,27 @@ EOF
 read
 }
 
+create_mysql_db_jambulatv () {
+# Create setup database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $JAMBULATV_SETUP_DB_NAME
+# Generate database tables using schema
+mysql -u root -p$MYSQL_ROOT_PASSWORD $JAMBULATV_SETUP_DB_NAME < $JAMBULATV_SETUP_DB_SCHEMA
+# Set privileges on JambulaTV database
+echo "GRANT ALL PRIVILEGES ON $JAMBULATV_SETUP_DB_NAME.* to $JAMBULATV_SETUP_DB_USER@localhost IDENTIFIED by '$JAMBULATV_SETUP_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+}
+
+drop_mysql_db_jambulatv() {
+mysqladmin -p$MYSQL_ROOT_PASSWORD drop $JAMBULATV_SETUP_DB_NAME
+}
+
+reset_mysql_db_jambulatv () {
+# Drop JambulaTV setup database
+drop_mysql_db_jambulatv
+#
+# Create JambulaTV setup database
+create_mysql_db_jambulatv
+}
+
 query_mysql_db () {
 mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} 2> /dev/null << EOF
 USE ${JAMBULATV_SETUP_DB_NAME};
