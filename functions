@@ -8173,6 +8173,15 @@ JAMBULATV_FTP_PASS=$JAMBULATV_FTP_PASS
 EOF
 }
 
+jp2a_install () {
+# Install jp2a - A simple JPEG to ASCII converter.
+rsync -av --delete-after $PROJECT_GITHUB_DIR/jp2a/ $INSTALL_SRC_DIR/jp2a/
+cd $INSTALL_SRC_DIR/jp2a
+autoreconf -vi
+./configure --prefix=$PREFIX
+make_install_jambulatv
+}
+
 motd_configure () {
 cat > $CONFDIR/cron.d/motd << EOF
 @daily root $BINARY_PREFIX/jambulatv-sysinfo > $CONFDIR/motd
