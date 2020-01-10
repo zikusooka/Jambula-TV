@@ -315,6 +315,12 @@ ALERT_SOUND_FILE=guest_visitor_mode_deactivated.mp3
 40)
 ALERT_SOUND_FILE=its_time_4_news.mp3
 ;;
+41)
+HOUR=$(date +%-I) 
+AMPM=$(date +%-P) 
+# Select sound based on hour and AM/PM
+ALERT_SOUND_FILE=time_now_is_${HOUR}_${AMPM}.mp3
+;;
 [Aa-Zz]*)
 if [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]];
 then
