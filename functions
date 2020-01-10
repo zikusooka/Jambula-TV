@@ -14491,6 +14491,9 @@ make_install_jambulatv
 }
 
 pocketsphinx_configure () {
+# Give multimedia user permission to access main pocketsphinx directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $DATAROOTDIR/pocketsphinx
+
 # Copy over pocketsphinx language dictionaries, models, etc 
 rsync -av $PROJECT_CONTRIB_DIR/speech_tts_asr/pocketsphinx/ $POCKETSPHINX_DATA_DIR/
 

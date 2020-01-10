@@ -3,18 +3,20 @@
 # Use it to detect requested phrases for read time, weather, etc
 #
 # Jambula Labs @copyright 2020-2021 All rights reserved
-#
+
+
+# ----------
 # Variables
-WATCH_CMD="/usr/bin/tail"
-WATCH_INTERVAL="1.0"
-WATCH_OPTS="-n 0 -F -s $WATCH_INTERVAL"
+# ----------
+
+# Mic Source
+# ---
+#PS_MIC_SOURCE=$(unset DISPLAY; /usr/bin/pactl info | awk -F': ' '/Default Source/ {print $2}')
 #
-# Mic Sources
-# -----------
-PS_MIC_SOURCE=
+# To find other mic sources other than default, run the command:
+# unset DISPLAY; pactl list sources short
 #
-# Run the following command to find your default source
-#pactl list sources short && exit
+# Tested microphones:
 #
 # OmniVision Technologies - Sony Playstation Eye
 #PS_MIC_SOURCE="alsa_input.usb-OmniVision_Technologies__Inc._USB_Camera-B4.09.24.1-01-CameraB409241.multichannel-input"
@@ -31,23 +33,38 @@ PS_MIC_SOURCE=
 #
 #PS_MIC_SOURCE="alsa_output.usb-IPEVO_corp_FR-33.2_0000000000-01-FR332.analog-mono.monitor"
 
+# Pocketsphinx
+# ---
 PS_ACOUSTIC_MODEL_DIR=MY_PREFIX/share/pocketsphinx/model/en-us/en-us
 PS_DATA_DIR=MY_POCKETSPHINX_DATA_DIR
 PS_DICTIONARY_FILE=$PS_DATA_DIR/jambulatv.000.dic
 PS_LANGUAGE_MODEL_FILE=$PS_DATA_DIR/jambulatv.000.lm
-#PS_LOG_FILE=/var/log/JambulaTV/pocketsphinx.log
+#PS_LOG_FILE=MY_JAMBULATV_LOG_DIR/pocketsphinx.log
 PS_LOG_FILE=/dev/null
 PS_OUTPUT_FILE=MY_TMPDIR/results
 PS_KEYPHRASE_LIST=$PS_DATA_DIR/keyphrase.list
-#PS_KEYPHRASE="OKAY JAMB BOO LA"
+PS_KEYPHRASE="OKAY JAMB BOO LA"
+PS_KEYPHRASE_THRESHOLD="1e-20"
+PS_KEYPHRASE_MULTIPLE=yes #yes|no
 PS_NOISE_SILENCE_THRESHOLD="4.0"
+PS_CMN="prior" #current|prior|none
+PS_CMNINIT="65,-1,-35,-10,-5,-24,8,-8,-21,-12,-32,-21,-29"
+#PS_CMNINIT="41.00,-5.29,-0.12,5.09,2.48,-4.07,-1.37,-1.78,-5.08,-2.05,-6.45,-1.42,1.17"
 PS_SAMPRATE="16000/8000/48000"
 PS_OLD_TAIL_PID=$(ps auxw | grep -v grep | grep "$WATCH_CMD $WATCH_OPTS" | awk {'print $2'} | head -1)
 PS_OLD_CONTINUOUS_PID=$(ps auxw | grep -v grep | grep 'pocketsphinx_continuous' | awk {'print $2'} | head -1)
+
+# TTS/ASR Speech tools
+# ---
 TEXT_2_SPEECH_TOOL_PATH=/usr/bin/jambulatv-text2speech
 TEXT_2_SPEECH_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $TEXT_2_SPEECH_TOOL_PATH | cut -d '=' -f2 | head -1 | awk {'print $1'})
-
 JAMBULATV_SKILLS_FILE=/usr/bin/jambulatv-asr-skills
+
+# Miscellaneous
+# ---
+WATCH_CMD="/usr/bin/tail"
+WATCH_INTERVAL="1.0"
+WATCH_OPTS="-n 0 -F -s $WATCH_INTERVAL"
 
 
 
@@ -57,7 +74,7 @@ JAMBULATV_SKILLS_FILE=/usr/bin/jambulatv-asr-skills
 
 setup_default_microphone () {
 # Set to desired source i.e. microphone
-pactl set-default-source $PS_MIC_SOURCE
+/usr/bin/pactl set-default-source $PS_MIC_SOURCE
 }
 
 cleanup_old_processes () {
@@ -78,17 +95,57 @@ touch $PS_OUTPUT_FILE
 fi
 }
 
+pocketsphinx_add_featparams_file () {
+cat > $PS_ACOUSTIC_MODEL_DIR/feat.params <<ET
+-lowerf 130
+-upperf 6800
+-nfilt 25
+-transform dct
+-lifter 22
+-feat 1s_c_d_dd
+-svspec 0-12/13-25/26-38
+-agc none
+-cmn $PS_CMN
+-varnorm no
+-model ptm
+-cmninit $PS_CMNINIT
+ET
+}
+
 run_speech2text_engine () {
+# Add featparams file with custom cmninit values
+pocketsphinx_add_featparams_file
+
+# Start pocketsphinx_continuous
+if [[ "$PS_KEYPHRASE_MULTIPLE" = "yes" ]];
+then
 # Using multiple keyphrases
-pocketsphinx_continuous -hmm $PS_ACOUSTIC_MODEL_DIR -adcdev $PS_MIC_SOURCE -inmic yes \
-	-lm $PS_LANGUAGE_MODEL_FILE -dict $PS_DICTIONARY_FILE -kws "$PS_KEYPHRASE_LIST" \
-	-vad_threshold $PS_NOISE_SILENCE_THRESHOLD -samprate $PS_SAMPRATE \
-	-logfn $PS_LOG_FILE | tee -a $PS_OUTPUT_FILE &
-#
+/usr/bin/pocketsphinx_continuous \
+	-adcdev $PS_MIC_SOURCE \
+	-hmm $PS_ACOUSTIC_MODEL_DIR \
+	-inmic yes \
+	-lm $PS_LANGUAGE_MODEL_FILE \
+	-dict $PS_DICTIONARY_FILE \
+	-kws "$PS_KEYPHRASE_LIST" \
+	-vad_threshold $PS_NOISE_SILENCE_THRESHOLD \
+	-samprate $PS_SAMPRATE \
+	-logfn $PS_LOG_FILE \
+		| tee -a $PS_OUTPUT_FILE &
+else
 # Using one keyphrase
-#pocketsphinx_continuous -hmm $PS_ACOUSTIC_MODEL_DIR -adcdev $PS_MIC_SOURCE -inmic yes \
-#	-lm $PS_LANGUAGE_MODEL_FILE -dict $PS_DICTIONARY_FILE -keyphrase "$PS_KEYPHRASE" \
-#	-kws_threshold 1e-20 -logfn $PS_LOG_FILE | tee -a $PS_OUTPUT_FILE &
+/usr/bin/pocketsphinx_continuous \
+	-adcdev $PS_MIC_SOURCE \
+	-hmm $PS_ACOUSTIC_MODEL_DIR \
+	-inmic yes \
+	-lm $PS_LANGUAGE_MODEL_FILE \
+	-dict $PS_DICTIONARY_FILE \
+	-keyphrase "$PS_KEYPHRASE" \
+	-kws_threshold "$PS_KEYPHRASE_THRESHOLD" \
+	-vad_threshold $PS_NOISE_SILENCE_THRESHOLD \
+	-samprate $PS_SAMPRATE \
+	-logfn $PS_LOG_FILE \
+		| tee -a $PS_OUTPUT_FILE &
+fi
 }
 
 detect_triggers_and_activate_text2speech () {
