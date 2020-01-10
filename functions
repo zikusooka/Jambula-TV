@@ -869,6 +869,12 @@ PUBLIC_DNS_SERVERS="$GOOGLE_DNS_SERVER_IP_1 $OPEN_DNS_SERVER_IP_1 $COMODO_DNS_SE
 #
 DNS_SERVER_IP_ADDRESS_DEFAULT=$GOOGLE_DNS_SERVER_IP_1
 
+# DNS blocking
+DNS_BLOCKING_CACHE_DIR=$PROJECT_SYSTEM_SHARE_DIR/dns_blocklists
+DNS_BLOCKING_SOURCES_FILE=$PROJECT_SYSTEM_CONF_DIR/dns-blocklists-sources.txt
+DNS_BLOCKING_URL_HOSTNAMES="https://raw.githubusercontent.com/notracking/hosts-blocklists/master/hostnames.txt"
+DNS_BLOCKING_URL_DOMAINS="https://raw.githubusercontent.com/notracking/hosts-blocklists/master/domains.txt"
+
 # Netdata
 NETDATA_PORT=$(grep -i 'netdata$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
@@ -8385,6 +8391,34 @@ EOT2
 cp -v $PROJECT_INIT_SCRIPTS_DIR/openresolv.service $SYSTEMD_UNITS_DIR_USER/
 # Enable openresolv if needed
 systemctl enable openresolv.service
+}
+
+dns_blocking_using_dnsmasq_setup () {
+# Create DNS blocklists directory
+[[ -d $DNS_BLOCKING_CACHE_DIR ]] || mkdir -p $DNS_BLOCKING_CACHE_DIR
+# Copy initial domains and hostnames files to DNS cache directory
+rsync -av $PROJECT_CONTRIB_DIR/dns_block_lists/ $DNS_BLOCKING_CACHE_DIR/ 
+# Give multimedia user permission to access DNS cache directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $DNS_BLOCKING_CACHE_DIR
+
+# Add DNS block lists to dnsmasq file
+cat >> $CONFDIR/dnsmasq.conf <<EOT
+
+# DNS based blocking 
+conf-file=$DNS_BLOCKING_CACHE_DIR/domains.txt
+addn-hosts=$DNS_BLOCKING_CACHE_DIR/hostnames.txt
+EOT
+
+# Add initial list of DNS block URLs file to be used when updating
+cat > $DNS_BLOCKING_SOURCES_FILE <<EOT
+$DNS_BLOCKING_URL_HOSTNAMES
+$DNS_BLOCKING_URL_DOMAINS
+EOT
+# Give multimedia user permission to access list of DNS block URLs file
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $DNS_BLOCKING_SOURCES_FILE
+
+# Reload dnsmasq
+systemctl restart dnsmasq.service
 }
 
 wol_configure () {

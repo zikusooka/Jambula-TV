@@ -200,6 +200,7 @@ chrony_configure
 dnsmasq_configure
 openresolv_install
 openresolv_configure
+dns_blocking_using_dnsmasq_setup
 
 # -----------------
 # Internet Access 
