@@ -37,6 +37,8 @@ LAST_DNS_STATUS=$2
 
 RESOLVCONF_CONFIG=/etc/resolvconf.conf
 PUBLIC_DNS_SERVERS="$PUBLIC_DNS_SERVERS"
+DNS_BLOCKING_CACHE_DIR=MY_PROJECT_SYSTEM_SHARE_DIR/dns_blocklists
+DNS_BLOCKING_SOURCES_FILE=MY_PROJECT_SYSTEM_CONF_DIR/dns-blocklists-sources.txt
 
 MONITORING_PLUGINS_DIR=/usr/lib64/nagios/plugins
 
@@ -169,6 +171,12 @@ update_dns_servers
 
 # Remove dnsmasq entries for local resolution
 [ ! -e $INTERNET_OFF_FILE ] || rm -f $INTERNET_OFF_FILE
+
+# Download updated DNS block lists i.e. hostnames and domains txt files
+/usr/bin/wget -c -i $DNS_BLOCKING_SOURCES_FILE -P $DNS_BLOCKING_CACHE_DIR
+# Give multimedia user permission to access DNS cache directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $DNS_BLOCKING_CACHE_DIR
+
 # Restart dnsmasq.service
 systemctl restart dnsmasq.service
 
