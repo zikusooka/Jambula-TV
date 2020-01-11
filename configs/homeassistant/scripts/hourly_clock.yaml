@@ -1,10 +1,9 @@
-say_time_internet_on:
+say_time_at_top_off_hour:
   sequence:
 
 
-
-  # Task - Speak the current of the hour
-  # ------------------------------------------------------
+  # Task - Announce the current time at the top of the hour
+  # -------------------------------------------------------
   # a) Mute speaker volume if there is already audio playing
     - service: shell_command.speaker_volume_mute
   # Pause for a second - Needed - DO NOT REMOVE unless you have a fix!
@@ -14,11 +13,10 @@ say_time_internet_on:
     - service: shell_command.play_chime_big_ben_alert
   # Wait for bell to finish ringing
     - delay:
-        seconds: 0
+        seconds: 3
   # c) Speak the current hour using house speakers
-    - service: shell_command.say_current_time_using_text2speech
+    - service: shell_command.say_current_time_using_sounds_tool
       data_template:
-        tts_engine: ""
-        tts_audio_gain: ""
+        audio_gain: ""
   # d) Unmute speaker volume 
     - service: shell_command.speaker_volume_unmute

@@ -32,11 +32,5 @@ condition:
 
 action:
 
-  # Wait for bell to finish ringing
-  - service_template: >
-        {% if is_state('binary_sensor.internet', 'on') %}
-          script.say_time_internet_on
-
-        {% else %}
-          script.say_time_internet_off
-        {% endif %}
+  # Run script that says time at the top of the hour
+  - service: script.say_time_at_top_off_hour
