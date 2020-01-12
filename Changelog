@@ -1,3 +1,97 @@
+Changes since v6.6
+--------------------
+
+* JambulaTV: Fix bug issue where the AP, Station, and Monitor wireless            interfaces are not correctly assigned during initial            install process i.e Update 'wireless_interfaces_configure'            routines in initial install & functions file 
+
+* JambulaTV: Add support for voice alert notifications when performing            the following tasks:            a) Backup of mobile phones and            b) Enabling/Disabling of Internet data saving mode 
+
+* JambulaTV: Add adb to list of allowed super user commands (sudo)            i.e. Append to 'AUTOLOGIN_USER_COMMANDS' variable 
+
+* JambulaTV: Add udev rules for all known android phone device vendors            See: https://github.com/M0Rf30/android-udev-rules 
+
+* JambulaTV: Refactor code used to backup data from Android based mobile            phones plus fix issues discovered in phone backup tool 
+
+* JambulaTV: Remove build directory after GCC installation is done in            order to save space 
+
+* JambulaTV: Upgrade Linux kernel (5.4 branch) to version 5.4.6 
+
+* JambulaTV: Upgrade Linux kernel (4.19 branch) to version 4.19.91 
+
+* JambulaTV: Upgrade Intel X11 (Xorg) driver i.e. xf86-video-intel to            the latest upstream git version 
+
+* JambulaTV: Rotate Nginx log files in order to reduce on the sizes of            files created i.e. Include addition of nginx logrotate            config file under 'nginx_configure' routines in initial            functions 
+
+* JambulaTV: Rotate MPD log in order to reduce on the size of file            created by mpd processes 
+
+* JambulaTV: Rotate Zoneminder logs in order to reduce on the size of            files created by the zoneminder processes 
+
+* JambulaTV: Rotate asterisk logs in order to reduce on the size of            files created by the asterisk processes 
+
+* JambulaTV: Upgrade Python 3 to latest version: 3.8.1 
+
+* JambulaTV: Use superuser (root) to kill failed pulseaudio processes            when running FM radio streamer tool i.e. Update            jambulatv-fm-radio-streamer 
+
+* JambulaTV: Disable Internet speed tests when Internet data saver mode            is enabled i.e Update 'jambulatv-internet-data-saver' tool 
+
+* JambulaTV: Add sounds for Vacation/Holiday, Guest/Visitor, and Night            time modes to sounds tool i.e. jambulatv-sounds 
+
+* JambulaTV: Add support for Vacation/Holiday, Guest/Visitor, and Night            time modes to Home-Assistant 
+
+* JambulaTV: Fix bugs and issues in pulseaudio configuration that lead            to instability when running and accessing the sound server 
+
+* JambulaTV: Stop Xinit processes in case kodi fails to start.  This is            rare, and will happen only if system is broken but just            want to be thorough 
+
+* JambulaTV: Remove requests to start or stop pulseaudio sound server            from tools that did so since it is now handled by the            system i.e. pulseaudio.service systemd unit 
+
+* JambulaTV: Update/add copyright notices in all tools as follows: 
+
+* JambulaTV: Remove owncloud nginx server config file since it is no            longer used 
+
+* JambulaTV: Give multimedia user permission to access nextcloud's data            directory i.e. datadirectory 
+
+* JambulaTV: Upgrade Linux kernel (4.19 branch) to version 4.19.93 
+
+* JambulaTV: Upgrade Linux kernel (5.4 branch) to version 5.4.8 
+
+* JambulaTV: Add sound alert when its time for the News to sounds tool            i.e. jambulatv-sounds 
+
+* JambulaTV: Add support for playing locally stored music using the MPD            backend to Home-Assistant.  This allows us to trigger HASS            scripts that generate MPD playlists on the fly and play            selected genres or all available music 
+
+* JambulaTV: Add install of jp2a, a simple JPEG to ASCII converter 
+
+* JambulaTV: Update udev properties script i.e. udev-properties.sh in            contributed folder.  The original script does not work            properly 
+
+* JambulaTV: Upgrade Firefox browser to the latest version: 72.0.1 
+
+* JambulaTV: Upgrade LibreOffice to the latest version: 6.3.4.2 
+
+* JambulaTV: Add a helper function named 'python3_module_local_install'            which allows for easy install of python3 module libraries            when system is offline 
+
+* JambulaTV: Add the following helper function(s) which allow for easy            creation, deletion, and resetting of the MySQL database            for JambulaTV 
+
+* JambulaTV: Upgrade Sphinxbase and Pocketsphinx to latest git versions 
+
+* JambulaTV: Add the use of 'cmn' and 'cminit' options during startup of            pocketsphinx in the Speech-to-Text tool i.e.            jambulatv-speech2text 
+
+* JambulaTV: Add support for Online DNS blocking like Pi-Hole but using            dnsmasq and the 'hosts-blocklists' project, which uses            automatically updated, moderated and optimized lists to            block Internet ads, trackers and other online garbage 
+
+* JambulaTV: Add support for updating DNS blocking lists to the Internet            and DNS monitoring tool i.e. jambulatv-dns-status-triggers 
+
+* JambulaTV: Add support for hourly time clock announcements using the            sounds tool i.e. jambulatv-sounds 
+
+* JambulaTV: Add support for hourly time clock announcements with human            sounding voices when the system is offline 
+
+* JambulaTV: Upgrade Kodi preferred skin: 'skin.titan.mod.beta.leia'            to the latest Github version 
+
+* JambulaTV: Add DSTV Now kodi plugin i.e. plugin.video.dstv.now to zip            addons sources directory 
+
+* JambulaTV: Add initial support for libimobiledevice, a cross-platform            software protocol library and tools to communicate with            iOS® devices natively 
+
+* JambulaTV: Add querying of some phone attributes such as MAC and IP            addresses during backup of mobile phones i.e. Update the            tool: jambulatv-backup-mobile-phone 
+
+* JambulaTV: Add code to clean up downloaded DNS blocking domains file in            DNS status triggers tool i.e. jambulatv-dns-status-triggers 
+
+
 Changes since v6.5
 ------------------
 
