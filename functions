@@ -12603,6 +12603,50 @@ systemctl disable presence-detection-via-trackerjacker.service
 fi
 }
 
+libplist_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/libplist/ $INSTALL_SRC_DIR/libplist/
+# Compile
+cd $INSTALL_SRC_DIR/libplist
+./autogen.sh --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+# Install
+make_install_jambulatv
+}
+
+libusbmuxd_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/libusbmuxd/ $INSTALL_SRC_DIR/libusbmuxd/
+# Compile
+cd $INSTALL_SRC_DIR/libusbmuxd
+./autogen.sh --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+# Install
+make_install_jambulatv
+}
+
+libimobiledevice_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/libimobiledevice/ $INSTALL_SRC_DIR/libimobiledevice/
+# Compile
+cd $INSTALL_SRC_DIR/libimobiledevice
+./autogen.sh --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+# Install
+make_install_jambulatv
+}
+
+usbmuxd_install () {
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/usbmuxd/ $INSTALL_SRC_DIR/usbmuxd/
+# Compile
+cd $INSTALL_SRC_DIR/usbmuxd
+./autogen.sh --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
+# Install
+make_install_jambulatv
+}
+
+imobiledevice_install () {
+# Install required libraries for iPhone/iOs devices
+libplist_install
+libusbmuxd_install
+libimobiledevice_install
+usbmuxd_install
+}
+
 backup_mobile_phones_setup () {
 # Setup android-udev-rules
 # ---
