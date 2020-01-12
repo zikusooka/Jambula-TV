@@ -174,6 +174,14 @@ update_dns_servers
 
 # Download updated DNS block lists i.e. hostnames and domains txt files
 /usr/bin/wget -c -i $DNS_BLOCKING_SOURCES_FILE -P $DNS_BLOCKING_CACHE_DIR
+#
+# Clean up domains.txt file
+grep -v -e ^address -e ^# $DNS_BLOCKING_CACHE_DIR/domains.txt | while read LINE
+do
+sed -i "s|$LINE|\#$LINE|g" $DNS_BLOCKING_CACHE_DIR/domains.txt 
+sleep 1
+done
+
 # Give multimedia user permission to access DNS cache directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $DNS_BLOCKING_CACHE_DIR
 
