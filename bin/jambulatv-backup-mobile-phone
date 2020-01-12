@@ -73,7 +73,7 @@ $LOGGER_CMD -s -t $(basename $0) "Time out - failed to get user input. Quitting 
 
 notification_start () {
 # Alert using console
-$LOGGER_CMD -s -t $(basename $0) "Starting backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER"
+$LOGGER_CMD -s -t $(basename $0) "Starting backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER - $PHONE_MAC_ADDRESS - $PHONE_IP_ADDRESS"
 # Alert using voice
 [[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 27
 }
@@ -94,7 +94,7 @@ $LOGGER_CMD -s -t $(basename $0) "Feel free to unplug your phone, while we compl
 
 notification_end () {
 # Alert using console
-$LOGGER_CMD -s -t $(basename $0) "Completed backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER"
+$LOGGER_CMD -s -t $(basename $0) "Completed backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER - $PHONE_MAC_ADDRESS - $PHONE_IP_ADDRESS"
 # Alert using voice
 [[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 28
 }
@@ -200,6 +200,13 @@ fi
 done
 }
 
+query_device_params () {
+# Query device's MAC address
+PHONE_MAC_ADDRESS=$($ADB_CMD -s ${PHONE_SERIAL_NUMBER} shell ip addr show wlan0  | grep 'link/ether '| cut -d' ' -f6)
+# Query device's IP address
+PHONE_IP_ADDRESS=$($ADB_CMD -s ${PHONE_SERIAL_NUMBER} shell ip addr show wlan0 | grep inet | awk {'print $2'} | cut -d'/' -f1 | head -1)
+}
+
 backup_old_archive () {
 if [[ -e $PHONE_BACKUP_FILE ]];
 then
@@ -225,6 +232,9 @@ start_adb_server
 
 # Query device existence
 query_if_device_is_connected
+
+# Query device parameters
+query_device_params
 
 # Backup old android formatted .ab archive
 backup_old_archive
