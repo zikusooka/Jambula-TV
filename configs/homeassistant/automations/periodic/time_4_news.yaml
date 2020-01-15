@@ -6,11 +6,11 @@ trigger:
 
   # Local News at 7pm
   - platform: time
-    at: '18:59:00'
+    at: '18:58:30'
 
   # Local News at 9pm
   - platform: time
-    at: '20:59:00'
+    at: '20:58:30'
 
 
 condition:
@@ -42,8 +42,12 @@ action:
   # b) Chime alert using house speakers
     - service: shell_command.play_chime_alert
 
+
   # c) Its time for news sound effect using house speakers
+    - service: shell_command.news_starting_sound_effect
+
+  # d) Announce its time time for news using house speakers
     - service: shell_command.its_time_4_news
 
-  # d) Unmute speaker volume 
+  # e) Unmute speaker volume 
     - service: shell_command.speaker_volume_unmute
