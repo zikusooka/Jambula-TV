@@ -7892,7 +7892,7 @@ get_wireless_interface_parameters
 # Create AP rule
 cat > $UDEV_RULES_WIFI_NET_DEVICES <<EOF
 # $WIFI_AP_INTERFACE
-SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_AP_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_AP_INTERFACE", TAG+="systemd", ENV{SYSTEMD_WANTS}+=""
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_AP_MACADDRESS", KERNEL=="wlan*", NAME="$WIFI_AP_INTERFACE", TAG+="systemd", ENV{SYSTEMD_WANTS}+=""
 EOF
 # Reload Udev
 /usr/sbin/udevadm control --reload && udevadm trigger --action=add
@@ -7906,7 +7906,7 @@ if [ "x$WIFI_STATION_MACADDRESS" != "x" ];
 then
 cat >> $UDEV_RULES_WIFI_NET_DEVICES <<EOF
 # $WIFI_STATION_INTERFACE
-SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_STATION_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_STATION_INTERFACE"
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_STATION_MACADDRESS", KERNEL=="wlan*", NAME="$WIFI_STATION_INTERFACE"
 EOF
 fi
 # Reload Udev
@@ -7921,7 +7921,7 @@ if [ "x$WIFI_MONITOR_MACADDRESS" != "x" ];
 then
 cat >> $UDEV_RULES_WIFI_NET_DEVICES <<EOF
 # $WIFI_MONITOR_INTERFACE
-SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_MONITOR_MACADDRESS", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="$WIFI_MONITOR_INTERFACE"
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="$WIFI_MONITOR_MACADDRESS", KERNEL=="wlan*", NAME="$WIFI_MONITOR_INTERFACE"
 EOF
 fi
 # Reload Udev
