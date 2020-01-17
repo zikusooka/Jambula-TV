@@ -7646,7 +7646,7 @@ SSID="$WIFI_SSID"
 SECURITY_KEY="$WIFI_SECURITY_KEY"
 EOF
 # Copy Connect to WiFi AP script, if it does not exist in bin directory
-[ -e $CONNECT_WIFI_AP_TOOL ] || \
+[[ -e $CONNECT_WIFI_AP_TOOL ]] || \
 cat $PROJECT_BIN_DIR/jambulatv-connect-2-wifi-ap | \
 	sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" | \
 	sed -e "s:MY_HOST_2_PING:$DNS_SERVER_IP_ADDRESS_DEFAULT:g" \

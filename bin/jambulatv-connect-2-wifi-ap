@@ -15,7 +15,6 @@ HOST_2_PING=MY_HOST_2_PING
 
 # Available in functions file
 INTERNET_WIFI_ISP_CONFIG=/etc/JambulaTV/internet-mobile-wifi.cfg
-WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
 WIFI_INTERFACES_AVAILABLE=$(sudo /usr/sbin/ip link |grep jwlan | wc -l)
 # Variable specific to this script
 WIFI_SSID=$(grep -i SSID $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
@@ -55,9 +54,7 @@ break
 
 elif [[ "$DNS_STATUS" != "0" ]];
 then
-cat <<ET
 logger -s -t $(basename $0) "Connecting to the Internet using the WiFi Access Point (MiFi)"
-ET
 break 
 
 elif [[ ! -e "$SETUP_COMPLETED_FILE" ]];
@@ -88,45 +85,20 @@ exit 2
 fi
 }
 
-type_of_station_interface () {
-# Unsupported r8188eu devices like RTL8188ETV, RTL8188EUS (TP-Link TL-WN723/TL-WN725N)
-journalctl -b -o cat --no-pager | grep $WIFI_STATION_INTERFACE | grep r8188eu > /dev/null 2>&1
-UNSUPPORTED=$?
-# Check to see if supported
-if [[ "$UNSUPPORTED" = "0" ]];
-then
-IW_COMPATIBLE=no
-else
-IW_COMPATIBLE=yes
-fi
-}
-
 check_4_wifi_dongle () {
-# Test to see if WiFi stick is now present
-if [[ "$IW_COMPATIBLE" = "yes" ]];
-then
-# Using iw command
-/usr/sbin/iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
-else
-# Using iwconfig
-/usr/sbin/iwconfig ${WIFI_STATION_INTERFACE} | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
-fi
+# Test to see if WiFi stick is present
+sudo /usr/bin/iwctl device list | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
 WIFI_STICK_PRESENT=$?
+#
+# Test to see if WiFi stick is now present
 until [[ "$WIFI_STICK_PRESENT" = "0" ]];
 do
 # Display success message on Screen
 $OSD_TOOL_CMD "$INSERT_WIFI_DONGLE_MSG"
 # Pause while waiting for insertion
 sleep 60
-# Test if WiFi stick is now present
-if [[ "$IW_COMPATIBLE" = "yes" ]];
-then
-# Using iw command
-/usr/sbin/iw dev ${WIFI_STATION_INTERFACE} info > /dev/null 2>&1
-else
-# Using iwconfig command
-/usr/sbin/iwconfig ${WIFI_STATION_INTERFACE} | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
-fi
+# Test to see if WiFi stick is now present
+sudo /usr/bin/iwctl device list | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
 WIFI_STICK_PRESENT=$?
 done
 }
@@ -134,28 +106,19 @@ done
 scan_4_wifi () {
 # Take station UP
 sudo /usr/sbin/ip link set $WIFI_STATION_INTERFACE up
-#
-# Scan for AP, and get scanned SSID
-if [[ "$IW_COMPATIBLE" = "yes" ]];
-then
-# Using iw command
-sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: $WIFI_SSID" > /dev/null 2>&1
-AP_EXISTENCE=$?
-else
-# Using iwlist command
-sudo iwlist $WIFI_STATION_INTERFACE scan | grep -w "ESSID:\"$WIFI_SSID\"" > /dev/null 2>&1
-AP_EXISTENCE=$?
-fi
+# Scan for AP and pick out preferred SSID
+sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE scan
+DISCOVERED_WIFI_SSID=$(sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE get-networks | awk '/*/ {print $1}' | sed 's/>//g' | sed -n "/^$WIFI_SSID$/p")
 #
 # See if there's a match
-if [[ "$AP_EXISTENCE" = "0" ]];
+if [[ "x$DISCOVERED_WIFI_SSID" = "x" ]];
 then
-WIFI_FOUND=yes
-# Notify
-logger -s -t $(basename $0) "$AP_FOUND_MSG"
-else
 WIFI_FOUND=no
+# Notify
 logger -s -t $(basename $0) "$AP_NOT_FOUND_MSG"
+else
+WIFI_FOUND=yes
+logger -s -t $(basename $0) "$AP_FOUND_MSG"
 fi
 export WIFI_FOUND
 }
@@ -163,53 +126,50 @@ export WIFI_FOUND
 disconnect_4rm_access_point () {
 # PIDs
 DHCLIENT_PID=$(sudo ps auxw | grep dhclient | grep $WIFI_STATION_INTERFACE | head -1 | awk {'print $2'})
-WPA_SUPPLICANT_PID=$(sudo ps auxw | grep wpa_supplicant | grep $WIFI_STATION_INTERFACE | head -1 | awk {'print $2'})
-#
+
 # Kill dhclient
 [[ "x$DHCLIENT_PID" = "x" ]] || sudo kill $DHCLIENT_PID >> /dev/null
-# Kill wpa_supplicant
-[[ "x$WPA_SUPPLICANT_PID" = "x" ]] || sudo kill $WPA_SUPPLICANT_PID >> /dev/null
+
+# Disconnect from Access Point
+sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE disconnect
+
+# Forget previous Access point
+sudo /usr/bin/iwctl known-networks list | grep "\b$WIFI_SSID\b" > /dev/null 2>&1
+NETWORK_EXISTS=$?
+[[ "$NETWORK_EXISTS" = "0" ]] && \
+	sudo /usr/bin/iwctl known-networks "$WIFI_SSID" forget
+
 # Flush Wifi station interface
 sudo /usr/sbin/ip addr flush dev $WIFI_STATION_INTERFACE 
-}
-
-generate_wpa_config () {
-grep "psk=\"$WIFI_SECURITY_KEY\"" $WIFI_WPA_CONFIG_FILE > /dev/null 2>&1
-PASSPHRASE_MATCH=$?
-grep "ssid=\"$WIFI_SSID\"" $WIFI_WPA_CONFIG_FILE > /dev/null 2>&1
-SSID_MATCH=$?
-# Generate a wpa/wpa2 configuration file if not yet set
-if [[ "$PASSPHRASE_MATCH" != "0" ]] || [[ "$SSID_MATCH" != "0" ]];
-then
-sudo wpa_passphrase "$WIFI_SSID" "$WIFI_SECURITY_KEY" > $WIFI_WPA_CONFIG_FILE
-fi
 }
 
 connect_2_access_point () {
 # Disconnect any existing WiFi processes
 disconnect_4rm_access_point
-# Connect to HotSpot
-sudo wpa_supplicant -B -i $WIFI_STATION_INTERFACE -c $WIFI_WPA_CONFIG_FILE
+
+# Start IWD service if not running
+sudo /usr/bin/systemctl -q is-active iwd.service || /usr/bin/systemctl start iwd.service
+
+# Connect to Access Point
+sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE connect "$WIFI_SSID" --passphrase "$WIFI_SECURITY_KEY"
+
+# Do not auto connect
+sudo /usr/bin/iwctl known-networks "$WIFI_SSID" set-property AutoConnect no
 }
 
 check_link_status () {
 # Check link status
-if [[ "$IW_COMPATIBLE" = "yes" ]];
-then
-# Using iw command
-WIFI_LINK_STATUS=$(sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE link)
-else
-# Using iwconfig command
-WIFI_LINK_STATUS=$(sudo /usr/sbin/iwconfig $WIFI_STATION_INTERFACE | awk -F':' '/Access Point/ {print $3}' | awk '{print $1}')
-fi
+WIFI_LINK_STATUS=$(sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE show | awk '/State/ {print $2}')
 #
-if [[ "$WIFI_LINK_STATUS" = "Not connected." ]] || [[ "$WIFI_LINK_STATUS" = "Not-Associated" ]];
+if [[ "$WIFI_LINK_STATUS" = "disconnected" ]];
 then
 logger -s -t $(basename $0) "Connection to $WIFI_SSID failed!. Exiting ..."
 exit 1
+
 else
 # Beep to alert: Connected WiFi AP
 /usr/bin/beep
+
 # Display success message on Screen
 $OSD_TOOL_CMD "$CONNECTED_MSG"
 fi
@@ -297,9 +257,6 @@ quit_if_already_running
 # Find WiFi interface to be used as station
 number_of_interfaces
 
-# See if station device is properly supported i.e. iw command compatible
-type_of_station_interface
-
 # Act according to who called this script
 case $ICINGA2_AP_STATUS in
 OK)
@@ -325,19 +282,15 @@ esac
 check_4_wifi_dongle
 
 # Go futher if there's available AP
-generate_wpa_config
-connect_2_access_point 
+connect_2_access_point
 # IMPORTANT: Wait for access point link to settle before checking state
-sleep 15
+sleep 5
 check_link_status
 get_ip_address
 wait_4_ip_address
 
 # Start presence detection using MiFi: Restart systemd unit if enabled but not active
 start_presence_detection_via_mifi
-
-# Reload coova-chilli in order to change default gateway device and DNS settings
-#/usr/bin/jambulatv-chilli restart
 
 #keep_alive
 remove_script_running_file
