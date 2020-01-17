@@ -23,7 +23,7 @@ PROJECT_ATTENDANT_USERNAME=zik
 PROJECT_ATTENDANT_HOSTNAME=kampala
 
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="4.19.93"
+KERNEL_VERSION="5.4.8"
 KERNEL_CONFIG_VERS=$(echo $KERNEL_VERSION | cut -d '.' -f1-2)
 
 PRODUCT_MODEL_NAME="$PROJECT_NAME"
@@ -34,7 +34,7 @@ PRODUCT_SERIAL_NUMBER=$(uuid | cut -d - -f5)
 ROOT_DIR=/JambulaTV
 AUTOLOGIN_USER=jambula
 AUTOLOGIN_USER_HOME_DIR=`finger $AUTOLOGIN_USER | grep Directory: | awk {'print $2'}`
-AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer, /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd, /usr/bin/chattr, /usr/sbin/asterisk, /usr/sbin/iftop, /usr/bin/bwm-ng, /usr/bin/socat, /usr/bin/trackerjacker, /usr/sbin/rtcwake, /usr/bin/mount, /usr/bin/umount, /usr/bin/rsync, /usr/bin/ssh, /usr/bin/ssh-copy-id, /usr/bin/adb, /usr/bin/dd"
+AUTOLOGIN_USER_COMMANDS="/usr/bin/xinit, /sbin/shutdown -h now, /usr/bin/nice, /usr/bin/kill, /usr/bin/killall, /usr/bin/rm, /usr/bin/jambulatv*, /usr/bin/systemctl, /usr/bin/chown, /usr/bin/chmod, /usr/bin/mkdir, /usr/sbin/alsactl, /usr/bin/amixer, /usr/sbin/ip, /usr/bin/touch, /usr/bin/cp, /usr/bin/sed, /usr/bin/grep, /usr/sbin/chpasswd, /usr/bin/chattr, /usr/sbin/asterisk, /usr/sbin/iftop, /usr/bin/bwm-ng, /usr/bin/socat, /usr/bin/trackerjacker, /usr/sbin/rtcwake, /usr/bin/mount, /usr/bin/umount, /usr/bin/rsync, /usr/bin/ssh, /usr/bin/ssh-copy-id, /usr/bin/adb, /usr/bin/dd, /usr/bin/iwctl"
 MULTIMEDIA_USER=$AUTOLOGIN_USER
 MULTIMEDIA_USER_HOME_DIR=$AUTOLOGIN_USER_HOME_DIR
 BACKUPS_DIR=$ROOT_DIR/Backups
@@ -615,6 +615,7 @@ PLYMOUTH_SET_CMD=/usr/sbin/plymouth-set-default-theme
 SYSTEMD_UNITS_DIR_SYSTEM=/usr/lib/systemd/system
 SYSTEMD_UNITS_DIR_USER=/etc/systemd/system
 
+DBUS_USER_SERVICES_DIR=$CONFDIR/dbus-1/system.d
 DBUS_SYSTEM_SERVICES_DIR=$DATAROOTDIR/dbus-1/system-services
 
 SYSCONFIG_DIR=/etc/sysconfig
@@ -3980,7 +3981,7 @@ echo "<!-- This configuration file specifies the required security policies
     <deny send_destination=\"org.bluez\"/>
   </policy>
 
-</busconfig>" > /etc/dbus-1/system.d/bluetooth.conf
+</busconfig>" > $DBUS_USER_SERVICES_DIR/bluetooth.conf
 #
 # Pairing scripts
 # Copy simple-agent to binaries directory - used for pairing
@@ -10206,6 +10207,51 @@ make_install_jambulatv
 wpa_supplicant_configure () {
 # Create WPA supplicant directory if non-existent
 [ -d $WIFI_WPA_CONFIG_DIR ] || mkdir -p $WIFI_WPA_CONFIG_DIR
+}
+
+iwd_install () {
+# Copy sources to install directory
+# iwd
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/iwd/ $INSTALL_SRC_DIR/iwd/
+# ell
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/ell/ $INSTALL_SRC_DIR/ell/
+cd $INSTALL_SRC_DIR/iwd
+# Bootstrap
+./bootstrap --prefix=$PREFIX --libdir=$LIBDIR
+# Configure
+./configure --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR --with-systemd-modloaddir=$PREFIX/lib/modules-load.d
+# Make Install
+make_install_jambulatv
+}
+
+iwd_configure () {
+# Generate our iwd systemd service unit file
+cat $PROJECT_INIT_SCRIPTS_DIR/iwd.service | \
+	sed -e "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" \
+		> $SYSTEMD_UNITS_DIR_USER/iwd.service
+# Remove existing default iwd systemd unit file
+[[ -e $SYSTEMD_UNITS_DIR_SYSTEM/iwd.service ]] && rm -f $SYSTEMD_UNITS_DIR_SYSTEM/iwd.service
+# Enable and start iwd if needed
+systemctl enable iwd.service
+
+# Allow icinga2 user to access iwd using DBUS 
+cat > $DBUS_USER_SERVICES_DIR/icinga-iwd.conf <<EOT
+<!DOCTYPE busconfig PUBLIC
+ "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+
+<busconfig>
+
+  <policy user="icinga">
+    <allow own="net.connman.iwd"/>
+    <allow send_destination="net.connman.iwd"/>
+    <allow send_interface="net.connman.iwd.Agent"/>
+  </policy>
+
+</busconfig>
+EOT
+# Restart dbus systemd unit
+systemctl restart dbus.service
 }
 
 youtube_dl_install () {

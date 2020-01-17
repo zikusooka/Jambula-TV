@@ -404,8 +404,10 @@ nodogsplash_configure
 nodogsplash_customization 
 hostapd_install
 hostapd_configure
-wpa_supplicant_install
-wpa_supplicant_configure
+#wpa_supplicant_install
+#wpa_supplicant_configure
+iwd_install
+iwd_configure
 daloradius_configure
 
 #------------------
