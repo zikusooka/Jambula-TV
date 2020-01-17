@@ -1,4 +1,9 @@
 #!/bin/sh
+# This script is used by icinga2 to check for availability of preferred
+# wireless access point
+#
+# Jambula Labs @copyright 2020-2021 All rights reserved
+
 # Available in functions file
 INTERNET_WIFI_ISP_CONFIG=/etc/JambulaTV/internet-mobile-wifi.cfg
 WIFI_WPA_CONFIG_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
@@ -22,34 +27,11 @@ exit 2
 fi
 }
 
-type_of_station_interface () {
-# Unsupported r8188eu devices like RTL8188ETV, RTL8188EUS (TP-Link TL-WN723/TL-WN725N)
-journalctl -b -o cat --no-pager | grep $WIFI_STATION_INTERFACE | grep r8188eu > /dev/null 2>&1
-UNSUPPORTED=$?
-# Check to see if supported
-if [ "$UNSUPPORTED" = "0" ];
-then
-IW_COMPATIBLE=no
-else
-IW_COMPATIBLE=yes
-fi
-}
-
 scan_4_wifi () {
 # Take station UP
 sudo /usr/sbin/ip link set $WIFI_STATION_INTERFACE up
-#
-# Scan for AP, and get scanned SSID
-if [ "$IW_COMPATIBLE" = "yes" ];
-then
-# Using iw command
-sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE scan | grep -w "SSID: $WIFI_SSID" > /dev/null 2>&1
-AP_EXISTENCE=$?
-else
-# Using iwlist command
-sudo iwlist $WIFI_STATION_INTERFACE scan | grep -w "ESSID:\"$WIFI_SSID\"" > /dev/null 2>&1
-AP_EXISTENCE=$?
-fi
+# Scan for AP and pick out preferred SSID
+DISCOVERED_WIFI_SSID=$(sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE scan | awk -F': ' '/SSID:/ {print $2}' | grep -i "\b$WIFI_SSID\b")
 }
 
 
@@ -57,12 +39,15 @@ fi
 #################
 #  MAIN SCRIPT  #
 #################
+
+# Check for number of WiFi devices
 number_of_interfaces
-type_of_station_interface
+
+# Scan for available WiFi networks
 scan_4_wifi
 
 # See if there's a match for my AP
-if [ "$AP_EXISTENCE" = "0" ];
+if [[ "x$DISCOVERED_WIFI_SSID" != "x" ]];
 then
 echo "OK - Wireless Access Point ($WIFI_SSID) Available"
 exit 0
