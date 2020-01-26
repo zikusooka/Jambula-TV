@@ -7855,34 +7855,34 @@ get_wireless_interface_parameters () {
 # Create list and get roles and variables
 assign_roles_2_wireless_devices
 # AP
-WIFI_AP_BIOSDEV_NAME=$(grep WIFI_AP $WIFI_DEVICES_ROLES_LIST | awk {'print $1'})
+WIFI_AP_BIOSDEV_NAME=$(grep WIFI_AP $WIFI_DEVICES_ROLES_LIST | awk {'print $2'})
 # If configuring virtual interfaces, then set random AP/Station MAC addresses based on OEM/UUID
 if [ "$VIRT_WIFI_SUPPORT" = "0" ];
 then
 WIFI_AP_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):01"
 else
-WIFI_AP_MACADDRESS=$(grep WIFI_AP $WIFI_DEVICES_ROLES_LIST | awk {'print $2'})
+WIFI_AP_MACADDRESS=$(grep WIFI_AP $WIFI_DEVICES_ROLES_LIST | awk {'print $3'})
 fi
 #
 # ST
-WIFI_STATION_BIOSDEV_NAME=$(grep WIFI_ST $WIFI_DEVICES_ROLES_LIST | awk {'print $1'})
+WIFI_STATION_BIOSDEV_NAME=$(grep WIFI_ST $WIFI_DEVICES_ROLES_LIST | awk {'print $2'})
 # If configuring virtual interfaces, then set random AP/Station MAC addresses based on OEM/UUID
 if [ "$VIRT_WIFI_SUPPORT" = "0" ];
 then
 WIFI_STATION_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):02"
 else
-WIFI_STATION_MACADDRESS=$(grep WIFI_ST $WIFI_DEVICES_ROLES_LIST | awk {'print $2'})
+WIFI_STATION_MACADDRESS=$(grep WIFI_ST $WIFI_DEVICES_ROLES_LIST | awk {'print $3'})
 fi
 #
-# MO
-WIFI_MONITOR_BIOSDEV_NAME=$(grep WIFI_MO $WIFI_DEVICES_ROLES_LIST | awk {'print $1'})
+# 
+WIFI_MONITOR_BIOSDEV_NAME=$(grep WIFI_MO $WIFI_DEVICES_ROLES_LIST | awk {'print $2'})
 # If configuring virtual interfaces, then set random AP/Station/Monitor MAC addresses
 # based on OEM/UUID
 if [ "$VIRT_WIFI_SUPPORT" = "0" ];
 then
 WIFI_MONITOR_MACADDRESS="00:E0:29:$(echo $SYSTEM_IDENTIFIER | cut -c 1-2,3-4 --output-delimiter ':' | tr '[:lower:]' '[:upper:]'):02"
 else
-WIFI_MONITOR_MACADDRESS=$(grep WIFI_MO $WIFI_DEVICES_ROLES_LIST | awk {'print $2'})
+WIFI_MONITOR_MACADDRESS=$(grep WIFI_MO $WIFI_DEVICES_ROLES_LIST | awk {'print $3'})
 fi
 }
 
