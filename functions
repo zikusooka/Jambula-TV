@@ -11472,9 +11472,10 @@ cd $INSTALL_SRC_DIR/dahdi-linux-complete
 # Log to build file
 make_build_log
 # Make
-make -s all
-make install
-make config 
+# Do not build any modules to avoid compile errors
+make DAHDI_BUILD_ALL=n all
+make DAHDI_BUILD_ALL=n install
+make DAHDI_BUILD_ALL=n config
 }
 
 libpri_install () {
