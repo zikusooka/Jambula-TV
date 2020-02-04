@@ -1,12 +1,13 @@
 [Unit]
-Description=Wireless service
-Before=network.target
-Wants=network.target
+Description=iNet Wireless Daemon
+Requires = sys-subsystem-net-devices-MY_WIFI_STATION_INTERFACE.device
+After = sys-subsystem-net-devices-MY_WIFI_STATION_INTERFACE.device
+After = syslog.target network.target
 
 [Service]
 Type=dbus
 BusName=net.connman.iwd
-ExecStart=/usr/libexec/iwd -i MY_WIFI_STATION_INTERFACE
+ExecStart=/usr/libexec/iwd --interface MY_WIFI_STATION_INTERFACE
 NotifyAccess=main
 LimitNPROC=1
 Restart=on-failure
