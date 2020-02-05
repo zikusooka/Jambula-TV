@@ -28,7 +28,7 @@ SETUP_MAC_ADDRESSES_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.wifi_devices.txt
 SETUP_COMPLETED_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.initial-setup-completed
 SETUP_DVBT_CONFIG_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.dvbt-settings.txt
 CCTV_HTML_OUTPUT_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.cctv-settings.txt
-
+SETUP_BATCH_MODE_SETTINGS_FILE=$PROJECT_SYSTEM_SHARE_DIR/html/setup/.batch-all-settings.txt
 SETUP_LAN_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
 SETUP_3_4G_DONGLE_FILE=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-usb.cfg
 SETUP_MIFI_ROUTER_FILE=$PROJECT_SYSTEM_CONF_DIR/internet-mobile-wifi.cfg
@@ -99,6 +99,18 @@ lock_process_exclusively () {
 [[  "${FLOCKER}"  !=  "$0" ]] && exec env FLOCKER="$0" flock -en "$0" "$0" "$@" || :
 }
 
+pre_tasks_batch_mode () {
+if [[ -s $SETUP_BATCH_MODE_SETTINGS_FILE ]];
+then
+# Set to batch mode to yes
+BATCH_MODE=yes
+#
+# Change ownership of setup & config directories to multimedia user
+sudo chown -R $MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/html/setup
+sudo chown -R $MULTIMEDIA_USER $PROJECT_SYSTEM_CONF_DIR
+fi
+}
+
 jambula_addons_enable () {
 # Enable our custom addons
 if [[ ! -e $KODI_USER_DATA/Database/.jambula_addons_enabled && \
@@ -120,7 +132,7 @@ sudo systemctl restart nginx.service
 remove_previous_osd_message () {
 # Set PID of current OSD tool process
 EXISTING_OSD_PID=$(ps auxw | grep -Ev grep | grep ${OSD_TOOL##*/} | grep python | awk {'print $2'})
-[ "x$EXISTING_OSD_PID" = "x" ] || sudo kill -15 $EXISTING_OSD_PID
+[[ "x$EXISTING_OSD_PID" = "x" ]] || sudo kill -15 $EXISTING_OSD_PID
 # Remove OSD run file if it exists
 [[ -e $OSDRUNFILE ]] && sudo rm -f $OSDRUNFILE
 }
@@ -128,7 +140,7 @@ EXISTING_OSD_PID=$(ps auxw | grep -Ev grep | grep ${OSD_TOOL##*/} | grep python 
 remove_previous_qrcode () {
 # Kill existing QR Code player process
 QRCODE_PLAYER_PID=$(ps auxw | grep -Ev grep | grep ${QRCODE_PLAYER_CMD##*/} | grep qrcodes/setup_url.png | awk {'print $2'})
-[ "x$QRCODE_PLAYER_PID" != "x" ] && kill $QRCODE_PLAYER_PID
+[[ "x$QRCODE_PLAYER_PID" != "x" ]] && kill $QRCODE_PLAYER_PID
 }
 
 stop_voice_assistant () {
@@ -136,7 +148,7 @@ stop_voice_assistant () {
 PID_SOUNDS_TOOL=$(ps auxw | grep -Ev grep | grep setup-.*wav | awk {'print $2'})
 #
 # Kill current voice assistant process
-[ "x$PID_SOUNDS_TOOL" = "x" ] || kill -15 $PID_SOUNDS_TOOL
+[[ "x$PID_SOUNDS_TOOL" = "x" ]] || kill -15 $PID_SOUNDS_TOOL
 }
 
 osd_turn_on_speakers () {
@@ -195,9 +207,78 @@ SERVER_ACCESSED=$?
 done
 }
 
-configure_internet_connection () {
+configure_internet_connection_batch () {
+# Source variables file for batch mode
+. $SETUP_BATCH_MODE_SETTINGS_FILE
+#
+# Set Internet Gateway and ISP settings
+case $INTERNET_DEVICE in
+3_4g_dongle)
+[[ -e $SETUP_3_4G_DONGLE_FILE ]] && sudo chown $MULTIMEDIA_USER $SETUP_3_4G_DONGLE_FILE
+cat > $SETUP_3_4G_DONGLE_FILE <<EOF
+TYPE=$INTERNET_DEVICE
+ISP_NAME=$ISP_NAME
+USERNAME=$USERNAME
+PASSWORD=$PASSWORD
+APN=$NETWORK_APN
+EOF
+#
+# Trigger 3/4G Internet connect
+sudo $PPP_DIAL_TOOL $ISP_NAME $USERNAME $PASSWORD 1 &
+;;
+mifi_router)
+[[ -e $SETUP_MIFI_ROUTER_FILE ]] && sudo chown $MULTIMEDIA_USER $SETUP_MIFI_ROUTER_FILE
+cat > $SETUP_MIFI_ROUTER_FILE <<EOF
+TYPE=$INTERNET_DEVICE
+ISP_NAME=$ISP_NAME
+SSID="$MIFI_SSID"
+SECURITY_KEY="$MIFI_PASS"
+EOF
+#
+# Trigger MiFi Internet connect
+sudo $CONNECT_WIFI_AP_TOOL UP &
+;;  
+lan_dhcp)
+[[ -e $SETUP_LAN_SYSCONFIG_FILE ]] && sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
+cat > $SETUP_LAN_SYSCONFIG_FILE <<EOF
+# IP/DNS settings for ${SETUP_LAN_DEVICE}
+DEVICE="${SETUP_LAN_DEVICE}"
+TYPE="Ethernet"
+BOOTPROTO="dhcp"
+ONBOOT="yes"
+NM_CONTROLLED="no"
+EOF
+#
+# Restart network
+sudo systemctl restart network.service
+;;
+lan_static)
+[[ -e $SETUP_LAN_SYSCONFIG_FILE ]] && sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
+cat > $SETUP_LAN_SYSCONFIG_FILE <<EOF
+# IP/DNS settings for ${SETUP_LAN_DEVICE}
+DEVICE="${SETUP_LAN_DEVICE}"
+TYPE="Ethernet"
+BOOTPROTO="static"
+ONBOOT="yes"
+NM_CONTROLLED="no"
+IPADDR0="$LAN_IP_ADDRESS"
+PREFIX0="24"
+GATEWAY="$LAN_IP_GATE"
+DNS1="$LAN_DNS_1"
+DNS2="$LAN_DNS_2"
+DNS3=8.8.4.4
+DNS4=208.67.222.222
+EOF
+#
+# Restart network
+sudo systemctl restart network.service
+;;
+esac
+}
+
+configure_internet_connection_interactive () {
 # Check for Internet settings file
-while [ ! -e $SETUP_INTERNET_CONFIG_FILE ];
+while [[ ! -e $SETUP_INTERNET_CONFIG_FILE ]];
 do
 # Wait
 sleep 1
@@ -207,7 +288,7 @@ done
 # Configure internet based on device type selected
 case $TYPE in
 3_4g_dongle)
-[ -e $SETUP_3_4G_DONGLE_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_3_4G_DONGLE_FILE
+[[ -e $SETUP_3_4G_DONGLE_FILE ]] && sudo chown $MULTIMEDIA_USER $SETUP_3_4G_DONGLE_FILE
 cat > $SETUP_3_4G_DONGLE_FILE <<EOF
 TYPE='3_4g_dongle'
 ISP_NAME=$ISP_NAME
@@ -215,21 +296,23 @@ USERNAME=$USERNAME
 PASSWORD=$PASSWORD
 APN=$APN
 EOF
+#
 # Trigger 3/4G Internet connect
 sudo $PPP_DIAL_TOOL $ISP_NAME $USERNAME $PASSWORD 1 &
 ;;
 mifi_router)
-[ -e $SETUP_MIFI_ROUTER_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_MIFI_ROUTER_FILE
+[[ -e $SETUP_MIFI_ROUTER_FILE ]] && sudo chown $MULTIMEDIA_USER $SETUP_MIFI_ROUTER_FILE
 cat > $SETUP_MIFI_ROUTER_FILE <<EOF
 ISP_NAME=$ISP_NAME
 SSID="$WIFI_SSID"
 SECURITY_KEY="$WIFI_SECURITY_KEY"
 EOF
+#
 # Trigger MiFi Internet connect
 sudo $CONNECT_WIFI_AP_TOOL UP &
 ;;
 lan_dhcp)
-[ -e $SETUP_LAN_SYSCONFIG_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
+[[ -e $SETUP_LAN_SYSCONFIG_FILE ]] && sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
 cat > $SETUP_LAN_SYSCONFIG_FILE <<EOF
 # IP/DNS settings for ${SETUP_LAN_DEVICE}
 DEVICE="${SETUP_LAN_DEVICE}"
@@ -238,11 +321,12 @@ BOOTPROTO="dhcp"
 ONBOOT="yes"
 NM_CONTROLLED="no"
 EOF
+#
 # Restart network
 sudo systemctl restart network.service
 ;;
 lan_static)
-[ -e $SETUP_LAN_SYSCONFIG_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
+[[ -e $SETUP_LAN_SYSCONFIG_FILE ]] && sudo chown $MULTIMEDIA_USER $SETUP_LAN_SYSCONFIG_FILE
 cat > $SETUP_LAN_SYSCONFIG_FILE <<EOF
 # IP/DNS settings for ${SETUP_LAN_DEVICE}
 DEVICE="${SETUP_LAN_DEVICE}"
@@ -258,6 +342,7 @@ DNS2="$NETWORK_DNS_2"
 DNS3=8.8.4.4
 DNS4=208.67.222.222
 EOF
+#
 # Restart network
 sudo systemctl restart network.service
 ;;
@@ -268,7 +353,7 @@ sudo rm -f $SETUP_INTERNET_CONFIG_FILE
 
 configure_icinga2_presence_detection () {
 # Change permissions so we can write to icinga2 hosts file
-[ -e $ICINGA2_JAMBULATV_HOSTS_FILE ] && sudo chown $MULTIMEDIA_USER $ICINGA2_JAMBULATV_HOSTS_FILE
+[[ -e $ICINGA2_JAMBULATV_HOSTS_FILE ]] && sudo chown $MULTIMEDIA_USER $ICINGA2_JAMBULATV_HOSTS_FILE
 # Add to icinga2 hosts file
 cat >> $ICINGA2_JAMBULATV_HOSTS_FILE <<EOF
 
@@ -287,28 +372,33 @@ sudo systemctl restart icinga2.service
 [[ -e $BINARY_PREFIX/jambulatv-presence-detection-via-icinga2 ]] || cp -v $PROJECT_BIN_DIR/jambulatv-presence-detection-via-icinga2 $SCRIPT $BINARY_PREFIX/
 }
 
-configure_wifi_mac_addresses () {
-# MAC Addresses
-while [ ! -e $SETUP_MAC_ADDRESSES_FILE ];
-do
-# Wait
-sleep 1
-done
+configure_wifi_mac_addresses_batch () {
+# Source variables file for batch mode
+. $SETUP_BATCH_MODE_SETTINGS_FILE
+#
 # Change permissions so we can write to My WiFi devices file
-[ -e $SETUP_WIFI_DEVICES_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_WIFI_DEVICES_FILE
+[[ -e $SETUP_WIFI_DEVICES_FILE ]] && sudo chown $MULTIMEDIA_USER $SETUP_WIFI_DEVICES_FILE
+# Create temporary file containing WiFi nicknames and MAC addresses
+cat > $SETUP_MAC_ADDRESSES_FILE <<ET
+${WIFI_NICKNAMES[0]},${WIFI_MAC_IDS[0]}
+${WIFI_NICKNAMES[1]},${WIFI_MAC_IDS[1]}
+${WIFI_NICKNAMES[2]},${WIFI_MAC_IDS[2]}
+${WIFI_NICKNAMES[3]},${WIFI_MAC_IDS[3]}
+${WIFI_NICKNAMES[4]},${WIFI_MAC_IDS[4]}
+ET
 # Copy MAC Addresses to JambulaTV WiFi devices file
 cat $SETUP_MAC_ADDRESSES_FILE | while read LINE 
 do
 NICKNAME=$(echo $LINE | cut -d ',' -f1)
 MAC_DASHED=$(echo $LINE | cut -d ',' -f2 | sed 's/:/-/g')
 MAC_DOTTED=$(echo $LINE | cut -d ',' -f2 )
-if [ "x$MAC_DASHED" != "x" ];
+if [[ "x$MAC_DASHED" != "x" ]];
 then
 # Add to My-WiFi devices file
 echo "$MAC_DASHED | $NICKNAME | no" >> $SETUP_WIFI_DEVICES_FILE
 #
 # Set up icinga2 hosts for user presence detections if requested
-[ "$SETUP_ICINGA2_PRESENCE_HOSTS" = "yes" ] && configure_icinga2_presence_detection
+[[ "$SETUP_ICINGA2_PRESENCE_HOSTS" = "yes" ]] && configure_icinga2_presence_detection
 # 
 else
 break
@@ -318,24 +408,46 @@ done
 sudo rm -f $SETUP_MAC_ADDRESSES_FILE
 }
 
-configure_live_tv () {
-# Wait for dvbt config file to show up first
-while [ ! -e $SETUP_DVBT_CONFIG_FILE  ];
+configure_wifi_mac_addresses_interactive () {
+# MAC Addresses
+while [[ ! -e $SETUP_MAC_ADDRESSES_FILE ]];
 do
 # Wait
 sleep 1
 done
+# Change permissions so we can write to My WiFi devices file
+[[ -e $SETUP_WIFI_DEVICES_FILE ]] && sudo chown $MULTIMEDIA_USER $SETUP_WIFI_DEVICES_FILE
+# Copy MAC Addresses to JambulaTV WiFi devices file
+cat $SETUP_MAC_ADDRESSES_FILE | while read LINE 
+do
+NICKNAME=$(echo $LINE | cut -d ',' -f1)
+MAC_DASHED=$(echo $LINE | cut -d ',' -f2 | sed 's/:/-/g')
+MAC_DOTTED=$(echo $LINE | cut -d ',' -f2 )
+if [[ "x$MAC_DASHED" != "x" ]];
+then
+# Add to My-WiFi devices file
+echo "$MAC_DASHED | $NICKNAME | no" >> $SETUP_WIFI_DEVICES_FILE
 #
-# Source DVBT settings
-[ -e $SETUP_DVBT_CONFIG_FILE ] && . $SETUP_DVBT_CONFIG_FILE
+# Set up icinga2 hosts for user presence detections if requested
+[[ "$SETUP_ICINGA2_PRESENCE_HOSTS" = "yes" ]] && configure_icinga2_presence_detection
+# 
+else
+break
+fi
+done
+# Remove MAC set up file
+sudo rm -f $SETUP_MAC_ADDRESSES_FILE
+}
+
+configure_live_tv_batch () {
+# Source variables file for batch mode
+. $SETUP_BATCH_MODE_SETTINGS_FILE
 #
 # Configure TVHeadend
 if [[ ! -e $TVHEADEND_CONFIG_DIR/.dvbt_configured && "$TVH_DVBT_CONFIG_REQUESTED" = "y" ]];
 then
-
 # Source Live TV variables
 dvbt_set_variables
-
 # Create, configure DVB-T network, then Scan and Map all available channels
 nohup sudo $TVHEADEND_CONTROLLER_TOOL dvb all > $TVH_DVBT_SETUP_LOG 2>&1 &
 
@@ -345,9 +457,53 @@ nohup sudo $TVHEADEND_CONTROLLER_TOOL dvb all > $TVH_DVBT_SETUP_LOG 2>&1 &
 # 1) Check status of pvr.hts addon, and enable it if false
 $KODI_CONTROLLER_TOOL addon_status pvr.hts > /dev/null 2>&1
 # Source PVR status temp file
-[ -e $PVR_STATUS_FILE ] && . $PVR_STATUS_FILE
+[[ -e $PVR_STATUS_FILE ]] && . $PVR_STATUS_FILE
 # If status is disabled - Enable it! i.e. Toggle to true
-[ "$ADDON_STATUS" = "true" ] || $KODI_CONTROLLER_TOOL addon_switch pvr.hts > /dev/null 2>&1
+[[ "$ADDON_STATUS" = "true" ]] || $KODI_CONTROLLER_TOOL addon_switch pvr.hts > /dev/null 2>&1
+# Let other runs know, we did this already
+touch $KODI_USER_DATA/.pvrmanager_enabled
+
+# 2) Add Jambula customized guisettings file with support for Live TV - Overrides previous install setting
+KODI_GUISETTINGS_FILE=$PROJECT_CONFIGS_DIR/kodi/skin.$KODI_PREFERRED_SKIN/guisettings.with.pvr.xml
+#
+cat $KODI_GUISETTINGS_FILE | \
+	sed -e "s:KODI_HTTP_USER:$KODI_HTTP_USER:g" | \
+   	sed -e "s:KODI_HTTP_PASS:$KODI_HTTP_PASS:g" | \
+	sed -e "s:KODI_HTTP_PORT:$KODI_HTTP_PORT:g" | \
+   	sed -e "s:SMB_WORKGROUP:$SMB_WORKGROUP:g" \
+	> $KODI_USER_DATA/guisettings.xml
+
+fi
+}
+
+configure_live_tv_interactive () {
+# Wait for dvbt config file to show up first
+while [[ ! -e $SETUP_DVBT_CONFIG_FILE  ]];
+do
+# Wait
+sleep 1
+done
+#
+# Source DVBT settings
+[[ -e $SETUP_DVBT_CONFIG_FILE ]] && . $SETUP_DVBT_CONFIG_FILE
+#
+# Configure TVHeadend
+if [[ ! -e $TVHEADEND_CONFIG_DIR/.dvbt_configured && "$TVH_DVBT_CONFIG_REQUESTED" = "y" ]];
+then
+# Source Live TV variables
+dvbt_set_variables
+# Create, configure DVB-T network, then Scan and Map all available channels
+nohup sudo $TVHEADEND_CONTROLLER_TOOL dvb all > $TVH_DVBT_SETUP_LOG 2>&1 &
+
+# Since DVBT configure was requested, enable PVR functions in kodi 
+# ----------------------------------------------------------------
+#
+# 1) Check status of pvr.hts addon, and enable it if false
+$KODI_CONTROLLER_TOOL addon_status pvr.hts > /dev/null 2>&1
+# Source PVR status temp file
+[[ -e $PVR_STATUS_FILE ]] && . $PVR_STATUS_FILE
+# If status is disabled - Enable it! i.e. Toggle to true
+[[ "$ADDON_STATUS" = "true" ]] || $KODI_CONTROLLER_TOOL addon_switch pvr.hts > /dev/null 2>&1
 # Let other runs know, we did this already
 touch $KODI_USER_DATA/.pvrmanager_enabled 
 
@@ -366,7 +522,7 @@ fi
 
 remove_current_qrcode () {
 # Wait for setup to complete successfully
-while [ ! -e $SETUP_COMPLETED_FILE ];
+while [[ ! -e $SETUP_COMPLETED_FILE ]];
 do
 sleep 1
 echo "Waiting for Setup to complete"
@@ -374,6 +530,16 @@ done
 # Remove QR Code since setup completed
 QRCODE_PID=$(ps auxw | grep -Ev grep | grep $QRCODE_FILE | awk {'print $2'})
 kill -15 $QRCODE_PID || kill -9 $QRCODE_PID
+}
+
+add_settings_2_mysql_setup_db_batch () {
+# Source variables file for batch mode
+. $SETUP_BATCH_MODE_SETTINGS_FILE
+#
+# Populate setup database
+mysql -s -u ${JAMBULATV_SETUP_DB_USER} -p${JAMBULATV_SETUP_DB_PASS} ${JAMBULATV_SETUP_DB_NAME} 2> /dev/null << EOF
+INSERT INTO ${JAMBULATV_SETUP_DB_TABLE} (contact_name, contact_email, contact_phone, contact_birthday, contact_address1, contact_address2, contact_city, contact_country, system_password, isp_name, internet_device, wifi_nickname_1, wifi_mac_1, wifi_nickname_2, wifi_mac_2, wifi_nickname_3, wifi_mac_3, wifi_nickname_4, wifi_mac_4, wifi_nickname_5, wifi_mac_5, network_apn, mifi_ssid, mifi_pass, mifi_ip_address, mifi_admin_user, mifi_admin_pass, lan_ip_addr, lan_ip_gate, lan_dns_1, lan_dns_2, tvh_dvbt_config_requested, tv_market, dvbt_tuner_name, schedule_tvseries, schedule_podcasts, schedule_movies, schedule_iptv, traktv_username, traktv_watchlist, telegram_bot_id, telegram_chat_id, telegram_username, whatsapp_no_recipient, whatsapp_no_sender, notification_email_address, gmail_address, gmail_password, cctv_all, cctv_whatsapp, cctv_telegram, cctv_sms, cctv_email, cctv_kodi, cctv_osd, cctv_call, cctv_lights, news_sources, youtube_api_key, youtube_client_id, youtube_client_secret, wunderground_api_key, openweathermap_api_key, latitude_home, longitude_home, ispeech_tts_api_key, google_tts_api_key, watson_tts_api_key) VALUES ("$CONTACT_NAME", "$CONTACT_EMAIL", "$CONTACT_PHONE", "$CONTACT_BIRTHDAY", "$CONTACT_ADDRESS1", "$CONTACT_ADDRESS2", "$CONTACT_CITY", "$CONTACT_COUNTRY", "$SYSTEM_PASSWORD", "$ISP_NAME", "$INTERNET_DEVICE", "$WIFI_NICKNAME_1", "$WIFI_MAC_1", "$WIFI_NICKNAME_2", "$WIFI_MAC_2", "$WIFI_NICKNAME_3", "$WIFI_MAC_3", "$WIFI_NICKNAME_4", "$WIFI_MAC_4", "$WIFI_NICKNAME_5", "$WIFI_MAC_5", "$NETWORK_APN", "$MIFI_SSID", "$MIFI_PASS", "$MIFI_IP_ADDRESS", "$MIFI_ADMIN_USER", "$MIFI_ADMIN_PASS", "$LAN_IP_ADDR", "$LAN_IP_GATE", "$LAN_DNS_1", "$LAN_DNS_2", "$TVH_DVBT_CONFIG_REQUESTED", "$TV_MARKET", "$DVBT_TUNER_NAME", "$SCHEDULE_TVSERIES", "$SCHEDULE_PODCASTS", "$SCHEDULE_MOVIES", "$SCHEDULE_IPTV", "$TRAKTV_USERNAME", "$TRAKTV_WATCHLIST", "$TELEGRAM_BOT_ID", "$TELEGRAM_CHAT_ID", "$TELEGRAM_USERNAME", "$WHATSAPP_NO_RECIPIENT", "$WHATSAPP_NO_SENDER", "$NOTIFICATION_EMAIL_ADDRESS", "$GMAIL_ADDRESS", "$GMAIL_PASSWORD", "$CCTV_ALL", "$CCTV_WHATSAPP", "$CCTV_TELEGRAM", "$CCTV_SMS", "$CCTV_EMAIL", "$CCTV_KODI", "$CCTV_OSD", "$CCTV_CALL", "$CCTV_LIGHTS", "$NEWS_SOURCES", "$YOUTUBE_API_KEY", "$YOUTUBE_CLIENT_ID", "$YOUTUBE_CLIENT_SECRET", "$WUNDERGROUND_API_KEY", "$OPENWEATHERMAP_API_KEY", "$LATITUDE_HOME", "$LONGITUDE_HOME", "$ISPEECH_TTS_API_KEY", "$GOOGLE_TTS_API_KEY", "$WATSON_TTS_API_KEY");
+EOF
 }
 
 query_mysql_db () {
@@ -433,7 +599,7 @@ NEWS_SOURCES=$(query_mysql_db news_sources | sed 's:,: :g')
 }
 
 gmail_smtp_setup () {
-[ -e $EMAIL_GMAIL_CONFIG ] && sudo chown $MULTIMEDIA_USER $EMAIL_GMAIL_CONFIG
+[[ -e $EMAIL_GMAIL_CONFIG ]] && sudo chown $MULTIMEDIA_USER $EMAIL_GMAIL_CONFIG
 # Add usernames, passwords credentials to Gmail config
 cat >> $EMAIL_GMAIL_CONFIG << EOF
 # GMail username and password
@@ -443,8 +609,8 @@ EOF
 }
 
 email_messaging_setup () {
-[ -e $EMAIL_CREDENTIALS_CONFIG ] || sudo touch $EMAIL_CREDENTIALS_CONFIG
-[ -e $EMAIL_CREDENTIALS_CONFIG ] && sudo chown $MULTIMEDIA_USER $EMAIL_CREDENTIALS_CONFIG
+[[ -e $EMAIL_CREDENTIALS_CONFIG ]] || sudo touch $EMAIL_CREDENTIALS_CONFIG
+[[ -e $EMAIL_CREDENTIALS_CONFIG ]] && sudo chown $MULTIMEDIA_USER $EMAIL_CREDENTIALS_CONFIG
 cat > $EMAIL_CREDENTIALS_CONFIG << EOF
 EMAIL_TO_ADDRESS="$NOTIFICATION_EMAIL_ADDRESS"
 EMAIL_CC_ADDRESS=""
@@ -452,8 +618,8 @@ EOF
 }
 
 telegram_messaging_setup () {
-[ -e $TELEGRAM_CREDENTIALS_CONFIG ] && sudo chown $MULTIMEDIA_USER $TELEGRAM_CREDENTIALS_CONFIG
-cat >> $TELEGRAM_CREDENTIALS_CONFIG << EOF
+[[ -e $TELEGRAM_CREDENTIALS_CONFIG ]] && sudo chown $MULTIMEDIA_USER $TELEGRAM_CREDENTIALS_CONFIG
+cat > $TELEGRAM_CREDENTIALS_CONFIG << EOF
 TELEGRAM_API_BOT="$TELEGRAM_BOT_ID"
 TELEGRAM_CHAT_ID="$TELEGRAM_CHAT_ID"
 TELEGRAM_USERNAME="$TELEGRAM_USERNAME"
@@ -461,7 +627,7 @@ EOF
 }
 
 whatsapp_messaging_setup () {
-[ -e $WHATSAPP_CREDENTIALS_CONFIG ] && sudo chown $MULTIMEDIA_USER $WHATSAPP_CREDENTIALS_CONFIG
+[[ -e $WHATSAPP_CREDENTIALS_CONFIG ]] && sudo chown $MULTIMEDIA_USER $WHATSAPP_CREDENTIALS_CONFIG
 cat > $WHATSAPP_CREDENTIALS_CONFIG << EOF
 # TIP: Run the script $WHATSAPP_TOOL to generate the rest of whatsapp settings
 WHATSAPP_TOOL=$WHATSAPP_TOOL
@@ -526,16 +692,40 @@ sudo sed -i "s:GOOGLE_SERVICES_USERNAME:$GMAIL_ADDRESS:g" $ASTERISK_AGI_BIN_DIR/
 sudo sed -i "s:GOOGLE_SERVICES_PASSWORD:$GMAIL_PASSWORD:g" $ASTERISK_AGI_BIN_DIR/include_xmpp_providers.sh
 }
 
-cctv_alarm_setup () {
+cctv_alarm_setup_batch () {
+# Source variables file for batch mode
+. $SETUP_BATCH_MODE_SETTINGS_FILE
+#
+# Change permissions so we can write to JambulaTV CCTV settings file
+[[ -e $JAMBULATV_CCTV_SETTINGS_FILE ]] && sudo chown $MULTIMEDIA_USER $JAMBULATV_CCTV_SETTINGS_FILE
+# Copy CCTV HTML output to JambulaTV CCTV settings file
+cat > $JAMBULATV_CCTV_SETTINGS_FILE <<ET
+CCTV_ALL=$CCTV_ALL
+CCTV_WHATSAPP=$CCTV_WHATSAPP
+CCTV_TELEGRAM=$CCTV_TELEGRAM
+CCTV_SMS=$CCTV_SMS
+CCTV_EMAIL=$CCTV_EMAIL
+CCTV_KODI=$CCTV_KODI
+CCTV_OSD=$CCTV_OSD
+CCTV_CALL=$CCTV_CALL
+CCTV_LIGHTS=$CCTV_LIGHTS
+ET
+# Change permissions to multimedia user
+sudo chown $MULTIMEDIA_USER $JAMBULATV_CCTV_SETTINGS_FILE
+# Remove MAC set up file
+sudo rm -f $CCTV_HTML_OUTPUT_FILE
+}
+
+cctv_alarm_setup_interactive () {
 # CCTV Alarm settings
-while [ ! -e $CCTV_HTML_OUTPUT_FILE ];
+while [[ ! -e $CCTV_HTML_OUTPUT_FILE ]];
 do
 # Wait
 sleep 1
 done
 
 # Change permissions so we can write to JambulaTV CCTV settings file
-[ -e $JAMBULATV_CCTV_SETTINGS_FILE ] && sudo chown $MULTIMEDIA_USER $JAMBULATV_CCTV_SETTINGS_FILE
+[[ -e $JAMBULATV_CCTV_SETTINGS_FILE ]] && sudo chown $MULTIMEDIA_USER $JAMBULATV_CCTV_SETTINGS_FILE
 # Copy CCTV HTML output to JambulaTV CCTV settings file
 cat $CCTV_HTML_OUTPUT_FILE > $JAMBULATV_CCTV_SETTINGS_FILE
 #
@@ -549,9 +739,9 @@ sudo rm -f $CCTV_HTML_OUTPUT_FILE
 news_headlines_setup() {
 # Extract variables from mysql
 extract_setup_variables
-
+#
 # Change permissions of RSS file if one already exists
-[ -e $SETUP_NEWS_RSS_FILE ] && sudo chown $MULTIMEDIA_USER $SETUP_NEWS_RSS_FILE
+[[ -e $SETUP_NEWS_RSS_FILE ]] && sudo chown $MULTIMEDIA_USER $SETUP_NEWS_RSS_FILE
 
 # Empty existing file
 echo "" > $SETUP_NEWS_RSS_FILE
@@ -623,6 +813,7 @@ done
 reset_system_password () {
 # Extract variables from mysql
 extract_setup_variables
+#
 echo "root:$SYSTEM_PASSWORD" | sudo /usr/sbin/chpasswd
 echo "$MULTIMEDIA_USER:$SYSTEM_PASSWORD" | sudo /usr/sbin/chpasswd
 }
@@ -640,7 +831,7 @@ done
 email_system_info () {
 # Extract variables from mysql
 extract_setup_variables
-
+#
 # Email system info and passwords for storage
 $EMAIL_VIA_GMAIL_TOOL $CONTACT_EMAIL "[JambulaTV] Setup completed" "Dear $CONTACT_NAME, 
 
@@ -673,6 +864,18 @@ scan_video_music_db () {
 sudo $KODI_LIBRARY_TOOL scan
 }
 
+post_tasks_batch_mode () {
+if [[ "$BATCH_MODE" = "yes" ]];
+then
+# Remove wild permissions on settings file
+[[ -s $SETUP_BATCH_MODE_SETTINGS_FILE ]] && sudo chmod 400 $SETUP_BATCH_MODE_SETTINGS_FILE
+# Mark LiveTV setup as completed
+[[ "$TVH_DVBT_CONFIG_REQUESTED" = "y" ]] && touch $TVHEADEND_CONFIG_DIR/.dvbt_configured
+# Mark initial setup as completed
+touch $SETUP_COMPLETED_FILE
+fi
+}
+
 
 
 #################
@@ -680,7 +883,6 @@ sudo $KODI_LIBRARY_TOOL scan
 #################
 
 check_if_setup_completed
-
 lock_process_exclusively
 
 # Start logging to file
@@ -688,46 +890,61 @@ exec 2>> $INITIAL_SETUP_LOG
 logger -s -t $(basename $0) "JambulaTV Setup: START"
 
 osd_turn_on_speakers
-
 voice_assist_thanks_4_purchase
-
 jambula_addons_enable
 
+pre_tasks_batch_mode
+
+if [[ "$BATCH_MODE" = "yes" ]];
+then
+add_settings_2_mysql_setup_db_batch
+configure_internet_connection_batch
+configure_wifi_mac_addresses_batch
+
+else
 clear_logfile
-
 run_auto_wifi_provision
-
 display_qrcode_4_setup
-
 display_and_play_setup_message
-
-configure_internet_connection
-configure_wifi_mac_addresses
+configure_internet_connection_interactive
+configure_wifi_mac_addresses_interactive 
+fi
 
 messaging_services_setup
 
-configure_live_tv # Run after setting up messaging services
+if [[ "$BATCH_MODE" = "yes" ]];
+then
+configure_live_tv_batch 
+else
+configure_live_tv_interactive 
+fi
 
-remove_current_qrcode
+# Remove QRcode if not in batch mode
+[[ "$BATCH_MODE" = "yes" ]] || remove_current_qrcode
 
 flexget_secrets_setup
 asterisk_google_xmpp_setup
 
-cctv_alarm_setup
+# Configure CCTV settings
+if [[ "$BATCH_MODE" = "yes" ]];
+then
+cctv_alarm_setup_batch
+else
+cctv_alarm_setup_interactive
+fi
 
 news_headlines_setup
-
 reset_system_password
-
 enable_systemd_units
-
 email_system_info
 
-# End
-logger -s -t $(basename $0) "JambulaTV Setup: END"
-
+post_tasks_batch_mode
 voice_assist_setup_completed_tutor_channel
 
-# Scan library
+# End here - since a reboot is initiated by functions that follow
+logger -s -t $(basename $0) "JambulaTV Setup: END"
+
+# ---
+# Scan Kodi library databases
 create_video_music_db
 scan_video_music_db
