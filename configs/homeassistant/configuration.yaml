@@ -8,6 +8,8 @@ homeassistant:
 
   packages: !include_dir_named components/packages
 
+mobile_app:
+
 # MQTT servers 
 mqtt:
   broker: !secret mqtt_server
