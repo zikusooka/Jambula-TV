@@ -61,11 +61,11 @@ clientmac=$mac
 
 # Display landing page depending on availability of Internet
 # ----------------------------------------------------------
-# check for DNS connectivity
-jambula_check_dns
+# check for Internet connectivity
+jambula_check_internet_connectivity
 #
 # Check if Internet is ON
-if [ "$DNS_STATUS" = "0" ];
+if [ "$INTERNET_IS_REACHEABLE" = "0" ];
 then
 # Internet On
 jambula_header 
