@@ -1,3 +1,57 @@
+Changes since v6.7
+--------------------
+
+* JambulaTV: Add sound effect to play right before the voice alert that            reminds users when it is time for the news plus update the            automation start time in home-assistant 
+
+* JambulaTV: Replace wpa_supplicant with iwd, a new and better wireless            daemon for Linux written by Intel 
+
+* JambulaTV: Update and refactor code in the connect to WiFi AP tool i.e            jambulatv-connect-2-wifi-ap. It now uses iwd instead of            wpa_supplicant to connect to preferred wireless network 
+
+* JambulaTV: Update icinga2 plugin: check_wifi_ap. Now uses iwd instead            of wpa_supplicant to search for preferred wireless network 
+
+* JambulaTV: Update udev rules for wireless based network interfaces            Remove unnecessary attributes i.e. 'dev_id' and 'type' 
+
+* JambulaTV: Fix issue where MAC addresses for wireless network devices            are not correctly identified during initial setup 
+
+* JambulaTV: Upgrade DAHDI-Linux-complete package for asterisk to the            latest version: 3.1.0+3.1.0 
+
+* JambulaTV: Upgrade Linux kernel (5.5 branch) to version 5.5 
+
+* JambulaTV: Add support for playing of random music using the defined            mpd playlists in Home Assistant 
+
+* JambulaTV: Upgrade Linux kernel (5.5 branch) to version 5.5.1 
+
+* JambulaTV: Fix issue where iNet Wireless Daemon does not bring up our            WiFi station interface (jwlan1) 
+
+* JambulaTV: Fix issue where python3 throws the following error: 
+
+* JambulaTV: Add helper functions named 'python3_module_local_download'            and 'python3_module_local_install.' These routines allow            for easy download and install of python3 module libraries            respectively.  This is useful when system is offline 
+
+* JambulaTV: Add support for non-interactive configurations during the            initial setup process 
+
+* JambulaTV: Upgrade Linux kernel (5.5 branch) to version 5.5.2 
+
+* JambulaTV: Upgrade Home-Assistant to the latest Github version:            0.106.0.dev0 
+
+* JambulaTV: Upgrade Home-Assistant-CLI to latest Github version:            0.9.0.dev20191118021524 
+
+* JambulaTV: Upgrade Flexget to the latest release version: 3.1.20 
+
+* JambulaTV: Update Python installer (pip3) to the latest version:            20.0.2 
+
+* JambulaTV: Remove the following old and unused python3 library modules            in order to save some space: home-assistant-frontend,            Pillow, and praw 
+
+* JambulaTV: Remove use of 'no-binary' option when installing PyNaCl            Python3 module dependency for Home-Assistant i.e. Force            the use of wheels package instead of tarball 
+
+* JambulaTV: Add support for Home-Assistant Mobile App 
+
+* JambulaTV: Update nginx default configuration file for HTTP requests 
+
+* JambulaTV: Add routines to check availability of the Internet in            NoDogSplash (NDS) captive portal's functions file            i.e. 'jambula_check_internet_connectivity' 
+
+* JambulaTV: Update/Add the captive portal login and post-auth splash            web pages for NoDogSplash (NDS) 
+
+
 Changes since v6.6
 --------------------
 
