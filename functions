@@ -13529,12 +13529,12 @@ $CURL_CMD $CURL_OPTS \
 	-d "Monitor[Path]=$Path" \
 	-d "Monitor[Options]=$Options" \
 	-d "Monitor[User]=$User" \
-	-d "Monitor[Pass]=$Path" \
+	-d "Monitor[Pass]=$Pass" \
 	-d "Monitor[Width]=$Width" \
 	-d "Monitor[Height]=$Height" \
 	-d "Monitor[Colours]=$Colours" \
 	-d "Monitor[Palette]=$Palette" \
-	-d "Monitor[Orientation]=0" \
+	-d "Monitor[Orientation]=ROTATE_0" \
 	-d "Monitor[Deinterlacing]=0" \
 	-d "Monitor[SaveJPEGs]=0" \
 	-d "Monitor[VideoWriter]=1" \
