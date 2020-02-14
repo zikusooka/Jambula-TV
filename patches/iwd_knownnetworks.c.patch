@@ -1,0 +1,24 @@
+--- knownnetworks.c.orig	2020-02-14 18:19:29.383343233 +0300
++++ knownnetworks.c		2020-02-14 21:53:33.108616626 +0300
+@@ -771,14 +771,14 @@
+ 		break;
+ 	case L_DIR_WATCH_EVENT_ACCESSED:
+ 		break;
+-	case L_DIR_WATCH_EVENT_ATTRIB:
+-		if (network_before) {
+-			connected_time = l_path_get_mtime(full_path);
+-			known_network_set_connected_time(network_before,
+-								connected_time);
+-		}
++	//case L_DIR_WATCH_EVENT_ATTRIB:
++		//if (network_before) {
++			//connected_time = l_path_get_mtime(full_path);
++			//known_network_set_connected_time(network_before,
++								//connected_time);
++		//}
+ 
+-		break;
++		//break;
+ 	}
+ }
+ 

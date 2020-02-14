@@ -134,6 +134,12 @@ coova_chilli_configure
 coova_chilli_customization
 }
 
+upgrade_iwd () {
+uninstall_iwd
+iwd_install
+iwd_configure
+}
+
 upgrade_wpa_supplicant () {
 uninstall_wpa_supplicant
 wpa_supplicant_install
@@ -367,6 +373,8 @@ mopidy_install
 #upgrade_coova_chilli
 
 #upgrade_wpa_supplicant 
+
+#upgrade_iwd
 
 #upgrade_hostapd
 

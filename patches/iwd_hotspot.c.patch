@@ -1,0 +1,27 @@
+--- /Backup1/JambulaTV/src/github/iwd/src/hotspot.c	2020-02-14 18:19:29.381343233 +0300
++++ ./src/hotspot.c	2020-02-14 21:58:27.615760738 +0300
+@@ -469,16 +469,16 @@
+ 		break;
+ 	case L_DIR_WATCH_EVENT_ACCESSED:
+ 		break;
+-	case L_DIR_WATCH_EVENT_ATTRIB:
+-		config = l_queue_find(hs20_settings, match_filename, full_path);
+-		if (!config)
+-			return;
++	//case L_DIR_WATCH_EVENT_ATTRIB:
++		//config = l_queue_find(hs20_settings, match_filename, full_path);
++		//if (!config)
++			//return;
+ 
+-		connected_time = l_path_get_mtime(full_path);
+-		known_network_set_connected_time(&config->super,
+-							connected_time);
++		//connected_time = l_path_get_mtime(full_path);
++		//known_network_set_connected_time(&config->super,
++							//connected_time);
+ 
+-		break;
++		//break;
+ 	}
+ }
+ 

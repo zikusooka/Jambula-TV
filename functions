@@ -2627,6 +2627,20 @@ uninstall_src_pkgs libdvbpsi
 uninstall_live555
 }
 
+uninstall_iwd () {
+# stop iwd process
+systemctl stop iwd.service || killall iwd
+# uninstall iwd
+uninstall_src_pkgs iwd
+# Remove systemd files
+[[ -e $SYSTEMD_UNITS_DIR_USER/iwd.service ]] && rm -f $SYSTEMD_UNITS_DIR_USER/iwd.service
+systemctl --system daemon-reload
+# Remove dbus file
+[[ -e $DBUS_USER_SERVICES_DIR/icinga-iwd.conf ]] && rm -f $DBUS_USER_SERVICES_DIR/icinga-iwd.conf 
+# Restart dbus systemd unit
+systemctl restart dbus.service
+}
+
 uninstall_wpa_supplicant () {
 killall wpa_supplicant > /dev/null 2>&1
 rm -f /usr/sbin/{wpa_supplicant,wpa_cli,wpa_passphrase}
@@ -10220,6 +10234,11 @@ iwd_install () {
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/iwd/ $INSTALL_SRC_DIR/iwd/
 # ell
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/ell/ $INSTALL_SRC_DIR/ell/
+#
+# Apply temporary patches to fix make failures
+patch -p1 $INSTALL_SRC_DIR/iwd/src/knownnetworks.c < $PROJECT_PATCHES_DIR/iwd_knownnetworks.c.patch
+patch -p1 $INSTALL_SRC_DIR/iwd/src/hotspot.c < $PROJECT_PATCHES_DIR/iwd_hotspot.c.patch
+#
 cd $INSTALL_SRC_DIR/iwd
 # Bootstrap
 ./bootstrap --prefix=$PREFIX --libdir=$LIBDIR
