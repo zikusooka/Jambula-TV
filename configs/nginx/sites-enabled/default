@@ -7,7 +7,7 @@
 	
         location / {
             # Redirect to HotSpot Portal for wireless clients
-            if ($remote_addr ~* 172.16.0) {
+            if ($remote_addr != 127.0.0.1) {
             rewrite  ^	http://172.16.0.1;
             }
         }
