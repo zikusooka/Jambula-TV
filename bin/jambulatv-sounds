@@ -11,7 +11,7 @@ JAMBULATV_SOUNDS_DIR="/usr/share/JambulaTV/sounds"
 DEFAULT_SOUND_EFFECTS_FILE="waiting-4-online-response.wav"
 #
 # If third CLI argument is used, set it as sound effects file.  For others, use default sound effects file
-if [ "x$3" = "x" ] || [ ! -e "$JAMBULATV_SOUNDS_DIR/$3" ];
+if [[ "x$3" = "x" ]] || [[ ! -e "$JAMBULATV_SOUNDS_DIR/$3" ]];
 then
 SOUND_EFFECTS_WAITING_PATH="$JAMBULATV_SOUNDS_DIR/$DEFAULT_SOUND_EFFECTS_FILE"
 else
@@ -320,6 +320,12 @@ HOUR=$(date +%-I)
 AMPM=$(date +%-P) 
 # Select sound based on hour and AM/PM
 ALERT_SOUND_FILE=time_now_is_${HOUR}_${AMPM}.mp3
+;;
+42)
+ALERT_SOUND_FILE=planned_power_outage_tomorrow.mp3
+;;
+43)
+ALERT_SOUND_FILE=unplanned_emergency_power_outage_currently.mp3
 ;;
 [Aa-Zz]*)
 if [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]];
