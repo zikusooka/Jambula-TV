@@ -107,8 +107,7 @@ scan_4_wifi () {
 # Take station UP
 sudo /usr/sbin/ip link set $WIFI_STATION_INTERFACE up
 # Scan for AP and pick out preferred SSID
-sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE scan
-DISCOVERED_WIFI_SSID=$(sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE get-networks | awk '/*/ {print $1}' | sed 's/>//g' | sed -n "/^$WIFI_SSID$/p")
+DISCOVERED_WIFI_SSID=$(sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE scan | awk -F': ' '/SSID:/ {print $2}' | grep -i "\b$WIFI_SSID\b")
 #
 # See if there's a match
 if [[ "x$DISCOVERED_WIFI_SSID" = "x" ]];
