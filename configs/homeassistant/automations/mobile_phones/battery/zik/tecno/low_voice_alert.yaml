@@ -27,9 +27,8 @@ action:
 
   # b) Mute speaker volume if there is already audio playing
   - service: shell_command.speaker_volume_mute
-  # Pause for a second - Needed - DO NOT REMOVE unless you have a fix!
-  - delay:
-      seconds: 1
+  # Pause for a second - DO NOT REMOVE unless you have a fix!
+  - delay: '00:00:01'
 
   # c) Battery low sound effect using house speakers
   - service: shell_command.play_phone_battery_low_sound_effect

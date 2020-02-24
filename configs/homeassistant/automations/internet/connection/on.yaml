@@ -22,16 +22,21 @@ action:
 
   # VOICE ALERT - sound alert notice using Intercom i.e. paging
   # -----------------------------------------------------------
+
   # a) Mute speaker volume if there is already audio playing
   - service: shell_command.speaker_volume_mute
-  # Pause for a second - Needed - DO NOT REMOVE unless you have a fix!
-  - delay:
-      seconds: 1
+
+  # Pause for a second - DO NOT REMOVE unless you have a fix!
+  - delay: '00:00:01'
+
   # b) Chime alert using house speakers
   - service: shell_command.play_chime_alert
+
   # c) Internet on sound effect using house speakers
   #- service: shell_command.
+
   # d) Voice alert using house speakers
   - service: shell_command.internet_is_back_on
+
   # e) Unmute speaker volume 
   - service: shell_command.speaker_volume_unmute 

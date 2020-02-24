@@ -29,20 +29,21 @@ action:
 
   # a) Mute speaker volume if there is already audio playing
   - service: shell_command.speaker_volume_mute
-  # Pause for a second - Needed - DO NOT REMOVE unless you have a fix!
-  - delay:
-      seconds: 1
+  # Pause for a second - DO NOT REMOVE unless you have a fix!
+  - delay: '00:00:01'
+
   # b) Chime alert using house speakers
   - service: shell_command.play_battery_low_sound_effect
+
   # c) Use Text2Speech to alert 
   - service: shell_command.say_custom_text_using_text2speech
     data_template:
       tts_text: "Please be advised that an unplanned power outage is likely in your area any minute from now. Please backup your work"
       tts_engine: ""
       tts_audio_gain: "0.5"
+
   # d) Unmute speaker volume 
   - service: shell_command.speaker_volume_unmute 
-
 
 # Text power outage reports
 # -------------------------
@@ -60,3 +61,23 @@ action:
       telegram_text: !include ../../templates/power_outages/umeme_ongoing_notification_message.yaml
       telegram_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
       telegram_recipient_phone: ''
+
+# VOICE ALERT - sound alert notice using Intercom i.e. paging
+# -----------------------------------------------------------
+
+  # a) Mute speaker volume if there is already audio playing
+  - service: shell_command.speaker_volume_mute
+  # Pause for a second - DO NOT REMOVE unless you have a fix!
+  - delay: '00:00:01'
+
+  # b) Chime alert using house speakers
+  - service: shell_command.play_chime_alert
+
+  # c) Planned power outage tomorrow sound effect using house speaker
+  #- service: shell_command.
+
+  # d) Planned power outage tomorrow notification
+  - service: shell_command.unplanned_emergency_power_outage_currently
+
+  # e) Unmute speaker volume 
+  - service: shell_command.speaker_volume_unmute

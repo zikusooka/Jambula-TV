@@ -11,8 +11,7 @@ daily_digest_notify:
         phone: ''
 
     # IMPORTANT: Pause a bit to allow previous notification to be sent
-    - delay:
-        seconds: 10
+    - delay: '00:00:10'
 
     # WhatsApp - text
     - service: shell_command.send_whatsapp_text
@@ -21,8 +20,7 @@ daily_digest_notify:
         phone: ''
 
     # IMPORTANT: Pause a bit to allow previous notification to be sent
-    - delay:
-        seconds: 10
+    - delay: '00:00:10'
 
     #  TELEGRAM  
     # ---------
@@ -34,8 +32,7 @@ daily_digest_notify:
         phone: ''
 
     # IMPORTANT: Pause a bit to allow previous notification to be sent
-    - delay:
-        seconds: 10
+    - delay: '00:00:10'
 
     # Telegram - text
     - service: shell_command.send_telegram_text
@@ -44,8 +41,7 @@ daily_digest_notify:
         phone: ''
 
     # IMPORTANT: Pause a bit to allow previous notification to be sent
-    - delay:
-        seconds: 10
+    - delay: '00:00:10'
 
 
     #  TWITTER REPORTS
@@ -57,8 +53,7 @@ daily_digest_notify:
         village: !secret homeassistant_city
 
     # IMPORTANT: Pause a bit to allow previous task to be completed
-    - delay:
-        seconds: 5
+    - delay: '00:00:05'
 
     # Send twitter reports - WhatsApp
     - service: shell_command.send_twitter_reports_whatsapp
@@ -66,8 +61,7 @@ daily_digest_notify:
         reports_file: !secret twitter_reports_file
 
     # IMPORTANT: Pause a bit to allow previous notification to be sent
-    - delay:
-        seconds: 10
+    - delay: '00:00:10'
 
     # Send twitter reports - Telegram
     - service: shell_command.send_twitter_reports_telegram

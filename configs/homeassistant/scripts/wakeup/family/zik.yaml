@@ -1,9 +1,8 @@
 wakeup_zik:
   sequence:
 
-
-  # 1. Say wakeup greeting for zik
-  # ------------------------------
+    # 1. Say wakeup greeting for zik
+    # ------------------------------
     # a) Merge audio files
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
@@ -15,9 +14,8 @@ wakeup_zik:
 
     # b) Mute speaker volume if there is already audio playing
     - service: shell_command.speaker_volume_mute
-    # Pause for a second - Needed> DO NOT REMOVE unless you have a fix!
-    - delay:
-        seconds: 1
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
 
     # c) Play merged audio file using house speakers
     - service: shell_command.play_merged_audio_file
@@ -29,7 +27,7 @@ wakeup_zik:
     - service: shell_command.speaker_volume_unmute
 
 
-  # 2. Read flash briefing for zik
-  # ------------------------------
+    # 2. Read flash briefing for zik
+    # ------------------------------
     #  Play daily flash briefing using house speakers
     - service: shell_command.play_flash_briefing

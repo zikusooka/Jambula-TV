@@ -24,19 +24,19 @@ condition:
 
 action:
 
-  # Text power outage reports
-  # -------------------------
+# Text power outage reports
+# -------------------------
   
-    # a) WhatsApp
-    - service: script.send_whatsapp
-      data_template:        
-        whatsapp_text: !include ../../templates/power_outages/umeme_today_notification_message.yaml
-        whatsapp_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
-        whatsapp_recipient_phone: ''
+  # a) WhatsApp
+  - service: script.send_whatsapp
+    data_template:        
+      whatsapp_text: !include ../../templates/power_outages/umeme_today_notification_message.yaml
+      whatsapp_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
+      whatsapp_recipient_phone: ''
 
-    # b) Telegram
-    - service: script.send_telegram
-      data_template: 
-        telegram_text: !include ../../templates/power_outages/umeme_today_notification_message.yaml
-        telegram_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
-        telegram_recipient_phone: ''
+  # b) Telegram
+  - service: script.send_telegram
+    data_template: 
+      telegram_text: !include ../../templates/power_outages/umeme_today_notification_message.yaml
+      telegram_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
+      telegram_recipient_phone: ''

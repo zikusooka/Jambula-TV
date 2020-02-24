@@ -10,8 +10,7 @@ romantic_visit_christian:
         station: '1'
 
     # Wait for 20 minutes
-    - delay:
-        seconds: 1200
+    - delay: '00:20:00'
 
     # Play K-Love
     - service: shell_command.internet_radio_play_selected_station
@@ -19,8 +18,7 @@ romantic_visit_christian:
         station: '5'
 
     # Wait for 20 minutes
-    - delay:
-        seconds: 1200
+    - delay: '00:20:00'
 
 
     # LIGHTING

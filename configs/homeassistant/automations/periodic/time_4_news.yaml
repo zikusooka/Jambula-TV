@@ -35,19 +35,18 @@ condition:
 action:
 
   # a) Mute speaker volume if there is already audio playing
-    - service: shell_command.speaker_volume_mute
-  # Pause for a second - Needed - DO NOT REMOVE unless you have a fix!
-    - delay:
-        seconds: 1
-  # b) Chime alert using house speakers
-    - service: shell_command.play_chime_alert
+  - service: shell_command.speaker_volume_mute
+  # Pause for a second - DO NOT REMOVE unless you have a fix!
+  - delay: '00:00:01'
 
+  # b) Chime alert using house speakers
+  - service: shell_command.play_chime_alert
 
   # c) Its time for news sound effect using house speakers
-    - service: shell_command.news_starting_sound_effect
+  - service: shell_command.news_starting_sound_effect
 
   # d) Announce its time time for news using house speakers
-    - service: shell_command.its_time_4_news
+  - service: shell_command.its_time_4_news
 
   # e) Unmute speaker volume 
-    - service: shell_command.speaker_volume_unmute
+  - service: shell_command.speaker_volume_unmute

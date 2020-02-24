@@ -16,9 +16,8 @@ bedtime_zik:
 
     # b) Mute speaker volume if there is already audio playing
     - service: shell_command.speaker_volume_mute
-    # Pause for a second - Needed> DO NOT REMOVE unless you have a fix!
-    - delay:
-        seconds: 1
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
 
     # c) Play merged audio file using house speakers
     - service: shell_command.play_merged_audio_file
@@ -63,5 +62,4 @@ bedtime_zik:
         alarm_time: "{{states('sensor.phone_alarm_for_zik_tecno')}}"
 
     # Delay 15 minutes before shutdown to allow notifications to go out
-    - delay:
-        seconds: 900
+    - delay: '00:15:00'

@@ -8,8 +8,7 @@ send_telegram:
         phone: '{{telegram_recipient_phone}}'
 
     # IMPORTANT: Pause a bit to allow previous notification to be sent
-    - delay:
-        seconds: 10
+    - delay: '00:00:10'
 
     # Telegram - text
     - service: shell_command.send_telegram_text
@@ -18,5 +17,4 @@ send_telegram:
         phone: '{{telegram_recipient_phone}}'
 
     # IMPORTANT: Pause a bit to allow previous notification to be sent
-    - delay:
-        seconds: 10
+    - delay: '00:00:10'

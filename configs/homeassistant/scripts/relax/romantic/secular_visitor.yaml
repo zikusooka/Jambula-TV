@@ -10,8 +10,7 @@ romantic_visit_secular:
         station: '1'
 
     # Wait for 20 minutes
-    - delay:
-        seconds: 1200
+    - delay: '00:20:00'
 
     # Play Reggae
     - service: shell_command.internet_radio_play_selected_station
@@ -19,8 +18,7 @@ romantic_visit_secular:
         station: '23'
 
     # Wait for 20 minutes
-    - delay:
-        seconds: 1200
+    - delay: '00:20:00'
 
 
     # LIGHTING

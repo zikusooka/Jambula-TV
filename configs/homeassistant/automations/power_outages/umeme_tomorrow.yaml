@@ -20,19 +20,39 @@ condition:
 
 action:
 
-  # Text power outage reports
-  # -------------------------
+# Text power outage reports
+# ------------------------
   
-    # a) WhatsApp
-    - service: script.send_whatsapp
-      data_template:        
-        whatsapp_text: !include ../../templates/power_outages/umeme_tomorrow_notification_message.yaml
-        whatsapp_image: '/usr/share/JambulaTV/images/hass/power_outage_tomorrow.png'
-        whatsapp_recipient_phone: ''
+  # a) WhatsApp
+  - service: script.send_whatsapp
+    data_template:        
+      whatsapp_text: !include ../../templates/power_outages/umeme_tomorrow_notification_message.yaml
+      whatsapp_image: '/usr/share/JambulaTV/images/hass/power_outage_tomorrow.png'
+      whatsapp_recipient_phone: ''
 
-    # b) Telegram
-    - service: script.send_telegram
-      data_template: 
-        telegram_text: !include ../../templates/power_outages/umeme_tomorrow_notification_message.yaml
-        telegram_image: '/usr/share/JambulaTV/images/hass/power_outage_tomorrow.png'
-        telegram_recipient_phone: ''
+  # b) Telegram
+  - service: script.send_telegram
+    data_template: 
+      telegram_text: !include ../../templates/power_outages/umeme_tomorrow_notification_message.yaml
+      telegram_image: '/usr/share/JambulaTV/images/hass/power_outage_tomorrow.png'
+      telegram_recipient_phone: ''
+
+# VOICE ALERT - sound alert notice using Intercom i.e. paging
+# -----------------------------------------------------------
+
+  # a) Mute speaker volume if there is already audio playing
+  - service: shell_command.speaker_volume_mute
+  # Pause for a second - DO NOT REMOVE unless you have a fix!
+  - delay: '00:00:01'
+
+  # b) Chime alert using house speakers
+  - service: shell_command.play_chime_alert
+
+  # c) Planned power outage tomorrow sound effect using house speakers
+  #- service: shell_command.
+
+  # d) Planned power outage tomorrow notification
+  - service: shell_command.planned_power_outage_tomorrow
+
+  # e) Unmute speaker volume 
+  - service: shell_command.speaker_volume_unmute
