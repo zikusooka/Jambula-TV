@@ -464,7 +464,13 @@ stream_now_playing
 fi
 
 # Print name of station, song, and artist if found
-if [[ "x$NAME_OF_STATION" != "x" || "x$NAME_OF_SONG_ARTIST" != "x" ]];
+if [[ "$NAME_OF_STATION" = "$NAME_OF_SONG_ARTIST" ]];
+then
+cat <<PLAYING
+$NAME_OF_SONG_ARTIST
+PLAYING
+
+elif [[ "x$NAME_OF_STATION" != "x" || "x$NAME_OF_SONG_ARTIST" != "x" ]];
 then
 cat <<PLAYING
 ($NAME_OF_STATION) $NAME_OF_SONG_ARTIST
