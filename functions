@@ -770,6 +770,7 @@ MQTT_PUBLISH_OPTS="--quiet -h $MQTT_BROKER_IP -p $MQTT_BROKER_PORT"
 MQTT_TOPIC_PRESENCE_HOSTAPD=JambulaTV/house/presence/hostapd
 MQTT_TOPIC_PRESENCE_MIFI=JambulaTV/house/presence/mifi
 MQTT_TOPIC_PRESENCE_TRACKERJACKER=JambulaTV/house/presence/trackerjacker
+MQTT_TOPIC_STATUS_MIFI=JambulaTV/house/status/mifi
 
 # Presence via MiFi
 PRESENCE_VIA_MIFI_CHECK_INTERVAL_SECS=60
@@ -7675,7 +7676,13 @@ chmod 755 $CONNECT_WIFI_AP_TOOL
 #
 # Add jambulatv-mifi-query tool - Get stats such as data balance, battery level, signal etc
 [[ -e $MIFI_QUERY_TOOL ]] || \
-	cp -v $PROJECT_BIN_DIR/jambulatv-mifi-query $BINARY_PREFIX
+	cat $PROJECT_BIN_DIR/jambulatv-mifi-query | \
+	sed -e "s:MY_MQTT_BROKER_IP:$MQTT_BROKER_IP:g" | \
+	sed -e "s:MY_MQTT_BROKER_PORT:$MQTT_BROKER_PORT:g" | \
+	sed -e "s:MY_MQTT_PUBLISH_CMD:$MQTT_PUBLISH_CMD:g" | \
+	sed -e "s:MY_MQTT_PUBLISH_OPTS:$MQTT_PUBLISH_OPTS:g" | \
+	sed -e "s:MY_MQTT_TOPIC_STATUS_MIFI:$MQTT_TOPIC_STATUS_MIFI:g" \
+	> $BINARY_PREFIX/jambulatv-mifi-query
 # Make tool executable
 chmod 755 $MIFI_QUERY_TOOL
 }
