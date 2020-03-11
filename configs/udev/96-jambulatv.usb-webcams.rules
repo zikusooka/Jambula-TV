@@ -3,7 +3,12 @@
 #
 # To find those variables, run ../contrib/scripts/udev-properties.sh
 # ------------------------------------------------------------------
-# Logitech, Inc. Webcam C200
-KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTR{name}=="UVC Camera (046d:0802)", GROUP="video", MODE="0660", SYMLINK+="video-C200-0", OPTIONS="last_rule" 
+
+# Sony Playstation Eye
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ENV{ID_VENDOR_ID}=="1415", ENV{ID_MODEL_ID}=="2000", GROUP="video", MODE="0660", SYMLINK+="video-playstation-eye-0"
+
 # Logitech QuickCam STX
-KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTR{name}=="gspca main driver", GROUP="video", MODE="0660", SYMLINK+="video-quickcam-0", OPTIONS="last_rule"
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ENV{ID_VENDOR_ID}=="046d", ENV{ID_MODEL_ID}=="08d7", GROUP="video", MODE="0660", SYMLINK+="video-quickcam-0"
+
+# Logitech, Inc. Webcam C200
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ENV{ID_VENDOR_ID}=="046d", ENV{ID_MODEL_ID}=="0802", GROUP="video", MODE="0660", SYMLINK+="video-C200-0"
