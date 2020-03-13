@@ -8,6 +8,7 @@ ICINGA2_AP_STATUS=$@
 SCRIPT_RUNNING_FILE=/tmp/connect_2_ap_running
 INTERNET_OFF_FILE=/etc/dnsmasq.d/dns_off.conf
 SETUP_COMPLETED_FILE=/usr/share/JambulaTV/html/setup/.initial-setup-completed
+DHCLIENT_ENTER_HOOKS_FILE=/etc/dhcp/dhclient-enter-hooks
 
 PING_CMD=/usr/sbin/fping
 PING_CMD_OPTS="-l"
@@ -21,6 +22,7 @@ WIFI_SSID=$(grep -i SSID $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 
 WIFI_SECURITY_KEY=$(grep -i SECURITY_KEY $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 OSD_TOOL_CMD="sudo /usr/bin/jambulatv-osd -m"
 AP_NOT_FOUND_MSG="WARNING - Wireless Access Point ($WIFI_SSID) Not Available"
+AP_SCAN_WAITING_4_OTHER_PROCESS="Waiting for another WiFi scan process to complete"
 AP_FOUND_MSG="Found your WiFi Access Point ($WIFI_SSID). Please wait while I connect to it"
 CONNECTED_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID), Assigning IP Address ..."
 INSERT_WIFI_DONGLE_MSG="Please insert your USB Wireless (WiFi) Network Adapter. I will try connecting to $WIFI_SSID shortly ..."
@@ -45,7 +47,7 @@ check_external_dns_status
 if [[ -e "$SCRIPT_RUNNING_FILE" ]] && [[ -e "$INTERNET_OFF_FILE" ]];
 then
 # Remove script running file and continue
-rm -f $SCRIPT_RUNNING_FILE
+sudo rm -f $SCRIPT_RUNNING_FILE
 
 elif [[ -e "$INTERNET_OFF_FILE" ]];
 then
@@ -73,7 +75,7 @@ touch $SCRIPT_RUNNING_FILE
 }
 
 remove_script_running_file () {
-rm -f $SCRIPT_RUNNING_FILE
+sudo rm -f $SCRIPT_RUNNING_FILE
 }
 
 number_of_interfaces () { 
@@ -103,9 +105,25 @@ WIFI_STICK_PRESENT=$?
 done
 }
 
+wait_for_other_wifi_scan_2_complete () {
+sudo ps auxw | grep -v grep | grep "$WIFI_STATION_INTERFACE scan" > /dev/null 2>&1
+ANOTHER_WIFI_SCAN=$?
+while [[ "$ANOTHER_WIFI_SCAN" = "0" ]];
+do
+logger -s -t $(basename $0) "$AP_SCAN_WAITING_4_OTHER_PROCESS"
+sleep 1
+sudo ps auxw | grep -v grep | grep "$WIFI_STATION_INTERFACE scan" > /dev/null 2>&1
+ANOTHER_WIFI_SCAN=$?
+done
+}
+
 scan_4_wifi () {
 # Take station UP
 sudo /usr/sbin/ip link set $WIFI_STATION_INTERFACE up
+
+# Before scanning, check if 'iw scan' is being used by another process
+wait_for_other_wifi_scan_2_complete
+
 # Scan for AP and pick out preferred SSID
 DISCOVERED_WIFI_SSID=$(sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE scan | awk -F': ' '/SSID:/ {print $2}' | grep -i "\b$WIFI_SSID\b")
 #
@@ -149,11 +167,34 @@ disconnect_4rm_access_point
 # Start IWD service if not running
 sudo /usr/bin/systemctl -q is-active iwd.service || /usr/bin/systemctl start iwd.service
 
+# Before scanning, check if 'iw scan' is being used by another process
+wait_for_other_wifi_scan_2_complete
+
+# Scan for WiFi networks
+sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE scan
+
+# Wait for scan to find all available AP SSIDs
+sleep 3
+
+# Check if Access Point is hidden
+sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE get-hidden-access-points | grep "\b$WIFI_SSID\b" > /dev/null 2>&1
+NETWORK_HIDDEN=$?
+#
 # Connect to Access Point
+if [[ "$NETWORK_HIDDEN" = "0" ]];
+then
+# Hidden
+sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE connect-hidden "$WIFI_SSID" --passphrase "$WIFI_SECURITY_KEY"
+# Not hidden
+else
 sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE connect "$WIFI_SSID" --passphrase "$WIFI_SECURITY_KEY"
+fi
 
 # Do not auto connect
-sudo /usr/bin/iwctl known-networks "$WIFI_SSID" set-property AutoConnect no
+sudo /usr/bin/iwctl known-networks list | grep "\b$WIFI_SSID\b" > /dev/null 2>&1
+NETWORK_EXISTS=$?
+[[ "$NETWORK_EXISTS" = "0" ]] && \
+	sudo /usr/bin/iwctl known-networks "$WIFI_SSID" set-property AutoConnect no
 }
 
 check_link_status () {
@@ -175,17 +216,21 @@ fi
 }
 
 disable_dns_servers_assignment () {
-[[ -e /etc/dhcp/dhclient-enter-hooks ]] || \
-	cat > /etc/dhcp/dhclient-enter-hooks <<ET
+if [[ ! -e $DHCLIENT_ENTER_HOOKS_FILE ]]
+then
+
+# Generate dhclient-enter-hooks script
+cat << ET | sudo tee $DHCLIENT_ENTER_HOOKS_FILE > /dev/null 2>&1
 #!/bin/sh
 make_resolv_conf () {
 :
 logger -s -t \$(basename \$0) "Info: JambulaTV will ignore any DNS server IP addresses assigned to \$interface ..."
-}
+} 
 ET
 
 # Make dhclient-enter-hooks script executable
-chmod 755 /etc/dhcp/dhclient-enter-hooks
+sudo chmod 755 $DHCLIENT_ENTER_HOOKS_FILE
+fi
 }
 
 get_ip_address () {
