@@ -1,7 +1,6 @@
 #!/bin/sh
-# This script queries a UMEME Electricity Distribution server API(s) to get 
-# areas that are and will experience power outages today, tomorrow, and 
-# the day after tomorrow
+# This script queries a UMEME Electricity Distribution server API(s) to # get areas that are and will experience power outages today, tomorrow,
+# and the day after tomorrow
 #
 # Disclaimer: We do not work for UMEME, neither do I have direct access # to their servers, so this script may break should there be changes 
 # to their API
@@ -48,6 +47,7 @@ MAXIMUM_AGE_OF_UMEME_OUTAGES_PLANNED_FILE=10800 #3 hours
 UMEME_OUTAGES_ONGOING_FILE=/tmp/UMEME-ongoing-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}-${DATE_DIGIT_TODAY}.json
 MAXIMUM_AGE_OF_UMEME_OUTAGES_ONGOING_FILE=1800 # 30 minutes
 UMEME_SELECTED_AREAS=$(echo ${@:2} | sed 's: ,:,:g' | sed 's:, :,:g' | sed 's: , :,:g')
+UMEME_OUTAGES_OUTPUT=/tmp/umeme_outage_areas_found
 SCRIPT_USER=$(whoami)
 
 
@@ -57,13 +57,34 @@ SCRIPT_USER=$(whoami)
 ###############
 
 pre_cleanup () {
-# Give user permissions i.e. write access to existing outage files 
 # Planned
-[[ -e $UMEME_OUTAGES_PLANNED_FILE ]] && \
-	sudo chown $SCRIPT_USER $UMEME_OUTAGES_PLANNED_FILE > /dev/null 2>&1
+# -------
+if [[ -s $UMEME_OUTAGES_PLANNED_FILE ]];
+then
+# Give user permissions i.e. write access to existing outage file
+sudo chown $SCRIPT_USER $UMEME_OUTAGES_PLANNED_FILE > /dev/null 2>&1
+
+elif [[ ! -s $UMEME_OUTAGES_PLANNED_FILE ]];
+# Remove if existing outage file is empty
+then
+sudo rm -f $UMEME_OUTAGES_PLANNED_FILE 
+fi
+
 # Ongoing
-[[ -e $UMEME_OUTAGES_ONGOING_FILE ]] && \
-	sudo chown $SCRIPT_USER $UMEME_OUTAGES_ONGOING_FILE > /dev/null 2>&1
+# -------
+if [[ -s $UMEME_OUTAGES_ONGOING_FILE ]];
+then
+# Give user permissions i.e. write access to existing outage file
+sudo chown $SCRIPT_USER $UMEME_OUTAGES_ONGOING_FILE > /dev/null 2>&1
+
+elif [[ ! -s $UMEME_OUTAGES_ONGOING_FILE ]];
+then
+# Remove if existing outage file is empty
+sudo rm -f $UMEME_OUTAGES_ONGOING_FILE
+fi
+
+# Remove outage areas output temp file if it exists
+[[ -e $UMEME_OUTAGES_OUTPUT ]] && sudo rm -f $UMEME_OUTAGES_OUTPUT
 }
 
 DaySuffix() {
@@ -88,7 +109,10 @@ INTERNET_STATUS_VAL=$?
 # Alert if there is no Internet
 if [[ "$INTERNET_STATUS_VAL" != "0" ]];
 then
-logger -s -t $(basename $0) "Warning: Unable to connect to the Internet.  UMEME outages file(s) can not be downloaded"
+logger -t $(basename $0) "Warning: Unable to connect to the Internet.  UMEME outages file(s) can not be downloaded"
+#
+# Print 'none' if no Internet i.e. Outages file(s) can not be downloaded
+echo none
 exit 1
 fi
 }
@@ -102,7 +126,31 @@ if [[ "$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" != "yes" ]];
 then
 check_internet_connectivity_ping
 logger -s -t $(basename $0) "INFO: Fetching UMEME monthly outages file ..."
-$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d main=Az8hHN9n7nBp98SN3xs341. http://41.84.213.50/umeme/access/phone_forty/get_monthly_outages.php > $UMEME_OUTAGES_PLANNED_FILE
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d main=Az8hHN9n7nBp98SN3xs341. http://41.84.213.50/umeme/access/phone_forty/get_monthly_outages.php | tr -cd '\11\12\15\40-\176' | sed -e 's:\\r::g' | sed 's:\\n::g' > $UMEME_OUTAGES_PLANNED_FILE
+
+# Check the integrity of the downloaded outages file
+cat $UMEME_OUTAGES_PLANNED_FILE | grep -e SUBSTATION -e DISTRICT > /dev/null 2>&1
+FILE_STATE=$?
+#
+if [[ -s "$UMEME_OUTAGES_PLANNED_FILE" ]] && [[ "$FILE_STATE" != "0" ]];
+then
+# Quit if outages file is corrupted
+logger -s -t $(basename $0) "Error: UMEME monthly outages file is corrupted, exiting ..."
+# Print 'none' if outages file(s) can not be downloaded
+echo none
+# Quit
+exit 0
+
+elif [[ ! -s "$UMEME_OUTAGES_PLANNED_FILE" ]];
+then
+# Quit if outages file is empty
+logger -s -t $(basename $0) "Error: UMEME monthly outages file is empty, exiting ..."
+# Print 'none' if outages file(s) can not be downloaded
+echo none
+# Quit
+exit 0
+fi
+#
 fi
 }
 
@@ -115,10 +163,59 @@ if [[ "$UMEME_OUTAGES_ONGOING_FILE_IS_FRESH" != "yes" ]];
 then
 check_internet_connectivity_ping
 logger -s -t $(basename $0) "INFO: Fetching UMEME ongoing outages file ..."
-$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d main=Az8hHN9n7nBp98SN3xs341. http://41.84.213.50/umeme/access/phone_forty/get_ongoing_outages.php > $UMEME_OUTAGES_ONGOING_FILE
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d main=Az8hHN9n7nBp98SN3xs341. http://41.84.213.50/umeme/access/phone_forty/get_ongoing_outages.php | tr -cd '\11\12\15\40-\176' | sed -e 's:\\r::g' | sed 's:\\n::g' > $UMEME_OUTAGES_ONGOING_FILE 
+#
+# Check the integrity of the downloaded outages file
+cat $UMEME_OUTAGES_ONGOING_FILE | grep -e SUBSTATION -e DISTRICT > /dev/null 2>&1
+FILE_STATE=$?
+#
+if [[ -s "$UMEME_OUTAGES_ONGOING_FILE" ]] && [[ "$FILE_STATE" != "0" ]];
+then
+# Quit if outages file is corrupted
+logger -s -t $(basename $0) "Error: UMEME ongoing outages file is corrupted, exiting ..."
+# Print 'none' if outages file(s) can not be downloaded
+echo none
+# Quit
+exit 0
+
+elif [[ ! -s "$UMEME_OUTAGES_ONGOING_FILE" ]];
+then
+# Quit if outages file is empty
+logger -s -t $(basename $0) "Error: UMEME ongoing outages file is empty, exiting ..."
+# Print 'none' if outages file(s) can not be downloaded
+echo none
+# Quit
+exit 0
+fi
+#
 fi
 }
 
+fetch_outage_lists () {
+# Fetch ongoing & monthly outage lists
+get_ongoing_outages
+get_monthly_outages
+}
+
+write_outage_areas_2_temp_file () {
+if [[ "x$UMEME_OUTAGES" = "x" ]];
+then
+echo "none" >> $UMEME_OUTAGES_OUTPUT
+else
+echo "$UMEME_OUTAGES" >> $UMEME_OUTAGES_OUTPUT
+fi
+}
+
+print_outage_areas () {
+OUTPUT_ENTRIES=$(uniq $UMEME_OUTAGES_OUTPUT | wc -l)
+if [[ "$OUTPUT_ENTRIES" -gt "1" ]];
+then
+sed 's:none::g' $UMEME_OUTAGES_OUTPUT | sed '/^$/d' | uniq
+
+else
+uniq $UMEME_OUTAGES_OUTPUT
+fi
+}
 
 # After Tomorrow
 # --------------
@@ -133,16 +230,24 @@ get_monthly_outages
 if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
 then
 # Output all areas if none was specified on command line
-cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_AFTER_TOMORROW"'")) |.["Areas & Customers to be Affected"]'
+UMEME_OUTAGES=$(cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_AFTER_TOMORROW"'")) |.["Areas & Customers to be Affected"] | select(. != null)' | uniq)
+#
+write_outage_areas_2_temp_file
 
 else
 # Output only selected areas if specified on the command line
 IFS=","
 for AREA in $UMEME_SELECTED_AREAS
 do
-cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_AFTER_TOMORROW"'")) |.["Areas & Customers to be Affected"]' | grep -io "$AREA" | sed 's:^ ::g'
+
+UMEME_OUTAGES=$(cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_AFTER_TOMORROW"'")) |.["Areas & Customers to be Affected"] | select(. != null)' | grep -io "$AREA" | sed 's:^ ::g' | uniq)
+#
+write_outage_areas_2_temp_file
 done
 fi
+
+# Print outages: Remove entries named 'none' since there are other areas
+print_outage_areas
 }
 
 # Tomorrow
@@ -158,16 +263,23 @@ get_monthly_outages
 if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
 then
 # Output all areas if none was specified on command line
-cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TOMORROW"'")) |.["Areas & Customers to be Affected"]'
+UMEME_OUTAGES=$(cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TOMORROW"'")) |.["Areas & Customers to be Affected"] | select(. != null)' | uniq)
+#
+write_outage_areas_2_temp_file
 
 else
 # Output only selected areas if specified on the command line
 IFS=","
 for AREA in $UMEME_SELECTED_AREAS
 do
-cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TOMORROW"'")) |.["Areas & Customers to be Affected"]' | grep -io "$AREA" | sed 's:^ ::g'
+UMEME_OUTAGES=$(cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TOMORROW"'")) |.["Areas & Customers to be Affected"] | select(. != null)' | grep -io "$AREA" | sed 's:^ ::g' | uniq)
+#
+write_outage_areas_2_temp_file
 done
 fi
+
+# Print outages: Remove entries named 'none' since there are other areas
+print_outage_areas
 }
 
 # Today
@@ -183,18 +295,24 @@ get_monthly_outages
 if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
 then
 # Output all areas if none was specified on command line
-cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TODAY"'")) |.["Areas & Customers to be Affected"]'
+UMEME_OUTAGES=$(cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TODAY"'")) |.["Areas & Customers to be Affected"] | select(. != null)' | uniq)
+#
+write_outage_areas_2_temp_file
 
 else
 # Output only selected areas if specified on the command line
 IFS=","
 for AREA in $UMEME_SELECTED_AREAS
 do
-cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TODAY"'")) |.["Areas & Customers to be Affected"]' | grep -io "$AREA" | sed 's:^ ::g'
+UMEME_OUTAGES=$(cat $UMEME_OUTAGES_PLANNED_FILE | jq -r '.[] | select(.DATE | contains("'"$DATE_TODAY"'")) |.["Areas & Customers to be Affected"] | select(. != null)' | grep -io "$AREA" | sed 's:^ ::g' | uniq)
+#
+write_outage_areas_2_temp_file
 done
 fi
-}
 
+# Print outages: Remove entries named 'none' since there are other areas
+print_outage_areas
+}
 
 # Ongoing
 # -------
@@ -209,16 +327,23 @@ get_ongoing_outages
 if [[ "x$UMEME_SELECTED_AREAS" = "x" ]];
 then
 # Output all areas if none was specified on command line
-cat $UMEME_OUTAGES_ONGOING_FILE | jq -r '.[] | select(.CREATED_DATE | contains("'"$DATE_TODAY"'")) |.["AREAS"]'
+UMEME_OUTAGES=$(cat $UMEME_OUTAGES_ONGOING_FILE | jq -r '.[] | select(.CREATED_DATE | contains("'"$DATE_TODAY"'")) |.["AREAS"] | select(. != null)' | uniq)
+#
+write_outage_areas_2_temp_file
 
 else
 # Output only selected areas if specified on the command line
 IFS=","
 for AREA in $UMEME_SELECTED_AREAS
 do
-cat $UMEME_OUTAGES_ONGOING_FILE | jq -r '.[] | select(.CREATED_DATE | contains("'"$DATE_TODAY"'")) |.["AREAS"]' | grep -io "$AREA" | sed 's:^ ::g'
+UMEME_OUTAGES=$(cat $UMEME_OUTAGES_ONGOING_FILE | jq -r '.[] | select(.CREATED_DATE | contains("'"$DATE_TODAY"'")) |.["AREAS"] | select(. != null)' | grep -io "$AREA" | sed 's:^ ::g' | uniq)
+#
+write_outage_areas_2_temp_file
 done
 fi
+
+# Print outages: Remove entries named 'none' since there are other areas
+print_outage_areas
 }
 
 
@@ -230,6 +355,9 @@ fi
 pre_cleanup
 
 case $1 in
+fetch)
+fetch_outage_lists
+;;
 after_tomorrow)
 after_tomorrow
 ;;
@@ -242,9 +370,13 @@ today
 ongoing)
 ongoing 
 ;;
+
 *)
 clear
 cat <<ET
-Usage: $(basename $0) [today|tomorrow|ongoing|after_tomorrow] [AREA1, AREA 2, AREA3]
+Usage: $(basename $0) [today|tomorrow|ongoing|after_tomorrow] [AREA1, AREA2, AREA3]
+
+NOTE: To download outage lists: $(basename $0) [fetch]
+
 ET
 esac
