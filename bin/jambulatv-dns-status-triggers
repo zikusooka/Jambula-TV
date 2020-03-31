@@ -27,6 +27,7 @@ SOUNDS_TOOL=MY_SOUNDS_TOOL
 INTERNET_SPEED_TOOL=MY_INTERNET_SPEED_TOOL
 GEOLOCATION_TOOL=MY_GEOLOCATION_TOOL
 REVERSE_SSH_TOOL=MY_REVERSE_SSH_TOOL
+UMEME_OUTAGES_TOOL=/usr/bin/jambulatv-umeme-outages
 
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
 
@@ -176,7 +177,7 @@ update_dns_servers
 /usr/bin/wget -c -i $DNS_BLOCKING_SOURCES_FILE -P $DNS_BLOCKING_CACHE_DIR
 #
 # Clean up domains.txt file
-grep -v -e ^address -e ^# $DNS_BLOCKING_CACHE_DIR/domains.txt | while read LINE
+grep -v -e ^address -e \# $DNS_BLOCKING_CACHE_DIR/domains.txt | while read LINE
 do
 sed -i "s|$LINE|\#$LINE|g" $DNS_BLOCKING_CACHE_DIR/domains.txt 
 sleep 1
@@ -207,6 +208,10 @@ update_youtube_dl > /dev/null 2>&1
 # Lookup current public IP Address and City and Country Name i.e. Setup Geo Location Data
 # ---------------------------------------------------------------------------------------
 . $GEOLOCATION_TOOL > /dev/null 2>&1
+
+# Download power outages lists i.e. UMEME if in Uganda
+# -----------------------------------------------------
+[[ "$COUNTRY" = "Uganda" ]] && $UMEME_OUTAGES_TOOL fetch
 
 # Sound alert beep
 # ----------------
