@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run reminder to find out whats coming up, and display botice ion screen
+# Run reminder to find out whats coming up, and display notice on screen
 #
 # Jambula Labs @copyright 2020-2021 All rights reserved
 
@@ -10,11 +10,13 @@ MULTIMEDIA_USER=jambula
 
 TODAYS_REMINDERS_FILE=/tmp/reminders
 
+NOTIFICATION_METHOD=$1
+
 OSD_TOOL=/usr/bin/jambulatv-osd
 OSD_WAIT=15
 
 KODI_GUI_SETTINGS="/JambulaTV/.kodi/userdata/guisettings.xml"
-KODI_WEBSERVER_PORT=$(grep webserverport $KODI_GUI_SETTINGS | sed 's:<webserverport>::' | sed 's:</webserverport>::' | sed 's: ::g')
+KODI_WEBSERVER_PORT=$(grep -oP "(?<=id=\"services.webserverport\">).+?(?=</setting>)" $KODI_GUI_SETTINGS)
 
 
 
@@ -28,15 +30,33 @@ ss -ln | grep $KODI_WEBSERVER_PORT > /dev/null 2>&1
 done
 
 
+# Remove existing reminders file
+[[ -e $TODAYS_REMINDERS_FILE ]] && sudo rm -f $TODAYS_REMINDERS_FILE
+#
 # Get reminders
-$REMIND_CMD -u$MULTIMEDIA_USER $REMIND_OPTIONS $REMIND_DIR > $TODAYS_REMINDERS_FILE
+$REMIND_CMD -u$MULTIMEDIA_USER $REMIND_OPTIONS $REMIND_DIR | grep -Ev -e 'Reminders for' -e  '(#.*$)' > $TODAYS_REMINDERS_FILE
+#
+# Quit if no reminders
+if [[ ! -s $TODAYS_REMINDERS_FILE ]];
+then
+echo "none"
+exit 0
+fi
 #
 # Read reminders
 cat $TODAYS_REMINDERS_FILE | sed '/^\s*$/d' | while read REMINDER_MSG
 do
-# Quit if no reminders
-[ "x$REMINDER_MSG" = "x" ] && exit 0
+
 # Display Message one at a time
+if [[ "x$NOTIFICATION_METHOD" = "x" || "$NOTIFICATION_METHOD" = "osd" ]];
+then
+# Notice via OSD
 $OSD_TOOL -m "$REMINDER_MSG"
 sleep $OSD_WAIT
+
+else
+# Notice via Text
+echo "$REMINDER_MSG"
+fi
+
 done
