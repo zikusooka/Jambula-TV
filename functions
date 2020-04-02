@@ -10517,10 +10517,6 @@ chown snapserver:snapserver $SNAPCAST_DEFAULT_SERVER_FILE
 # snapclient
 chown $MULTIMEDIA_USER:audio $SNAPCAST_DEFAULT_CLIENT_FILE
 
-# Enable snapcast server and client NOTE: Already enebled by default
-systemctl enable snapserver.service
-systemctl enable snapclient.service
-
 # Configure MPD for use by Snapcast
 cat $PROJECT_CONFIGS_DIR/mpd.conf.sample | \
 	sed -e "s:MY_MPD_PORT:$MPD_PORT:g" | \
@@ -10544,6 +10540,28 @@ ET
 #
 # Change permissions of config directory to owner
 chown -R mpd:mpd $PROJECT_SYSTEM_CONF_DIR/mpd
+
+# Setup systemd unit files for snapcast server and client 
+# ---
+for SYSTEMD_UNIT in snapserver snapclient
+do
+#
+if [[ -e $SYSTEMD_UNITS_DIR_SYSTEM/${SYSTEMD_UNIT}.service ]];
+then
+# Disable default systemd unit
+systemctl disable ${SYSTEMD_UNIT}.service
+# Remove default systemd unit service file
+rm -f $SYSTEMD_UNITS_DIR_SYSTEM/${SYSTEMD_UNIT}.service
+fi
+#
+# Copy systemd unit systemd file if it non-existent
+[[ -e $SYSTEMD_UNITS_DIR_USER/${SYSTEMD_UNIT}.service ]] || \
+	cp -v $PROJECT_INIT_SCRIPTS_DIR/${SYSTEMD_UNIT}.service $SYSTEMD_UNITS_DIR_USER/
+#
+# Enable systemd unit
+systemctl enable ${SYSTEMD_UNIT}.service
+systemctl restart ${SYSTEMD_UNIT}.service
+done
 }
 
 gstreamer_install () {

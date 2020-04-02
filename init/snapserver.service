@@ -1,0 +1,14 @@
+[Unit]
+Description=Snapcast server
+Requires=network-online.target sound.target avahi-daemon.service
+After=network-online.target sound.target
+
+[Service]
+EnvironmentFile=-/etc/default/snapserver
+Type=forking
+ExecStart=/usr/bin/snapserver -d $USER_OPTS $SNAPSERVER_OPTS
+PIDFile=/var/run/snapserver/pid
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
