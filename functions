@@ -12488,7 +12488,11 @@ unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/homeassistant_pyozw-${PYOZW_VERSION
 sed -i \
 	"s|def get_openzwave(self, url='https://raw.githubusercontent.com/home-assistant/python-openzwave/hass/archives/open-zwave-hass-{0}.zip'|def get_openzwave(self, url='file:$PROJECT_PIPS_DIR/openzwave-embed/open-zwave-hass-{0}.zip'|g" \
 	$INSTALL_SRC_DIR/homeassistant_pyozw/pyozw_setup.py
-
+#
+# Copy open-zwave-hass into openzwave-embed directory
+[[ -f $PROJECT_PIPS_DIR/openzwave-embed/open-zwave-hass-${PYOZW_VERSION}.zip ]] || \
+	cp -v $PROJECT_PIPS_DIR/open-zwave-hass-${PYOZW_VERSION}.zip $PROJECT_PIPS_DIR/openzwave-embed/open-zwave-hass-${PYOZW_VERSION}.zip
+#
 # compile
 cd $INSTALL_SRC_DIR/homeassistant_pyozw
 $PYTHON_INSTALL_CMD
