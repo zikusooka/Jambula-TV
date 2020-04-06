@@ -16,19 +16,23 @@ OSD_TOOL=/usr/bin/jambulatv-osd
 OSD_WAIT=15
 
 KODI_GUI_SETTINGS="/JambulaTV/.kodi/userdata/guisettings.xml"
-KODI_WEBSERVER_PORT=$(grep -oP "(?<=id=\"services.webserverport\">).+?(?=</setting>)" $KODI_GUI_SETTINGS)
+KODI_WEBSERVER_PORT=$(grep -oP "(?<=id=\"services.webserverport\">).+?(?=</setting>)" $KODI_GUI_SETTINGS > /dev/null 2>&1)
 
 
-
+# Extract kodi webserver port
+if [[ "x$KODI_WEBSERVER_PORT" != "x" ]];
+then
+#
 # Wait for kodi interface to come up
 ss -ln | grep $KODI_WEBSERVER_PORT > /dev/null 2>&1
 KODI_PORT_STATUS=$?
-while [[ $KODI_PORT_STATUS != 0 ]];
+while [[ "$KODI_PORT_STATUS" != "0" ]];
 do
 sleep 5
 ss -ln | grep $KODI_WEBSERVER_PORT > /dev/null 2>&1
 done
-
+#
+fi
 
 # Remove existing reminders file
 [[ -e $TODAYS_REMINDERS_FILE ]] && sudo rm -f $TODAYS_REMINDERS_FILE
