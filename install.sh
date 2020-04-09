@@ -107,6 +107,8 @@ echo "Using default X11 driver ..."
 ;;
 esac
 
+# Upgrade ccache
+ccache_install
 # Cmake - using sources
 cmake_install
 # Boost - using sources
