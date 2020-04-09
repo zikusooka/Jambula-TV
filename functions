@@ -12438,9 +12438,9 @@ cd $INSTALL_SRC_DIR/boost
 # Bootstrap
 ./bootstrap.sh --prefix=$PREFIX --libdir=$LIBDIR
 # Stage
-./b2 -j$SYSTEM_CPU_CORES variant=release threading=multi toolset=gcc --prefix=$PREFIX --libdir=$LIBDIR --with-atomic --with-chrono --with-context --with-date_time --with-filesystem --with-graph --with-iostreams --with-locale --with-log --with-math --with-program_options --with-random --with-regex --with-serialization --with-signals --with-system --with-test --with-thread --with-timer --with-wave stage
+./b2 -j$SYSTEM_CPU_CORES variant=release threading=multi toolset=gcc --prefix=$PREFIX --libdir=$LIBDIR --with-atomic --with-chrono --with-context --with-coroutine --with-date_time --with-filesystem --with-graph --with-iostreams --with-locale --with-log --with-math --with-program_options --with-random --with-regex --with-serialization --with-signals --with-system --with-test --with-thread --with-timer --with-wave stage
 # Install
-./b2 -j$SYSTEM_CPU_CORES variant=release threading=multi toolset=gcc --prefix=$PREFIX --libdir=$LIBDIR --with-atomic --with-chrono --with-context --with-date_time --with-filesystem --with-graph --with-iostreams --with-locale --with-log --with-math --with-program_options --with-random --with-regex --with-serialization --with-signals --with-system --with-test --with-thread --with-timer --with-wave install
+./b2 -j$SYSTEM_CPU_CORES variant=release threading=multi toolset=gcc --prefix=$PREFIX --libdir=$LIBDIR --with-atomic --with-chrono --with-context --with-coroutine --with-date_time --with-filesystem --with-graph --with-iostreams --with-locale --with-log --with-math --with-program_options --with-random --with-regex --with-serialization --with-signals --with-system --with-test --with-thread --with-timer --with-wave install
 # Remove install sources
 cd ../ && rm -rf boost
 }
