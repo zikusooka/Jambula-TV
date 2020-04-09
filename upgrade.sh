@@ -103,7 +103,7 @@ flexget_python3_install
 }
 
 upgrade_icinga2 () {
-uninstall_icinga2 
+uninstall_icinga2
 icinga2_install
 icinga2_ido_mysql 
 icinga2_configure 
