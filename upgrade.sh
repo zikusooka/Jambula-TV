@@ -52,7 +52,11 @@ scapy_install
 fi
 }
 
-# Upgrade Kodi
+upgrade_boost () {
+uninstall_boost
+boost_install
+}
+
 upgrade_kodi () {
 #uninstall_kodi17
 #kodi17_install
@@ -362,6 +366,8 @@ snapcast_install
 #upgrade_python3
 
 #upgrade_scapy
+
+#upgrade_boost
 
 #upgrade_kodi # Takes ~ 3hrs 17mins
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
