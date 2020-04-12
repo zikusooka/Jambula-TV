@@ -2601,6 +2601,33 @@ uninstall_python_pkgs $DEP
 done
 }
 
+uninstall_snapcast () {
+# Uninstall systemd unit files for snapcast server and client 
+# ---
+for SYSTEMD_UNIT in snapserver snapclient
+do
+#
+if [[ -e $SYSTEMD_UNITS_DIR_USER/${SYSTEMD_UNIT}.service ]];
+then
+# Stop unit && process
+systemctl stop ${SYSTEMD_UNIT}.service && killall -9 ${SYSTEMD_UNIT}
+# Disable default systemd unit
+systemctl disable ${SYSTEMD_UNIT}.service
+# Remove default systemd unit service file
+rm -f $SYSTEMD_UNITS_DIR_USER/${SYSTEMD_UNIT}.service
+fi
+#
+systemctl enable ${SYSTEMD_UNIT}.service
+done
+
+# Uninstall snapcast server and client 
+# ---
+cd $INSTALL_SRC_DIR/snapcast/client && make uninstall
+cd $INSTALL_SRC_DIR/snapcast/server && make uninstall
+#
+rm -rf $INSTALL_SRC_DIR/snapcast
+}
+
 uninstall_gstreamer_plugins () {
 for GST_PLUGIN in \
 base \
@@ -10461,10 +10488,17 @@ make_install_jambulatv
 }
 
 snapcast_install () {
+# Set to working version - recent releases do not work with gcc 4.9
+SNAPCAST_TAG="v0.15.0"
 # Copy sources to install directory
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/snapcast/ $INSTALL_SRC_DIR/snapcast/
-# Compile
+#
+# Change to install sources directory
 cd $INSTALL_SRC_DIR/snapcast
+# Switch to desired git tag
+git checkout $SNAPCAST_TAG
+#
+# Build
 make
 # Install snapserver and snapclient
 make installserver

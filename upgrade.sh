@@ -338,6 +338,11 @@ mopidy_deps_install
 mopidy_install
 }
 
+upgrade_snapcast () {
+uninstall_snapcast
+snapcast_install
+}
+
 
 
 #################
@@ -426,3 +431,5 @@ mopidy_install
 #upgrade_mesa
 
 #upgrade_mopidy
+
+#upgrade_snapcast
