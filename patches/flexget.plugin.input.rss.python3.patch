@@ -1,19 +1,18 @@
---- rss.py.orig	2018-02-28 01:29:51.827820375 +0300
-+++ rss.py	2018-03-03 06:07:03.281904231 +0300
-@@ -23,6 +23,10 @@
- from flexget.utils.tools import decode_html
+--- input/rss.py.orig		2020-02-07 16:45:08.801942517 +0300
++++ input/rss.py		2020-04-28 02:35:29.434013303 +0300
+@@ -18,6 +18,9 @@
+ from flexget.utils.cached_input import cached
  from flexget.utils.pathscrub import pathscrub
- 
+ from flexget.utils.tools import decode_html
 +from bs4 import BeautifulSoup
 +from urllib.request import urlopen
 +from urllib.request import urlretrieve
-+
- log = logging.getLogger('rss')
+ 
+ logger = logger.bind(name='rss')
  feedparser.registerDateHandler(lambda date_string: dateutil.parser.parse(date_string).timetuple())
+@@ -228,6 +231,18 @@
  
-@@ -209,6 +213,18 @@
- 
-         log.debug('Requesting task `%s` url `%s`', task.name, config['url'])
+         logger.debug('Requesting task `{}` url `{}`', task.name, config['url'])
  
 +        #Jambula: Extract podcast poster URL from RSS feed
 +        url = config['url'] 
@@ -28,9 +27,9 @@
 +        podcast_poster_url = image_links[0]
 +
          # Used to identify which etag/modified to use
-         url_hash = str(hash(config['url']))
+         url_hash = hashlib.md5(config['url'].encode('utf-8')).hexdigest()
  
-@@ -377,6 +393,9 @@
+@@ -439,6 +454,9 @@
              # TODO: confusing? refactor into class member ...
  
              def add_entry(ea):

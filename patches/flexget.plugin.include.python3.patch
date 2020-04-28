@@ -7,7 +7,7 @@
 +            #
 +	    # JambulaTV: Check if included file exists
 +            if os.path.exists(file):
-+                include = yaml.load(io.open(file, encoding='utf-8'))
++                include = yaml.load(io.open(file, encoding='utf-8'), Loader=yaml.FullLoader)
 +            else:
 +                log.warning('JambulaTV: Please add the file: %s ' % file)
 +                break
