@@ -10,6 +10,7 @@ YOUTUBE_DEBUG=no #no|yes
 YOUTUBE_USER_URL="https://www.youtube.com/user"
 YOUTUBE_CHANNEL_URL="https://www.youtube.com/channel"
 YOUTUBE_WATCH_URL="https://www.youtube.com/watch?v"
+YOUTUBE_WATCH_DOMAIN=$(echo $YOUTUBE_WATCH_URL | awk -F/ '{print $3}' | sed 's/www.//g')
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
 YOUTUBE_DL_OPTS="-q -4 -i --ignore-config --prefer-insecure --no-check-certificate --geo-bypass --hls-prefer-ffmpeg"
 YOUTUBE_VARIABLES_TEMP_FILE="/tmp/youtube_variables"
@@ -181,9 +182,9 @@ YOUTUBE_SEARCH_OUTPUT_FILE=/tmp/youtube_search_results
 YOUTUBE_PLAYLIST_FILE=/tmp/youtube_video_ids_found
 #
 # Remove previous youtube search results
-[ -e $YOUTUBE_SEARCH_OUTPUT_FILE ] && sudo rm -f $YOUTUBE_SEARCH_OUTPUT_FILE
+[[ -e $YOUTUBE_SEARCH_OUTPUT_FILE ]] && sudo rm -f $YOUTUBE_SEARCH_OUTPUT_FILE
 # Remove previous youtube playlist file
-[ -e $YOUTUBE_PLAYLIST_FILE ] && sudo rm -f $YOUTUBE_PLAYLIST_FILE
+[[ -e $YOUTUBE_PLAYLIST_FILE ]] && sudo rm -f $YOUTUBE_PLAYLIST_FILE
 #
 # Search for Youtube IDs using API
 # NOTE: Do not use curl --data/ or -d option to post - Youtube search fails if done
@@ -209,7 +210,7 @@ YOUTUBE_SEARCH_OUTPUT_FILE=/tmp/youtube_search_results
 YOUTUBE_SEARCH_SITE_LINKS_FILE=/tmp/youtube_links_found
 #
 # Remove previous youtube search results
-[ -e $YOUTUBE_SEARCH_OUTPUT_FILE ] && sudo rm -f $YOUTUBE_SEARCH_OUTPUT_FILE
+[[ -e $YOUTUBE_SEARCH_OUTPUT_FILE ]] && sudo rm -f $YOUTUBE_SEARCH_OUTPUT_FILE
 #
 # Search for Youtube IDs using scraped data with filters: Live, Today, View Count
 $HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE \
@@ -226,7 +227,7 @@ set_youtube_search_method () {
 query_db_4_youtube_api
 #
 # Method of search depending on availability of Youtube API Key
-if [ "x$GOOGLE_YOUTUBE_API_KEY" != "x" ];
+if [[ "x$GOOGLE_YOUTUBE_API_KEY" != "x" ]];
 then
 # API available
 youtube_search_method=youtube_search_video_id_via_api
@@ -252,20 +253,32 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/bukeddetv | grep -i -
 }
 
 youtube_video_id_citizentv_kenya () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/kenyacitizentv | grep -i "Citizen TV Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/kenyacitizentv | grep -i -e "Citizen TV Live" -e "CitizenTV LIVE" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_ktn_news_kenya () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/standardgroupkenya | grep -i -e "KTN News Live Stream (Nairobi Kenya)" -e "KTN News Live Stream" -e "KTN Kenya Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/standardgroupkenya | grep -i -e "KTN News Live Stream (Nairobi Kenya)" -e "KTN News Live Stream" -e "KTN Kenya Live Stream"  -e "KTN NEWS Livestream | Nairobi, Kenya" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_ktn_home_kenya () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/KTNClassics | grep -i -e "KTN Home Livestream (Nairobi Kenya)" -e "KTN Home Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+# Youtube
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/KTNClassics | grep -i -e "KTN Home Livestream (Nairobi Kenya)" -e "KTN Home Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+
+# DailyMotion
+YOUTUBE_VIDEO_ID=x7l3lxv
+YOUTUBE_WATCH_URL="https://www.dailymotion.com/embed/video"
+YOUTUBE_WATCH_DOMAIN=$(echo $YOUTUBE_WATCH_URL | awk -F/ '{print $3}' | sed 's/www.//g')
 }
 
 youtube_video_id_ntv_kenya () {
-YOUTUBE_LIVE_CHANNEL_PAGE_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/qtvkenya/channels | awk -F: '/title="Live"/ { print $0 }' | grep -oP '(?<=href="/channel/).+?(?=".*>Live)' | uniq)
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | grep -i -e "NTV Kenya Live Stream" -e "shows Live on NTV Kenya" -e "LIVE: \"NTV Today\"" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+# Youtube
+#YOUTUBE_LIVE_CHANNEL_PAGE_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/qtvkenya/channels | awk -F: '/title="Live"/ { print $0 }' | grep -oP '(?<=href="/channel/).+?(?=".*>Live)' | uniq)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | grep -i -e "NTV Kenya Live Stream" -e "shows Live on NTV Kenya" -e "LIVE: \"NTV Today\"" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+
+# DailyMotion
+YOUTUBE_VIDEO_ID=x6shkab
+YOUTUBE_WATCH_URL="https://www.dailymotion.com/embed/video"
+YOUTUBE_WATCH_DOMAIN=$(echo $YOUTUBE_WATCH_URL | awk -F/ '{print $3}' | sed 's/www.//g')
 }
 
 youtube_video_id_learn_swahili () {
@@ -308,7 +321,7 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ABNDigital | grep -i 
 }
 
 youtube_video_id_bloomberg () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/Bloomberg | grep -i -e "Bloomberg TV LIVE" -e "Bloomberg Global News LIVE" -e "Bloomberg Global News" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/Bloomberg | grep -i -e "Bloomberg TV LIVE" -e "Bloomberg Global News LIVE" -e "Bloomberg Global News" -e "Bloomberg Global Financial News" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
 }
 
 youtube_video_id_fox_news () {
@@ -458,7 +471,20 @@ sudo touch $YOUTUBE_FETCH_IN_PROGRESS_FILE
 }
 
 get_youtube_manifest () {
-YOUTUBE_MANIFEST_URL=$($YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_VIDEO_FORMAT -g --youtube-skip-dash-manifest "$YOUTUBE_WATCH_URL=$YOUTUBE_VIDEO_ID" | grep http | head -1)
+# Set format of the video URL 
+case "$YOUTUBE_WATCH_DOMAIN" in
+youtube.com)
+YOUTUBE_VIDEO_URL=${YOUTUBE_WATCH_URL}=${YOUTUBE_VIDEO_ID}
+YOUTUBE_VIDEO_FORMAT=$YOUTUBE_VIDEO_FORMAT
+;;
+dailymotion.com)
+YOUTUBE_VIDEO_URL=${YOUTUBE_WATCH_URL}/${YOUTUBE_VIDEO_ID}
+YOUTUBE_VIDEO_FORMAT="best"
+;;
+esac
+
+# Get manifest URL
+YOUTUBE_MANIFEST_URL=$($YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_VIDEO_FORMAT -g --youtube-skip-dash-manifest "$YOUTUBE_VIDEO_URL" | grep http | head -1)
 }
 
 youtube_failed_actions () {
@@ -508,10 +534,11 @@ fi
 
 save_youtube_variables () {
 # Remove Youtube variables temp file if it exists
-[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
+[[ -e $YOUTUBE_VARIABLES_TEMP_FILE ]] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
 #
 # Create a Youtube variables temp file for other tools to use
 cat > $YOUTUBE_VARIABLES_TEMP_FILE <<EOF
+YOUTUBE_WATCH_DOMAIN=${YOUTUBE_WATCH_DOMAIN}
 YOUTUBE_VIDEO_ID=${YOUTUBE_VIDEO_ID}
 YOUTUBE_VIDEO_URL=${YOUTUBE_WATCH_URL}=${YOUTUBE_VIDEO_ID}
 YOUTUBE_VIDEO_QUALITY=${YOUTUBE_VIDEO_QUALITY}
