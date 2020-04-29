@@ -2759,8 +2759,10 @@ rm -rf $(whereis hass-cli)
 uninstall_firefox () {
 [ -d $INSTALL_SRC_DIR/firefox ] && rm -rf $INSTALL_SRC_DIR/firefox
 }
+
 uninstall_youtube_dl () {
 uninstall_python_pkgs youtube-dl
+uninstall_src_pkgs youtube-dl
 }
 
 uninstall_netdata () {
@@ -10332,16 +10334,17 @@ youtube_dl_install () {
 # Copy sources to install directory
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/youtube-dl/ $INSTALL_SRC_DIR/youtube-dl/
 cd $INSTALL_SRC_DIR/youtube-dl
-#$PYTHON_INSTALL_CMD
 #
 # Compile youtube-dl with lazy-extractors
-make lazy-extractors
-make youtube-dl
+#make lazy-extractors
+#make youtube-dl
+python3 setup.py build_lazy_extractors
+python3 setup.py build_lazy_extractors install
 #
 # Copy youtube-dl binary 
-cp -v $INSTALL_SRC_DIR/youtube-dl/youtube-dl $PREFIX/local/bin
+#cp -v $INSTALL_SRC_DIR/youtube-dl/youtube-dl $PREFIX/local/bin
 # Create symbolic link to youtube-dl binary in /usr/local/bin
-ln -s $PREFIX/local/bin/youtube-dl $BINARY_PREFIX/youtube-dl
+#ln -s $PREFIX/local/bin/youtube-dl $BINARY_PREFIX/youtube-dl
 }
 
 youtube_setup () {
