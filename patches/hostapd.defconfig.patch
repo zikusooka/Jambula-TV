@@ -1,7 +1,7 @@
---- defconfig.orig	2017-11-09 15:46:32.281775537 +0300
-+++ defconfig	2017-11-09 16:59:28.854628338 +0300
-@@ -111,9 +111,9 @@
- #CONFIG_EAP_FAST=y
+--- defconfig.orig	2020-05-04 06:02:42.376871614 +0300
++++ defconfig	2020-05-04 06:07:40.678864036 +0300
+@@ -115,9 +115,9 @@
+ #CONFIG_EAP_TEAP=y
  
  # Wi-Fi Protected Setup (WPS)
 -#CONFIG_WPS=y
@@ -12,7 +12,7 @@
  # Enable WPS support with NFC config method
  #CONFIG_WPS_NFC=y
  
-@@ -135,7 +135,7 @@
+@@ -139,10 +139,10 @@
  #CONFIG_RADIUS_SERVER=y
  
  # Build IPv6 support for RADIUS operations
@@ -20,13 +20,12 @@
 +#CONFIG_IPV6=y
  
  # IEEE Std 802.11r-2008 (Fast BSS Transition)
- #CONFIG_IEEE80211R=y
-@@ -145,14 +145,14 @@
- #CONFIG_DRIVER_RADIUS_ACL=y
+-#CONFIG_IEEE80211R=y
++CONFIG_IEEE80211R=y
  
- # IEEE 802.11n (High Throughput) support
--#CONFIG_IEEE80211N=y
-+CONFIG_IEEE80211N=y
+ # Use the hostapd's IEEE 802.11 authentication (ACL), but without
+ # the IEEE 802.11 Management capability (e.g., FreeBSD/net80211)
+@@ -150,16 +150,16 @@
  
  # Wireless Network Management (IEEE Std 802.11v-2011)
  # Note: This is experimental and not complete implementation.
@@ -39,7 +38,14 @@
  
  # IEEE 802.11ax HE support
  # Note: This is experimental and work in progress. The definitions are still
-@@ -167,7 +167,7 @@
+ # subject to change and this should not be expected to interoperate with the
+ # final IEEE 802.11ax version.
+-#CONFIG_IEEE80211AX=y
++CONFIG_IEEE80211AX=y
+ 
+ # Remove debugging code that is printing out debug messages to stdout.
+ # This can be used to reduce the size of the hostapd considerably if debugging
+@@ -168,7 +168,7 @@
  
  # Add support for writing debug log to a file: -f /tmp/hostapd.log
  # Disabled by default.
@@ -48,7 +54,16 @@
  
  # Send debug messages to syslog instead of stdout
  #CONFIG_DEBUG_SYSLOG=y
-@@ -301,7 +301,7 @@
+@@ -270,7 +270,7 @@
+ # internal = Internal TLSv1 implementation (experimental)
+ # linux = Linux kernel AF_ALG and internal TLSv1 implementation (experimental)
+ # none = Empty template
+-#CONFIG_TLS=openssl
++CONFIG_TLS=gnutls
+ 
+ # TLS-based EAP methods require at least TLS v1.0. Newer version of TLS (v1.1)
+ # can be enabled to get a stronger construction of messages when block ciphers
+@@ -307,7 +307,7 @@
  #CONFIG_INTERWORKING=y
  
  # Hotspot 2.0
@@ -57,7 +72,7 @@
  
  # Enable SQLite database support in hlr_auc_gw, EAP-SIM DB, and eap_user_file
  #CONFIG_SQLITE=y
-@@ -342,12 +342,12 @@
+@@ -348,18 +348,18 @@
  # For more details refer to:
  # http://wireless.kernel.org/en/users/Documentation/acs
  #
@@ -72,3 +87,19 @@
  
  # Client Taxonomy
  # Has the AP retain the Probe Request and (Re)Association Request frames from
+ # a client, from which a signature can be produced which can identify the model
+ # of client device like "Nexus 6P" or "iPhone 5s".
+-#CONFIG_TAXONOMY=y
++CONFIG_TAXONOMY=y
+ 
+ # Fast Initial Link Setup (FILS) (IEEE 802.11ai)
+ #CONFIG_FILS=y
+@@ -368,7 +368,7 @@
+ 
+ # Include internal line edit mode in hostapd_cli. This can be used to provide
+ # limited command line editing and history support.
+-#CONFIG_WPA_CLI_EDIT=y
++CONFIG_WPA_CLI_EDIT=y
+ 
+ # Opportunistic Wireless Encryption (OWE)
+ # Experimental implementation of draft-harkins-owe-07.txt

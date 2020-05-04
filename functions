@@ -2701,7 +2701,7 @@ rm -f /usr/sbin/{hostapd,hostapd_cli}
 [ -e $SYSTEMD_UNITS_DIR_USER/hostapd.service ] && rm -f $SYSTEMD_UNITS_DIR_USER/hostapd.service
 systemctl --system daemon-reload
 # Remove source files
-rm -rf $INSTALL_SRC_DIR/hostapd
+rm -rf $INSTALL_SRC_DIR/hostap/hostapd
 }
 
 # Uninstall pocketsphinx
@@ -10177,6 +10177,7 @@ patch -p1 $INSTALL_SRC_DIR/hostap/hostapd/defconfig < $PROJECT_PATCHES_DIR/hosta
 cd $INSTALL_SRC_DIR/hostap/hostapd
 cp -v defconfig .config
 make_install_jambulatv
+
 # Copy hostapd systemd file 
 if [ "$VIRT_WIFI_SUPPORT" = "0" ];
 then
