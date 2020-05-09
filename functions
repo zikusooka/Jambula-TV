@@ -14122,6 +14122,8 @@ make_install_jambulatv
 }
 
 icinga2_ido_mysql () {
+if [[ ! -e $ICINGA2_FEATURES_AVAIL_DIR/ido-mysql.conf ]];
+then
 # Enable and start mysql service if it is not running
 systemctl -q is-active mysqld.service || systemctl enable mysqld.service
 systemctl -q is-active mysqld.service || systemctl start mysqld.service
@@ -14150,14 +14152,18 @@ object IdoMysqlConnection "ido-mysql" {
   database = "$ICINGA_DB_NAME"
 }
 EOF
-#
+fi
+
 # Enable icinga2 ido-mysql
 icinga2 feature enable ido-mysql
 }
 
 icinga2_configure () {
-# Enable command ido-mysql livestatus compatlog
+# Setup ido-MySQL
+icinga2_ido_mysql
+# Enable command, livestatus, compatlog
 icinga2 feature enable command livestatus compatlog
+#
 # Create custom config dirctory
 [ -d $ICINGA2_CUSTOM_CONFIG_DIR ] || mkdir $ICINGA2_CUSTOM_CONFIG_DIR
 # Copy Icinga objects files
@@ -14289,6 +14295,9 @@ mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME < $WWW_HT
 }
 
 icingaweb2_configure () {
+# Setup ido-MySQL
+icinga2_ido_mysql 
+
 # Get WWW User and Group
 set_www_user_group
 #
@@ -14408,7 +14417,7 @@ echo "INSERT INTO icingaweb_user (name, active, password_hash, ctime) VALUES ('$
 echo "INSERT INTO icingaweb_group VALUES (1,'Administrators', NULL, NOW(), NULL);" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
 # Add Icingaweb2 User to Admin Group in MySQL database
 echo "INSERT INTO icingaweb_group_membership (group_id, username, ctime) VALUES ('1', '$ICINGAWEB2_ADMIN_USER', NOW());" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
-#
+
 # Display IcingaWeb's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
