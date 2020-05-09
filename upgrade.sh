@@ -6,6 +6,7 @@
 PROJECT_NAME=JambulaTV
 SOURCESDIR=/opt
 PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
+UPGRADING=yes
 
 # Source functions file
 . $PROJECT_BASE_DIR/functions
@@ -366,7 +367,7 @@ snapcast_install
 
 #upgrade_scapy
 
-#upgrade_boost
+#upgrade_boost # Takes ~35mins
 
 #upgrade_kodi # Takes ~ 3hrs 17mins
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3

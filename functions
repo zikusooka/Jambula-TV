@@ -12504,6 +12504,23 @@ cd $INSTALL_SRC_DIR/boost
 # Install
 ./b2 -j$SYSTEM_CPU_CORES variant=release threading=multi toolset=gcc --prefix=$PREFIX --libdir=$LIBDIR --with-atomic --with-chrono --with-context --with-coroutine --with-date_time --with-filesystem --with-graph --with-iostreams --with-locale --with-log --with-math --with-program_options --with-random --with-regex --with-serialization --with-system --with-test --with-thread --with-timer --with-wave install
 
+# If Upgrading, display boost version information to final notice
+if [[ "$UPGRADING" = "yes" ]];
+then
+
+cat << EOF
+
+Boost Version
+=============
+% The following version of boost has been installed:
+
+$([[ -e $INCDIR/boost/version.hpp ]] && grep '#define BOOST_LIB_VERSION' $INCDIR/boost/version.hpp | awk {'print $3'} | sed 's:\"::g')
+
+% IMPORTANT: You must re-install icinga2 due to this boost upgrade!
+
+EOF
+fi
+
 # Remove install sources
 cd ../ && rm -rf boost
 }
