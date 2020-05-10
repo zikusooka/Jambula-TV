@@ -137,6 +137,7 @@ libvdpau_va_gl_install
 libbluray_install
 ffmpeg_deps_install
 ffmpeg_install
+vlc_deps_install
 vlc_install
 #xine_lib_install
 #xine_ui_install

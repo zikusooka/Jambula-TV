@@ -255,6 +255,9 @@ FMT_TAG=4.1.0
 
 LIBBLURAY_TAG=1.0.2
 
+LIBDVDREAD_VERSION=6.0.2
+LIBDVDNAV_VERSION=6.0.1
+
 VLC_SOURCES_TYPE=tarball #git
 
 KODI17_VERSION=17.6
@@ -4873,6 +4876,45 @@ vlc_unpack_git () {
 rsync -avz $PROJECT_GITHUB_DIR/vlc/ $INSTALL_SRC_DIR/vlc/
 # Patch configure_ac - make AX_CXX_COMPILE_STDCXX_11 optional
 patch -p1 $INSTALL_SRC_DIR/vlc/configure.ac < $PROJECT_PATCHES_DIR/vlc_confiure_ac.patch
+}
+
+libdvdread_install () {
+# Remove libdvdread rpm installed package(s)
+for RPM_PKG in libdvdread-devel libdvdread
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/libdvdread-${LIBDVDREAD_VERSION}.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libdvdread-* libdvdread
+# Compile
+cd $INSTALL_SRC_DIR/libdvdread
+./configure --prefix=$PREFIX --libdir=$LIBDIR 
+# Install
+make_install_jambulatv
+}
+
+libdvdnav_install () {
+# Remove libdvdnav rpm installed package(s)
+for RPM_PKG in libdvdnav-devel libdvdnav
+do
+rpm -q $RPM_PKG > /dev/null 2>&1 && rpm -e --nodeps $RPM_PKG
+done
+#
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/libdvdnav-${LIBDVDNAV_VERSION}.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v libdvdnav-* libdvdnav
+# Compile
+cd $INSTALL_SRC_DIR/libdvdnav
+./configure --prefix=$PREFIX --libdir=$LIBDIR
+# Install
+make_install_jambulatv
+}
+
+vlc_deps_install () {
+libdvdread_install
+libdvdnav_install
 }
 
 vlc_unpack_tarball () {
