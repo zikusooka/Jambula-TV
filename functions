@@ -10342,10 +10342,8 @@ cd $INSTALL_SRC_DIR/youtube-dl
 python3 setup.py build_lazy_extractors
 python3 setup.py build_lazy_extractors install
 #
-# Copy youtube-dl binary 
-#cp -v $INSTALL_SRC_DIR/youtube-dl/youtube-dl $PREFIX/local/bin
 # Create symbolic link to youtube-dl binary in /usr/local/bin
-#ln -s $PREFIX/local/bin/youtube-dl $BINARY_PREFIX/youtube-dl
+ln -s $PREFIX/local/bin/youtube-dl $BINARY_PREFIX/youtube-dl
 }
 
 youtube_setup () {
