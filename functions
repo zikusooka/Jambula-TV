@@ -2331,14 +2331,14 @@ uninstall_src_pkgs groupsock
 uninstall_src_pkgs BasicUsageEnvironment
 uninstall_src_pkgs UsageEnvironment
 # Remove Binaries
-for LIVEBIN in live555MediaServer live555ProxyServer sapWatch playSIP openRTSP testMP3Streamer testMPEG1or2VideoStreamer testMPEG1or2AudioVideoStreamer testMPEG2TransportStreamer testMPEG4VideoStreamer testH264VideoStreamer testDVVideoStreamer testWAVAudioStreamer testAMRAudioStreamer vobStreamer testMP3Receiver testMPEG1or2VideoReceiver testMPEG2TransportReceiver sapWatch testRelay testReplicator testOnDemandRTSPServer testMPEG1or2AudioVideoToDarwin testMPEG4VideoToDarwin testRTSPClient openRTSP playSIP testMPEG1or2Splitter testMPEG1or2ProgramToTransportStream testH264VideoToTransportStream MPEG2TransportStreamIndexer testMPEG2TransportStreamTrickPlay
+for LIVEBIN in live555HLSProxy live555MediaServer live555ProxyServer sapWatch playSIP openRTSP testMP3Streamer testMPEG1or2VideoStreamer testMPEG1or2AudioVideoStreamer testMPEG2TransportStreamer testMPEG4VideoStreamer testH264VideoStreamer testDVVideoStreamer testWAVAudioStreamer testAMRAudioStreamer vobStreamer testMP3Receiver testMPEG1or2VideoReceiver testMPEG2TransportReceiver sapWatch testRelay testReplicator testOnDemandRTSPServer testMPEG1or2AudioVideoToDarwin testMPEG4VideoToDarwin testRTSPClient openRTSP playSIP testMPEG1or2Splitter testMPEG1or2ProgramToTransportStream testH264VideoToTransportStream MPEG2TransportStreamIndexer testMPEG2TransportStreamTrickPlay
 do
-rm $BINARY_PREFIX/$LIVEBIN
+[[ -e $BINARY_PREFIX/$LIVEBIN ]] && rm $BINARY_PREFIX/$LIVEBIN
 done
 # Remove Libs
 for LIVELIB in libBasicUsageEnvironment.a libliveMedia.a libgroupsock.a libUsageEnvironment.a
 do
-rm $LIBDIR/$LIVELIB
+[[ -e $LIBDIR/$LIVELIB ]] && rm $LIBDIR/$LIVELIB
 done
 }
 
@@ -4753,10 +4753,9 @@ for MAKEFILE_LIB in `grep -rl '$(PREFIX)/lib'`
 do
 sed -i "s:\$(PREFIX)/lib:$LIBDIR:g" $MAKEFILE_LIB
 done
-# Fix VLC Error
-patch -p1 $INSTALL_SRC_DIR/live/config.linux < $PROJECT_PATCHES_DIR/live555.config.linux.patch
 # Compile
-./genMakefiles linux
+./genMakefiles linux-with-shared-libraries
+# Install
 make_install_jambulatv
 }
 
