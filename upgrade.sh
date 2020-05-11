@@ -414,7 +414,7 @@ snapcast_install
 
 #upgrade_ffmpeg
 
-#upgrade_vlc
+#upgrade_vlc # Takes ~105mins
 
 #upgrade_mplayer
 
