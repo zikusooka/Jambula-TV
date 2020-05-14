@@ -1215,6 +1215,7 @@ MIFI_HOTSPOT_TOOL=$BINARY_PREFIX/jambulatv-hotspot-query
 MIFI_QUERY_TOOL=$BINARY_PREFIX/jambulatv-mifi-query
 OSD_TOOL=$BINARY_PREFIX/jambulatv-osd
 PIP_TOOL=$BINARY_PREFIX/jambulatv-pip
+PLAYLIST_M3U2XSPF_TOOL=$BINARY_PREFIX/m3u2xspf.py
 PPP_DIAL_TOOL=$BINARY_PREFIX/jambulatv-ppp-dialer
 PRESENCE_DETECTION_VIA_MIFI_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-mifi
 PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-hostapd
@@ -10934,6 +10935,14 @@ set_www_user_group
 # Change playlist directory permissions: IMPORTANT: User='Web User' Group='Multimedia User'
 chown -R $WWW_USER:$MULTIMEDIA_USER $PLAYLISTS_DIRECTORY
 chmod -R 775 $PLAYLISTS_DIRECTORY
+
+# Copy contributed script that converts M3Uplaylists to XSPF format
+if [[ -e $PROJECT_CONTRIB_DIR/scripts/m3u2xspf.py ]] && [[ ! -e $PLAYLIST_M3U2XSPF_TOOL ]];
+then
+cp -v $PROJECT_CONTRIB_DIR/scripts/m3u2xspf.py $BINARY_PREFIX/
+# Make it executable
+chmod -R 775 $PLAYLIST_M3U2XSPF_TOOL
+fi
 }
 
 video_on_demand_configure () {
