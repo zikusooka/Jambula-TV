@@ -51,7 +51,7 @@ then
 clear
 cat <<EOF
 Usage:  ./`basename $0` [METHOD]
-Available methods: sendMessage|sendFileContent|sendImageDisk|sendVideoDisk|newbot
+Available methods: sendMessage|sendFileContent|sendFileDisk|sendImageDisk|sendVideoDisk|newbot
 EOF
 exit 1
 fi
@@ -72,6 +72,11 @@ echo "$USAGE [FILE_PATH_e.g_/tmp/twitter_reports]"
 exit 1
 ;;
 
+[Ss][Ee][Nn][Dd][Ff][Ii][Ll][Ee][Dd][Ii][Ss][Kk])
+echo "$USAGE [FILE_PATH_e.g_/tmp/LiveTV-Lan.xspf]"
+exit 1
+;;
+
 [Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee][Dd][Ii][Ss][Kk])
 echo "$USAGE [IMAGE_PATH_eg_/tmp/bell.png]"
 exit 1
@@ -88,7 +93,7 @@ break
 clear
 cat <<EOF
 Usage:  ./`basename $0` [METHOD]
-Available methods: sendMessage|sendFileContent|sendImageDisk|sendVideoDisk|newbot
+Available methods: sendMessage|sendFileContent|sendFileDisk|sendImageDisk|sendVideoDisk|newbot
 EOF
 exit 1
 ;;
@@ -226,6 +231,13 @@ curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/sendMessage \
 	-d parse_mode="markdown" > /dev/null 2>&1
 }
 
+send_file_disk () {
+MESSAGE_FILE_PATH=$TELEGRAM_ARGUMENTS
+curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/sendDocument \
+	-F chat_id=$TELEGRAM_CHAT_ID \
+	-F document=@$MESSAGE_FILE_PATH > /dev/null 2>&1
+}
+
 send_image_disk () {
 curl -s -X POST $TELEGRAM_API_URL/bot$TELEGRAM_API_BOT/sendPhoto \
 	-F chat_id=$TELEGRAM_CHAT_ID \
@@ -282,6 +294,11 @@ send_message
 [Ss][Ee][Nn][Dd][Ff][Ii][Ll][Ee][Cc][Oo][Nn][Tt][Ee][Nn][Tt])
 get_chat_id 
 send_file_content
+;;
+
+[Ss][Ee][Nn][Dd][Ff][Ii][Ll][Ee][Dd][Ii][Ss][Kk])
+get_chat_id 
+send_file_disk
 ;;
 
 [Ss][Ee][Nn][Dd][Ii][Mm][Aa][Gg][Ee][Dd][Ii][Ss][Kk])
