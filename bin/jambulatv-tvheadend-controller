@@ -32,24 +32,30 @@ EMAIL_ADDRESS_USER=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG | sed '/
 SERIAL=$(grep -i Serial $PROJECT_RELEASE_FILE | cut -d : -f2)
 
 # TVHeadend
-TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
+TVHEADEND_BASE_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}"
+TVHEADEND_WIRED_URL="http://${NETWORK_IP_ADDRESS}:${TVHEADEND_HTTP_PORT}"
+TVHEADEND_WIFI_URL="http://${NETWORK_WIRELESS_HOTSPOT_IP}:${TVHEADEND_HTTP_PORT}"
+TVHEADEND_API_URL="${TVHEADEND_BASE_URL}/api"
 TVHEADEND_DVBT_TUNER_NODE=/dev/dvb/adapter$DVBT_TUNER_NO
-TVHEADEND_DVBT_CREATE_CHAN_TEMP_FILE=/tmp/create_dvb_channels.sh
-TVHEADEND_DVBT_CREATE_CHAN_TAG_TEMP_FILE=/tmp/create_dvb_channel_tags.sh
-TVHEADEND_PLAY_STREAM_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/play/stream"
-TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=/tmp/iptv_service_uuid.txt
+TVHEADEND_DVBT_CREATE_CHAN_TEMP_FILE=$TMPDIR/create_dvb_channels.sh
+TVHEADEND_DVBT_CREATE_CHAN_TAG_TEMP_FILE=$TMPDIR/create_dvb_channel_tags.sh
+TVHEADEND_PLAY_STREAM_URL="${TVHEADEND_BASE_URL}/play/stream"
+TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=$TMPDIR/iptv_service_uuid.txt
 TVHEADEND_IPTV_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-info.$(date +%Y%m%d%H%M).log
 TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-failed.$(date +%Y%m%d%H%M).log
-TVHEADEND_IPTV_SERVICE_LOG_FILE=/tmp/iptv_service_output.log
-TVHEADEND_IPTV_CREATE_CHAN_TEMP_FILE=/tmp/create_iptv_channels.sh
-TVHEADEND_IPTV_CREATE_CHAN_TAG_TEMP_FILE=/tmp/create_iptv_channel_tags.sh
-TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE=/tmp/iptv_scanning_in_progress
-TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE=/tmp/iptv_mapping_in_progress
+TVHEADEND_IPTV_SERVICE_LOG_FILE=$TMPDIR/iptv_service_output.log
+TVHEADEND_IPTV_CREATE_CHAN_TEMP_FILE=$TMPDIR/create_iptv_channels.sh
+TVHEADEND_IPTV_CREATE_CHAN_TAG_TEMP_FILE=$TMPDIR/create_iptv_channel_tags.sh
+TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE=$TMPDIR/iptv_scanning_in_progress
+TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE=$TMPDIR/iptv_mapping_in_progress
 
-TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE=/tmp/create_cctv_channels.sh
-TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE=/tmp/create_cctv_channel_tags.sh
+TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE=$TMPDIR/create_cctv_channels.sh
+TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE=$TMPDIR/create_cctv_channel_tags.sh
 TVHEADEND_CCTV_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/cctv-scan-info.$(date +%Y%m%d%H%M).log
-TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE=/tmp/cctv_service_uuid.txt
+TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE=$TMPDIR/cctv_service_uuid.txt
+
+TVHEADEND_PLAYLIST_4_WIRED_CLIENTS=$TMPDIR/LiveTV-Lan
+TVHEADEND_PLAYLIST_4_WIFI_CLIENTS=$TMPDIR/LiveTV-WiFi
 
 PLAYLISTS_PORT=MY_PLAYLISTS_PORT
 
@@ -72,7 +78,7 @@ usage () {
 if [ "x$TV_TYPE" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [dvb|iptv|cctv]
+echo "Usage:  ./`basename $0` [dvb|iptv|cctv|general]
 "
 exit 1
 fi
@@ -142,6 +148,16 @@ notify_tv_server_controller_initiated
 #
 # Check to see if TVHeadend server is in use
 check_if_in_use
+fi
+}
+
+usage_and_pre_start_general () {
+if [[ "x$TV_TASK" = "x" ]];
+then
+clear
+echo "Usage:  ./`basename $0` general [clients|playlists]
+"
+exit 1
 fi
 }
 
@@ -225,14 +241,13 @@ tvheadend_restart_server
 }
 
 post_config () {
-# Restart TVHeadend for all tasks except for m3u, epg, icons)
-[[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]] || \
-tvheadend_restart_server
+# Restart TVHeadend for all tasks except for m3u, epg, icons,general)
+[[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" || "$TV_TASK" = "clients" || "$TV_TASK" = "playlists" ]] || tvheadend_restart_server
 }
 
 email_failed_iptv_notice () {
 # Email notice regarding failed IPTV streams
-[ -e "$TVHEADEND_IPTV_FAILED_LOG_FILE" ] && \
+[[ -e "$TVHEADEND_IPTV_FAILED_LOG_FILE" ]] && \
 	$EMAIL_VIA_GMAIL_TOOL $EMAIL_ADDRESS_ERRORS "[JambulaTV]: IPTV services failed" "The following IPTV streams are no longer working at the following JambulaTV user: Serial No. $SERIAL" $TVHEADEND_IPTV_FAILED_LOG_FILE
 }
 
@@ -282,6 +297,80 @@ $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/imagecache/config/clean -d clean=1 > /de
 # Refresh TV logos in kodi
 $KODI_CONTROLLER_TOOL tv_picons_repair > /dev/null 2>&1
 }
+
+get_tvh_clients_connected () {
+cat <<ET
+The following client(s) are connected to the TV server:
+
+ET
+echo "CHANNEL-NAME:IP-ADDRESS:PLAYER-TYPE:OPERATING-SYSTEM" | column -t -s ':'
+
+echo "-------------------------------------------------------"
+
+INDEX=0
+CHANNEL_NAME=initial
+while [[ "$INDEX" -ge "0" && "x$CHANNEL_NAME" != "x" ]];
+do
+CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq -r ".entries [$INDEX] | select(.state == "'"Running"'") | .channel")
+CLIENT_IP_ADDRESS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq -r ".entries [$INDEX] | select(.state == "'"Running"'") | .hostname")
+CLIENT_PLAYER=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq -r ".entries [$INDEX] | select(.state == "'"Running"'") | .client" | awk '{print $1}')
+#CLIENT_OS=$(/usr/bin/nmap -Pn -O --osscan-guess $CLIENT_IP_ADDRESS | awk -F': ' '/Running/ {print $2}')
+#
+# Print details of connected client
+echo "$CHANNEL_NAME:$CLIENT_IP_ADDRESS:$CLIENT_PLAYER:$CLIENT_OS" | column -t -s ':'
+
+let "INDEX = $INDEX + 1"
+done
+}
+
+generate_tvh_playlists () {
+for TVH_PLAYLIST in \
+${TVHEADEND_PLAYLIST_4_WIFI_CLIENTS} \
+${TVHEADEND_PLAYLIST_4_WIRED_CLIENTS}
+do
+# Remove previous playlist
+[[ -e ${TVH_PLAYLIST}.m3u ]] && rm -f ${TVH_PLAYLIST}.m3u
+[[ -e ${TVH_PLAYLIST}.xspf ]] && rm -f ${TVH_PLAYLIST}.xspf
+#
+# Fetch TVHeadend playlists
+$CURL_CMD -o ${TVH_PLAYLIST}.m3u $CURL_OPTS $TVHEADEND_WIRED_URL/playlist/channels
+#
+# Convert playlists to XSPF format which is suitable for VLC clients
+$PLAYLIST_M3U2XSPF_TOOL -f -i ${TVH_PLAYLIST}.m3u -o ${TVH_PLAYLIST}.xspf > /dev/null 2>&1
+done
+}
+
+send_tvh_playlist_via_telegram () {
+# Generate TVHeadend playlists for both Wireless and LAN clients 
+generate_tvh_playlists
+#
+# Source notification strings
+set_notifications
+#
+# Send Telegram message when only LAN playlist requested
+if [[ "$1" = "wired" ]] && [[ -e ${TVHEADEND_PLAYLIST_4_WIRED_CLIENTS}.xspf ]];
+then
+sudo jambulatv-telegram SendMessage "$TVHEADEND_PLAYLIST_GENERATED_NOTIFICATION_MESSAGE"
+sudo jambulatv-telegram sendFileDisk ${TVHEADEND_PLAYLIST_4_WIRED_CLIENTS}.xspf
+# Print notifciation to stdout and systemd journal 
+print_notification "$TVHEADEND_PLAYLIST_GENERATED_NOTIFICATION_MESSAGE" text
+# Send Telegram message when only WiFi playlist requested
+elif [[ "$1" = "wireless" ]] && [[ -e ${TVHEADEND_PLAYLIST_4_WIFI_CLIENTS}.xspf ]];
+then
+sudo jambulatv-telegram SendMessage "$TVHEADEND_PLAYLIST_GENERATED_NOTIFICATION_MESSAGE"
+sudo jambulatv-telegram sendFileDisk ${TVHEADEND_PLAYLIST_4_WIFI_CLIENTS}.xspf
+# Print notifciation to stdout and systemd journal 
+print_notification "$TVHEADEND_PLAYLIST_GENERATED_NOTIFICATION_MESSAGE" text
+# Send Telegram message when both WiFi and LAN playlists inferred
+else
+sudo jambulatv-telegram SendMessage "$TVHEADEND_PLAYLIST_GENERATED_NOTIFICATION_MESSAGE"
+sudo jambulatv-telegram sendFileDisk ${TVHEADEND_PLAYLIST_4_WIFI_CLIENTS}.xspf
+sudo jambulatv-telegram sendFileDisk ${TVHEADEND_PLAYLIST_4_WIRED_CLIENTS}.xspf
+# Print notifciation to stdout and systemd journal 
+print_notification "$TVHEADEND_PLAYLIST_GENERATED_NOTIFICATION_MESSAGE" text
+fi
+}
+
 
 
 ############
@@ -788,12 +877,31 @@ done
 fi
 }
 
+iptv_status_of_network_scan () {
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq -r '.entries [] | select(.service | contains("'"$TVHEADEND_IPTV_NETWORK_NAME"'")) |.state' | grep -i -e Testing -e Running > /dev/null 2>&1
+IPTV_NETWORK_SCAN_IN_PROGRESS=$?
+#
+while [[ "$IPTV_NETWORK_SCAN_IN_PROGRESS" = "0" ]];
+do
+
+# Wait while scan of IPTV network takes place
+logger -s -t $(basename $0) "Scan of [$TVHEADEND_IPTV_NETWORK_NAME] network is in progress, please be patient ..."
+sleep 60
+#
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq -r '.entries [] | select(.service | contains("'"$TVHEADEND_IPTV_NETWORK_NAME"'")) |.state' | grep -i -e Testing -e Running > /dev/null 2>&1
+IPTV_NETWORK_SCAN_IN_PROGRESS=$?
+done
+}
+
 iptv_scan_add_muxes () {
 # Set Network UUID - Keep this here, not top
 TVHEADEND_IPTV_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_IPTV_NETWORK_NAME"'") | .uuid')
 #
 # Force scan of IPTV network
 $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/scan -d uuid=$TVHEADEND_IPTV_NETWORK_UUID > /dev/null 2>&1
+
+# Check the status of IPTV network scan
+iptv_status_of_network_scan
 }
 
 configure_iptv_network () {
@@ -820,7 +928,7 @@ iptv_tvheadend_network_add
 
 fi
 
-# Add Muxes i.e. Force scan
+# Add Muxes i.e. Force scan using TVHeadend API
 iptv_scan_add_muxes 
 }
 
@@ -937,10 +1045,13 @@ iptv_test_stream
 fi
 
 done
-#
+
+# Add Muxes i.e. Force scan using TVHeadend API
+iptv_scan_add_muxes 
+
 # Email failed IPTV streams
 email_failed_iptv_notice
-#
+
 # Remove control file for other apps to know that IPTV scan completed
 [ -e $TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE ] && sudo rm -f $TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE
 }
@@ -948,7 +1059,7 @@ email_failed_iptv_notice
 get_channel_number_using_iptv_builder () {
 #
 # Variables
-CHANNEL_NUMBER_TEMP_FILE=/tmp/chan_number
+CHANNEL_NUMBER_TEMP_FILE=$TMPDIR/chan_number
 CHANNEL_COUNT=$(grep -iEw "${CHANNEL_NAME}" -d skip $IPTV_BUILDER_GROUPS_DIR/* | cut -d '|' -f2 | sed 's: ::g' | wc -l)
 # Remove existing file
 [ -e $CHANNEL_NUMBER_TEMP_FILE ] && rm -f $CHANNEL_NUMBER_TEMP_FILE
@@ -1349,6 +1460,7 @@ iptv_functions_task_all () {
 	iptv_refresh_epg_data
 	refresh_tvh_kodi_icons
 	notify_tv_server_controller_completed
+	send_tvh_playlist_via_telegram # [wireless|wired]
 }
 
 cctv_functions_task_all () {
@@ -1400,7 +1512,8 @@ usage_and_pre_start_dvb
 # Repair damaged DVB-T/T2
 [[ "$TV_TASK" = "repair" ]] && \
 	check_health_of_dvb_tvheadend_network && \
-	refresh_tvh_kodi_icons
+	refresh_tvh_kodi_icons && \
+	send_tvh_playlist_via_telegram # [wireless|wired]
 ;;
 
 iptv)
@@ -1470,6 +1583,19 @@ configure_cctv_network
 # All tasks {scan+map} 
 [[ "$TV_TASK" = "all" ]] && \
 	cctv_functions_task_all
+;;
+
+general)
+# Usage - all
+usage_and_pre_start_general
+
+# Get connected clients and their details
+[[ "$TV_TASK" = "clients" ]] && \
+	get_tvh_clients_connected
+
+# Generate TVHeadend Playlists and send via Telegram
+[[ "$TV_TASK" = "playlists" ]] && \
+	send_tvh_playlist_via_telegram # [wireless|wired]
 ;;
 
 esac

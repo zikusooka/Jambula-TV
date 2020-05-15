@@ -1320,6 +1320,8 @@ WGET_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 TVHEADEND_RESET_MESSAGE="Reset of TV server has been requested"
 TVHEADEND_NO_TUNER_FOUND_MESSAGE="No DVB-T Adapter was detected!  Please insert the DVB-T device before continuing. You must also ensure the TV Antenna is hooked up properly"
 TVHEADEND_WAITING_4_SERVER_MESSAGE="Waiting for tvheadend.service to settle. Please be patient"
+
+
 AGREEMENT_DVBT_CONFIGURE_NO_MESSAGE="You did not agree to configuring DVB-T, so quitting"
 DVBT_NETWORK_EXISTS_MESSAGE="Warning: DVB-T network ($DVBT_NETWORK_NAME) already exists"
 DVBT_MULTIPLEX_NOT_FOUND_MESSAGE="Error: No multiplexes were found for $TV_MARKET"
@@ -1353,6 +1355,7 @@ EPG_DATA_4_KODI_REFRESH_MESSAGE="Refreshing the TV Guide for your ($(echo $TV_TY
 EPG_DATA_DOWNLOAD_START_MESSAGE="Download of TV programme information for $EPG_XMLTV_GUIDE_NAME started, please be patient ..."
 EPG_GENERIC_FTA_XMLTV_CREATED_MESSAGE="Generated Free-To-Air XMLTV guide file (Generic):"
 TVHEADEND_SERVER_REFRESH_STOP_MESSAGE="Maintenance on your ($(echo $TV_TYPE | tr '[:lower:]' '[:upper:]')) network completed successfully. You may now resume watching Live TV"
+TVHEADEND_PLAYLIST_GENERATED_NOTIFICATION_MESSAGE="*[$PROJECT_NAME]* Hi there! Please be advised that new and fresh playlist(s) for Live TV viewing have been generated. Please update your device using the attached playlist(s)"
 #
 BANDWIDTH_MONITOR_USED_MESSAGE="*[JambulaTV]* The Internet data used by *$MONITOR_REQUESTOR* was:"
 BANDWIDTH_QUERY_USED_MESSAGE="*[JambulaTV]* The Internet data used $(echo $QUERY_PERIOD | sed 's:week:during the last 7 days:' | sed 's:month:during the last 30 days:') was:"
