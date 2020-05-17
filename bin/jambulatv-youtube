@@ -7,14 +7,13 @@
 
 # Variables
 YOUTUBE_DEBUG=no #no|yes
+YOUTUBE_SEARCH_TEMP_DIR=/tmp
 YOUTUBE_USER_URL="https://www.youtube.com/user"
 YOUTUBE_CHANNEL_URL="https://www.youtube.com/channel"
 YOUTUBE_WATCH_URL="https://www.youtube.com/watch?v"
 YOUTUBE_WATCH_DOMAIN=$(echo $YOUTUBE_WATCH_URL | awk -F/ '{print $3}' | sed 's/www.//g')
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
 YOUTUBE_DL_OPTS="-q -4 -i --ignore-config --prefer-insecure --no-check-certificate --geo-bypass --hls-prefer-ffmpeg"
-YOUTUBE_VARIABLES_TEMP_FILE="/tmp/youtube_variables"
-YOUTUBE_FETCH_IN_PROGRESS_FILE="/tmp/youtube_fetch_in_progress"
 YOUTUBE_VIDEO_FORMAT=93
 # Video Quality definitions according to format selected 
 case $YOUTUBE_VIDEO_FORMAT in
@@ -85,7 +84,7 @@ bloomberg
 fox news
 cnn
 pbs newshour
-nbc2
+nbc news
 aljazeera
 twit live
 
@@ -148,6 +147,9 @@ fi
 }
 
 search_waiting_sound_effects () {
+# Set fetch in progress file here
+YOUTUBE_FETCH_IN_PROGRESS_FILE="$YOUTUBE_SEARCH_TEMP_DIR/youtube_fetch_in_progress.${YOUTUBE_SEARCH_TEXT}"
+#
 # Dont play sound effects if tvheadend iptv {scan|map} running. Play if called by HTSP or json RPC calls
 [[ -e $TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE || -e $TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE ]] && \
 	export CALLED_BY_JSONRPC=1 CALLED_BY_HTSP=1 
@@ -173,13 +175,13 @@ GOOGLE_YOUTUBE_CLIENT_SECRET=$(query_mysql_db youtube_client_secret)
 
 youtube_search_video_id_via_api () {
 # Youtube search variables
-YOUTUBE_SEARCH_URL=https://www.googleapis.com/youtube/v3/search
-YOUTUBE_API_KEY="$GOOGLE_YOUTUBE_API_KEY"
 YOUTUBE_SEARCH_PHRASE="$@"
 YOUTUBE_SEARCH_TEXT="$(echo "$YOUTUBE_SEARCH_PHRASE" | sed -s "s: :+:g")"
+YOUTUBE_SEARCH_URL=https://www.googleapis.com/youtube/v3/search
+YOUTUBE_API_KEY="$GOOGLE_YOUTUBE_API_KEY"
 YOUTUBE_MAX_RESULTS=3
-YOUTUBE_SEARCH_OUTPUT_FILE=/tmp/youtube_search_results
-YOUTUBE_PLAYLIST_FILE=/tmp/youtube_video_ids_found
+YOUTUBE_SEARCH_OUTPUT_FILE=$YOUTUBE_SEARCH_TEMP_DIR/youtube_search_results.${YOUTUBE_SEARCH_TEXT}
+YOUTUBE_PLAYLIST_FILE=$YOUTUBE_SEARCH_TEMP_DIR/youtube_video_ids_found.${YOUTUBE_SEARCH_TEXT}
 #
 # Remove previous youtube search results
 [[ -e $YOUTUBE_SEARCH_OUTPUT_FILE ]] && sudo rm -f $YOUTUBE_SEARCH_OUTPUT_FILE
@@ -188,7 +190,15 @@ YOUTUBE_PLAYLIST_FILE=/tmp/youtube_video_ids_found
 #
 # Search for Youtube IDs using API
 # NOTE: Do not use curl --data/ or -d option to post - Youtube search fails if done
+# ---
+# If event type specified i.e. Live TV
+if [[ "x$YOUTUBE_EVENT_TYPE" != "x" ]];
+then
 $HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE ${YOUTUBE_SEARCH_URL}?part=snippet'&'sp="$YOUTUBE_SEARCH_FILTER"'&'key="$YOUTUBE_API_KEY"'&'type=video'&'eventType="$YOUTUBE_EVENT_TYPE"'&'maxResults=$YOUTUBE_MAX_RESULTS'&'q="$YOUTUBE_SEARCH_TEXT"
+# If event type is not specified i.e. NULL
+else
+$HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE ${YOUTUBE_SEARCH_URL}?part=snippet'&'sp="$YOUTUBE_SEARCH_FILTER"'&'key="$YOUTUBE_API_KEY"'&'type=video'&'maxResults=$YOUTUBE_MAX_RESULTS'&'q="$YOUTUBE_SEARCH_TEXT"
+fi
 #
 # Generate Youtube playlist containing video Ids
 cat $YOUTUBE_SEARCH_OUTPUT_FILE | jq -r '.items[]' | grep videoId | awk {'print $2'} | sed 's:["|,]::g' > $YOUTUBE_PLAYLIST_FILE
@@ -202,12 +212,12 @@ export YOUTUBE_VIDEO_ID
 
 youtube_search_video_id_via_scraper () {
 # Youtube search variables
-YOUTUBE_SEARCH_URL=https://www.youtube.com/results
 YOUTUBE_SEARCH_PHRASE="$@"
 YOUTUBE_SEARCH_TEXT="$(echo "$YOUTUBE_SEARCH_PHRASE" | sed -s "s: :+:g")"
+YOUTUBE_SEARCH_URL=https://www.youtube.com/results
 YOUTUBE_SEARCH_FILTER="CAMSBAgCQAFQFA%253D%253D"
-YOUTUBE_SEARCH_OUTPUT_FILE=/tmp/youtube_search_results
-YOUTUBE_SEARCH_SITE_LINKS_FILE=/tmp/youtube_links_found
+YOUTUBE_SEARCH_OUTPUT_FILE=$YOUTUBE_SEARCH_TEMP_DIR/youtube_search_results.${YOUTUBE_SEARCH_TEXT}
+YOUTUBE_SEARCH_SITE_LINKS_FILE=$YOUTUBE_SEARCH_TEMP_DIR/youtube_links_found.${YOUTUBE_SEARCH_TEXT}
 #
 # Remove previous youtube search results
 [[ -e $YOUTUBE_SEARCH_OUTPUT_FILE ]] && sudo rm -f $YOUTUBE_SEARCH_OUTPUT_FILE
@@ -325,32 +335,32 @@ YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/Bloomberg | grep -i -
 }
 
 youtube_video_id_fox_news () {
-$youtube_search_method "Fox News Live"
+$youtube_search_method "\"Fox News Live\" -Gramp"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_cnn () {
-$youtube_search_method "CNN Live"
+$youtube_search_method "\"CNN News Live Stream\""
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_pbs_newshour () {
-$youtube_search_method "PBS NewsHour"
+$youtube_search_method "\"PBS NewsHour\""
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
-youtube_video_id_nbc2 () {
-$youtube_search_method "NBC2 Live"
+youtube_video_id_nbc_news () {
+$youtube_search_method "\"NBC News\""
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_aljazeera () {
-$youtube_search_method "Al Jazeera English"
+$youtube_search_method "\"Al Jazeera English\""
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_twit_live () {
-$youtube_search_method "Twit Live"
+$youtube_search_method "\"Twit Live\""
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
@@ -442,9 +452,9 @@ youtube_video_id_cnn
 [Pp][Bb][Ss]*[Nn][Ee][Ww][Ss][Hh][Oo][Uu][Rr])
 youtube_video_id_pbs_newshour
 ;;
-# NBC2
-[Nn][Bb][Cc]2)
-youtube_video_id_nbc2
+# NBC News
+[Nn][Bb][Cc]*[Nn][Ee][Ww][Ss])
+youtube_video_id_nbc_news
 ;;
 # Al Jazeera
 [Aa][Ll][Jj][Aa][Zz][Ee][Ee][Rr][Aa])
@@ -467,6 +477,9 @@ esac
 }
 
 stop_waiting_sound_effects () {
+# Set fetch in progress file here
+YOUTUBE_FETCH_IN_PROGRESS_FILE="$YOUTUBE_SEARCH_TEMP_DIR/youtube_fetch_in_progress.${YOUTUBE_SEARCH_TEXT}"
+#
 sudo touch $YOUTUBE_FETCH_IN_PROGRESS_FILE
 }
 
@@ -505,8 +518,10 @@ if [[ "$TYPE_OF_VIDEO_PLAYING" = "Live TV" ]] && \
 	jambulatv-kodi-controller tv_play_stop &
 fi
 #
+# Set Youtube variables file here
+YOUTUBE_VARIABLES_TEMP_FILE="$YOUTUBE_SEARCH_TEMP_DIR/youtube_variables.${YOUTUBE_SEARCH_TEXT}"
 # Remove Youtube temp variables file in case of next run
-[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
+[[ -e $YOUTUBE_VARIABLES_TEMP_FILE ]] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
 # Add log message to systemd journal if No Youtube ID was found
 if [[ "x$YOUTUBE_VIDEO_ID" = "x" ]];
 then
@@ -533,6 +548,8 @@ fi
 }
 
 save_youtube_variables () {
+# Set Youtube variables file here
+YOUTUBE_VARIABLES_TEMP_FILE="$YOUTUBE_SEARCH_TEMP_DIR/youtube_variables.${YOUTUBE_SEARCH_TEXT}"
 # Remove Youtube variables temp file if it exists
 [[ -e $YOUTUBE_VARIABLES_TEMP_FILE ]] && sudo rm -f $YOUTUBE_VARIABLES_TEMP_FILE
 #
@@ -550,6 +567,9 @@ export YOUTUBE_VIDEO_ID YOUTUBE_VIDEO_URL YOUTUBE_VIDEO_QUALITY YOUTUBE_MANIFEST
 }
 
 print_debug_info () {
+# Set Youtube variables file here
+YOUTUBE_VARIABLES_TEMP_FILE="$YOUTUBE_SEARCH_TEMP_DIR/youtube_variables.${YOUTUBE_SEARCH_TEXT}"
+#
 if [[ "$YOUTUBE_DEBUG" = "yes" ]] && [[ -e $YOUTUBE_VARIABLES_TEMP_FILE ]];
 then
 cat $YOUTUBE_VARIABLES_TEMP_FILE
