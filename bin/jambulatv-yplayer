@@ -7,6 +7,14 @@
 # Variables
 FFMPEG_DEBUG_LOG=no #no|yes
 TERM=xterm
+TEMP_DIR=/tmp
+
+YOUTUBE_TOOL=jambulatv-youtube
+YOUTUBE_CMD=$(which $YOUTUBE_TOOL)
+YOUTUBE_SEARCH_PHRASE="$@"
+YOUTUBE_SEARCH_TEXT="$(echo "$YOUTUBE_SEARCH_PHRASE" | sed -s "s: :+:g")"
+YOUTUBE_VARIABLES_TEMP_FILE=$(grep ^YOUTUBE_VARIABLES_TEMP_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g' | cut -d '.' -f1 | sed "s:\$YOUTUBE_SEARCH_TEMP_DIR:$TEMP_DIR:g").${YOUTUBE_SEARCH_TEXT}
+YOUTUBE_LOG_FILE=$TEMP_DIR/youtube-info.${YOUTUBE_SEARCH_TEXT}.log
 
 FFMPEG_CMD=/usr/bin/ffmpeg
 FFMPEG_FFLAGS="+nobuffer+genpts+genpts+igndts+ignidx"
@@ -18,16 +26,11 @@ FFMPEG_CODECS=copy
 FFMPEG_FILTERS="-bsf:v dump_extra"
 FFMPEG_FORMAT=mpegts 
 FFMPEG_OTHER_OPTS="-tune zerolatency -strict experimental" 
-FFMPEG_LOG_FILE=/tmp/ffmpeg-info.log
-
-YOUTUBE_TOOL=jambulatv-youtube
-YOUTUBE_CMD=$(which $YOUTUBE_TOOL)
-YOUTUBE_VARIABLES_TEMP_FILE=$(grep ^YOUTUBE_VARIABLES_TEMP_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g')
-YOUTUBE_LOG_FILE=/tmp/youtube-info.log
+FFMPEG_LOG_FILE=$TEMP_DIR/ffmpeg-info.${YOUTUBE_SEARCH_TEXT}.log
 
 IPTV_SERVICE_PROVIDER=MY_IPTV_SERVICE_PROVIDER
 IPTV_USER_AGENT="MY_USER_AGENT"
-IPTV_SERVICE_NAME="$(echo $@ | sed 's:"::g')"
+IPTV_SERVICE_NAME="$(echo $YOUTUBE_SEARCH_PHRASE | sed 's:"::g')"
 
 METADATA_SERVICE_NAME=$(echo $IPTV_SERVICE_NAME | sed -e 's: :-:g' | tr '[:lower:]' '[:upper:]')
 
