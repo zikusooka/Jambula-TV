@@ -340,6 +340,8 @@ trackerjacker_configure
 adb_install
 adb_sync_setup
 libmaxminddb_install
+geoipupdate_install
+geoipupdate_configure
 
 # ----------------
 # Communications 

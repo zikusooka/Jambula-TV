@@ -1299,6 +1299,9 @@ WEBRADIO_STREAMER_PORT=$(grep -i 'webradio streamer$' $PORTS_ASSIGNED_FILE | awk
 # GeoLocation
 GEOLOCATION_FILE=$PROJECT_SYSTEM_CONF_DIR/geolocation.txt
 
+GEOIP_MAXMIND_ACCOUNT_ID=309196
+GEOIP_MAXMIND_LICENSE_KEY=gxpGAbykWU3A3QNv
+
 
 
 ############################
@@ -11236,6 +11239,63 @@ cd $INSTALL_SRC_DIR/libmaxminddb
 ./bootstrap
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
 make_install_jambulatv
+}
+
+geoipupdate_install () {
+# Remove geoipupdate rpm installed package(s)
+rpm -q GeoIP-devel > /dev/null 2>&1 && rpm -e --nodeps GeoIP-devel
+rpm -q GeoIP > /dev/null 2>&1 && rpm -e --nodeps GeoIP
+# Remove Database directory if it exists
+[[ -d $DATAROOTDIR/GeoIP ]] && rm -rf $DATAROOTDIR/GeoIP
+#
+# Install geoipupdate
+tar zxvf $PROJECT_TARBALLS_DIR/geoipupdate_*_linux_amd64.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v geoipupdate_*_linux_amd64 geoipupdate
+#
+# Copy geoipupdate tool to binary directory
+cp -v $INSTALL_SRC_DIR/geoipupdate/geoipupdate $BINARY_PREFIX/
+}
+
+geoipupdate_configure () {
+# Generate GeoIP configuration file
+[[ -e $PROJECT_SYSTEM_CONF_DIR/GeoIP.conf ]] || \
+cat $PROJECT_CONFIGS_DIR/GeoIP.conf.sample | \
+sed -e "s:MY_GEOIP_MAXMIND_ACCOUNT_ID:$GEOIP_MAXMIND_ACCOUNT_ID:g" | \
+sed -e "s:MY_GEOIP_MAXMIND_LICENSE_KEY:$GEOIP_MAXMIND_LICENSE_KEY:g" | \
+sed -e "s:MY_PROJECT_SYSTEM_SHARE_DIR:$PROJECT_SYSTEM_SHARE_DIR:g" \
+	> $PROJECT_SYSTEM_CONF_DIR/GeoIP.conf
+#
+# Create data directory if non-existent
+[[ -d $PROJECT_SYSTEM_SHARE_DIR/GeoIP ]] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/GeoIP
+#
+# Copy over initial MaxMind database files
+for GEOIP_DB_FILE in GeoLite2-Country GeoLite2-City
+do
+[[ -e $PROJECT_SYSTEM_SHARE_DIR/GeoIP/${GEOIP_DB_FILE}.mmdb ]] || \
+	cp -v $PROJECT_CONTRIB_DIR/GeoIP/${GEOIP_DB_FILE}.mmdb $PROJECT_SYSTEM_SHARE_DIR/GeoIP/
+done
+#
+# Change ownership of data directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/GeoIP 
+#
+# Print post install info
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+GeoIP (MaxMind)
+===============
+% Ensure the following MaxMind Account ID and Licence Key are valid and 
+  still work. If not, please update the file: $PROJECT_SYSTEM_CONF_DIR/GeoIP.conf
+
+  AccountID = $GEOIP_MAXMIND_ACCOUNT_ID
+  LicenseKey = $GEOIP_MAXMIND_LICENSE_KEY
+
+% To update the databases, run the following command:
+
+  $BINARY_PREFIX/geoipupdate -v -f $PROJECT_SYSTEM_CONF_DIR/GeoIP.conf
+
+#
+EOF
 }
 
 iptv_support () {

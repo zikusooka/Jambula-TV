@@ -1,0 +1,10 @@
+# For information on how to download a pre-filled GeoIP.conf file
+# Please see https://dev.maxmind.com/geoip/geoipupdate/
+
+
+AccountID MY_GEOIP_MAXMIND_ACCOUNT_ID
+LicenseKey MY_GEOIP_MAXMIND_LICENSE_KEY
+
+EditionIDs GeoLite2-Country GeoLite2-City
+
+DatabaseDirectory MY_PROJECT_SYSTEM_SHARE_DIR/GeoIP
