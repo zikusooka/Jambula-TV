@@ -49,6 +49,9 @@ UPDATE_AVAIL_MSG="Software Updates: A new version of JambulaTV software is avail
 SSHUTTLE_PID_FILE=MY_RUNDIR/sshuttle.pid
 SSHUTTLE_PID=$(ps auxw | grep -Ev grep | grep 'sshuttle -D' | grep python | awk {'print $2'} | tail -1)
 
+GEOIP_COUNTRY_DB_FILE=MY_PROJECT_SYSTEM_SHARE_DIR/GeoIP/GeoLite2-Country.mmdb
+MAXIMUM_AGE_OF_GEOIP_COUNTRY_DATA=604800 # 1 week
+
 
 
 ###############
@@ -149,30 +152,18 @@ check_4_updates () {
 $MONITORING_PLUGINS_DIR/check_updates > /dev/null 2>&1
 UPDATES_STATUS=$?
 # Notify if updates are available
-[ "$UPDATES_STATUS" = "2" ] && $OSD_TOOL_CMD "$UPDATE_AVAIL_MSG"
+[[ "$UPDATES_STATUS" = "2" ]] && $OSD_TOOL_CMD "$UPDATE_AVAIL_MSG"
 }
 
 reverse_ssh_tunnel () {
 sudo $REVERSE_SSH_TOOL
 }
 
-
-
-##########################
-#  Internet status:  UP  #
-##########################
-
-if [ "$DNS_STATUS" = "UP" ] && [ "$LAST_DNS_STATUS" = "DOWN" ];
-then
-# Debug
-echo "$(date): New State = Up | Old State = Down" >> $DEBUG_FILE  
-
-# Update to current DNS i.e. resolvconf
-update_dns_servers
-
-# Remove dnsmasq entries for local resolution
-[ ! -e $INTERNET_OFF_FILE ] || rm -f $INTERNET_OFF_FILE
-
+refresh_dns_blocklists () {
+# Remove old DNS blocklists
+[[ -e $DNS_BLOCKING_CACHE_DIR/domains.txt ]] && rm $DNS_BLOCKING_CACHE_DIR/domains.txt 
+[[ -e $DNS_BLOCKING_CACHE_DIR/hostnames.txt ]] && rm $DNS_BLOCKING_CACHE_DIR/hostnames.txt
+#
 # Download updated DNS block lists i.e. hostnames and domains txt files
 /usr/bin/wget -c -i $DNS_BLOCKING_SOURCES_FILE -P $DNS_BLOCKING_CACHE_DIR
 #
@@ -182,31 +173,70 @@ do
 sed -i "s|$LINE|\#$LINE|g" $DNS_BLOCKING_CACHE_DIR/domains.txt 
 sleep 1
 done
-
+#
 # Give multimedia user permission to access DNS cache directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $DNS_BLOCKING_CACHE_DIR
-
+#
 # Restart dnsmasq.service
 systemctl restart dnsmasq.service
+}
+
+update_geoip_databases () {
+# If Geo Location file is still fresh, set variable to yes
+[[ -e "$GEOIP_COUNTRY_DB_FILE" && "$(date -d "now - $(stat -c "%Y" $GEOIP_COUNTRY_DB_FILE) seconds" +%s)" -gt "$MAXIMUM_AGE_OF_GEOIP_COUNTRY_DATA" ]] && GEOIP_COUNTRY_DB_FILE_IS_FRESH=yes
+#
+if [[ "$GEOIP_COUNTRY_DB_FILE_IS_FRESH" = "yes" ]] || [[ ! -e "$GEOIP_COUNTRY_DB_FILE" ]];
+then
+# Update GeoIP databases if older than one week
+logger -s -t $(basename $0) "Updating GeoIP databases ..."
+MY_BINARY_PREFIX/geoipupdate -f $PROJECT_SYSTEM_CONF_DIR/GeoIP.conf
+fi
+}
+
+
+
+##########################
+#  Internet status:  UP  #
+##########################
+
+if [[ "$DNS_STATUS" = "UP" && "$LAST_DNS_STATUS" = "DOWN" ]];
+then
+# Debug
+echo "$(date): New State = Up | Old State = Down" >> $DEBUG_FILE  
+
+# Update to current DNS i.e. resolvconf
+update_dns_servers
+
+# Remove dnsmasq entries for local resolution
+[[ ! -e $INTERNET_OFF_FILE ]] || rm -f $INTERNET_OFF_FILE
 
 
 # Since Internet is now UP -  Do other stuff that requires connectivity
 #######################################################################
 
+# JambulaTV: Restart HomeAssistant, so connection to online APIs occurs
+# ---------------------------------------------------------------------
+systemctl restart home-assistant.service
+
 # Take chrony on-line: Update clock time
 # --------------------------------------
 update_clock_time online
 
-# JambulaTV: Restart HomeAssistant, so connection to online APIs occurs
-# ---------------------------------------------------------------------
-systemctl restart home-assistant.service
+# Refresh DNS blocking lists
+# --------------------------
+refresh_dns_blocklists 
+
+# Update MaxMind GeoIP databases if older than one week
+# -----------------------------------------------------
+update_geoip_databases
 
 # Update Youtube-DL: Critical in Youtube-based Live TV streams
 # ------------------------------------------------------------
 update_youtube_dl > /dev/null 2>&1
 
-# Lookup current public IP Address and City and Country Name i.e. Setup Geo Location Data
-# ---------------------------------------------------------------------------------------
+# Lookup current public IP Address, City and Country Name 
+# i.e. Setup Geo Location Data
+# --------------------------------------------------------
 . $GEOLOCATION_TOOL > /dev/null 2>&1
 
 # Download power outages lists i.e. UMEME if in Uganda
@@ -215,11 +245,11 @@ update_youtube_dl > /dev/null 2>&1
 
 # Sound alert beep
 # ----------------
-[ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL beep online
+[[ -x $SOUNDS_TOOL ]] && $SOUNDS_TOOL beep online
 
 # Test Internet speed
 # -------------------
-[ -x $INTERNET_SPEED_TOOL ] && $INTERNET_SPEED_TOOL
+[[ -x $INTERNET_SPEED_TOOL ]] && $INTERNET_SPEED_TOOL
 
 # JambulaTV: Check for available updates
 # --------------------------------------
@@ -243,7 +273,7 @@ send_telegram_messages_spooled
 #  Internet status:  DOWN  #
 ############################
 
-elif [ "$DNS_STATUS" = "DOWN" ] && [ "$LAST_DNS_STATUS" = "UP" ];
+elif [[ "$DNS_STATUS" = "DOWN" && "$LAST_DNS_STATUS" = "UP" ]];
 then
 # Debug
 echo "$(date): New State = Down | Old State = Up" >> $DEBUG_FILE
@@ -269,7 +299,7 @@ update_clock_time offline
 
 # Sound alert beep
 # ----------------
-[ -x $SOUNDS_TOOL ] && $SOUNDS_TOOL beep offline
+[[ -x $SOUNDS_TOOL ]] && $SOUNDS_TOOL beep offline
 
 # Stop any existing VPN tunnel processes
 # --------------------------------------

@@ -10198,6 +10198,8 @@ internet_connectivity_monitoring () {
 		sed -e "s:MY_RUNDIR:$RUNDIR:g" | \
 		sed "s:MY_PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" | \
 		sed -e "s:MY_PROJECT_SYSTEM_SHARE_DIR:$PROJECT_SYSTEM_SHARE_DIR:g" | \
+		sed -e "s:MY_BINARY_PREFIX:$BINARY_PREFIX:g" | \
+		sed -e "s:MY_GEOIP_COUNTRY_DB_FILE:$GEOIP_COUNTRY_DB_FILE:g" | \
 		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" \
 			> $BINARY_PREFIX/jambulatv-dns-status-triggers 
 # Make script executable
