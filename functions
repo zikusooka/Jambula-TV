@@ -136,6 +136,9 @@ PLAYLISTS_PORT=$(grep -i 'playlists$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 PLAYLISTS_IPTV_WORLD_M3U_FILE=jambula-iptv.m3u8
 PLAYLISTS_CCTV_LOCAL_M3U_FILE=jambula-cctv.m3u8
 
+MUSIC_DOWNLOADS_DIRECTORY=$PROJECT_PARTITION/Downloads/Music
+MUSIC_NOW_PLAYING_FILE=$TMPDIR/now_playing
+
 # Snapcast
 SNAPCAST_SERVER_PORT=$(grep -i 'snapcast server$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 SNAPCAST_CLIENT_PORT=$(grep -i 'snapcast client$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -1213,6 +1216,7 @@ KODI_PVR_MANAGER_ENABLE_TOOL=$BINARY_PREFIX/jambulatv-kodi-pvr-hts-manager
 LIGHTS_TOOL=$BINARY_PREFIX/jambulatv-lights
 MIFI_HOTSPOT_TOOL=$BINARY_PREFIX/jambulatv-hotspot-query
 MIFI_QUERY_TOOL=$BINARY_PREFIX/jambulatv-mifi-query
+MUSIC_DOWNLOAD_TOOL=$BINARY_PREFIX/jambulatv-fetch-music
 OSD_TOOL=$BINARY_PREFIX/jambulatv-osd
 PIP_TOOL=$BINARY_PREFIX/jambulatv-pip
 PLAYLIST_M3U2XSPF_TOOL=$BINARY_PREFIX/m3u2xspf.py
@@ -10411,6 +10415,18 @@ youtube_setup () {
 			> $YOUTUBE_DL_SEARCH_TOOL 
 # Make script executable
 chmod 755 $YOUTUBE_DL_SEARCH_TOOL 
+}
+
+music_download_tool_setup () {
+[[ -e $MUSIC_DOWNLOAD_TOOL ]] || cat $PROJECT_BIN_DIR/jambulatv-fetch-music | \
+	sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
+	sed -e "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
+	sed -e "s:MY_MUSIC_DOWNLOADS_DIRECTORY:$MUSIC_DOWNLOADS_DIRECTORY:g" | \
+	sed -e "s:MY_MUSIC_NOW_PLAYING_FILE:$MUSIC_NOW_PLAYING_FILE:g" | \
+	sed -e "s:MY_YOUTUBE_DL_SEARCH_TOOL:$YOUTUBE_DL_SEARCH_TOOL:g" \
+		> $MUSIC_DOWNLOAD_TOOL
+# Make script executable
+chmod 755 $MUSIC_DOWNLOAD_TOOL
 }
 
 mpd_install () {
