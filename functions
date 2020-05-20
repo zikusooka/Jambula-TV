@@ -1241,6 +1241,7 @@ WEBRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-internet-radio-streamer
 WHATSAPP_TOOL=$BINARY_PREFIX/jambulatv-whatsapp
 XMPP_TOOL=$BINARY_PREFIX/jambulatv-xmpp
 VPN_TUNNEL_SSHUTTLE_TOOL=$BINARY_PREFIX/jambulatv-vpn-tunnel-via-sshuttle
+YOUTUBE_DL_SEARCH_TOOL=$BINARY_PREFIX/jambulatv-youtube
 ZMEVENTSERVER_NOTIFICATION_DAEMON=$BINARY_PREFIX/zmeventnotification.pl
 ZONEMINDER_ALARM_NOTIFICATIONS_TOOL=$BINARY_PREFIX/jambulatv-zm-alarm-all-notifications 
 ZONEMINDER_ALARM_DAEMON=$BINARY_PREFIX/zmalarm_daemon.pl
@@ -10398,7 +10399,7 @@ ln -s $PREFIX/local/bin/youtube-dl $BINARY_PREFIX/youtube-dl
 
 youtube_setup () {
 # Copy jambulatv-youtube script, if it does not exist in bin directory and add User-Agent string
-[ -e $BINARY_PREFIX/jambulatv-youtube ] || \
+[[ -e $YOUTUBE_DL_SEARCH_TOOL ]] || \
 	cat $PROJECT_BIN_DIR/jambulatv-youtube | \
 		sed -e "s:MY_USER_AGENT:$HTTP_BROWSER_USERAGENT_YOUTUBE:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
@@ -10407,9 +10408,9 @@ youtube_setup () {
 		sed -e "s:MY_JAMBULATV_SETUP_DB_PASS:$JAMBULATV_SETUP_DB_PASS:g" | \
 		sed -e "s:MY_TVHEADEND_LOG_FILE:$TVHEADEND_LOG_FILE:g" | \
 		sed -e "s:MY_KODI_LOG_FILE:$KODI_LOG_FILE:g" \
-			> $BINARY_PREFIX/jambulatv-youtube 
+			> $YOUTUBE_DL_SEARCH_TOOL 
 # Make script executable
-chmod 755 $BINARY_PREFIX/jambulatv-youtube 
+chmod 755 $YOUTUBE_DL_SEARCH_TOOL 
 }
 
 mpd_install () {
