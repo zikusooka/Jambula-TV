@@ -431,6 +431,16 @@ elif [ "$DETECTED_PATTERN" = "STOP PLAYING MUSIC" ];
 then
 skill_music_play_stop
 
+# Read currently playing song
+elif [ "$DETECTED_PATTERN" = "WHAT SONG IS PLAYING NOW" ];
+then
+skill_music_read_playing_now 
+
+# Download currently playing song
+elif [ "$DETECTED_PATTERN" = "DOWNLOAD THE CURRENT SONG" ];
+then
+skill_music_download_playing_now
+
 # Start FM Radio
 elif [[ "$DETECTED_PATTERN" =~ "PLAY FM RADIO" ]];
 then

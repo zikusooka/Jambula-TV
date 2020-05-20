@@ -398,6 +398,16 @@ skill_music_unpause () {
 $KODI_CONTROLLER_TOOL music_play_pause
 }
 
+skill_music_read_playing_now () {
+MUSIC_NOW_PLAYING_SONG=$(tail -1 $MUSIC_NOW_PLAYING_FILE | cut -d')' -f2- | sed 's:^ ::g')
+# Use text to speech
+$TEXT2SPEECH_TOOL "" custom "The song currently playing is. $MUSIC_NOW_PLAYING_SONG"
+}
+
+skill_music_download_playing_now () {
+$MUSIC_DOWNLOAD_TOOL youtube playing
+}
+
 skill_fmradio_start () {
 # Change FM radio station
 $FMRADIO_STREAMER_TOOL restart "$@"
