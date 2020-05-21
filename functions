@@ -2810,6 +2810,14 @@ cd $INSTALL_SRC_DIR/mpv
 rm -rf $INSTALL_SRC_DIR/mpv
 }
 
+uninstall_nginx () {
+systemctl stop nginx.service
+[[ -e $SBINARY_PREFIX/nginx ]] && rm -f $SBINARY_PREFIX/nginx 
+[[ -d $STATEDIR/log/nginx ]] && rm -rf $STATEDIR/log/nginx
+[[ -d $LIBDIR/perl5/auto/nginx ]] && rm -rf $LIBDIR/perl5/auto/nginx 
+[[ -d $INSTALL_SRC_DIR/nginx ]] && rm -rf $INSTALL_SRC_DIR/nginx
+}
+
 
 
 #####################
@@ -9539,7 +9547,6 @@ cd $INSTALL_SRC_DIR/nginx
 	--with-http_degradation_module \
 	--with-http_perl_module \
 	--with-http_flv_module \
-	--with-http_geoip_module \
 	--with-google_perftools_module \
 	--with-http_gzip_static_module \
 	--with-http_gunzip_module \
@@ -9554,10 +9561,10 @@ cd $INSTALL_SRC_DIR/nginx
 	--with-http_dav_module \
 	--with-http_xslt_module \
 	--with-file-aio \
-	--with-ipv6 \
 	--with-mail \
 	--with-mail_ssl_module \
 	--with-debug
+# Install
 make_install_jambulatv
 #
 # Add nginx user and group

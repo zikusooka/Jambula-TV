@@ -347,6 +347,11 @@ uninstall_snapcast
 snapcast_install
 }
 
+upgrade_nginx () {
+uninstall_nginx
+nginx_install
+}
+
 
 
 #################
@@ -439,3 +444,5 @@ snapcast_install
 #upgrade_mopidy
 
 #upgrade_snapcast
+
+#upgrade_nginx
