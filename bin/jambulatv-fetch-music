@@ -54,7 +54,7 @@ echo "Error: The file $MUSIC_NOW_PLAYING_FILE was not found"
 exit 1
 fi
 # Set music name of song now playing
-MUSIC_NOW_PLAYING_SONG=$(tail -1 $MUSIC_NOW_PLAYING_FILE | cut -d')' -f2- | sed 's:^ ::g')
+MUSIC_NOW_PLAYING_SONG=$(tail -1 $MUSIC_NOW_PLAYING_FILE | cut -d')' -f2- | sed 's:^ ::g' | sed 's:Radio Edit::g')
 ;;
 
 demand)
