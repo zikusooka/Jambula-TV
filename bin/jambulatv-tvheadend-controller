@@ -928,8 +928,11 @@ iptv_tvheadend_network_add
 
 fi
 
+# Download the latest IPTV playlist
+iptv_get_fresh_playlist
+
 # Add Muxes i.e. Force scan using TVHeadend API
-iptv_scan_add_muxes 
+iptv_scan_add_muxes
 }
 
 enable_iptv_network () {
@@ -1453,7 +1456,6 @@ dvb_functions_task_all () {
 }
 
 iptv_functions_task_all () {
-	iptv_get_fresh_playlist
 	iptv_scan_add_services
 	iptv_add_channel_tags
 	iptv_map_services_2_channels
@@ -1530,7 +1532,7 @@ fi
 [[ "$TV_TASK" = "m3u" ]] && \
 	iptv_get_fresh_playlist
 
-# Add IPTV Network (except for m3u, epg, icons)
+# Add IPTV Network if it does not exist (except for m3u, epg, icons)
 [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]] || \
 	configure_iptv_network
 
