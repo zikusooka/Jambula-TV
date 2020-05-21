@@ -269,7 +269,7 @@ KODI17_TAG=$KODI17_VERSION-$KODI17_CODENAME
 KODI17_SOURCES_TYPE=tarball 
 KODI17_CORE_INSTALL_ROOT_DIR=$INSTALL_SRC_DIR/kodi
 
-KODI18_VERSION=18.6
+KODI18_VERSION=18.7
 KODI18_CODENAME=Leia
 KODI18_TAG=$KODI18_VERSION-$KODI18_CODENAME
 KODI18_SOURCES_TYPE=git
@@ -6466,6 +6466,12 @@ esac
 # -------------
 # a) Use curl HTTP 1.1 instead of 2.0 
 patch -p1 $KODI18_CORE_INSTALL_ROOT_DIR/xbmc/filesystem/CurlFile.cpp < $PROJECT_PATCHES_DIR/kodi.curlfile.cpp.patch
+
+# b) Change OEM information that is advertised by several services
+# UPnP
+patch -p1 $KODI18_CORE_INSTALL_ROOT_DIR/xbmc/network/upnp/UPnP.cpp < $PROJECT_PATCHES_DIR/kodi.UPnP.cpp.patch
+# Network
+patch -p1 $KODI18_CORE_INSTALL_ROOT_DIR/xbmc/network/NetworkServices.cpp < $PROJECT_PATCHES_DIR/kodi.NetworkServices.cpp.patch
 
 # Create build directory if non existent
 [[ -d $KODI18_CORE_INSTALL_BUILD_DIR ]] || \

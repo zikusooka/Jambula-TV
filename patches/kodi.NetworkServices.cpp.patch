@@ -1,0 +1,11 @@
+--- NetworkServices.cpp.orig	2020-05-11 19:48:15.082327076 +0300
++++ NetworkServices.cpp		2020-05-11 19:56:08.476473414 +0300
+@@ -604,7 +604,7 @@
+   std::vector<std::pair<std::string, std::string> > txt;
+   CNetworkInterface* iface = CServiceBroker::GetNetwork().GetFirstConnectedInterface();
+   txt.push_back(std::make_pair("deviceid", iface != NULL ? iface->GetMacAddress() : "FF:FF:FF:FF:FF:F2"));
+-  txt.push_back(std::make_pair("model", "Xbmc,1"));
++  txt.push_back(std::make_pair("model", "JambulaTV"));
+   txt.push_back(std::make_pair("srcvers", AIRPLAY_SERVER_VERSION_STR));
+ 
+   // for ios8 clients we need to announce mirroring support

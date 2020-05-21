@@ -1,0 +1,38 @@
+--- UPnP.cpp.orig	2020-05-11 19:46:23.497699751 +0300
++++ UPnP.cpp		2020-05-11 19:54:12.778749245 +0300
+@@ -631,12 +631,12 @@
+                     CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_SERVICES_WEBSERVERPORT),
+                     "/").ToString();
+ 
+-    device->m_ModelName        = "Kodi";
++    device->m_ModelName        = "JambulaTV";
+     device->m_ModelNumber      = CSysInfo::GetVersion().c_str();
+-    device->m_ModelDescription = "Kodi - Media Server";
+-    device->m_ModelURL         = "http://kodi.tv/";
+-    device->m_Manufacturer     = "XBMC Foundation";
+-    device->m_ManufacturerURL  = "http://kodi.tv/";
++    device->m_ModelDescription = "Jambula - Smart Home Hub";
++    device->m_ModelURL         = "https://jambulatv.com/";
++    device->m_Manufacturer     = "Jambula Labs";
++    device->m_ManufacturerURL  = "http://jambulalabs.com/";
+ 
+     device->SetDelegate(device);
+     return device;
+@@ -715,12 +715,12 @@
+         NPT_HttpUrl(m_IP.c_str(),
+                     CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_SERVICES_WEBSERVERPORT),
+                     "/").ToString();
+-    device->m_ModelName        = "Kodi";
++    device->m_ModelName        = "JambulaTV";
+     device->m_ModelNumber      = CSysInfo::GetVersion().c_str();
+-    device->m_ModelDescription = "Kodi - Media Renderer";
+-    device->m_ModelURL         = "http://kodi.tv/";
+-    device->m_Manufacturer     = "XBMC Foundation";
+-    device->m_ManufacturerURL  = "http://kodi.tv/";
++    device->m_ModelDescription = "Jambula - Smart Home Hub";
++    device->m_ModelURL         = "https://jambulatv.com/";
++    device->m_Manufacturer     = "Jambula Labs";
++    device->m_ManufacturerURL  = "http://jambulalabs.com/";
+ 
+     return device;
+ }
