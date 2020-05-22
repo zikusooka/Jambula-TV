@@ -289,6 +289,7 @@ KODI18_LIBDVDNAV_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/libdvdnav-6.0.0-Leia-Alpha-3
 KODI18_LIBDVDREAD_PACAKGE_NAME=$PROJECT_TARBALLS_DIR/libdvdread-6.0.0-Leia-Alpha-3.tar.gz
 
 KODI18_PVR_HTS_TAG="4.4.21-Leia"
+KODI18_INPUTSTREAM_ADAPTIVE_TAG="2.4.5-Leia"
 
 #KODI18_CMAKE_EXTRA_OPTIONS="-DADDON_TARBALL_CACHING=ON -DADDON_SRC_PREFIX=$KODI18_BINARY_ADDONS_BUILD_DIR"
 ##KODI18_CMAKE_EXTRA_OPTIONS="-DADDON_TARBALL_CACHING=ON -DTARBALLS_LOCATION=$KODI18_BINARY_ADDONS_DOWNLOAD_DIR -DTARBALL_DIR=$KODI18_BINARY_ADDONS_DOWNLOAD_DIR"
@@ -6449,6 +6450,49 @@ cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
 make_install_jambulatv
 }
 
+kodi18_inputstream_adaptive_install () {
+# Change to inputstream.adaptive Github sources
+cd $PROJECT_GITHUB_DIR/kodi-addons/inputstream.adaptive
+#
+# Check to see if desired branch/tag exists
+git tag -l | grep -x $KODI18_INPUTSTREAM_ADAPTIVE_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+#
+if [ "$TAG_EXISTS" = "0" ];
+then
+git archive --format tar.gz --prefix=kodi-inputstream.adaptive/ $KODI18_INPUTSTREAM_ADAPTIVE_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=kodi-inputstream.adaptive/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Display Kodi's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+Kodi inputstream.adaptive Version
+=================================
+% The inputstream.adaptive branch you specified ($KODI18_INPUTSTREAM_ADAPTIVE_TAG), does not exist, so I used master/ HEAD instead
+
+#
+EOF
+fi
+
+# Create cmake build directory
+mkdir $INSTALL_SRC_DIR/kodi-inputstream.adaptive/build
+# Change to install directory
+cd $INSTALL_SRC_DIR/kodi-inputstream.adaptive/build
+# CMake
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi ../
+make_install_jambulatv
+}
+
+kodi18_script_module_inputstreamhelper_install () {
+PYTHON_VERSION_USED=2 && set_python_version
+#
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/script.module.inputstreamhelper/ $INSTALL_SRC_DIR/kodi-script.module.inputstreamhelper/
+# Install
+cd $INSTALL_SRC_DIR/kodi-script.module.inputstreamhelper
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+}
+
 kodi18_install () {
 # Unpack sources depending on type of sources
 case $KODI18_SOURCES_TYPE in
@@ -6523,6 +6567,10 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 kodi18_platform_install
 # pvr.hts
 kodi18_pvr_hts_install
+# inputstream.adaptive
+kodi18_inputstream_adaptive_install
+# script.module.inputstreamhelper
+kodi18_script_module_inputstreamhelper_install
 # pvr.rtl.radiofm ~ Not yet compiling 
 #kodi_pvr_rtl_radiofm_install 
 
