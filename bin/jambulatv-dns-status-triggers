@@ -12,6 +12,7 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 . $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Variables
+TMPDIR=/tmp
 # Get ethernet device
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip -o -4 link show | awk -F': ' '/mode DEFAULT/ {print $2}' | grep -v lo | head -1)
 # Get ethernet IP Address
@@ -32,7 +33,7 @@ UMEME_OUTAGES_TOOL=/usr/bin/jambulatv-umeme-outages
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
 
 INTERNET_OFF_FILE=/etc/dnsmasq.d/dns_off.conf
-DEBUG_FILE=/tmp/internet_status.log
+DEBUG_FILE=$TMPDIR/internet_status.log
 DNS_STATUS=$1
 LAST_DNS_STATUS=$2
 
@@ -160,12 +161,20 @@ sudo $REVERSE_SSH_TOOL
 }
 
 refresh_dns_blocklists () {
-# Remove old DNS blocklists
-[[ -e $DNS_BLOCKING_CACHE_DIR/domains.txt ]] && rm $DNS_BLOCKING_CACHE_DIR/domains.txt 
-[[ -e $DNS_BLOCKING_CACHE_DIR/hostnames.txt ]] && rm $DNS_BLOCKING_CACHE_DIR/hostnames.txt
+# Remove old DNS blocklists if found in temp directory
+for DNSLIST in domains.txt hostnames.txt
+do
+[[ -e $TMPDIR/$DNSLIST ]] && rm $TMPDIR/$DNSLIST
+done
 #
-# Download updated DNS block lists i.e. hostnames and domains txt files
-/usr/bin/wget -c -i $DNS_BLOCKING_SOURCES_FILE -P $DNS_BLOCKING_CACHE_DIR
+# Download fresh DNS blocklists into a temporary directory
+/usr/bin/wget -c -i $DNS_BLOCKING_SOURCES_FILE -P $TMPDIR
+#
+# Sync DNS block lists i.e. hostnames and domains txt files
+for DNSLIST in domains.txt hostnames.txt
+do
+/usr/bin/rsync -av $TMPDIR/$DNSLIST $DNS_BLOCKING_CACHE_DIR/
+done
 #
 # Clean up domains.txt file
 grep -v -e ^address -e \# $DNS_BLOCKING_CACHE_DIR/domains.txt | while read LINE
