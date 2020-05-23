@@ -8301,6 +8301,11 @@ export PROMPT_COMMAND='echo "\$(history 1)" >> $PROJECT_SYSTEM_LOG_DIR/bash/\$(w
 #
 # CLI Calculator
 calc(){ awk "BEGIN{ print \$* }" ;}
+
+# Aliases
+# --------
+# Youtube_dl
+alias youtube-dl='youtube-dl --prefer-insecure --no-check-certificate --geo-bypass'
 EOF
 
 # Add .profile to autologin user's home directory
