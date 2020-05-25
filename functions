@@ -11383,6 +11383,44 @@ GeoIP (MaxMind)
 EOF
 }
 
+gplaycli_deps_install () {
+# Install gplaycli dependencies: colorama, termcolor, protobuf-compiler, pyaxmlparser, matlink-gpapi
+for MODULE in \
+colorama \
+termcolor \
+protobuf-compiler \
+pyaxmlparser \
+matlink-gpapi
+do
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR $MODULE
+done
+}
+
+gplaycli_install () {
+# Install gplaycli dependencies
+gplaycli_deps_install
+#
+PYTHON_VERSION_USED=3 && set_python_version
+# Copy sources to install directory
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/gplaycli/ $INSTALL_SRC_DIR/gplaycli/
+# Install
+cd $INSTALL_SRC_DIR/gplaycli
+$PYTHON_INSTALL_CMD --prefix=$PREFIX --install-lib=$PYTHON_SITEDIR
+}
+
+gplaycli_configure () {
+# Create gplaycli config directory if non-existent
+[[ -d $CONFDIR/gplaycli ]] || mkdir -p $CONFDIR/gplaycli
+# Create gplaycli token directory if non-existent
+[[ -e $CONFDIR/gplaycli/token ]] || touch $CONFDIR/gplaycli/token
+#
+# Copy default gplaycli config file
+[[ -e $CONFDIR/gplaycli/gplaycli.conf ]] || \
+	cat $PROJECT_CONFIGS_DIR/gplaycli.conf.sample | \
+		sed -e "s:MY_CONFDIR:$CONFDIR:g" \
+			> $CONFDIR/gplaycli/gplaycli.conf
+}
+
 iptv_support () {
 # Copy IPTV xml files to html directory
 cp -rv $PROJECT_CONTRIB_DIR/iptv $WWW_HTML_DIR
