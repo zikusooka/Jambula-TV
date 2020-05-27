@@ -345,6 +345,7 @@ geoipupdate_install
 geoipupdate_configure
 gplaycli_install
 gplaycli_configure
+dexMD5_setup
 
 # ----------------
 # Communications 

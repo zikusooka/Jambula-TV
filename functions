@@ -11421,6 +11421,28 @@ gplaycli_configure () {
 			> $CONFDIR/gplaycli/gplaycli.conf
 }
 
+axmlparser_install () {
+PYTHON_VERSION_USED=3 && set_python_version
+#
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/axmlparser/ $INSTALL_SRC_DIR/axmlparser/
+# Install
+cd $INSTALL_SRC_DIR/axmlparser
+$PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+}
+
+dexMD5_setup () {
+# Install axmlparser python module needed by dexMD5 tool
+axmlparser_install
+#
+# Copy dexMD5.py to binary directory
+if [[ ! -x $BINARY_PREFIX/dexMD5.py ]];
+then
+cp -v $PROJECT_CONTRIB_DIR/scripts/dexMD5.py $BINARY_PREFIX/
+# Make script executable
+chmod 755 $BINARY_PREFIX/dexMD5.py
+fi
+}
+
 iptv_support () {
 # Copy IPTV xml files to html directory
 cp -rv $PROJECT_CONTRIB_DIR/iptv $WWW_HTML_DIR
