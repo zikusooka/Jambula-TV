@@ -221,9 +221,62 @@ MOBILE_COUNTRY_CODE=$(awk "NR==$NETWORK_NUMBER" $COUNTRY_MCC_MNC_RAW_FILE | cut 
 MOBILE_NETWORK_CODE=$(awk "NR==$NETWORK_NUMBER" $COUNTRY_MCC_MNC_RAW_FILE | cut -d , -f3)
 }
 
+update_yowsup_env_android_version_md5 () {
+PYTHON_VERSION_USED=2 && set_python_version
+YOWSUP_VERSION=3.2.3
+YOWSUP_ENV_ANDROID_FILE=$PYTHON_SITEDIR/yowsup-${YOWSUP_VERSION}-py${PYTHON_MINOR_VERSION_NUMBER}.egg/yowsup/env/env_android.py
+#
+WHATSAPP_APK_NAME=com.whatsapp
+WHATSAPP_VERSION_OLD=$(grep '\b_VERSION =' ${YOWSUP_ENV_ANDROID_FILE} | awk -F'= ' '{print $2}' | sed 's:\"::g')
+WHATSAPP_MD5_CLASSES_OLD=$(grep '\b_MD5_CLASSES =' ${YOWSUP_ENV_ANDROID_FILE} | awk -F'= ' '{print $2}' | sed 's:\"::g')
+#
+GPLAYCLI_CMD=/usr/bin/gplaycli
+DEXMD5_CMD=/usr/bin/dexMD5.py
+
+# Download latest WhatsApp apk if non-existent
+WHATSAPP_APK_COUNT=$(find $TMPDIR -iname ${WHATSAPP_APK_NAME}*apk  | wc -l)
+if [[ "$WHATSAPP_APK_COUNT" = "0" ]];
+then
+cd $TMPDIR
+echo "Downloading WhatsApp apk from the Google Play store, please be patient ..."
+$GPLAYCLI_CMD -av -p -d $WHATSAPP_APK_NAME
+fi
+
+# Set the new apk version & MD5 
+WHATSAPP_APK_COUNT=$(find $TMPDIR -iname ${WHATSAPP_APK_NAME}*apk  | wc -l)
+if [[ "$WHATSAPP_APK_COUNT" != "0" ]];
+then
+WHATSAPP_DOWNLOAD_VERSION=$(echo $TMPDIR/*${WHATSAPP_APK_NAME}* | cut -d'-' -f2 | sed -s 's:v.::' | sed 's:.apk::')
+#
+WHATSAPP_VERSION_NEW=$($DEXMD5_CMD $TMPDIR/${WHATSAPP_APK_NAME}-v.${WHATSAPP_DOWNLOAD_VERSION}.apk | grep 'WhatsApp Version' | awk -F': ' '{print $2}' | sed "s:^b'::g" | sed "s:'$::g")
+WHATSAPP_MD5_CLASSES_NEW=$($DEXMD5_CMD $TMPDIR/${WHATSAPP_APK_NAME}-v.${WHATSAPP_DOWNLOAD_VERSION}.apk | grep 'WhatsApp ClassesDEX MD5' | awk -F': ' '{print $2}' | sed "s:^b'::g" | sed "s:'$::g")
+#
+export WHATSAPP_VERSION_NEW WHATSAPP_MD5_CLASSES_NEW
+fi
+
+# See if its different from current one
+if [[ "${WHATSAPP_VERSION_NEW}" != "${WHATSAPP_VERSION_OLD}" ]];
+then
+echo "Updating yowsup file: [${YOWSUP_ENV_ANDROID_FILE##*/}] to newer version ...
+"
+# Remove env android pyc runtime file
+[[ -e "${YOWSUP_ENV_ANDROID_FILE}c" ]] && rm -f "${YOWSUP_ENV_ANDROID_FILE}c"
+# Backup env android py file
+cp -v ${YOWSUP_ENV_ANDROID_FILE} ${YOWSUP_ENV_ANDROID_FILE}.bak > /dev/null 2>&1
+
+# Update Yowsup env android file
+cat ${YOWSUP_ENV_ANDROID_FILE}.bak | \
+	sed "s|${WHATSAPP_VERSION_OLD}|${WHATSAPP_VERSION_NEW}|g" | \
+	sed "s|${WHATSAPP_MD5_CLASSES_OLD}|${WHATSAPP_MD5_CLASSES_NEW}|g" > ${YOWSUP_ENV_ANDROID_FILE}
+fi
+}
+
 registration_request_code () {
 # Check if registered before
 registration_status
+
+# Update Yowsup env android version and MD5
+update_yowsup_env_android_version_md5
 
 # Download mcc_mnc file
 download_mcc_mnc_file
