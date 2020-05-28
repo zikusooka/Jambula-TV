@@ -307,6 +307,7 @@ samba_configure
 # -----------------
 youtube_dl_install
 youtube_setup
+streamlink_install
 music_download_tool_setup
 livestreamer_install
 vcfconvert_install

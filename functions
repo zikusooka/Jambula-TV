@@ -10483,6 +10483,23 @@ youtube_setup () {
 chmod 755 $YOUTUBE_DL_SEARCH_TOOL 
 }
 
+streamlink_deps_install () {
+# Install dependencies for streamlink using requirements file
+pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/streamlink-requirements.txt
+}
+
+streamlink_install () {
+# Install streamlink dependencies
+streamlink_deps_install
+#
+PYTHON_VERSION_USED=3 && set_python_version
+# Copy sources to install directory
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/streamlink/ $INSTALL_SRC_DIR/streamlink/
+# Install
+cd $INSTALL_SRC_DIR/streamlink
+$PYTHON_INSTALL_CMD --prefix=$PREFIX --install-lib=$PYTHON_SITEDIR
+}
+
 music_download_tool_setup () {
 [[ -e $MUSIC_DOWNLOAD_TOOL ]] || cat $PROJECT_BIN_DIR/jambulatv-fetch-music | \
 	sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
