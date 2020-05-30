@@ -9712,6 +9712,11 @@ patch -p1 $CONFDIR/php.ini < $PROJECT_PATCHES_DIR/php.ini.patch
 # Change permissions of save session path (php.ini) to web user
 chown -R $WWW_USER:$WWW_GROUP $STATEDIR/lib/php
 #
+# Disable PHP5 pdo_sqlite due to the bug:
+# --
+# PHP Warning:  PHP Startup: Unable to load dynamic library '/usr/lib64/php/modules/pdo_sqlite.so' - /usr/lib64/php/modules/pdo_sqlite.so: undefined symbol: sqlite3_column_table_name in Unknown on line 0
+[[ -e $CONFDIR/php.d/pdo_sqlite.ini ]] && rm $CONFDIR/php.d/pdo_sqlite.ini
+#
 # Disable and stop php-fpm service if it is running
 systemctl -q is-active php-fpm.service && systemctl disable php-fpm.service
 systemctl -q is-active php-fpm.service && systemctl stop php-fpm.service
