@@ -612,6 +612,7 @@ PULSE_DEFAULT_CONFIG=$CONFDIR/pulse/default.pa
 PULSE_CLIENT_CONFIG=$CONFDIR/pulse/client.conf
 PULSE_DAEMON_CONFIG=$CONFDIR/pulse/daemon.conf
 PULSE_ROOT_CONFIG_DIR=/root/.config/pulse
+PULSE_MULTIMEDIA_USER_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.config/pulse
 PULSE_SERVER_SOCKET=$TMPDIR/pulse-server
 
 CHRONY_KEYS_FILE=/etc/chrony.keys
@@ -4219,6 +4220,9 @@ fi
 pulseaudio_configure () {
 # Setup pulseuadio user i.e. pulse
 # ---
+# Give ownership of HOME pulse config dir to multimedia user i.e. 
+# /JambulaTV/.config/pulse
+[[ -d $PULSE_MULTIMEDIA_USER_CONFIG_DIR ]] && chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PULSE_MULTIMEDIA_USER_CONFIG_DIR
 # Create pulseaudio home dir if it does not exist
 [[ -d $PULSE_HOME_DIR ]] || mkdir -p $PULSE_HOME_DIR
 # Change ownership of pulseaudio home directory to pulse user
