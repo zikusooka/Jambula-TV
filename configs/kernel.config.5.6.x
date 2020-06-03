@@ -1,1 +1,0 @@
-kernel.config.5.6.x.without.retpoline
