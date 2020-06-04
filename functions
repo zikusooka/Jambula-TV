@@ -1498,6 +1498,7 @@ PYTHON_MINOR_VERSION_NUMBER=$(echo $PYTHON_VERSION | cut -d '.' -f1-2)
 PYTHON_SITEDIR=$LIBDIR/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
 PYTHON_HOME=$(which python | sed "s:/bin/python$PYTHON_MAJOR_VERSION_NUMBER::" | sed "s:/bin/python::")
 PYTHON_INSTALL_CMD="python2 setup.py install"
+PYTHON_UNINSTALL_CMD="python-pip uninstall"
 # Export
 export PYTHON_VERSION PYTHON_MAJOR_VERSION_NUMBER PYTHON_MINOR_VERSION_NUMBER PYTHON_SITEDIR PYTHON_HOME PYTHON_INSTALL_CMD
 ;;
@@ -1509,12 +1510,15 @@ PYTHON_MINOR_VERSION_NUMBER=$(echo $PYTHON_VERSION | cut -d '.' -f1-2)
 PYTHON_SITEDIR=$PREFIX/local/lib/python${PYTHON_MINOR_VERSION_NUMBER}/site-packages
 PYTHON_HOME=$(which python | sed "s:/bin/python$PYTHON_MAJOR_VERSION_NUMBER::" | sed "s:/bin/python::")
 PYTHON_INSTALL_CMD="python3 setup.py install"
+PYTHON_UNINSTALL_CMD="pip3 uninstall"
 # Export
 export PYTHON_VERSION PYTHON_MAJOR_VERSION_NUMBER PYTHON_MINOR_VERSION_NUMBER PYTHON_SITEDIR PYTHON_HOME PYTHON_INSTALL_CMD
 ;;
 
 *)
-PYTHON_VERSION_USED=2
+PYTHON_VERSION=$($PREFIX/local/bin/python3 -c "import platform; print (platform.python_version())")
+PYTHON_INSTALL_CMD="python3 setup.py install"
+PYTHON_UNINSTALL_CMD="pip3 uninstall"
 ;;
 
 esac
@@ -2172,11 +2176,21 @@ PKG_LEFTOVERS_EXIST=$?
 }
 
 uninstall_python_pkgs () {
-# Attempt uninstall using pip tool
-pip uninstall -y $1
-# Manual uninstall for lingering files 
-#PYTHON_VERSION_USED=2 && set_python_version
+# Set python version if explicity requested on CLI 
+if [[ "$2" = "python3" ]];
+then
 PYTHON_VERSION_USED=3 && set_python_version
+elif [[ "$2" = "python2" ]];
+then
+PYTHON_VERSION_USED=2 && set_python_version
+else
+PYTHON_VERSION_USED=3 && set_python_version
+fi
+#
+# Attempt uninstall using pip tool
+$PYTHON_UNINSTALL_CMD -y $1
+#
+# Manual uninstall for lingering files 
 [[ -d $PYTHON_SITEDIR/$1 ]] && rm -rf $PYTHON_SITEDIR/$1
 [[ $(find $PYTHON_SITEDIR -type d -name "$1*.egg" | wc -l ) != "0" ]] && \
 	rm -rf $PYTHON_SITEDIR/$1*.egg
