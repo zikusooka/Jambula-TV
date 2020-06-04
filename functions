@@ -9363,7 +9363,7 @@ EOF
 
 yowsup3_deps_install () {
 PYTHON_VERSION_USED=2 && set_python_version
-
+#
 # Install dependency python modules for Yowsup 3 using Python version 2
 # ---
 # setuptools
@@ -9371,7 +9371,7 @@ python_setuptools_install $PYTHON_SETUPTOOLS_VERSION
 # setuptools_scm
 python_setuptools_scm_install $PYTHON_SETUPTOOLS_SCM_VERSION
 #
-# Yowsup general requirements
+# Install other yowsup python dependency modules using requirements file
 pip-python --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/yowsup3-python2-requirements.txt
 #
 # cryptography for Python2
@@ -9388,19 +9388,28 @@ python_consonance_install $PYTHON_CONSONANCE_VERSION
 
 yowsup3_python2_install () {
 PYTHON_VERSION_USED=2 && set_python_version
-
-# Install yowsup python dependency modules using requirements file
-yowsup3_deps_install
-
+#
 # Copy yowsup sources to install directory
 rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup/ $INSTALL_SRC_DIR/yowsup/
 #
 # Patch iq_keys_get_result.py
-patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/layers/axolotl/protocolentities/iq_keys_get_result.py < $PROJECT_PATCHES_DIR/yowsup.iq_keys_get_result.patch
+#patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/layers/axolotl/protocolentities/iq_keys_get_result.py < $PROJECT_PATCHES_DIR/yowsup.iq_keys_get_result.patch
 # Patch setup.py - remove strict dependencies
 patch -p1 $INSTALL_SRC_DIR/yowsup/setup.py < $PROJECT_PATCHES_DIR/yowsup.setup.py.patch
 # Patch env.py
 patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/env/env.py < $PROJECT_PATCHES_DIR/yowsup.env.py.patch
+# Patch env_android
+patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/env/env_android.py < $PROJECT_PATCHES_DIR/yowsup.env.android.patch
+# Patch test_decoder.py
+patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/layers/coder/test_decoder.py < $PROJECT_PATCHES_DIR/yowsup.test_decoder.py.patch
+# Patch test_encoder.py
+patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/layers/coder/test_encoder.py < $PROJECT_PATCHES_DIR/yowsup.test_encoder.py.patch
+# Patch test_tokendictionary.py
+patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/layers/coder/test_tokendictionary.py < $PROJECT_PATCHES_DIR/yowsup.test_tokendictionary.py.patch
+# Patch tokendictionary.py
+patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/layers/coder/tokendictionary.py < $PROJECT_PATCHES_DIR/yowsup.tokendictionary.py.patch
+# Patch noise/layer.py
+patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/layers/noise/layer.py < $PROJECT_PATCHES_DIR/yowsup.noise.layer.py.patch
 #
 # Compile
 cd $INSTALL_SRC_DIR/yowsup
@@ -9409,7 +9418,7 @@ $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 
 yowsup2_python3_install () {
 PYTHON_VERSION_USED=3 && set_python_version
-
+#
 # Install yowsup python dependency modules using requirements file
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/yowsup-requirements.txt
 #
