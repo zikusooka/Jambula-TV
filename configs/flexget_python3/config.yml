@@ -48,7 +48,7 @@ templates:
 # Settings - TV Series
 # ---------------------
     _settings_for_series: &settings_for_series
-      quality: "h264 h265 xvid 720p !480p"
+      quality: "h264 xvid 720p !h265 !480p"
       exact: yes
       propers: no 
       identified_by: ep
@@ -718,7 +718,6 @@ tasks:
       - rss: { url: '{? tv_feeds.rarbg ?}', silent: yes }
       - rss: { url: '{? tv_feeds.ezrss ?}', silent: yes }
       - rss: { url: '{? tv_feeds.limetorrents ?}', silent: yes }
-      - rss: { url: '{? tv_feeds.torrentdownloads ?}', silent: yes }
       - rss: { url: '{? tv_feeds.demonoid ?}', silent: yes }
     template: 
       - tv_series
@@ -735,7 +734,6 @@ tasks:
     inputs:
       - rss: { url: '{? movie_feeds.rarbg ?}', silent: yes }
       - rss: { url: '{? movie_feeds.limetorrents ?}', silent: yes }
-      - rss: { url: '{? movie_feeds.torrentdownloads ?}', silent: yes }
       - rss: { url: '{? movie_feeds.demonoid ?}', silent: yes }
     template: 
       - movies
