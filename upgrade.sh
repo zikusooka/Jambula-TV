@@ -360,7 +360,7 @@ nginx_install
 #DEBUGGING
 #_install_pause_check_4_errors_ $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "Insert program name here"
 
-#upgrade_kernel 5.7
+#upgrade_kernel 5.7.1
 #upgrade_kernel 5.6.2
 #upgrade_kernel 5.5.2
 #upgrade_kernel 4.20
