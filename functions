@@ -2763,6 +2763,9 @@ rm -rf $INSTALL_SRC_DIR/domoticz
 }
 
 uninstall_homeassistant () {
+# Stop home-assistant
+systemctl stop home-assistant.service || killall hass
+# Uninstall home-assistant
 uninstall_python_pkgs home_assistant_frontend
 uninstall_python_pkgs homeassistant
 uninstall_python_pkgs home-assistant
