@@ -1,8 +1,14 @@
---- include.py.orig	2018-01-29 15:56:22.171334526 +0300
-+++ include.py	2018-01-29 16:02:08.089435973 +0300
-@@ -45,6 +45,14 @@
-             with io.open(file, encoding='utf-8') as inc_file:
-                 include = yaml.load(inc_file)
+--- flexget/plugins/operate/include.py	2020-06-06 22:03:15.107063651 +0300
++++ flexget/plugins/operate/include.py	2020-06-08 16:11:26.765939972 +0300
+@@ -1,4 +1,5 @@
+ import os
++import io
+ 
+ import yaml
+ from loguru import logger
+@@ -41,6 +42,14 @@
+             with open(file, encoding='utf-8') as inc_file:
+                 include = yaml.safe_load(inc_file)
                  inc_file.flush()
 +            #
 +	    # JambulaTV: Check if included file exists
@@ -14,4 +20,4 @@
 +            #
              errors = process_config(include, plugin.plugin_schemas(interface='task'))
              if errors:
-                 log.error('Included file %s has invalid config:', file)
+                 logger.error('Included file {} has invalid config:', file)
