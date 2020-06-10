@@ -11495,6 +11495,15 @@ chmod 755 $BINARY_PREFIX/dexMD5.py
 fi
 }
 
+series_cli_install () {
+PYTHON_VERSION_USED=3 && set_python_version
+#
+rsync -avz --delete-after $PROJECT_GITHUB_DIR/series-cli/ $INSTALL_SRC_DIR/series-cli/
+# Install
+cd $INSTALL_SRC_DIR/series-cli
+$PYTHON_INSTALL_CMD --prefix=$PREFIX --install-lib=$PYTHON_SITEDIR
+}
+
 iptv_support () {
 # Copy IPTV xml files to html directory
 cp -rv $PROJECT_CONTRIB_DIR/iptv $WWW_HTML_DIR
