@@ -53,6 +53,9 @@ images_add
 # Install current openssl
 openssl111_install
 
+# Install current gnutls
+gnutls_install
+
 # Install expat - needed for python3
 expat_install
 

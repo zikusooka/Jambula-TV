@@ -3339,6 +3339,55 @@ make -j$SYSTEM_CPU_CORES
 make install_sw
 }
 
+gmp_install () {
+# Remove RPM based package if installed
+#for RPM in gmp-devel gmp
+#do
+#rpm -q $RPM > /dev/null 2>&1 && rpm -e --nodeps $RPM
+#done
+#
+tar xvf $PROJECT_TARBALLS_DIR/gmp-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v gmp-* gmp
+# Compile
+cd $INSTALL_SRC_DIR/gmp
+./configure --prefix=$PREFIX --libdir=$LIBDIR --localstatedir=$STATEDIR 
+make_install_jambulatv
+}
+
+nettle_install () {
+# Remove RPM based package if installed
+#for RPM in nettle-devel nettle
+#do
+#rpm -q $RPM > /dev/null 2>&1 && rpm -e --nodeps $RPM
+#done
+#
+tar zxvf $PROJECT_TARBALLS_DIR/nettle-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v nettle-* nettle
+# Compile
+cd $INSTALL_SRC_DIR/nettle
+./configure --prefix=$PREFIX --libdir=$LIBDIR --localstatedir=$STATEDIR
+make_install_jambulatv
+}
+
+gnutls_install () {
+# Install dependencies for gnutls
+gmp_install
+nettle_install
+#
+# Remove RPM based package if installed
+#for RPM in gnutls-devel gnutls-dane gnutls-c++ gnutls
+#do
+#rpm -q $RPM > /dev/null 2>&1 && rpm -e --nodeps $RPM
+#done
+#
+tar xvf $PROJECT_TARBALLS_DIR/gnutls-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v gnutls-* gnutls
+# Compile
+cd $INSTALL_SRC_DIR/gnutls
+./configure --prefix=$PREFIX --libdir=$LIBDIR --localstatedir=$STATEDIR --with-included-libtasn1 --without-p11-kit --disable-guile
+make_install_jambulatv
+}
+
 pcre_install () {
 # Unpack
 tar jxvf $PROJECT_TARBALLS_DIR/pcre-*.tar.bz2 -C $INSTALL_SRC_DIR
@@ -4984,6 +5033,7 @@ cd $INSTALL_SRC_DIR/vlc
 # Configure: Disabled: aom | vpx | goom | shine | skins2 | ncurses
 ./configure --prefix=$PREFIX --libdir=$LIBDIR \
 --enable-run-as-root \
+--enable-gnutls \
 --enable-realrtsp \
 --enable-wma-fixed \
 --enable-omxil \
