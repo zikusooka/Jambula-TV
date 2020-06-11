@@ -5,7 +5,13 @@
 # Variables
 ARIA2_CMD=/usr/bin/aria2c 
 ARIA2_OPTIONS="-c -D -q --log-level=notice"
-ARIA2_LOG_FILE=/var/log/JambulaTV/aria2.log
+#
+YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
+YOUTUBE_DL_OPTS="-q -4 -i --ignore-config --prefer-insecure --no-check-certificate --geo-bypass --hls-prefer-ffmpeg"
+YOUTUBE_VIDEO_FORMAT="best"
+#
+FETCH_LOG_FILE=/var/log/JambulaTV/$(basename $0).log
+#
 # Email
 EMAIL_VIA_GMAIL_TOOL=/usr/bin/jambulatv-email
 EMAIL_CREDENTIALS_CONFIG=/etc/JambulaTV/messaging-email.cfg
@@ -101,7 +107,7 @@ exit 1
 fi
 
 # Set on download completed script
-ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT=/tmp/${PODCAST_META_FILE}_send_notification.sh
+ON_DOWNLOAD_COMPLETE_SCRIPT=/tmp/${PODCAST_META_FILE}_send_notification.sh
 
 # Get information about podcast
 URL=$(grep '\[URL\]' $PODCAST_META_FILE_PATH | sed 's:\[URL\]|*::')
@@ -113,11 +119,11 @@ IMAGE=$(grep '\[IMAGE\]' $PODCAST_META_FILE_PATH | sed 's:\[IMAGE\]|*::')
 PODCAST_FILE=$(basename $URL)
 
 # Remove existing Aria2c download script
-[ -f $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT ] && sudo rm -f $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT
+[ -f $ON_DOWNLOAD_COMPLETE_SCRIPT ] && sudo rm -f $ON_DOWNLOAD_COMPLETE_SCRIPT
 
 # Generate 'On-Download-completed' Scripts
 # ----------------------------------------
-cat > $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT << EOF
+cat > $ON_DOWNLOAD_COMPLETE_SCRIPT << EOF
 #!/bin/sh
 # Perform the following after aria2 download is completed
 #
@@ -156,7 +162,7 @@ fi
 if [ "x\$WHATSAPP_PHONE_NUMBER_RECIPIENT" != "x" ];
 then
 
-/usr/bin/jambulatv-whatsapp sendmessage $WHATSAPP_PHONE_NUMBER_RECIPIENT "*[JambulaTV] New Podcast(s) Added*
+sudo /usr/bin/jambulatv-whatsapp sendmessage $WHATSAPP_PHONE_NUMBER_RECIPIENT "*[JambulaTV] New Podcast(s) Added*
 The following podcast was successfully downloaded. You may find it under 'Videos >> Files >> Podcasts' on your JambulaTV or in the folder ${PODCASTS_COMPLETED_DIRECTORY}. Enjoy!
 
 *$TITLE*
@@ -183,14 +189,26 @@ rm -- \$0
 EOF
 #
 # Make script executable
-chmod 755 $ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT
+chmod 755 $ON_DOWNLOAD_COMPLETE_SCRIPT
 
 # Start/Resume Downloads
 # ----------------------
-$ARIA2_CMD $ARIA2_OPTIONS -d $PODCASTS_COMPLETED_DIRECTORY -l $ARIA2_LOG_FILE --on-download-complete=$ARIA2_ON_DOWNLOAD_COMPLETE_SCRIPT $URL
+# Test to see if URL is a youtube link
+echo "$URL" | grep -i "youtube.com/watch" > /dev/null 2>&1
+IS_YOUTUBE_URL=$?
+#
+if [[ "$IS_YOUTUBE_URL" = "0" ]];
+then
+# Use youtube-dl 
+$YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_VIDEO_FORMAT -o "$PODCASTS_COMPLETED_DIRECTORY/%(uploader)s.%(title)s.%(upload_date)s.%(ext)s" --restrict-filenames --exec "$ON_DOWNLOAD_COMPLETE_SCRIPT" $URL > $FETCH_LOG_FILE 2>&1
 
+else
+# Use aria2c
+$ARIA2_CMD $ARIA2_OPTIONS -d $PODCASTS_COMPLETED_DIRECTORY -l $FETCH_LOG_FILE --on-download-complete=$ON_DOWNLOAD_COMPLETE_SCRIPT $URL
+fi
 done
 }
+
 
 
 #################
