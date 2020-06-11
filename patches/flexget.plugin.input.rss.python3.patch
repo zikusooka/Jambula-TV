@@ -22,7 +22,7 @@
 +          rss_feed_page = urlopen(url)
 +          # Extract image links using BeautifulSoup
 +          soup = BeautifulSoup(rss_feed_page, "html5lib")
-+          image_links = []
++          image_links = ['']
 +          for img in soup.findAll(['itunes:image']):
 +              image_links.append(img.get('href'))
 +          # Get first poster image URL
