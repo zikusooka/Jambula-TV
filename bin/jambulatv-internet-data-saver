@@ -9,6 +9,8 @@ DATA_SAVER_ACTION=$1
 # Services to disable
 IPTV=yes
 INTERNET_SPEED_TOOL=/usr/bin/jambulatv-speed-test
+PODCASTS_FETCH_TOOL=/usr/bin/jambulatv-fetch-podcasts
+
 
 
 ###############
@@ -24,13 +26,21 @@ exit 1
 }
 
 internet_data_saver_on () {
+# Disable fetch podcasts tool
+sudo chmod a-x $PODCASTS_FETCH_TOOL
+
+# Do not run speed tests i.e. disable speed test tool
+sudo chmod a-x $INTERNET_SPEED_TOOL
+
+# Disable IPTV services
 if [[ "$IPTV" = "yes" ]];
 then
 for UNIT in \
+	jambulatv-iptv-maintenance.timer \
 	jambulatv-iptv-maintenance.service \
-	jambulatv-iptv-maintenance.timer
+	jambulatv-search-for-iptv-channels.timer \
+	jambulatv-search-for-iptv-channels.service
 do
-# Disable IPTV services
 sudo /usr/bin/systemctl stop $UNIT
 # Stop IPTV service & timer
 sudo /usr/bin/systemctl disable $UNIT
@@ -40,29 +50,45 @@ fi
 # Disable IPTV network in TVHeadend
 sudo /usr/bin/jambulatv-tvheadend-controller iptv disable > /dev/null > /dev/null 2>&1
 
-# Do not run speed tests i.e. disable speed test tool
-sudo chmod a-x $INTERNET_SPEED_TOOL
+# Disable Download services
+for UNIT in aria2.service flexget.service rtorrent.service
+do
+# Stop download services
+sudo /usr/bin/systemctl stop $UNIT
+# Disable download services
+sudo /usr/bin/systemctl disable $UNIT
+done
 }
 
 internet_data_saver_off () {
+# Enable speed test tool i.e. OK to run speed tests 
+sudo chmod a+x $INTERNET_SPEED_TOOL
+
+# Enable fetch podcasts tool
+sudo chmod a+x $PODCASTS_FETCH_TOOL
+
+# Enable IPTV services
 if [[ "$IPTV" = "yes" ]];
 then
 for UNIT in \
 	jambulatv-iptv-maintenance.timer \
-	jambulatv-iptv-maintenance.service
+	jambulatv-iptv-maintenance.service \
+	jambulatv-search-for-iptv-channels.timer \
+	jambulatv-search-for-iptv-channels.service
 do
-# Enable IPTV services
 sudo /usr/bin/systemctl enable $UNIT
 done
-# Start IPTV timer
-sudo /usr/bin/systemctl start jambulatv-iptv-maintenance.timer
 fi
 #
 # Enable IPTV network in TVHeadend
 sudo /usr/bin/jambulatv-tvheadend-controller iptv enable > /dev/null 2>&1
 
-# Enable speed test tool i.e. OK to run speed tests 
-sudo chmod a+x $INTERNET_SPEED_TOOL
+# Enable Download services
+for UNIT in aria2.service flexget.service rtorrent.service
+do
+# Enable download services
+sudo /usr/bin/systemctl enable $UNIT
+done
 }
 
 
