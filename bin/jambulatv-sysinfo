@@ -15,6 +15,8 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 # Source install functions
 . $PROJECT_FUNCTIONS_FILE
 
+PRODUCT_VERSION=$(grep -i Version $PROJECT_RELEASE_FILE | cut -d : -f2)
+
 
 
 set_fonts_colors () {
@@ -114,7 +116,7 @@ fi
 }
 
 wifi_status () {
-WIFI_STATUS=$(cat /sys/class/net/${WIFI_STATION_INTERFACE}/operstate)
+WIFI_STATUS=$([[ -e /sys/class/net/${WIFI_STATION_INTERFACE}/operstate ]] && cat /sys/class/net/${WIFI_STATION_INTERFACE}/operstate)
 if [[ "$WIFI_STATUS" = "up" ]];
 then
 WIFI_CONNECTION_STATUS="${GREEN}Connected${RST}"
@@ -124,16 +126,19 @@ fi
 }
 
 get_geolocation () {
-CITY=$(grep -i city $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2)
-COUNTRY=$(grep -i country $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2)
-LATITUDE=$(grep -i latitude $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2)
-LONGITUDE=$(grep -i longitude $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2) 
-GEOLOCATION="$CITY, $COUNTRY ($LATITUDE, $LONGITUDE)"
+# Lookup currentlocation if the geolocation file does not exist
+[[ -e $GEOLOCATION_FILE ]] || $GEOLOCATION_TOOL > /dev/null 2>&1
+#
+CITY=$(grep -i city $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2 | sed "s:\"::g")
+COUNTRY=$(grep -i country $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2 | sed "s:\"::g")
+LATITUDE=$(grep -i latitude $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2 | sed "s:\"::g" | xargs printf '%.2f')
+LONGITUDE=$(grep -i longitude $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2 | sed "s:\"::g" | xargs printf '%.2f') 
+GEOLOCATION="$CITY, $COUNTRY ($LATITUDE,$LONGITUDE)"
 }
 
 install_setup_info () {
 # Date
-INSTALL_DATE=$(ls -dlct --time-style="+%d %B %Y" "/lost+found" | awk '{printf $9 " " $6 " "$7 " " $8}' | sed 's:/lost+found ::g')
+INSTALL_DATE=$([[ -e /lost+found ]] && ls -dlct --time-style="+%d %B %Y" "/lost+found" | awk '{printf $9 " " $6 " "$7 " " $8}' | sed 's:/lost+found ::g')
 
 # Owner
 CONTACT_NAME=$(query_mysql_db contact_name)
@@ -141,7 +146,7 @@ CONTACT_NAME=$(query_mysql_db contact_name)
 
 battery_info () {
 ACPI_BATTERY_DIR=/sys/class/power_supply/BAT0
-if [[ -d $ACPI_BATTERY_DIR ]];
+if [[ -f $ACPI_BATTERY_DIR/capacity ]];
 then
 BATTERY_CAPACITY="$(cat $ACPI_BATTERY_DIR/capacity)%"
 else
@@ -167,39 +172,64 @@ GPU_DRIVER=$(/usr/bin/journalctl -b -o cat | grep -i '\[drm\] Initialized' | gre
 
 hard_disks_info () {
 # Disks
-DISKS_INSTALLED=$(cat /proc/diskstats | awk {'print $3'} | cut -c2,1,3 | sort -u | wc -l)
+DISKS_INSTALLED=$(grep sd /proc/diskstats | awk {'print $3'} | cut -c2,1,3 | sort -u | wc -l)
+
 # Disk 1
+# ------
 DISK1_LOGICAL_NAME=/dev/sda
 DISK1_MODEL=$(/usr/sbin/parted -l | grep -B1 $DISK1_LOGICAL_NAME | grep -i Model | sed 's/Model: //' | sed 's/ATA //g' | sed 's/ (scsi)//g')
 DISK1_SIZE=$(/usr/sbin/parted -l | grep -B1 $DISK1_LOGICAL_NAME | grep $DISK1_LOGICAL_NAME | awk {'print $3'})
 DISK1_AVAIL_ROOT=$(df -h / | awk '{ a = $4 } END { print a }')
 DISK1_AVAIL_JAMBULA=$(df -h /JambulaTV | awk '{ a = $4 } END { print a }')
 DISK1_TEMP=$(/usr/sbin/hddtemp $DISK1_LOGICAL_NAME | cut -d : -f3 | sed 's: ::g')
+# Disk 1 type
+if [[ -e /sys/block/sda/queue/rotational ]];
+then
+DISK1_ROTATION=$(cat /sys/block/sda/queue/rotational)
+#
+# Disk 1
+[[ "$DISK1_ROTATION" = "0" ]] && DISK1_TYPE=SSD
+[[ "$DISK1_ROTATION" = "1" ]] && DISK1_TYPE=HDD
+fi
+
 # Disk 2
+# ------
 DISK2_LOGICAL_NAME=/dev/sdb
+if [[ -b $DISK2_LOGICAL_NAME ]];
+then
 DISK2_MODEL=$(/usr/sbin/parted -l | grep -B1 $DISK2_LOGICAL_NAME | grep -i Model | sed 's/Model: //' | sed 's/ATA //g' | sed 's/ (scsi)//g')
 DISK2_SIZE=$(/usr/sbin/parted -l | grep -B1 $DISK2_LOGICAL_NAME | grep $DISK2_LOGICAL_NAME | awk {'print $3'})
 DISK2_MNT_POINT=$(df -h ${DISK2_LOGICAL_NAME}1 | awk {'print $6'} | tail -1)
 DISK2_AVAIL=$(df -h $DISK2_MNT_POINT | awk '{ a = $4 } END { print a }')
 DISK2_TEMP=$(/usr/sbin/hddtemp $DISK2_LOGICAL_NAME | cut -d : -f3 | sed 's: ::g')
+# Disk 2 type
+if [[ -e /sys/block/sdb/queue/rotational ]];
+then
+DISK2_ROTATION=$(cat /sys/block/sdb/queue/rotational)
+#
+[[ "$DISK2_ROTATION" = "0" ]] && DISK2_TYPE=SSD
+[[ "$DISK2_ROTATION" = "1" ]] && DISK2_TYPE=HDD
+fi
+
+fi
 }
 
 memory_info () {
 MEMORY_SIZE_TOTAL=$(expr $(grep -i 'MemTotal' /proc/meminfo | awk {'print $2'}) / 1048576 | xargs printf '%.1f')GB
 # Memory Model
-MEMORY_VENDOR_0=$(dmidecode -t memory | grep -i Manufacturer | head -1 | awk {'print $2'} | sed 's/A0_Manufacturer0//')
-MEMORY_PART_NO_0=$(dmidecode -t memory | grep -i 'Part Number' | head -1 | awk {'print $3'} | sed 's/Array1_PartNumber1//g')
-MEMORY_CLOCK_SPEED_0=$(dmidecode -t memory | grep -i 'Configured Clock Speed' | head -1 | awk {'print $4 $5'})
-MEMORY_VENDOR_1=$(dmidecode -t memory | grep -i Manufacturer | tail -1 | awk {'print $2'} | sed 's/A1_Manufacturer1//')
-MEMORY_PART_NO_1=$(dmidecode -t memory | grep -i 'Part Number' | tail -1 | awk {'print $3'} | sed 's/Array1_PartNumber1//g')
-MEMORY_CLOCK_SPEED_1=$(dmidecode -t memory | grep -i 'Configured Clock Speed' | tail -1 | awk {'print $4 $5'})
-MEMORY_MODEL_B0=$(echo "$MEMORY_VENDOR_0 $MEMORY_PART_NO_0" | cut -c1-20)
-MEMORY_MODEL_B1=$(echo "$MEMORY_VENDOR_1 $MEMORY_PART_NO_1" | cut -c1-20)
+MEMORY_VENDOR_0=$(/usr/sbin/dmidecode -t memory | grep -i Manufacturer | head -1 | awk {'print $2'} | sed 's/A0_Manufacturer0//')
+MEMORY_PART_NO_0=$(/usr/sbin/dmidecode -t memory | grep -i 'Part Number' | head -1 | awk {'print $3'} | sed 's/Array1_PartNumber1//g')
+MEMORY_CLOCK_SPEED_0=$(/usr/sbin/dmidecode -t memory | grep -i 'Configured Clock Speed' | head -1 | awk {'print $4 $5'})
+MEMORY_VENDOR_1=$(/usr/sbin/dmidecode -t memory | grep -i Manufacturer | tail -1 | awk {'print $2'} | sed 's/A1_Manufacturer1//')
+MEMORY_PART_NO_1=$(/usr/sbin/dmidecode -t memory | grep -i 'Part Number' | tail -1 | awk {'print $3'} | sed 's/Array1_PartNumber1//g')
+MEMORY_CLOCK_SPEED_1=$(/usr/sbin/dmidecode -t memory | grep -i 'Configured Clock Speed' | tail -1 | awk {'print $4 $5'})
+MEMORY_MODEL_B0=$(echo "$MEMORY_VENDOR_0 $MEMORY_PART_NO_0" | cut -c1-20 | sed "s:-$::")
+MEMORY_MODEL_B1=$(echo "$MEMORY_VENDOR_1 $MEMORY_PART_NO_1" | cut -c1-20 | sed "s:-$::")
 # Memory Size
-[[ "$(dmidecode -t memory | grep -i 'Size' | head -1 | awk {'print $2'})" = "No" ]] || \
-MEMORY_SIZE_B0=$(expr $(dmidecode -t memory | grep -i 'Size' | head -1 | awk {'print $2'}) / 1024 | xargs printf '%.0f')GB
-[[ "$(dmidecode -t memory | grep -i 'Size' | tail -1 | awk {'print $2'})" = "No" ]] || \
-MEMORY_SIZE_B1=$(expr $(dmidecode -t memory | grep -i 'Size' | tail -1 | awk {'print $2'}) / 1024 | xargs printf '%.0f')GB
+[[ "$(/usr/sbin/dmidecode -t memory | grep -i 'Size' | head -1 | awk {'print $2'})" = "No" ]] || \
+MEMORY_SIZE_B0=$(expr $(/usr/sbin/dmidecode -t memory | grep -i 'Size' | head -1 | awk {'print $2'}) / 1024 | xargs printf '%.0f')GB
+[[ "$(/usr/sbin/dmidecode -t memory | grep -i 'Size' | tail -1 | awk {'print $2'})" = "No" ]] || \
+MEMORY_SIZE_B1=$(expr $(/usr/sbin/dmidecode -t memory | grep -i 'Size' | tail -1 | awk {'print $2'}) / 1024 | xargs printf '%.0f')GB
 # Memory available
 MEMORY_AVAIL=$(free -m | grep Mem: | awk {'print $4'})
 }
@@ -254,7 +284,7 @@ cat <<SUMMARY
 		Current WiFi:		${BOLD} $WIFI_CONNECTION_STATUS ${RST}
 		Battery Level:		${BOLD} ${BATTERY_CAPACITY} ${RST}
 		Current Location:	${BOLD} $GEOLOCATION ${RST}
-		Platform Software:	${BOLD} $PROJECT_VERSION ${RST}($(uname -r)) $UPDATES_AVAILABLE
+		Platform Software:	${BOLD} $PRODUCT_VERSION ${RST}($(uname -r)) $UPDATES_AVAILABLE
 		Model Number:		${BOLD} $PRODUCT_MODEL_NUMBER ${RST}
 		Serial Number:		${BOLD} $PRODUCT_SERIAL_NUMBER ${RST}
 		Install Date:		${BOLD} $INSTALL_DATE ${RST}
@@ -298,9 +328,9 @@ fi
 echo -e "${RST}Disks installed:${BOLD} $DISKS_INSTALLED \t\t\t ${RST}Disk Space Left [System]: ${BOLD}$DISK1_AVAIL_ROOT"
 
 # Disk Model & Size
-echo -e "${RST}Disk 1 Model:${BOLD} $DISK1_MODEL \t\t ${RST}Disk 1 Size:${BOLD} $DISK1_SIZE"
+echo -e "${RST}Disk 1 Model:${BOLD} $DISK1_MODEL ($DISK1_TYPE) \t ${RST}Disk 1 Size:${BOLD} $DISK1_SIZE"
 [[ "$DISKS_INSTALLED" -gt "1" ]] && \
-echo -e "${RST}Disk 2 Model:${BOLD} $DISK2_MODEL \t\t ${RST}Disk 2 Size:${BOLD} $DISK2_SIZE"
+echo -e "${RST}Disk 2 Model:${BOLD} $DISK2_MODEL ($DISK2_TYPE) \t ${RST}Disk 2 Size:${BOLD} $DISK2_SIZE"
 
 # Disk Space left
 if [[ "$DISKS_INSTALLED" -gt "1" ]];
