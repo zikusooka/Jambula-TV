@@ -40,6 +40,7 @@ TVHEADEND_DVBT_TUNER_NODE=/dev/dvb/adapter$DVBT_TUNER_NO
 TVHEADEND_DVBT_CREATE_CHAN_TEMP_FILE=$TMPDIR/create_dvb_channels.sh
 TVHEADEND_DVBT_CREATE_CHAN_TAG_TEMP_FILE=$TMPDIR/create_dvb_channel_tags.sh
 TVHEADEND_PLAY_STREAM_URL="${TVHEADEND_BASE_URL}/play/stream"
+TVHEADEND_IPTV_SOURCE_PLAYLIST=${PLAYLISTS_DIRECTORY}/${PLAYLISTS_IPTV_WORLD_M3U_FILE}
 TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=$TMPDIR/iptv_service_uuid.txt
 TVHEADEND_IPTV_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-info.$(date +%Y%m%d%H%M).log
 TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-failed.$(date +%Y%m%d%H%M).log
@@ -737,6 +738,21 @@ fi
 #  IPTV  #
 ##########
 #
+iptv_quit_if_no_playlist_found () {
+if [[ ! -e "${TVHEADEND_IPTV_SOURCE_PLAYLIST}" ]];
+then
+# Notify that playlist is missing
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$IPTV_MISSING_PLAYLIST_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$IPTV_MISSING_PLAYLIST_MESSAGE" osd
+# Quit
+exit 0
+fi
+}
+
 iptv_get_fresh_playlist () {
 # Notify that playlist is going to be downloaded
 # Source notification strings
@@ -1028,7 +1044,7 @@ $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.e
 do
 # Do not play if we already have a service
 SERVICE_ADDED=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .num_svc')
-SERVICE_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .name' | sed "s:$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g")
+SERVICE_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .name' | sed "s:$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g" | sed "s:^-*::g")
 # Pipe stream variables
 PLAYLIST_URL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_url')
 PLAYLIST_CHANNEL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_sname' | head -1)
@@ -1093,8 +1109,11 @@ export CHANNEL_NUMBER
 }
 
 iptv_map_services_2_channels () {
+# Quit if IPTV playlist file is missing
+iptv_quit_if_no_playlist_found
+
 # Add control file for other apps to know that IPTV map is in progress
-[ -e $TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE ] || touch $TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE
+[[ -e $TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE ]] || touch $TVHEADEND_IPTV_MAP_IN_PROGRESS_TEMP_FILE
 
 # Notify of IPTV network mapping start
 # Source notification strings
@@ -1114,12 +1133,12 @@ zap_dead_channels
 $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.text | contains("'${TVHEADEND_IPTV_NETWORK_NAME}'")).uuid' > $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
 cat $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE | while read SERVICE_UUID
 do
-CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.uuid=="'$SERVICE_UUID'") | .text' | sed "s:$TVHEADEND_IPTV_NETWORK_NAME/$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g"| cut -d / -f2-)
+CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.uuid=="'$SERVICE_UUID'") | .text' | sed "s:$TVHEADEND_IPTV_NETWORK_NAME/$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g" | cut -d / -f2- | sed "s:^-*::g")
 # Extract channel number from iptv group files
 get_channel_number_using_iptv_builder
 #
 CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:upper:] [:lower:]| sed 's: :_:g').png
-CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_IPTV_WORLD_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
+CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${TVHEADEND_IPTV_SOURCE_PLAYLIST} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
 CHANNEL_TAG=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/list?limit=100000 | jq -r '.entries[] | select(.val=="'${CHANNEL_CATEGORY}'") | .key')
 #
 # Check if channel already exists
@@ -1127,7 +1146,7 @@ $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entr
 CHANNEL_EXISTS=$?
 #
 # Don't add if channel already exists
-[ "$CHANNEL_EXISTS" = "0" ] && continue
+[[ "$CHANNEL_EXISTS" = "0" ]] && continue
 
 # Play service URL using ffprobe i.e. Activate it to make it usable as a channel
 SERVICE_URL="$TVHEADEND_PLAY_STREAM_URL/service/$SERVICE_UUID"
@@ -1193,11 +1212,14 @@ print_notification "$IPTV_CHANNEL_MAP_COMPLETED_MESSAGE" osd
 }
 
 iptv_add_channel_tags () {
+# Quit if IPTV playlist file is missing
+iptv_quit_if_no_playlist_found
+
 # Remove previous temp script file for creating IPTV channel tags
 [[ -e $TVHEADEND_IPTV_CREATE_CHAN_TAG_TEMP_FILE ]] && sudo rm -f $TVHEADEND_IPTV_CREATE_CHAN_TAG_TEMP_FILE 
 
 # Cycle through playlist m3u8 file for IPTV channel tag
-cat ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_IPTV_WORLD_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | sort -u | while read IPTV_CHANNEL
+cat ${TVHEADEND_IPTV_SOURCE_PLAYLIST} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | sort -u | while read IPTV_CHANNEL
 do
 TAG_NAME=$IPTV_CHANNEL 
 TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | head -1)
@@ -1251,6 +1273,7 @@ sleep 3
 rm -f $TVHEADEND_IPTV_CREATE_CHAN_TAG_TEMP_FILE
 fi
 }
+
 
 
 ##########
@@ -1532,8 +1555,8 @@ fi
 [[ "$TV_TASK" = "m3u" ]] && \
 	iptv_get_fresh_playlist
 
-# Add IPTV Network if it does not exist (except for m3u, epg, icons)
-[[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]] || \
+# Add IPTV Network if it does not exist (except for m3u, epg, icons,enable)
+[[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" || "$TV_TASK" = "enable" || "$TV_TASK" = "disable" ]] || \
 	configure_iptv_network
 
 # Add Services i.e. Manually play each mux found

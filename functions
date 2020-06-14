@@ -1350,6 +1350,7 @@ DVBT_NETWORK_CREATION_MESSAGE="Setting up a fresh DVB-T network named $DVBT_NETW
 IPTV_FETCH_PLAYLIST_MESSAGE="Downloading the latest IPTV playlist ($PLAYLISTS_IPTV_WORLD_M3U_FILE)"
 IPTV_NETWORK_EXISTS_MESSAGE="IPTV network already exists, proceeding"
 CCTV_NETWORK_EXISTS_MESSAGE="CCTV network already exists, proceeding"
+IPTV_MISSING_PLAYLIST_MESSAGE="The IPTV playlist [$PLAYLISTS_IPTV_WORLD_M3U_FILE] was not found, quitting ..."
 IPTV_NETWORK_SCAN_STARTED_MESSAGE="Scanning of IPTV network started. This will take some time, please be patient ..."
 DVBT_NETWORK_SCAN_STARTED_MESSAGE="Scanning for DVB Terrestrial services in $TV_MARKET TV market area started, please wait ..."
 DVBT_NETWORK_REPAIR_TERMINATED="Warning: DVB-T repair process terminated since TVHeadend is being reset or repaired"
