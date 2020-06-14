@@ -80,7 +80,11 @@ To setup your telegram bot, please read the instructions for <a href="help/teleg
  <input name="notification_email_address" id="notification_email_address" type="text" value="" >
 
 </hr>
- <p><b>IMPORTANT:</b>In order for email to work, you will need a Google services account.  This can be another GMail account different from your primary one.  For this purpose, it is recommended that you <a href="https://accounts.google.com/SignUp?service=mail" target="_blank">create a new account</a></p>
+ <p><b>IMPORTANT:</b>In order for email to work, you will need a Google services account.  This can be another GMail account different from your primary one.  For this purpose, it is recommended that you <a href="https://accounts.google.com/SignUp?service=mail" target="_blank">create a new account</a>
+<br>
+<br>
+Also, please visit <a href="https://myaccount.google.com/lesssecureapps" target="_blank">account settings</a> and enable <i>less secure</i> access, otherwise Google
+will block your system from sending out emails</p>
  <label>GMail Address :</label><br />
  <input name="gmail_address" id="gmail_address" type="text" value="" >
  <label>GMail Password :</label><br />
