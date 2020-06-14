@@ -14660,6 +14660,9 @@ fi
 ;;
 esac
 #
+# Remove double multipliers in Format.php
+sed -i "s:\$multiplier = 1024 \*\*:\$multiplier = 1024 \*:g" $WWW_HTML_DIR/icingaweb2/library/Icinga/Util/Format.php
+#
 # Add icingaweb2 group
 groupadd -r $ICINGA2_WEB_GROUP
 # Make web user a member of the system group "icingaweb2" group
