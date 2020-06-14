@@ -7014,8 +7014,13 @@ chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/IPTV
 iptv_builder_install () {
 # Unpack sources
 rsync -avq --delete-after $PROJECT_GITHUB_DIR/jambula-iptv-builder $SOURCESDIR/
+#
+# Copy jambulatv-search-for-iptv-channels .timer and .service files
+cp -v $PROJECT_GITHUB_DIR/jambula-iptv-builder/systemd/jambulatv-search-for-iptv-channels.{timer,service} $SYSTEMD_UNITS_DIR_USER/
+#
 # Create XMLTV directory in multimedia user's home directory
 [ -d $EPG_XMLTV_GUIDE_DIR ] || mkdir -p $EPG_XMLTV_GUIDE_DIR
+#
 # Change iptv-builder directory permissions to multimedia user
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $EPG_XMLTV_GUIDE_DIR
 }
