@@ -2822,12 +2822,16 @@ userdel -r netdata
 }
 
 uninstall_mpv () {
+if [[ -d $INSTALL_SRC_DIR/mpv ]];
+then
 # change to sources dir
 cd $INSTALL_SRC_DIR/mpv
 # uninstall
-./waf uninstall
+waf uninstall
+cd $INSTALL_SRC_DIR
 # remove sources dir
 rm -rf $INSTALL_SRC_DIR/mpv
+fi
 }
 
 uninstall_nginx () {
@@ -5122,26 +5126,21 @@ make clean
 
 mpv_install () {
 # Copy git sources to install directory
-rsync -avz $PROJECT_GITHUB_DIR/mpv/ $INSTALL_SRC_DIR/mpv/
+rsync -av --delete $PROJECT_GITHUB_DIR/mpv/ $INSTALL_SRC_DIR/mpv/
 # Change to build directory
 cd $INSTALL_SRC_DIR/mpv
-# Bootstrap
-./bootstrap.py
 # Configure
-./waf configure --prefix=/usr --libdir=$LIBDIR \
-	--enable-libsmbclient \
-	--enable-dvdread \
+waf configure --prefix=/usr --libdir=$LIBDIR \
+	--enable-libmpv-shared \
+	--enable-dvbin \
 	--enable-dvdnav \
 	--enable-cdda \
 	--enable-sdl2 \
-	--enable-sndio \
-	--enable-openal \
-	--enable-tv \
-	--enable-dvbin
+	--enable-openal
 # Build
-./waf build -j$SYSTEM_CPU_CORES
+waf build -j$SYSTEM_CPU_CORES
 # Install
-./waf install
+waf install
 }
 
 sox_install () {
