@@ -327,6 +327,9 @@ ALERT_SOUND_FILE=planned_power_outage_tomorrow.mp3
 43)
 ALERT_SOUND_FILE=unplanned_emergency_power_outage_currently.mp3
 ;;
+44)
+ALERT_SOUND_FILE=there_is_a_birthday_today.mp3
+;;
 [Aa-Zz]*)
 if [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]];
 then
