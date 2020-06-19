@@ -3948,6 +3948,17 @@ install -vDm644 misc/bash-completion /usr/share/bash-completion/completions/ninj
 install -vDm644 misc/zsh-completion /usr/share/zsh/site-functions/_ninja
 }
 
+waf_install () {
+# Unpack
+tar jxvf $PROJECT_TARBALLS_DIR/waf-*.tar.bz2 -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v waf-* waf
+# Compile
+cd $INSTALL_SRC_DIR/waf && ./configure --prefix=/usr \
+--libdir=$LIBDIR 
+# Copy waf to binary prefix directory
+cp -v $INSTALL_SRC_DIR/waf/waf $BINARY_PREFIX/
+}
+
 intel_x11_driver_install () {
 # Remove any existing intel drivers
 yum -y remove xorg-x11-drv-intel-*

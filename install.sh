@@ -66,6 +66,9 @@ python3_install
 meson_install
 ninja_install
 
+# Install waf - used to build mpv
+waf_install
+
 # Install current libxml2
 libxml2_install
 
