@@ -3588,7 +3588,7 @@ make_install_jambulatv
 }
 
 libxml2_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/libxml2/ $INSTALL_SRC_DIR/libxml2/
+rsync -av $PROJECT_GITHUB_DIR/libxml2/ $INSTALL_SRC_DIR/libxml2/
 # Compile
 cd $INSTALL_SRC_DIR/libxml2
 ./autogen.sh --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
@@ -3965,7 +3965,7 @@ yum -y remove xorg-x11-drv-intel-*
 # check version
 if [ "$INTEL_X11_DRIVER_VERSION" = "git" ];
 then
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/xf86-video-intel/ $INSTALL_SRC_DIR/xf86-video-intel/
+rsync -av $PROJECT_GITHUB_DIR/xf86-video-intel/ $INSTALL_SRC_DIR/xf86-video-intel/
 cd $INSTALL_SRC_DIR/xf86-video-intel
 ./autogen.sh
 else
@@ -3986,7 +3986,7 @@ yum -y remove xorg-x11-drv-nouveau-*
 # check version
 if [ "$NOUVEAU_X11_DRIVER_VERSION" = "git" ];
 then
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/xf86-video-nouveau/ $INSTALL_SRC_DIR/xf86-video-nouveau/
+rsync -av $PROJECT_GITHUB_DIR/xf86-video-nouveau/ $INSTALL_SRC_DIR/xf86-video-nouveau/
 $INSTALL_SRC_DIR/xf86-video-nouveau/autogen.sh
 else
 # Unpack
@@ -4007,7 +4007,7 @@ yum -y remove xorg-x11-drv-mga-*
 # check version
 if [ "$MGA_X11_DRIVER_VERSION" = "git" ];
 then
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/xf86-video-mga/ $INSTALL_SRC_DIR/xf86-video-mga/
+rsync -av $PROJECT_GITHUB_DIR/xf86-video-mga/ $INSTALL_SRC_DIR/xf86-video-mga/
 $INSTALL_SRC_DIR/xf86-video-mga/autogen.sh
 else
 # Unpack
@@ -4028,7 +4028,7 @@ yum -y remove xorg-x11-drv-openchrome-*
 # check version
 if [ "$OPENCHROME_X11_DRIVER_VERSION" = "git" ];
 then
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/xf86-video-openchrome/ $INSTALL_SRC_DIR/xf86-video-openchrome/
+rsync -av $PROJECT_GITHUB_DIR/xf86-video-openchrome/ $INSTALL_SRC_DIR/xf86-video-openchrome/
 $INSTALL_SRC_DIR/xf86-video-openchrome/autogen.sh
 else
 # Unpack
@@ -4567,7 +4567,7 @@ make_install_jambulatv
 }
 
 libass_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/libass/ $INSTALL_SRC_DIR/libass/
+rsync -av $PROJECT_GITHUB_DIR/libass/ $INSTALL_SRC_DIR/libass/
 cd $INSTALL_SRC_DIR/libass
 ./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
@@ -4576,7 +4576,7 @@ make_install_jambulatv
 
 libvdpau_va_gl_install () {
 # Unpack
-rsync -av --delete-after $PROJECT_GITHUB_DIR/libvdpau-va-gl/ $INSTALL_SRC_DIR/libvdpau-va-gl/
+rsync -av $PROJECT_GITHUB_DIR/libvdpau-va-gl/ $INSTALL_SRC_DIR/libvdpau-va-gl/
 # configure
 cd $INSTALL_SRC_DIR/libvdpau-va-gl
 # Create cmake build directory
@@ -4696,7 +4696,7 @@ make_install_jambulatv
 fdk_aac_install () {
 # Unpack
 # Sync sources to install directory
-rsync -av --delete-after $PROJECT_GITHUB_DIR/fdk-aac/ $INSTALL_SRC_DIR/fdk-aac/
+rsync -av $PROJECT_GITHUB_DIR/fdk-aac/ $INSTALL_SRC_DIR/fdk-aac/
 # Compile
 cd $INSTALL_SRC_DIR/fdk-aac
 ./autogen.sh
@@ -4780,7 +4780,7 @@ rm -rf $TMPDIR/usr
 }
 
 aom_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/aom/ $INSTALL_SRC_DIR/aom/
+rsync -av $PROJECT_GITHUB_DIR/aom/ $INSTALL_SRC_DIR/aom/
 # Build
 mkdir $INSTALL_SRC_DIR/aom/aom_build
 cd $INSTALL_SRC_DIR/aom/aom_build
@@ -4837,7 +4837,7 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
 dav1d_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/dav1d/ $INSTALL_SRC_DIR/dav1d/
+rsync -av $PROJECT_GITHUB_DIR/dav1d/ $INSTALL_SRC_DIR/dav1d/
 # Build
 cd $INSTALL_SRC_DIR/dav1d
 meson --prefix=$PREFIX build --buildtype release
@@ -4870,7 +4870,7 @@ libdvdcss_install () {
 # Remove old libdvdcss
 yum -y remove libdvdcss-*
 # Unpack
-rsync -av --delete-after $PROJECT_GITHUB_DIR/libdvdcss/ $INSTALL_SRC_DIR/libdvdcss/
+rsync -av $PROJECT_GITHUB_DIR/libdvdcss/ $INSTALL_SRC_DIR/libdvdcss/
 # configure
 cd $INSTALL_SRC_DIR/libdvdcss
 autoreconf -i 
@@ -4894,7 +4894,7 @@ make_install_jambulatv
 
 libdvbcsa_install () {
 # Unpack 
-rsync -av --delete-after $PROJECT_GITHUB_DIR/libdvbcsa/ $INSTALL_SRC_DIR/libdvbcsa/
+rsync -av $PROJECT_GITHUB_DIR/libdvbcsa/ $INSTALL_SRC_DIR/libdvbcsa/
 # configure
 cd $INSTALL_SRC_DIR/libdvbcsa 
 ./bootstrap
@@ -6015,7 +6015,7 @@ PYTHON_VERSION_USED=2 && set_python_version
 for KAA_MODULE in kaa-base kaa-imlib2 kaa-display kaa-metadata kaa-webmetadata kaa-epg kaa-popcorn kaa-candy
 do
 # Copy module to install directory
-rsync -avz --delete-after $KAA_MODULES_GIT_DIR/$KAA_MODULE/ $KAA_INSTALL_DIR/$KAA_MODULE/
+rsync -av $KAA_MODULES_GIT_DIR/$KAA_MODULE/ $KAA_INSTALL_DIR/$KAA_MODULE/
 # Install module
 cd $KAA_INSTALL_DIR/$KAA_MODULE
 $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
@@ -6030,10 +6030,10 @@ PYTHON_VERSION_USED=2 && set_python_version
 if [ "$FREEVO_VERSION" = "git" ];
 then
 # Copy freevo1-git files to install directory
-rsync -avz --delete-after $FREEVO1_GIT_DIR/ $FREEVO_INSTALL_DIR/
+rsync -av $FREEVO1_GIT_DIR/ $FREEVO_INSTALL_DIR/
 else
 # Copy freevo1-svn files to install directory
-rsync -avz --delete-after $FREEVO1_SVN_DIR/ $FREEVO_INSTALL_DIR/
+rsync -av $FREEVO1_SVN_DIR/ $FREEVO_INSTALL_DIR/
 fi
 # Install module
 cd $FREEVO_INSTALL_DIR
@@ -6260,7 +6260,7 @@ make_install_jambulatv -j$SYSTEM_CPU_CORES
 }
 
 shairplay_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/shairplay/ $INSTALL_SRC_DIR/shairplay/
+rsync -av $PROJECT_GITHUB_DIR/shairplay/ $INSTALL_SRC_DIR/shairplay/
 cd $INSTALL_SRC_DIR/shairplay
 ./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
@@ -6348,7 +6348,7 @@ make_install_jambulatv
 }
 
 kodi17_pvr_hts_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts-$KODI17_CODENAME/ $INSTALL_SRC_DIR/kodi-pvr.hts/
+rsync -av $PROJECT_GITHUB_DIR/kodi-addons/pvr.hts-$KODI17_CODENAME/ $INSTALL_SRC_DIR/kodi-pvr.hts/
 cd $INSTALL_SRC_DIR/kodi-pvr.hts
 # CMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
@@ -6356,7 +6356,7 @@ make_install_jambulatv
 }
 
 kodi_pvr_iptvsimple_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.iptvsimple-$KODI17_CODENAME/ $INSTALL_SRC_DIR/kodi-pvr.iptvsimple/
+rsync -av $PROJECT_GITHUB_DIR/kodi-addons/pvr.iptvsimple-$KODI17_CODENAME/ $INSTALL_SRC_DIR/kodi-pvr.iptvsimple/
 cd $INSTALL_SRC_DIR/kodi-pvr.iptvsimple
 # CMake
 cmake -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR/kodi .
@@ -6365,7 +6365,7 @@ make_install_jambulatv
 
 kodi_pvr_rtl_radiofm_install () {
 # Unpack pvr.rtl.radiofm sources
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/pvr.rtl.radiofm/ $INSTALL_SRC_DIR/pvr.rtl.radiofm/
+rsync -av $PROJECT_GITHUB_DIR/kodi-addons/pvr.rtl.radiofm/ $INSTALL_SRC_DIR/pvr.rtl.radiofm/
 # configure
 cd $INSTALL_SRC_DIR/pvr.rtl.radiofm
 # CMake
@@ -6569,7 +6569,7 @@ make_install_jambulatv
 kodi18_script_module_inputstreamhelper_install () {
 PYTHON_VERSION_USED=2 && set_python_version
 #
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/kodi-addons/script.module.inputstreamhelper/ $INSTALL_SRC_DIR/kodi-script.module.inputstreamhelper/
+rsync -av $PROJECT_GITHUB_DIR/kodi-addons/script.module.inputstreamhelper/ $INSTALL_SRC_DIR/kodi-script.module.inputstreamhelper/
 # Install
 cd $INSTALL_SRC_DIR/kodi-script.module.inputstreamhelper
 $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
@@ -7023,7 +7023,7 @@ chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/IPTV
 
 iptv_builder_install () {
 # Unpack sources
-rsync -avq --delete-after $PROJECT_GITHUB_DIR/jambula-iptv-builder $SOURCESDIR/
+rsync -av $PROJECT_GITHUB_DIR/jambula-iptv-builder $SOURCESDIR/
 #
 # Copy jambulatv-search-for-iptv-channels .timer and .service files
 cp -v $PROJECT_GITHUB_DIR/jambula-iptv-builder/systemd/jambulatv-search-for-iptv-channels.{timer,service} $SYSTEMD_UNITS_DIR_USER/
@@ -7308,7 +7308,7 @@ rsync -av $PROJECT_IMAGES_DIR/kodi/backgrounds/skin.$KODI_PREFERRED_SKIN/ \
 
 titan|titan.mod.beta.leia)
 # Copy preferred skin files to addons directory
-rsync -av --delete-after $PROJECT_GITHUB_DIR/kodi-addons/skin.$KODI_PREFERRED_SKIN $KODI_USER_ADDONS/
+rsync -av $PROJECT_GITHUB_DIR/kodi-addons/skin.$KODI_PREFERRED_SKIN $KODI_USER_ADDONS/
 
 # Set collection of skin addon packages
 if [[ "$PREFERRED_KODI_CODENAME" = "Krypton" ]];
@@ -7626,7 +7626,7 @@ ET
 
 python_xbmc_install () {
 PYTHON_VERSION_USED=2 && set_python_version
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/python-xbmc/ $INSTALL_SRC_DIR/python-xbmc/
+rsync -av $PROJECT_GITHUB_DIR/python-xbmc/ $INSTALL_SRC_DIR/python-xbmc/
 cd $INSTALL_SRC_DIR/python-xbmc
 $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
@@ -7667,7 +7667,7 @@ cd $INSTALL_SRC_DIR/singledispatch
 $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 
 # Copy sources 
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/livestreamer/ $INSTALL_SRC_DIR/livestreamer/
+rsync -av $PROJECT_GITHUB_DIR/livestreamer/ $INSTALL_SRC_DIR/livestreamer/
 cd $INSTALL_SRC_DIR/livestreamer
 #NOTE: Install after FlexGet which pulls latest dependencies like requests
 $PYTHON_INSTALL_CMD
@@ -7763,7 +7763,7 @@ load-module module-loopback source=$TV_AUDIO_SOURCE latency_msec=26" >> $PULSE_D
 }
 
 v4l_utils_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/v4l-utils/ $INSTALL_SRC_DIR/v4l-utils/
+rsync -av $PROJECT_GITHUB_DIR/v4l-utils/ $INSTALL_SRC_DIR/v4l-utils/
 # Compile
 cd $INSTALL_SRC_DIR/v4l-utils
 ./bootstrap.sh
@@ -8486,7 +8486,7 @@ EOF
 
 jp2a_install () {
 # Install jp2a - A simple JPEG to ASCII converter.
-rsync -av --delete-after $PROJECT_GITHUB_DIR/jp2a/ $INSTALL_SRC_DIR/jp2a/
+rsync -av $PROJECT_GITHUB_DIR/jp2a/ $INSTALL_SRC_DIR/jp2a/
 cd $INSTALL_SRC_DIR/jp2a
 autoreconf -vi
 ./configure --prefix=$PREFIX
@@ -8560,7 +8560,7 @@ EOF
 
 sshuttle_install () {
 PYTHON_VERSION_USED=3 && set_python_version
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/sshuttle/ $INSTALL_SRC_DIR/sshuttle/
+rsync -av $PROJECT_GITHUB_DIR/sshuttle/ $INSTALL_SRC_DIR/sshuttle/
 cd $INSTALL_SRC_DIR/sshuttle
 $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 # Create symbolic link in /usr/bin
@@ -9079,7 +9079,7 @@ pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJ
 #
 # Install python modules
 echo "Installing FlexGet ..."
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/Flexget-current/ $INSTALL_SRC_DIR/Flexget/
+rsync -av $PROJECT_GITHUB_DIR/Flexget-current/ $INSTALL_SRC_DIR/Flexget/
 # Force our requirements
 cp -v $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt \
 	$INSTALL_SRC_DIR/Flexget/requirements.txt
@@ -9115,7 +9115,7 @@ PYTHON_VERSION_USED=2 && set_python_version
 rm -rf $PYTHON_SITEDIR/FlexGet* 
 # Install python modules
 echo "Installing FlexGet ..."
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/Flexget/ $INSTALL_SRC_DIR/Flexget/
+rsync -av $PROJECT_GITHUB_DIR/Flexget/ $INSTALL_SRC_DIR/Flexget/
 # Apply our patches - include plugin
 patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT_PATCHES_DIR/flexget.plugin.include.patch
 # Install
@@ -9278,7 +9278,7 @@ make_install_jambulatv
 }
 
 libtorrent_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/libtorrent/ $INSTALL_SRC_DIR/libtorrent/
+rsync -av $PROJECT_GITHUB_DIR/libtorrent/ $INSTALL_SRC_DIR/libtorrent/
 cd $INSTALL_SRC_DIR/libtorrent
 ./autogen.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
@@ -9288,7 +9288,7 @@ make clean
 }
 
 rtorrent_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/rtorrent/ $INSTALL_SRC_DIR/rtorrent/
+rsync -av $PROJECT_GITHUB_DIR/rtorrent/ $INSTALL_SRC_DIR/rtorrent/
 cd $INSTALL_SRC_DIR/rtorrent
 # Patch for color
 # patch -p1 < $PROJECT_PATCHES_DIR/rtorrent_color.patch
@@ -9473,7 +9473,7 @@ yowsup3_python2_install () {
 PYTHON_VERSION_USED=2 && set_python_version
 #
 # Copy yowsup sources to install directory
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup/ $INSTALL_SRC_DIR/yowsup/
+rsync -av $PROJECT_GITHUB_DIR/yowsup/ $INSTALL_SRC_DIR/yowsup/
 #
 # Patch iq_keys_get_result.py
 #patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/layers/axolotl/protocolentities/iq_keys_get_result.py < $PROJECT_PATCHES_DIR/yowsup.iq_keys_get_result.patch
@@ -9506,7 +9506,7 @@ PYTHON_VERSION_USED=3 && set_python_version
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/yowsup-requirements.txt
 #
 # Copy yowsup sources to install directory
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/yowsup/ $INSTALL_SRC_DIR/yowsup/
+rsync -av $PROJECT_GITHUB_DIR/yowsup/ $INSTALL_SRC_DIR/yowsup/
 #
 # Patch env_android
 patch -p1 $INSTALL_SRC_DIR/yowsup/yowsup/env/env_android.py < $PROJECT_PATCHES_DIR/yowsup.env.android.patch
@@ -9549,7 +9549,7 @@ mosquitto_install () {
 rpm -q mosquitto > /dev/null 2>&1 && rpm -e --nodeps mosquitto
 #
 # sync mosquitto sources
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/mosquitto/ $INSTALL_SRC_DIR/mosquitto/
+rsync -av $PROJECT_GITHUB_DIR/mosquitto/ $INSTALL_SRC_DIR/mosquitto/
 # Patch config.mk: change bin,lib,include locations
 cp -v $INSTALL_SRC_DIR/mosquitto/config.mk $INSTALL_SRC_DIR/mosquitto/config.mk.orig
 cat $INSTALL_SRC_DIR/mosquitto/config.mk.orig | \
@@ -9834,7 +9834,7 @@ systemctl start nginx.service
 }
 
 nginx_fcgiwrap_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/fcgiwrap/ $INSTALL_SRC_DIR/fcgiwrap/
+rsync -av $PROJECT_GITHUB_DIR/fcgiwrap/ $INSTALL_SRC_DIR/fcgiwrap/
 cd $INSTALL_SRC_DIR/fcgiwrap
 autoreconf -i
 ./configure --prefix=/usr --libdir=$LIBDIR 
@@ -9860,7 +9860,7 @@ systemctl start spawn-fcgi.service
 
 rtgui_configure () {
 # Unpack rtgui - Graphical frontend for rtorrent
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/rtgui/ $WWW_HTML_DIR/rtgui
+rsync -av $PROJECT_GITHUB_DIR/rtgui/ $WWW_HTML_DIR/rtgui
 # Get WWW User and Group
 set_www_user_group
 # Create config.php file using template and copy to WWW location
@@ -10071,7 +10071,7 @@ EOF
 
 coova_chilli_install () {
 # Unpack coova
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/coova-chilli/ $INSTALL_SRC_DIR/coova-chilli/
+rsync -av $PROJECT_GITHUB_DIR/coova-chilli/ $INSTALL_SRC_DIR/coova-chilli/
 #
 # BUG?: Patch Makefile to not treat warnins as errors
 patch -p1 $INSTALL_SRC_DIR/coova-chilli/src/Makefile.am < $PROJECT_PATCHES_DIR/coova_src_Makefile.am.patch
@@ -10278,7 +10278,7 @@ EOF
 
 nodogsplash_install () {
 # Sync nodogsplash sources to install directory
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/nodogsplash/ $INSTALL_SRC_DIR/nodogsplash/
+rsync -av $PROJECT_GITHUB_DIR/nodogsplash/ $INSTALL_SRC_DIR/nodogsplash/
 #
 # Patch redir.c to allow general logging of User-Agent
 patch -p1 $INSTALL_SRC_DIR/nodogsplash/src/fw_iptables.c < $PROJECT_PATCHES_DIR/nodogsplash_fw_iptables.c.patch
@@ -10384,7 +10384,7 @@ chmod 755 $BINARY_PREFIX/jambulatv-dns-status-triggers
 
 hostapd_install () {
 # sync hostapd sources excluding wpa_supplicant
-rsync -avz --exclude=wpa_supplicant --delete-after $PROJECT_GITHUB_DIR/hostap/ $INSTALL_SRC_DIR/hostap/
+rsync -avz --exclude=wpa_supplicant $PROJECT_GITHUB_DIR/hostap/ $INSTALL_SRC_DIR/hostap/
 # Patch Makefile: change bin,lib,include locations
 cp -v $INSTALL_SRC_DIR/hostap/hostapd/Makefile $INSTALL_SRC_DIR/hostap/hostapd/Makefile.orig
 cat $INSTALL_SRC_DIR/hostap/hostapd/Makefile.orig | \
@@ -10476,7 +10476,7 @@ EOF
 
 wpa_supplicant_install () {
 # Sync wpa_supplicant sources excluding hostapd
-rsync -avz --exclude=hostapd --delete-after $PROJECT_GITHUB_DIR/hostap/ $INSTALL_SRC_DIR/hostap/
+rsync -avz --exclude=hostapd $PROJECT_GITHUB_DIR/hostap/ $INSTALL_SRC_DIR/hostap/
 #
 # Remove existing wpa_supplicant rpm package
 rpm -q wpa_supplicant > /dev/null 2>&1 && rpm --quiet -e --nodeps wpa_supplicant > /dev/null 2>&1
@@ -10596,7 +10596,7 @@ systemctl restart dbus.service
 
 youtube_dl_install () {
 # Copy sources to install directory
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/youtube-dl/ $INSTALL_SRC_DIR/youtube-dl/
+rsync -av $PROJECT_GITHUB_DIR/youtube-dl/ $INSTALL_SRC_DIR/youtube-dl/
 cd $INSTALL_SRC_DIR/youtube-dl
 #
 # Compile youtube-dl with lazy-extractors
@@ -10636,7 +10636,7 @@ streamlink_deps_install
 #
 PYTHON_VERSION_USED=3 && set_python_version
 # Copy sources to install directory
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/streamlink/ $INSTALL_SRC_DIR/streamlink/
+rsync -av $PROJECT_GITHUB_DIR/streamlink/ $INSTALL_SRC_DIR/streamlink/
 # Install
 cd $INSTALL_SRC_DIR/streamlink
 $PYTHON_INSTALL_CMD --prefix=$PREFIX --install-lib=$PYTHON_SITEDIR
@@ -10795,7 +10795,7 @@ snapcast_install () {
 # Set to working version - recent releases do not work with gcc 4.9
 SNAPCAST_TAG="v0.15.0"
 # Copy sources to install directory
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/snapcast/ $INSTALL_SRC_DIR/snapcast/
+rsync -av $PROJECT_GITHUB_DIR/snapcast/ $INSTALL_SRC_DIR/snapcast/
 #
 # Change to install sources directory
 cd $INSTALL_SRC_DIR/snapcast
@@ -10975,7 +10975,7 @@ pykka_install
 mopidy_install () {
 PYTHON_VERSION_USED=2 && set_python_version
 # Copy sources to install directory
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/mopidy/ $INSTALL_SRC_DIR/mopidy/
+rsync -av $PROJECT_GITHUB_DIR/mopidy/ $INSTALL_SRC_DIR/mopidy/
 # Install
 cd $INSTALL_SRC_DIR/mopidy
 $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
@@ -11123,7 +11123,7 @@ EOF
 
 xupnpd_install () {
 # Install xupnpd server
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/xupnpd/ $INSTALL_SRC_DIR/xupnpd/
+rsync -av $PROJECT_GITHUB_DIR/xupnpd/ $INSTALL_SRC_DIR/xupnpd/
 cd $INSTALL_SRC_DIR/xupnpd/src
 # Log to build file
 make_build_log
@@ -11218,7 +11218,7 @@ done
 }
 
 rtmpdump_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/rtmpdump/ $INSTALL_SRC_DIR/rtmpdump/
+rsync -av $PROJECT_GITHUB_DIR/rtmpdump/ $INSTALL_SRC_DIR/rtmpdump/
 cd $INSTALL_SRC_DIR/rtmpdump
 # Change prefix in Makefile
 sed -i "s:prefix=/usr/local:prefix=/usr:g" Makefile
@@ -11231,7 +11231,7 @@ make install
 
 rtl_sdr_install () {
 # Unpack
-rsync -av --delete-after $PROJECT_GITHUB_DIR/rtl-sdr/ $INSTALL_SRC_DIR/rtl-sdr/
+rsync -av $PROJECT_GITHUB_DIR/rtl-sdr/ $INSTALL_SRC_DIR/rtl-sdr/
 # configure
 cd $INSTALL_SRC_DIR/rtl-sdr
 # Create cmake build directory
@@ -11405,7 +11405,7 @@ done
 
 trackerjacker_install () {
 PYTHON_VERSION_USED=3 && set_python_version
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/trackerjacker/ $INSTALL_SRC_DIR/trackerjacker/
+rsync -av $PROJECT_GITHUB_DIR/trackerjacker/ $INSTALL_SRC_DIR/trackerjacker/
 
 # Install dependencies for trackerjacker using pips specified in requirements
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/trackerjacker-requirements.txt
@@ -11477,7 +11477,7 @@ chmod 755 $BINARY_PREFIX/adb-sync
 
 libmaxminddb_install () {
 # Unpack 
-rsync -av --delete-after $PROJECT_GITHUB_DIR/libmaxminddb/ $INSTALL_SRC_DIR/libmaxminddb/
+rsync -av $PROJECT_GITHUB_DIR/libmaxminddb/ $INSTALL_SRC_DIR/libmaxminddb/
 # configure
 cd $INSTALL_SRC_DIR/libmaxminddb 
 ./bootstrap
@@ -11561,7 +11561,7 @@ gplaycli_deps_install
 #
 PYTHON_VERSION_USED=3 && set_python_version
 # Copy sources to install directory
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/gplaycli/ $INSTALL_SRC_DIR/gplaycli/
+rsync -av $PROJECT_GITHUB_DIR/gplaycli/ $INSTALL_SRC_DIR/gplaycli/
 # Install
 cd $INSTALL_SRC_DIR/gplaycli
 $PYTHON_INSTALL_CMD --prefix=$PREFIX --install-lib=$PYTHON_SITEDIR
@@ -11583,7 +11583,7 @@ gplaycli_configure () {
 axmlparser_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 #
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/axmlparser/ $INSTALL_SRC_DIR/axmlparser/
+rsync -av $PROJECT_GITHUB_DIR/axmlparser/ $INSTALL_SRC_DIR/axmlparser/
 # Install
 cd $INSTALL_SRC_DIR/axmlparser
 $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
@@ -11605,7 +11605,7 @@ fi
 series_cli_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 #
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/series-cli/ $INSTALL_SRC_DIR/series-cli/
+rsync -av $PROJECT_GITHUB_DIR/series-cli/ $INSTALL_SRC_DIR/series-cli/
 # Install
 cd $INSTALL_SRC_DIR/series-cli
 $PYTHON_INSTALL_CMD --prefix=$PREFIX --install-lib=$PYTHON_SITEDIR
@@ -11653,7 +11653,7 @@ make_install_jambulatv
 
 email_smtp_install () {
 # Install Email - A standalone SMTP-Like client (Required)
-rsync -av --delete-after $PROJECT_GITHUB_DIR/eMail/ $INSTALL_SRC_DIR/eMail/
+rsync -av $PROJECT_GITHUB_DIR/eMail/ $INSTALL_SRC_DIR/eMail/
 cd $INSTALL_SRC_DIR/eMail
 ./configure --prefix=$PREFIX --with-ssl --mandir $MANDIR1 --sysconfdir $CONFDIR
 make_install_jambulatv
@@ -11698,7 +11698,7 @@ EOF
 }
 
 freeswitch_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/freeswitch/ $INSTALL_SRC_DIR/freeswitch/
+rsync -av $PROJECT_GITHUB_DIR/freeswitch/ $INSTALL_SRC_DIR/freeswitch/
 cd $INSTALL_SRC_DIR/freeswitch
 ./bootstrap.sh
 ./configure --prefix=$PREFIX --libdir=$LIBDIR/freeswitch \
@@ -12270,7 +12270,7 @@ done
 # WebRTC
 # ------
 # Copy jssip files for WebRTC
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/jssip/ $WWW_HTML_DIR/jssip/
+rsync -av $PROJECT_GITHUB_DIR/jssip/ $WWW_HTML_DIR/jssip/
 # Change permissions of sipml5 to www owner
 chown -R $WWW_USER:$WWW_GROUP $WWW_HTML_DIR/jssip
 #
@@ -12754,7 +12754,7 @@ $CEPSTRAL_PREFIX/bin/swift --reg-voice --customer-name "$CEPSTRAL_CUSTOMER_NAME"
 
 app_swift_install () {
 # Unpack
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/app_swift/ $INSTALL_SRC_DIR/app_swift/
+rsync -av $PROJECT_GITHUB_DIR/app_swift/ $INSTALL_SRC_DIR/app_swift/
 # Install 
 cd $INSTALL_SRC_DIR/app_swift
 ./configure
@@ -13073,7 +13073,7 @@ PYTHON_VERSION_USED=3 && set_python_version
 homeassistant_pyozw_install
 
 # Copy homeassistant sources to install directory
-rsync -av --delete-after $PROJECT_GITHUB_DIR/home-assistant/ $INSTALL_SRC_DIR/home-assistant/
+rsync -av $PROJECT_GITHUB_DIR/home-assistant/ $INSTALL_SRC_DIR/home-assistant/
 
 # Install PyNaCl==1.3.0 using installed system sodium library 
 # i.e. libsodium
@@ -13143,7 +13143,7 @@ PYTHON_VERSION_USED=3 && set_python_version
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/home-assistant-cli-requirements.txt
 
 # Sync sources to install directory
-rsync -av --delete-after $PROJECT_GITHUB_DIR/home-assistant-cli/ $INSTALL_SRC_DIR/home-assistant-cli/
+rsync -av $PROJECT_GITHUB_DIR/home-assistant-cli/ $INSTALL_SRC_DIR/home-assistant-cli/
 
 # Force our requirements
 cp -v $PROJECT_PIPS_REQUIRES_DIR/home-assistant-cli-requirements.txt $INSTALL_SRC_DIR/home-assistant-cli/requirements.txt
@@ -13224,7 +13224,7 @@ fi
 }
 
 libplist_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/libplist/ $INSTALL_SRC_DIR/libplist/
+rsync -av $PROJECT_GITHUB_DIR/libplist/ $INSTALL_SRC_DIR/libplist/
 # Compile
 cd $INSTALL_SRC_DIR/libplist
 ./autogen.sh --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
@@ -13233,7 +13233,7 @@ make_install_jambulatv
 }
 
 libusbmuxd_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/libusbmuxd/ $INSTALL_SRC_DIR/libusbmuxd/
+rsync -av $PROJECT_GITHUB_DIR/libusbmuxd/ $INSTALL_SRC_DIR/libusbmuxd/
 # Compile
 cd $INSTALL_SRC_DIR/libusbmuxd
 ./autogen.sh --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
@@ -13242,7 +13242,7 @@ make_install_jambulatv
 }
 
 libimobiledevice_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/libimobiledevice/ $INSTALL_SRC_DIR/libimobiledevice/
+rsync -av $PROJECT_GITHUB_DIR/libimobiledevice/ $INSTALL_SRC_DIR/libimobiledevice/
 # Compile
 cd $INSTALL_SRC_DIR/libimobiledevice
 ./autogen.sh --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
@@ -13251,7 +13251,7 @@ make_install_jambulatv
 }
 
 usbmuxd_install () {
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/usbmuxd/ $INSTALL_SRC_DIR/usbmuxd/
+rsync -av $PROJECT_GITHUB_DIR/usbmuxd/ $INSTALL_SRC_DIR/usbmuxd/
 # Compile
 cd $INSTALL_SRC_DIR/usbmuxd
 ./autogen.sh --prefix=$PREFIX --sysconfdir=$CONFDIR --libdir=$LIBDIR --localstatedir=$STATEDIR 
@@ -13578,7 +13578,7 @@ make_install_jambulatv
 }
 
 zoneminder_128_install () {
-rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
+rsync -av $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
 # Patches
 # Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
 sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > $TMPDIR/zmdc.pl.patch
@@ -13606,7 +13606,7 @@ make_install_jambulatv
 
 zoneminder_130_install () {
 cd /
-rsync -av --delete-after $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
+rsync -av $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
 # Patches
 # Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
 sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > $TMPDIR/zmdc.pl.patch
@@ -14911,7 +14911,7 @@ htpasswd -b -c $CONFDIR/icinga/htpasswd.users icingaadmin $ICINGA_ADMIN_PASS
 
 netdata_install () {
 # Copy sources to install directory
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/netdata/ $INSTALL_SRC_DIR/netdata/
+rsync -av $PROJECT_GITHUB_DIR/netdata/ $INSTALL_SRC_DIR/netdata/
 # Install
 cd $INSTALL_SRC_DIR/netdata && \
 ./netdata-installer.sh --dont-start-it --dont-wait
@@ -14951,10 +14951,10 @@ PYTHON_VERSION_USED=2 && set_python_version
 # Copy sources depending on python version
 # Python 2
 [[ "$PYTHON_MAJOR_VERSION_NUMBER" = "2" ]] && \
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/gdata-python2/ $INSTALL_SRC_DIR/gdata-python/
+rsync -av $PROJECT_GITHUB_DIR/gdata-python2/ $INSTALL_SRC_DIR/gdata-python/
 # Python 3
 [[ "$PYTHON_MAJOR_VERSION_NUMBER" = "3" ]] && \
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/gdata-python3/ $INSTALL_SRC_DIR/gdata-python/
+rsync -av $PROJECT_GITHUB_DIR/gdata-python3/ $INSTALL_SRC_DIR/gdata-python/
 #
 cd $INSTALL_SRC_DIR/gdata-python
 $PYTHON_INSTALL_CMD
