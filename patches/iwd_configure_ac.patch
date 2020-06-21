@@ -1,0 +1,10 @@
+--- configure.ac	2020-06-19 23:31:19.545246381 +0300
++++ configure.ac	2020-06-19 23:32:46.585341261 +0300
+@@ -130,6 +130,7 @@
+ AC_CHECK_FUNCS(explicit_bzero)
+ AC_CHECK_FUNCS(rawmemchr)
+ 
++AC_CHECK_DECLS([RTA_PREF], [], [], [[#include <linux/rtnetlink.h>]])
+ AC_CHECK_HEADERS(linux/types.h linux/if_alg.h)
+ 
+ # In maintainer mode: try to build with application backtrace and disable PIE.

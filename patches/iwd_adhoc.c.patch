@@ -1,0 +1,11 @@
+--- src/adhoc.c	2020-06-19 15:34:10.446496179 +0300
++++ src/adhoc.c	2020-06-20 19:12:58.734300631 +0300
+@@ -23,7 +23,7 @@
+ #ifdef HAVE_CONFIG_H
+ #include <config.h>
+ #endif
+-
++#include <sys/socket.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/if.h>
+ 

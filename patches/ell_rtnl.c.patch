@@ -1,0 +1,24 @@
+--- ell/rtnl.c	2020-06-19 15:39:19.880627720 +0300
++++ ell/rtnl.c	2020-06-19 21:40:35.876346596 +0300
+@@ -25,8 +25,9 @@
+ #endif
+ 
+ #define _GNU_SOURCE
+-#include <linux/if.h>
++#include <sys/types.h>
+ #include <sys/socket.h>
++#include <linux/if.h>
+ #include <arpa/inet.h>
+ 
+ #include "util.h"
+@@ -35,6 +36,10 @@
+ #include "rtnl.h"
+ #include "private.h"
+ 
++#if defined HAVE_DECL_RTA_PREF && !HAVE_DECL_RTA_PREF
++#define RTA_PREF 20
++#endif
++
+ static size_t rta_add_u8(void *rta_buf, unsigned short type, uint8_t value)
+ {
+ 	struct rtattr *rta = rta_buf;

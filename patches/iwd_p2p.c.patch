@@ -1,0 +1,10 @@
+--- src/p2p.c	2020-06-19 15:34:10.461495992 +0300
++++ src/p2p.c	2020-06-20 19:24:52.517479865 +0300
+@@ -36,6 +36,7 @@
+ #include <ell/ell.h>
+ 
+ #include "linux/nl80211.h"
++#include "src/missing.h"
+ 
+ #include "src/iwd.h"
+ #include "src/wiphy.h"

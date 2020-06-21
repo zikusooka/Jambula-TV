@@ -1,0 +1,11 @@
+--- configure.ac	2020-06-19 15:39:19.872627820 +0300
++++ configure.ac	2020-06-19 21:36:34.373534113 +0300
+@@ -112,7 +112,7 @@
+ 			AC_MSG_ERROR(dynamic linking loader is required))
+ 
+ AC_CHECK_HEADERS(linux/types.h linux/if_alg.h)
+-
++AC_CHECK_DECLS([RTA_PREF], [], [], [[#include <linux/rtnetlink.h>]])
+ AC_ARG_ENABLE(glib, AC_HELP_STRING([--enable-glib],
+ 				[enable ell/glib main loop example]),
+ 					[enable_glib=${enableval}])

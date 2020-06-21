@@ -10504,16 +10504,57 @@ wpa_supplicant_configure () {
 }
 
 iwd_install () {
-# Copy sources to install directory
-# iwd
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/iwd/ $INSTALL_SRC_DIR/iwd/
-# ell
-rsync -avz --delete-after $PROJECT_GITHUB_DIR/ell/ $INSTALL_SRC_DIR/ell/
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/iwd
+# Get latest iwd tag
+IWD_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
 #
-# Apply temporary patches to fix make failures
+# Unpack desired git branch/tag
+case $IWD_TAG in
+master)
+# master branch i.e. HEAD
+git archive --format tar.gz --prefix=iwd/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+;;
+*)
+# Check to see if desired branch/tag exists
+git tag -l | grep -x $IWD_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+if [[ "$TAG_EXISTS" = "0" ]];
+then
+git archive --format tar.gz --prefix=iwd/ $IWD_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=iwd/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Display iwd's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+IWD Version
+===========
+% The iwd branch you specified ($IWD_TAG), does not exist, so I used master/ HEAD instead
+
+#
+EOF
+fi
+;;
+esac
+#
+# Add ell sources
+rsync -avz --delete $PROJECT_GITHUB_DIR/ell/ $INSTALL_SRC_DIR/ell/
+#
+# Apply the following patches, otherwise compile & make ell fails
+patch -p1 $INSTALL_SRC_DIR/ell/ell/genl.c < $PROJECT_PATCHES_DIR/ell_genl.c.patch
+patch -p1 $INSTALL_SRC_DIR/ell/ell/rtnl.c < $PROJECT_PATCHES_DIR/ell_rtnl.c.patch
+patch -p1 $INSTALL_SRC_DIR/ell/configure.ac < $PROJECT_PATCHES_DIR/ell_configure_ac.patch
+#
+# Apply the following patches, otherwise compile & make iwd fails
 patch -p1 $INSTALL_SRC_DIR/iwd/src/knownnetworks.c < $PROJECT_PATCHES_DIR/iwd_knownnetworks.c.patch
 patch -p1 $INSTALL_SRC_DIR/iwd/src/hotspot.c < $PROJECT_PATCHES_DIR/iwd_hotspot.c.patch
 #
+patch -p1 $INSTALL_SRC_DIR/iwd/src/adhoc.c < $PROJECT_PATCHES_DIR/iwd_adhoc.c.patch
+patch -p1 $INSTALL_SRC_DIR/iwd/src/p2p.c < $PROJECT_PATCHES_DIR/iwd_p2p.c.patch
+patch -p1 $INSTALL_SRC_DIR/iwd/configure.ac < $PROJECT_PATCHES_DIR/iwd_configure_ac.patch
+#
+# Switch to iwd sources
 cd $INSTALL_SRC_DIR/iwd
 # Bootstrap
 ./bootstrap --prefix=$PREFIX --libdir=$LIBDIR
