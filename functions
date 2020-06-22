@@ -14575,18 +14575,6 @@ make_install_jambulatv
 icinga2_ido_mysql () {
 if [[ ! -e $ICINGA2_FEATURES_AVAIL_DIR/ido-mysql.conf ]];
 then
-# Enable and start mysql service if it is not running
-systemctl -q is-active mysqld.service || systemctl enable mysqld.service
-systemctl -q is-active mysqld.service || systemctl start mysqld.service
-# Change MySQL password if default is empty
-mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
-# Create icinga database
-mysqladmin -p$MYSQL_ROOT_PASSWORD create $ICINGA_DB_NAME
-# Set privileges on icinga database
-echo "GRANT ALL PRIVILEGES ON $ICINGA_DB_NAME.* to '$ICINGA_DB_USER'@'localhost' IDENTIFIED by '$ICINGA_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
-# Populate icinga database tables using ido MySQL schema
-mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $DATAROOTDIR/icinga2-ido-mysql/schema/mysql.sql
-#
 # Add MySQL DB login credentials to ido-mysql.conf
 cat > $ICINGA2_FEATURES_AVAIL_DIR/ido-mysql.conf << EOF
 /**
@@ -14604,14 +14592,29 @@ object IdoMysqlConnection "ido-mysql" {
 }
 EOF
 fi
-
+#
 # Enable icinga2 ido-mysql
 icinga2 feature enable ido-mysql
 }
 
 icinga2_configure () {
+# Create and setup icinga2 MySQL database
+# ---------------------------------------
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+# Create icinga database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $ICINGA_DB_NAME
+# Set privileges on icinga database
+echo "GRANT ALL PRIVILEGES ON $ICINGA_DB_NAME.* to '$ICINGA_DB_USER'@'localhost' IDENTIFIED by '$ICINGA_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+# Populate icinga database tables using ido MySQL schema
+mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $DATAROOTDIR/icinga2-ido-mysql/schema/mysql.sql
+#
 # Setup ido-MySQL
 icinga2_ido_mysql
+#
 # Enable command, livestatus, compatlog
 icinga2 feature enable command livestatus compatlog
 #
