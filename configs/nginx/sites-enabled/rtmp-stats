@@ -1,0 +1,10 @@
+server {
+    listen      8563;
+
+    location / {
+    rtmp_stat all;
+    rtmp_stat_stylesheet stat.xsl;
+
+    root /usr/share/JambulaTV/html/rtmp;
+    }
+}

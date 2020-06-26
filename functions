@@ -9691,7 +9691,10 @@ done
 # Unpack nginx
 tar zxvf $PROJECT_TARBALLS_DIR/nginx-*.tar.gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR 
-mv -v nginx-* nginx 
+mv -v nginx-* nginx
+# Copy rtmp-module sources to install directory
+rsync -av $PROJECT_GITHUB_DIR/nginx-rtmp-module/ nginx-rtmp-module/
+#
 cd $INSTALL_SRC_DIR/nginx 
 ./configure --prefix=$PROJECT_SYSTEM_SHARE_DIR --sbin-path=$PREFIX/sbin/nginx \
 	--conf-path=$NGINX_CONF_DIR/nginx.conf \
@@ -9720,6 +9723,7 @@ cd $INSTALL_SRC_DIR/nginx
 	--with-file-aio \
 	--with-mail \
 	--with-mail_ssl_module \
+	--add-module=../nginx-rtmp-module \
 	--with-debug
 # Install
 make_install_jambulatv
@@ -9740,6 +9744,12 @@ export WWW_USER WWW_GROUP
 nginx_configure () {
 # Get WWW User and Group
 set_www_user_group
+#
+# Add RTMP information directory i.e. stats
+[[ -d $WWW_HTML_DIR/rtmp ]] || mkdir -p $WWW_HTML_DIR/rtmp
+# Copy stats index XML file from nginx-rtmp-module to root directory
+cp -v $INSTALL_SRC_DIR/nginx-rtmp-module/stat.xsl $WWW_HTML_DIR/rtmp/
+#
 # Change log directory permissions
 chown -R $WWW_USER:$WWW_GROUP $STATEDIR/log/nginx
 #
