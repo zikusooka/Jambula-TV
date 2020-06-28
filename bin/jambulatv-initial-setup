@@ -50,7 +50,7 @@ OSDRUNFILE=$(grep ^OSDRUNFILE $OSD_TOOL | cut -d '=' -f2 | head -1 | awk {'print
 
 OSD_MSG_TURN_ON_SPEAKERS="Please turn on your speakers for a voice assisted setup process"
 
-QRCODE_OSD_MSG_4_SETUP="To begin setup, please use the QR Code Reader App on your smartphone to scan this code.  Alternatively, you may manually open the following link using a browser on your smart phone: http://172.16.0.1:8502  This QR code will only be removed once setup has been completed."
+QRCODE_OSD_MSG_4_SETUP="To begin setup, please use the QR Code Reader App on your smartphone to scan this code.  Alternatively, you may manually open the following link using a browser on your smart phone: http://172.16.0.1:8504  This QR code will only be removed once setup has been completed."
 
 QRCODE_PREFERRED_PLAYER=ffplay
 #
