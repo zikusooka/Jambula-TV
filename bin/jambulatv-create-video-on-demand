@@ -29,4 +29,4 @@ setup `echo $@ | cut -d . -f1` input 'file://$VLM_VOD_DIRECTORY/$@'
 # Kill existing vlm processes
 kill `ps auxw | grep vlm-conf | awk {'print $2'} | head -1`
 # Restart vlm server
-$VLM_SERVER_TOOL &
+$VLM_SERVER_TOOL restart &
