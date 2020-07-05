@@ -11210,7 +11210,7 @@ fi
 video_on_demand_configure () {
 # Create incron tab file for vlm vod
 echo "
-$VLM_VOD_DIRECTORY IN_CREATE $VLM_VOD_CREATE_TOOL \$#
+#$VLM_VOD_DIRECTORY IN_CREATE $VLM_VOD_CREATE_TOOL \$#
 #$VLM_VOD_DIRECTORY IN_DELETE $VLM_VOD_DELETE_TOOL \$# 
 " > $INCRON_DIRECTORY/vlm_vod
 # Create vlm vod directory
