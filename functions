@@ -1987,7 +1987,10 @@ ln -s $INCDIR/openssl_101 $INCDIR/openssl
 
 python3_module_local_download () {
 PYTHON_MODULE=$1
-pip3 --disable-pip-version-check download --no-binary :all: --only-binary none -d $TMPDIR/python_tarballs $PYTHON_MODULE
+PYTHON_PKG=$(echo $PYTHON_MODULE | cut -d'=' -f1)
+PYTHON_DOWNLOADS_DIR=$TMPDIR/python3_deps.${PYTHON_MODULE}
+#
+pip3 --disable-pip-version-check download --no-binary :all: --only-binary none -d $PYTHON_DOWNLOADS_DIR $PYTHON_MODULE
 }
 
 python3_module_local_install () {
@@ -13094,13 +13097,13 @@ SODIUM_INSTALL=system pip3 --log $BUILD_LOG install --no-index --find-links $PRO
 # Install dependencies for Home-Assistant using pips specified in requirements
 pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR -r $INSTALL_SRC_DIR/home-assistant/requirements_all.txt
 #
-# Install other dependencies that are somewhat left out during install
-pip3 --log $BUILD_LOG install --ignore-installed --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/home-assistant-requirements.txt
-#
 # Install Home-Assistant
 cd $INSTALL_SRC_DIR/home-assistant
 $PYTHON_INSTALL_CMD
-#
+
+# Install other dependencies that are somewhat left out during install
+pip3 --log $BUILD_LOG install --upgrade --ignore-installed --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/home-assistant-requirements.txt
+
 # Patch homeassistant i.e. hass binary to allow for connections to unverified 
 # SSL certificate sites and
 # Avoid unnecessary logging warnings after migration to python 3.6
