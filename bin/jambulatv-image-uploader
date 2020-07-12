@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# This tool allows upload of image(s) to online services
+# Currently supported: imgur
+#
+# Jambula Labs @copyright 2020-2021 All rights reserved
+#
+CURL_CMD="/usr/bin/curl"
+CURL_OPTS="-G -s -S -L -m 60 -k"
+
+IMGUR_CLIENT_ID=b8359d02186031c
+
+IMAGE_PATH="$1"
+
+# Usage
+if [[ "x$IMAGE_PATH" = "x" ]];
+then
+
+cat <<ET
+
+Usage: $(basename $0) [IMAGE_FILE_PATH]
+
+ET
+
+# Quit
+exit 1
+fi
+
+
+IMGUR_RESPONSE=$($CURL_CMD $CURL_OPTS -H "Authorization: Client-ID $IMGUR_CLIENT_ID" -H "Expect: " -F "image=@$IMAGE_PATH" https://api.imgur.com/3/image.xml)
+
+# Parse the response from imgur
+IMGUR_URL="${IMGUR_RESPONSE##*<link>}"
+IMGUR_URL="${IMGUR_URL%%</link>*}"
+IMGUR_DELETE_HASH="${IMGUR_RESPONSE##*<deletehash>}"
+IMGUR_DELETE_HASH="${IMGUR_DELETE_HASH%%</deletehash>*}"
+
+# Final Output
+echo $IMGUR_URL | sed 's/^http:/https:/'
+echo "Delete page: https://imgur.com/delete/$IMGUR_DELETE_HASH" >&2
+
+

@@ -355,6 +355,7 @@ gplaycli_install
 gplaycli_configure
 dexMD5_setup
 series_cli_install
+image_uploader_setup
 
 # ----------------
 # Communications 

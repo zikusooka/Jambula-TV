@@ -1207,6 +1207,7 @@ FETCH_NEWS_TOOL=$BINARY_PREFIX/jambulatv-fetch-news
 FMRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-fm-radio-streamer
 GENERATE_LOCAL_CONF_TOOL=$BINARY_PREFIX/jambulatv-generate-local-conf
 GEOLOCATION_TOOL=$BINARY_PREFIX/jambulatv-whereami
+IMAGE_UPLOAD_TOOL=$BINARY_PREFIX/jambulatv-image-uploader
 INITIAL_SETUP_TOOL=$BINARY_PREFIX/jambulatv-initial-setup 
 INTERNET_SPEED_TOOL=$BINARY_PREFIX/jambulatv-speed-test
 INTERNET_DATA_SAVER_TOOL=$BINARY_PREFIX/jambulatv-internet-data-saver
@@ -11747,6 +11748,15 @@ rsync -av $PROJECT_GITHUB_DIR/series-cli/ $INSTALL_SRC_DIR/series-cli/
 # Install
 cd $INSTALL_SRC_DIR/series-cli
 $PYTHON_INSTALL_CMD --prefix=$PREFIX --install-lib=$PYTHON_SITEDIR
+}
+
+image_uploader_setup () {
+# Copy Image Uploader tool, if it does not exist in bin directory
+[[ -e $IMAGE_UPLOAD_TOOL ]] || \
+cp -v $PROJECT_BIN_DIR/${IMAGE_UPLOAD_TOOL##*/} \
+	$IMAGE_UPLOAD_TOOL
+# Make tool executable
+chmod 755 $IMAGE_UPLOAD_TOOL
 }
 
 iptv_support () {
