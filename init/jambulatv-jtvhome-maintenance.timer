@@ -1,0 +1,11 @@
+[Unit]
+Description = Maintenance of JTV Home RTMP/HLS TV Channels
+
+
+[Timer]
+OnCalendar = *-*-* 00/6:30:00
+Unit = jambulatv-jtvhome-maintenance.service
+
+
+[Install]
+WantedBy = multi-user.target

@@ -135,6 +135,11 @@ PLAYLISTS_DIRECTORY=$PROJECT_PARTITION/Playlists
 PLAYLISTS_PORT=$(grep -i 'playlists$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 PLAYLISTS_IPTV_WORLD_M3U_FILE=jambula-iptv.m3u8
 PLAYLISTS_CCTV_LOCAL_M3U_FILE=jambula-cctv.m3u8
+PLAYLISTS_JTV_HOME_M3U_FILE=jambula-home.m3u8
+
+RTMP_HLS_INPUT="$PROJECT_SYSTEM_SHARE_DIR/clips/video/jtv_home_streaming_test_01.mkv"
+RTMP_HLS_URL="rtmp://127.0.0.1:8560/hls"
+RTMP_HLS_ALL_STREAMS_FILE=$TMPDIR/rtmp_hls_streams_4_jtv_home.txt
 
 MUSIC_DOWNLOADS_DIRECTORY=$PROJECT_PARTITION/Downloads/Music
 MUSIC_NOW_PLAYING_FILE=$TMPDIR/now_playing
@@ -209,40 +214,34 @@ TVHEADEND_HTTP_PORT=9981  # Please change to conform with our lineup
 TVHEADEND_HTSP_PORT=9982  # Please change to conform with our lineup
 TVHEADEND_HTTP_USER=""
 TVHEADEND_HTTP_PASS=""
-TVHEADEND_API_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api"
+TVHEADEND_BASE_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}"
+TVHEADEND_API_URL="${TVHEADEND_BASE_URL}/api"
+TVHEADEND_PLAY_STREAM_URL="${TVHEADEND_BASE_URL}/play/stream"
 # TVHeadend components
 TVHEADEND_TIMESHIFT_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/timeshift
 TVHEADEND_TIMESHIFT_BUFFER_FILE=$TMPDIR/timeshift_buffer
 TVHEADEND_DVR_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/dvr/config
 TVHEADEND_DVR_LOG_DIR=$TVHEADEND_CONFIG_DIR/dvr/log
 TVHEADEND_DVR_CREATE_PROFILE_TEMP_FILE=$TMPDIR/create_dvr_profile.sh
-
 TVHEADEND_IMAGE_CACHE_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/imagecache
-
 TVHEADEND_ADAPTERS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/linuxdvb/adapters
-
 TVHEADEND_RESET_IN_PROGRESS_TEMP_FILE=$TMPDIR/tvheadend_reset_in_progress
 TVHEADEND_REPAIR_IN_PROGRESS_TEMP_FILE=$TMPDIR/tvheadend_repair_in_progress
-
 TVHEADEND_DVBT_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/dvb/networks
 TVHEADEND_DVBT_CREATE_NETWORK_TEMP_FILE=$TMPDIR/create_dvbt_network.sh
 TVHEADEND_DVBT_CREATE_MUX_TEMP_FILE=$TMPDIR/create_dvbt_multiplex.sh
-
 TVHEADEND_IPTV_NETWORK_NAME=jambula-IPTV
 TVHEADEND_IPTV_NETWORK_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/input/iptv/networks
 TVHEADEND_IPTV_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/iptv
 TVHEADEND_IPTV_CREATE_NETWORK_TEMP_FILE=$TMPDIR/create_iptv_network.sh
-
 TVHEADEND_CHANNELS_CONFIG_DIR=$TVHEADEND_CONFIG_DIR/channel/config
 TVHEADEND_CHANNELS_TAGS_DIR=$TVHEADEND_CONFIG_DIR/channel/tag
-
 TVHEADEND_CCTV_CREATE_NETWORK_TEMP_FILE=$TMPDIR/create_cctv_network.sh
-
 TVHEADEND_CCTV_NETWORK_NAME=jambula-Eyes
 TVHEADEND_CCTV_LOG_DIR=$TVHEADEND_IPTV_LOG_DIR
-
+TVHEADEND_JTV_HOME_CREATE_NETWORK_TEMP_FILE=$TMPDIR/create_jtvhome_network.sh
+TVHEADEND_JTV_HOME_NETWORK_NAME=jambula-Home
 TVHEADEND_EPG_GRAB_DIR=$TVHEADEND_CONFIG_DIR/epggrab
-
 TVHEADEND_TV_MARKET=UG-Kampala
 
 XMLTV_GRABBER=tv_grab_combiner
@@ -1309,6 +1308,18 @@ GEOLOCATION_FILE=$PROJECT_SYSTEM_CONF_DIR/geolocation.txt
 GEOIP_MAXMIND_ACCOUNT_ID=309196
 GEOIP_MAXMIND_LICENSE_KEY=gxpGAbykWU3A3QNv
 
+# FFmpeg
+FFMPEG_CMD=/usr/bin/ffmpeg
+FFMPEG_FFLAGS="+nobuffer+genpts+genpts+igndts+ignidx"
+FFMPEG_FLAGS="+global_header+low_delay"
+FFMPEG_OPTS="-hide_banner"
+
+# FFprobe
+TIMEOUT_PROBE="80s"
+TIMEOUT_CMD="/usr/bin/timeout $TIMEOUT_PROBE"
+FFPROBE_CMD="$TIMEOUT_CMD /usr/bin/ffprobe"
+FFPROBE_OPTS="-hide_banner"
+
 
 
 ############################
@@ -1350,7 +1361,9 @@ DVBT_NETWORK_CREATION_MESSAGE="Setting up a fresh DVB-T network named $DVBT_NETW
 IPTV_FETCH_PLAYLIST_MESSAGE="Downloading the latest IPTV playlist ($PLAYLISTS_IPTV_WORLD_M3U_FILE)"
 IPTV_NETWORK_EXISTS_MESSAGE="IPTV network already exists, proceeding"
 CCTV_NETWORK_EXISTS_MESSAGE="CCTV network already exists, proceeding"
+JTV_HOME_NETWORK_EXISTS_MESSAGE="JTV Home network already exists, proceeding"
 IPTV_MISSING_PLAYLIST_MESSAGE="The IPTV playlist [$PLAYLISTS_IPTV_WORLD_M3U_FILE] was not found, quitting ..."
+JTV_HOME_MISSING_PLAYLIST_MESSAGE="The JTV Home playlist [$PLAYLISTS_JTV_HOME_M3U_FILE] was not found, quitting ..."
 IPTV_NETWORK_SCAN_STARTED_MESSAGE="Scanning of IPTV network started. This will take some time, please be patient ..."
 DVBT_NETWORK_SCAN_STARTED_MESSAGE="Scanning for DVB Terrestrial services in $TV_MARKET TV market area started, please wait ..."
 DVBT_NETWORK_REPAIR_TERMINATED="Warning: DVB-T repair process terminated since TVHeadend is being reset or repaired"
@@ -1358,9 +1371,11 @@ DVBT_WAITING_4_SERVICES_ADD_MESSAGE="Waiting for all DVB-T services to be added 
 DVBT_CHANNEL_MAP_STARTED_MESSAGE="Mapping of your DVB-T network ($DVBT_NETWORK_NAME) started"
 IPTV_CHANNEL_MAP_STARTED_MESSAGE="Mapping of your IPTV network started. Please be patient while mapping of your IPTV channels takes place ..."
 CCTV_CHANNEL_MAP_STARTED_MESSAGE="Mapping of your CCTV network started. Please be patient while mapping of your CCTV channel feeds takes place ..."
+JTV_HOME_CHANNEL_MAP_STARTED_MESSAGE="Mapping of your JTV Home network started. Please be patient while mapping of your JTV Home channel feeds takes place ..."
 DVBT_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your DVB-T network ($DVBT_NETWORK_NAME) completed"
 IPTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your IPTV network completed"
 CCTV_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your CCTV network completed. You may now resume watching CCTV feeds ..."
+JTV_HOME_CHANNEL_MAP_COMPLETED_MESSAGE="Mapping of your JTV Home network completed. You may now resume watching JTV Home feeds ..."
 KODI_REFRESH_TV_LOGOS_MESSAGE="Refreshing TV icons for your ($(echo $TV_TYPE | tr '[:lower:]' '[:upper:]')) network, the video screen will be restarted shortly"
 EPG_DATA_4_KODI_REFRESH_MESSAGE="Refreshing the TV Guide for your ($(echo $TV_TYPE | tr '[:lower:]' '[:upper:]')) channels ..."
 EPG_DATA_DOWNLOAD_START_MESSAGE="Download of TV programme information for $EPG_XMLTV_GUIDE_NAME started, please be patient ..."
@@ -7160,6 +7175,114 @@ rsync -av $PROJECT_CONTRIB_DIR/tv/picons/CCTV $PROJECT_SYSTEM_ICONS_DIR/
 set_www_user_group
 # Give permissons to TV Icons
 chown -R $WWW_USER:$WWW_GROUP $PROJECT_SYSTEM_ICONS_DIR/CCTV
+}
+
+jtvhome_tvheadend_network_add () {
+# Remove previous temp script file for creating JTV Home network
+[[ -e $TVHEADEND_JTV_HOME_CREATE_NETWORK_TEMP_FILE ]] && sudo rm -f $TVHEADEND_JTV_HOME_CREATE_NETWORK_TEMP_FILE 
+
+# Add JTV Home network creation command to temp file
+cat >> $TVHEADEND_JTV_HOME_CREATE_NETWORK_TEMP_FILE <<EOF
+# $TVHEADEND_JTV_HOME_NETWORK_NAME
+# ----------------------------
+# Add JTV Home network to backend
+$CURL_CMD $CURL_OPTS -d "class=iptv_auto_network" -d "\$(printf $(echo -n $(cat <<EOT
+conf='{
+	"url": "http://$TVHEADEND_HTTP_IP:$PLAYLISTS_PORT/$PLAYLISTS_JTV_HOME_M3U_FILE",
+	"bouquet": true,
+	"channel_number": 1000,
+	"refetch_period": 1440,
+	"ssl_peer_verify": false,
+	"tsid_zero": true,
+	"remove_args": "ticket",
+	"scan_create": false,
+	"service_sid": 0,
+	"priority": 1,
+	"spriority": 1,
+	"max_streams": 0,
+	"max_bandwidth": 0,
+	"max_timeout": 120,
+	"icon_url": "file://$PROJECT_SYSTEM_ICONS_DIR/IPTV",
+	"networkname": "$TVHEADEND_JTV_HOME_NETWORK_NAME",
+	"pnetworkname": "$PROJECT_NAME",
+	"nid": 0,
+	"autodiscovery": 0,
+	"skipinitscan": true,
+	"idlescan": true,
+	"sid_chnum": false,
+	"ignore_chnum": false,
+	"satip_source": 0,
+	"localtime": 180,
+	"wizard": false,
+	"ignore_path": 0,
+	"remove_scrambled": true
+}'
+EOT
+)
+))" $TVHEADEND_API_URL/mpegts/network/create > /dev/null 2>&1
+#
+# Notify - JTV Home network added
+logger -s -t $(basename $0) "Added JTV Home network [$TVHEADEND_JTV_HOME_NETWORK_NAME]"
+
+EOF
+
+# Create JTV Home network script
+if [[ -e $TVHEADEND_JTV_HOME_CREATE_NETWORK_TEMP_FILE ]];
+then
+# Prepare create JTV Home network script
+sed -i '1i #!/bin/sh' "$TVHEADEND_JTV_HOME_CREATE_NETWORK_TEMP_FILE"
+chmod 755 $TVHEADEND_JTV_HOME_CREATE_NETWORK_TEMP_FILE
+
+# Run script to create JTV Home network
+$TVHEADEND_JTV_HOME_CREATE_NETWORK_TEMP_FILE
+
+# Pause for a bit to allow JTV Home network to be added properly
+sleep 3
+# Remove temp script file
+rm -f $TVHEADEND_JTV_HOME_CREATE_NETWORK_TEMP_FILE
+fi
+}
+
+jtvhome_tvheadend_configure () {
+# Add JTV Home network
+jtvhome_tvheadend_network_add
+
+# Copy default JTV Home playlist for JambulaTV if not existent - see playlists_configure
+if [[ -e $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_JTV_HOME_M3U_FILE ]] && \
+	[[ ! -e $PLAYLISTS_DIRECTORY/$PLAYLISTS_JTV_HOME_M3U_FILE ]];
+then
+	cp -rv $PROJECT_CONTRIB_DIR/tv/iptv/$PLAYLISTS_JTV_HOME_M3U_FILE $PLAYLISTS_DIRECTORY
+#
+# Change playlist directory ownership to multimedia user i.e. jambula
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PLAYLISTS_DIRECTORY
+fi
+
+# Schedule JTV Home maintenance using systemd timers
+# --------------------------------------------------
+# Copy systemd service file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-jtvhome-maintenance.service ]] || \
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-jtvhome-maintenance.service $SYSTEMD_UNITS_DIR_USER/
+# Copy systemd timer file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-jtvhome-maintenance.timer ]] || \
+cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-jtvhome-maintenance.timer $SYSTEMD_UNITS_DIR_USER/
+# Enable and start timer
+systemctl enable jambulatv-jtvhome-maintenance.timer
+systemctl start jambulatv-jtvhome-maintenance.timer
+
+# Add sample video clips used in running temporary RTMP streams
+# -------------------------------------------------------------
+# Create system clips directory if non-existent
+[[ -d $PROJECT_SYSTEM_SHARE_DIR ]] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR
+# Sync clips from contributed to our share directory
+rsync -av $PROJECT_CONTRIB_DIR/clips/ $PROJECT_SYSTEM_SHARE_DIR/clips/
+# Change ownership of clips directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/clips
+
+#
+# TODO
+# ----
+# Add jambulatv-home streaming tool
+#
 }
 
 kodi_configure () {

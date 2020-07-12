@@ -1,0 +1,19 @@
+[Unit]
+Description = Maintenance of JTV Home RTMP/HLS TV Channels
+After = graphical.target
+
+
+[Service]
+User = jambula
+Type = forking
+ExecStart = /bin/sh -c "/usr/bin/jambulatv-tvheadend-controller jtvhome all &"
+
+# Restart every 20 minutes on failure for up to 5 times in a period of 2 hours
+Restart = on-failure
+RestartSec = 20min
+StartLimitInterval = 2hr
+StartLimitBurst = 5
+
+
+[Install]
+WantedBy = graphical.target

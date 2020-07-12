@@ -282,11 +282,12 @@ video_on_demand_configure
 # Playlists
 playlists_configure
 
-# Live TV Configuration DVB-T2 & IPTV
+# Live TV Configuration DVB-T2, IPTV and JTV Home
 tvheadend_configure
 iptv_tvheadend_configure
 iptv_icons_add 
 iptv_builder_install
+jtvhome_tvheadend_configure
 
 # Auto download of TV Shows, Movies, and Podcasts
 #flexget_deps_install
