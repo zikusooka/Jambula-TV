@@ -18,10 +18,6 @@ PROJECT_DVBT_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/dvbt-settings.cfg
 . $PROJECT_DVBT_SETTINGS_FILE
 
 # Other variables
-TIMEOUT_PROBE="80s"
-TIMEOUT_CMD="/usr/bin/timeout $TIMEOUT_PROBE"
-FFPROBE_CMD="$TIMEOUT_CMD /usr/bin/ffprobe"
-FFPROBE_OPTS="-hide_banner"
 YOUTUBE_CMD="/usr/bin/jambulatv-youtube"
 YOUTUBE_VARIABLES_TEMP_FILE=$(grep ^YOUTUBE_VARIABLES_TEMP_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g')
 
@@ -32,10 +28,8 @@ EMAIL_ADDRESS_USER=$(grep -i EMAIL_TO_ADDRESS $EMAIL_CREDENTIALS_CONFIG | sed '/
 SERIAL=$(grep -i Serial $PROJECT_RELEASE_FILE | cut -d : -f2)
 
 # TVHeadend
-TVHEADEND_BASE_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}"
 TVHEADEND_WIRED_URL="http://${NETWORK_IP_ADDRESS}:${TVHEADEND_HTTP_PORT}"
 TVHEADEND_WIFI_URL="http://${NETWORK_WIRELESS_HOTSPOT_IP}:${TVHEADEND_HTTP_PORT}"
-TVHEADEND_API_URL="${TVHEADEND_BASE_URL}/api"
 TVHEADEND_DVBT_TUNER_NODE=/dev/dvb/adapter$DVBT_TUNER_NO
 TVHEADEND_DVBT_CREATE_CHAN_TEMP_FILE=$TMPDIR/create_dvb_channels.sh
 TVHEADEND_DVBT_CREATE_CHAN_TAG_TEMP_FILE=$TMPDIR/create_dvb_channel_tags.sh
@@ -54,6 +48,13 @@ TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE=$TMPDIR/create_cctv_channels.sh
 TVHEADEND_CCTV_CREATE_CHAN_TAG_TEMP_FILE=$TMPDIR/create_cctv_channel_tags.sh
 TVHEADEND_CCTV_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/cctv-scan-info.$(date +%Y%m%d%H%M).log
 TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE=$TMPDIR/cctv_service_uuid.txt
+TVHEADEND_JTV_HOME_SOURCE_PLAYLIST=${PLAYLISTS_DIRECTORY}/${PLAYLISTS_JTV_HOME_M3U_FILE}
+TVHEADEND_JTV_HOME_CREATE_CHAN_TEMP_FILE=$TMPDIR/create_jtvhome_channels.sh
+TVHEADEND_JTV_HOME_CREATE_CHAN_TAG_TEMP_FILE=$TMPDIR/create_jtvhome_channel_tags.sh
+TVHEADEND_JTV_HOME_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/jtvhome-scan-info.$(date +%Y%m%d%H%M).log
+TVHEADEND_JTV_HOME_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/jtvhome-scan-failed.$(date +%Y%m%d%H%M).log
+TVHEADEND_JTV_HOME_SERVICE_LOG_FILE=$TMPDIR/jtvhome_service_output.log
+TVHEADEND_JTV_HOME_SERVICE_UUIDS_RAW_FILE=$TMPDIR/jtvhome_service_uuid.txt
 
 TVHEADEND_PLAYLIST_4_WIRED_CLIENTS=$TMPDIR/LiveTV-Lan
 TVHEADEND_PLAYLIST_4_WIFI_CLIENTS=$TMPDIR/LiveTV-WiFi
@@ -79,7 +80,7 @@ usage () {
 if [ "x$TV_TYPE" = "x" ];
 then
 clear
-echo "Usage:  ./`basename $0` [dvb|iptv|cctv|general]
+echo "Usage:  ./`basename $0` [dvb|iptv|cctv|jtvhome|general]
 "
 exit 1
 fi
@@ -140,6 +141,23 @@ if [ "x$TV_TASK" = "x" ];
 then
 clear
 echo "Usage:  ./`basename $0` cctv [scan|map|all]
+"
+exit 1
+
+else
+# Notify when TV server controller process has been initiated
+notify_tv_server_controller_initiated
+#
+# Check to see if TVHeadend server is in use
+check_if_in_use
+fi
+}
+
+usage_and_pre_start_jtvhome () {
+if [ "x$TV_TASK" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` jtvhome [scan|map|all]
 "
 exit 1
 
@@ -435,8 +453,8 @@ dvb_add_channel_tags () {
 # Add DVB-T channels tags - Free-To-Air, Local, etc.
 for TAG_NAME in "Free-To-Air" "Local" 
 do
-TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | sed 's:"::g' | head -1)
-TAG_EXISTS_COUNT=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | wc -l)
+TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'"$TAG_NAME"'") |.enabled' | sed 's:"::g' | head -1)
+TAG_EXISTS_COUNT=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'"$TAG_NAME"'") |.enabled' | wc -l)
 
 # Test for existence of channel tag and ensure no duplicates are created
 if [[ "$TAG_EXISTS" != "true" || "$TAG_EXISTS_COUNT" = "0" ]];
@@ -976,11 +994,14 @@ tvheadend_restart_server
 iptv_test_stream () {
 # Stream variables
 MUX_URL="$TVHEADEND_PLAY_STREAM_URL/mux/$MUX_UUID"
-PLAYLIST_URL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_url')
-PLAYLIST_CATEGORY=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_tags' | head -1)
-PLAYLIST_CHANNEL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_sname' | head -1)
+PLAYLIST_URL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .iptv_url')
+PLAYLIST_CATEGORY=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .iptv_tags' | head -1)
+PLAYLIST_CHANNEL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .iptv_sname' | head -1)
 PLAYLIST_PIPE_COMMAND="$(echo $PLAYLIST_URL | sed 's|pipe://||g')"
-
+#
+# Wait a bit, other wise last TV channel will not be added
+sleep 1
+#
 # Add to log file
 echo 2>&1 | tee -a $TVHEADEND_IPTV_INFO_LOG_FILE << EOF
 
@@ -1046,8 +1067,8 @@ do
 SERVICE_ADDED=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .num_svc')
 SERVICE_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .name' | sed "s:$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g" | sed "s:^-*::g")
 # Pipe stream variables
-PLAYLIST_URL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_url')
-PLAYLIST_CHANNEL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'$MUX_UUID'") | .iptv_sname' | head -1)
+PLAYLIST_URL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .iptv_url')
+PLAYLIST_CHANNEL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .iptv_sname' | head -1)
 PLAYLIST_PIPE_COMMAND="$(echo $PLAYLIST_URL | sed 's|pipe://||g')"
 #
 echo $PLAYLIST_URL | grep $PLAYLIST_PIPE_COMMAND > /dev/null 2>&1
@@ -1125,21 +1146,26 @@ print_notification "$IPTV_CHANNEL_MAP_STARTED_MESSAGE" osd
 
 # Remove dead channels
 zap_dead_channels
-#
+
+# Create IPTV channels
+# ....................
 # Remove previous temp script file for creating IPTV channels
-[[ -e $TVHEADEND_IPTV_CREATE_CHAN_TEMP_FILE ]] && sudo rm -f $TVHEADEND_IPTV_CREATE_CHAN_TEMP_FILE 
+[[ -e $TVHEADEND_IPTV_CREATE_CHAN_TEMP_FILE ]] && sudo rm -f $TVHEADEND_IPTV_CREATE_CHAN_TEMP_FILE
+# Remove previous temp service UUID raw file for IPTV services
+[[ -e $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE ]] && sudo rm -f $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
+# Create service UUIDs file
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.text | contains("'"${TVHEADEND_IPTV_NETWORK_NAME}"'")).uuid' > $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
 #
 # Cycle through IPTV services
-$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.text | contains("'${TVHEADEND_IPTV_NETWORK_NAME}'")).uuid' > $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
 cat $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE | while read SERVICE_UUID
 do
-CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.uuid=="'$SERVICE_UUID'") | .text' | sed "s:$TVHEADEND_IPTV_NETWORK_NAME/$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g" | cut -d / -f2- | sed "s:^-*::g")
+CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$SERVICE_UUID"'") | .text' | sed "s:$TVHEADEND_IPTV_NETWORK_NAME/$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g" | cut -d / -f2- | sed "s:^-*::g")
 # Extract channel number from iptv group files
 get_channel_number_using_iptv_builder
 #
 CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:upper:] [:lower:]| sed 's: :_:g').png
 CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${TVHEADEND_IPTV_SOURCE_PLAYLIST} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
-CHANNEL_TAG=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/list?limit=100000 | jq -r '.entries[] | select(.val=="'${CHANNEL_CATEGORY}'") | .key')
+CHANNEL_TAG=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/list?limit=100000 | jq -r '.entries[] | select(.val=="'"${CHANNEL_CATEGORY}"'") | .key')
 #
 # Check if channel already exists
 $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
@@ -1199,6 +1225,9 @@ sleep 3
 rm -f $TVHEADEND_IPTV_CREATE_CHAN_TEMP_FILE
 fi
 
+# Remove temp service UUID raw file for IPTV services
+[[ -e $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE ]] && sudo rm -f $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
+
 # Notify of IPTV network mapping complete
 # Source notification strings
 set_notifications
@@ -1221,9 +1250,9 @@ iptv_quit_if_no_playlist_found
 # Cycle through playlist m3u8 file for IPTV channel tag
 cat ${TVHEADEND_IPTV_SOURCE_PLAYLIST} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | sort -u | while read IPTV_CHANNEL
 do
-TAG_NAME=$IPTV_CHANNEL 
-TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | head -1)
-TAG_EXISTS_COUNT=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | wc -l)
+TAG_NAME="$IPTV_CHANNEL"
+TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'"$TAG_NAME"'") |.enabled' | head -1)
+TAG_EXISTS_COUNT=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'"$TAG_NAME"'") |.enabled' | wc -l)
 
 # Test for existence of channel tag and ensure no duplicates are created
 if [[ "$TAG_EXISTS" != "true" || "$TAG_EXISTS_COUNT" = "0" ]];
@@ -1275,7 +1304,6 @@ fi
 }
 
 
-
 ##########
 #  CCTV  #
 ##########
@@ -1315,9 +1343,9 @@ cctv_add_channel_tags () {
 # Cycle through playlist m3u8 file for CCTV channel tag
 cat ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CCTV_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | sort -u | while read CCTV_CHANNEL
 do
-TAG_NAME=$CCTV_CHANNEL 
-TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | head -1)
-TAG_EXISTS_COUNT=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'$TAG_NAME'") |.enabled' | wc -l)
+TAG_NAME="$CCTV_CHANNEL"
+TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'"$TAG_NAME"'") |.enabled' | head -1)
+TAG_EXISTS_COUNT=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'"$TAG_NAME"'") |.enabled' | wc -l)
 
 # Test for existence of channel tag and ensure no duplicates are created
 if [[ "$TAG_EXISTS" != "true" || "$TAG_EXISTS_COUNT" = "0" ]];
@@ -1336,7 +1364,7 @@ conf='{
 	"private": false,
 	"icon": "",
 	"titled_icon": false,
-	"comment": "Web-based $TAG_NAME Channels"
+	"comment": "$TAG_NAME Channels"
 }'
 
 EOT
@@ -1378,21 +1406,25 @@ print_notification "$CCTV_CHANNEL_MAP_STARTED_MESSAGE" osd
 
 # Remove dead channels
 zap_dead_channels
-#
-$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.text | contains("'${TVHEADEND_CCTV_NETWORK_NAME}'")).uuid' > $TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE
 
+# Create CCTV channels
+# ....................
 # Remove previous temp script file for creating DVB channels
 [[ -e $TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE ]] && sudo rm -f $TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE 
+# Remove previous temp service UUID raw file for CCTV services
+[[ -e $TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE ]] && sudo rm -f $TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE
+# Create service UUIDs file
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.text | contains("'"${TVHEADEND_CCTV_NETWORK_NAME}"'")).uuid' > $TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE
 #
 # Cycle through CCTV services
 cat $TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE | while read SERVICE_UUID
 do
-CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.uuid=="'$SERVICE_UUID'") | .text' | sed "s:$TVHEADEND_CCTV_NETWORK_NAME/$PLAYLISTS_CCTV_LOCAL_M3U_FILE - ::g"| cut -d / -f2-)
+CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$SERVICE_UUID"'") | .text' | sed "s:$TVHEADEND_CCTV_NETWORK_NAME/$PLAYLISTS_CCTV_LOCAL_M3U_FILE - ::g"| cut -d / -f2-)
 # Extract channel number from CCTV playlist
 CHANNEL_NUMBER=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CCTV_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d = -f5 | awk {'print $1'} | sed 's:"::g' | head -1)
 CHANNEL_LOGO=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CCTV_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d = -f4 | awk {'print $1'} | sed 's:"::g' | head -1)
 CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CCTV_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
-CHANNEL_TAG=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/list?limit=100000 | jq -r '.entries[] | select(.val=="'${CHANNEL_CATEGORY}'") | .key')
+CHANNEL_TAG=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/list?limit=100000 | jq -r '.entries[] | select(.val=="'"${CHANNEL_CATEGORY}"'") | .key')
 #
 # Check if channel already exists
 $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
@@ -1455,6 +1487,9 @@ sleep 3
 rm -f $TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE
 fi
 
+# Remove temp service UUID raw file for CCTV services
+[[ -e $TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE ]] && sudo rm -f $TVHEADEND_CCTV_SERVICE_UUIDS_RAW_FILE
+
 # Notify of CCTV network mapping complete
 # Source notification strings
 set_notifications
@@ -1463,6 +1498,319 @@ print_notification "$CCTV_CHANNEL_MAP_COMPLETED_MESSAGE" text
 # Print notification using OSD tool
 print_notification "$CCTV_CHANNEL_MAP_COMPLETED_MESSAGE" osd
 }
+
+
+##############
+#  JTV HOME  #
+##############
+jtvhome_quit_if_no_playlist_found () {
+if [[ ! -e "${TVHEADEND_JTV_HOME_SOURCE_PLAYLIST}" ]];
+then
+# Notify that playlist is missing
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$JTV_HOME_MISSING_PLAYLIST_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$JTV_HOME_MISSING_PLAYLIST_MESSAGE" osd
+# Quit
+exit 0
+fi
+}
+
+configure_jtvhome_network () {
+TVHEADEND_JTV_HOME_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_JTV_HOME_NETWORK_NAME"'") |.uuid')
+# See JTV Home network similar to what we want already exists
+SIMILAR_JTV_HOME_NETWORK_FOUND=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_JTV_HOME_NETWORK_NAME"'") |.networkname')
+#
+# Test for existing JTV Home network
+if [[ "x$TVHEADEND_JTV_HOME_NETWORK_UUID" != "x" || "x$SIMILAR_JTV_HOME_NETWORK_FOUND" != "x" ]];
+then
+# Notify of JTV Home network already existing and proceed
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$JTV_HOME_NETWORK_EXISTS_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$JTV_HOME_NETWORK_EXISTS_MESSAGE" osd
+
+else
+# Add JTV Home network
+jtvhome_tvheadend_network_add
+fi
+}
+
+jtvhome_scan_add_muxes () {
+# Set Network UUID - Keep this here, not top
+TVHEADEND_JTV_HOME_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_JTV_HOME_NETWORK_NAME"'") | .uuid')
+#
+# Force scan of IPTV network
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/scan -d uuid=$TVHEADEND_JTV_HOME_NETWORK_UUID > /dev/null 2>&1
+}
+
+jtvhome_add_channel_tags () {
+# Remove previous temp script file for creating JTV Home channel tags
+[[ -e $TVHEADEND_JTV_HOME_CREATE_CHAN_TAG_TEMP_FILE ]] && sudo rm -f $TVHEADEND_JTV_HOME_CREATE_CHAN_TAG_TEMP_FILE 
+
+# Cycle through playlist m3u8 file for JTV Home channel tag
+grep -oP "(?<=tvh-tags=\").+?(?=\")" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_JTV_HOME_M3U_FILE} | sort -u | while read JTV_HOME_CHANNEL_TAG
+do
+TAG_NAME="$JTV_HOME_CHANNEL_TAG"
+TAG_EXISTS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'"$TAG_NAME"'") |.enabled' | head -1)
+TAG_EXISTS_COUNT=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/grid?limit=100000 | jq -r '.entries[] | select(.name=="'"$TAG_NAME"'") |.enabled' | wc -l)
+
+# Test for existence of channel tag and ensure no duplicates are created
+if [[ "$TAG_EXISTS" != "true" || "$TAG_EXISTS_COUNT" = "0" ]];
+then
+# Add JTV Home channel tags creation command to temp file
+cat >> $TVHEADEND_JTV_HOME_CREATE_CHAN_TAG_TEMP_FILE <<EOF
+# $CHANNEL_NAME
+# -------------
+# Add channel tag to backend
+$CURL_CMD $CURL_OPTS -d "\$(printf $(echo -n $(cat <<EOT
+conf='{
+	"enabled": true,
+	"index": 0,
+	"name": "$TAG_NAME",
+	"internal": false,
+	"private": false,
+	"icon": "",
+	"titled_icon": false,
+	"comment": "Local RTMP/HLS based TV Channels"
+}'
+
+EOT
+)
+))" $TVHEADEND_API_URL/channeltag/create > /dev/null 2>&1
+#
+# Notify - Channel Tag added
+logger -s -t $(basename $0) "Added Channel Tag [$TAG_NAME]"
+
+EOF
+fi
+
+done
+
+# Create JTV Home channels script
+if [[ -e $TVHEADEND_JTV_HOME_CREATE_CHAN_TAG_TEMP_FILE ]];
+then
+# Prepare create JTV Home channels script
+sed -i '1i #!/bin/sh' "$TVHEADEND_JTV_HOME_CREATE_CHAN_TAG_TEMP_FILE"
+chmod 755 $TVHEADEND_JTV_HOME_CREATE_CHAN_TAG_TEMP_FILE
+# Run script to create JTV Home channels
+$TVHEADEND_JTV_HOME_CREATE_CHAN_TAG_TEMP_FILE
+# Pause for a bit to allow TV channels to be added properly
+# IMPORTANT: If left out, channels will not be mapped to services
+sleep 3
+# Remove temp script file
+rm -f $TVHEADEND_JTV_HOME_CREATE_CHAN_TAG_TEMP_FILE
+fi
+}
+
+jtvhome_rtmp_streaming_start () {
+# Remove previous or any existing all streams temp file
+[[ -e $RTMP_HLS_ALL_STREAMS_FILE ]] && sudo rm $RTMP_HLS_ALL_STREAMS_FILE
+# Create temporary file listing all JTV channels to be streamed via RTMP/HLS
+for JTV_CHANNEL in $(grep http $PLAYLISTS_DIRECTORY/$PLAYLISTS_JTV_HOME_M3U_FILE | cut -d '/' -f4 | cut -d '.' -f1);
+do
+echo -n "[f=flv]$RTMP_HLS_URL/$JTV_CHANNEL | " >> $RTMP_HLS_ALL_STREAMS_FILE
+done 
+# Clean up temp file
+sed -i "s:[|][[:space:]]*$::" $RTMP_HLS_ALL_STREAMS_FILE
+# Stream all JTV channels
+$FFMPEG_CMD $FFMPEG_OPTS -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -re -i $RTMP_HLS_INPUT -codec copy -tune zerolatency -strict experimental -f tee -map 0:v -map 0:a "$(cat $RTMP_HLS_ALL_STREAMS_FILE)" &
+}
+
+jtvhome_rtmp_streaming_stop () {
+FFMPEG_PID=$(ps u | awk '/[f]fmpeg/ {print $2}')
+if [[ "x$FFMPEG_PID" != "x" ]];
+then
+kill $FFMPEG_PID || kill -9 $FFMPEG_PID
+# Remove all streams temp file
+[[ -e $RTMP_HLS_ALL_STREAMS_FILE ]] && sudo rm $RTMP_HLS_ALL_STREAMS_FILE
+fi
+}
+
+jtvhome_test_stream () {
+# Stream variables
+MUX_URL="$TVHEADEND_PLAY_STREAM_URL/mux/$MUX_UUID"
+PLAYLIST_URL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .iptv_url')
+PLAYLIST_CHANNEL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .iptv_sname' | head -1)
+#
+# Wait a bit, other wise last TV channel will not be added
+sleep 1
+#
+# Add service if none existent
+# ............................
+# SERVICE_ADDED=1 means service was found
+if [[ "$SERVICE_ADDED" != "1" ]];
+then
+# Add to log file
+echo 2>&1 | tee -a $TVHEADEND_JTV_HOME_INFO_LOG_FILE << EOF
+
+
+*******************************************************************************
+JambulaTV: Testing JTV Home stream: [$PLAYLIST_CHANNEL], please wait ...
+*******************************************************************************
+
+EOF
+# Probe stream using ffprobe i.e. play mux briefly to add service
+$FFPROBE_CMD $FFPROBE_OPTS $MUX_URL 2>&1 | tee -a $TVHEADEND_JTV_HOME_INFO_LOG_FILE > $TVHEADEND_IPTV_SERVICE_LOG_FILE
+
+# Check if service was added 
+# ..........................
+# SERVICE_ADDED=1 means service was found
+SERVICE_ADDED=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .num_svc')
+#
+# Test for whether stream was working
+if [ "$SERVICE_ADDED" != "1" ];
+then
+# Log failed streams
+cat >> $TVHEADEND_JTV_HOME_FAILED_LOG_FILE << STREAMLOG
+
+*******************************************************************************
+$PLAYLIST_CHANNEL ($PLAYLIST_CATEGORY)
+*******************************************************************************
+
+Link:	$PLAYLIST_URL
+
+Error:	$(cat $TVHEADEND_JTV_HOME_SERVICE_LOG_FILE)
+
+STREAMLOG
+fi
+
+fi
+}
+
+jtvhome_map_services_2_channels () {
+# Quit if JTV Home playlist file is missing
+jtvhome_quit_if_no_playlist_found
+
+# Notify of JTV Home network mapping start
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$JTV_HOME_CHANNEL_MAP_STARTED_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$JTV_HOME_CHANNEL_MAP_STARTED_MESSAGE" osd
+
+# Remove dead channels
+zap_dead_channels
+
+# Start temporary RTMP/HLS streaming
+jtvhome_rtmp_streaming_start
+
+# Cycle through all JTV HOME MUX IDs and test to create services
+# ..............................................................
+# Set Network UUID
+TVHEADEND_JTV_HOME_NETWORK_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/network/grid?limit=100000 | jq -r '.entries[] | select(.networkname=="'"$TVHEADEND_JTV_HOME_NETWORK_NAME"'") | .uuid')
+
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.network_uuid=="'"$TVHEADEND_JTV_HOME_NETWORK_UUID"'") | .uuid' | while read MUX_UUID
+
+do
+# Do not play if we already have a service
+SERVICE_ADDED=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .num_svc')
+SERVICE_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .name' | sed "s:$PLAYLISTS_JTV_HOME_M3U_FILE - ::g" | sed "s:^-*::g")
+#
+# Test stream
+jtvhome_test_stream
+done
+
+# Create JTV Home channels
+# ........................
+# Remove previous temp script file for creating JTV Home channels
+[[ -e $TVHEADEND_JTV_HOME_CREATE_CHAN_TEMP_FILE ]] && sudo rm -f $TVHEADEND_JTV_HOME_CREATE_CHAN_TEMP_FILE 
+# Remove previous temp service UUID raw file for JTV Home services
+[[ -e $TVHEADEND_JTV_HOME_SERVICE_UUIDS_RAW_FILE ]] && sudo rm -f $TVHEADEND_JTV_HOME_SERVICE_UUIDS_RAW_FILE
+# Create service UUIDs file
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.text | contains("'"${TVHEADEND_JTV_HOME_NETWORK_NAME}"'")).uuid' > $TVHEADEND_JTV_HOME_SERVICE_UUIDS_RAW_FILE
+#
+# Cycle through JTV Home services
+cat $TVHEADEND_JTV_HOME_SERVICE_UUIDS_RAW_FILE | while read SERVICE_UUID
+do
+CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$SERVICE_UUID"'") | .text' | sed "s:$TVHEADEND_JTV_HOME_NETWORK_NAME/$PLAYLISTS_JTV_HOME_M3U_FILE - ::g"| cut -d / -f2-)
+# Extract channel number from JTV Home playlist
+CHANNEL_NUMBER=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_JTV_HOME_M3U_FILE} | grep '#EXTINF' | cut -d = -f5 | awk {'print $1'} | sed 's:"::g' | head -1)
+CHANNEL_LOGO=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_JTV_HOME_M3U_FILE} | grep '#EXTINF' | cut -d = -f4 | awk {'print $1'} | sed 's:"::g' | head -1)
+CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_JTV_HOME_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
+CHANNEL_TAG=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/list?limit=100000 | jq -r '.entries[] | select(.val=="'"${CHANNEL_CATEGORY}"'") | .key')
+#
+# Check if channel already exists
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
+CHANNEL_EXISTS=$?
+#
+# Don't add if channel already exists
+[[ "$CHANNEL_EXISTS" = "0" ]] && continue
+
+# Play service URL using ffprobe i.e. Activate it to make it usable as a channel
+SERVICE_URL="$TVHEADEND_PLAY_STREAM_URL/service/$SERVICE_UUID"
+
+# Probe remote stream using ffprobe i.e. play mux briefly to add service
+$FFPROBE_CMD $FFPROBE_OPTS $SERVICE_URL 2>&1 | tee -a $TVHEADEND_JTV_HOME_INFO_LOG_FILE 
+
+# Add jtvhome channel creation command to temp file
+cat >> $TVHEADEND_JTV_HOME_CREATE_CHAN_TEMP_FILE <<EOF
+# $CHANNEL_NAME
+# -------------
+# Add channel to TVHeadend backend
+$CURL_CMD $CURL_OPTS -d "\$(printf $(echo -n $(cat <<EOT
+conf='{
+	"enabled": true,
+	"number": $CHANNEL_NUMBER,
+	"icon": "file://$PROJECT_SYSTEM_ICONS_DIR/IPTV/$CHANNEL_LOGO",
+	"epgauto": true,
+	"dvr_pre_time": 0,
+	"dvr_pst_time": 0,
+	"epg_running": -1,
+	"services": [
+		"$SERVICE_UUID"
+	],
+	"tags": [
+		"$CHANNEL_TAG"
+	],
+	"bouquet": ""
+}'
+EOT
+)
+))" $TVHEADEND_API_URL/channel/create > /dev/null 2>&1
+#
+# Notify - Channel added
+logger -s -t $(basename $0) "Added Channel No.[$CHANNEL_NUMBER] [$CHANNEL_NAME]"
+
+EOF
+
+done
+
+# Create JTV Home channels script
+if [[ -e $TVHEADEND_JTV_HOME_CREATE_CHAN_TEMP_FILE ]];
+then
+# Prepare create JTV_HOME channels script
+sed -i '1i #!/bin/sh' "$TVHEADEND_JTV_HOME_CREATE_CHAN_TEMP_FILE"
+chmod 755 $TVHEADEND_JTV_HOME_CREATE_CHAN_TEMP_FILE
+# Run script to create JTV_HOME channels
+$TVHEADEND_JTV_HOME_CREATE_CHAN_TEMP_FILE
+# Pause for a bit to allow JTV_HOME channels to be added properly
+# IMPORTANT: If left out, channels will not be mapped to services
+sleep 3
+# Remove temp script file
+rm -f $TVHEADEND_JTV_HOME_CREATE_CHAN_TEMP_FILE
+fi
+
+# Remove temp service UUID raw file for JTV Home services
+[[ -e $TVHEADEND_JTV_HOME_SERVICE_UUIDS_RAW_FILE ]] && sudo rm -f $TVHEADEND_JTV_HOME_SERVICE_UUIDS_RAW_FILE
+
+# Stop temporary RTMP/HLS streaming
+jtvhome_rtmp_streaming_stop
+
+# Notify of JTV Home network mapping complete
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$JTV_HOME_CHANNEL_MAP_COMPLETED_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$JTV_HOME_CHANNEL_MAP_COMPLETED_MESSAGE" osd
+}
+
 
 
 # Group functions
@@ -1492,6 +1840,12 @@ cctv_functions_task_all () {
 	cctv_scan_add_muxes
 	cctv_add_channel_tags
 	cctv_map_services_2_channels
+}
+
+jtvhome_functions_task_all () {
+	jtvhome_scan_add_muxes
+	jtvhome_add_channel_tags
+	jtvhome_map_services_2_channels
 }
 
 
@@ -1608,6 +1962,27 @@ configure_cctv_network
 # All tasks {scan+map} 
 [[ "$TV_TASK" = "all" ]] && \
 	cctv_functions_task_all
+;;
+
+jtvhome)
+# Usage - jtvhome
+usage_and_pre_start_jtvhome
+
+# Add JTV Home network
+configure_jtvhome_network
+
+# Scan
+[[ "$TV_TASK" = "scan" ]] && \
+	jtvhome_scan_add_muxes 
+
+# Map
+[[ "$TV_TASK" = "map" ]] && \
+	jtvhome_add_channel_tags && \
+	jtvhome_map_services_2_channels
+
+# All tasks {scan+map} 
+[[ "$TV_TASK" = "all" ]] && \
+	jtvhome_functions_task_all
 ;;
 
 general)
