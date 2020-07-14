@@ -8511,7 +8511,7 @@ sudo chown -R \$(whoami) $PROJECT_SYSTEM_LOG_DIR/bash/\$(whoami)
 # History file settings
 export HISTTIMEFORMAT="%d-%m-%Y - %T \$(whoami) "
 export HISTCONTROL=ignoreboth
-export HISTSIZE=5000
+export HISTSIZE=9000
 shopt -s histappend
 export PROMPT_COMMAND='echo "\$(history 1)" >> $PROJECT_SYSTEM_LOG_DIR/bash/\$(whoami)/history-\$(date "+%Y%m%d").log'
 #
