@@ -153,7 +153,7 @@ echo
 
 # Power outage alerts
 power_outage_alerts () {
-$TWITTER_CLIENT_CMD search -c 2 -q "from:UmemeLtd since:$TWITTER_DATE_YESTERDAY Outage Alert OR token generation" | jq -r '.statuses[] |.created_at,.text'
+$TWITTER_CLIENT_CMD search -c 2 -q "from:UmemeLtd since:$TWITTER_DATE_YESTERDAY #PlannedShutdownAlert OR #OutageAlert OR Outage Alert OR token generation" | jq -r '.statuses[] |.created_at,.text'
 echo
 }
 
@@ -161,6 +161,39 @@ echo
 power_outage_alerts_uetcl () {
 $TWITTER_CLIENT_CMD search -c 2 -q "from:uetcl since:$TWITTER_DATE_YESTERDAY @UmemeLtd @ERA_Uganda @ntvuganda @nbstv @newvisionwire @ubctvuganda" | jq -r '.statuses[] |.created_at,.text'
 echo
+}
+
+covid19_updates () {
+# Corona Virus of 2020 #COVID19 updates
+# Via The Observer
+# ---
+OBSERVER_SEARCH_STRING="COVID19 update"
+#
+cat <<ET
+
+New Cases (The Observer)
+ET
+$TWITTER_CLIENT_CMD search -c 1 -q "from:observerug since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $OBSERVER_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
+
+# Via The Daily Monitor
+# ---
+DAILY_MONITOR_SEARCH_STRING="Covid-19 cases"
+#
+cat <<ET
+
+New cases (The Daily Monitor)
+ET
+$TWITTER_CLIENT_CMD search -c 1 -q "from:DailyMonitor since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $DAILY_MONITOR_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
+
+# Via Edge.ug
+# ---
+EDGE_SEARCH_STRING="COVID-19 tests done OR COVID19UG tests done"
+#
+cat <<ET
+
+New cases (Edge.ug)
+ET
+$TWITTER_CLIENT_CMD search -c 1 -q "from:ug_edge since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $EDGE_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
 }
 
 
@@ -202,6 +235,10 @@ $(power_outage_alerts)
 
 *UETCL ALERTS (Kampala)*
 $(power_outage_alerts_uetcl)
+
+
+*COVID-19 Updates (Uganda)*
+$(covid19_updates)
 
 ET
 
