@@ -980,6 +980,7 @@ ICINGA2_OBJECTS_DIR=$ICINGA2_CONFIG_DIR/conf.d
 ICINGA2_CUSTOM_CONFIG_DIR=$ICINGA2_OBJECTS_DIR/$PROJECT_NAME
 ICINGA2_SCRIPTS_DIR=$ICINGA2_CONFIG_DIR/scripts
 ICINGA2_FEATURES_AVAIL_DIR=$ICINGA2_CONFIG_DIR/features-available
+ICINGA2_API_USERS_CONF_FILE=$ICINGA2_OBJECTS_DIR/api-users.conf
 
 MONITORING_PLUGINS_DIR=$LIBDIR/nagios/plugins
 FPING_CMD=/usr/sbin/fping
@@ -14745,6 +14746,38 @@ fi
 icinga2 feature enable ido-mysql
 }
 
+icinga2_api_setup () {
+# Setup and enable Icinga2 API
+icinga2 api setup
+# 
+ICINGA2_API_PASSWORD=$(awk -F'= ' '/password/ {print $2}' $ICINGA2_API_USERS_CONF_FILE | sed "s:\"::g")
+
+
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+Icinga2 API
+===========
+% The icinga2 was enabled and the password for root user is:
+
+$ICINGA2_API_PASSWORD
+
+-----------------------
+Icinga2 API - Examples
+-----------------------
+
+# Status
+curl -k -s -S -u "root:$ICINGA2_API_PASSWORD" "http://localhost:5665/v1/status"
+
+# Hosts
+curl -k -sS -u "root:$ICINGA2_API_PASSWORD" -H "Accept: application/json" \
+ -H 'X-HTTP-Method-Override: GET' -X POST \
+ 'https://localhost:5665/v1/objects/hosts'
+
+#
+EOF
+}
+
 icinga2_configure () {
 # Create and setup icinga2 MySQL database
 # ---------------------------------------
@@ -14820,6 +14853,9 @@ Icinga2
   $ICINGA2_CONFIG_DIR
 #
 EOF
+
+# Setup and enable Icinga2 API
+icinga2_api_setup
 }
 
 icingaweb2_install () {
