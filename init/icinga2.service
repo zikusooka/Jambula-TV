@@ -11,6 +11,10 @@ ExecStartPre=/bin/mkdir -p /var/log/icinga2/compat
 ExecStartPre=/usr/lib/icinga2/prepare-dirs /etc/sysconfig/icinga2
 ExecStart=/usr/sbin/icinga2 daemon -d -e ${ICINGA2_ERROR_LOG}
 PIDFile=/run/icinga2/icinga2.pid
+
+ExecStop=/usr/bin/kill $(cat ${ICINGA2_RUN_DIR}/icinga2/icinga2.pid) 
+ExecStop=/usr/bin/kill -9 $(ps auxw | awk '/[i]cinga/ {print $2}')
+
 ExecReload=/usr/lib/icinga2/safe-reload /etc/sysconfig/icinga2
 TimeoutStartSec=30m
 

@@ -980,6 +980,7 @@ ICINGA2_OBJECTS_DIR=$ICINGA2_CONFIG_DIR/conf.d
 ICINGA2_CUSTOM_CONFIG_DIR=$ICINGA2_OBJECTS_DIR/$PROJECT_NAME
 ICINGA2_SCRIPTS_DIR=$ICINGA2_CONFIG_DIR/scripts
 ICINGA2_FEATURES_AVAIL_DIR=$ICINGA2_CONFIG_DIR/features-available
+ICINGA2_FEATURES_ENABLED_DIR=$ICINGA2_CONFIG_DIR/features-enabled
 ICINGA2_API_USERS_CONF_FILE=$ICINGA2_OBJECTS_DIR/api-users.conf
 
 MONITORING_PLUGINS_DIR=$LIBDIR/nagios/plugins
@@ -1004,6 +1005,7 @@ ICINGAWEB2_DB_PASS=jambula2
 ICINGAWEB2_ADMIN_USER=jambulatv
 ICINGAWEB2_ADMIN_PASS=jambulatv2
 ICINGAWEB2_ADMIN_PASS_HASH=$(openssl passwd -1 $ICINGAWEB2_ADMIN_PASS)
+ICINGAWEB2_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/icingaweb2.log
 #
 ICINGA2_WEB_GROUP=icingaweb2
 ICINGA2_WEB_TOKEN_FILE=$TMPDIR/icingaweb2_setup_token
@@ -2392,9 +2394,10 @@ done
 }
 
 uninstall_icinga2 () {
-ICINGA2_PREVIOUS_VERSION=$(icinga2 --version | head -1 | cut -d : -f2 | sed 's: ::' | sed 's:)::')
+ICINGA2_PREVIOUS_VERSION=$([[ -x /usr/sbin/icinga2 ]] && /usr/sbin/icinga2 --version | head -1 | cut -d : -f2 | sed 's: ::' | sed 's:)::')
 # stop icinga2 service
-systemctl stop icinga2.service
+systemctl stop icinga2.service 
+kill -9 $(ps aux | awk '/[i]cinga/ {print $2}') > /dev/null 2>&1
 # disable service
 systemctl disable icinga2.service
 # Remove icinga systemd file
@@ -2406,10 +2409,10 @@ mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $ICINGA_DB_NAME
 groupdel $ICINGA_CMD_GROUP
 userdel -r $ICINGA_USER
 # Remove sudoers file
-[ -f $SUDOERS_DIR/icinga ] && \
+[[ -f $SUDOERS_DIR/icinga ]] && \
 	rm -f $SUDOERS_DIR/icinga
 # /etc
-mv -v $CONFDIR/icinga2 $CONFDIR/icinga2.$ICINGA2_PREVIOUS_VERSION
+rm -rf $CONFDIR/icinga2*
 rm -f $CONFDIR/rc.d/rc{0,1,2,3,4,5,6}.d/*icinga2
 rm -f $CONFDIR/bash_completion.d/icinga2
 rm -f $LOGROTATE_CONF_DIR/icinga2
@@ -2432,17 +2435,20 @@ rm -rf $INSTALL_SRC_DIR/icinga2
 }
 
 uninstall_icingaweb2 () {
-ICINGAWEB2_PREVIOUS_VERSION=$(cat $WWW_HTML_DIR/icingaweb2/VERSION | cut -d - -f1)
-# Backup config dir
-mv -v $PROJECT_SYSTEM_CONF_DIR/icingaweb2 $PROJECT_SYSTEM_CONF_DIR/icingaweb2.$ICINGAWEB2_PREVIOUS_VERSION
+ICINGAWEB2_PREVIOUS_VERSION=$([[ -f $WWW_HTML_DIR/icingaweb2/VERSION ]] && cat $WWW_HTML_DIR/icingaweb2/VERSION | cut -d - -f1)
+# Remove icingaweb2 config directories
+[[ -d $ICINGA2_WEB_CONFIG_DIR ]] && rm -rf $ICINGA2_WEB_CONFIG_DIR
+[[ -d $CONFDIR/icingaweb2 ]] && rm -rf $CONFDIR/icingaweb2
 # Remove icingaweb2 user/group
 groupdel $ICINGA2_WEB_GROUP 
 # Drop MySQL DB
 mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $ICINGAWEB2_DB_NAME
 # Remove icingaweb2 html/source files
-rm -rf $WWW_HTML_DIR/icingaweb2/
-[ -f $NGINX_CONF_DIR/sites-enabled/icingaweb2 ] &&
+[[ -d $WWW_HTML_DIR/icingaweb2 ]] && rm -rf $WWW_HTML_DIR/icingaweb2
+[[ -f $NGINX_CONF_DIR/sites-enabled/icingaweb2 ]] &&
 	rm -f $NGINX_CONF_DIR/sites-enabled/icingaweb2
+# Remove other files: log
+[[ -e $ICINGAWEB2_LOG_FILE ]] && rm -f $ICINGAWEB2_LOG_FILE
 }
 
 uninstall_zoneminder () {
@@ -14721,9 +14727,18 @@ aclocal && autoconf && automake -a
 make_install_jambulatv
 }
 
-icinga2_ido_mysql () {
-if [[ ! -e $ICINGA2_FEATURES_AVAIL_DIR/ido-mysql.conf ]];
+icinga2_ido_mysql_setup () {
+# Check if ido-mysql is enabled
+icinga2 feature list | awk -F':' '/Enabled features:/ {print $2}' | grep ido-mysql > /dev/null 2>&1
+IDO_MYSQL_ENABLED=$?
+#
+# Setup ido-mysql
+if [[ "$IDO_MYSQL_ENABLED" != "0" ]];
 then
+# Remove any existing 'ido-mysql.conf' files from icinga2 config dir
+[[ -e $ICINGA2_FEATURES_AVAIL_DIR/ido-mysql.conf ]] && \
+	sudo rm -f $ICINGA2_FEATURES_AVAIL_DIR/ido-mysql.conf
+#
 # Add MySQL DB login credentials to ido-mysql.conf
 cat > $ICINGA2_FEATURES_AVAIL_DIR/ido-mysql.conf << EOF
 /**
@@ -14740,25 +14755,35 @@ object IdoMysqlConnection "ido-mysql" {
   database = "$ICINGA_DB_NAME"
 }
 EOF
-fi
 #
-# Enable icinga2 ido-mysql
+# Enable icinga2 feature - ido-mysql
 icinga2 feature enable ido-mysql
+
+else
+# Notify that ido-mysql is already enabled
+logger -s -t $(basename $0) " Icinga2 ido-mysql is already enabled, proceeding ..."
+fi
 }
 
 icinga2_api_setup () {
+# Check if api is enabled
+icinga2 feature list | awk -F':' '/Enabled features:/ {print $2}' | grep api > /dev/null 2>&1
+API_ENABLED=$?
+#
 # Setup and enable Icinga2 API
+if [[ "$API_ENABLED" != "0" ]];
+then
 icinga2 api setup
 # 
 ICINGA2_API_PASSWORD=$(awk -F'= ' '/password/ {print $2}' $ICINGA2_API_USERS_CONF_FILE | sed "s:\"::g")
-
+export ICINGA2_API_PASSWORD
 
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
 #
 Icinga2 API
 ===========
-% The icinga2 was enabled and the password for root user is:
+% The icinga2 API was enabled and the password for root user is:
 
 $ICINGA2_API_PASSWORD
 
@@ -14776,6 +14801,11 @@ curl -k -sS -u "root:$ICINGA2_API_PASSWORD" -H "Accept: application/json" \
 
 #
 EOF
+
+else
+# Notify that ido-mysql is already enabled
+logger -s -t $(basename $0) " Icinga2 api is already enabled, proceeding ..."
+fi
 }
 
 icinga2_configure () {
@@ -14792,13 +14822,7 @@ mysqladmin -p$MYSQL_ROOT_PASSWORD create $ICINGA_DB_NAME
 echo "GRANT ALL PRIVILEGES ON $ICINGA_DB_NAME.* to '$ICINGA_DB_USER'@'localhost' IDENTIFIED by '$ICINGA_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
 # Populate icinga database tables using ido MySQL schema
 mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $DATAROOTDIR/icinga2-ido-mysql/schema/mysql.sql
-#
-# Setup ido-MySQL
-icinga2_ido_mysql
-#
-# Enable command, livestatus, compatlog
-icinga2 feature enable command livestatus compatlog
-#
+
 # Create custom config dirctory
 [ -d $ICINGA2_CUSTOM_CONFIG_DIR ] || mkdir $ICINGA2_CUSTOM_CONFIG_DIR
 # Copy Icinga objects files
@@ -14807,11 +14831,11 @@ cp -v $PROJECT_CONFIGS_DIR/icinga2/conf.d/*.conf $ICINGA2_CUSTOM_CONFIG_DIR/
 cp -v $PROJECT_CONFIGS_DIR/icinga2/scripts/* $ICINGA2_SCRIPTS_DIR/
 # Copy contributed plugins - See https://github.com/zikusooka/icinga-nagios-plugins 
 rsync -av $PROJECT_CONTRIB_DIR/icinga2/plugins/ $MONITORING_PLUGINS_DIR/
-#
-# Change Wirfeless Interface(s) in check_wifi_ap plugin
+
+# Change Wireless Interface(s) in check_wifi_ap plugin
 sed -i "s:MY_WIFI_STATION_INTERFACE:$WIFI_STATION_INTERFACE:g" \
 	$MONITORING_PLUGINS_DIR/check_wifi_ap
-#
+
 # Remove generic icinga2 conf files
 for ICINGA_FILE in hosts.conf;
 do
@@ -14832,16 +14856,32 @@ chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/log/icinga2
 chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/cache/icinga2
 # Copy icinga2 systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/icinga2.service $SYSTEMD_UNITS_DIR_USER/
-# Disable icinga2.service - IMPORTANT: Will be enabled after initial setup!
+
+# Enable icinga2 features: command, livestatus, compatlog
+for ICINGA2_FEATURE in command livestatus compatlog
+do
+icinga2 feature enable $ICINGA2_FEATURE
+done
+
+# Setup and enable icinga2 feature: ido-mysql
+icinga2_ido_mysql_setup
+
+# Setup and enable Icinga2 feature: API
+icinga2_api_setup
+
+# Disable icinga2.service - IMPORTANT: Enabled after initial setup!
 systemctl disable icinga2.service
+
 # Allow icinga user to use 'sudo' ie: events_handler commands
 # IMPORTANT: Refine what icinga can execute !!!
 echo "Defaults:$ICINGA_USER    !requiretty
 $ICINGA_USER             ALL = (ALL) NOPASSWD: ALL" > $SUDOERS_DIR/$ICINGA_USER
 # Change sudoer permissions
 chmod 0440 $SUDOERS_DIR/$ICINGA_USER
+
 # Check config
 icinga2 daemon -C || \
+
 # Notify of icinga2 check error in final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
@@ -14853,9 +14893,6 @@ Icinga2
   $ICINGA2_CONFIG_DIR
 #
 EOF
-
-# Setup and enable Icinga2 API
-icinga2_api_setup
 }
 
 icingaweb2_install () {
@@ -14909,19 +14946,14 @@ usermod -a -G $ICINGA2_WEB_GROUP $WWW_USER
 usermod -a -G $ICINGA_CMD_GROUP $WWW_USER
 # Change permissions to WWW user
 chown -R $WWW_USER:$ICINGA2_WEB_GROUP $WWW_HTML_DIR/icingaweb2
-# Setup config directory
-$WWW_HTML_DIR/icingaweb2/bin/icingacli setup config directory --group $ICINGA2_WEB_GROUP --config $PROJECT_SYSTEM_CONF_DIR/icingaweb2
-# Copy icingaweb2 nginx config file or run the command:
-# '$WWW_HTML_DIR/icingaweb2/bin/icingacli setup config webserver nginx --document-root $WWW_HTML_DIR/icingaweb2/public > $NGINX_CONF_DIR/sites-enabled/icingaweb2'
-[ -e $NGINX_CONF_DIR/sites-enabled/icingaweb2 ] || cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/icingaweb2 $NGINX_CONF_DIR/sites-enabled/
-# Restart nginx
-systemctl restart nginx.service
+}
 
-# Add DB schema for icingaweb2
-#mysql -u $ICINGA_DB_USER -p$ICINGA_DB_PASS $ICINGA_DB_NAME < $WWW_HTML_DIR/icingaweb2/etc/schema/mysql.schema.sql 
+icingaweb2_configure () {
+# Get WWW User and Group
+set_www_user_group
 
 # Database 4 icingaweb2
-# ---------------------
+# ---
 # Enable and start mysql service if it is not running
 systemctl -q is-active mysqld.service || systemctl enable mysqld.service
 systemctl -q is-active mysqld.service || systemctl start mysqld.service
@@ -14932,40 +14964,50 @@ mysqladmin -p$MYSQL_ROOT_PASSWORD create $ICINGAWEB2_DB_NAME
 # Set privileges on icinga database
 echo "GRANT ALL PRIVILEGES ON $ICINGAWEB2_DB_NAME.* to '$ICINGAWEB2_DB_USER'@'localhost' IDENTIFIED by '$ICINGAWEB2_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
 # Add DB schema for icingaweb2
-mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME < $WWW_HTML_DIR/icingaweb2/etc/schema/mysql.schema.sql 
-}
+mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME < $WWW_HTML_DIR/icingaweb2/etc/schema/mysql.schema.sql
 
-icingaweb2_configure () {
-# Setup ido-MySQL
-icinga2_ido_mysql 
+# Admin User and Group 4 icingaweb2
+# ---
+# Create Icingaweb2 Admin User in MySQL database
+echo "INSERT INTO icingaweb_user (name, active, password_hash, ctime) VALUES ('$ICINGAWEB2_ADMIN_USER', '1', '$ICINGAWEB2_ADMIN_PASS_HASH', NOW());" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
+# Create Icingaweb2 Admin Group in MySQL database
+echo "INSERT INTO icingaweb_group VALUES (1,'Administrators', NULL, NOW(), NULL);" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
+# Add Icingaweb2 User to Admin Group in MySQL database
+echo "INSERT INTO icingaweb_group_membership (group_id, username, ctime) VALUES ('1', '$ICINGAWEB2_ADMIN_USER', NOW());" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
 
-# Get WWW User and Group
-set_www_user_group
-#
+# Icinga2 CLI setup
+# -----------------
+# Setup icingaweb2 config directory, and create it if non-existent
+$WWW_HTML_DIR/icingaweb2/bin/icingacli setup config directory --group $ICINGA2_WEB_GROUP --config $ICINGA2_WEB_CONFIG_DIR
+
 # Generate setup token
-$WWW_HTML_DIR/icingaweb2/bin/icingacli setup token create --config $PROJECT_SYSTEM_CONF_DIR/icingaweb2 > $ICINGA2_WEB_TOKEN_FILE
-#
-# Authentication file
-cat > $ICINGA2_WEB_AUTH_FILE <<EOF
-[icingaweb2]
-backend             = "db"
-resource            = "icingaweb_db"
-EOF
-# Config file
+$WWW_HTML_DIR/icingaweb2/bin/icingacli setup token create --config $ICINGA2_WEB_CONFIG_DIR > $ICINGA2_WEB_TOKEN_FILE
+
+# Config.ini: General configuration (global, logging, themes, etc.)
+# ---
 cat > $ICINGA2_WEB_CONF_FILE <<EOF
 [global]
-show_stacktraces = "1"
+show_stacktraces = "0"
 config_backend = "db"
-config_resource = "icingaweb_db"
+config_resource = "icingaweb2"
+module_path = "$WWW_HTML_DIR/icingaweb2/modules"
 
 [logging]
-log = "syslog"
-level = "ERROR"
+log = "file"
+file = "$ICINGAWEB2_LOG_FILE"
+level = "DEBUG"
 application = "icingaweb2"
+facility = "user"
+
+[themes]
+disabled = "1"
+default = "high-contrast"
 EOF
-# Resources file
+
+# resources.ini: Global resources (Icinga Web 2 database for preferences# and authentication, Icinga 2 IDO database)
+# ---
 cat > $ICINGA2_WEB_RESOURCES_FILE << EOF
-[icingaweb_db]
+[icingaweb2]
 type                = "db"
 db                  = "mysql"
 host                = "localhost"
@@ -14973,10 +15015,8 @@ port                = "3306"
 dbname = "$ICINGAWEB2_DB_NAME"
 username = "$ICINGAWEB2_DB_USER"
 password = "$ICINGAWEB2_DB_PASS"
-charset = ""
-persistent = "0"
 
-[icinga_ido]
+[icinga2]
 type                = "db"
 db                  = "mysql"
 host                = "localhost"
@@ -14984,80 +15024,105 @@ port                = "3306"
 dbname              = "$ICINGA_DB_NAME"
 username            = "$ICINGA_DB_USER"
 password            = "$ICINGA_DB_PASS"
-charset = ""
-persistent = "0"
 EOF
-#
-# Roles file
+
+# authentication.ini: Authentication backends (e.g. database)
+# ---
+cat > $ICINGA2_WEB_AUTH_FILE <<EOF
+[icingaweb2]
+backend             = "db"
+resource            = "icingaweb2"
+EOF
+
+# roles.ini: User specific roles (e.g. administrators) and permissions
+# ---
 cat > $ICINGA2_WEB_ROLES_FILE <<EOF
 [Administrators]
 users               = "$ICINGA_DB_USER"
 permissions         = "*"
 groups = "Administrators"
 EOF
-#
-# Groups file
+
+# groups.ini: Groups
+# ---
 cat > $ICINGA2_WEB_GROUPS_FILE <<EOF
 [icingaweb2]
 backend = "db"
-resource = "icingaweb_db"
+resource = "icingaweb2"
 EOF
-#
-# Create modules directories if they do not exist
-for MOD in monitoring
-do
-[ -d $ICINGA2_WEB_CONFIG_DIR/modules/$MOD ] || \
-	mkdir -p $ICINGA2_WEB_CONFIG_DIR/modules/$MOD
-done
-#
-# Configure monitoring module
-# ----------------------------
-# backends.ini
-cat > $ICINGA2_WEB_CONFIG_DIR/modules/monitoring/backends.ini <<EOF
-[icinga]
-type                = "ido"
-resource            = "icinga_ido"
-EOF
-# config.ini
+
+# Configure Monitoring backend in order to bypass GUI wizard process
+# ------------------------------------------------------------------
+# Create monitoring module directory if its does not exist
+[[ -d $ICINGA2_WEB_CONFIG_DIR/modules/monitoring ]] || \
+        mkdir -p $ICINGA2_WEB_CONFIG_DIR/modules/monitoring
+
+# config.ini: Defines additional security settings
+# ---
 cat > $ICINGA2_WEB_CONFIG_DIR/modules/monitoring/config.ini <<EOF
 [security]
 protected_customvars = "*pw*,*pass*,community"
 EOF
-# instances.ini
+
+# backends.ini: References the Icinga 2 DB IDO resource
+# ---
+cat > $ICINGA2_WEB_CONFIG_DIR/modules/monitoring/backends.ini <<EOF
+[icinga]
+type                = "ido"
+resource            = "icinga2"
+EOF
+
+# commandtransports.ini: Defines the Icinga 2 API command transport
 cat > $ICINGA2_WEB_CONFIG_DIR/modules/monitoring/commandtransports.ini <<EOF
 [icinga2]
-transport           = "local"
-path                = "$RUNDIR/icinga2/cmd/icinga2.cmd"
+transport = "api"
+host = "localhost"
+port = "5665"
+username = "root"
+password = "$ICINGA2_API_PASSWORD"
 EOF
-#
-# Create enabledModules directory if it does not exist
-[ -d $ICINGA2_WEB_CONFIG_DIR/enabledModules ] || \
-	mkdir -p $ICINGA2_WEB_CONFIG_DIR/enabledModules
-# Link to monitoring under enabledModules directory if it does not exist
-[ -e $ICINGA2_WEB_CONFIG_DIR/enabledModules/monitoring ] || ln -s $WWW_HTML_DIR/icingaweb2/modules/monitoring $ICINGA2_WEB_CONFIG_DIR/enabledModules/monitoring
-# Documentation
-# Link to doc under enabledModules directory if it does not exist
-[ -e $ICINGA2_WEB_CONFIG_DIR/enabledModules/doc ] || \
-	ln -s $WWW_HTML_DIR/icingaweb2/modules/doc \
-	$ICINGA2_WEB_CONFIG_DIR/enabledModules/doc
-# Make symlinks to modules accessible
-chmod -R 777 $ICINGA2_WEB_CONFIG_DIR/enabledModules
-# Change ownership of icingaweb2 config directory
-chown -R $WWW_USER:$ICINGA2_WEB_GROUP $ICINGA2_WEB_CONFIG_DIR
-#
-# Modules
-# Add Icinga2 documentation
-[ -d $WWW_HTML_DIR/icingaweb2/modules/icinga2 ] || mkdir $WWW_HTML_DIR/icingaweb2/modules/icinga2
-rsync -av $PROJECT_GITHUB_DIR/icinga2/doc/ $WWW_HTML_DIR/icingaweb2/modules/icinga2/doc/
-# Change directory owner/group to allow web user
-chown -R $WWW_USER:$ICINGA2_WEB_GROUP $WWW_HTML_DIR/icingaweb2/modules/icinga2
 
-# Create Icingaweb2 Admin User in MySQL database
-echo "INSERT INTO icingaweb_user (name, active, password_hash, ctime) VALUES ('$ICINGAWEB2_ADMIN_USER', '1', '$ICINGAWEB2_ADMIN_PASS_HASH', NOW());" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
-# Create Icingaweb2 Admin Group in MySQL database
-echo "INSERT INTO icingaweb_group VALUES (1,'Administrators', NULL, NOW(), NULL);" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
-# Add Icingaweb2 User to Admin Group in MySQL database
-echo "INSERT INTO icingaweb_group_membership (group_id, username, ctime) VALUES ('1', '$ICINGAWEB2_ADMIN_USER', NOW());" | mysql -u $ICINGAWEB2_DB_USER -p$ICINGAWEB2_DB_PASS $ICINGAWEB2_DB_NAME
+# Enable modules: monitoring, doc
+# ---
+# Create enabledModules directory
+[[ -d $ICINGA2_WEB_CONFIG_DIR/enabledModules ]] || \
+        mkdir -p $ICINGA2_WEB_CONFIG_DIR/enabledModules
+# Create symlinks to modules inside enabledModules i.e. enable module
+for ICINGA_MODULE in monitoring doc
+do
+# Link to module under enabledModules directory if it does not exist
+[[ -e $ICINGA2_WEB_CONFIG_DIR/enabledModules/$ICINGA_MODULE ]] || \
+	ln -s $WWW_HTML_DIR/icingaweb2/modules/$ICINGA_MODULE \
+	$ICINGA2_WEB_CONFIG_DIR/enabledModules/$ICINGA_MODULE
+done
+
+# Create icingaweb2 file and give it appropriate permissions
+[[ -e $ICINGAWEB2_LOG_FILE ]] || touch $ICINGAWEB2_LOG_FILE
+chown -R $WWW_USER:$ICINGA2_WEB_GROUP $ICINGAWEB2_LOG_FILE
+
+# Change permissions and ownership of icingaweb2 config directory
+chmod -R 2770 $ICINGA2_WEB_CONFIG_DIR
+chown -R $WWW_USER:$ICINGA2_WEB_GROUP $ICINGA2_WEB_CONFIG_DIR
+
+# Add Icinga2 documentation files
+# ---
+rsync -av $PROJECT_GITHUB_DIR/icinga2/doc/ $WWW_HTML_DIR/icingaweb2/doc/icinga2/
+# Change directory owner/group to allow web user
+chown -R $WWW_USER:$ICINGA2_WEB_GROUP $WWW_HTML_DIR/icingaweb2/doc/icinga2
+
+# Setup and enable icinga2 feature - ido-mysql
+icinga2_ido_mysql_setup
+
+# Setup Webserver i.e. Nginx
+# ---
+# Add nginx web server file for icingaweb2
+[[ -e $NGINX_CONF_DIR/sites-enabled/icingaweb2 ]] || cp -v $PROJECT_CONFIGS_DIR/nginx/sites-enabled/icingaweb2 $NGINX_CONF_DIR/sites-enabled/
+#
+# Restart nginx systemd unit
+systemctl restart nginx.service
+
+# Restart icinga2 systemd unit
+systemctl restart icinga2.service
 
 # Display IcingaWeb's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
@@ -15083,8 +15148,6 @@ Experts Only
   SETUP_ICINGA2_PRESENCE_HOSTS=yes
 
 EOF
-# Restart nginx
-systemctl restart nginx.service
 }
 
 icinga2_ui_configure () {
