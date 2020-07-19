@@ -440,6 +440,8 @@ check_logfiles_install
 icinga2_configure
 icingaweb2_install
 icingaweb2_configure
+icinga2_director_install
+icinga2_director_configure
 #
 internet_connectivity_monitoring
 #

@@ -976,6 +976,7 @@ ICINGA_DB_USER=${ICINGA_USER}2
 ICINGA_DB_PASS=${ICINGA_PASS}2
 
 ICINGA2_CONFIG_DIR=$CONFDIR/icinga2
+ICINGA2_ZONES_DIR=$ICINGA2_CONFIG_DIR/zones.d
 ICINGA2_OBJECTS_DIR=$ICINGA2_CONFIG_DIR/conf.d
 ICINGA2_CUSTOM_CONFIG_DIR=$ICINGA2_OBJECTS_DIR/$PROJECT_NAME
 ICINGA2_SCRIPTS_DIR=$ICINGA2_CONFIG_DIR/scripts
@@ -1015,6 +1016,14 @@ ICINGA2_WEB_CONF_FILE=$ICINGA2_WEB_CONFIG_DIR/config.ini
 ICINGA2_WEB_RESOURCES_FILE=$ICINGA2_WEB_CONFIG_DIR/resources.ini
 ICINGA2_WEB_ROLES_FILE=$ICINGA2_WEB_CONFIG_DIR/roles.ini
 ICINGA2_WEB_GROUPS_FILE=$ICINGA2_WEB_CONFIG_DIR/groups.ini
+
+# Icinga Director
+ICINGA_DIRECTOR_DB_NAME=icinga_director
+ICINGA_DIRECTOR_DB_USER=icinga_director
+ICINGA_DIRECTOR_DB_PASS=jambula3
+ICINGA_DIRECTOR_API_USER=director_api
+ICINGA_DIRECTOR_API_PASS=jambula4
+ICINGA_DIRECTOR_ZONE=director-global
 
 # VNC
 VNC_DISPLAY=3
@@ -2449,6 +2458,23 @@ mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $ICINGAWEB2_DB_NAME
 	rm -f $NGINX_CONF_DIR/sites-enabled/icingaweb2
 # Remove other files: log
 [[ -e $ICINGAWEB2_LOG_FILE ]] && rm -f $ICINGAWEB2_LOG_FILE
+}
+
+uninstall_icinga2_director () {
+# Remove icinga director config directories
+[[ -d $ICINGA2_WEB_CONFIG_DIR/modules/director ]] && \
+	rm -rf $ICINGA2_WEB_CONFIG_DIR/modules/director
+# Remove director symlink in enabledModules directory
+[[ -e $ICINGA2_WEB_CONFIG_DIR/enabledModules/director ]] && \
+	rm -f $ICINGA2_WEB_CONFIG_DIR/enabledModules/director
+# Drop MySQL DB
+mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $ICINGA_DIRECTOR_DB_NAME
+# Remove directory and dependency module sources
+for ICINGA_MODULE in incubator ipl reactbundle director;
+do
+[[ -d $WWW_HTML_DIR/icingaweb2/modules/$ICINGA_MODULE ]] && \
+	rm -rf $WWW_HTML_DIR/icingaweb2/modules/$ICINGA_MODULE
+done
 }
 
 uninstall_zoneminder () {
@@ -15148,6 +15174,101 @@ Experts Only
   SETUP_ICINGA2_PRESENCE_HOSTS=yes
 
 EOF
+}
+
+icinga2_director_install () {
+# Copy & sync sources for icingaweb2 modules: director and dependencies
+for ICINGA_MODULE in incubator ipl reactbundle director;
+do
+rsync -av $PROJECT_GITHUB_DIR/icingaweb2-modules/$ICINGA_MODULE/ $WWW_HTML_DIR/icingaweb2/modules/$ICINGA_MODULE/
+done
+}
+
+icinga2_director_configure () {
+# Database 4 Icinga Director
+# ---
+# Enable and start mysql service if it is not running
+systemctl -q is-active mysqld.service || systemctl enable mysqld.service
+systemctl -q is-active mysqld.service || systemctl start mysqld.service
+# Change MySQL password if default is empty
+mysqladmin password $MYSQL_ROOT_PASSWORD > /dev/null 2>&1 || clear && echo "Default MySQL password was already changed! Proceeding ..." && sleep 5
+# Create icinga director database
+mysqladmin -p$MYSQL_ROOT_PASSWORD create $ICINGA_DIRECTOR_DB_NAME
+# Set privileges on icinga director database
+echo "GRANT ALL PRIVILEGES ON $ICINGA_DIRECTOR_DB_NAME.* to '$ICINGA_DIRECTOR_DB_USER'@'localhost' IDENTIFIED by '$ICINGA_DIRECTOR_DB_PASS';" | mysql -u root -p$MYSQL_ROOT_PASSWORD
+
+# Add DB schema for Icinga Director
+mysql -u $ICINGA_DIRECTOR_DB_USER -p$ICINGA_DIRECTOR_DB_PASS $ICINGA_DIRECTOR_DB_NAME < $WWW_HTML_DIR/icingaweb2/modules/director/schema/mysql.sql
+
+# Configure director backend in order to bypass GUI wizard process
+# ------------------------------------------------------------------
+cat >> $ICINGA2_WEB_RESOURCES_FILE << EOF
+[$ICINGA_DIRECTOR_DB_NAME]
+type = "db"
+db = "mysql"
+host = "localhost"
+dbname = "$ICINGA_DIRECTOR_DB_NAME"
+username = "$ICINGA_DIRECTOR_DB_USER"
+password = "$ICINGA_DIRECTOR_DB_PASS"
+charset = "utf8"
+EOF
+
+# Create director module directory if its does not exist
+[[ -d $ICINGA2_WEB_CONFIG_DIR/modules/director ]] || \
+        mkdir -p $ICINGA2_WEB_CONFIG_DIR/modules/director
+
+# config.ini
+# ---
+cat > $ICINGA2_WEB_CONFIG_DIR/modules/director/config.ini <<EOF
+[db]
+resource = "$ICINGA_DIRECTOR_DB_NAME"
+EOF
+
+# kickstart.ini
+# ---
+cat > $ICINGA2_WEB_CONFIG_DIR/modules/director/kickstart.ini <<EOF
+[config]
+endpoint = master
+host = localhost
+port = 5665
+username = $ICINGA_DIRECTOR_API_USER
+password = $ICINGA_DIRECTOR_API_PASS
+EOF
+
+# Create API user for director
+cat >> $ICINGA2_API_USERS_CONF_FILE <<ET
+
+object ApiUser "$ICINGA_DIRECTOR_API_USER" {
+  password = "$ICINGA_DIRECTOR_API_PASS"
+  permissions = [ "*" ]
+  //client_cn = ""
+}
+ET
+
+# Create Zone for director
+cat >> $ICINGA2_ZONES_DIR/jambulatv-zones.conf <<ET
+
+object Zone "$ICINGA_DIRECTOR_ZONE" {
+  global = true
+}
+ET
+
+# Enable icingaweb2 modules: director and dependencies
+# ---
+# Create enabledModules directory if non-existent
+[[ -d $ICINGA2_WEB_CONFIG_DIR/enabledModules ]] || \
+        mkdir -p $ICINGA2_WEB_CONFIG_DIR/enabledModules
+# Create symlinks to modules inside enabledModules i.e. enable modules
+for ICINGA_MODULE in incubator ipl reactbundle director;
+do
+[[ -e $ICINGA2_WEB_CONFIG_DIR/enabledModules/$ICINGA_MODULE ]] || \
+	ln -s $WWW_HTML_DIR/icingaweb2/modules/$ICINGA_MODULE \
+	$ICINGA2_WEB_CONFIG_DIR/enabledModules/$ICINGA_MODULE
+done
+
+# Change permissions and ownership of icingaweb2 config dir
+chmod -R 2770 $ICINGA2_WEB_CONFIG_DIR
+chown -R $WWW_USER:$ICINGA2_WEB_GROUP $ICINGA2_WEB_CONFIG_DIR
 }
 
 icinga2_ui_configure () {

@@ -119,6 +119,12 @@ icingaweb2_install
 icingaweb2_configure 
 }
 
+upgrade_icinga2_director () {
+uninstall_icinga2_director
+icinga2_director_install
+icinga2_director_configure
+}
+
 upgrade_owncloud () {
 uninstall_owncloud
 owncloud_install
@@ -383,6 +389,7 @@ nginx_install
 
 #upgrade_icinga2 
 #upgrade_icingaweb2
+#upgrade_icinga2_director
 
 #upgrade_nextcloud
 
