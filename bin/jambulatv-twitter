@@ -25,13 +25,39 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 # Source install functions
 . $PROJECT_FUNCTIONS_FILE
 
+MQTT_TOPIC_STATUS_COVID=JambulaTV/house/status/covid19_ug_updates
+MQTT_TOPIC_STATUS_POWER_UMEME=JambulaTV/house/status/power_umeme_alerts
+MQTT_TOPIC_STATUS_POWER_UETCL=JambulaTV/house/status/power_uetcl_alerts
+MQTT_TOPIC_STATUS_POWER_ESKOM=JambulaTV/house/status/power_eskom_alerts
+MQTT_TOPIC_STATUS_WATER_CHATS=JambulaTV/house/status/water_village_chats
+MQTT_TOPIC_STATUS_POWER_CHATS=JambulaTV/house/status/power_village_chats
+
 TWITTER_CLIENT_CMD=/usr/bin/tweet.sh
 TWITTER_CLIENT_KEYS_FILE=$PROJECT_SYSTEM_CONF_DIR/twitter_client.key
+TWITTER_SHORT_URL="https://t.co/"
 TWITTER_DATE=$(date -u +'%a %b %d')
 TWITTER_DATE_YESTERDAY=$(date -u -d yesterday +'%Y-%m-%d')
-TWITTER_REPORTS_OUTPUT_FILE=$TMPDIR/twitter_reports_today
+TWITTER_REPORTS_OUTPUT_DIR=$TMPDIR/twitter_searches
+TWITTER_REPORTS_OUTPUT_FILE_ALL=$TWITTER_REPORTS_OUTPUT_DIR/all
+TWITTER_REPORTS_OUTPUT_FILE_POWER_UMEME=$TWITTER_REPORTS_OUTPUT_DIR/power_umeme
+TWITTER_REPORTS_OUTPUT_FILE_POWER_UETCL=$TWITTER_REPORTS_OUTPUT_DIR/power_uetcl
+TWITTER_REPORTS_OUTPUT_FILE_POWER_ESKOM=$TWITTER_REPORTS_OUTPUT_DIR/power_eskom
+TWITTER_REPORTS_OUTPUT_FILE_WATER_CHATS=$TWITTER_REPORTS_OUTPUT_DIR/water_chats
+TWITTER_REPORTS_OUTPUT_FILE_POWER_CHATS=$TWITTER_REPORTS_OUTPUT_DIR/power_chats
+TWITTER_REPORTS_OUTPUT_FILE_COVID=$TWITTER_REPORTS_OUTPUT_DIR/covid_19
+TWITTER_REPORTS_OUTPUT_FILE_DAILY_MONITOR=$TWITTER_REPORTS_OUTPUT_DIR/newspaper_daily_monitor
+TWITTER_REPORTS_OUTPUT_FILE_OBSERVER=$TWITTER_REPORTS_OUTPUT_DIR/newspaper_observer
+TWITTER_REPORTS_OUTPUT_FILE_NEW_VISION=$TWITTER_REPORTS_OUTPUT_DIR/newspaper_new_vision
+TWITTER_REPORTS_OUTPUT_FILE_RED_PEPPER=$TWITTER_REPORTS_OUTPUT_DIR/newspaper_red_pepper
 
 TWITTER_VILLAGE_NAME=$1
+TWITTER_SEARCH_TASK=$2
+
+
+
+###############
+#  FUNCTIONS  #
+###############
 
 get_client_keys () {
 # Source Twitter client keys file if available
@@ -63,9 +89,9 @@ fi
 usage () {
 # CLI arguments
 clear
-if [ "x$TWITTER_VILLAGE_NAME" = "x" ];
+if [[ "x$TWITTER_VILLAGE_NAME" = "x" || "x$TWITTER_SEARCH_TASK" = "x" ]];
 then
-echo "Usage:  ./`basename $0` [VILLAGE NAME]
+echo "Usage:  ./`basename $0` [VILLAGE NAME] [newspapers|power_umeme|power_uetcl|power_eskom|water_chats|power_chats|covid|all]
 "
 exit 1
 fi
@@ -84,6 +110,10 @@ then
 # Start a VPN tunnel using sshuttle
 $VPN_TUNNEL_SSHUTTLE_TOOL start $MIDDLEMAN_SSH_SERVER $MIDDLEMAN_SSH_SERVER_PORT $MIDDLEMAN_SSH_SERVER_USER 0.0.0.0/0
 fi
+
+# Create output directory if non existent
+[[ -d $TWITTER_REPORTS_OUTPUT_DIR ]] || \
+	sudo mkdir -p $TWITTER_REPORTS_OUTPUT_DIR
 }
 
 post_clean_up_tasks () {
@@ -95,105 +125,344 @@ $VPN_TUNNEL_SSHUTTLE_TOOL stop
 fi
 }
 
-extract_newspaper_links () {
-# Daily monitor
-# ---
-DAILY_MONITOR_SEARCH_STRING="Monitor+Today OR Monitor+Tomorrow OR Saturday+Monitor OR Sunday+Monitor OR In+your+copy+of+the+Daily+Monitor"
-# 
-cat <<ET
+mqtt_publish () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "changed"
+}
 
-Daily Monitor (Uganda)
-ET
-$TWITTER_CLIENT_CMD search -c 1 -q "from:DailyMonitor since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $DAILY_MONITOR_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
-
-# The Observer
-# ---
-OBSERVER_SEARCH_STRING="In+@observerug: OR In+@observerug+tomorrow: AND >>"
+twitter_search_daily_monitor () {
+DAILY_MONITOR_SEARCH_STRING="\"edition of\" OR \"your copy of\" OR \"yourself a copy of\" OR \"headline in the\" OR \"details of this\" OR \"and more stories\""
+NTV_UGANDA_SEARCH_STRING="\"look out for today\" OR \"yourself a copy of\" OR \"see the details of this story and more\""
 #
-cat <<ET
+# Daily monitor
+$TWITTER_CLIENT_CMD search -c 1 -q "from:DailyMonitor since:$TWITTER_DATE_YESTERDAY filter:twimg filter:media $DAILY_MONITOR_SEARCH_STRING" | jq -r '.statuses[].entities' | grep -i "$TWITTER_SHORT_URL" > ${TWITTER_REPORTS_OUTPUT_FILE_DAILY_MONITOR}.tmp 2>&1
+DAILY_MONITOR_TWITTER_OUTPUT=$?
+#
+# Try NTV Uganda since same media house
+$TWITTER_CLIENT_CMD search -c 1 -q "from:ntvuganda since:$TWITTER_DATE_YESTERDAY filter:twimg filter:media $NTV_UGANDA_SEARCH_STRING" | jq -r '.statuses[].entities' | grep -i "$TWITTER_SHORT_URL" >> ${TWITTER_REPORTS_OUTPUT_FILE_DAILY_MONITOR}.tmp 2>&1
+NTV_UGANDA_TWITTER_OUTPUT=$?
 
-The Observer (Uganda)
+if [[ "$DAILY_MONITOR_TWITTER_OUTPUT" = "0" || "$NTV_UGANDA_TWITTER_OUTPUT" = "0" ]] && [[ -s ${TWITTER_REPORTS_OUTPUT_FILE_DAILY_MONITOR}.tmp ]];
+then
+# Merge Twitter search outputs
+grep -i "$TWITTER_SHORT_URL" ${TWITTER_REPORTS_OUTPUT_FILE_DAILY_MONITOR}.tmp | head -1 | awk {'print $2'} | sed 's:[",]::g' > $TWITTER_REPORTS_OUTPUT_FILE_DAILY_MONITOR
+# Add header to Twitter search output file
+sed -i "1i *Daily Monitor (Uganda)*" $TWITTER_REPORTS_OUTPUT_FILE_DAILY_MONITOR
+
+# Print search results
+cat $TWITTER_REPORTS_OUTPUT_FILE_DAILY_MONITOR  
+
+else
+cat <<ET
+Warning: Frontpage news clip for the Daily Monitor was not found
 ET
-$TWITTER_CLIENT_CMD search -c 1 -q "from:observerug since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $OBSERVER_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
+fi
+}
+
+twitter_search_observer () {
+OBSERVER_SEARCH_STRING="\"In @observerug\""
+#
+$TWITTER_CLIENT_CMD search -c 1 -q "from:observerug since:$TWITTER_DATE_YESTERDAY filter:twimg filter:media $OBSERVER_SEARCH_STRING" | jq -r '.statuses[].entities' | grep -i "$TWITTER_SHORT_URL" > ${TWITTER_REPORTS_OUTPUT_FILE_OBSERVER}.tmp 2>&1
+OBSERVER_TWITTER_OUTPUT=$?
+#
+if [[ "$OBSERVER_TWITTER_OUTPUT" = "0" ]] && [[ -s ${TWITTER_REPORTS_OUTPUT_FILE_OBSERVER}.tmp ]];
+then
+# Merge Twitter search outputs
+grep -i "$TWITTER_SHORT_URL" ${TWITTER_REPORTS_OUTPUT_FILE_OBSERVER}.tmp | head -1 | awk {'print $2'} | sed 's:[",]::g' > $TWITTER_REPORTS_OUTPUT_FILE_OBSERVER
+# Add header to Twitter search output file
+sed -i "1i *Observer (Uganda)*" $TWITTER_REPORTS_OUTPUT_FILE_OBSERVER
+
+# Print search results
+cat $TWITTER_REPORTS_OUTPUT_FILE_OBSERVER  
+
+else
+cat <<ET
+Warning: Frontpage news clip for Observer was not found
+ET
+fi
+}
+
+twitter_search_new_vision () {
+NEW_VISION_SEARCH_STRING="\"A sneak peek of today\" OR \"TODAY IN THE NEW\" OR \"Get the details in\" OR \"daily is out\" OR \"Details and more\" OR \"Grab yourself a copy or subscribe to our\"OR \"in your copy of the\""
+#
+$TWITTER_CLIENT_CMD search -c 1 -q "from:newvisionwire since:$TWITTER_DATE_YESTERDAY filter:media $NEW_VISION_SEARCH_STRING" | jq -r '.statuses[].entities' | grep -i "$TWITTER_SHORT_URL" > ${TWITTER_REPORTS_OUTPUT_FILE_NEW_VISION}.tmp 2>&1
+NEW_VISION_TWITTER_OUTPUT=$?
+#
+if [[ "$NEW_VISION_TWITTER_OUTPUT" = "0" ]] && [[ -s ${TWITTER_REPORTS_OUTPUT_FILE_NEW_VISION}.tmp ]];
+then
+# Merge Twitter search outputs
+grep -i "$TWITTER_SHORT_URL" ${TWITTER_REPORTS_OUTPUT_FILE_NEW_VISION}.tmp | head -1 | awk {'print $2'} | sed 's:[",]::g' > $TWITTER_REPORTS_OUTPUT_FILE_NEW_VISION
+# Add header to Twitter search output file
+sed -i "1i *New Vision (Uganda)*" $TWITTER_REPORTS_OUTPUT_FILE_NEW_VISION
+
+# Print search results
+cat $TWITTER_REPORTS_OUTPUT_FILE_NEW_VISION  
+
+else
+cat <<ET
+Warning: Frontpage news clip for New Vision was not found
+ET
+fi
+}
+
+twitter_search_red_pepper () {
+RED_PEPPER_SEARCH_STRING="\"Edition\" OR \"On The Stall\" OR \"on the stalls\" OR \"at stalls\""
+#
+$TWITTER_CLIENT_CMD search -c 1 -q "from:RedPepperUG since:$TWITTER_DATE_YESTERDAY filter:twimg filter:media $RED_PEPPER_SEARCH_STRING" | jq -r '.statuses[].entities' | grep -i "$TWITTER_SHORT_URL" > ${TWITTER_REPORTS_OUTPUT_FILE_RED_PEPPER}.tmp 2>&1
+RED_PEPPER_TWITTER_OUTPUT=$?
+#
+if [[ "$RED_PEPPER_TWITTER_OUTPUT" = "0" ]] && [[ -s ${TWITTER_REPORTS_OUTPUT_FILE_RED_PEPPER}.tmp ]];
+then
+# Merge Twitter search outputs
+grep -i "$TWITTER_SHORT_URL" ${TWITTER_REPORTS_OUTPUT_FILE_RED_PEPPER}.tmp | head -1 | awk {'print $2'} | sed 's:[",]::g' > $TWITTER_REPORTS_OUTPUT_FILE_RED_PEPPER
+# Add header to Twitter search output file
+sed -i "1i *Red Pepper (Uganda)*" $TWITTER_REPORTS_OUTPUT_FILE_RED_PEPPER
+
+# Print search results
+cat $TWITTER_REPORTS_OUTPUT_FILE_RED_PEPPER 
+
+else
+cat <<ET
+Warning: Frontpage news clip for Red Pepper was not found
+ET
+fi
+}
+
+# Daily Newspapers for Uganda
+# ---
+twitter_search_newspapers () {
+# Add header
+cat <<ET
+*Today's daily newspapers (Uganda)*
+* ---
+ET
+
+# Daily monitor
+twitter_search_daily_monitor
+
+# Observer
+twitter_search_observer
 
 # New Vision
-# ---
-NEW_VISION_SEARCH_STRING="TODAY+IN+THE+NEW OR Get+the+details+in OR daily+is+out OR Details+and+more OR Saturday OR Sunday OR Get+yourself+a+copy+of+the AND Vision"
-#
-cat <<ET
-
-New Vision (Uganda)
-ET
-$TWITTER_CLIENT_CMD search -c 1 -q "from:newvisionwire since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $NEW_VISION_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
+twitter_search_new_vision
 
 # RedPepper
+twitter_search_red_pepper
+}
+
+# Power outage alerts by UMEME
 # ---
-REDPEPPER_SEARCH_STRING="Edition OR On+The+Stall"
+twitter_search_power_umeme () {
+PREVIOUS_OUTPUT_FILE_SIZE=$([[ -e $TWITTER_REPORTS_OUTPUT_FILE_POWER_UMEME ]] && stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_POWER_UMEME)
+POWER_UMEME_ALERTS_STRING="#PlannedShutdownAlert OR #PlannedOutageAlert OR #OutageAlert OR #PowerOutageAlert OR #OutageUpdate OR \"Outage Alert\" OR #YakaVendingServices OR \"token generation\" OR \"Yaka Vending services\""
 #
+$TWITTER_CLIENT_CMD search -c 1 -q "from:UmemeLtd -filter:retweets since:$TWITTER_DATE_YESTERDAY $POWER_UMEME_ALERTS_STRING" | jq -r '.statuses[] |.created_at,.text' > $TWITTER_REPORTS_OUTPUT_FILE_POWER_UMEME 2>&1
+POWER_UMEME_TWITTER_OUTPUT=$?
+#
+if [[ "$POWER_UMEME_TWITTER_OUTPUT" = "0" ]] && [[ -s $TWITTER_REPORTS_OUTPUT_FILE_POWER_UMEME ]];
+then
+# Add header to Twitter search output file
+sed -i "1i *UMEME Power Outage Alerts (Uganda)*" $TWITTER_REPORTS_OUTPUT_FILE_POWER_UMEME
+#Calculate size of current Twitter search output file
+CURRENT_OUTPUT_FILE_SIZE=$(stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_POWER_UMEME)
+#
+# Updated status using MQTT
+if [[ "$PREVIOUS_OUTPUT_FILE_SIZE" -ne "$CURRENT_OUTPUT_FILE_SIZE" ]];
+then
+mqtt_publish $MQTT_TOPIC_STATUS_POWER_UMEME
+fi
+
+# Print search results
+cat $TWITTER_REPORTS_OUTPUT_FILE_POWER_UMEME 
+
+else
 cat <<ET
-
-RedPepper (Uganda)
+No power outage alerts from UMEME were found
 ET
-$TWITTER_CLIENT_CMD search -c 1 -q "from:RedPepperUG since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $REDPEPPER_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
-
-echo
+fi
 }
 
-# Water outage reports
-water_outage_reports () {
-$TWITTER_CLIENT_CMD search -c 2 -q "@nwscug since:$TWITTER_DATE_YESTERDAY $TWITTER_VILLAGE_NAME" | jq -r '.statuses[] |.created_at,.text'
-echo
-}
-
-# Power outage reports
-power_outage_reports () {
-$TWITTER_CLIENT_CMD search -c 2 -q "@UmemeLtd since:$TWITTER_DATE_YESTERDAY $TWITTER_VILLAGE_NAME" | jq -r '.statuses[] |.created_at,.text'
-echo
-}
-
-# Power outage alerts
-power_outage_alerts () {
-$TWITTER_CLIENT_CMD search -c 2 -q "from:UmemeLtd since:$TWITTER_DATE_YESTERDAY #PlannedShutdownAlert OR #OutageAlert OR Outage Alert OR token generation" | jq -r '.statuses[] |.created_at,.text'
-echo
-}
-
-# Power outage alerts - UETCL
-power_outage_alerts_uetcl () {
-$TWITTER_CLIENT_CMD search -c 2 -q "from:uetcl since:$TWITTER_DATE_YESTERDAY @UmemeLtd @ERA_Uganda @ntvuganda @nbstv @newvisionwire @ubctvuganda" | jq -r '.statuses[] |.created_at,.text'
-echo
-}
-
-covid19_updates () {
-# Corona Virus of 2020 #COVID19 updates
-# Via The Observer
+# Power outage alerts by UETCL
 # ---
-OBSERVER_SEARCH_STRING="COVID19 update"
+twitter_search_power_uetcl () {
+PREVIOUS_OUTPUT_FILE_SIZE=$([[ -e $TWITTER_REPORTS_OUTPUT_FILE_POWER_UETCL ]] && stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_POWER_UETCL)
+POWER_UETCL_ALERTS_STRING="#poweroutage OR power+blackout"
 #
+$TWITTER_CLIENT_CMD search -c 2 -q "from:uetcl -filter:retweets since:$TWITTER_DATE_YESTERDAY $POWER_UETCL_ALERTS_STRING " | jq -r '.statuses[] |.created_at,.text' > $TWITTER_REPORTS_OUTPUT_FILE_POWER_UETCL 2>&1
+POWER_UETCL_TWITTER_OUTPUT=$?
+#
+if [[ "$POWER_UETCL_TWITTER_OUTPUT" = "0" ]] && [[ -s $TWITTER_REPORTS_OUTPUT_FILE_POWER_UETCL ]];
+then
+# Add header to Twitter search output file
+sed -i "1i *UETCL Power Blackouts (Uganda)*
+" $TWITTER_REPORTS_OUTPUT_FILE_POWER_UETCL
+#Calculate size of current Twitter search output file
+CURRENT_OUTPUT_FILE_SIZE=$(stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_POWER_UETCL)
+#
+# Updated status using MQTT
+if [[ "$PREVIOUS_OUTPUT_FILE_SIZE" -ne "$CURRENT_OUTPUT_FILE_SIZE" ]];
+then
+mqtt_publish $MQTT_TOPIC_STATUS_POWER_UETCL
+fi
+
+# Print search results
+cat $TWITTER_REPORTS_OUTPUT_FILE_POWER_UETCL 
+
+else
 cat <<ET
-
-New Cases (The Observer)
+No power outage alerts from UETCL were found
 ET
-$TWITTER_CLIENT_CMD search -c 1 -q "from:observerug since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $OBSERVER_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
+fi
+}
 
-# Via The Daily Monitor
+# Power outage alerts by ESKOM
 # ---
-DAILY_MONITOR_SEARCH_STRING="Covid-19 cases"
+twitter_search_power_eskom () {
+PREVIOUS_OUTPUT_FILE_SIZE=$([[ -e $TWITTER_REPORTS_OUTPUT_FILE_POWER_ESKOM ]] && stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_POWER_ESKOM)
+POWER_ESKOM_ALERTS_STRING="national+black+out OR @UmemeLtd+@ERA_Uganda OR outage OR blackout OR poweroutage"
 #
+$TWITTER_CLIENT_CMD search -c 1 -q "from:Eskomug -filter:retweets since:$TWITTER_DATE_YESTERDAY $POWER_ESKOM_ALERTS_STRING" | jq -r '.statuses[] |.created_at,.text' > $TWITTER_REPORTS_OUTPUT_FILE_POWER_ESKOM 2>&1
+POWER_ESKOM_TWITTER_OUTPUT=$?
+#
+if [[ "$POWER_ESKOM_TWITTER_OUTPUT" = "0" ]] && [[ -s $TWITTER_REPORTS_OUTPUT_FILE_POWER_ESKOM ]];
+then
+# Add header to Twitter search output file
+sed -i "1i *ESKOM Power Blackouts (Uganda)*
+" $TWITTER_REPORTS_OUTPUT_FILE_POWER_ESKOM
+#Calculate size of current Twitter search output file
+CURRENT_OUTPUT_FILE_SIZE=$(stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_POWER_ESKOM)
+#
+# Updated status using MQTT
+if [[ "$PREVIOUS_OUTPUT_FILE_SIZE" -ne "$CURRENT_OUTPUT_FILE_SIZE" ]];
+then
+mqtt_publish $MQTT_TOPIC_STATUS_POWER_ESKOM
+fi
+
+# Print search results
+cat $TWITTER_REPORTS_OUTPUT_FILE_POWER_ESKOM 
+
+else
 cat <<ET
-
-New cases (The Daily Monitor)
+No power outage alerts from Eskom were found
 ET
-$TWITTER_CLIENT_CMD search -c 1 -q "from:DailyMonitor since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $DAILY_MONITOR_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
+fi
+}
 
-# Via Edge.ug
+# Water outage chats for specified village
 # ---
-EDGE_SEARCH_STRING="COVID-19 tests done OR COVID19UG tests done"
+twitter_search_water_outage_chats () {
+PREVIOUS_OUTPUT_FILE_SIZE=$([[ -e $TWITTER_REPORTS_OUTPUT_FILE_WATER_CHATS ]] && stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_WATER_CHATS)
 #
-cat <<ET
+$TWITTER_CLIENT_CMD search -c 2 -q "@nwscug since:$TWITTER_DATE_YESTERDAY $TWITTER_VILLAGE_NAME" | jq -r '.statuses[] |.created_at,.text' > $TWITTER_REPORTS_OUTPUT_FILE_WATER_CHATS 2>&1
+WATER_CHATS_TWITTER_OUTPUT=$?
+#
+if [[ "$WATER_CHATS_TWITTER_OUTPUT" = "0" ]] && [[ -s $TWITTER_REPORTS_OUTPUT_FILE_WATER_CHATS ]];
+then
+# Add header to Twitter search output file
+sed -i "1i *Water Chats ($TWITTER_VILLAGE_NAME)*" $TWITTER_REPORTS_OUTPUT_FILE_WATER_CHATS
+#Calculate size of current Twitter search output file
+CURRENT_OUTPUT_FILE_SIZE=$(stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_WATER_CHATS)
+#
+# Updated status using MQTT
+if [[ "$PREVIOUS_OUTPUT_FILE_SIZE" -ne "$CURRENT_OUTPUT_FILE_SIZE" ]];
+then
+mqtt_publish $MQTT_TOPIC_STATUS_WATER_CHATS
+fi
 
-New cases (Edge.ug)
+# Print search results
+cat $TWITTER_REPORTS_OUTPUT_FILE_WATER_CHATS
+
+else
+cat <<ET
+No converstations on the water situation in $TWITTER_VILLAGE_NAME were found
 ET
-$TWITTER_CLIENT_CMD search -c 1 -q "from:ug_edge since:$TWITTER_DATE_YESTERDAY filter:twimg -filter:retweets $EDGE_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" 
+fi
+}
+
+# Power outage chats for specified village
+# ---
+twitter_search_power_outage_chats () {
+PREVIOUS_OUTPUT_FILE_SIZE=$([[ -e $TWITTER_REPORTS_OUTPUT_FILE_POWER_CHATS ]] && stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_POWER_CHATS)
+#
+$TWITTER_CLIENT_CMD search -c 2 -q "@UmemeLtd since:$TWITTER_DATE_YESTERDAY $TWITTER_VILLAGE_NAME" | jq -r '.statuses[] |.created_at,.text' > $TWITTER_REPORTS_OUTPUT_FILE_POWER_CHATS 2>&1
+POWER_CHATS_TWITTER_OUTPUT=$?
+#
+if [[ "$POWER_CHATS_TWITTER_OUTPUT" = "0" ]] && [[ -s $TWITTER_REPORTS_OUTPUT_FILE_POWER_CHATS ]];
+then
+# Add header to Twitter search output file
+sed -i "1i *Power Chats ($TWITTER_VILLAGE_NAME)*" $TWITTER_REPORTS_OUTPUT_FILE_POWER_CHATS
+#Calculate size of current Twitter search output file
+CURRENT_OUTPUT_FILE_SIZE=$(stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_POWER_CHATS)
+#
+# Updated status using MQTT
+if [[ "$PREVIOUS_OUTPUT_FILE_SIZE" -ne "$CURRENT_OUTPUT_FILE_SIZE" ]];
+then
+mqtt_publish $MQTT_TOPIC_STATUS_POWER_CHATS
+fi
+
+# Print search results
+cat $TWITTER_REPORTS_OUTPUT_FILE_POWER_CHATS
+
+else
+cat <<ET
+No converstations on the power situation in $TWITTER_VILLAGE_NAME were found
+ET
+fi
+}
+
+# Corona Virus (COVID-19) updates for Uganda
+# ---
+twitter_search_covid () {
+PREVIOUS_OUTPUT_FILE_SIZE=$([[ -e $TWITTER_REPORTS_OUTPUT_FILE_COVID ]] && stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_COVID)
+MOH_UG_SEARCH_STRING="\"COVID-19 tests done on\" OR \"Results from COVID-19\" OR \"new COVID-19 cases\""
+#
+$TWITTER_CLIENT_CMD search -c 1 -q "from:MinofHealthUG since:$TWITTER_DATE_YESTERDAY -filter:retweets $MOH_UG_SEARCH_STRING" | jq -r '.statuses[] |.created_at,.text' | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" > $TWITTER_REPORTS_OUTPUT_FILE_COVID 2>&1
+COVID_TWITTER_OUTPUT=$?
+#
+if [[ "$COVID_TWITTER_OUTPUT" = "0" ]] && [[ -s $TWITTER_REPORTS_OUTPUT_FILE_COVID ]];
+then
+# Add header to Twitter search output file
+sed -i "1i *COVID-19 Updates for Uganda*" $TWITTER_REPORTS_OUTPUT_FILE_COVID
+#Calculate size of current Twitter search output file
+CURRENT_OUTPUT_FILE_SIZE=$(stat -c '%s' $TWITTER_REPORTS_OUTPUT_FILE_COVID)
+#
+# Updated status using MQTT
+if [[ "$PREVIOUS_OUTPUT_FILE_SIZE" -ne "$CURRENT_OUTPUT_FILE_SIZE" ]];
+then
+mqtt_publish $MQTT_TOPIC_STATUS_COVID
+fi
+
+# Print search results
+cat $TWITTER_REPORTS_OUTPUT_FILE_COVID
+
+else
+cat <<ET
+No updates for COVID-19 were found
+ET
+fi
+}
+
+# Search for all alerts/updates
+# ---
+twitter_search_all () {
+cat > $TWITTER_REPORTS_OUTPUT_FILE_ALL <<ET
+$(twitter_search_newspapers)
+
+$(twitter_search_power_umeme)
+
+$(twitter_search_power_uetcl)
+
+$(twitter_search_power_eskom)
+
+$(twitter_search_power_outage_chats)
+
+$(twitter_search_water_outage_chats)
+
+$(twitter_search_covid)
+
+ET
+
+# Print search results
+cat $TWITTER_REPORTS_OUTPUT_FILE_ALL 
 }
 
 
@@ -215,33 +484,40 @@ trap post_clean_up_tasks EXIT
 pre_start_tasks 
 
 # Create temp output file
-cat > $TWITTER_REPORTS_OUTPUT_FILE <<ET
+case $TWITTER_SEARCH_TASK in
 
-*NEWS PAPERS TODAY*
-$(extract_newspaper_links)
+all)
+twitter_search_all
+;;
 
+newspapers)
+twitter_search_newspapers
+;;
 
-*WATER REPORTS ($TWITTER_VILLAGE_NAME)*
-$(water_outage_reports)
+power_umeme)
+twitter_search_power_umeme
+;;
 
+power_uetcl)
+twitter_search_power_uetcl
+;;
 
-*POWER REPORTS ($TWITTER_VILLAGE_NAME)*
-$(power_outage_reports)
+power_eskom)
+twitter_search_power_eskom
+;;
 
+water_chats)
+twitter_search_water_outage_chats
+;;
 
-*UMEME ALERTS (Everywhere)*
-$(power_outage_alerts)
+power_chats)
+twitter_search_power_outage_chats
+;;
 
+covid)
+twitter_search_covid
+;;
 
-*UETCL ALERTS (Kampala)*
-$(power_outage_alerts_uetcl)
-
-
-*COVID-19 Updates (Uganda)*
-$(covid19_updates)
-
-ET
-
-# Print output
-clear
-cat $TWITTER_REPORTS_OUTPUT_FILE
+*)
+twitter_search_all
+esac
