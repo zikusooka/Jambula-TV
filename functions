@@ -15752,7 +15752,7 @@ systemctl restart avahi-daemon.service
 
 geolocation_api () {
 # Add correct DB name, username and password credentials in geolocation-api tool
-[ -e $GEOLOCATION_TOOL ] || \
+[[ -e $GEOLOCATION_TOOL ]] || \
 	cat $PROJECT_BIN_DIR/jambulatv-whereami | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_NAME:$JAMBULATV_SETUP_DB_NAME:g" | \
 		sed -e "s:MY_JAMBULATV_SETUP_DB_TABLE:$JAMBULATV_SETUP_DB_TABLE:g" | \

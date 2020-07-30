@@ -247,7 +247,7 @@ EOF
 
 # Check for existence of Latitude, Longitude, City, and Country
 check_lat_lon_city_country () {
-if [[ "x$LATITUDE" = "x" || "x$LONGITUDE" = "x" || "x$CITY" = "x" || "x$COUNTRY" = "x" || "$LATITUDE" = "null" || "$LONGITUDE" = "null" ]];
+if [[ "x$LATITUDE" = "x" || "x$LONGITUDE" = "x" || "x$CITY" = "x" || "x$COUNTRY" = "x" || "$LATITUDE" = "null" || "$LONGITUDE" = "null" || "$CITY" = "null" || "$COUNTRY" = "null" ]];
 then
 export GEOLOCATION_LOOKUP_IS_INCOMPLETE=yes
 else
@@ -339,16 +339,32 @@ GEOLOCATION_SERVICE_NAME="your public IP address"
 logger -s -t $(basename $0) "Trying to get Geolocation using $GEOLOCATION_SERVICE_NAME, please wait ..."
 # Check for Internet connectivity
 check_internet_connectivity_ping 
+#
+# Skip lookup if there's no Internet
+[[ "$INTERNET_STATUS_VAL" != "0" ]] && continue
+
+# Get ISP name
+get_isp_using_ip
+
+# Get the current IP address block
+ISP_IP_BLOCK=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ip-api.com/json | jq -r ".query" | cut -d '.' -f1-3)
+
+# Exclude ISPs with the wrong data like Zuku in Uganda i.e. Shows Kenya
+if [[ "$ISP_IP_BLOCK" = "196.200.43" ]];
+then
+logger -s -t $(basename $0) "Warning: Geo-location lookup using $GEOLOCATION_SERVICE_NAME failed - Your Internet service provider [$ISP] is excluded because they do not keep proper geolocation records. Please let them know!"
+continue
+fi
+#
 # Lookup public IP address, city, country, and geo coordinates using iP 
-# if there's a direct connection to the Internet 
-if [[ "$INTERNET_STATUS_VAL" = "0" && "$PROXY_NOT_DETECTED" != "0" ]];
+# if there's a direct connection to the Internet
+if [[ "$PROXY_NOT_DETECTED" != "0" ]];
 then
 # Check for proxy in between connection
 detect_if_proxy_is_used
 #
 get_city_using_ip
 get_country_using_ip
-get_isp_using_ip
 get_latitude_longitude
 fi
 #
