@@ -7048,10 +7048,10 @@ iptv_tvheadend_configure () {
 # Add IPTV network
 iptv_tvheadend_network_add
 # Copy jambulatv-rtmplayer used to play rtmp based IPTV streams via TVHeadend
-[ -e $BINARY_PREFIX/jambulatv-rtmplayer ] || cp -v $PROJECT_BIN_DIR/jambulatv-rtmplayer $BINARY_PREFIX/
+[[ -e $BINARY_PREFIX/jambulatv-rtmplayer ]] || cp -v $PROJECT_BIN_DIR/jambulatv-rtmplayer $BINARY_PREFIX/
 #
 # Copy jambulatv-yplayer used to play Youtube based IPTV streams via TVHeadend and add User-Agent string too
-[ -e $BINARY_PREFIX/jambulatv-yplayer ] || \
+[[ -e $BINARY_PREFIX/jambulatv-yplayer ]] || \
 	cat $PROJECT_BIN_DIR/jambulatv-yplayer | \
 		sed -e "s:MY_USER_AGENT:$HTTP_BROWSER_USERAGENT_YOUTUBE:g" | \
 		sed -e "s:MY_IPTV_SERVICE_PROVIDER:$TVHEADEND_IPTV_NETWORK_NAME:g" \

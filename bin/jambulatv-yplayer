@@ -57,8 +57,8 @@ if [[ "$FFMPEG_DEBUG_LOG" = "yes" ]];
 then
 
 # Change log file ownership to multimedia user or person running this tool
-[ -e $YOUTUBE_LOG_FILE ] && sudo chown $(whoami) $YOUTUBE_LOG_FILE
-[ -e $FFMPEG_LOG_FILE ] && sudo chown $(whoami) $FFMPEG_LOG_FILE
+[[ -e $YOUTUBE_LOG_FILE ]] && sudo chown $(whoami) $YOUTUBE_LOG_FILE
+[[ -e $FFMPEG_LOG_FILE ]] && sudo chown $(whoami) $FFMPEG_LOG_FILE
 #
 # Add Youtube info details to log file i.e. for debugging purposes
 cat >> $YOUTUBE_LOG_FILE <<EOF
@@ -91,10 +91,10 @@ fi
 
 youtube_query_video () {
 # Run jambulatv-youtube command
-$YOUTUBE_CMD "$IPTV_SERVICE_NAME" 
+$YOUTUBE_CMD "$IPTV_SERVICE_NAME"
 #
 # Quit if no variables file was created i.e. No Youtube Video ID
-[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] || exit 0
+[[ -e $YOUTUBE_VARIABLES_TEMP_FILE ]] || exit 0
 #
 # Source Youtube video ID, URL, and Manifest variables
 YOUTUBE_VIDEO_ID="$(grep YOUTUBE_VIDEO_ID $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
@@ -102,27 +102,20 @@ YOUTUBE_VIDEO_URL="$(grep YOUTUBE_VIDEO_URL $YOUTUBE_VARIABLES_TEMP_FILE | cut -
 YOUTUBE_VIDEO_QUALITY="$(grep YOUTUBE_VIDEO_QUALITY $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
 YOUTUBE_MANIFEST_URL="$(grep YOUTUBE_MANIFEST_URL $YOUTUBE_VARIABLES_TEMP_FILE | cut -d '=' -f2-)"
 #
-# Set FFmpeg command for streaming
-###############################################################################
-if [[ "$FFMPEG_DEBUG_LOG" = "yes" ]];
-then
-FFMPEG_FULL_COMMAND="FFREPORT=file=$FFMPEG_LOG_FILE:level=$LOG_LEVEL $FFMPEG_CMD -loglevel $LOG_LEVEL -hide_banner -nostats -user_agent \"$IPTV_USER_AGENT\" -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -probesize $FFMPEG_PROBE_SIZE -analyzeduration $FFMPEG_ANALYZE_DURATION -i $YOUTUBE_MANIFEST_URL -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=$METADATA_SERVICE_NAME -codec $FFMPEG_CODECS $FFMPEG_FILTERS $FFMPEG_OTHER_OPTS -f $FFMPEG_FORMAT pipe:1"
-
-else
-FFMPEG_FULL_COMMAND="$FFMPEG_CMD -loglevel $LOG_LEVEL -hide_banner -nostats -user_agent \"$IPTV_USER_AGENT\" -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -probesize $FFMPEG_PROBE_SIZE -analyzeduration $FFMPEG_ANALYZE_DURATION -i $YOUTUBE_MANIFEST_URL -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=$METADATA_SERVICE_NAME -codec $FFMPEG_CODECS $FFMPEG_FILTERS $FFMPEG_OTHER_OPTS -f $FFMPEG_FORMAT pipe:1"
-fi
-###############################################################################
-export FFMPEG_FULL_COMMAND
+export YOUTUBE_MANIFEST_URL YOUTUBE_VIDEO_QUALITY YOUTUBE_VIDEO_URL YOUTUBE_VIDEO_ID
 }
 
 youtube_stream_url () {
-if [[ "$FFMPEG_DEBUG_LOG" != "yes" ]];
-then
 # Remove Youtube temp variables file in case of next run
-[ -e $YOUTUBE_VARIABLES_TEMP_FILE ] && rm -f $YOUTUBE_VARIABLES_TEMP_FILE
+[[ -e $YOUTUBE_VARIABLES_TEMP_FILE ]] && rm -f $YOUTUBE_VARIABLES_TEMP_FILE
 #
 # Run stream via Ffmpeg Pipe
-$FFMPEG_FULL_COMMAND
+if [[ "$FFMPEG_DEBUG_LOG" = "yes" ]];
+then
+FFREPORT=file=$FFMPEG_LOG_FILE:level=$LOG_LEVEL $FFMPEG_CMD -loglevel $LOG_LEVEL -hide_banner -nostats -user_agent "$IPTV_USER_AGENT" -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -probesize $FFMPEG_PROBE_SIZE -analyzeduration $FFMPEG_ANALYZE_DURATION -i "$YOUTUBE_MANIFEST_URL" -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=$METADATA_SERVICE_NAME -codec $FFMPEG_CODECS $FFMPEG_FILTERS $FFMPEG_OTHER_OPTS -f $FFMPEG_FORMAT pipe:1
+
+else
+$FFMPEG_CMD -loglevel $LOG_LEVEL -hide_banner -nostats -user_agent "$IPTV_USER_AGENT" -fflags $FFMPEG_FFLAGS -flags $FFMPEG_FLAGS -probesize $FFMPEG_PROBE_SIZE -analyzeduration $FFMPEG_ANALYZE_DURATION -i "$YOUTUBE_MANIFEST_URL" -metadata service_provider=$IPTV_SERVICE_PROVIDER -metadata service_name=$METADATA_SERVICE_NAME -codec $FFMPEG_CODECS $FFMPEG_FILTERS $FFMPEG_OTHER_OPTS -f $FFMPEG_FORMAT pipe:1
 fi
 }
 
@@ -147,7 +140,7 @@ set_logging_level
 youtube_query_video
 
 # Add FFmpeg and Youtube information (variables) file depending on whether debug is enabled
-add_youtube_ffmpeg_debugging_files 
+add_youtube_ffmpeg_debugging_files
 
 # Start streaming video
 youtube_stream_url
