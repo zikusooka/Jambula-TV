@@ -1328,10 +1328,18 @@ FFMPEG_FLAGS="+global_header+low_delay"
 FFMPEG_OPTS="-hide_banner"
 
 # FFprobe
-TIMEOUT_PROBE="80s"
-TIMEOUT_CMD="/usr/bin/timeout $TIMEOUT_PROBE"
+TIMEOUT_PROBE="60s"
+TIMEOUT_CMD="/usr/bin/timeout --preserve-status $TIMEOUT_PROBE"
 FFPROBE_CMD="$TIMEOUT_CMD /usr/bin/ffprobe"
-FFPROBE_OPTS="-hide_banner"
+FFPROBE_OPTS_GLOBAL="-hide_banner -loglevel error"
+FFPROBE_OPTS_STREAMS="-show_streams"
+FFPROBE_OPTS_ENTRIES="-show_entries"
+FFPROBE_OPTS_VIDEO="$FFPROBE_OPTS_STREAMS -select_streams v"
+FFPROBE_OPTS_AUDIO="$FFPROBE_OPTS_STREAMS -select_streams a"
+FFPROBE_OPTS_DURATION="$FFPROBE_OPTS_ENTRIES format=duration -of default=noprint_wrappers=1:nokey=1"
+FFPROBE_OPTS_FRAMERATE="$FFPROBE_OPTS_ENTRIES stream=avg_frame_rate -select_streams v:0  -of default=noprint_wrappers=1:nokey=1"
+FFPROBE_OPTS_RESOLUTION="$FFPROBE_OPTS_ENTRIES stream=height,width -select_streams v:0 -of csv=s=x:p=0"
+FFPROBE_PREFERRED_FORMATS="mpegts|hls|applehttp"
 
 
 
