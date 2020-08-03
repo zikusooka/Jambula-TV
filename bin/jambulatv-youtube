@@ -7,6 +7,7 @@
 
 # Variables
 YOUTUBE_DEBUG=no #no|yes
+YOUTUBE_SEARCH_PHRASE="$@"
 YOUTUBE_SEARCH_TEMP_DIR=/tmp
 YOUTUBE_USER_URL="https://www.youtube.com/user"
 YOUTUBE_CHANNEL_URL="https://www.youtube.com/channel"
@@ -84,9 +85,11 @@ bloomberg
 fox news
 cnn
 pbs newshour
-nbc news
+nbc news now
 aljazeera
 twit live
+nasa
+spacex
 
 EOF
 exit 1
@@ -146,7 +149,15 @@ jambulatv-osd -m "$STREAM_PRETTY_NAME  ::  Am sorry this stream was not found.  
 fi
 }
 
+youtube_search_phrase () {
+YOUTUBE_SEARCH_TEXT="$(echo "$YOUTUBE_SEARCH_PHRASE" | sed -s "s: :+:g")"
+export YOUTUBE_SEARCH_PHRASE YOUTUBE_SEARCH_TEXT
+}
+
 search_waiting_sound_effects () {
+# Youtube search variables
+youtube_search_phrase
+#
 # Set fetch in progress file here
 YOUTUBE_FETCH_IN_PROGRESS_FILE="$YOUTUBE_SEARCH_TEMP_DIR/youtube_fetch_in_progress.${YOUTUBE_SEARCH_TEXT}"
 #
@@ -175,8 +186,8 @@ GOOGLE_YOUTUBE_CLIENT_SECRET=$(query_mysql_db youtube_client_secret)
 
 youtube_search_video_id_via_api () {
 # Youtube search variables
-YOUTUBE_SEARCH_PHRASE="$@"
-YOUTUBE_SEARCH_TEXT="$(echo "$YOUTUBE_SEARCH_PHRASE" | sed -s "s: :+:g")"
+youtube_search_phrase
+#
 YOUTUBE_SEARCH_URL=https://www.googleapis.com/youtube/v3/search
 YOUTUBE_API_KEY="$GOOGLE_YOUTUBE_API_KEY"
 YOUTUBE_MAX_RESULTS=3
@@ -191,12 +202,13 @@ YOUTUBE_PLAYLIST_FILE=$YOUTUBE_SEARCH_TEMP_DIR/youtube_video_ids_found.${YOUTUBE
 # Search for Youtube IDs using API
 # NOTE: Do not use curl --data/ or -d option to post - Youtube search fails if done
 # ---
-# If event type specified i.e. Live TV
 if [[ "x$YOUTUBE_EVENT_TYPE" != "x" ]];
 then
+# If event type specified i.e. Live TV
 $HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE ${YOUTUBE_SEARCH_URL}?part=snippet'&'sp="$YOUTUBE_SEARCH_FILTER"'&'key="$YOUTUBE_API_KEY"'&'type=video'&'eventType="$YOUTUBE_EVENT_TYPE"'&'maxResults=$YOUTUBE_MAX_RESULTS'&'q="$YOUTUBE_SEARCH_TEXT"
-# If event type is not specified i.e. NULL
+
 else
+# If event type is not specified i.e. NULL
 $HTTP_BROWSER_COMMAND -A "$HTTP_BROWSER_USERAGENT" -o $YOUTUBE_SEARCH_OUTPUT_FILE ${YOUTUBE_SEARCH_URL}?part=snippet'&'sp="$YOUTUBE_SEARCH_FILTER"'&'key="$YOUTUBE_API_KEY"'&'type=video'&'maxResults=$YOUTUBE_MAX_RESULTS'&'q="$YOUTUBE_SEARCH_TEXT"
 fi
 #
@@ -212,8 +224,8 @@ export YOUTUBE_VIDEO_ID
 
 youtube_search_video_id_via_scraper () {
 # Youtube search variables
-YOUTUBE_SEARCH_PHRASE="$@"
-YOUTUBE_SEARCH_TEXT="$(echo "$YOUTUBE_SEARCH_PHRASE" | sed -s "s: :+:g")"
+youtube_search_phrase
+#
 YOUTUBE_SEARCH_URL=https://www.youtube.com/results
 YOUTUBE_SEARCH_FILTER="CAMSBAgCQAFQFA%253D%253D"
 YOUTUBE_SEARCH_OUTPUT_FILE=$YOUTUBE_SEARCH_TEMP_DIR/youtube_search_results.${YOUTUBE_SEARCH_TEXT}
@@ -251,29 +263,38 @@ fi
 # a) PRE-DEFINED CHANNELS: Extract and Set Youtube video IDs
 # -----------------------------------------------------------
 youtube_video_id_ntv_uganda () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i -e "NTV Uganda Livestream" -e "NTV Uganda Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i -e "NTV Uganda Livestream" -e "NTV Uganda Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"NTV Uganda Live Stream\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_sparktv_uganda () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i -e "Spark TV LiveStream" -e "Spark TV Live Stream" -e "Spark TV Uganda Livestream"  -e "SparkTV Uganda Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ntvuganda | grep -i -e "Spark TV LiveStream" -e "Spark TV Live Stream" -e "Spark TV Uganda Livestream"  -e "SparkTV Uganda Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"Spark TV Live Stream\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_bukeddetv_uganda () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/bukeddetv | grep -i -e "Bukedde TV Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/bukeddetv | grep -i -e "Bukedde TV Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"Bukedde TV Live Stream\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_citizentv_kenya () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/kenyacitizentv | grep -i -e "Citizen TV Live" -e "CitizenTV LIVE" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/kenyacitizentv | grep -i -e "Citizen TV Live" -e "CitizenTV LIVE" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"Citizen TV Live\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_ktn_news_kenya () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/standardgroupkenya | grep -i -e "KTN News Live Stream (Nairobi Kenya)" -e "KTN News Live Stream" -e "KTN Kenya Live Stream"  -e "KTN NEWS Livestream | Nairobi, Kenya" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/standardgroupkenya | grep -i -e "KTN News Live Stream (Nairobi Kenya)" -e "KTN News Live Stream" -e "KTN Kenya Live Stream"  -e "KTN NEWS Livestream | Nairobi, Kenya" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"KTN News Live Stream\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_ktn_home_kenya () {
 # Youtube
 #YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/KTNClassics | grep -i -e "KTN Home Livestream (Nairobi Kenya)" -e "KTN Home Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
-
 # DailyMotion
 YOUTUBE_VIDEO_ID=x7l3lxv
 YOUTUBE_WATCH_URL="https://www.dailymotion.com/embed/video"
@@ -284,7 +305,6 @@ youtube_video_id_ntv_kenya () {
 # Youtube
 #YOUTUBE_LIVE_CHANNEL_PAGE_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/qtvkenya/channels | awk -F: '/title="Live"/ { print $0 }' | grep -oP '(?<=href="/channel/).+?(?=".*>Live)' | uniq)
 #YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | grep -i -e "NTV Kenya Live Stream" -e "shows Live on NTV Kenya" -e "LIVE: \"NTV Today\"" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
-
 # DailyMotion
 YOUTUBE_VIDEO_ID=x6shkab
 YOUTUBE_WATCH_URL="https://www.dailymotion.com/embed/video"
@@ -292,46 +312,66 @@ YOUTUBE_WATCH_DOMAIN=$(echo $YOUTUBE_WATCH_URL | awk -F/ '{print $3}' | sed 's/w
 }
 
 youtube_video_id_learn_swahili () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/SwahiliPod101 | grep -i -e "Learn Swahili in 24 Hours with SwahiliPod101 TV" -e "Learn Swahili 24/7 with SwahiliPod101 TV" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/SwahiliPod101 | grep -i -e "Learn Swahili in 24 Hours with SwahiliPod101 TV" -e "Learn Swahili 24/7 with SwahiliPod101 TV" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"Learn Swahili in 24 Hours with SwahiliPod101 TV\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_inooro_tv_kenya () {
-YOUTUBE_LIVE_CHANNEL_PAGE_ID=UCZlNMLTVNxzwB0axilK-rDw
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | awk -F: '/title="iNooro TV Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_LIVE_CHANNEL_PAGE_ID=UCZlNMLTVNxzwB0axilK-rDw
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | awk -F: '/title="iNooro TV Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"iNooro TV Live\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_joy_news_ghana () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/myjoyonlinetube | grep -i -e "Joy News live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/myjoyonlinetube | grep -i -e "Joy News live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"Joy News live\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_adom_tv_ghana () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/adomtvtube | grep -i -e "Adom TV Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/adomtvtube | grep -i -e "Adom TV Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"Adom TV Live\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_tvc_news_nigeria () {
-YOUTUBE_LIVE_CHANNEL_PAGE_ID=UCgp4A6I8LCWrhUzn-5SbKvA
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | awk -F: '/title="TVC News Nigeria Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_LIVE_CHANNEL_PAGE_ID=UCgp4A6I8LCWrhUzn-5SbKvA
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | awk -F: '/title="TVC News Nigeria Live"/ { print $0 }' | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"TVC News Nigeria Live\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_channels_tv_nigeria () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/channelsweb | grep -i -e "Channels Television - Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/channelsweb | grep -i -e "Channels Television - Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"Channels Television - Live\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_ann7_south_africa () {
-YOUTUBE_LIVE_CHANNEL_PAGE_ID=UC6gciFMFztxlRrO5f4K1xbQ
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | grep -B20 -i "LIVE NOW" | grep -i "ANN7 TV Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_LIVE_CHANNEL_PAGE_ID=UC6gciFMFztxlRrO5f4K1xbQ
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/$YOUTUBE_LIVE_CHANNEL_PAGE_ID | grep -B20 -i "LIVE NOW" | grep -i "ANN7 TV Live Stream" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"ANN7 TV Live Stream\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_africanews () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/UC1_E8NeF5QHY2dtdLRBCCLA | grep "africanews Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_CHANNEL_URL/UC1_E8NeF5QHY2dtdLRBCCLA | grep "africanews Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"africanews Live\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_cnbc_africa () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ABNDigital | grep -i "Africa Business News - Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/ABNDigital | grep -i "Africa Business News - Live" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"Africa Business News - Live\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_bloomberg () {
-YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/Bloomberg | grep -i -e "Bloomberg TV LIVE" -e "Bloomberg Global News LIVE" -e "Bloomberg Global News" -e "Bloomberg Global Financial News" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+#YOUTUBE_VIDEO_ID=$($HTTP_BROWSER_COMMAND $YOUTUBE_USER_URL/Bloomberg | grep -i -e "Bloomberg TV LIVE" -e "Bloomberg Global News LIVE" -e "Bloomberg Global News" -e "Bloomberg Global Financial News" | grep -oP '(?<=href="/watch\?v=).+?(?=")' | uniq | head -1)
+$youtube_search_method "\"Bloomberg Global News\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_fox_news () {
@@ -340,7 +380,7 @@ YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
 youtube_video_id_cnn () {
-$youtube_search_method "\"CNN News Live Stream\""
+$youtube_search_method "\"CNN News Live Stream\" -News18 -abcnews -haber -CANAL"
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
@@ -349,8 +389,8 @@ $youtube_search_method "\"PBS NewsHour\""
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
-youtube_video_id_nbc_news () {
-$youtube_search_method "\"NBC News\""
+youtube_video_id_nbc_news_now () {
+$youtube_search_method "\"NBC News Now\""
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
 
@@ -363,6 +403,17 @@ youtube_video_id_twit_live () {
 $youtube_search_method "\"Twit Live\""
 YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
 }
+
+youtube_video_id_nasa () {
+$youtube_search_method "\"NASA Live: Official Stream of NASA TV\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
+}
+
+youtube_video_id_spacex () {
+$youtube_search_method "\"CosmoSapiens\""
+YOUTUBE_VIDEO_ID=$YOUTUBE_VIDEO_ID
+}
+
 
 # -------------------------------------------------------------------------
 # b) PRE-DEFINED CHANNELS: Match Youtube video IDs based on user's request
@@ -452,9 +503,9 @@ youtube_video_id_cnn
 [Pp][Bb][Ss]*[Nn][Ee][Ww][Ss][Hh][Oo][Uu][Rr])
 youtube_video_id_pbs_newshour
 ;;
-# NBC News
-[Nn][Bb][Cc]*[Nn][Ee][Ww][Ss])
-youtube_video_id_nbc_news
+# NBC News Now
+[Nn][Bb][Cc]*[Nn][Ee][Ww][Ss]*[Nn][Oo][Ww])
+youtube_video_id_nbc_news_now
 ;;
 # Al Jazeera
 [Aa][Ll][Jj][Aa][Zz][Ee][Ee][Rr][Aa])
@@ -463,6 +514,14 @@ youtube_video_id_aljazeera
 # TWit
 [Tt][Ww][Ii][Tt]*[Ll][Ii][Vv][Ee])
 youtube_video_id_twit_live
+;;
+# NASA
+[Nn][Aa][Ss][Aa])
+youtube_video_id_nasa
+;;
+# SpaceX
+[Ss][Pp][Aa][Cc][Ee][Xx])
+youtube_video_id_spacex
 ;;
 # Other search phrases
 *)
@@ -501,6 +560,9 @@ YOUTUBE_MANIFEST_URL=$($YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_VIDEO_FORMAT
 }
 
 youtube_failed_actions () {
+# Youtube search variables
+youtube_search_phrase
+#
 # Add Youtube fetch-in-progress temp file - Stop waiting sounds effect
 stop_waiting_sound_effects
 # Failure notification on OSD IF script was called by htsp client
@@ -548,6 +610,9 @@ fi
 }
 
 save_youtube_variables () {
+# Youtube search variables
+youtube_search_phrase
+#
 # Set Youtube variables file here
 YOUTUBE_VARIABLES_TEMP_FILE="$YOUTUBE_SEARCH_TEMP_DIR/youtube_variables.${YOUTUBE_SEARCH_TEXT}"
 # Remove Youtube variables temp file if it exists
@@ -567,6 +632,9 @@ export YOUTUBE_VIDEO_ID YOUTUBE_VIDEO_URL YOUTUBE_VIDEO_QUALITY YOUTUBE_MANIFEST
 }
 
 print_debug_info () {
+# Youtube search variables
+youtube_search_phrase
+#
 # Set Youtube variables file here
 YOUTUBE_VARIABLES_TEMP_FILE="$YOUTUBE_SEARCH_TEMP_DIR/youtube_variables.${YOUTUBE_SEARCH_TEXT}"
 #
@@ -581,6 +649,7 @@ fi
 #################
 #  MAIN SCRIPT  #
 #################
+
 # Usage
 usage
 
