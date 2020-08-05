@@ -18,6 +18,8 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 # Source install functions
 . $PROJECT_FUNCTIONS_FILE
 
+WIFI_STATION_INTERFACE=$INTERNET_GATEWAY_DEV
+
 VNSTAT_CMD=/usr/bin/vnstat
 VNSTAT_QUERY_OPTS="--config $VNSTAT_CONFIG_FILE -q" 
 VNSTAT_TODAY=$(date +%Y-%m-%d)
@@ -66,6 +68,28 @@ EOT
 exit 1
 }
 
+# Notifications
+# -------------
+send_notification_of_used_data_by_bandwidth_monitor () {
+# WhatsApp 
+sudo $WHATSAPP_TOOL sendmessage "$BANDWIDTH_MONITOR_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
+# Telegram
+$TELEGRAM_TOOL SendMessage "$BANDWIDTH_MONITOR_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*"
+}
+
+send_notification_of_used_data_by_bandwidth_query () {
+# WhatsApp 
+sudo $WHATSAPP_TOOL sendmessage "$BANDWIDTH_QUERY_USED_MESSAGE *$DATA_BANDWIDTH_USED*. $BANDWIDTH_GRAPHS_ATTACHED_MESSAGE" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
+# Telegram
+$TELEGRAM_TOOL SendMessage "$BANDWIDTH_QUERY_USED_MESSAGE *$DATA_BANDWIDTH_USED*. $BANDWIDTH_GRAPHS_ATTACHED_MESSAGE"
+}
+
+send_image_of_bandwidth_graphs () {
+# Send Telegram
+$TELEGRAM_TOOL SendImageDisk $VNSTATI_IMAGE
+# Send WhatsApp
+sudo $WHATSAPP_TOOL sendimage $VNSTATI_IMAGE $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
+}
 
 # Monitoring
 # ----------
@@ -228,27 +252,6 @@ $VNSTATI_CMD $VNSTATI_OPTS --headertext "$VNSTATI_HEADER_TEXT" -o $VNSTATI_IMAGE
 # Give multimedia user i.e. jambula access permissions to vnstati temp image file
 sudo chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $VNSTATI_IMAGE
 fi
-}
-
-send_notification_of_used_data_by_bandwidth_monitor () {
-# WhatsApp 
-sudo $WHATSAPP_TOOL sendmessage "$BANDWIDTH_MONITOR_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
-# Telegram
-$TELEGRAM_TOOL SendMessage "$BANDWIDTH_MONITOR_USED_MESSAGE *$BANDWIDTH_USED_CURRENT_SESSION*"
-}
-
-send_notification_of_used_data_by_bandwidth_query () {
-# WhatsApp 
-sudo $WHATSAPP_TOOL sendmessage "$BANDWIDTH_QUERY_USED_MESSAGE *$DATA_BANDWIDTH_USED*. $BANDWIDTH_GRAPHS_ATTACHED_MESSAGE" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
-# Telegram
-$TELEGRAM_TOOL SendMessage "$BANDWIDTH_QUERY_USED_MESSAGE *$DATA_BANDWIDTH_USED*. $BANDWIDTH_GRAPHS_ATTACHED_MESSAGE"
-}
-
-send_image_of_bandwidth_graphs () {
-# Send Telegram
-$TELEGRAM_TOOL SendImageDisk $VNSTATI_IMAGE
-# Send WhatsApp
-sudo $WHATSAPP_TOOL sendimage $VNSTATI_IMAGE $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1 
 }
 
 

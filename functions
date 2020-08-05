@@ -636,6 +636,7 @@ SYSCONFIG_i18N_FILE=/etc/sysconfig/i18n
 HOSTNAME_FILE=/etc/hostname
 
 INTERNET_GATEWAY_IP=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
+INTERNET_GATEWAY_DEV=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $5}')
 NETWORK_MAC_ADDRESS=$(/usr/sbin/ip addr show | grep ether | awk {'print $2'} | head -1)
 
 DHCLIENT_CONFIG_DIR=$CONFDIR/dhcp
@@ -1730,6 +1731,7 @@ PROCESS_INSTANCE_LOCK_FILE=$TMPDIR/${PROCESS_INSTANCE_NAME}_process_instance.loc
 # Create exclusive lock file for this process instance
 if [[ "$PROCESS_INSTANCE_LOCK_TYPE" = "exclusive" ]];
 then
+[[ -e $PROCESS_INSTANCE_LOCK_FILE ]] && sudo chown $(whoami) $PROCESS_INSTANCE_LOCK_FILE 
 exec {lock_fd}>$PROCESS_INSTANCE_LOCK_FILE 
 flock -x -n "$lock_fd" 
 
