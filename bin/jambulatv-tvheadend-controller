@@ -38,7 +38,6 @@ TVHEADEND_IPTV_SOURCE_PLAYLIST=${PLAYLISTS_DIRECTORY}/${PLAYLISTS_IPTV_WORLD_M3U
 TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE=$TMPDIR/iptv_service_uuid.txt
 TVHEADEND_IPTV_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-info.$(date +%Y%m%d%H%M).log
 TVHEADEND_IPTV_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/iptv-scan-failed.$(date +%Y%m%d%H%M).log
-TVHEADEND_IPTV_SERVICE_LOG_FILE=$TMPDIR/iptv_service_output.log
 TVHEADEND_IPTV_CREATE_CHAN_TEMP_FILE=$TMPDIR/create_iptv_channels.sh
 TVHEADEND_IPTV_CREATE_CHAN_TAG_TEMP_FILE=$TMPDIR/create_iptv_channel_tags.sh
 TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE=$TMPDIR/iptv_scanning_in_progress
@@ -63,6 +62,7 @@ PLAYLISTS_PORT=MY_PLAYLISTS_PORT
 
 IPTV_BUILDER_BASE_DIR=/opt/jambula-iptv-builder
 IPTV_BUILDER_GROUPS_DIR=$IPTV_BUILDER_BASE_DIR/groups
+IPTV_BUILDER_CHANNEL_VARIABLES_FILE=$TMPDIR/iptv_builder_channels_variables
 
 TV_TYPE=$1
 TV_TASK=$2
@@ -174,7 +174,7 @@ usage_and_pre_start_general () {
 if [[ "x$TV_TASK" = "x" ]];
 then
 clear
-echo "Usage:  ./`basename $0` general [clients|playlists]
+echo "Usage:  ./`basename $0` general [clients]
 "
 exit 1
 fi
@@ -231,7 +231,7 @@ log_file () {
 # Create IPTV log directory if non existent
 [ -d $TVHEADEND_IPTV_LOG_DIR ] || mkdir -p $TVHEADEND_IPTV_LOG_DIR
 # Give it Multimedia user's permissions
-chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_IPTV_LOG_DIR
+sudo chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TVHEADEND_IPTV_LOG_DIR
 
 # Date stamp log file
 cat >> $TVHEADEND_IPTV_INFO_LOG_FILE <<EOT
@@ -245,7 +245,7 @@ EOT
 
 tvheadend_restart_server () {
 # Give multimedia user permission to access tvheadend directories
-chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
+sudo chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 #
 # Restart TVHeadend
 sudo systemctl restart tvheadend.service
@@ -261,7 +261,10 @@ tvheadend_restart_server
 
 post_config () {
 # Restart TVHeadend for all tasks except for m3u, epg, icons,general)
-[[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" || "$TV_TASK" = "clients" || "$TV_TASK" = "playlists" ]] || tvheadend_restart_server
+[[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" || "$TV_TASK" = "clients" ]] || tvheadend_restart_server
+
+# Remove IPTV builder channel variables file
+[[ -e $IPTV_BUILDER_CHANNEL_VARIABLES_FILE ]] && sudo rm -f $IPTV_BUILDER_CHANNEL_VARIABLES_FILE
 }
 
 email_failed_iptv_notice () {
@@ -290,6 +293,44 @@ done
 
 # Restart TVH server
 tvheadend_restart_server
+}
+
+check_status_of_iptv_channels () {
+# Restart tvheadend for previous changes to take effect
+tvheadend_restart_server
+
+# Create service UUIDs file if non-existent
+if [[ ! -e $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE ]];
+then
+$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.text | contains("'"${TVHEADEND_IPTV_NETWORK_NAME}"'")).uuid' > $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
+fi
+
+# Cycle through IPTV service UUIDs
+while read IPTV_SERVICE_UUID;
+do
+
+IPTV_CHANNEL_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[] | select(.services[] | contains("'"$IPTV_SERVICE_UUID"'")) .uuid')
+IPTV_CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[] | select(.services[] | contains("'"$IPTV_SERVICE_UUID"'")) .name' | uniq)
+IPTV_CHANNEL_URI="$TVHEADEND_PLAY_STREAM_URL/channel/$IPTV_CHANNEL_UUID"
+
+# Skip if no channel exists for service 
+[[ "x$IPTV_CHANNEL_UUID" = "x" || "x$IPTV_CHANNEL_NAME" = "x" ]] && continue
+
+# Test and see if link is playable
+logger -s -t $(basename $0) "Checking status of channel [$IPTV_CHANNEL_NAME]"
+#
+# Probe TV channel
+$FFPROBE_CMD $FFPROBE_OPTS_GLOBAL $FFPROBE_OPTS_STREAMS "$IPTV_CHANNEL_URI" >> /dev/null 2>&1
+FFPROBE_EXIT_STATUS=$?
+#
+# Remove TV channels that are no longer playable i.e. Not working
+if [[ "$FFPROBE_EXIT_STATUS" != "0" ]] && [[ -f $TVHEADEND_CHANNELS_CONFIG_DIR/$IPTV_CHANNEL_UUID ]];
+then
+sudo rm -f $TVHEADEND_CHANNELS_CONFIG_DIR/$IPTV_CHANNEL_UUID
+logger -s -t $(basename $0) "Removed non-working iptv channel [$IPTV_CHANNEL_NAME]"
+fi
+
+done < $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
 }
 
 get_tvheadend_last_channel_number () {
@@ -584,7 +625,7 @@ EOT
 ))" $TVHEADEND_API_URL/channel/create > /dev/null 2>&1
 #
 # Notify - Channel added
-logger -s -t $(basename $0) "Added Channel No.[$CHANNEL_NUMBER] [$CHANNEL_NAME]"
+logger -s -t $(basename $0) "Found channel number.[$CHANNEL_NUMBER] [$CHANNEL_NAME]"
 
 EOF
 #
@@ -735,9 +776,7 @@ $CURL_CMD $CURL_OPTS -d uuid="$TVHEADEND_DVBT_NETWORK_UUID" $TVHEADEND_API_URL/i
 # Start DVB-T network repair process
 repair_dvb_tvheadend_network 
 
-
 else
-
 # Notify of DVB-T health status is OK
 # Source notification strings
 set_notifications
@@ -757,7 +796,7 @@ fi
 ##########
 #
 iptv_quit_if_no_playlist_found () {
-if [[ ! -e "${TVHEADEND_IPTV_SOURCE_PLAYLIST}" ]];
+if [[ ! -e "${TVHEADEND_IPTV_SOURCE_PLAYLIST}" ]] && [[ "$TV_TASK" != "map" ]];
 then
 # Notify that playlist is missing
 # Source notification strings
@@ -1012,7 +1051,7 @@ JambulaTV: Testing IPTV stream: [$SERVICE_NAME], please wait ...
 
 EOF
 # Probe remote stream using ffprobe i.e. play mux briefly to add service
-$FFPROBE_CMD $FFPROBE_OPTS $MUX_URL 2>&1 | tee -a $TVHEADEND_IPTV_INFO_LOG_FILE > $TVHEADEND_IPTV_SERVICE_LOG_FILE
+$FFPROBE_CMD $FFPROBE_OPTS_GLOBAL $FFPROBE_OPTS_STREAMS $MUX_URL >> $TVHEADEND_IPTV_INFO_LOG_FILE 2>&1 
 
 # Check if service was added i.e. Remote Link works
 SERVICE_ADDED=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$MUX_UUID"'") | .num_svc')
@@ -1028,8 +1067,6 @@ $PLAYLIST_CHANNEL ($PLAYLIST_CATEGORY)
 *******************************************************************************
 
 Link:	$PLAYLIST_URL
-
-Error:	$(cat $TVHEADEND_IPTV_SERVICE_LOG_FILE)
 
 STREAMLOG
 fi
@@ -1096,37 +1133,32 @@ email_failed_iptv_notice
 [ -e $TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE ] && sudo rm -f $TVHEADEND_IPTV_SCAN_IN_PROGRESS_TEMP_FILE
 }
 
-get_channel_number_using_iptv_builder () {
+get_channel_variables_using_iptv_builder () {
+CHANNEL_NAME="$1"
 #
-# Variables
-CHANNEL_NUMBER_TEMP_FILE=$TMPDIR/chan_number
-CHANNEL_COUNT=$(grep -iEw "${CHANNEL_NAME}" -d skip $IPTV_BUILDER_GROUPS_DIR/* | cut -d '|' -f2 | sed 's: ::g' | wc -l)
-# Remove existing file
-[ -e $CHANNEL_NUMBER_TEMP_FILE ] && rm -f $CHANNEL_NUMBER_TEMP_FILE
-# Find channel number, if more than one match
-if [ "$CHANNEL_COUNT" -gt "1" ];
-then
+# Remove previous IPTV builder channel variables file
+[[ -e $IPTV_BUILDER_CHANNEL_VARIABLES_FILE ]] && sudo rm -f $IPTV_BUILDER_CHANNEL_VARIABLES_FILE
 
-grep -iEw "${CHANNEL_NAME}" -d skip $IPTV_BUILDER_GROUPS_DIR/* | while read LINE
+# Read each line in channel categories file, and extract logo name
+grep -Ei "^${CHANNEL_NAME}[[:space:]]*\|" -d skip $IPTV_BUILDER_GROUPS_DIR/* | while read LINE
 do
-COL1=$(echo $LINE | cut -d ':' -f2 | cut -d '|' -f1 | sed 's/ $//')
-COL2=$(echo $LINE | cut -d ':' -f2 | cut -d '|' -f2 | sed 's/ //g')
-if [ "$COL1" = "$CHANNEL_NAME" ];
-then
-# Set channel number
-echo "CHANNEL_NUMBER=$COL2" > $CHANNEL_NUMBER_TEMP_FILE
-fi
-break
-done 
+CHANNEL_EPG="$(echo $LINE | cut -d '|' -f5 | awk '{$1=$1}1')"
+CHANNEL_NAME="$(echo $LINE | cut -d '|' -f4 | awk '{$1=$1}1')"
+CHANNEL_LOGO="$(echo $LINE | cut -d '|' -f3 | awk '{$1=$1}1')"
+CHANNEL_NUMBER="$(echo $LINE | cut -d '|' -f2 | awk '{$1=$1}1')"
+#
+# Create temp IPTV builder channel variables file
+cat > $IPTV_BUILDER_CHANNEL_VARIABLES_FILE <<ET
+CHANNEL_EPG="$CHANNEL_EPG"
+CHANNEL_NAME="$CHANNEL_NAME"
+CHANNEL_LOGO="$CHANNEL_LOGO"
+CHANNEL_NUMBER="$CHANNEL_NUMBER"
+ET
 
-else
-# Find channel number, if only one match
-CHANNEL_NUMBER=$(grep -iEw "${CHANNEL_NAME}" -d skip $IPTV_BUILDER_GROUPS_DIR/* | cut -d '|' -f2 | sed 's: ::g' | head -1)
-fi
-# Source temp channel number file i.e. Get channel number
-[ -e $CHANNEL_NUMBER_TEMP_FILE ] && . $CHANNEL_NUMBER_TEMP_FILE
-# Export
-export CHANNEL_NUMBER
+done
+#
+# Source IPTV builder channel variables file
+. $IPTV_BUILDER_CHANNEL_VARIABLES_FILE
 }
 
 iptv_map_services_2_channels () {
@@ -1160,19 +1192,21 @@ $CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entr
 cat $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE | while read SERVICE_UUID
 do
 CHANNEL_NAME=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/service/list?limit=100000 | jq -r '.entries[] | select(.uuid=="'"$SERVICE_UUID"'") | .text' | sed "s:$TVHEADEND_IPTV_NETWORK_NAME/$PLAYLISTS_IPTV_WORLD_M3U_FILE - ::g" | cut -d / -f2- | sed "s:^-*::g")
-# Extract channel number from iptv group files
-get_channel_number_using_iptv_builder
+# Extract channel number and logo from iptv group files
+get_channel_variables_using_iptv_builder "${CHANNEL_NAME}"
 #
-CHANNEL_LOGO=$(echo $CHANNEL_NAME | tr [:upper:] [:lower:]| sed 's: :_:g').png
 CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${TVHEADEND_IPTV_SOURCE_PLAYLIST} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
 CHANNEL_TAG=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/list?limit=100000 | jq -r '.entries[] | select(.val=="'"${CHANNEL_CATEGORY}"'") | .key')
-#
+
 # Check if channel already exists
-$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
-CHANNEL_EXISTS=$?
+EXISTING_CHANNEL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[] | select(.name | contains("'"$CHANNEL_NAME"'")) |.name' | uniq)
 #
 # Don't add if channel already exists
-[[ "$CHANNEL_EXISTS" = "0" ]] && continue
+if [[ "x$EXISTING_CHANNEL" != "x" || "x$CHANNEL_NUMBER" != "x" ]];
+then
+logger -s -t $(basename $0) "IPTV channel [$CHANNEL_NAME] already exists, skipping its addition ..."
+continue
+fi
 
 # Play service URL using ffprobe i.e. Activate it to make it usable as a channel
 SERVICE_URL="$TVHEADEND_PLAY_STREAM_URL/service/$SERVICE_UUID"
@@ -1204,7 +1238,7 @@ EOT
 ))" $TVHEADEND_API_URL/channel/create > /dev/null 2>&1
 #
 # Notify - Channel added
-logger -s -t $(basename $0) "Added Channel No.[$CHANNEL_NUMBER] [$CHANNEL_NAME]"
+logger -s -t $(basename $0) "Found channel number.[$CHANNEL_NUMBER] [$CHANNEL_NAME]"
 
 EOF
 
@@ -1224,6 +1258,9 @@ sleep 3
 # Remove temp script file
 rm -f $TVHEADEND_IPTV_CREATE_CHAN_TEMP_FILE
 fi
+
+# Ensure there are no non-working i.e. dead channels left
+check_status_of_iptv_channels
 
 # Remove temp service UUID raw file for IPTV services
 [[ -e $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE ]] && sudo rm -f $TVHEADEND_IPTV_SERVICE_UUIDS_RAW_FILE
@@ -1425,19 +1462,18 @@ CHANNEL_NUMBER=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_
 CHANNEL_LOGO=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CCTV_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d = -f4 | awk {'print $1'} | sed 's:"::g' | head -1)
 CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_CCTV_LOCAL_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
 CHANNEL_TAG=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/list?limit=100000 | jq -r '.entries[] | select(.val=="'"${CHANNEL_CATEGORY}"'") | .key')
-#
+
 # Check if channel already exists
-$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
-CHANNEL_EXISTS=$?
+EXISTING_CHANNEL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[] | select(.name | contains("'"$CHANNEL_NAME"'")) |.name' | uniq)
 #
 # Don't add if channel already exists
-[ "$CHANNEL_EXISTS" = "0" ] && continue
+[[ "x$EXISTING_CHANNEL"  = "x" ]] || continue
 
 # Play service URL using ffprobe i.e. Activate it to make it usable as a channel
 SERVICE_URL="$TVHEADEND_PLAY_STREAM_URL/service/$SERVICE_UUID"
 
 # Probe remote stream using ffprobe i.e. play mux briefly to add service
-$FFPROBE_CMD $FFPROBE_OPTS $SERVICE_URL 2>&1 | tee -a $TVHEADEND_CCTV_INFO_LOG_FILE 
+$FFPROBE_CMD $FFPROBE_OPTS_GLOBAL $FFPROBE_OPTS_STREAMS $SERVICE_URL >> $TVHEADEND_CCTV_INFO_LOG_FILE 2>&1
 
 # Add cctv channel creation command to temp file
 cat >> $TVHEADEND_CCTV_CREATE_CHAN_TEMP_FILE <<EOF
@@ -1466,7 +1502,7 @@ EOT
 ))" $TVHEADEND_API_URL/channel/create > /dev/null 2>&1
 #
 # Notify - Channel added
-logger -s -t $(basename $0) "Added Channel No.[$CHANNEL_NUMBER] [$CHANNEL_NAME]"
+logger -s -t $(basename $0) "Found channel number.[$CHANNEL_NUMBER] [$CHANNEL_NAME]"
 
 EOF
 
@@ -1655,7 +1691,7 @@ JambulaTV: Testing JTV Home stream: [$PLAYLIST_CHANNEL], please wait ...
 
 EOF
 # Probe stream using ffprobe i.e. play mux briefly to add service
-$FFPROBE_CMD $FFPROBE_OPTS $MUX_URL 2>&1 | tee -a $TVHEADEND_JTV_HOME_INFO_LOG_FILE > $TVHEADEND_IPTV_SERVICE_LOG_FILE
+$FFPROBE_CMD $FFPROBE_OPTS_GLOBAL $FFPROBE_OPTS_STREAMS $MUX_URL >> $TVHEADEND_JTV_HOME_INFO_LOG_FILE 2>&1 
 
 # Check if service was added 
 # ..........................
@@ -1734,19 +1770,18 @@ CHANNEL_NUMBER=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_
 CHANNEL_LOGO=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_JTV_HOME_M3U_FILE} | grep '#EXTINF' | cut -d = -f4 | awk {'print $1'} | sed 's:"::g' | head -1)
 CHANNEL_CATEGORY=$(grep -Ew "${CHANNEL_NAME}$" ${PLAYLISTS_DIRECTORY}/${PLAYLISTS_JTV_HOME_M3U_FILE} | grep '#EXTINF' | cut -d , -f1 | awk {'print $NF'} | cut -d = -f2 | sed 's:"::g' | head -1)
 CHANNEL_TAG=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channeltag/list?limit=100000 | jq -r '.entries[] | select(.val=="'"${CHANNEL_CATEGORY}"'") | .key')
-#
+
 # Check if channel already exists
-$CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[]' | grep "$SERVICE_UUID" > /dev/null 2>&1
-CHANNEL_EXISTS=$?
+EXISTING_CHANNEL=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/channel/grid?limit=100000 | jq -r '.entries[] | select(.name | contains("'"$CHANNEL_NAME"'")) |.name' | uniq)
 #
 # Don't add if channel already exists
-[[ "$CHANNEL_EXISTS" = "0" ]] && continue
+[[ "x$EXISTING_CHANNEL"  = "x" ]] || continue
 
 # Play service URL using ffprobe i.e. Activate it to make it usable as a channel
 SERVICE_URL="$TVHEADEND_PLAY_STREAM_URL/service/$SERVICE_UUID"
 
 # Probe remote stream using ffprobe i.e. play mux briefly to add service
-$FFPROBE_CMD $FFPROBE_OPTS $SERVICE_URL 2>&1 | tee -a $TVHEADEND_JTV_HOME_INFO_LOG_FILE 
+$FFPROBE_CMD $FFPROBE_OPTS_GLOBAL $FFPROBE_OPTS_STREAMS $SERVICE_URL >> $TVHEADEND_JTV_HOME_INFO_LOG_FILE 2>&1
 
 # Add jtvhome channel creation command to temp file
 cat >> $TVHEADEND_JTV_HOME_CREATE_CHAN_TEMP_FILE <<EOF
@@ -1775,7 +1810,7 @@ EOT
 ))" $TVHEADEND_API_URL/channel/create > /dev/null 2>&1
 #
 # Notify - Channel added
-logger -s -t $(basename $0) "Added Channel No.[$CHANNEL_NUMBER] [$CHANNEL_NAME]"
+logger -s -t $(basename $0) "Found channel number.[$CHANNEL_NUMBER] [$CHANNEL_NAME]"
 
 EOF
 
@@ -1810,7 +1845,6 @@ print_notification "$JTV_HOME_CHANNEL_MAP_COMPLETED_MESSAGE" text
 # Print notification using OSD tool
 print_notification "$JTV_HOME_CHANNEL_MAP_COMPLETED_MESSAGE" osd
 }
-
 
 
 # Group functions
@@ -1910,7 +1944,7 @@ fi
 	iptv_get_fresh_playlist
 
 # Add IPTV Network if it does not exist (except for m3u, epg, icons,enable)
-[[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" || "$TV_TASK" = "enable" || "$TV_TASK" = "disable" ]] || \
+[[ "$TV_TASK" = "map" || "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" || "$TV_TASK" = "enable" || "$TV_TASK" = "disable" ]] || \
 	configure_iptv_network
 
 # Add Services i.e. Manually play each mux found
@@ -1992,12 +2026,7 @@ usage_and_pre_start_general
 # Get connected clients and their details
 [[ "$TV_TASK" = "clients" ]] && \
 	get_tvh_clients_connected
-
-# Generate TVHeadend Playlists and send via Telegram
-[[ "$TV_TASK" = "playlists" ]] && \
-	send_tvh_playlist_via_telegram # [wireless|wired]
 ;;
-
 esac
 
 post_config
