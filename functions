@@ -552,6 +552,7 @@ UDEV_RULES_USB_PHONES_ANDROID=$UDEV_RULES_DIR/96-jambulatv.usb-phones.rules
 UDEV_RULES_USB_WEBCAMS=$UDEV_RULES_DIR/96-jambulatv.usb-webcams.rules
 UDEV_RULES_USB_HA_CONTROLLERS=$UDEV_RULES_DIR/96-jambulatv.usb-ha-controllers.rules
 
+MODULES_LOAD_DIR=/etc/modules-load.d
 MODPROBE_DIR=/etc/modprobe.d
 SUDOERS_DIR=/etc/sudoers.d
 
@@ -2848,6 +2849,11 @@ make -j$SYSTEM_CPU_CORES install
 #
 # Clean up - saves upto 8GB
 make clean
+#
+# Load Realtek driver at boot time, else RTL network card will not work
+# See comment at https://bugzilla.redhat.com/show_bug.cgi?id=1650984#c6
+[[ -e $MODULES_LOAD_DIR/realtek.conf ]] || \
+	echo "realtek" > $MODULES_LOAD_DIR/realtek.conf
 #
 # Done
 # ----
