@@ -529,11 +529,21 @@ PULSE_SINK_INPUT_STATUS=$?
 if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]];
 then
 JTVRADIO_VOLUME=$($PACTL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv | awk '/Volume/ {print $5}')
+JTVRADIO_VOLUME_MUTED=$($PACTL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | grep -i Mute | awk -F': ' {'print $2'})
+#
+# Set volume mute status
+if [[ "$JTVRADIO_VOLUME_MUTED" = "yes" ]];
+then
+VOLUME_MUTE_STATUS="Muted !!!"
+else
+VOLUME_MUTE_STATUS=Active
+fi
+
 cat <<ET
 -----------------------------
 JambulaTV Radio
 -----------------------------
-Status	:	Active
+Status	:	$VOLUME_MUTE_STATUS
 Volume	:	$JTVRADIO_VOLUME
 
 ET
