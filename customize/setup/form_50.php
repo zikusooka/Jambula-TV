@@ -34,7 +34,10 @@
  echo '<b>';
  echo '<p><span id="success">Congratulations! You have successfully completed setup</span></p>';
  echo '<p><span id="span">JambulaTV is now restarting.  Please wait until all your video and music content has been scanned</span></p>';
-
+ echo '</b>';
+ echo '<p>
+In order for you to lookup or download TV shows and movies using your private <a href="https://trakt.tv">trakt.tv</a> account, authorization of your box is required. Please contact the support team and ask them to authenticate your Flexget instance with trakt.tv
+</p>';
  echo '<p>
    <table style="width: 100%;" border="0" cellpadding="5"><tbody>
 
