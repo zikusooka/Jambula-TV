@@ -8513,6 +8513,8 @@ global_settings_configure () {
 DNS_SERVER_IP_ADDRESS_DEFAULT=$(echo $DNS_SERVER_IP_ADDRESS_DEFAULT | sed 's/\$//g')
 
 # Add global settings to file
+if [[ ! -e $PROJECT_GLOBAL_SETTINGS_FILE ]];
+then
 cat >> $PROJECT_GLOBAL_SETTINGS_FILE <<GLOBAL
 # JambulaTV global settings
 # ---
@@ -8537,10 +8539,14 @@ SMS_PHONE_NUMBER=$SMS_PHONE_NUMBER_DEFAULT
 
 # Text 2 Speech default API used # 1=iSpeech 2=google 3=watson
 TTS_PROVIDER_API=$TTS_PROVIDER_API
+
+# Internet data saver mode
+INTERNET_DATA_SAVER_MODE=off
 GLOBAL
 #
 # Give multimedia user permissions to global settings
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_GLOBAL_SETTINGS_FILE
+fi
 }
 
 bash_configure () {
