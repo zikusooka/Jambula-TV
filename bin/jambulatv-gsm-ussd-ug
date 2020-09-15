@@ -28,6 +28,14 @@ MM_MIN_AMOUNT=500
 # Modem Manager functions
 # -----------------------
 #
+quit_if_no_modem_found () {
+if [[ "x$MODEM_INDICES" = "x" ]];
+then
+logger -s -t $(basename $0) "No modem was found"
+exit 1
+fi
+}
+
 get_modem_index () {
 for INDEX in $MODEM_INDICES
 do
@@ -62,11 +70,11 @@ mmcli -m $MODEM_INDEX --3gpp-ussd-cancel > /dev/null 2>&1
 # ----
 #
 query_voice_balance_mtn_standard () {
-ussd_initiate_session_command '*131#' | awk -F'Airtime;' '/new reply from network/ {print $1}' | awk -F"Y'ello. You have " '{print $2}' | sed 's:/-::g'
+ussd_initiate_session_command '*131#' | awk -F': ' '/new reply from network/ {print $3}' | sed 's:/-::g' | awk {'print $1'}
 }
 
 query_data_balance_mtn_standard () {
-ussd_initiate_session_command '*131#' | awk -F'Internet;' '/new reply from network/ {print $1}' | awk -F"Airtime;  and " '{print $2}' | sed 's:/-::g'
+ussd_initiate_session_command '*131*4#' | awk -F': ' '/new reply from network/ {print $2}' | sed 's:Total data is ::g' | sed "s:['|.]::g"
 }
 
 query_data_balance_mtn_promotion () {
@@ -262,6 +270,9 @@ esac
 
 # Usage
 usage
+
+# Quit if no modem is found
+quit_if_no_modem_found
 
 # Find modem Index for requested mobile provider
 get_modem_index
