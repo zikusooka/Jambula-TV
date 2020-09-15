@@ -6,10 +6,12 @@
 # Jambula Labs @copyright 2020-2021 All rights reserved
 
 DATA_SAVER_ACTION=$1
+# Global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 # Services to disable
 IPTV=yes
-INTERNET_SPEED_TOOL=/usr/bin/jambulatv-speed-test
-PODCASTS_FETCH_TOOL=/usr/bin/jambulatv-fetch-podcasts
 
 
 
@@ -26,11 +28,10 @@ exit 1
 }
 
 internet_data_saver_on () {
-# Disable fetch podcasts tool
-sudo chmod a-x $PODCASTS_FETCH_TOOL
-
-# Do not run speed tests i.e. disable speed test tool
-sudo chmod a-x $INTERNET_SPEED_TOOL
+# Turn on Internet data saver mode in global settings
+sed -i "/INTERNET_DATA_SAVER_MODE/d" $PROJECT_GLOBAL_SETTINGS_FILE
+sed -i "/Internet data saver mode/ a\
+INTERNET_DATA_SAVER_MODE=on" $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Disable IPTV services
 if [[ "$IPTV" = "yes" ]];
@@ -61,11 +62,10 @@ done
 }
 
 internet_data_saver_off () {
-# Enable speed test tool i.e. OK to run speed tests 
-sudo chmod a+x $INTERNET_SPEED_TOOL
-
-# Enable fetch podcasts tool
-sudo chmod a+x $PODCASTS_FETCH_TOOL
+# Turn off Internet data saver mode in global settings
+sed -i "/INTERNET_DATA_SAVER_MODE/d" $PROJECT_GLOBAL_SETTINGS_FILE
+sed -i "/Internet data saver mode/ a\
+INTERNET_DATA_SAVER_MODE=off" $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Enable IPTV services
 if [[ "$IPTV" = "yes" ]];
