@@ -1,8 +1,14 @@
 #!/bin/sh
 #
 # Jambula Labs @copyright 2020-2021 All rights reserved
+
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
 #
-# Variables
+# Other variables
 ARIA2_CMD=/usr/bin/aria2c 
 ARIA2_OPTIONS="-c -D -q --log-level=notice"
 #
@@ -57,6 +63,14 @@ fi
 ###############
 #  FUNCTIONS  #
 ###############
+
+quit_if_data_saver_mode_enabled () {
+if [[ "$INTERNET_DATA_SAVER_MODE" = "on" || "$INTERNET_DATA_SAVER_MODE" = "ON" ]];
+then
+logger -s -t $(basename $0) "Fetching of podcasts is disabled due to Internet data saver mode"
+exit 0
+fi
+}
 
 send_podcast_queued_notices  () {
 # Get podcasts info files
@@ -214,6 +228,9 @@ done
 #################
 #  MAIN SCRIPT  #
 #################
+
+# Quit if Internet data saver mode is on
+quit_if_data_saver_mode_enabled
 
 # Queued: Send podcast queued notices if this script was called automatically by flexget 
 [ "$PARENT_COMMAND" = "flexget" ] && send_podcast_queued_notices 

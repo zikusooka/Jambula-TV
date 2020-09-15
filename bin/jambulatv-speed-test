@@ -41,6 +41,14 @@ exit 0
 fi
 }
 
+quit_if_data_saver_mode_enabled () {
+if [[ "$INTERNET_DATA_SAVER_MODE" = "on" || "$INTERNET_DATA_SAVER_MODE" = "ON" ]];
+then
+logger -s -t $(basename $0) "Testing of Internet speed is disabled due to Internet data saver mode"
+exit 0
+fi
+}
+
 select_speed_test_server () {
 # Speed Tests
 for SELECTED_SPEED_TEST_SERVER in $SPEED_TEST_SERVER
@@ -126,7 +134,10 @@ fi
 #################
 #  MAIN SCRIPT  #
 #################
+
 check_internet_access
+
+quit_if_data_saver_mode_enabled
 
 select_speed_test_server
 
