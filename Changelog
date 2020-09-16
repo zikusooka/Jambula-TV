@@ -1,3 +1,323 @@
+Changes since v6.8
+--------------------
+
+* JambulaTV: Upgrade ZoneMinder to the latest Github version: 1.34.2 
+
+* JambulaTV: Upgrade IWD to the latest upstream version: 1.5 
+
+* JambulaTV: Update nginx default web server config file and force all clients not originating from localhost to be redirected to the hotspot i.e. captive portal 
+
+* JambulaTV: Add voice notification support for planned and unplanned power outages (for tomorrow and currently respectively) to sounds tool i.e. jambulatv-sounds 
+
+* JambulaTV: Update the home-assistant-requirements.txt file and add pyMetno, a required homeassistant python3 dependency module 
+
+* JambulaTV: Upgrade colorlog, a homeassistant-cli python3 dependency module to version 4.1.0 i.e. Update the home-assistant-cli-requirements.txt 
+
+* JambulaTV: Upgrade aiohttp, a home-assistant/cli and commonly used python3 dependency module to version 3.6.2 i.e. Update the following files: common-requirements.txt and home-assistant-cli-requirements.txt 
+
+* JambulaTV: Ignore already installed python3 dependency modules when installing Home-Assistant 
+
+* JambulaTV: Add cffi, a home-assistant dependency package to the list of commonly used python3 dependency modules that are installed initially 
+
+* JambulaTV:  Change the format used for the 'delay' option in home  automations as older one is deprecated in newer versions  of Home-Assistant 
+
+* JambulaTV: Refactor WiFi scanning routines in the connect to WiFi AP tool i.e. Update 'jambulatv-connect-2-wifi-ap' script 
+
+* JambulaTV: When querying title of music being played, do not show both the song's artist and title if the two entries are similar 
+
+* JambulaTV: Add MQTT support to MiFi router query tool i.e. Update 'jambulatv-mifi-query' 
+
+* JambulaTV: Add/Update contributed Zoneminder Monitor configuration options files for Sony Playstation 3 Eye and Logitech Quickcam USB webcams respectively 
+
+* JambulaTV: Add UDEV rules for Sony Playstation Eye USB webcam 
+
+* JambulaTV: Kill any lingering processes when ZoneMinder service stoppage is requested 
+
+* JambulaTV: Upgrade ZoneMinder to the latest Github version: 1.35.1 
+
+* JambulaTV: Update the home-assistant-requirements.txt file and add distro, a required homeassistant python3 dependency module 
+
+* JambulaTV: Add support for connecting to hidden wireless networks plus improve the WiFi scanning routines in the connect to WiFi AP tool i.e Update jambulatv-connect-2-wifi-ap 
+
+* JambulaTV: Load Realtek driver at boot time otherwise Realtek based network cards like RTL8101/8102/8111/8168/8411 are not activated even if the r8169 module is loaded 
+
+* JambulaTV: Improve and update the UMEME power outages query tool i.e. jambulatv-umeme-outages 
+
+* JambulaTV: Improve and update the reminders tool i.e. jambulatv-remind 
+
+* JambulaTV: Improve and update the Internet/DNS monitoring tool i.e. jambulatv-dns-status-triggers 
+
+* JambulaTV: Upgrade Linux kernel to new stable version: 5.6.2 
+
+* JambulaTV: Fix issue where there is no audio when playing music via snapcast client as seen previously in the commit: d363754a285c70f2eb0f77e115ea3398604627c0 
+
+* JambulaTV: Upgrade Kodi to the latest github version of 18.6 (Leia) 
+
+* JambulaTV: Upgrade Home-Assistant to the latest Github version: 0.108.0.dev0 (Beta 3) 
+
+* JambulaTV: Improve and update the reminders tool i.e. jambulatv-remind 
+
+* JambulaTV: Upgrade Flexget to the latest release version: 3.1.47 
+
+* JambulaTV: Install boost with support for the coroutine library i.e. Add option '--with-coroutine' to bz2 install script 
+
+* JambulaTV: Upgrade ccache to a recent release (version 3.7.9) as this allows for error-free installations of up-to-date versions of cmake such as: cmake 3.17.0 
+
+* JambulaTV: Upgrade cmake to latest version of 3.17.0 
+
+* JambulaTV: Upgrade icinga2 to latest github version: r2.12.0-rc1-1 
+
+* JambulaTV: Upgrade check_logfiles to the latest version: v3.11.0.3 
+
+* JambulaTV: Upgrade vnStat to latest github version: 2.7 beta1 
+
+* JambulaTV: Do not automatically start snapcast server and client via the config files: snapserver.sample and snapclient.sample Use systemd unit files instead i.e. restart="Always" 
+
+* JambulaTV: Upgrade boost library to the latest version: 1.72.0 
+
+* JambulaTV: Update URL for Jazz24 stream in Internet radio streamer tool i.e. jambulatv-internet-radio-streamer 
+
+* JambulaTV: Upgrade Flexget to the latest release version: 3.1.51 
+
+* JambulaTV: Upgrade youtube-dl sources to latest version: 2020.03.24 
+
+* JambulaTV: Add support for Dailymotion live streams to youtube tool i.e. Update jambulatv-youtube 
+
+* JambulaTV: Upgrade hostapd WiFi server to the latest version of: v2.10-devel-hostap_2_9-1155-g43723fa+ and add support for new and/or experimental features 
+
+* JambulaTV: Enable support for 802.11n in the WiFi Hotspot server This reverses previously committed change See commit: 7582049df74692e03a260c3b48f01d481c816062 
+
+* JambulaTV: Update Flexget RSS input plugin so that the code which extracts the URL of the podcast poster image only runs if the execution task is 'internet_tv' ie. Update the patch file: flexget.plugin.input.rss.python3.patch 
+
+* JambulaTV: Upgrade youtube-dl sources to latest version: 2020.05.08 
+
+* JambulaTV: Upgrade live555 to latest version: 2020.04.24 
+
+* JambulaTV: Upgrade FFmpeg CLI tool to the latest version: 4.2.2 
+
+* JambulaTV: Update icinga2 sources to latest github version 
+
+* JambulaTV: Update icingaweb2 sources to the latest github version 
+
+* JambulaTV: Upgrade boost library to the latest version: 1.73.0 
+
+* JambulaTV: Fix minor issue where youtube-dl command is missing from binaries location i.e. /usr/bin/youtube-dl 
+
+* JambulaTV: Upgrade VLC required libraries: libdvdread and libdvdnav to versions 6.0.2 and 6.0.1 respectively 
+
+* JambulaTV: Upgrade dav1d to latest github version: 0.6.0-95-geaedb95 
+
+* JambulaTV: Fix issue where VLC compilation fails and errors when Live555 is enabled 
+
+* JambulaTV: Upgrade VLC Media Player to latest version: 3.0.10 
+
+* JambulaTV: Change maximum input streams setting in TVHeadend for JambulaTV IPTV from '1' to '0' i.e. Allow unlimited IPTV input streams 
+
+* JambulaTV: Add community contributed python script 'm3u2xspf.py' to our contrib directory 
+
+* JambulaTV: Add support for sending file attachments (documents) via Telegram 
+
+* JambulaTV: Add the following new features to the TVHeadend controller tool i.e. jambulatv-tvheadend-controller 
+
+* JambulaTV: Refactor API search code in Youtube tool and add support for download of non-live content such as music videos i.e. Update 'jambulatv-youtube' 
+
+* JambulaTV: Refactor Youtube-based Player tool 'jambulatv-yplayer' as necessitated due to recent changes in the Youtube tool: jambulatv-youtube. Changes are mainly variables used when searching for content and to allow for multiple and simultaneous Youtube queries 
+
+* JambulaTV: Add install of libmaxminddb, a C library for the MaxMind DB file format.  It includes a tool named 'mmdblookup', which looks up an IP address in the specified MaxMind DB file i.e. Perform Geolookups using IP address 
+
+* JambulaTV: Add support for the GeoIP Update program, which allows us to perform automatic updates for GeoIP2 binary databases from MaxMind servers 
+
+* JambulaTV: Add support for weekly updates of MaxMind GeoIP databases to the Internet/DNS monitoring tool i.e. Update and add 'update_geoip_databases' to jambulatv-dns-status-triggers 
+
+* JambulaTV: Refactor setup code for the youtube-dl based tool i.e jambulatv-youtube 
+
+* JambulaTV: Add new tool named 'jambulatv-fetch-music' which downloads music files and converts them to an audio (mp3) format for end-user consumption. It can be run either for playing now or on-demand music requests 
+
+* JambulaTV: Add support for reading and downloading of music that is currently playing using voice commands in the Speech Recognition (ASR) engine 
+
+* JambulaTV: Fix issues and minor bugs in the music download tool i.e Update 'jambulatv-fetch-music' 
+
+* JambulaTV: Ensure IPTV playlist file is refreshed before scanning of IPTV network takes place i.e Update TVHeadend controller tool: 'jambulatv-tvheadend-controller' 
+
+* JambulaTV: Upgrade nginx to the latest stable version: 1.18.0 
+
+* JambulaTV: Upgrade Kodi to the latest github version of 18.7 (Leia) 
+
+* JambulaTV: Upgrade the following Kodi addon(s) to latest version(s): 
+
+* JambulaTV: Add install of Inputstream Adapative, a Kodi inputstream addon for several manifest types 
+
+* JambulaTV: Add initial support for Amazon Prime Video i.e. Add new kodi video addon: 'plugin.video.amazon-test' 
+
+* JambulaTV: Allow Youtube download tool 'youtube_dl' to not only perform insecure connections but also not to check SSL certificates and bypass geolocation restrictions 
+
+* JambulaTV: Fix issue where dnsmasq systemd service fails to restart when there's a status change in Internet connectivity 
+
+* JambulaTV: Update the IPTV playlists file for initial installs i.e. jambula-iptv.m3u8 
+
+* JambulaTV: Upgrade libxml2 library to latest version: 2.9.10 
+
+* JambulaTV: Upgrade FFmpeg to the latest version: 4.2.3 
+
+* JambulaTV: Add initial support for downloading APK applications from the Google Play store 
+
+* JambulaTV: Add dexMD5.py, a tool used to get version and MD5 info i.e. Extract classes.dex from apk and return base64 MD5 raw encoded 
+
+* JambulaTV: Add support for updating WhatsApp version and MD5 classes information in yowsup python code during the registration process i.e. Update WhatsApp tool: 'jambulatv-whatsapp' 
+
+* JambulaTV: Add support for streamlink, a command line utility which pipes video streams from various services into a video player like VLC 
+
+* JambulaTV: Disable PHP5 module 'pdo_sqlite' temporarily due to the following startup warning message: 
+
+* JambulaTV: Fix issue where pulseaudio is not started by Kodi after initial install and generates the following error: 
+
+* JambulaTV: Upgrade Linux kernel to new stable version: 5.7 
+
+* JambulaTV: Perform icinga2 DVB-T2 network check NOT only if DVB-T2 Live TV was enabled during initial setup but also if a manual configuration of the same was done 
+
+* JambulaTV: Fix issue where sending of Whatsapp message(s) fails due to disconnect errors as reported at: https://github.com/tgalal/yowsup/issues/2980 
+
+* JambulaTV: Refactor code that uninstalls python packages i.e. Update the following routines in the main functions file: 
+
+* JambulaTV: Upgrade ZoneMinder to the latest Github version: 1.35.4 
+
+* JambulaTV: Upgrade Flexget to the latest release version: 3.1.62 
+
+* JambulaTV: Upgrade Home-Assistant Core to the latest Github version: 0.112.0.dev0 (Git tag is 0.111.0b2) 
+
+* JambulaTV: Upgrade Home-Assistant-CLI to latest Github version: 0.10.0.dev20200526101050 
+
+* JambulaTV: Upgrade Flexget to the latest release version: 3.1.63 
+
+* JambulaTV: Upgrade Linux kernel (5.7 branch) to version 5.7.1 
+
+* JambulaTV: Add support for series-cli, a simple CLI app to get basic info for a tv show (name, rating, next episode, previous episode) using Python and the TVMaze API 
+
+* JambulaTV: Upgrade GNUTLS system package to the current version using upstream sources due to higher gnutls version required by VLC 
+
+* JambulaTV: Fix bug issue in Flexget where RSS feeds with no image links cause crash in the execution of internet_tv tasks 
+
+* JambulaTV: Add support for downloading Youtube based podcasts like Hak5 to the fetch tool: jambulatv-fetch-podcasts 
+
+* JambulaTV: Update Data Saver tool: jambulatv-internet-data-saver 
+
+* JambulaTV: Fix the following bugs/issues in the system information tool: i.e. jambulatv-sysinfo 
+
+* JambulaTV: Fix issue where duplicate IPTV channels are added during maintenance process i.e Update TVHeadend controller tool: jambulatv-tvheadend-controller 
+
+* JambulaTV: Update jambula-iptv-builder sources to latest version 
+
+* JambulaTV: Add copying of systemd unit files for IPTV builder tool i.e. 'jambula-iptv-builder' to the initial install and functions file 
+
+* JambulaTV: Upgrade icingaweb2 to the latest github version: 2.8.0 
+
+* JambulaTV: While setting up GMail account for SMTP relaying during initial setup, Notify user that they should visit their Google account settings and enable 'less secure' access for their email address 
+
+* JambulaTV: Add voice notification support for Birthday reminders i.e. Announce if there is a birthday today 
+
+* JambulaTV: Add voice notification support for battery charging and discharging levels when using Laptop based systems i.e. Announce when the laptop's AC power adapter is unplugged or plugged in 
+
+* JambulaTV: Upgrade FFmpeg to the latest version: 4.3 
+
+* JambulaTV: Upgrade VLC Media Player to latest version: 3.0.11 
+
+* JambulaTV: Upgrade MPlayer to latest version: SVN-r38192-4.9.4 
+
+* JambulaTV: Upgrade MPV player to latest version: 0.32.0-562-gae5ac7e 
+
+* JambulaTV: Add support for waf, the meta build system. It is used in the installation of the mpv media player 
+
+* JambulaTV: Upgrade icinga2 to the latest stable version: r2.11.4-1 
+
+* JambulaTV: Upgrade IWD to the latest upstream version: 1.8 
+
+* JambulaTV: Add support for mpv CLI based player to speaker volumes tool i.e. jambulatv-speaker-volume 
+
+* JambulaTV: Upgrade Flexget to the latest release version: 3.1.65 
+
+* JambulaTV: Set rsync command and options to just 'rsync -av' in the initial and main functions file i.e. Remove the rsync CLI option '--delete-after' as it causes issues with upgrades of some git based packages 
+
+* JambulaTV: Refactor icinga2 configuration routines in initial and main functions file i.e. icinga2_configure 
+
+* JambulaTV: Add install of libCEC library to kodi 18 installs i.e. Include 'libcec_install' routines in 'kodi18_install' 
+
+* JambulaTV: Upgrade OpenSSL to the latest version of 1.1.1g 
+
+* JambulaTV: Upgrade nginx to the latest mainline version: 1.19.0 
+
+* JambulaTV: Change port used by initial setup process from 8502 to 8504 since latter is officially unassigned by IANA 
+
+* JambulaTV: Fix issue where vlc's vlm server is not restarted when a video file is inserted into the Video-On-Demand directory i.e. Update the 'jambulatv-create-video-on-demand' tool and add missing restart command 
+
+* JambulaTV: Disable Video On Demand streaming using VLC's VLM services as it not efficient and uses a whole lot of CPU resources 
+
+* JambulaTV: Upgrade TVHeadend to latest version: 4.3-1886~g51a4c5b-dirty 
+
+* JambulaTV: Upgrade Home-Assistant Core to the latest Github version: 0.113.0.dev0 (Git tag is 0.112) 
+
+* JambulaTV: Add the following RTMP/HLS streaming related files into the project's contributed directory: 
+
+* JambulaTV: Update initial and main functions file so as to support local RTMP/HLS based Live TV streaming 
+
+* JambulaTV: Add support for local RTMP/HLS based Live TV streaming to TVHeadend control tool and make several changes to it i.e. Update 'jambulatv-tvheadend-controller' 
+
+* JambulaTV: Add support for upload of images to cloud based services like imgur i.e. Add new tool named 'jambulatv-upload-image' 
+
+* JambulaTV: Add support for updates of daily Corona Virus (COVID-19) cases in Uganda to the Twitter search tool i.e. Update 'jambulatv-twitter' 
+
+* JambulaTV: Increase Bash shell history size setting from 5000 to 9000 i.e. Update 'bash_configure' routines in initial functions files 
+
+* JambulaTV: Add configuration and setup of icinga2 API during initial install 
+
+* JambulaTV: Refactor Icinga Web 2 install, configuration and uninstall 
+
+* JambulaTV: Add initial support for Icinga2 director, a web based configuration and deployment tool for Icinga 2 
+
+* JambulaTV: Upgrade Flexget to the latest release version: 3.1.67 
+
+* JambulaTV: Add support for querying specific categories to Twitter search tool i.e. Refactor and update 'jambulatv-twitter' 
+
+* JambulaTV: Fix issue where the Geolocation tool reports incorrect or null values for City, Country, Latitude, and Longitude 
+
+* JambulaTV: Add support for scraping of Kodi TV/Movie metadata and artwork from the TVmaze online database. This acts as an alternative to the existing TVDB scraper which fails to work sometimes 
+
+* JambulaTV: Add initial support for querying IPTV stream duration, framerate, resolution, audio, etc 
+
+* JambulaTV: Refactor the youtube-dl based tool i.e jambulatv-youtube since search by scraping is currently broken. This is because the Youtube site is now based on polymer project 
+
+* JambulaTV: Fix issue where jambulatv-yplayer tool fails to play our Youtube based Live TV channels using pipe in TVheadend 
+
+* JambulaTV: Fix issue where the bandwidth tool does not send out notifications 
+
+* JambulaTV: Fix multiple issues discovered during IPTV maintenance processes i.e Update TVHeadend controller tool: jambulatv-tvheadend-controller 
+
+* JambulaTV: Add initial support for latest Linux kernel 5.8.x version 
+
+* JambulaTV: Upgrade Home-Assistant Core to the latest Github version: 0.114.3 
+
+* JambulaTV: Check for existence of lock file when running sounds tool i.e. jambulatv-sounds 
+
+* JambulaTV: If the volume of JambulaTV Radio is muted, add alert in the status output printed from the speaker volumes tool i.e. Update jambulatv-speaker-volume 
+
+* JambulaTV: Update code used in initial setup process as follows: 
+
+* JambulaTV: Update GSM USSD controller tool i.e. jambulatv-gsm-ussd-ug 
+
+* JambulaTV: Add Internet data saver mode option to the global settings file i.e. Update the 'global_settings_configure' routines in initial functions 
+
+* JambulaTV: Add Internet data saver mode support to the following tools that are data hogs: 
+
+* JambulaTV: Update data saver tool i.e. jambulatv-internet-data-saver 
+
+* JambulaTV: Switch to using OpenCellID when determining the location of cell/mobile network tower in geolocation tool i.e. Update jambulatv-whereami 
+
+* JambulaTV: Do not attempt to get TV channel ID using Kodi controller tool if the hts PVR addon is not enabled, otherwise 'jq' errors are outputed 
+
+* JambulaTV: Update jambula-iptv-builder sources to latest version 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+
 Changes since v6.7
 --------------------
 
