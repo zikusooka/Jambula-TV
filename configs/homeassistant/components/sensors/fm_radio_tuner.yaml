@@ -1,0 +1,4 @@
+platform: command_line
+name: "FM Radio Tuner Status"
+command: "/usr/bin/rtl_fm -f 000 > /dev/null 2>&1 || echo 'Not Available'"
+scan_interval: 3600

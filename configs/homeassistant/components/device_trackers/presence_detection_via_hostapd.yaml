@@ -2,5 +2,5 @@ platform: mqtt
 devices:
   zik_hostapd: !secret mqtt_presence_hostapd_topic_zik
   lenovo_t61_hostapd: !secret mqtt_presence_hostapd_topic_lenovo_t61
-#  eva_hostapd: !secret mqtt_presence_hostapd_topic_eva
-  angie_hostapd: !secret mqtt_presence_hostapd_topic_angie
+  eva_hostapd: !secret mqtt_presence_hostapd_topic_eva
+#  angie_hostapd: !secret mqtt_presence_hostapd_topic_angie

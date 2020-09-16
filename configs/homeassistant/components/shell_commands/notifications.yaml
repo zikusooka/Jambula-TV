@@ -7,8 +7,10 @@ send_whatsapp_image: sudo /usr/bin/jambulatv-whatsapp sendImage """{{image_path}
 send_whatsapp_text: sudo /usr/bin/jambulatv-whatsapp sendMessage """*[JambulaTV]* {{message}}""" {{phone}}
 
 
-# WhatsApp (Twitter reports)
-send_twitter_reports_whatsapp: sudo /usr/bin/jambulatv-whatsapp sendFileContent {{reports_file}} {{phone}}
+# Twitter reports
+# ---
+# WhatsApp
+send_twitter_reports_whatsapp: sudo /usr/bin/jambulatv-whatsapp sendFileContent {{reports_file}} {{phone}} 
 
-# Telegram (Twitter reports)
+# Telegram
 send_twitter_reports_telegram: sudo /usr/bin/jambulatv-telegram sendFileContent {{reports_file}} {{phone}}

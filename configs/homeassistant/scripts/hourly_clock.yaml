@@ -8,17 +8,19 @@ say_time_at_top_off_hour:
     # a) Mute speaker volume if there is already audio playing
     - service: shell_command.speaker_volume_mute
     # Pause for a second - DO NOT REMOVE unless you have a fix!
-    - delay: '00:00:01'
+    - delay: '00:00:04'
 
     # b) Chime alert using house speakers
     - service: shell_command.play_chime_big_ben_alert
     # Wait for bell to finish ringing
-    - delay: '00:00:01'
+    - delay: '00:00:04'
 
     # c) Speak the current hour using house speakers
     - service: shell_command.say_current_time_using_sounds_tool
       data_template:
-        audio_gain: ""
+        audio_gain: "5.0"
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
 
     # d) Unmute speaker volume 
     - service: shell_command.speaker_volume_unmute

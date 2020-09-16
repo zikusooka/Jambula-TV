@@ -1,0 +1,14 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.mifi_status
+    state: "on"
+
+card:
+  type: gauge
+  entity: sensor.mifi_battery_charge
+  name: 'Battery Charge (MiFi)'
+  unit: '%'
+  severity:
+    green: 50
+    yellow: 30 
+    red: 10

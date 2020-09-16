@@ -1,0 +1,39 @@
+alias: There is a birthday today
+initial_state: True
+
+
+trigger:
+
+  # Every 1 hour
+  - platform: time_pattern
+    hours: '/1'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Time of day
+    - condition: time
+      after: '06:00:00'
+      before: '20:59:59'
+
+
+action:
+
+  # a) Mute speaker volume if there is already audio playing
+  - service: shell_command.speaker_volume_mute
+  # Pause for a second - DO NOT REMOVE unless you have a fix!
+  - delay: '00:00:01'
+
+  # b) Chime alert using house speakers
+  - service: shell_command.play_chime_alert
+
+  # c) Its time for news sound effect using house speakers
+  - service: shell_command.birthday_balloon_sound_effect
+
+  # d) Announce its time time for news using house speakers
+  - service: shell_command.there_is_a_birthday_today
+
+  # e) Unmute speaker volume 
+  - service: shell_command.speaker_volume_unmute

@@ -2,5 +2,5 @@ platform: mqtt
 devices:
   zik_mifi: !secret mqtt_presence_mifi_topic_zik
   lenovo_t61_mifi: !secret mqtt_presence_mifi_topic_lenovo_t61
-#  eva_mifi: !secret mqtt_presence_mifi_topic_eva
-  angie_mifi: !secret mqtt_presence_mifi_topic_angie
+  eva_mifi: !secret mqtt_presence_mifi_topic_eva
+  #angie_mifi: !secret mqtt_presence_mifi_topic_angie

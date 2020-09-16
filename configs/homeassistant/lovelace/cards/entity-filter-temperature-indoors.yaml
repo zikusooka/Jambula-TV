@@ -1,0 +1,11 @@
+type: entity-filter
+entities:
+  - entity: sensor.outside_temperature
+    name: 'Temperature (Indoors)'
+
+state_filter:
+  - operator: "!="
+    value: "unavailable"
+
+card: sensor
+show_empty: false

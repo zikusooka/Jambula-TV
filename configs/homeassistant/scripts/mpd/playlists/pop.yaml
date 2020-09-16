@@ -1,0 +1,22 @@
+music_play_pop:
+  sequence:
+
+    # Generate playlist
+    - service: shell_command.create_local_music_playlist
+      data_template:
+        music_dir: !secret jambulatv_music_dir
+        mpd_playlists_dir: !secret jambulatv_playlists_mpd_dir
+        genre: 'Pop'
+
+    # Play 
+    - service: media_player.media_play
+      data:
+        entity_id: media_player.now_playing
+        media_content_type: playlist
+        media_content_id: 'Local-Music-Pop'
+
+    # set volume
+    - service: media_player.volume_set
+      data:
+        entity_id: media_player.main
+        volume_level: 0.90

@@ -1,0 +1,60 @@
+# Laptop battery is discharging
+alias: "System Battery is discharging"
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.battery_laptop
+    to: 'Discharging'
+
+
+#condition:
+  #condition: and
+  #conditions:
+
+    # Internet state
+    #- condition: template
+    #  value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+
+action:
+
+# VOICE ALERT - sound alert notice using Intercom i.e. paging
+# -----------------------------------------------------------
+
+  # a) Mute speaker volume if there is already audio playing
+  - service: shell_command.speaker_volume_mute
+  # Pause for a second - DO NOT REMOVE unless you have a fix!
+  - delay: '00:00:01'
+
+  # b) Chime alert using house speakers
+  - service: shell_command.play_chime_alert
+
+  # c) Laptop battery is discharging sound effect using house speaker
+  #- service: shell_command.
+
+  # d) Laptop battery is discharging
+  - service: shell_command.laptop_battery_discharging
+
+  # e) Unmute speaker volume 
+  - service: shell_command.speaker_volume_unmute
+
+# Text power outage reports
+# -------------------------
+
+  # a) WhatsApp
+  - service: script.send_whatsapp
+    data_template:        
+      whatsapp_text: !include ../../templates/system/laptop_battery_discharging.yaml
+
+      whatsapp_image: ''
+      whatsapp_recipient_phone: ''
+
+  # b) Telegram
+  - service: script.send_telegram
+    data_template: 
+      telegram_text: !include ../../templates/system/laptop_battery_discharging.yaml
+      telegram_image: ''
+      telegram_recipient_phone: ''

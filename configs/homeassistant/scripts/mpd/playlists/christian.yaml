@@ -9,9 +9,9 @@ music_play_christian:
         genre: 'Christian'
 
     # Play 
-    - service: media_player.play_media
+    - service: media_player.media_play
       data:
-        entity_id: media_player.jambulatv_now_playing
+        entity_id: media_player.now_playing
         media_content_type: playlist
         media_content_id: 'Local-Music-Christian'
 

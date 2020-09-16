@@ -1,0 +1,12 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.internet
+    state: "on"
+    #state: "off"
+
+card:
+  type: entities
+  entities:
+    - entity: input_select.internet_radio_station
+      name: 'Internet Radio'
+      icon: 'mdi:radio'

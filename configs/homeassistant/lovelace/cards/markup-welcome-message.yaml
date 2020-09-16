@@ -1,0 +1,11 @@
+type: markdown
+content: Hi there, Welcome to **JambulaTV**, your smart home automation and entertainment hub. 
+
+
+
+#The following events are coming up [[ sensor.time.state ]] [[ sensor.time.attributes.icon]] **[[ sensor.power_outage_today.state ]]** 
+
+#{% for state in states.sensor %} {{ state.entity_id }}={{ state.state }}, {% endfor %} {{state.sensor.power_outage_today}}-{{states.sensor.power_outage_today}}-{{sensor.power_outage_today}}
+
+
+

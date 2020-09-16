@@ -13,3 +13,6 @@ homeassistant:
 
   # Lets me custimize entities based on a matching pattern
   customize_glob: !include_dir_merge_named ../../customizations/globs
+
+  # Allow list of folders that can be used as sources for sending files
+  whitelist_external_dirs: /tmp/twitter_searches/

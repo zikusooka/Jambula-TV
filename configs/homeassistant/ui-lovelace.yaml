@@ -1,16 +1,45 @@
-# This is actually just a bootstrap for my Lovelace configuration.
+title: JambulaTV Control Panel
+background: center / cover no-repeat url("/local/backgrounds/jambula_01.png") fixed
+resources: !include_dir_list lovelace/resources
 
-# It loads all resources for Lovelace dynamically from subfolders
-# inside the `lovelace/resources` directory.
-#
-# Views are actually include one by one, this to guarentee the order of
-# the tabs of the view in the UI.
-#
-#title: Home Control Panel
-#resources: !include_dir_list lovelace/resources
-#views:
-#  - !include lovelace/views/dashboard.yaml
-#  - !include lovelace/views/downstairs.yaml
-#  - !include lovelace/views/upstairs.yaml
-#  - !include lovelace/views/outside.yaml
+custom_header:
+  chevrons: false
+  compact_mode: true
+  exceptions:
+    - conditions:
+        user_agent: Mobile
+      config:
+        show_tabs: '0,1,2,3,4,5,6,7,8,9,10'
+    - conditions:
+        user_agent: Windows
+      config:
+        show_tabs: '0,1,2,3,4,5,6,7,8,9,10'
+    - conditions:
+        device_id: Tablet
+      config:
+        show_tabs: '0,1,2,3,4,5,6,7,8,9,10'
+  hide_help: true
+  menu_hide: true
+
+
+
+
+
+
+swipe_nav:
+  animate: swipe
+  prevent_default: true
+  skip_tabs: '0,1,2,3,4,5,6,7,8,9,10'
+  swipe_amount: 15
+  wrap: true
+
+
+views:
+
+
+  - !include lovelace/views/dashboard.yaml
+#  - !include lovelace/views/livingroom.yaml
+#  - !include lovelace/views/kitchen.yaml
+#  - !include lovelace/views/bedrooms.yaml
+#  - !include lovelace/views/bathrooms.yaml
 #  - !include lovelace/views/security.yaml

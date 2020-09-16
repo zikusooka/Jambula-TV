@@ -48,7 +48,7 @@ daily_digest_notify:
     # ----------------
     #
     # Fetch twitter reports
-    - service: shell_command.fetch_twitter_reports
+    - service: shell_command.fetch_twitter_reports_all
       data_template: 
         village: !secret homeassistant_city
 
@@ -58,7 +58,7 @@ daily_digest_notify:
     # Send twitter reports - WhatsApp
     - service: shell_command.send_twitter_reports_whatsapp
       data_template: 
-        reports_file: !secret twitter_reports_file
+        reports_file: !secret twitter_reports_all_file
 
     # IMPORTANT: Pause a bit to allow previous notification to be sent
     - delay: '00:00:10'
@@ -66,4 +66,5 @@ daily_digest_notify:
     # Send twitter reports - Telegram
     - service: shell_command.send_twitter_reports_telegram
       data_template: 
-        reports_file: !secret twitter_reports_file
+        reports_file: !secret twitter_reports_all_file
+

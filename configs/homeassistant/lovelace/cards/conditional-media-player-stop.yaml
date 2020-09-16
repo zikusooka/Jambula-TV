@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: media_player.now_playing
+    state: "playing"
+
+card:
+  type: entity-button
+  entity: script.music_stop
+  tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.music_stop
+  name: 'STOP'
+  icon: 'mdi:stop-circle-outline'

@@ -1,7 +1,19 @@
 # MiFi router info
+binary_sensor.mifi_status:
+  friendly_name: MiFi Router Status
+  icon: mdi:router-wireless
 sensor.mifi_battery_level:
   friendly_name: Battery Level
   icon: mdi:battery-outline
+sensor.mifi_battery_charge:
+  friendly_name: Battery Charge
+  icon: mdi:battery-outline
+sensor.mifi_battery_status:
+  friendly_name: Battery Status
+  icon: mdi:battery-outline
 sensor.mifi_data_balance:
   friendly_name: Data Balance
-  icon: mdi:gas-station
+  icon: mdi:chart-donut
+sensor.mifi_data_balance_amount:
+  friendly_name: Data Balance
+  icon: mdi:chart-donut

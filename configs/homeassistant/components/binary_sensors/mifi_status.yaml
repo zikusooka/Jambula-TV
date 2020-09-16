@@ -1,0 +1,8 @@
+platform: mqtt
+name: 'MiFi Status'
+state_topic: !secret mqtt_status_mifi
+
+scan_interval: 60
+device_class: connectivity
+payload_on: "on"
+payload_off: "off"

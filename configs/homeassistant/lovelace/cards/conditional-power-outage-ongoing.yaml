@@ -1,0 +1,19 @@
+type: conditional
+conditions:
+  - entity: sensor.power_outage_on_going
+    state_not: 'none'
+
+  - entity: sensor.power_outage_on_going
+    state_not: 'unknown'
+
+  - entity: binary_sensor.internet
+    state: "on"
+
+card:
+  type: entities
+  entities:
+    - entity: sensor.power_outage_on_going
+      name: 'Power outages (ongoing/Emergency)'
+      icon: 'mdi:power-plug-off'
+      show_name: false
+      show_icon: true

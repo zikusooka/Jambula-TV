@@ -1,0 +1,13 @@
+type: conditional
+conditions:
+  - entity: sensor.vision_security_zp3102_pir_motion_sensor_alarm_level
+    state_not: "254"
+
+card:
+  type: entities
+  entities:
+    - entity: sensor.vision_security_zp3102_pir_motion_sensor_alarm_level
+      name: 'Motion detected (Outside)'
+      icon: 'mdi:motion-sensor'
+      show_name: false
+      show_icon: true

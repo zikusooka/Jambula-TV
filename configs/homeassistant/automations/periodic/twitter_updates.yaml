@@ -1,0 +1,41 @@
+alias: Twitter updates and alerts
+initial_state: True
+
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/10'
+
+
+#condition:
+  #condition: and
+  #conditions:
+ 
+    # Pandemic mode
+    #- condition: state
+      #entity_id: 'input_boolean.pandemic_mode'
+      #state: 'on'
+
+
+action:
+
+    # Fetch twitter reports for UMEME power outage alerts
+  - service: shell_command.fetch_twitter_reports_power_umeme
+    data_template: 
+      village: !secret homeassistant_city
+
+    # Fetch twitter reports for UETCL power outage alerts
+  - service: shell_command.fetch_twitter_reports_power_uetcl
+    data_template: 
+      village: !secret homeassistant_city
+
+    # Fetch twitter reports for Eskom power outage alerts
+  - service: shell_command.fetch_twitter_reports_power_eskom
+    data_template: 
+      village: !secret homeassistant_city
+
+    # Fetch twitter reports for Covid19 updates in Uganda
+  - service: shell_command.fetch_twitter_reports_covid
+    data_template: 
+      village: !secret homeassistant_city

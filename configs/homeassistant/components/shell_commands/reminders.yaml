@@ -1,5 +1,5 @@
 # News Starting sound effect
-news_starting_sound_effect: jambulatv-sounds alert news_starting
+news_starting_sound_effect: /usr/bin/jambulatv-sounds alert news_starting
 # It's News Time
 its_time_4_news: /usr/bin/jambulatv-sounds alert 40
 
@@ -8,3 +8,11 @@ planned_power_outage_tomorrow: /usr/bin/jambulatv-sounds alert 42
 
 # Unplanned and Emergency power outage currently
 unplanned_emergency_power_outage_currently: /usr/bin/jambulatv-sounds alert 43
+
+# There's a birthday today
+there_is_a_birthday_today: /usr/bin/remind /JambulaTV/Reminders/birthdays.rem | grep -i today && /usr/bin/jambulatv-sounds alert 44
+birthday_balloon_sound_effect: /usr/bin/jambulatv-sounds alert birthday_balloon
+
+# Laptop Battery Discharging/Charging - Probably power is Off/On
+laptop_battery_discharging: /usr/bin/jambulatv-sounds alert 45
+laptop_battery_charging: /usr/bin/jambulatv-sounds alert 46

@@ -1,0 +1,4 @@
+platform: mqtt
+state_topic: !secret mqtt_twitter_searches_topic_power_uetcl
+expire_after: 360
+name: UETCL Power Alerts via Twitter
