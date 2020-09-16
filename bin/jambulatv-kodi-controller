@@ -30,7 +30,6 @@ KODI_ADDON="$2"
 PING_TIMEOUT=3 #9
 PING_IP_ADDRESS=$PING_IP_ADDRESS
 
-PVR_GROUP=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannelGroups", "params": {"channeltype":"tv"}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq '.result.channelgroups[] | select(.label=="All channels") | .channelgroupid')
 PVR_STOP_REC_SCRIPT=MY_TMPDIR/.stop_recording_tv_channel.sh
 PVR_STATUS_FILE=MY_TMPDIR/pvr_status
 TV_RECORD_STATUS_FILE=MY_TMPDIR/tv_record_status
@@ -177,9 +176,9 @@ curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: applicatio
 
 pause_player () {
 type_of_player
-[ "$VIDEO_IS_PLAYING" = "yes" ] || exit 0
+[[ "$VIDEO_IS_PLAYING" = "yes" ]] || exit 0
 
-if [ "$1" = "noreplay" ];
+if [[ "$1" = "noreplay" ]];
 then
 # No replay/toggle
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Player.PlayPause", "params": {"playerid":1, "play":false}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
@@ -245,6 +244,18 @@ input_fullscreen_toggle () {
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "Input.ExecuteAction", "params": {"action":"togglefullscreen"}}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc"
 }
 
+check_addon_status () {
+ADDON_STATUS=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"Addons.GetAddonDetails","params":{"addonid":"'"$1"'","properties":["enabled"]},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc | egrep -o 'true|false')
+# Export variable
+cat > $PVR_STATUS_FILE << EOF
+ADDON_STATUS=$ADDON_STATUS
+EOF
+# Echo status
+cat <<EOF
+Addon [$1] enabled: $ADDON_STATUS
+EOF
+}
+
 list_tv_channels () {
 # Remove previous channel list
 [ -e $ALL_TV_CHANNELS_LIST_FILE ] && rm -f $ALL_TV_CHANNELS_LIST_FILE
@@ -253,7 +264,12 @@ curl -s http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}/api/channel/grid?limi
 }
 
 get_tv_channel_id () {
+check_addon_status pvr.hts > /dev/null 2>&1
+if [[ "$ADDON_STATUS" != "false" ]];
+then
+PVR_GROUP=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannelGroups", "params": {"channeltype":"tv"}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq '.result.channelgroups[] | select(.label=="All channels") | .channelgroupid')
 CHANNELID=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" --header "Content-Type: application/json" --data '{"jsonrpc": "2.0", "id":"1", "method": "PVR.GetChannels", "params": {"channelgroupid":'$PVR_GROUP'}, "id": 1}' "http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc" | jq '.result.channels[] | select(.label=="'"${TV_CHANNEL}"'") | .channelid')
+fi
 }
 
 play_tv_channel () {
@@ -499,18 +515,6 @@ kodi_addon_toggle () {
 curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"Addons.SetAddonEnabled","params":{"addonid":"'"$1"'","enabled":"toggle"},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
 }
 
-check_addon_status () {
-ADDON_STATUS=$(curl -s --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"Addons.GetAddonDetails","params":{"addonid":"'"$1"'","properties":["enabled"]},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc | egrep -o 'true|false')
-# Export variable
-cat > $PVR_STATUS_FILE << EOF
-ADDON_STATUS=$ADDON_STATUS
-EOF
-# Echo status
-cat <<EOF
-Addon [$1] enabled: $ADDON_STATUS
-EOF
-}
-
 scan_video_library () {
 # Check for Internet connectivity
 check_internet_access
@@ -566,7 +570,7 @@ curl --user "$KODI_HTTP_USER:$KODI_HTTP_PASS" -X POST -H "Content-Type: applicat
 #################
 
 usage
- 
+
 get_tv_channel_id
 
 case $TV_ACTION in
