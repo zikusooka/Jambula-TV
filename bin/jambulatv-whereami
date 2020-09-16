@@ -34,7 +34,8 @@ GEOLOCATION_REFRESH_FILE=/tmp/geolocation_refresh
 GEOLOCATION_DATA_MISSING_TMP_FILE=/tmp/geolocation_data_missing
 MAXIMUM_AGE_OF_GEOLOCATION_DATA=43200 # 12 hours
 
-MOBILE_BTS_API_ENDPOINT="https://api.mylnikov.org/geolocation/cell"
+MOBILE_BTS_API_ENDPOINT="https://us1.unwiredlabs.com/v2/process.php"
+MOBILE_BTS_API_TOKEN=" e62982e9c7df94" #e8f8600fbaf032
 MOBILE_3G_MODEM_NODE=ttyUSB-3G-Mobile
 MOBILE_IMSI_TMP_FILE=/tmp/3g_network_imsi.tmp
 MOBILE_LAC_CID_TMP_FILE=/tmp/3g_network_lac_cid.tmp
@@ -75,8 +76,8 @@ PROXY_NOT_DETECTED=$?
 }
 
 query_and_set_freshness_of_geolocation_data_file () {
-# If Geo Location file exists, set variable to yes
-[[ -e "$GEOLOCATION_FILE" ]] && \
+# If Geo Location file of size exists, set variable to yes
+[[ -s "$GEOLOCATION_FILE" ]] && \
 	GEOLOCATION_FILE_IS_PRESENT=yes
 #
 # If Geo Location file is still fresh, set variable to yes
@@ -141,11 +142,11 @@ LONGITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" http://ip-api.com/json | 
 }
 
 get_city_using_coordinates () {
-CITY=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -G -d format=jsonv2 -d lat=$LATITUDE -d lon=$LONGITUDE https://nominatim.openstreetmap.org/reverse | jq -r '.address.suburb')
+CITY=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -G -d format=jsonv2 -d lat=$LATITUDE -d lon=$LONGITUDE https://nominatim.openstreetmap.org/reverse | jq -r '.address.village')
 }
 
 get_neighbourhood_using_coordinates () {
-NEIGHBOURHOOD=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -G -d format=jsonv2 -d lat=$LATITUDE -d lon=$LONGITUDE https://nominatim.openstreetmap.org/reverse | jq -r '.address.neighbourhood')
+NEIGHBOURHOOD=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -G -d format=jsonv2 -d lat=$LATITUDE -d lon=$LONGITUDE https://nominatim.openstreetmap.org/reverse | jq -r '.address.suburb')
 }
 
 get_country_using_coordinates () {
@@ -227,14 +228,43 @@ query_mobile_network
 # Check for Internet connectivity
 check_internet_connectivity_ping 
 
-# If Internet is available plus mobile gateway device exists; then proceed to lookup
-# cell tower geo-coordinates
+# If Internet is available plus mobile gateway device exists; then 
+# proceed to lookup cell tower geo-coordinates and actual location
 if [[ "$INTERNET_STATUS_VAL" = "0" && "$MOBILE_DEV_EXISTS" = "yes" ]];
 then
-# Set geo-coordinates using cell tower
-LATITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" --ciphers ecdhe_ecdsa_aes_256_sha -d v=1.1 -d data=open -d mcc=$MCC -d mnc=$MNC -d lac=$LAC -d cellid=$CID $MOBILE_BTS_API_ENDPOINT | jq -r '.data.lat')
+# Set address and geo-coordinates using cell tower
+ADDRESS=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" --data '{
+    "token": "'"$MOBILE_BTS_API_TOKEN"'",
+    "mcc": "'"$MCC"'",
+    "mnc": "'"$MNC"'",
+    "cells": [{
+        "lac": "'"$LAC"'",
+        "cid": "'"$CID"'"
+    }],
+    "address": 1
+}' --url $MOBILE_BTS_API_ENDPOINT | jq -r '.address')
 echo
-LONGITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" --ciphers ecdhe_ecdsa_aes_256_sha -d v=1.1 -d data=open -d mcc=$MCC -d mnc=$MNC -d lac=$LAC -d cellid=$CID $MOBILE_BTS_API_ENDPOINT | jq -r '.data.lon')
+LATITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" --data '{
+    "token": "'"$MOBILE_BTS_API_TOKEN"'",
+    "mcc": "'"$MCC"'",
+    "mnc": "'"$MNC"'",
+    "cells": [{
+        "lac": "'"$LAC"'",
+        "cid": "'"$CID"'"
+    }],
+    "address": 1
+}' --url $MOBILE_BTS_API_ENDPOINT | jq -r '.lat')
+echo
+LONGITUDE=$($CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" --data '{
+    "token": "'"$MOBILE_BTS_API_TOKEN"'",
+    "mcc": "'"$MCC"'",
+    "mnc": "'"$MNC"'",
+    "cells": [{
+        "lac": "'"$LAC"'",
+        "cid": "'"$CID"'"
+    }],
+    "address": 1
+}' --url $MOBILE_BTS_API_ENDPOINT | jq -r '.lon')
 fi
 }
 
