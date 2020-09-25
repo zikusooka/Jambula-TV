@@ -319,9 +319,20 @@ $MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT clear
 }
 
 mpd_now_playing () {
-# Get current playlist
+# See if song filename ends with a known music extension i.e. is locally saved
+$MPC_CMD -h localhost -p $MPD_LOCAL_PORT current  | grep -i '[.m4a|wma|.ogg|.wav|.mp3|.mp4]$' > /dev/null 2>&1
+SONG_IS_STORED_LOCALLY=$?
+#
+# Get title and artist
+if [[ "$SONG_IS_STORED_LOCALLY" = "0" ]];
+then
+NAME_OF_STATION=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | cut -d '/' -f2- | rev | cut -d '.' -f2- | rev | sed 's:_: :g' | sed 's:\.: :g' | sed 's:/: :g')
+NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | cut -d '/' -f2- | rev | cut -d '.' -f2- | rev | sed 's:_: :g' | sed 's:\.: :g' | sed 's:/: :g')
+
+else
 NAME_OF_STATION=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | awk -F: '{print $1}')
-NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | rev | awk -F' :' '{print $1}' | rev) 
+NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | rev | awk -F' :' '{print $1}' | rev)
+fi
 }
 
 internet_radio_via_mpd_start () {
@@ -444,7 +455,7 @@ AGE_OF_WEBRADIO_STREAMER_LOG_FILE=$(date -d "now - $(stat -c "%Y" $WEBRADIO_STRE
 # Only show 'now playing' if the age of log file is less than 1 minute
 if [[ "$AGE_OF_WEBRADIO_STREAMER_LOG_FILE" -lt "60" ]];
 then
-NAME_OF_STATION=$(/usr/bin/awk '/Name   : / {print $3}' $WEBRADIO_STREAMER_LOG_FILE | /usr/bin/head -1 | /usr/bin/uniq)
+NAME_OF_STATION=$(/usr/bin/awk '/Name   : / {print $3}' $WEBRADIO_STREAMER_LOG_FILE | /usr/bin/head -1 | /usr/bin/sort -u)
 NAME_OF_SONG_ARTIST=$(/usr/bin/grep -a -oP "(?<=ICY Info: StreamTitle=').+?(?=';)" $WEBRADIO_STREAMER_LOG_FILE | /usr/bin/tail -1)
 fi
 }
@@ -473,7 +484,7 @@ PLAYING
 elif [[ "x$NAME_OF_STATION" != "x" || "x$NAME_OF_SONG_ARTIST" != "x" ]];
 then
 cat <<PLAYING
-($NAME_OF_STATION) $NAME_OF_SONG_ARTIST
+$NAME_OF_STATION - $NAME_OF_SONG_ARTIST
 PLAYING
 fi
 }
