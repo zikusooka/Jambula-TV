@@ -23,6 +23,13 @@ MODEM_INDICES="$(mmcli -L | grep Modem | cut -d / -f6 | cut -d ' ' -f1)"
 MM_MIN_AMOUNT=500
 
 
+# PPP helper scripts
+PPP_TOOLS_DIR=/usr/bin
+MODEM_ISP_INIT_TOOL=$PPP_TOOLS_DIR/jambulatv-ppp-init
+
+# Source modem ISP initialization scripts
+. $MODEM_ISP_INIT_TOOL
+
 
 # ------------------------
 # Modem Manager functions
@@ -32,6 +39,26 @@ quit_if_no_modem_found () {
 if [[ "x$MODEM_INDICES" = "x" ]];
 then
 logger -s -t $(basename $0) "No modem was found"
+exit 1
+fi
+}
+
+check_sim_card_status () {
+query_sim_imsi > /dev/null 2>&1
+SIM_STATUS=$?
+if [[ "$SIM_STATUS" != "0" ]]; 
+then
+clear
+echo "SIM Access Error: Possible reasons include:
+
+a) SIM card is not properly inserted in modem
+b) A connection to the Internet has already been made 
+c) There is a problem with your SIM card. If so, please contact the:
+   Customer Support Center for $MOBILE_PROVIDER
+
+NOTE: If you are sure none of the above apply, then:
+Unplug modem from your PC and re-insert it
+" 
 exit 1
 fi
 }
@@ -273,6 +300,9 @@ usage
 
 # Quit if no modem is found
 quit_if_no_modem_found
+
+# Check SIM status
+check_sim_card_status
 
 # Find modem Index for requested mobile provider
 get_modem_index
