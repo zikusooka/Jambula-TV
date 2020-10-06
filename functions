@@ -1666,7 +1666,7 @@ set_notifications
 # Print notifciation to stdout and systemd journal 
 print_notification "$NO_INTERNET_NOTIFICATION_MESSAGE" text
 # Print notification using OSD tool
-print_notification "$NO_INTERNET_NOTIFICATION_MESSAGE" osd
+#print_notification "$NO_INTERNET_NOTIFICATION_MESSAGE" osd
 #
 # Send critical jobs to spool if specified
 [[ "$PING_FAIL_SPOOL" = "spool" ]] && spool_critical_jobs_when_no_internet
