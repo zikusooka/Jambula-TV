@@ -2033,7 +2033,7 @@ pip3 --disable-pip-version-check download --no-binary :all: --only-binary none -
 
 python3_module_local_install () {
 PYTHON_MODULE=$1
-pip3 --log $BUILD_LOG install --ignore-installed --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_MODULE
+pip3 --log $BUILD_LOG install --upgrade --upgrade-strategy eager --no-index --find-links $PROJECT_PIPS_DIR $PYTHON_MODULE
 }
 
 
@@ -13324,7 +13324,15 @@ esac
 # i.e. libsodium
 SODIUM_INSTALL=system pip3 --log $BUILD_LOG install --no-index --find-links $PROJECT_PIPS_DIR PyNaCl==1.3.0
 
-# Install dependencies for Home-Assistant using pips specified in 
+# Force versions of some HASS deps as a workaround
+for REQUIREMENTS_FILE in \
+	$INSTALL_SRC_DIR/home-assistant/requirements_all.txt \
+	$INSTALL_SRC_DIR/home-assistant/homeassistant/components/version/manifest.json
+do
+sed -i s:pyhaversion==3.4.2:pyhaversion==3.3.0:g $REQUIREMENTS_FILE
+done
+
+# Install dependencies for Home-Assistant using pips specified in
 # sources requirements and package_constraints files
 sed "/^#/d" $INSTALL_SRC_DIR/home-assistant/homeassistant/package_constraints.txt | sed "/^$/d" | xargs -n 1 pip3 --log $BUILD_LOG install --upgrade --upgrade-strategy eager --no-index --find-links $PROJECT_PIPS_DIR
 
