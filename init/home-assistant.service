@@ -1,6 +1,7 @@
 [Unit]
 Description=Home Assistant
-After=network-online.target
+After=network-online.target syslog.target mosquitto.service jambulatv@kodi.service
+
 
 [Service]
 Type=simple
