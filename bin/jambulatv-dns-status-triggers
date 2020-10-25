@@ -102,7 +102,6 @@ AGE_OF_MESSAGE=$(date -d "now - $(stat -c "%Y" $TELEGRAM_SPOOL_DIR/$MESSAGE) sec
 	if [[ "$AGE_OF_MESSAGE" -gt "86400" ]];
   	then
   	rm -f $TELEGRAM_SPOOL_DIR/$MESSAGE
-  	break
 
 	else
 	# Send message
@@ -125,7 +124,6 @@ AGE_OF_MESSAGE=$(date -d "now - $(stat -c "%Y" $WHATSAPP_SPOOL_DIR/$MESSAGE) sec
 	if [[ "$AGE_OF_MESSAGE" -gt "86400" ]];
   	then
   	rm -f $WHATSAPP_SPOOL_DIR/$MESSAGE
-  	break
 
 	else
 	# Send message
@@ -219,58 +217,54 @@ update_dns_servers
 # Remove dnsmasq entries for local resolution
 [[ ! -e $INTERNET_OFF_FILE ]] || rm -f $INTERNET_OFF_FILE
 
-
 # Since Internet is now UP -  Do other stuff that requires connectivity
-#######################################################################
+# ---
 
-# JambulaTV: Restart HomeAssistant, so connection to online APIs occurs
-# ---------------------------------------------------------------------
+# Sound alert beep
+[[ -x $SOUNDS_TOOL ]] && $SOUNDS_TOOL beep online
+
+# Restart HomeAssistant, so connection to online APIs occurs
 systemctl restart home-assistant.service
 
 # Take chrony on-line: Update clock time
-# --------------------------------------
 update_clock_time online
 
+
+# If Internet data saver mode is not enabled, do the following
+# ---
+if [[ "$INTERNET_DATA_SAVER_MODE" != "on" || "$INTERNET_DATA_SAVER_MODE" != "ON" ]];
+then
+
 # Refresh DNS blocking lists
-# --------------------------
 refresh_dns_blocklists 
 
 # Update MaxMind GeoIP databases if older than one week
-# -----------------------------------------------------
 update_geoip_databases
 
 # Update Youtube-DL: Critical in Youtube-based Live TV streams
-# ------------------------------------------------------------
 update_youtube_dl > /dev/null 2>&1
 
 # Lookup current public IP Address, City and Country Name 
-# i.e. Setup Geo Location Data
-# --------------------------------------------------------
 . $GEOLOCATION_TOOL > /dev/null 2>&1
 
 # Download power outages lists i.e. UMEME if in Uganda
-# -----------------------------------------------------
 [[ "$COUNTRY" = "Uganda" ]] && $UMEME_OUTAGES_TOOL fetch
 
-# Sound alert beep
-# ----------------
-[[ -x $SOUNDS_TOOL ]] && $SOUNDS_TOOL beep online
-
 # Test Internet speed
-# -------------------
 [[ -x $INTERNET_SPEED_TOOL ]] && $INTERNET_SPEED_TOOL
 
-# JambulaTV: Check for available updates
-# --------------------------------------
+# Check for available updates
 sleep 60
 check_4_updates
 
-# JambulaTV: Create a reverse SSH tunnel for remote connection when Internet is UP
-# --------------------------------------------------------------------------------
+# Create a reverse SSH tunnel for remote connection when Internet is UP
 reverse_ssh_tunnel
 
+fi
+
+
 # Clear instant messaging queues i.e. messages waiting in spool dir
-# -----------------------------------------------------------------
+# ---
 # WhatsApp
 send_whatsapp_messages_spooled
 # Telegram
