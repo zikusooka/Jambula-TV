@@ -1,12 +1,13 @@
 alias: There is a birthday today
-initial_state: True
+initial_state: False
 
 
 trigger:
 
   # Every 1 hour
   - platform: time_pattern
-    hours: '/1'
+    #hours: '/1'
+    minutes: '/20'
 
 
 condition:
@@ -17,6 +18,11 @@ condition:
     - condition: time
       after: '06:00:00'
       before: '20:59:59'
+
+
+    # If sensor shows 'yes'
+    - condition: template
+      value_template: "{{ is_state('sensor.there_is_a_birthday_today', 'yes') }}"
 
 
 action:

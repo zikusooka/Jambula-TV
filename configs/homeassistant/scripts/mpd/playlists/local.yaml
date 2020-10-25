@@ -9,7 +9,7 @@ music_play_local:
         genre: 'Local'
 
     # Play 
-    - service: media_player.media_play
+    - service: media_player.play_media
       data:
         entity_id: media_player.now_playing
         media_content_type: playlist
@@ -18,5 +18,5 @@ music_play_local:
     # set volume
     - service: media_player.volume_set
       data:
-        entity_id: media_player.main
-        volume_level: 0.90
+        entity_id: all
+        volume_level: !secret mixer_mpd_playlist_volume_level

@@ -1,4 +1,4 @@
 platform: command_line
 name: "Now Playing"
-command: /usr/bin/jambulatv-internet-radio-streamer playing > /tmp/now_playing; /usr/bin/jambulatv-fm-radio-streamer playing >> /tmp/now_playing; /usr/bin/cat /tmp/now_playing | /usr/bin/uniq
+command: /usr/bin/jambulatv-internet-radio-streamer playing > /tmp/now_playing; /usr/bin/jambulatv-fm-radio-streamer playing >> /tmp/now_playing; /usr/bin/cat /tmp/now_playing | /usr/bin/sort -u
 scan_interval: 10

@@ -1,5 +1,6 @@
 title: JambulaTV Control Panel
 background: center / cover no-repeat url("/local/backgrounds/jambula_01.png") fixed
+
 resources: !include_dir_list lovelace/resources
 
 custom_header:
@@ -22,10 +23,6 @@ custom_header:
   menu_hide: true
 
 
-
-
-
-
 swipe_nav:
   animate: swipe
   prevent_default: true
@@ -35,7 +32,6 @@ swipe_nav:
 
 
 views:
-
 
   - !include lovelace/views/dashboard.yaml
 #  - !include lovelace/views/livingroom.yaml

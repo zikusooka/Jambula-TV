@@ -18,8 +18,11 @@ condition:
     state: 'below_horizon'
 
   - condition: template 
-    value_template: '{{ states.media_player.jambulatv_living_room.attributes.media_content_type == "tvshow" }}'
+    value_template: '{{ states.media_player.jambulatv_living_room.attributes.media_content_type == "video" }}'
 
 action:
   - service: scene.turn_on
     entity_id: scene.LivingRoom_Off
+
+  # Run night mode (on) script
+  - service: script.night_mode_on

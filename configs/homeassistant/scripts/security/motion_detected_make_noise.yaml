@@ -1,0 +1,56 @@
+motion_detected_outside_make_noise:
+  sequence:
+
+
+    # Task 1 - Start capture of snapshot
+    # -----------------------------------
+
+    # Arm camera alarm
+    - service: shell_command.zoneminder_camera_arm
+      data_template:
+        camera_id: !secret zoneminder_camera_001
+
+    # Task 2 - sound alarm notice using Intercom i.e. paging
+    # ------------------------------------------------------
+
+    # a) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
+
+    # b) Chime alert using house speakers
+    - service: shell_command.play_chime_alert
+
+    # c) Voice alert using house speakers
+    - service: shell_command.motion_detected_voice_alert
+      data_template:
+        audio_gain: !secret voice_alert_audio_gain
+
+    # d) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute 
+
+    # Task 3 - Stop capture of snapshot
+    # ---------------------------------
+
+    # a) Wait a bit
+    - delay: '00:00:45'
+
+    # b) Disarm camera alarm
+    - service: shell_command.zoneminder_camera_disarm
+      data_template:
+        camera_id: !secret zoneminder_camera_001
+
+
+    # Other examples
+    # --------------
+    # Make alarm at local server station
+    #- service: shell_command.play_alert_at_local_server
+
+    # Make noise - Beeps
+    #- service: shell_command.play_alert_at_remote_workstation
+    #  data_template:
+    #    ssh_username: !secret operator_001_ssh_username
+    #    ssh_host: !secret operator_001_ssh_host
+    #    alert_command: "/usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav ; /usr/bin/gxmessage -center -ontop -sticky -timeout 20 -title Motion-detected Motion-detected-outside"
+      # Try this alarm for loud noise
+      #/usr/share/tuxtype/sounds/alarm.wav

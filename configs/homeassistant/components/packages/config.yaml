@@ -4,3 +4,6 @@
 # https://www.home-assistant.io/components/config/
 #
 config:
+
+lovelace:
+  resources: !include_dir_list ../../lovelace/resources

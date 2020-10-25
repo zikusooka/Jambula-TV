@@ -40,15 +40,15 @@ cards:
   # Lighting
   - type: horizontal-stack
     cards:
-      - !include ../cards/light-livingroom.yaml
+      - !include ../cards/light-living-room.yaml
       #- !include ../cards/light-dining.yaml 
       - !include ../cards/light-kitchen.yaml
-      - !include ../cards/light-bedroom.yaml
-      #- !include ../cards/light-bathroom.yaml
-      #- !include ../cards/light-guest-bedroom.yaml
-      #- !include ../cards/light-guest-bathroom.yaml
+      - !include ../cards/light-bed-room.yaml
+      #- !include ../cards/light-bath-room.yaml
+      #- !include ../cards/light-guest-bed-room.yaml
+      #- !include ../cards/light-guest-bath-room.yaml
       - !include ../cards/light-veranda.yaml
-      #- !include ../cards/light-boys-quatres.yaml
+      #- !include ../cards/light-boys-quarters.yaml
       #- !include ../cards/light-gate.yaml
 
   # Internet and MiFi Status
@@ -143,7 +143,7 @@ cards:
       - !include ../cards/entity-button-local-music-all.yaml
  
 
-  # Playing Now / Volume Controls / Stop Media Player
+  # Now Playing / Volume Controls / Stop Media Player
   - type: vertical-stack
     cards:
       - !include ../cards/media-control-jambulatv.yaml

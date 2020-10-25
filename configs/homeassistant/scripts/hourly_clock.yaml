@@ -18,7 +18,7 @@ say_time_at_top_off_hour:
     # c) Speak the current hour using house speakers
     - service: shell_command.say_current_time_using_sounds_tool
       data_template:
-        audio_gain: "5.0"
+        audio_gain: "4.0"
     # Pause for a second - DO NOT REMOVE unless you have a fix!
     - delay: '00:00:01'
 

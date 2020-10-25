@@ -1,6 +1,6 @@
 name: LivingRoom Off
 entities:
-    light.linear_nortek_security_control_llc_lb60z_1_dimmable_led_light_bulb_level:
+    group.lights_living_room:
       state: on
       transition: 1
-      brightness_pct: 0
+      brightness: 0

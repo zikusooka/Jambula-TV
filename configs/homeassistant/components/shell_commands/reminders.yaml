@@ -10,7 +10,7 @@ planned_power_outage_tomorrow: /usr/bin/jambulatv-sounds alert 42
 unplanned_emergency_power_outage_currently: /usr/bin/jambulatv-sounds alert 43
 
 # There's a birthday today
-there_is_a_birthday_today: /usr/bin/remind /JambulaTV/Reminders/birthdays.rem | grep -i today && /usr/bin/jambulatv-sounds alert 44
+there_is_a_birthday_today: /usr/bin/jambulatv-sounds alert 44
 birthday_balloon_sound_effect: /usr/bin/jambulatv-sounds alert birthday_balloon
 
 # Laptop Battery Discharging/Charging - Probably power is Off/On

@@ -1,6 +1,6 @@
 # Start FM Radio at Boot time, but only during day time
 alias: "Play FM Radio at start time"
-initial_state: True
+initial_state: False
 
 trigger:
   - platform: homeassistant

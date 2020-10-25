@@ -1,0 +1,23 @@
+kodi_pvr_play:
+  sequence:
+
+    - alias: Turn TV on
+      service: media_player.turn_on
+      data:
+        entity_id: media_player.jambulatv_living_room
+
+    - alias: Play TV channel
+      service: media_player.play_media
+      data:
+        entity_id: media_player.jambulatv_living_room
+        media_content_type: "CHANNEL"
+        media_content_id: >
+          {% if (now().hour < 20) or ((now().hour == 18) and (now().minute == 59)) %}
+            'NTV'
+          {% elif (now().hour < 22) or ((now().hour == 20) and (now().minute == 40)) %}
+            'NBS TV'
+          {% elif (now().hour == 3) and (now().minute == 1) %}
+            'NTV'
+          {% else %}
+            'NTV'
+          {% endif %}

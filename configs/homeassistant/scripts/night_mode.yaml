@@ -15,7 +15,7 @@ night_mode_on:
     # d) Lower speaker volume
     - service: shell_command.speaker_volume_input
       data_template:
-        volume_level: '50%'
+        volume_level: !secret mixer_night_mode_volume_level
 
     # e) Unmute speaker volume 
     - service: shell_command.speaker_volume_unmute
@@ -27,7 +27,7 @@ night_mode_off:
     # a) Increase speaker volume
     - service: shell_command.speaker_volume_input
       data_template:
-        volume_level: '100%'
+        volume_level: !secret mixer_start_up_volume_level
 
     # b) Mute speaker volume if there is already audio playing
     - service: shell_command.speaker_volume_mute
