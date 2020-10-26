@@ -1,0 +1,82 @@
+#!/usr/local/bin/python3
+# This script is used by icinga2 to check for availability of
+# bluetooth device specified
+#
+# NOTE: You need to have your icinga2 environment properly setup
+
+# Feel free to contact me at: josephzik AT gmail.com
+#
+# Joseph Zikusooka @copyright 2020-2021 All rights reserved
+#
+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import subprocess
+import sys
+
+OK       = 0
+WARNING  = 1
+CRITICAL = 2
+UNKNOWN  = 3
+
+SUDO_CMD = "/usr/bin/sudo"
+L2PING_CMD = "/usr/bin/l2ping"
+
+def get_args():
+   """
+   Supports the command-line arguments listed below.
+   """
+   parser = argparse.ArgumentParser(description="l2ping")
+   parser._optionals.title = "Options"
+   parser.add_argument('-i', '--interface', required=False, help='Bluetooth device i.e. hciX', dest='interface', type=str, default=['hci0'])
+   parser.add_argument('-c', '--count', required=True, help='Send count number of packets then exit', dest='count', type=str)
+   parser.add_argument('-t', '--timeout', required=False, help='Wait timeout seconds for the response', dest='timeout', type=str)
+   parser.add_argument('-d', '--delay', required=False, help='Wait delay seconds between pings', dest='delay', type=str)
+   parser.add_argument('-a', '--address', required=True, help='MAC Address', dest='address', type=str)
+   args = parser.parse_args()
+   return args
+
+
+def main():
+   """
+   Simple Bluez Scanner
+   """
+   args            = get_args()
+   interface       = args.interface
+   count           = args.count
+   timeout         = args.timeout
+   delay           = args.delay
+   address         = args.address
+
+   p = subprocess.Popen([SUDO_CMD, L2PING_CMD, '-c', count, address], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   output, error = p.communicate()
+
+   if p.returncode == 0:
+     print (f"Status of bluez device [{address}] is: Present")
+     sys.exit(OK)
+
+   elif p.returncode == 1:
+     print (f"Status of bluez device [{address}] is: Absent")
+     sys.exit(CRITICAL)
+
+   else:
+     print (f"Status of bluez device [{address}] is: Unknown")
+     sys.exit(UNKNOWN)
+
+
+if __name__ == "__main__":
+  main()
+
+sys.exit ()
