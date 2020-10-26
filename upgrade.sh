@@ -111,18 +111,21 @@ upgrade_icinga2 () {
 uninstall_icinga2
 icinga2_install
 icinga2_configure 
-}
-
-upgrade_icingaweb2 () {
-uninstall_icingaweb2
-icingaweb2_install
-icingaweb2_configure 
+# Enable icinga2.service - ONLY for upgrades
+systemctl enable icinga2.service
 }
 
 upgrade_icinga2_director () {
 uninstall_icinga2_director
 icinga2_director_install
 icinga2_director_configure
+}
+
+upgrade_icingaweb2 () {
+uninstall_icingaweb2
+icingaweb2_install
+icingaweb2_configure
+upgrade_icinga2_director
 }
 
 upgrade_owncloud () {
@@ -391,7 +394,6 @@ nginx_install
 
 #upgrade_icinga2 
 #upgrade_icingaweb2
-#upgrade_icinga2_director
 
 #upgrade_nextcloud
 

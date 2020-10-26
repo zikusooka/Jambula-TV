@@ -15248,8 +15248,33 @@ EOF
 }
 
 icinga2_director_install () {
-# Copy & sync sources for icingaweb2 modules: director and dependencies
-for ICINGA_MODULE in incubator ipl reactbundle director;
+ICINGA_DIRECTOR_TAG=v1.3.2
+# IMPORTANT: Director v1.4.0 and above require PHP upgrade
+#
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/icingaweb2-module-director
+# Check to see if desired branch/tag exists
+git tag -l | grep -x $ICINGA_DIRECTOR_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+if [ "$TAG_EXISTS" = "0" ];
+then
+git archive --format tar.gz --prefix=director/ $ICINGA_DIRECTOR_TAG | (cd $WWW_HTML_DIR/icingaweb2/modules/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=director/ HEAD | (cd $WWW_HTML_DIR/icingaweb2/modules/ && tar zxvf -)
+# Display Icinga director's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+Icinga Director Version
+=======================
+% The Icinga Director branch you specified ($ICINGA_DIRECTOR_TAG), does not exist, so I used master/ HEAD instead
+
+#
+EOF
+fi
+#
+# Copy sources for dependencies needed by icingaweb2-module-director
+for ICINGA_MODULE in incubator ipl reactbundle;
 do
 rsync -av $PROJECT_GITHUB_DIR/icingaweb2-modules/$ICINGA_MODULE/ $WWW_HTML_DIR/icingaweb2/modules/$ICINGA_MODULE/
 done
