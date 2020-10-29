@@ -4337,9 +4337,10 @@ $BINARY_PREFIX/dbus-launch $BINARY_PREFIX/pulseaudio -D -n --load="module-udev-d
 fi
 
 # Default sink, source, tvcard loopback device (if any)
-PULSE_DEFAULT_SINK=$(unset DISPLAY; $BINARY_PREFIX/pactl info | awk -F': ' '/Default Sink/ {print $2}')
-PULSE_DEFAULT_SOURCE=$(unset DISPLAY; $BINARY_PREFIX/pactl info | awk -F': ' '/Default Source/ {print $2}')
-TV_AUDIO_SOURCE=$(unset DISPLAY; $BINARY_PREFIX/pactl list | grep -B1 'SAA713' | grep alsa_input | cut -d : -f2 | sed 's/ //g')
+PULSE_DEFAULT_SINK=$($BINARY_PREFIX/pactl info | awk -F': ' '/Default Sink/ {print $2}')
+PULSE_DEFAULT_SOURCE=$($BINARY_PREFIX/pactl info | awk -F': ' '/Default Source/ {print $2}')
+PULSE_LINE_IN_SOURCE=$(echo $PULSE_DEFAULT_SINK | sed 's:output:input:g')
+TV_AUDIO_SOURCE=$($BINARY_PREFIX/pactl list | grep -B1 'SAA713' | grep alsa_input | cut -d : -f2 | sed 's/ //g')
 
 # Notify of missing sinks or sources
 if [[ "x$PULSE_DEFAULT_SINK" = "x" ]] || [[ "x$PULSE_DEFAULT_SOURCE" = "x" ]];
@@ -4495,7 +4496,16 @@ load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;$NETWORK_WIRED_MASK
 #load-module module-combine-sink sink_name=all_speakers slaves=frontend,backend
 #load-module module-combine sink_name=all_speakers slaves=$PULSE_DEFAULT_SINK,backend
 #set-default-sink all_speakers
+
+# Add support for playback of external audio sources (like CD, cassette player) via Line-In
+# --------------------------------------------------------------------
+load-module module-loopback latency_msec=1 source=$PULSE_LINE_IN_SOURCE sink=$PULSE_DEFAULT_SINK
 EOF
+
+# Enable ALSA loopback i.e. Line-In interface
+/usr/bin/amixer -c 0 set 'Loopback Mixing' Enabled > /dev/null 2>&1
+/usr/bin/amixer -c 0 sset 'Line' 50% unmute > /dev/null 2>&1
+/usr/bin/amixer -c 0 sset 'Line Boost' 50% > /dev/null 2>&1
 
 # Update pulseaudio config file: client.conf
 # ---
@@ -4517,6 +4527,8 @@ ET
 # Prevent pulseaudio server from exiting after an idle timeout
 cat > ${PULSE_DAEMON_CONFIG} <<ET
 exit-idle-time = -1
+#log-level = debug
+#log-target = file:$PROJECT_SYSTEM_LOG_DIR/pulseaudio.log
 ET
 
 # Setup systemd unit
