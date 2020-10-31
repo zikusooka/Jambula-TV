@@ -176,6 +176,8 @@ upgrade_tvheadend () {
 systemctl stop tvheadend.service
 uninstall_src_pkgs tvheadend
 tvheadend_install
+# Restart systemd unit 
+systemctl restart tvheadend.service
 }
 
 uninstall_freepbx_if_installed () {
