@@ -15343,7 +15343,12 @@ username = $ICINGA_DIRECTOR_API_USER
 password = $ICINGA_DIRECTOR_API_PASS
 EOF
 
-# Create API user for director
+# Create API user for director if non exists
+grep -i "object ApiUser \"$ICINGA_DIRECTOR_API_USER\"" $ICINGA2_API_USERS_CONF_FILE > /dev/null 2>&1
+API_USER_EXISTS=$?
+#
+if [[ "$API_USER_EXISTS" != "0" ]];
+then
 cat >> $ICINGA2_API_USERS_CONF_FILE <<ET
 
 object ApiUser "$ICINGA_DIRECTOR_API_USER" {
@@ -15352,6 +15357,7 @@ object ApiUser "$ICINGA_DIRECTOR_API_USER" {
   //client_cn = ""
 }
 ET
+fi
 
 # Create Zone for director
 cat >> $ICINGA2_ZONES_DIR/jambulatv-zones.conf <<ET
