@@ -2830,15 +2830,19 @@ rm -rf $DOMOTICZ_HTML_DIR
 rm -rf $INSTALL_SRC_DIR/domoticz
 }
 
-uninstall_homeassistant () {
+uninstall_homeassistant_core () {
 # Stop home-assistant
 systemctl stop home-assistant.service || killall hass
-# Uninstall home-assistant
+# Uninstall home-assistant core
 uninstall_python_pkgs home_assistant_frontend
 uninstall_python_pkgs homeassistant
-uninstall_python_pkgs home-assistant
+uninstall_python_pkgs home-assistant-core
 uninstall_python_pkgs homeassistant_pyozw
 uninstall_python_pkgs homeassistant-pyozw
+# Remove lingering *_homeassistant* related packages
+PYTHON_VERSION_USED=3 && set_python_version && \
+	rm -rf $(find $PYTHON_SITEDIR -iname "*_homeassistant*")
+# Remove python_openzwave
 uninstall_python_pkgs python_openzwave
 # Remove libopenzwave*
 uninstall_python_pkgs openzwave
@@ -2850,6 +2854,9 @@ do
 done
 # Remove hass binary file(s)
 rm -rf $(whereis hass)
+# Remove dependencies directory in hass config folder
+[[ -d $PROJECT_CONFIGS_DIR/homeassistant/deps ]] && \
+	rm -rf $PROJECT_CONFIGS_DIR/homeassistant/deps 
 }
 
 uninstall_homeassistant_cli () {
@@ -13211,7 +13218,7 @@ homeassistant_pyozw_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 
 # Set PyOZW version
-PYOZW_VERSION=$(awk -F'==' '/homeassistant-pyozw/ {print $2}' $PROJECT_GITHUB_DIR/home-assistant/requirements_all.txt)
+PYOZW_VERSION=$(awk -F'==' '/homeassistant-pyozw/ {print $2}' $PROJECT_GITHUB_DIR/home-assistant-core/requirements_all.txt)
 #
 # Unpack runtime
 unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/homeassistant_pyozw-${PYOZW_VERSION}.zip
@@ -13291,11 +13298,11 @@ PYTHON_VERSION_USED=3 && set_python_version
 # hass_openzwave
 homeassistant_pyozw_install
 
-# Archive and Unpack specified home-assistant tag
-# -----------------------------------------------
+# Archive and Unpack specified Home-Assistant core tag
+# ----------------------------------------------------
 # Change to Github sources
-cd $PROJECT_GITHUB_DIR/home-assistant
-# Get latest home-assistant tag
+cd $PROJECT_GITHUB_DIR/home-assistant-core
+# Get latest home-assistant core tag
 if [[ "x$HOME_ASSISTANT_TAG" = "x" ]];
 then
 HASS_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
@@ -13307,7 +13314,7 @@ fi
 case $HASS_TAG in
 master)
 # master branch i.e. HEAD
-git archive --format tar.gz --prefix=home-assistant/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=home-assistant-core/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 ;;
 *)
 # Check to see if desired branch/tag exists
@@ -13315,16 +13322,16 @@ git tag -l | grep -x $HASS_TAG > /dev/null 2>&1
 TAG_EXISTS=$?
 if [ "$TAG_EXISTS" = "0" ];
 then
-git archive --format tar.gz --prefix=home-assistant/ $HASS_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=home-assistant-core/ $HASS_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 else
-git archive --format tar.gz --prefix=home-assistant/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=home-assistant-core/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 # Display Kodi's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
 #
 HASS Version
 ===============
-% The home-assistant branch you specified ($HASS_TAG), does not exist, so I used master/ HEAD instead
+% The home-assistant core branch you specified ($HASS_TAG), does not exist, so I used master/ HEAD instead
 
 #
 EOF
@@ -13338,20 +13345,25 @@ SODIUM_INSTALL=system pip3 --log $BUILD_LOG install --no-index --find-links $PRO
 
 # Force versions of some HASS deps as a workaround
 for REQUIREMENTS_FILE in \
-	$INSTALL_SRC_DIR/home-assistant/requirements_all.txt \
-	$INSTALL_SRC_DIR/home-assistant/homeassistant/components/version/manifest.json
+	$INSTALL_SRC_DIR/home-assistant-core/requirements_all.txt \
+	$INSTALL_SRC_DIR/home-assistant-core/homeassistant/components/version/manifest.json
 do
-sed -i s:pyhaversion==3.4.2:pyhaversion==3.3.0:g $REQUIREMENTS_FILE
+
+
+echo
+#sed -i s:pyhaversion==3.4.2:pyhaversion==3.3.0:g $REQUIREMENTS_FILE
+
+
 done
 
 # Install dependencies for Home-Assistant using pips specified in
 # sources requirements and package_constraints files
-sed "/^#/d" $INSTALL_SRC_DIR/home-assistant/homeassistant/package_constraints.txt | sed "/^$/d" | xargs -n 1 pip3 --log $BUILD_LOG install --upgrade --upgrade-strategy eager --no-index --find-links $PROJECT_PIPS_DIR
+sed "/^#/d" $INSTALL_SRC_DIR/home-assistant-core/homeassistant/package_constraints.txt | sed "/^$/d" | xargs -n 1 pip3 --log $BUILD_LOG install --upgrade --upgrade-strategy eager --no-index --find-links $PROJECT_PIPS_DIR
 
 # Install Home-Assistant
-cd $INSTALL_SRC_DIR/home-assistant
+cd $INSTALL_SRC_DIR/home-assistant-core
 $PYTHON_INSTALL_CMD
-pip3 --log $BUILD_LOG install --upgrade --upgrade-strategy eager --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/home-assistant-requirements.txt
+pip3 --log $BUILD_LOG install --upgrade --upgrade-strategy eager --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/home-assistant-core-requirements.txt
 
 # Patch homeassistant i.e. hass binary to allow for connections to 
 # unverified SSL certificate sites and

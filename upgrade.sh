@@ -250,7 +250,7 @@ else
 NEW_HOME_ASSISTANT_TAG=$HOME_ASSISTANT_TAG
 fi
 # Uninstall old homeassistant
-uninstall_homeassistant
+uninstall_homeassistant_core
 # Update common python3 dependency modules
 python3_common_modules_install
 # Install latest homeassistant
