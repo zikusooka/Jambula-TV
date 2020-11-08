@@ -489,8 +489,8 @@ imobiledevice_install
 backup_mobile_phones_setup
 #
 # HomeAssistant
-homeassistant_install
-homeassistant_configure
+homeassistant_core_install
+homeassistant_core_configure
 # HomeAssistant-CLI
 homeassistant_cli_install
 

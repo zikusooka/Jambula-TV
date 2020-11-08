@@ -254,7 +254,7 @@ uninstall_homeassistant_core
 python3_common_modules_install
 # Install latest homeassistant
 HOME_ASSISTANT_TAG=$NEW_HOME_ASSISTANT_TAG && \
-	homeassistant_install 
+	homeassistant_core_install
 }
 
 upgrade_homeassistant_cli () {
