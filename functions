@@ -2830,6 +2830,18 @@ rm -rf $DOMOTICZ_HTML_DIR
 rm -rf $INSTALL_SRC_DIR/domoticz
 }
 
+uninstall_open_zwave () {
+# Remove python package
+uninstall_python_pkgs openzwave
+uninstall_python_pkgs open-zwave
+# Remove libraries/includes
+rm -f $LIBDIR/libopenzwave.so* 
+rm -f $LIBDIR/pkgconfig/libopenzwave.pc
+rm -rf $PREFIX/include/openzwave
+# Remove binaries
+rm -f $(which MinOZW ozw_config)
+}
+
 uninstall_homeassistant_core () {
 # Stop home-assistant
 systemctl stop home-assistant.service || killall hass
@@ -13189,13 +13201,12 @@ open_zwave_install () {
 rsync -avz $PROJECT_GITHUB_DIR/open-zwave/ $INSTALL_SRC_DIR/open-zwave/
 # Change to source dir
 cd $INSTALL_SRC_DIR/open-zwave
-# Change SYSCONFDIR to /etc before uilding
+# Change prefix in Makefile
+sed -i "s:PREFIX ?= /usr/local:PREFIX ?= $PREFIX:g" Makefile
+# Change SYSCONFDIR to /etc before building
 sed -i "s:\$(PREFIX)/etc:$CONFDIR:g" cpp/build/support.mk
-# Build
-BUILD=release PREFIX=$PREFIX LIB=$LIBDIR SYSCONFDIR=$CONFDIR/openzwave
+# Build/Install
 make_install_jambulatv
-# Link to openzwave library - FIX this - install should be in /usr not /usr/local? 
-ln -s /usr/local/lib64/libopenzwave.so.1.4 $LIBDIR/libopenzwave.so.1.4
 }
 
 python_openzwave_install () {

@@ -230,8 +230,7 @@ pocketsphinx_install
 }
 
 upgrade_open_zwave () {
-uninstall_python_pkgs open-zwave
-rm -f $(which MinOZW ozw_config)
+uninstall_open_zwave
 open_zwave_install 
 }
 
