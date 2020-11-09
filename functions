@@ -7976,7 +7976,42 @@ load-module module-loopback source=$TV_AUDIO_SOURCE latency_msec=26" >> $PULSE_D
 }
 
 v4l_utils_install () {
-rsync -av $PROJECT_GITHUB_DIR/v4l-utils/ $INSTALL_SRC_DIR/v4l-utils/
+# Remove RPM based package if installed
+rpm -q v4l-utils > /dev/null 2>&1 && rpm -e --nodeps $(rpm -qa | grep v4l-utils)
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/v4l-utils
+# Get latest v4l-utils tag
+V4L_UTILS_TAG=v4l-utils-1.16.8 # v4l-utils-1.18.0+ not compatible
+#
+# Unpack desired git branch/tag
+case $V4L_UTILS_TAG in
+master)
+# master branch i.e. HEAD
+git archive --format tar.gz --prefix=v4l-utils/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+;;
+*)
+# Check to see if desired branch/tag exists
+git tag -l | grep -x $V4L_UTILS_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+if [[ "$TAG_EXISTS" = "0" ]];
+then
+git archive --format tar.gz --prefix=v4l-utils/ $V4L_UTILS_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=v4l-utils/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Display v4l-utils's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+v4l-utils Version
+=================
+% The v4l-utils branch you specified ($V4L_UTILS_TAG), does not exist, so I used master/ HEAD instead
+
+#
+EOF
+fi
+;;
+esac
+#
 # Compile
 cd $INSTALL_SRC_DIR/v4l-utils
 ./bootstrap.sh

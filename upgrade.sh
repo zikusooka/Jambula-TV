@@ -362,6 +362,11 @@ uninstall_nginx
 nginx_install
 }
 
+upgrade_v4l_utils () {
+uninstall_src_pkgs v4l-utils
+v4l_utils_install
+}
+
 
 
 #################
@@ -459,3 +464,5 @@ nginx_install
 #upgrade_snapcast
 
 #upgrade_nginx
+
+#upgrade_v4l_utils
