@@ -27,11 +27,11 @@ ALERT_SOUND_AUDIO_GAIN=$(echo $@ | awk -F'=' '/gain/ {print $2}')
 if [[ "x$ALERT_SOUND_AUDIO_GAIN" = "x" ]];
 then
 # No audio gain
-SOUND_PLAYER_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --no-video --no-sout-display-video"
+SOUND_PLAYER_OPTS="--quiet --nodaemon --play-and-exit --aout alsa --no-video --no-sout-display-video"
 
 else
 # With audio gain
-SOUND_PLAYER_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --gain $ALERT_SOUND_AUDIO_GAIN --no-video --no-sout-display-video"
+SOUND_PLAYER_OPTS="--quiet --nodaemon --play-and-exit --aout alsa --gain $ALERT_SOUND_AUDIO_GAIN --no-video --no-sout-display-video"
 fi
 
 BEEP_CMD=/usr/bin/beep
