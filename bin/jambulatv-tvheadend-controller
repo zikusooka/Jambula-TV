@@ -86,90 +86,6 @@ exit 1
 fi
 }
 
-usage_and_pre_start_dvb () {
-if [[ "x$TV_TASK" = "x" ]];
-then
-clear
-echo "Usage:  ./`basename $0` dvb [scan|map|all|repair|epg|icons]
-"
-exit 1
-
-# Don't proceed if TV_TASK is epg, icons)
-elif [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]];
-then
-# Notify when TV server controller process has been initiated
-notify_tv_server_controller_initiated
-# Break out
-break
-
-else
-# Notify when TV server controller process has been initiated
-notify_tv_server_controller_initiated
-#
-# Check to see if TVHeadend server is in use
-check_if_in_use 
-fi
-}
-
-usage_and_pre_start_iptv () {
-if [[ "x$TV_TASK" = "x" ]];
-then
-clear
-echo "Usage:  ./`basename $0` iptv [scan|map|all|m3u|epg|icons|enable|disable]
-"
-exit 1
-
-# Don't proceed if TV_TASK is m3u, epg, icons)
-elif [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" || "$TV_TASK" = "enable" || "$TV_TASK" = "disable" ]];
-then
-# Notify when TV server controller process has been initiated
-notify_tv_server_controller_initiated
-# Break out
-break
-
-else
-# Notify when TV server controller process has been initiated
-notify_tv_server_controller_initiated
-#
-# Check to see if TVHeadend server is in use
-check_if_in_use 
-fi
-}
-
-usage_and_pre_start_cctv () {
-if [ "x$TV_TASK" = "x" ];
-then
-clear
-echo "Usage:  ./`basename $0` cctv [scan|map|all]
-"
-exit 1
-
-else
-# Notify when TV server controller process has been initiated
-notify_tv_server_controller_initiated
-#
-# Check to see if TVHeadend server is in use
-check_if_in_use
-fi
-}
-
-usage_and_pre_start_jtvhome () {
-if [ "x$TV_TASK" = "x" ];
-then
-clear
-echo "Usage:  ./`basename $0` jtvhome [scan|map|all]
-"
-exit 1
-
-else
-# Notify when TV server controller process has been initiated
-notify_tv_server_controller_initiated
-#
-# Check to see if TVHeadend server is in use
-check_if_in_use
-fi
-}
-
 usage_and_pre_start_general () {
 if [[ "x$TV_TASK" = "x" ]];
 then
@@ -262,9 +178,92 @@ tvheadend_restart_server
 post_config () {
 # Restart TVHeadend for all tasks except for m3u, epg, icons,general)
 [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" || "$TV_TASK" = "clients" ]] || tvheadend_restart_server
-
 # Remove IPTV builder channel variables file
 [[ -e $IPTV_BUILDER_CHANNEL_VARIABLES_FILE ]] && sudo rm -f $IPTV_BUILDER_CHANNEL_VARIABLES_FILE
+}
+
+usage_and_pre_start_dvb () {
+if [[ "x$TV_TASK" = "x" ]];
+then
+clear
+echo "Usage:  ./`basename $0` dvb [scan|map|all|repair|epg|icons]
+"
+exit 1
+
+# Don't proceed if TV_TASK is epg, icons)
+elif [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]];
+then
+# Notify when TV server controller process has been initiated
+notify_tv_server_controller_initiated
+# Break out
+break
+
+else
+# Check to see if TVHeadend server is in use
+check_if_in_use 
+#
+# Notify when TV server controller process has been initiated
+notify_tv_server_controller_initiated
+fi
+}
+
+usage_and_pre_start_iptv () {
+if [[ "x$TV_TASK" = "x" ]];
+then
+clear
+echo "Usage:  ./`basename $0` iptv [scan|map|all|m3u|epg|icons|enable|disable]
+"
+exit 1
+
+# Don't proceed if TV_TASK is m3u, epg, icons)
+elif [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]];
+then
+# Notify when TV server controller process has been initiated
+notify_tv_server_controller_initiated
+# Break out
+break
+
+else
+# Check to see if TVHeadend server is in use
+check_if_in_use 
+#
+# Notify when TV server controller process has been initiated
+notify_tv_server_controller_initiated
+fi
+}
+
+usage_and_pre_start_cctv () {
+if [ "x$TV_TASK" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` cctv [scan|map|all]
+"
+exit 1
+
+else
+# Check to see if TVHeadend server is in use
+check_if_in_use
+#
+# Notify when TV server controller process has been initiated
+notify_tv_server_controller_initiated
+fi
+}
+
+usage_and_pre_start_jtvhome () {
+if [ "x$TV_TASK" = "x" ];
+then
+clear
+echo "Usage:  ./`basename $0` jtvhome [scan|map|all]
+"
+exit 1
+
+else
+# Check to see if TVHeadend server is in use
+check_if_in_use
+#
+# Notify when TV server controller process has been initiated
+notify_tv_server_controller_initiated
+fi
 }
 
 email_failed_iptv_notice () {
