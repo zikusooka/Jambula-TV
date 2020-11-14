@@ -449,6 +449,9 @@ then
 set_sink_input_mute_cli_player_localhost 0
 
 fi
+
+# Unmute Line-In based sources like CD/Cassette player
+sudo /usr/bin/amixer -c 0 sset 'Line' 20% unmute > /dev/null 2>&1
 }
 
 mute_volume_jtvradio_localhost () {
@@ -470,6 +473,9 @@ JTVRADIO_VOLUME_MUTED=$($PACTL_CMD list sink-inputs | grep -B40 -e 'application.
 [[ "$JTVRADIO_VOLUME_MUTED" = "yes" ]] || set_sink_input_mute_cli_player_localhost 1
 
 fi
+
+# Mute Line-In based sources like CD/Cassette player
+sudo /usr/bin/amixer -c 0 sset 'Line' 0% mute > /dev/null 2>&1
 }
 
 adjust_volume_jtvradio_localhost () {
