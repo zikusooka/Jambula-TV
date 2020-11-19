@@ -5947,7 +5947,7 @@ tvheadend_create_dvr_profile_mkv
 chmod 755 $TVHEADEND_PROCESSOR_TOOL
 #
 # Copy jambulatv-dvbt-scan used to scan 4 DVB-T services, if none exists in bin directory
-[ -e $BINARY_PREFIX/jambulatv-dvbt-scan ] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/
+[[ -e $BINARY_PREFIX/jambulatv-dvbt-scan ]] || cp -v $PROJECT_BIN_DIR/jambulatv-dvbt-scan $BINARY_PREFIX/
 #
 # Generate jambulatv-tvheadend-controller script
 [[ -e $TVHEADEND_CONTROLLER_TOOL ]] || \
