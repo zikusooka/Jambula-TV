@@ -23,7 +23,7 @@ PROJECT_ATTENDANT_USERNAME=zik
 PROJECT_ATTENDANT_HOSTNAME=kampala
 
 KERNEL_NAME="$PROJECT_NAME"
-KERNEL_VERSION="5.9.8"
+KERNEL_VERSION="5.9.12"
 KERNEL_CONFIG_VERS=$(echo $KERNEL_VERSION | cut -d '.' -f1-2)
 
 PRODUCT_MODEL_NAME="$PROJECT_NAME"
@@ -2115,10 +2115,23 @@ KERNEL_CONFIG_VERS=$(echo $KERNEL_VERSION | cut -d '.' -f1-2)
 # See how much space is left
 kernel_check_4_space
 #
-# Check if desired kernel exists
-uname -r | grep -i $KERNEL_VERSION > /dev/null 2>&1
-if [ "$?" != "0" ];
+# Check and quit if kernel version is similar to the one installed
+if [[ "$KERNEL_VERSION" = "$(uname -r | sed 's:.JambulaTV::g')" ]];
 then
+clear
+cat <<ET
+The Linux kernel you are trying to upgrade to is already installed.
+
+In order to upgrade to newer version of $KERNEL_VERSION, please 
+reboot using a lower version, and remove previous install
+ET
+exit 1
+fi
+#
+# Remove directory containing kernel sources, if upgrading a previously
+# installed kernel
+[[ -d $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME ]] && \
+	rm -rf $KERNELS_SRC_DIR/$KERNEL_VERSION.$KERNEL_NAME
 # Unpack
 tar xvf $PROJECT_TARBALLS_DIR/linux-$KERNEL_VERSION.tar.xz  -C $KERNELS_SRC_DIR
 cd $KERNELS_SRC_DIR/
@@ -2151,7 +2164,6 @@ make mrproper
 cp -v $PROJECT_CONFIGS_DIR/kernel.config.${KERNEL_CONFIG_VERS}.x .config
 # Compile
 make oldconfig
-fi
 }
 
 kernel_upgrade_2 () {
@@ -2194,7 +2206,7 @@ cat << EOF
                       
     NOTE: You may need to re-compile some apps whose kernels modules
           may have changed e.g. tvheadend due to USB/DVB changes
-          For convinience, use upgrade.sh script where applicable
+          For convenience, use upgrade.sh script where applicable
             
                                                        
 ###############################################################################
