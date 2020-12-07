@@ -297,9 +297,13 @@ ET
 print_failed_notice () {
 clear
 cat <<ET
-Error: Failed to get any working Frequency/Transponder, hence nothing
-is available to scan.  Please check and ensure that the TV Antenna is 
-properly hooked up to the TV tuner before running this tool again.
+Error: I failed to get any working frequency/transponder in your area
+
+Please check and ensure that the TV Antenna is properly hooked up to 
+the TV tuner before running this tool again
+
+If this error persists, you might want to try using a different type 
+of TV tuner
 ET
 }
 
@@ -339,15 +343,15 @@ dvb-format-convert -I CHANNEL -O DVBV5 $RAW_CHANNELS_FILE $CHANNELS_FILE
 
 # Signal strength information
 get_signal_strength
-
-
-if [[ -s $RAW_CHANNELS_FILE || "$SCAN_FREQ_STATUS" != "1" ]];
+#
+if [[ ! -s $RAW_CHANNELS_FILE ]] || [[ "$SCAN_FREQ_STATUS" = "1" ]];
 then
-# Print frequencies discovered and the location of channels data file
-print_scan_report
+# Print failed notice
+print_failed_notice
 
 else
-print_failed_notice
+# Print frequencies discovered and the location of channels data file
+print_scan_report
 fi
 
 # Post setup
