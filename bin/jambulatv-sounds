@@ -21,17 +21,17 @@ fi
 SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
 SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep ${SOUND_EFFECTS_WAITING_PATH##*/} | awk {'print $2'}
 )
-SOUND_PLAYER_CMD="/usr/bin/cvlc"
+SOUND_PLAYER_CMD="/usr/bin/ffplay"
 ALERT_SOUND_AUDIO_GAIN=$(echo $@ | awk -F'=' '/gain/ {print $2}')
 # 
 if [[ "x$ALERT_SOUND_AUDIO_GAIN" = "x" ]];
 then
 # No audio gain
-SOUND_PLAYER_OPTS="--quiet --nodaemon --play-and-exit --aout alsa --no-video --no-sout-display-video"
+SOUND_PLAYER_OPTS="-hide_banner -loglevel quiet -vn -nodisp -autoexit"
 
 else
 # With audio gain
-SOUND_PLAYER_OPTS="--quiet --nodaemon --play-and-exit --aout alsa --gain $ALERT_SOUND_AUDIO_GAIN --no-video --no-sout-display-video"
+SOUND_PLAYER_OPTS="-hide_banner -loglevel quiet -vn -nodisp -af volume=$ALERT_SOUND_AUDIO_GAIN -autoexit" 
 fi
 
 BEEP_CMD=/usr/bin/beep
