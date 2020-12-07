@@ -34,6 +34,7 @@ LOGGER_CMD=/usr/bin/logger
 OPENSSL_CMD=/usr/bin/openssl
 TAR_CMD=/usr/bin/tar
 SOUNDS_TOOL=/usr/bin/jambulatv-sounds
+SPEAKER_VOLUME_TOOL=/usr/bin/jambulatv-speaker-volume
 SOUNDS_ENABLE=1
 
 
@@ -41,6 +42,18 @@ SOUNDS_ENABLE=1
 ###############
 #  FUNCTIONS  #
 ###############
+
+alert_using_voice () {
+if [[ "$SOUNDS_ENABLE" = "1" ]];
+then
+# Mute house speakers 
+$SPEAKER_VOLUME_TOOL all localhost mute
+# Play alert
+$SOUNDS_TOOL alert $1
+# Unmute house speakers if on
+$SPEAKER_VOLUME_TOOL all localhost unmute
+fi
+}
 
 notification_not_a_phone () {
 $LOGGER_CMD -s -t $(basename $0) "This is not a phone, so backup not necessary. Quitting ..."
@@ -54,49 +67,49 @@ notification_enable_usb_debugging () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Please enable USB Debugging (Developer options) on your phone ($PHONE_MODEL - $PHONE_SERIAL_NUMBER) before connecting it to the server"
 # Alert using voice
-[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 30
+alert_using_voice 30
 }
 
 notification_authorize_connection () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Please accept the prompt currently displayed on your phone screen. Save it to 'always' allow USB debugging with this specific server"
 # Alert using voice
-[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 32
+alert_using_voice 32
 }
 
 notification_timed_out_waiting_4_input () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Time out - failed to get user input. Quitting ..."
 # Alert using voice
-[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 33
+alert_using_voice 33
 }
 
 notification_start () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Starting backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER - $PHONE_MAC_ADDRESS - $PHONE_IP_ADDRESS"
 # Alert using voice
-[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 27
+alert_using_voice 27
 }
 
 notification_unlock_confirm () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Please unlock your phone and confirm the backup operation"
 # Alert using voice
-[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 31
+alert_using_voice 31
 }
 
 notification_disconnect_phone () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Feel free to unplug your phone, while we complete the rest of the backup processes"
 # Alert using voice
-[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 29
+alert_using_voice 29
 }
 
 notification_end () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Completed backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER - $PHONE_MAC_ADDRESS - $PHONE_IP_ADDRESS"
 # Alert using voice
-[[ "$SOUNDS_ENABLE" = "1" ]] && $SOUNDS_TOOL alert 28
+alert_using_voice 28
 }
 
 start_logging () {
