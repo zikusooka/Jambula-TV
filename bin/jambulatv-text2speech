@@ -13,20 +13,17 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 . $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Play TTS audio using FFPlay
-#TTS_PLAY_CMD="/usr/bin/ffplay"
-#TTS_PLAY_CMD_OPTS="-loglevel quiet -vn -nodisp -autoexit -af volume=2.0"
-# Play TTS audio using VLC
-TTS_PLAY_CMD="/usr/bin/cvlc"
+TTS_PLAY_CMD="/usr/bin/ffplay"
 TTS_PLAY_CMD_AUDIO_GAIN=$(echo $@ | awk -F'=' '/gain/ {print $2}')
-# 
+#
 if [[ "x$TTS_PLAY_CMD_AUDIO_GAIN" = "x" ]];
 then
 # No audio gain
-TTS_PLAY_CMD_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --no-video --no-sout-display-video"
+TTS_PLAY_CMD_OPTS="-hide_banner -loglevel quiet -vn -nodisp -autoexit" 
 
 else
 # With audio gain
-TTS_PLAY_CMD_OPTS="--quiet --nodaemon --play-and-exit --aout pulse --gain $TTS_PLAY_CMD_AUDIO_GAIN --no-video --no-sout-display-video"
+TTS_PLAY_CMD_OPTS="-hide_banner -loglevel quiet -vn -nodisp -af volume=$TTS_PLAY_CMD_AUDIO_GAIN -autoexit"
 fi
 
 TTS_OUTPUT_FILE=/var/tmp/tts_output.wav # IMPORTANT: Must be on 'ext4' partition i.e. /var
