@@ -9168,7 +9168,9 @@ chmod 4755 $BINARY_PREFIX/beep
 # Create sounds directory if no-existent
 [ -d $PROJECT_SYSTEM_SHARE_DIR/sounds ] || mkdir -p $PROJECT_SYSTEM_SHARE_DIR/sounds
 # Copy sound files
-cp -rv $PROJECT_CONTRIB_DIR/sounds/system/* $PROJECT_SYSTEM_SHARE_DIR/sounds/
+rsync -av $PROJECT_CONTRIB_DIR/sounds/system/ $PROJECT_SYSTEM_SHARE_DIR/sounds/
+# Copy other sound effects
+rsync -av $PROJECT_CONTRIB_DIR/sounds/effects/ $PROJECT_SYSTEM_SHARE_DIR/sounds/
 # Change ownership of sounds directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/sounds
 }
@@ -13460,7 +13462,9 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_CONF_DIR/homeassistan
 chmod 755 $BINARY_PREFIX/jambulatv-homeassistant-secrets
 
 # Copy homeassistant sound files
-cp -rv $PROJECT_CONTRIB_DIR/sounds/homeassistant/* $PROJECT_SYSTEM_SHARE_DIR/sounds/
+rsync -av $PROJECT_CONTRIB_DIR/sounds/homeassistant/ $PROJECT_SYSTEM_SHARE_DIR/sounds/
+# Copy other sound effects
+rsync -av $PROJECT_CONTRIB_DIR/sounds/effects/ $PROJECT_SYSTEM_SHARE_DIR/sounds/
 # Change ownership of sounds directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/sounds
 
