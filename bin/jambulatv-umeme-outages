@@ -28,7 +28,7 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 
 # Variables
 CURL_CMD="/usr/bin/curl"
-CURL_OPTS="-s -S -L"
+CURL_OPTS="-s -S -L -m 60 -k"
 HTTP_USER_AGENT="Dalvik/2.1.0 (Linux; U; Android 5.0.2; A0001"
 
 PING_IP_ADDRESS=$PING_IP_ADDRESS
@@ -126,26 +126,20 @@ if [[ "$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" != "yes" ]];
 then
 check_internet_connectivity_ping
 logger -s -t $(basename $0) "INFO: Fetching UMEME monthly outages file ..."
-$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d main=Az8hHN9n7nBp98SN3xs341. http://41.84.213.50/umeme/access/phone_forty/get_monthly_outages.php | tr -cd '\11\12\15\40-\176' | sed -e 's:\\r::g' | sed 's:\\n::g' > $UMEME_OUTAGES_PLANNED_FILE
-
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d main=Az8hHN9n7nBp98SN3xs341. http://41.84.213.50/umeme/access/phone_forty/get_monthly_outages.php | tr -cd '\11\12\15\40-\176' | sed -e 's:\\r::g' | sed 's:\\n::g' > $UMEME_OUTAGES_PLANNED_FILE > /dev/null 2>&1
+#
 # Check the integrity of the downloaded outages file
 cat $UMEME_OUTAGES_PLANNED_FILE | grep -e SUBSTATION -e DISTRICT > /dev/null 2>&1
 FILE_STATE=$?
+# Check for error page as title
+grep '<title>Error 404' $UMEME_OUTAGES_PLANNED_FILE > /dev/null 2>&1
+HTML_PAGE_ERROR_FOUND=$?
 #
-if [[ -s "$UMEME_OUTAGES_PLANNED_FILE" ]] && [[ "$FILE_STATE" != "0" ]];
+if [[ "$FILE_STATE" != "0" || "$HTML_PAGE_ERROR_FOUND" = "0" ]] || [[ ! -s "$UMEME_OUTAGES_PLANNED_FILE" ]];
 then
-# Quit if outages file is corrupted
-logger -s -t $(basename $0) "Error: UMEME monthly outages file is corrupted, exiting ..."
-# Print 'none' if outages file(s) can not be downloaded
-echo none
-# Quit
-exit 0
-
-elif [[ ! -s "$UMEME_OUTAGES_PLANNED_FILE" ]];
-then
-# Quit if outages file is empty
-logger -s -t $(basename $0) "Error: UMEME monthly outages file is empty, exiting ..."
-# Print 'none' if outages file(s) can not be downloaded
+# Quit if outages file is not usable
+logger -s -t $(basename $0) "Error: UMEME monthly outages file is corrupted or empty, exiting ..."
+# Print 'none' if outages file is not usable
 echo none
 # Quit
 exit 0
@@ -163,26 +157,20 @@ if [[ "$UMEME_OUTAGES_ONGOING_FILE_IS_FRESH" != "yes" ]];
 then
 check_internet_connectivity_ping
 logger -s -t $(basename $0) "INFO: Fetching UMEME ongoing outages file ..."
-$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d main=Az8hHN9n7nBp98SN3xs341. http://41.84.213.50/umeme/access/phone_forty/get_ongoing_outages.php | tr -cd '\11\12\15\40-\176' | sed -e 's:\\r::g' | sed 's:\\n::g' > $UMEME_OUTAGES_ONGOING_FILE 
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d main=Az8hHN9n7nBp98SN3xs341. http://41.84.213.50/umeme/access/phone_forty/get_ongoing_outages.php | tr -cd '\11\12\15\40-\176' | sed -e 's:\\r::g' | sed 's:\\n::g' > $UMEME_OUTAGES_ONGOING_FILE > /dev/null 2>&1
 #
 # Check the integrity of the downloaded outages file
 cat $UMEME_OUTAGES_ONGOING_FILE | grep -e SUBSTATION -e DISTRICT > /dev/null 2>&1
 FILE_STATE=$?
+# Check for error page as title
+grep '<title>Error 404' $UMEME_OUTAGES_ONGOING_FILE > /dev/null 2>&1
+HTML_PAGE_ERROR_FOUND=$?
 #
-if [[ -s "$UMEME_OUTAGES_ONGOING_FILE" ]] && [[ "$FILE_STATE" != "0" ]];
+if [[ "$FILE_STATE" != "0" || "$HTML_PAGE_ERROR_FOUND" = "0" ]] || [[ ! -s "$UMEME_OUTAGES_ONGOING_FILE" ]];
 then
-# Quit if outages file is corrupted
-logger -s -t $(basename $0) "Error: UMEME ongoing outages file is corrupted, exiting ..."
-# Print 'none' if outages file(s) can not be downloaded
-echo none
-# Quit
-exit 0
-
-elif [[ ! -s "$UMEME_OUTAGES_ONGOING_FILE" ]];
-then
-# Quit if outages file is empty
-logger -s -t $(basename $0) "Error: UMEME ongoing outages file is empty, exiting ..."
-# Print 'none' if outages file(s) can not be downloaded
+# Quit if outages file is not usable
+logger -s -t $(basename $0) "Error: UMEME ongoing outages file is corrupted or empty, exiting ..."
+# Print 'none' if outages file is not usable
 echo none
 # Quit
 exit 0
