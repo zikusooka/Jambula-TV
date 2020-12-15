@@ -223,9 +223,6 @@ update_dns_servers
 # Sound alert beep
 [[ -x $SOUNDS_TOOL ]] && $SOUNDS_TOOL beep online
 
-# Restart HomeAssistant, so connection to online APIs occurs
-systemctl restart home-assistant.service
-
 # Take chrony on-line: Update clock time
 update_clock_time online
 
