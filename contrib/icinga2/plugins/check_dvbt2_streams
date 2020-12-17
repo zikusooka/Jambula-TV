@@ -1,0 +1,88 @@
+#!/bin/sh
+# This script is used by icinga2 to check for the status of DVB-T/2
+# streams.  Restart TVHeadend server, if Live TV is failing
+#
+# Jambula Labs @copyright 2020-2021 All rights reserved
+#
+# Check states
+# ---
+# OK       = 0
+# WARNING  = 1
+# CRITICAL = 2
+# UNKNOWN  = 3
+
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+FFPROBE_CMD="$TIMEOUT_CMD /usr/bin/ffprobe"
+FFPROBE_OPTS_GLOBAL="-hide_banner -loglevel error"
+FFPROBE_OPTS_STREAMS="-show_streams"
+
+TVHEADEND_HTTP_IP=127.0.0.1
+TVHEADEND_HTTP_PORT=9981  # Please change to conform with our lineup
+TVHEADEND_HTSP_PORT=9982  # Please change to conform with our lineup
+TVHEADEND_HTTP_USER=""
+TVHEADEND_HTTP_PASS=""
+TVHEADEND_BASE_URL="http://${TVHEADEND_HTTP_IP}:${TVHEADEND_HTTP_PORT}"
+TVHEADEND_API_URL="${TVHEADEND_BASE_URL}/api"
+TVHEADEND_PLAY_STREAM_URL="${TVHEADEND_BASE_URL}/play/stream"
+TVHEADEND_PREFERRED_FREQUENCY="594MHz"
+
+
+
+##############
+#  FUNCTIONS #
+##############
+check_if_in_use () {
+CURRENT_PROFILES=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq -r '.entries[] | .profile' | sed 's:null::g')
+CURRENT_CHANNELS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq -r '.entries[] | .channel' | sed 's:null::g')
+#
+# Quit if TVH Server is being used i.e. Playing TV
+if [ "x$CURRENT_CHANNELS" != "x" ] || [ "x$CURRENT_PROFILES" != "x" ];
+then
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$TVHEADEND_SERVER_IN_USE_MESSAGE" text
+exit 0
+fi
+}
+
+dvbt_test_stream_ffprobe () {
+# Stream variables
+MUX_URL="$TVHEADEND_PLAY_STREAM_URL/mux/$MUX_UUID"
+MUX_UUID=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/mpegts/mux/grid?limit=100000 | jq -r '.entries[] | select(.name=="'"$TVHEADEND_PREFERRED_FREQUENCY"'") | .uuid')
+MUX_URL="$TVHEADEND_PLAY_STREAM_URL/mux/$MUX_UUID"
+#
+# Play dvbt mux briefly to see if it is working
+$FFPROBE_CMD $FFPROBE_OPTS_GLOBAL $FFPROBE_OPTS_STREAMS $MUX_URL > /dev/null 2>&1 
+FFPROBE_EXIT_STATUS=$?
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Check if server is in use
+check_if_in_use
+
+# Probe dvbt stream frequency using ffprobe
+dvbt_test_stream_ffprobe 
+
+# Test for status of DVB-T2 Live TV streaming
+if [[ "$FFPROBE_EXIT_STATUS" != "0" ]];
+then
+echo "CRITICAL - DVB-T2 Live TV streams are not playable (FFprobe=$FFPROBE_EXIT_STATUS)"
+exit 2
+
+else
+echo "OK - All's fine with DVB-T2 Live TV streams"
+exit 0
+fi

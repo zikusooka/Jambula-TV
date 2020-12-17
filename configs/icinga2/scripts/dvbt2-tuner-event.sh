@@ -24,7 +24,8 @@ mplayer -ao pulse -novideo  /usr/share/JambulaTV/sounds/on_life_support.mp3
 sudo systemctl stop tvheadend.service
 
 # Fix issue - Reset DVB module that is acting up 
-#modprobe -r dvb_usb_cxusb
+#/usr/sbin/modprobe -r dvb_usb_dvbsky
+#/usr/sbin/modprobe dvb_usb_dvbsky
 
 # Restart tvheadend
 sudo systemctl start tvheadend.service
