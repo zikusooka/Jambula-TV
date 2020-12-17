@@ -1,0 +1,162 @@
+#!/bin/sh
+#
+# This script is used to extract water meter readings from remote
+# machine and determine whether water supply is sufficient or not
+# NOTE: At this time,  no sensors are available, so readings are
+# done manually by attendant at remote PC i.e. kitchen box
+# You can find that script in the project's contributed directory
+#
+# Jambula Labs @copyright 2020-2021 All rights reserved
+
+# Variables
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+# other variables
+REMOTE_HOST=jambulatv-client2
+REMOTE_USER=jambula
+WATER_REPORTS_DIR_REMOTE=/var/tmp/water_reports
+WATER_REPORTS_DIR_LOCAL=$TMPDIR/water_reports
+
+WATER_REPORT_TODAY=$(date +%Y%m%d).txt
+WATER_REPORT_YESTERDAY=$(date --date='yesterday' +%Y%m%d).txt
+WATER_REPORT_2_DAYS_AGO=$(date --date='2 days ago' +%Y%m%d).txt
+WATER_REPORT_3_DAYS_AGO=$(date --date='3 days ago' +%Y%m%d).txt
+
+MQTT_TOPIC_STATUS_WATER_SUPPLY=JambulaTV/house/status/water_supply
+
+SCRIPT_USER=$(whoami)
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+mqtt_publish_water_supply_off () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "off"
+}
+
+mqtt_publish_water_supply_on () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "on"
+}
+
+mqtt_publish_water_supply_report_missing () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "unavailable"
+}
+
+connectivity_2_remote_host () {
+PING_COUNT=2
+PING_TIMEOUT=2
+ping -c $PING_COUNT -W $PING_TIMEOUT $REMOTE_HOST > /dev/null 2>&1
+REMOTE_HOST_REACHEABLE=$?
+#
+# Notify via mqtt and logger, then quit when there's NO Internet 
+if [ "$REMOTE_HOST_REACHEABLE" != "0" ];
+then
+logger -s -t $(basename $0) "The remote host at $REMOTE_HOST hosting the water readings is not reacheable. Please check that it is powered on"
+exit 0
+fi
+}
+
+pre_setup () {
+# Create local water reports directory if non-existent
+[[ -d $WATER_REPORTS_DIR_LOCAL ]] || mkdir -p $WATER_REPORTS_DIR_LOCAL
+
+# Give user permissions i.e. write access to existing outage file
+sudo chown -R $SCRIPT_USER $WATER_REPORTS_DIR_LOCAL
+}
+
+check_existence_of_todays_water_report_at_localhost () {
+[[ -e "$WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_TODAY" ]] || export REPORT_TODAY_MISSING_LOCALHOST=yes
+}
+
+check_existence_of_todays_water_report_at_remote_host () {
+connectivity_2_remote_host
+#
+ssh $REMOTE_USER@$REMOTE_HOST [[ -e "$WATER_REPORTS_DIR_REMOTE/$WATER_REPORT_TODAY" ]] || export REPORT_TODAY_MISSING_REMOTE_HOST=yes
+}
+
+fetch_water_reports_if_available () {
+# Check for water reading at remote host
+check_existence_of_todays_water_report_at_remote_host
+#
+if [[ "$REPORT_TODAY_MISSING_REMOTE_HOST" != "yes" ]];
+then
+	# Sync water report files from remote host to local machine 
+	for FILE in $WATER_REPORT_TODAY $WATER_REPORT_YESTERDAY $WATER_REPORT_2_DAYS_AGO $WATER_REPORT_3_DAYS_AGO;
+	do
+	rsync -av -u $REMOTE_USER@$REMOTE_HOST:$WATER_REPORTS_DIR_REMOTE/$FILE $WATER_REPORTS_DIR_LOCAL/
+	done
+
+elif [[ "$REPORT_TODAY_MISSING_REMOTE_HOST" = "yes" ]];
+then
+	# Check for water reading at localhost
+	check_existence_of_todays_water_report_at_localhost
+	#
+	if [[ "$REPORT_TODAY_MISSING_LOCALHOST" != "yes" ]];
+	then
+	continue
+	fi
+
+else
+# If today's water report is missing, notify, post mqtt status
+# and quit 
+mqtt_publish_water_supply_report_missing $MQTT_TOPIC_STATUS_WATER_SUPPLY
+	logger -s -t $(basename $0) "Today's water report ($WATER_REPORT_TODAY) was not found either locally or at $REMOTE_HOST"
+	exit 0
+fi
+}
+
+extract_water_reading_and_flow_state () {
+# Water readings if today, yesterday, and 2 days ago reports exist
+if [[ -s $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_TODAY ]] && \
+   [[ -s $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY ]] && \
+   [[ -s $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_2_DAYS_AGO ]];
+then
+WATER_READING_TODAY=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_TODAY)
+WATER_READING_YESTERDAY=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY)
+WATER_READING_2_DAYS_AGO=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_2_DAYS_AGO)
+# Water flow
+WATER_FLOWING_TODAY=$(awk -F'=' '/WATER_FLOWING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_TODAY)
+WATER_FLOWING_YESTERDAY=$(awk -F'=' '/WATER_FLOWING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY)
+WATER_FLOWING_2_DAYS_AGO=$(awk -F'=' '/WATER_FLOWING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_2_DAYS_AGO)
+
+else
+# If today's water report is missing, notify, post mqtt status
+# and quit 
+mqtt_publish_water_supply_report_missing $MQTT_TOPIC_STATUS_WATER_SUPPLY
+logger -s -t $(basename $0) "The required water reports ($WATER_REPORT_TODAY, $WATER_REPORT_YESTERDAY, $WATER_REPORT_2_DAYS_AGO) were not found"
+exit 0
+fi
+}
+
+analyze_and_report_water_status () {
+if [[ "$WATER_READING_TODAY" = "$WATER_READING_YESTERDAY" && "$WATER_READING_TODAY" = "$WATER_READING_2_DAYS_AGO" ]] || \
+	[[ "$WATER_FLOWING_TODAY" = "$WATER_FLOWING_YESTERDAY" && "$WATER_FLOWING_TODAY" = "$WATER_FLOWING_2_DAYS_AGO" ]]
+then
+# Running low on water, send to MQTT water supply topic
+mqtt_publish_water_supply_off $MQTT_TOPIC_STATUS_WATER_SUPPLY
+
+else
+# Water is flowing: Send 'on' to MQTT water supply topic
+mqtt_publish_water_supply_on $MQTT_TOPIC_STATUS_WATER_SUPPLY
+fi
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+pre_setup
+
+fetch_water_reports_if_available
+
+extract_water_reading_and_flow_state
+
+analyze_and_report_water_status
