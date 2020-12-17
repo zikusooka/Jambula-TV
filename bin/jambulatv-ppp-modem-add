@@ -88,7 +88,7 @@ ACCOUNT_PHONE_NUMBER=`grep ACCOUNT_PHONE_NUMBER $ISP_FILE | sed '/^#/d' | cut -d
 ACCOUNT_ACCESS_CODE=`grep ACCOUNT_ACCESS_CODE $ISP_FILE | sed '/^#/d' | cut -d = -f2 | sed 's/ //g'`
 else
 logger -s -t $(basename $0) "[JambulaTV-PPP-Modem-Add]: Could not locate the file named $ISP_FILE. Please create it first!"
-exit 1
+exit 0
 fi
 
 
