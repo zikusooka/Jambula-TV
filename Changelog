@@ -1,3 +1,110 @@
+Changes since v6.9
+--------------------
+
+* JambulaTV: Improve code for the 'Now Playing' feature to allow for showing pretty song title and artist names for locally stored music tracks with no metadata 
+
+* JambulaTV: Upgrade Linux kernel to new stable version: 5.8.12 
+
+* JambulaTV: Update GSM USSD controller tool i.e.jambulatv-gsm-ussd-ug 
+
+* JambulaTV: Fix issue where rtorrent systemd service does not halt all processes (i.e. rtorrent and screen) when stop iscalled 
+
+* JambulaTV: Add new Python 3 dependency modules for Home-Assistantversion 0.115 to pips directory. These packages may berequired in future upgrade 
+
+* JambulaTV: Disable OSD notification when checking for Internet connectivity. This is is because the OSD tool is slow, and during multiple queries leads to other notification processes being backloged 
+
+* JambulaTV: Upgrade Linux kernel to new stable version: 5.9.1 
+
+* JambulaTV: Upgrade Home-Assistant Core to the latest Github version:0.116.4 
+
+* JambulaTV: Upgrade Home-Assistant-CLI to latest Github version:0.10.0.dev20200827100801 
+
+* JambulaTV: Ensure Home-Assistant starts only after mosquitto MQTTand kodi media services have been started i.e. Updatethe systemd unit file for home-assistant.service 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Add Internet data saver mode support to the Internet/DNSmonitoring tool i.e. jambulatv-dns-status-trigger 
+
+* JambulaTV: Fix issue where kodi start up volumes are not fixed and vary per each restart 
+
+* JambulaTV: Add support for bluetooth presence detection using Icinga2monitoring software 
+
+* JambulaTV: Upgrade icingaweb2 to the latest github version: 2.8.2 
+
+* JambulaTV: Add support for playback of external audio sources (likeCD, cassette player) via Line-In 
+
+* JambulaTV: Upgrade Linux kernel to latest stable version: 5.9.2 
+
+* JambulaTV: Upgrade TVHeadend to latest version: 4.3-1914~g214a14f-dirty 
+
+* JambulaTV: Fix issue where the API user for Icinga director is createdmultiple times during upgrades leading to Icinga2 service failing to start 
+
+* JambulaTV: Upgrade Home-Assistant Core to the latest Github version:0.117.1 
+
+* JambulaTV: Upgrade OpenZWave sources to the latest Github
+version:1.6-1392-gb0afd4c-dirty NOTE: This version is currently not compatible with Home-Assistant hence not being used 
+
+* JambulaTV: Rename Home-Assitant install and configuration routines so they conform to change in upstream project name i.e.Project is now called 'Home-Assistant Core' 
+
+* JambulaTV: Upgrade Linux kernel to latest stable version: 5.9.6 
+
+* JambulaTV: Upgrade v4l-utils package to the latest compatible version:v4l-utils-1.16.8 
+
+* JambulaTV: Upgrade Flexget to the latest development version: 3.1.87.dev 
+
+* JambulaTV: Switch to using ALSA audio output in the sounds tool i.eUpdate 'jambulatv-sounds' 
+
+* JambulaTV: Add support for Line-In based sources (like CD/Cassette player) to speaker volume tool i.e. Update jTV radio volume routines in jambulatv-speaker-volume 
+
+* JambulaTV: Fix issue where running of IPTV network TV maintenance service leads to DVB-T channels becoming unplayable 
+
+* JambulaTV: Upgrade Linux kernel to latest stable version: 5.9.8 
+
+* JambulaTV: Add support for signal quality and SNR reporting to DVB-T scan tool i.e. Update and refactor 'jambulatv-dvbt-scan' 
+
+* JambulaTV: Add voice notification support for system restarts, presence detection (Home/Away), Bed and awake times, personal names, and others 
+
+* JambulaTV: Update Linux 4.4.x kernel (LTS) branch to current version:4.4.244 
+
+* JambulaTV: Update Linux 4.19.x kernel (LTS) branch to current version:4.19.158 
+
+* JambulaTV: Update Linux 5.4.x kernel (LTS) branch to current version:5.4.78 
+
+* JambulaTV: Upgrade Linux kernel to latest stable version: 5.9.12 
+
+* JambulaTV: Update DVB-T scanner tool i.e. 'jambulatv-dvbt-scan' 
+
+* JambulaTV: Drop the use of VLC when playing voice alerts. Instead switch to using the FFplay utility i.e. Update soundstool 'jambulatv-sounds' 
+
+* JambulaTV: Drop the use of VLC when playing TTS generated voice alerts. Instead switch to using the FFplay utility i.e.Update Text-2-Speech tool 'jambulatv-text2speech' 
+
+* JambulaTV: Add support for muting of background music while mobile phone backup tool plays the voice notification alerts i.e. Update 'jambulatv-backup-mobile-phone' 
+
+* JambulaTV: Add voice notification support for water flow outages, water running low warnings and meter reading reminders 
+
+* JambulaTV: Remove restarts of home-assistant service whenever the Internet/DNS monitoring tool reports a state of 'UP' i.e. Update 'jambulatv-dns-status-trigger' tool 
+
+* JambulaTV: Improve the handling and reporting of corrupted or empty outage report files by the UMEME power outages query tooli.e. Update 'jambulatv-umeme-outages' 
+
+* JambulaTV: Upgrade youtube-dl sources to latest version: 2020.12.14 
+
+* JambulaTV: Upgrade Linux kernel to latest stable version: 5.9.14 
+
+* JambulaTV: Upgrade Linux kernel to new stable version: 5.10.1 Switch to using Linux 5.10.x kernel branch releases 
+
+* JambulaTV: Temporarily fix issue where DVB-T/2 Live TV channels are unplayable due to buggy 'si2168' tuner driver 
+
+* JambulaTV: Drop the use of FFplay when playing voice alerts. Instead switch to using the MPlayer utility which is more stablei.e. Update sounds tool 'jambulatv-sounds' 
+
+* JambulaTV: Drop the use of FFplay when playing TTS generated voice alerts. Instead switch to using the MPlayer utility whichis more stable i.e.Update the Text-2-Speech tool:'jambulatv-text2speech' 
+
+* JambulaTV: Fix issue where systemd unit for 3/4G Internet connection i.e. 3g_internet.service fails upon insertion of 3/4G usb modem and when Internet by that method (PPP) is notspecified 
+
+* JambulaTV: Add new home automation tool i.e. 'jambulatv-water-supply'It's purpose is to extract and analyze daily water meter readings from a remote server and use those reports to determine the current water supply status at your house 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+
 Changes since v6.8
 --------------------
 
