@@ -27,11 +27,6 @@ condition:
       entity_id: sensor.darksky_precip_probability_0d
       above: 90
 
-    # Weather Underground
-    - condition: numeric_state
-      entity_id: sensor.pws_precip_1d
-      above: 90
-
 
 action:
 

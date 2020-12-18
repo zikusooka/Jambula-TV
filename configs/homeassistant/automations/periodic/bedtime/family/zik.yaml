@@ -10,6 +10,15 @@ trigger:
   - platform: state
     entity_id: sensor.phone_alarm_for_zik_tecno
     from: 'Unknown'
+ 
+  - platform: state
+    entity_id: input_boolean.bed_wakeup_mode_zik
+    to: 'on'
+
+  - platform: state
+    entity_id: binary_sensor.bluez_zik_01
+    from: 'on'
+    to: 'off'
 
 
 condition:
@@ -17,8 +26,8 @@ condition:
   conditions:
 
     # After sunset
-    - condition: sun
-      before: sunrise
+    #- condition: sun
+     # before: sunrise
       
 
 action:

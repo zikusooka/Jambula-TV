@@ -1,0 +1,35 @@
+alias: Its time for lunch
+initial_state: True
+
+
+trigger:
+
+  - platform: time
+    at: '13:30:00'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Vacation mode
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+
+    # Day of week
+    - condition: time
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+        - sat
+        - sun
+
+
+action:
+
+  # Run script that says its time for lunch
+  - service: script.its_time_for_lunch

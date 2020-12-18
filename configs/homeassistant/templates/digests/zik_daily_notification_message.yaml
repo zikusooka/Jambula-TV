@@ -13,12 +13,13 @@ Reminders:*
 *
 Power outages:*
 \r
-{{states('sensor.power_outages_today')}}
+{{states('sensor.power_outage_today')}}
 \r
 \r
 *
 Weather:*
-{{states('sensor.pws_weather_1h')}} (DarkSky)
+\r
+{{states('weather.dark_sky')}} (DarkSky)
 \r
 \r
 *
@@ -26,9 +27,6 @@ Rain chances:*
 \r
 {{states('sensor.darksky_precip_probability_0d')|int}}% chance of rainfall - {{states('sensor.darksky_summary_0d')}} (DarkSky)
 \r
-\r
-{{states('sensor.pws_precip_1d')}}% chance of rainfall (Wunderground)
-\r 
 \r
 Have a great day!
 \r

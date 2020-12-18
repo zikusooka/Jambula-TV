@@ -4,8 +4,9 @@ initial_state: True
 trigger:
 
   - platform: state
-    entity_id: sensor.phone_alarm_for_zik_tecno
-    to: ''
+    entity_id: binary_sensor.bluez_zik_01
+    from: 'unavailable'
+    to: 'on'
 
 
 condition:
@@ -13,21 +14,21 @@ condition:
   conditions:
 
     # After sunset
-    - condition: sun
-      after: sunrise
+    #- condition: sun
+      #after: sunrise
 
-    # Before midday
+    # Before midnight
     #- condition: time
-    #  before: '12:00:00'
+      #before: '00:00:00'
 
     # Zik is home
     #- condition: state
     #  entity_id: 'device_tracker.kampala'
     #  state: 'home'
       
-    # Internet state
-    - condition: template
-      value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+    # Night time mode is on
+    #- condition: template
+    #  value_template: "{{ is_state('input_boolean.night_mode', 'on') }}"
 
 
 action:

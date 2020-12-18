@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: media_player.now_playing
+    state: "playing"
+
+card:
+  type: entity-button
+  entity: script.music_volume_down
+  tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.music_volume_down
+  name: 'Volume - DOWN'
+  icon: 'mdi:volume-minus'

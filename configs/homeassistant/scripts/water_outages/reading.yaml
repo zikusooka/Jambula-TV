@@ -1,0 +1,29 @@
+water_meter_reading:
+  sequence:
+
+  # 1. Check for water reading 
+  # ---------------------------
+
+    # a) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
+
+    # b) Input of water reading sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Trickling-water-sound'
+        audio_gain: !secret voice_alert_audio_gain
+
+    - delay: '00:00:02'
+
+    # c) Request for input of water reading using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'input_water_reading_today.mp3'
+        audio_gain: !secret voice_alert_audio_gain
+
+    - delay: '00:00:04'
+
+    # d) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute

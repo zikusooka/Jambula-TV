@@ -1,0 +1,84 @@
+wakeup_maid:
+  sequence:
+
+    # a) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
+
+    # b) Voice alerts using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '21'
+        audio_gain: !secret voice_alert_audio_gain
+
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'its_time_2_wakeup'
+        audio_gain: !secret voice_alert_audio_gain
+
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'rise_and_shine'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # b) Sound effects using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'wake_alarm_clock_gentle_01'
+        audio_gain: !secret voice_alert_audio_gain
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'wake_alarm_clock_gentle_01'
+        audio_gain: !secret voice_alert_audio_gain
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'wake_alarm_clock_gentle_01'
+        audio_gain: !secret voice_alert_audio_gain
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'wake_alarm_clock_gentle_01'
+        audio_gain: !secret voice_alert_audio_gain
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'wake_alarm_clock_gentle_01'
+        audio_gain: !secret voice_alert_audio_gain
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'wake_alarm_clock_gentle_01'
+        audio_gain: !secret voice_alert_audio_gain
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'wake_alarm_clock_gentle_01'
+        audio_gain: !secret voice_alert_audio_gain
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'wake_alarm_clock_gentle_01'
+        audio_gain: !secret voice_alert_audio_gain
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'wake_alarm_clock_gentle_01'
+        audio_gain: !secret voice_alert_audio_gain
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'wake_alarm_clock_gentle_01'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # c) Voice alerts using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '21'
+        audio_gain: !secret voice_alert_audio_gain
+
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'its_time_2_wakeup'
+        audio_gain: !secret voice_alert_audio_gain
+
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'rise_and_shine'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # d) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute

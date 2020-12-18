@@ -1,0 +1,33 @@
+alias: Eva is home
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: person.eva
+    from: 'Unknown'
+    to: 'Sighted'
+
+  - platform: state
+    entity_id: person.eva
+    from: 'Away'
+    to: 'Sighted'
+
+  - platform: state
+    entity_id: person.eva
+    from: 'Away'
+    to: 'Home'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Last triggered more than 30 minute(s) ago
+    - condition: template
+      value_template: '{{ (as_timestamp(now()) - as_timestamp(states.person.eva.attributes.last_triggered | default(0)) | int > 1800)}}'
+
+
+action:
+
+  - service: script.eva_is_home

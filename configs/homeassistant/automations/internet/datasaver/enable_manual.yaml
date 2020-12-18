@@ -1,0 +1,50 @@
+alias: Internet Data Saver (Enable Manually)
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: input_boolean.internet_data_saver
+    to: 'on'
+
+
+condition:
+  condition: and
+  conditions:
+
+        # Do not run during startup of HASS 
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime
+      above: '2'
+
+
+action:
+
+  # Turn on data saver mode
+  # -----------------------
+  - service: shell_command.internet_data_saver_on
+
+  # VOICE ALERT - sound alert notice using Intercom i.e. paging
+  # -----------------------------------------------------------
+  # a) Mute speaker volume if there is already audio playing
+  - service: shell_command.speaker_volume_mute
+  # Pause for a second - DO NOT REMOVE unless you have a fix!
+  - delay: '00:00:01'
+
+  # b) Chime alert using house speakers
+  - service: shell_command.voice_alerts_and_sound_effects
+    data_template:
+      sound_alert: '1'
+      audio_gain: !secret voice_alert_audio_gain
+
+  # c) Internet data saver on sound effect using house speakers
+  #- service: shell_command.
+
+  # d) Voice alert using house speakers
+  - service: shell_command.voice_alerts_and_sound_effects
+    data_template:
+      sound_alert: '25'
+      audio_gain: !secret voice_alert_audio_gain
+
+  # e) Unmute speaker volume 
+  - service: shell_command.speaker_volume_unmute 

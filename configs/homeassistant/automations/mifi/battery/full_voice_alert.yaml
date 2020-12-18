@@ -28,11 +28,17 @@ action:
   # Pause for a second - DO NOT REMOVE unless you have a fix!
   - delay: '00:00:01'
 
-  # b) Full battery sound effect using house speakers
-  - service: shell_command.play_battery_low_sound_effect
+  # b) Battery full sound effect using house speakers
+  - service: shell_command.voice_alerts_and_sound_effects
+    data_template:
+      sound_alert: '8'
+      audio_gain: !secret voice_alert_audio_gain
 
   # c) Voice alert using house speakers
-  - service: shell_command.play_battery_full_voice_alert
+  - service: shell_command.voice_alerts_and_sound_effects
+    data_template:
+      sound_alert: '6'
+      audio_gain: !secret voice_alert_audio_gain
 
   # d) Unmute speaker volume 
   - service: shell_command.speaker_volume_unmute 

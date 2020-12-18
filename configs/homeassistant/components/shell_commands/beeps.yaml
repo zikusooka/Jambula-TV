@@ -1,3 +1,2 @@
 # Alert using Beeps
 play_alert_at_remote_workstation: /usr/bin/ssh {{ssh_username}}@{{ssh_host}} {{alert_command}}
-play_alert_at_local_server: /usr/bin/jambulatv-sounds beep alert

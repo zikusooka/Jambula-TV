@@ -1,0 +1,4 @@
+platform: command_line
+name: "Global Setting (Internet Data Saver Mode)"
+command: "/usr/bin/cat $(/usr/bin/jambulatv-homeassistant-secrets jambulatv_global_settings_file) | /usr/bin/grep -i 'INTERNET_DATA_SAVER_MODE' | grep -i 'on' > /dev/null 2>&1 && echo on || echo off"
+

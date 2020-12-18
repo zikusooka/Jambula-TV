@@ -44,13 +44,22 @@ action:
   - delay: '00:00:01'
 
   # b) Chime alert using house speakers
-  - service: shell_command.play_chime_alert
+  - service: shell_command.voice_alerts_and_sound_effects
+    data_template:
+      sound_alert: '1'
+      audio_gain: !secret voice_alert_audio_gain
 
   # c) Rain and thunderstorm sound effect using house speakers
-  - service: shell_command.play_rainfall_is_nearby_sound_effect
+  - service: shell_command.voice_alerts_and_sound_effects
+    data_template:
+      sound_alert: '11'
+      audio_gain: !secret voice_alert_audio_gain
 
   # d) Voice alert using house speakers
-  - service: shell_command.play_rainfall_is_nearby_voice_alert
+  - service: shell_command.voice_alerts_and_sound_effects
+    data_template:
+      sound_alert: '17'
+      audio_gain: !secret voice_alert_audio_gain
 
   # e) Unmute speaker volume 
   - service: shell_command.speaker_volume_unmute 

@@ -1,0 +1,58 @@
+wakeup_zik:
+  sequence:
+
+  # 1. Turn night mode (off) script
+  # -------------------------------
+    - service: script.night_mode_off
+
+
+  # 2. Disable Bedtime/WakeUp Mode at Frontend
+  # ------------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.bed_wakeup_mode_zik
+
+
+  # 3. Say wakeup greeting for zik
+  # -------------------------------
+    # a) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
+
+    # b) Voice alerts using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '21'
+        audio_gain: !secret voice_alert_audio_gain
+
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'zik'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # d) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute
+
+
+  # 4. Play locally stored music
+  # ----------------------------
+  #  - service: shell_command.jtv_radio_start
+
+
+  # 5. OTHER STUFF HERE
+  # -------------------
+    - service: media_player.play_media
+      data:
+        entity_id: media_player.jambulatv_server_room
+        media_content_type: video/mp4
+        media_content_id: media-source://media_source/podcasts/CordkillersEp325.mp4
+
+
+
+
+
+  # 6. Read flash briefing for zik
+  # ------------------------------
+    #  Play daily flash briefing using house speakers
+    #- service: shell_command.play_flash_briefing

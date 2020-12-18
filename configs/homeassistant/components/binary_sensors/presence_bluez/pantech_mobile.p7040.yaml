@@ -2,6 +2,7 @@ platform: mqtt
 name: 'Bluez Pantech P7040'
 state_topic: !secret mqtt_presence_bluez_topic_pantech_p7040
 scan_interval: 5
+expire_after: 300
 device_class: presence
 payload_on: "on"
 payload_off: "off"

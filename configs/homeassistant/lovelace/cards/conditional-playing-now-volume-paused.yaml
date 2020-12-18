@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: media_player.now_playing
+    state: "paused"
+
+card:
+  type: entities
+  entities:
+    - entity: sensor.now_playing
+      name: Playing
+      icon: 'mdi:playlist-music'
+
+    - entity: input_number.internet_radio_volume
+      name: 'Volume'
+      icon: 'mdi:volume-high'

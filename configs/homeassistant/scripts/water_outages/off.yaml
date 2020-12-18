@@ -1,0 +1,67 @@
+water_flow_off_alert:
+  sequence:
+
+  # 1. Alert using house speakers
+  # -----------------------------
+
+    # a) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
+
+    # b) Water supply is off sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Trickling-water-sound'
+        audio_gain: !secret voice_alert_audio_gain
+
+    - delay: '00:00:02'
+
+    # c) Announce water supply is off using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'water_supply_off_conserve_water'
+        audio_gain: !secret voice_alert_audio_gain
+
+    - delay: '00:00:04'
+
+    # d) Running low on water sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Trickling-water-sound'
+        audio_gain: !secret voice_alert_audio_gain
+
+    - delay: '00:00:02'
+
+    # e) Announce running low on water using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'running_low_conserve_water'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # f) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute
+
+
+  # 2. Send messages using  XMPP, WhatsApp, and Telegram
+  # ----------------------------------------------------
+
+    # XMPP Message
+    - service: notify.jambulatv
+      data_template:
+        title: '[JambulaTV]'
+        message: 'Water supply is off. Please conserve water'
+
+  # WhatsApp Message
+    - service: script.send_whatsapp
+      data_template:        
+        whatsapp_text: 'Water supply is off. Please conserve water'
+        whatsapp_image: ''
+        whatsapp_recipient_phone: ''
+  
+  # Telegram Message
+    - service: script.send_telegram
+      data_template: 
+        telegram_text: 'Water supply is off. Please conserve water'
+        telegram_image: ''
+        telegram_recipient_phone: ''

@@ -7,9 +7,6 @@ Weather forecast services indicate that rainfall is very likely today.
 *{{states('sensor.darksky_precip_probability_0d')|int}}% chance of rainfall - {{states('sensor.darksky_summary_0d')}}* (DarkSky)
 \r
 \r
-*{{states('sensor.pws_precip_1d')}}% chance of rainfall* (Wunderground)
-\r 
-\r
 Please remember to carry an umbrella today!
 \r
 \r

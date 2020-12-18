@@ -5,6 +5,12 @@
 #
 homeassistant:
 
+  #The URL that Home Assistant is available on from the internet
+  #external_url: "https://www.example.com"
+
+  # The URL that Home Assistant is available on from your local network
+  #internal_url: "http://172.16.0.1:8505"
+
   # Lets me customize individual entities
   customize: !include_dir_merge_named ../../customizations/entities
 
@@ -14,5 +20,18 @@ homeassistant:
   # Lets me custimize entities based on a matching pattern
   customize_glob: !include_dir_merge_named ../../customizations/globs
 
-  # Allow list of folders that can be used as sources for sending files
-  #whitelist_external_dirs: /tmp/twitter_searches/
+  # List of folders that can be used as sources for sending files
+  allowlist_external_dirs:
+    - /tmp
+
+  # List of external URLs that can be fetched
+  #allowlist_external_urls:
+    #- "http://images.com/image1.png"
+
+  # A mapping of local media sources and their paths on disk
+  media_dirs: 
+    music: /JambulaTV/Music
+    tv_shows: /JambulaTV/Videos/TV_Shows
+    movies: /JambulaTV/Videos/Movies
+    tv_recordings: /JambulaTV/Videos/TV_Recordings
+    podcasts: /JambulaTV/Podcasts

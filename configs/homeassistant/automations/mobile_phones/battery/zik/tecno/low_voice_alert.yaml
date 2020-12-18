@@ -31,7 +31,10 @@ action:
   - delay: '00:00:01'
 
   # c) Battery low sound effect using house speakers
-  - service: shell_command.play_phone_battery_low_sound_effect
+  - service: shell_command.voice_alerts_and_sound_effects
+    data_template:
+      sound_alert: '7'
+      audio_gain: !secret voice_alert_audio_gain
 
   # d) Play merged audio file using house speakers
   - service: shell_command.play_merged_audio_file

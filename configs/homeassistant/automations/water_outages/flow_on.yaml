@@ -1,0 +1,28 @@
+alias: Water Flow - On
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: 'binary_sensor.water_supply_status'
+    from: 'off'
+    to: 'on'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Vacation mode - off
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    entity_id: script.water_flow_on_alert

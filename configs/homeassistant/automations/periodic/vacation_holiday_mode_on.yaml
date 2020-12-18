@@ -26,13 +26,19 @@ action:
   - delay: '00:00:01'
 
   # b) Chime alert using house speakers
-  - service: shell_command.play_chime_alert
+  - service: shell_command.voice_alerts_and_sound_effects
+    data_template:
+      sound_alert: '1'
+      audio_gain: !secret voice_alert_audio_gain
 
   # c) Vacation mode activating sound effect using house speakers
-  - service: shell_command.vacation_holiday_mode_activating
+  - service: shell_command.voice_alerts_and_sound_effects
+    data_template:
+      sound_alert: '36'
+      audio_gain: !secret voice_alert_audio_gain
 
   # d) Turn on vacation mode
-  #- service: shell_command.vacation_mode_activate
+  #- service: shell_command...
 
   # e) Unmute speaker volume 
   - service: shell_command.speaker_volume_unmute 

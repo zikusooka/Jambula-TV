@@ -1,0 +1,36 @@
+alias: Water meter readings
+initial_state: True
+
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/15'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Water supply - off
+    - condition: state
+      entity_id: 'binary_sensor.water_supply_status'
+      state: 'unavailable'
+
+    # Between 6am and 7pm i.e. daytime
+    - condition: time
+      after: '06:00:00'
+      before: '19:00:00'
+
+    # Vacation mode - off
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    entity_id: script.water_meter_reading

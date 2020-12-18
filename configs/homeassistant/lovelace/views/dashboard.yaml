@@ -23,8 +23,15 @@ cards:
           #entity: weather.openweathermap
           #- !include ../cards/custom-weather-darksky.yaml
 
+
+  # Call maid for assistance
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/entity-button-call-maid-office.yaml
+      - !include ../cards/entity-button-call-maid-porch.yaml
+
+
   # Temperatures - Outdoors and Indoors
-  #- type: horizontal-stack
   - type: vertical-stack
     cards:
       - !include ../cards/entity-filter-temperature-outdoors.yaml
@@ -41,40 +48,46 @@ cards:
   - type: horizontal-stack
     cards:
       - !include ../cards/light-living-room.yaml
-      #- !include ../cards/light-dining.yaml 
       - !include ../cards/light-kitchen.yaml
+
+  - type: horizontal-stack
+    cards:
       - !include ../cards/light-bed-room.yaml
+      - !include ../cards/light-veranda.yaml
+      #- !include ../cards/light-dining.yaml 
       #- !include ../cards/light-bath-room.yaml
       #- !include ../cards/light-guest-bed-room.yaml
       #- !include ../cards/light-guest-bath-room.yaml
-      - !include ../cards/light-veranda.yaml
       #- !include ../cards/light-boys-quarters.yaml
       #- !include ../cards/light-gate.yaml
 
-  # Internet and MiFi Status
-  #- type: horizontal-stack
-  - type: vertical-stack
+
+  # Internet, Water and MiFi Status
+  - type: horizontal-stack
     cards:
+      - !include ../cards/entity-button-water-supply.yaml
       - !include ../cards/entity-button-internet-status.yaml
-      - !include ../cards/sensor-mifi-status.yaml
+      - !include ../cards/entity-button-mifi-status.yaml
+
 
   # CPU and Disk Usage 
-  #- type: horizontal-stack
-  - type: vertical-stack
+  - type: horizontal-stack
     cards:
       - !include ../cards/gauge-cpu-usage.yaml
       - !include ../cards/sensor-disk-free.yaml
 
 
   # MiFi Data and Battery
-  #- type: horizontal-stack
-  - type: vertical-stack
+  - type: horizontal-stack
     cards:
       - !include ../cards/conditional-mifi-data-balance-percent.yaml
       - !include ../cards/conditional-mifi-data-balance-amount.yaml
-      - !include ../cards/conditional-mifi-battery-level.yaml
+
+  - type: horizontal-stack
+    cards:
       - !include ../cards/conditional-mifi-battery-charge.yaml
       - !include ../cards/conditional-mifi-battery-status.yaml
+      #- !include ../cards/conditional-mifi-battery-level.yaml
 
 
   # Reminders
@@ -99,9 +112,9 @@ cards:
 
   # Live Cameras
   - type: horizontal-stack
-
     cards:
-      - !include ../cards/picture-entity-camera-gate.yaml
+      - !include ../cards/picture-entity-zoneminder-camera-front-gate.yaml
+      - !include ../cards/picture-entity-zoneminder-camera-back-yard.yaml
 
 
   # Modes
@@ -124,28 +137,49 @@ cards:
 
 
   # Music Playlists
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/entity-button-local-music-jazz.yaml
-      - !include ../cards/entity-button-local-music-christian.yaml
-      - !include ../cards/entity-button-local-music-country.yaml
 
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/entity-button-local-music-local.yaml
-      - !include ../cards/entity-button-local-music-indie.yaml
-      - !include ../cards/entity-button-local-music-congolese.yaml
 
-  - type: horizontal-stack
+
+  - type: vertical-stack
     cards:
-      - !include ../cards/entity-button-local-music-pop.yaml
-      - !include ../cards/entity-button-local-music-folk.yaml
-      - !include ../cards/entity-button-local-music-all.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-local-music-jazz.yaml
+          - !include ../cards/entity-button-local-music-christian.yaml
+          - !include ../cards/entity-button-local-music-country.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-local-music-local.yaml
+          - !include ../cards/entity-button-local-music-indie.yaml
+          - !include ../cards/entity-button-local-music-congolese.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-local-music-pop.yaml
+          - !include ../cards/entity-button-local-music-folk.yaml
+          - !include ../cards/entity-button-local-music-all.yaml
  
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-local-music-christmas.yaml
+
 
   # Now Playing / Volume Controls / Stop Media Player
   - type: vertical-stack
     cards:
-      - !include ../cards/media-control-jambulatv.yaml
-      - !include ../cards/conditional-playing-now-volume.yaml
-      - !include ../cards/conditional-media-player-stop.yaml
+      - !include ../cards/media-control-jambulatv-server.yaml
+      - !include ../cards/media-control-jambulatv-client-01.yaml
+      - !include ../cards/media-control-jambulatv-snapclient.yaml
+      - !include ../cards/conditional-playing-now-volume-playing.yaml
+      #
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-playing-now-volume-paused.yaml
+          - !include ../cards/conditional-media-player-stop.yaml
+          - !include ../cards/conditional-media-player-pause-playing.yaml
+          - !include ../cards/conditional-media-player-pause-paused.yaml
+
+          - !include ../cards/conditional-media-player-volume-up.yaml
+          - !include ../cards/conditional-media-player-volume-down.yaml

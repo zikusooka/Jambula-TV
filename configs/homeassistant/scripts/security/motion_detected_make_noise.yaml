@@ -19,17 +19,28 @@ motion_detected_outside_make_noise:
     - delay: '00:00:01'
 
     # b) Chime alert using house speakers
-    - service: shell_command.play_chime_alert
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain
 
     # c) Voice alert using house speakers
-    - service: shell_command.motion_detected_voice_alert
+    - service: shell_command.voice_alerts_and_sound_effects
       data_template:
+        sound_alert: '3'
         audio_gain: !secret voice_alert_audio_gain
 
     # d) Unmute speaker volume 
     - service: shell_command.speaker_volume_unmute 
 
+
     # Task 3 - Stop capture of snapshot
+    # ---------------------------------
+    # Make alarm at local server station
+    - service: shell_command.beep_alerts_at_local_server
+
+
+    # Task 4 - Stop capture of snapshot
     # ---------------------------------
 
     # a) Wait a bit
@@ -43,9 +54,6 @@ motion_detected_outside_make_noise:
 
     # Other examples
     # --------------
-    # Make alarm at local server station
-    #- service: shell_command.play_alert_at_local_server
-
     # Make noise - Beeps
     #- service: shell_command.play_alert_at_remote_workstation
     #  data_template:

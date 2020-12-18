@@ -1,6 +1,3 @@
-# Chimes
-play_chime_alert: /usr/bin/jambulatv-sounds alert 1 'gain=0.5'
-play_chime_big_ben_alert: /usr/bin/jambulatv-sounds alert 22 'gain=0.5'
-
-# Hourly clock
-say_current_time_using_sounds_tool: /usr/bin/jambulatv-sounds alert 41 'gain={{audio_gain}}'
+# Alerts and sound Effects
+voice_alerts_and_sound_effects: /usr/bin/jambulatv-sounds alert {{sound_alert}} 'gain={{audio_gain}}'
+beep_alerts_at_local_server: /usr/bin/jambulatv-sounds beep alert

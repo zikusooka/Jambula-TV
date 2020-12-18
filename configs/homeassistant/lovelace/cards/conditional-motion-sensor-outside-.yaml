@@ -1,7 +1,7 @@
 type: conditional
 conditions:
   - entity: sensor.vision_security_zp3102_pir_motion_sensor_alarm_level
-    state_not: "254"
+    state: "255"
 
 card:
   type: entities

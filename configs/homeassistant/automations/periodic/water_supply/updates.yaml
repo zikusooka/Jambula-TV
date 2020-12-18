@@ -1,0 +1,24 @@
+alias: Water supply updates
+initial_state: True
+
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/5'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Vacation mode - off
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+
+
+action:
+
+    # Report current status of water supply 
+  - service: shell_command.water_supply_reports_and_status

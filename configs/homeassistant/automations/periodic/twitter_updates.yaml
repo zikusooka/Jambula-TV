@@ -5,7 +5,8 @@ initial_state: True
 trigger:
 
   - platform: time_pattern
-    minutes: '/10'
+    hours: '/1'
+    #minutes: '/10'
 
 
 #condition:

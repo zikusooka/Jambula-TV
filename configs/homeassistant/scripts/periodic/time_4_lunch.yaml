@@ -1,0 +1,28 @@
+its_time_for_lunch:
+  sequence:
+
+
+    # Task - Announce that its time for lunch
+    # ----------------------------------------
+
+    # a) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
+
+    # b) Its time for lunch sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Bell-magic-transition-sound-effect'
+        audio_gain: !secret voice_alert_audio_gain
+
+    - delay: '00:00:02'
+
+    # c) Announce its time time for lunch using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'its_time_4_lunch'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # d) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute

@@ -1,0 +1,23 @@
+alias: Internet Data Saver (Enable Automatically)
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.global_setting_internet_data_saver_mode
+    to: 'on'
+
+
+condition:
+  condition: and
+  conditions:
+
+    - condition: template
+      value_template: "{{ is_state('input_boolean.internet_data_saver', 'off') }}"
+
+
+action:
+    
+  - service: homeassistant.turn_on
+    data:
+      entity_id: input_boolean.internet_data_saver

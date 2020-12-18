@@ -1,0 +1,70 @@
+night_mode_on:
+  sequence:
+
+  # 1. Enable Night time Mode at Frontend
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.night_mode
+
+  # 2. Voice alerts
+  # ---
+    # a) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
+
+    # b) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # c) Night mode turning on sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '34'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # d) Lower speaker volume
+    - service: shell_command.speaker_volume_input
+      data_template:
+        volume_level: !secret mixer_night_mode_volume_level
+
+    # e) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute
+
+
+night_mode_off:
+  sequence:
+
+  # 1. Disable Night time Mode at Frontend
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.night_mode
+
+  # 2. Voice alerts
+  # ---
+    # a) Increase speaker volume
+    - service: shell_command.speaker_volume_input
+      data_template:
+        volume_level: !secret mixer_start_up_volume_level
+
+    # b) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
+
+    # c) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # d) Night mode turned off sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '35'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # e) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute

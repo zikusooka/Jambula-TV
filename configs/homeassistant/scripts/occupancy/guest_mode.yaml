@@ -1,0 +1,52 @@
+guest_mode_on:
+  sequence:
+
+    # a) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
+
+    # b) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # c) Guest mode turning on sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '38'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # d) Guest mode actions - On
+    #- service: shell_command...
+
+    # e) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute
+
+
+guest_mode_off:
+  sequence:
+
+    # a) Guest mode actions - Off
+    #- service: shell_command...
+
+    # b) Mute speaker volume if there is already audio playing
+    - service: shell_command.speaker_volume_mute
+    # Pause for a second - DO NOT REMOVE unless you have a fix!
+    - delay: '00:00:01'
+
+    # c) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # d) Guest mode turning on sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '39'
+        audio_gain: !secret voice_alert_audio_gain
+
+    # e) Unmute speaker volume 
+    - service: shell_command.speaker_volume_unmute

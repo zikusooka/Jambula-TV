@@ -21,11 +21,7 @@ condition:
     #- condition: sun
       #after: sunset
       #before: sunrise
- 
-    # After HASS instance settles down after restart
-    #- condition: template
-     # value_template: "{{ states('sensor.hass_uptime.state')|int > '5' }}"
-
+    
 
 action:
 
