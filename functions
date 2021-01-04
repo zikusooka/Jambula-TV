@@ -825,7 +825,7 @@ ZONEMINDER_WEB_URL="http://${ZONEMINDER_DB_HOST}:${ZONEMINDER_WWW_PORT}"
 ZONEMINDER_API_VERSION=2
 ZONEMINDER_API_URL=$ZONEMINDER_WEB_URL/api
 ZONEMINDER_CCTV_MONITORS_CONFIGS_DIR=$PROJECT_CONTRIB_DIR/cameras
-ZONEMINDER_CCTV_MONITORS="sony_playstation_eye logitech_quickcam_communicate_stx logitech_c200"
+ZONEMINDER_CCTV_MONITORS="logitech_quickcam_communicate_stx logitech_c200 sony_playstation_eye"
 ZONEMINDER_CCTV_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/cctv-settings.cfg
 ZONEMINDER_CCTV_TEMP_MESSAGE_FILE=$TMPDIR/cctv_event_notice
 ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE=$TMPDIR/cctv_event_data
@@ -13946,8 +13946,49 @@ make_install_jambulatv
 }
 
 zoneminder_130_install () {
-cd /
-rsync -av $PROJECT_GITHUB_DIR/ZoneMinder/ $INSTALL_SRC_DIR/ZoneMinder/
+# Archive and Unpack specified ZoneMinder Tag
+# -------------------------------------------
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/ZoneMinder
+# Get latest ZoneMinder tag
+#ZONEMINDER_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+ZONEMINDER_TAG=master
+# Unpack desired git branch/tag
+case $ZONEMINDER_TAG in
+master)
+# master branch i.e. HEAD
+git archive --format tar.gz --prefix=ZoneMinder/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+;;
+*)
+# Check to see if desired branch/tag exists
+git tag -l | grep -x $ZONEMINDER_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+if [[ "$TAG_EXISTS" = "0" ]];
+then
+git archive --format tar.gz --prefix=ZoneMinder/ $ZONEMINDER_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=ZoneMinder/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Display Kodi's post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+ZoneMinder Version
+==================
+% The ZoneMinder branch you specified ($ZONEMINDER_TAG), does not exist, so I used master/ HEAD instead
+
+#
+EOF
+fi
+;;
+esac
+
+# Copy submodules
+# ---------------
+for SUBMODULE in Crud CakePHP-Enum-Behavior
+do
+rsync -av $PROJECT_GITHUB_DIR/ZoneMinder/web/api/app/Plugin/$SUBMODULE/ $INSTALL_SRC_DIR/ZoneMinder/web/api/app/Plugin/$SUBMODULE/
+done
+
 # Patches
 # Logitech Quickam USB webcams not displaying image: Replace LIBDIR variable in patch
 sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > $TMPDIR/zmdc.pl.patch
@@ -13955,7 +13996,6 @@ sed "s:LIBDIR:$LIBDIR:g" $PROJECT_PATCHES_DIR/zoneminder.zmdc.pl.patch > $TMPDIR
 patch -p1 $INSTALL_SRC_DIR/ZoneMinder/scripts/zmdc.pl.in < $TMPDIR/zmdc.pl.patch
 
 # API Bugs - Remove these patches when fixed
-# ------------------------------------------
 # Set require_once - includes to full path
 #patch -p1 $INSTALL_SRC_DIR/ZoneMinder/web/api/app/Config/bootstrap.php.in < $PROJECT_PATCHES_DIR/zoneminder.api.bootstrap.patch
 # Also set to full path in '../api/app/Controller/HostController.php'
@@ -13963,13 +14003,12 @@ patch -p1 $INSTALL_SRC_DIR/ZoneMinder/scripts/zmdc.pl.in < $TMPDIR/zmdc.pl.patch
 # Add/Edit/Delete of Monitors produces 'Insufficient privileges' errors 
 #patch -p1 $INSTALL_SRC_DIR/ZoneMinder/web/api/app/Controller/MonitorsController.php < $PROJECT_PATCHES_DIR/zoneminder.api.MonitorsController.patch
 
-
 # Get WWW User and Group
 set_www_user_group
 #
 cd $INSTALL_SRC_DIR/ZoneMinder
-# Compile using cmake
-cmake \
+# Build using cmake
+cmake VERBOSE=1 \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE=OFF \
 	-DCMAKE_INSTALL_PREFIX=$PREFIX \
@@ -13989,7 +14028,6 @@ cmake \
 	-DZM_WEB_USER=$WWW_USER \
 	-DZM_WEB_GROUP=$WWW_GROUP \
 	-DZM_DIR_EVENTS=$ZONEMINDER_CONTENT_DIR/events \
-	-DZM_DIR_IMAGES=$ZONEMINDER_CONTENT_DIR/images \
 	-DZM_DIR_SOUNDS=$ZONEMINDER_SOUNDS_DIR \
 	-DZM_PATH_ZMS=/zms-inetd \
 	-DZM_PATH_MAP=/dev/shm \
@@ -13999,13 +14037,13 @@ cmake \
 	-DZM_EXTRA_LIBS=ssl \
 	-DZM_MYSQL_ENGINE=InnoDB \
 	-DZM_NO_MMAP=OFF \
-	-DZM_NO_FFMPEG=OFF \
 	-DZM_NO_LIBVLC=OFF \
 	-DZM_NO_CURL=OFF \
 	-DZM_NO_X10=OFF \
 	-DZM_ONVIF=ON \
 	-DZM_SYSTEMD=ON \
 	.
+
 # Make and install
 make_install_jambulatv
 }
@@ -14087,7 +14125,7 @@ echo "GRANT ALL PRIVILEGES ON $ZONEMINDER_DB_NAME.* to $ZONEMINDER_DB_USER@local
 # ZM Options
 # ----------
 # Add customized data to Config table
-mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Config.13x.sql
+mysql -u $ZONEMINDER_DB_USER -p$ZONEMINDER_DB_PASS $ZONEMINDER_DB_NAME < $PROJECT_CONFIGS_DIR/zoneminder/Config-custom.sql
 
 # ZM Users
 # --------
