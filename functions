@@ -2453,11 +2453,11 @@ rm -rf $CONFDIR/icinga2*
 rm -f $CONFDIR/rc.d/rc{0,1,2,3,4,5,6}.d/*icinga2
 rm -f $CONFDIR/bash_completion.d/icinga2
 rm -f $LOGROTATE_CONF_DIR/icinga2
-rm -f $CONFDIR/sysconfig/icinga2
+rm -f $SYSCONFIG_DIR/icinga2
 # /var 
 rm -rf $STATEDIR/cache/icinga2 \
 rm -rf $STATEDIR/lib/icinga2 \
-rm -rf $STATEDIR/log/icinga2 \
+rm -rf $LOGDIR/icinga2 \
 rm -rf $SPOOLDIR/icinga2
 # /usr
 rm -f $SYSTEMD_UNITS_DIR_SYSTEM/icinga2.service
@@ -14864,7 +14864,8 @@ set_www_user_group
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/icinga2
 # Get latest icinga2 tag
-ICINGA2_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+#ICINGA2_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+ICINGA2_TAG=v2.12.3
 #
 # Unpack desired git branch/tag
 case $ICINGA2_TAG in
@@ -14876,7 +14877,7 @@ git archive --format tar.gz --prefix=icinga2/ HEAD | (cd $INSTALL_SRC_DIR/ && ta
 # Check to see if desired branch/tag exists
 git tag -l | grep -x $ICINGA2_TAG > /dev/null 2>&1
 TAG_EXISTS=$?
-if [ "$TAG_EXISTS" = "0" ];
+if [[ "$TAG_EXISTS" = "0" ]];
 then
 git archive --format tar.gz --prefix=icinga2/ $ICINGA2_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 else
@@ -15075,11 +15076,17 @@ chown -R $ICINGA_USER:$ICINGA_GROUP $LIBDIR/icinga2
 # $DATAROOTDIR/icinga2
 chown -R $ICINGA_USER:$ICINGA_GROUP $DATAROOTDIR/icinga2
 # /var/log/icinga2
-chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/log/icinga2
+chown -R $ICINGA_USER:$ICINGA_GROUP $LOGDIR/icinga2
 # /var/cache/icinga2
 chown -R $ICINGA_USER:$ICINGA_GROUP $STATEDIR/cache/icinga2
 # Copy icinga2 systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/icinga2.service $SYSTEMD_UNITS_DIR_USER/
+
+# Add Environment file for Systemd
+cat > $SYSCONFIG_DIR/icinga2 <<EOF
+ICINGA2_RUN_DIR="$RUNDIR"
+ICINGA2_ERROR_LOG="$LOGDIR/icinga2/error.log"
+EOF
 
 # Enable icinga2 features: command, livestatus, compatlog
 for ICINGA2_FEATURE in command livestatus compatlog
