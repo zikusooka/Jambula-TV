@@ -2895,8 +2895,7 @@ uninstall_firefox () {
 }
 
 uninstall_youtube_dl () {
-uninstall_python_pkgs youtube-dl
-uninstall_src_pkgs youtube-dl
+uninstall_python_pkgs youtube_dl
 }
 
 uninstall_netdata () {
