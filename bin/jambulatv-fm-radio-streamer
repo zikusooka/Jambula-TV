@@ -12,6 +12,9 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 # Source install functions
 . $PROJECT_FUNCTIONS_FILE
 #
+# Source global settings
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
 # Source Geo-location file used in extracting city and country of 
 # FM radio playlists
 [[ -e $GEOLOCATION_FILE ]] && . $GEOLOCATION_FILE
@@ -127,7 +130,7 @@ fm_radio_via_mpd_start
 else
 # Stream using CLI tool i.e. mplayer
 PULSEAUDIO_USER=$MULTIMEDIA_USER && \
-$MPLAYER_CMD -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 http://127.0.0.1:$FMRADIO_STREAMER_PORT > $FMRADIO_STREAMER_LOG_FILE 2>&1 &
+$MPLAYER_CMD -ao $AUDIO_OUTPUT_DRIVER::0 -novideo -nocache -nolirc -prefer-ipv4 http://127.0.0.1:$FMRADIO_STREAMER_PORT > $FMRADIO_STREAMER_LOG_FILE 2>&1 &
 fi
 ;;
 esac
