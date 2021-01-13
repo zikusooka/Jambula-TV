@@ -39,6 +39,7 @@ TVHEADEND_PREFERRED_FREQUENCY="594MHz"
 #  FUNCTIONS #
 ##############
 check_if_in_use () {
+TV_TYPE=DVB-T2
 CURRENT_PROFILES=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq -r '.entries[] | .profile' | sed 's:null::g')
 CURRENT_CHANNELS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq -r '.entries[] | .channel' | sed 's:null::g')
 #
