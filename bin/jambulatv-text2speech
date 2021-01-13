@@ -14,7 +14,7 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 
 # Play TTS audio using MPlayer
 TTS_PLAY_CMD="/usr/bin/mplayer"
-TTS_AUDIO_DRIVER="pulse"
+TTS_AUDIO_DRIVER="$AUDIO_OUTPUT_DRIVER"
 TTS_PLAY_CMD_AUDIO_GAIN=$(echo $@ | awk -F'=' '/gain/ {print $2}')
 #
 if [[ "x$TTS_PLAY_CMD_AUDIO_GAIN" = "x" ]];
