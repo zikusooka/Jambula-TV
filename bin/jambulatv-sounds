@@ -4,6 +4,13 @@
 # sounds at certain points of processing
 #
 # Jambula Labs @copyright 2020-2021 All rights reserved
+#
+#
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Variables
 SOUND_TYPE=$1
@@ -22,7 +29,7 @@ SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
 SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep ${SOUND_EFFECTS_WAITING_PATH##*/} | awk {'print $2'}
 )
 SOUND_PLAYER_CMD="/usr/bin/mplayer"
-SOUND_AUDIO_DRIVER="pulse"
+SOUND_AUDIO_DRIVER="$AUDIO_OUTPUT_DRIVER"
 
 ALERT_SOUND_AUDIO_GAIN=$(echo $@ | awk -F'=' '/gain/ {print $2}')
 # 
