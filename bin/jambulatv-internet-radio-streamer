@@ -10,6 +10,9 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 
 # Source install functions
 . $PROJECT_FUNCTIONS_FILE
+#
+# Source global settings
+. $PROJECT_GLOBAL_SETTINGS_FILE
 
 FFMPEG_CMD=/usr/bin/ffmpeg
 VLC_CMD=/usr/bin/cvlc
@@ -372,7 +375,7 @@ internet_radio_via_mpd_start
 else
 # Stream using CLI tool i.e. mplayer
 PULSEAUDIO_USER=$MULTIMEDIA_USER && \
-	$MPLAYER_CMD -noconsolecontrols -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 -loop 0 $WEBRADIO_STREAMER_URL > $WEBRADIO_STREAMER_LOG_FILE 2>&1 &
+	$MPLAYER_CMD -noconsolecontrols -ao $AUDIO_OUTPUT_DRIVER::0 -novideo -nocache -nolirc -prefer-ipv4 -loop 0 $WEBRADIO_STREAMER_URL > $WEBRADIO_STREAMER_LOG_FILE 2>&1 &
 fi
 ;;
 esac
@@ -399,7 +402,7 @@ internet_radio_via_mpd_start
 else
 # Stream using CLI tool i.e. mplayer
 PULSEAUDIO_USER=$MULTIMEDIA_USER && \
-	$MPLAYER_CMD -noconsolecontrols -ao pulse::0 -novideo -nocache -nolirc -prefer-ipv4 -loop 0 $WEBRADIO_STREAMER_URL > $WEBRADIO_STREAMER_LOG_FILE 2>&1 &
+	$MPLAYER_CMD -noconsolecontrols -ao $AUDIO_OUTPUT_DRIVER::0 -novideo -nocache -nolirc -prefer-ipv4 -loop 0 $WEBRADIO_STREAMER_URL > $WEBRADIO_STREAMER_LOG_FILE 2>&1 &
 fi
 #
 # Pause a bit to allow radio to settle
