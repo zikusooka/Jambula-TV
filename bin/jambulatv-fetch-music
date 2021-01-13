@@ -6,6 +6,12 @@
 # Jambula Labs @copyright 2020-2021 All rights reserved
 #
 #
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
 # Variables
 MUSIC_APPLICATION_ID=MY_PROJECT_NAME-Music-Downloader
 MUSIC_DOWNLOADS_DIR=MY_MUSIC_DOWNLOADS_DIRECTORY
@@ -16,11 +22,30 @@ MUSIC_SERVICE=$1
 MUSIC_CATEGORY=$2
 MUSIC_REQUESTED=$(echo $@ | sed "s: :+:g" | cut -d'+' -f3-)
 
+TIMEOUT_PROBE="60s"
+TIMEOUT_CMD="/usr/bin/timeout --preserve-status $TIMEOUT_PROBE"
+
+PING_TIMEOUT=3 #9
+PING_IP_ADDRESS=$PING_IP_ADDRESS
+
 
 
 ###############
 #  FUNCTIONS  #
 ###############
+
+check_internet_access () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+ping -w $PING_TIMEOUT $PING_IP_ADDRESS > /dev/null 2>&1
+INTERNET_ALIVE=$?
+if [ "$INTERNET_ALIVE" != "0" ];
+then
+# Log error of no Internet
+logger -s -t $(basename $0) "Error: Could not download music since there's no Internet connectivity"
+# Quit script, since there's no internet.  Leave exit status at 0 so systemd service works
+exit 0
+fi
+}
 
 pre_setup_all () {
 if [[ -d $MUSIC_DOWNLOADS_DIR ]];
@@ -54,7 +79,7 @@ echo "Error: The file $MUSIC_NOW_PLAYING_FILE was not found"
 exit 1
 fi
 # Set music name of song now playing
-MUSIC_NOW_PLAYING_SONG=$(tail -1 $MUSIC_NOW_PLAYING_FILE | cut -d')' -f2- | sed 's:^ ::g' | sed 's:Radio Edit::g')
+MUSIC_NOW_PLAYING_SONG=$(head -1 $MUSIC_NOW_PLAYING_FILE | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g')
 ;;
 
 demand)
@@ -81,7 +106,7 @@ fi
 YOUTUBE_SEARCH_TEXT=$(echo $MUSIC_NOW_PLAYING_SONG | sed 's:-: :g' | sed 's: :+:g')
 YOUTUBE_VARIABLES_TEMP_FILE=$(grep ^YOUTUBE_VARIABLES_TEMP_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g' | cut -d '.' -f1 | sed "s:\$YOUTUBE_SEARCH_TEMP_DIR:MY_TMPDIR:g").${YOUTUBE_SEARCH_TEXT}
 
-# Printsearching notification to systemd journal and console
+# Print searching notification to systemd journal and console
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Searching for [$MUSIC_NOW_PLAYING_SONG] from [$MUSIC_SERVICE], please be patient ..."
 #
@@ -104,18 +129,41 @@ fi
 
 download_music_from_youtube () {
 YOUTUBE_MUSIC_FORMAT=best
-YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
-YOUTUBE_DL_OPTS="-q -4 -i --ignore-config --prefer-insecure --no-check-certificate --geo-bypass"
+YOUTUBE_MAX_FILE_SIZE=25m
+YOUTUBE_DL_CMD="$TIMEOUT_CMD /usr/bin/youtube-dl"
+YOUTUBE_DL_OPTS="-v -4 -i --ignore-config --prefer-insecure --no-check-certificate --geo-bypass --max-filesize $YOUTUBE_MAX_FILE_SIZE"
+YOUTUBE_ERROR_LOG_FILE=/tmp/youtube_dl_fetch_music.log
 #
 # Print started notification to systemd journal and console
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Downloading the song now playing [$MUSIC_NOW_PLAYING_SONG] from [$MUSIC_SERVICE], please be patient ..."
 #
-# Download & extract best audio format & convert to desired format - mp3
-$YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_DOWNLOADS_DIR/"%(title)s.%(artist)s.%(ext)s" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title "%(title)s.%(artist)s" $YOUTUBE_VIDEO_URL > /dev/null 2>&1
+# Download & extract best audio format & convert 2 desired format - mp3
+$YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_DOWNLOADS_DIR/"%(title)s.%(artist)s.%(ext)s" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title "%(title)s.%(artist)s" $YOUTUBE_VIDEO_URL > $YOUTUBE_ERROR_LOG_FILE 2>&1
+FETCH_STATUS=$?
+#
+# Filter out errors from log file
+grep "File is larger than max-filesize" $YOUTUBE_ERROR_LOG_FILE > /dev/null 2>&1
+ERROR_FILE_IS_LARGE=$?
+#
+if [[ "$FETCH_STATUS" = "0"  && "$ERROR_FILE_IS_LARGE" != "0" ]];
+then
 # Print completed notification to systemd journal and console
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Completed download of the song [$MUSIC_NOW_PLAYING_SONG]. It is saved under: $MUSIC_DOWNLOADS_DIR"
+
+elif [[ "$FETCH_STATUS" = "0"  && "$ERROR_FILE_IS_LARGE" = "0" ]];
+then
+# Print error log for large files to systemd journal and console
+clear
+logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_NOW_PLAYING_SONG] because the file is larger than i.e. $YOUTUBE_MAX_FILE_SIZE"
+
+elif [[ "$FETCH_STATUS" != "0"  && "$ERROR_FILE_IS_LARGE" != "0" ]];
+then
+# Print error log for unfinished fetch to systemd journal and console
+clear
+logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_NOW_PLAYING_SONG] because the process did not complete. Please try again"
+fi
 }
 
 
@@ -124,6 +172,7 @@ logger -s -t $MUSIC_APPLICATION_ID "Completed download of the song [$MUSIC_NOW_P
 #  MAIN SCRIPT  #
 #################
 
+check_internet_access
 pre_setup_all
 
 case $MUSIC_SERVICE in
