@@ -97,7 +97,7 @@ fi
 
 wifi_hardware () {
 # Access Point
-IEEE_OUI_COMPANY_ID_AP=$(iw dev | grep -B2 -i 'type AP' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g' | head -1) 
+IEEE_OUI_COMPANY_ID_AP=$(/usr/sbin/iw dev | grep -B2 -i 'type AP' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g' | head -1) 
 if [[ "x$IEEE_OUI_COMPANY_ID_AP" != "x" ]];
 then
 WIFI_AP_CHIPSET=$(grep -i "$IEEE_OUI_COMPANY_ID_AP" $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5FS$6FS$7'})
@@ -106,7 +106,7 @@ WIFI_AP_CHIPSET="${RED}No Access Point found${RST}"
 fi
 #
 # Station
-IEEE_OUI_COMPANY_ID_ST=$(iw dev | grep -i -B2 'type managed' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g' | head -1) 
+IEEE_OUI_COMPANY_ID_ST=$(/usr/sbin/iw dev | grep -i -B2 'type managed' | grep addr | awk {'print $2'} | cut -d ':' -f1-3 | sed 's/://g' | head -1) 
 if [[ "x$IEEE_OUI_COMPANY_ID_ST" != "x" ]];
 then
 WIFI_CLIENT_CHIPSET=$(grep -i "$IEEE_OUI_COMPANY_ID_ST" $IEEE_OUI_HWDATA_FILE | awk {'print $4FS$5'})
