@@ -12445,7 +12445,7 @@ ldconfig
 #
 # Add asterisk group and user 
 groupadd -r asterisk
-useradd -r -M -c "Asterisk PBX User" -d $SPOOLDIR/asterisk -g asterisk asterisk -s /sbin/nologin
+useradd -r -M -c "Asterisk PBX User" -d $SPOOLDIR/asterisk -g asterisk asterisk -s /bin/bash
 # Give asterisk user access to audio devices and pulse access
 usermod -a -G audio,pulse,pulse-access asterisk
 }
