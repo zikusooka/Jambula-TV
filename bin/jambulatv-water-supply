@@ -19,8 +19,8 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 # other variables
 REMOTE_HOST=jambulatv-client2
 REMOTE_USER=jambula
-WATER_REPORTS_DIR_REMOTE=/var/tmp/water_reports
-WATER_REPORTS_DIR_LOCAL=$TMPDIR/water_reports
+WATER_REPORTS_DIR_REMOTE=$STATEDIR/tmp/water_reports
+WATER_REPORTS_DIR_LOCAL=$STATEDIR/tmp/water_reports
 
 WATER_REPORT_TODAY=$(date +%Y%m%d).txt
 WATER_REPORT_YESTERDAY=$(date --date='yesterday' +%Y%m%d).txt
@@ -28,6 +28,11 @@ WATER_REPORT_2_DAYS_AGO=$(date --date='2 days ago' +%Y%m%d).txt
 WATER_REPORT_3_DAYS_AGO=$(date --date='3 days ago' +%Y%m%d).txt
 
 MQTT_TOPIC_STATUS_WATER_SUPPLY=JambulaTV/house/status/water_supply
+MQTT_TOPIC_STATUS_WATER_TANK=JambulaTV/house/status/water_tank
+MQTT_TOPIC_STATUS_WATER_READING_TODAY=JambulaTV/house/status/water_reading_today
+MQTT_TOPIC_STATUS_WATER_READING_YESTERDAY=JambulaTV/house/status/water_reading_yesterday
+MQTT_TOPIC_STATUS_WATER_USAGE_DAILY=JambulaTV/house/status/water_usage_daily
+MQTT_TOPIC_STATUS_WATER_USAGE_MONTHLY=JambulaTV/house/status/water_usage_monthly
 
 SCRIPT_USER=$(whoami)
 
@@ -48,18 +53,19 @@ mqtt_publish_water_supply_report_missing () {
 $MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "unavailable"
 }
 
+mqtt_publish_water_tank_low () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "low"
+}
+
+mqtt_publish_water_reading () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "$2"
+}
+
 connectivity_2_remote_host () {
 PING_COUNT=2
 PING_TIMEOUT=2
 ping -c $PING_COUNT -W $PING_TIMEOUT $REMOTE_HOST > /dev/null 2>&1
 REMOTE_HOST_REACHEABLE=$?
-#
-# Notify via mqtt and logger, then quit when there's NO Internet 
-if [ "$REMOTE_HOST_REACHEABLE" != "0" ];
-then
-logger -s -t $(basename $0) "The remote host at $REMOTE_HOST hosting the water readings is not reacheable. Please check that it is powered on"
-exit 0
-fi
 }
 
 pre_setup () {
@@ -77,14 +83,25 @@ check_existence_of_todays_water_report_at_localhost () {
 check_existence_of_todays_water_report_at_remote_host () {
 connectivity_2_remote_host
 #
+if [[ "$REMOTE_HOST_REACHEABLE" = "0" ]];
+then
+# Report at remote host is missing
 ssh $REMOTE_USER@$REMOTE_HOST [[ -e "$WATER_REPORTS_DIR_REMOTE/$WATER_REPORT_TODAY" ]] || export REPORT_TODAY_MISSING_REMOTE_HOST=yes
+
+else
+# Notify via logger when there's NO connectivity to remote host
+logger -s -t $(basename $0) "The remote host at $REMOTE_HOST hosting the water readings is not reacheable. Please check that it is powered on"
+fi
 }
 
 fetch_water_reports_if_available () {
 # Check for water reading at remote host
 check_existence_of_todays_water_report_at_remote_host
 #
-if [[ "$REPORT_TODAY_MISSING_REMOTE_HOST" != "yes" ]];
+# Check for water reading at localhost
+check_existence_of_todays_water_report_at_localhost
+#
+if [[ "$REMOTE_HOST_REACHEABLE" = "0" && "$REPORT_TODAY_MISSING_REMOTE_HOST" != "yes" ]];
 then
 	# Sync water report files from remote host to local machine 
 	for FILE in $WATER_REPORT_TODAY $WATER_REPORT_YESTERDAY $WATER_REPORT_2_DAYS_AGO $WATER_REPORT_3_DAYS_AGO;
@@ -92,23 +109,55 @@ then
 	rsync -av -u $REMOTE_USER@$REMOTE_HOST:$WATER_REPORTS_DIR_REMOTE/$FILE $WATER_REPORTS_DIR_LOCAL/
 	done
 
-elif [[ "$REPORT_TODAY_MISSING_REMOTE_HOST" = "yes" ]];
+elif [[ "$REMOTE_HOST_REACHEABLE" != "0" && "$REPORT_TODAY_MISSING_LOCALHOST" != "yes" ]];
 then
-	# Check for water reading at localhost
-	check_existence_of_todays_water_report_at_localhost
-	#
-	if [[ "$REPORT_TODAY_MISSING_LOCALHOST" != "yes" ]];
-	then
+	# Continue to next since local water report was found
 	continue
-	fi
 
 else
-# If today's water report is missing, notify, post mqtt status
-# and quit 
+# If today's water report is missing, notify via mqtt and quit 
 mqtt_publish_water_supply_report_missing $MQTT_TOPIC_STATUS_WATER_SUPPLY
 	logger -s -t $(basename $0) "Today's water report ($WATER_REPORT_TODAY) was not found either locally or at $REMOTE_HOST"
 	exit 0
 fi
+}
+
+calculate_water_usage_monthly () {
+RUN=1
+END=30
+WATER_USAGE_MONTHLY_LOG=/tmp/water_usage_monthly_log
+
+# Remove previous monthly water usage log file if it exists
+[[ -e $WATER_USAGE_MONTHLY_LOG ]] && rm -f $WATER_USAGE_MONTHLY_LOG
+
+# Cycle through all 30 days
+while [[ "$RUN" -ge "1" && "$RUN" -le "$END" ]];
+do
+
+let "PREVIOUS_RUN=$RUN-1"
+WATER_REPORT_FILE_1=$WATER_REPORTS_DIR_LOCAL/$(date --date="$PREVIOUS_RUN days ago" +%Y%m%d).txt
+WATER_REPORT_FILE_2=$WATER_REPORTS_DIR_LOCAL/$(date --date="$RUN days ago" +%Y%m%d).txt
+#
+if [[ -f "$WATER_REPORT_FILE_1" ]] && [[ -f "$WATER_REPORT_FILE_2" ]];
+then
+#
+WATER_READING_1=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORT_FILE_1)
+WATER_READING_2=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORT_FILE_2)
+#
+WATER_USAGE=$(echo "$WATER_READING_1 - $WATER_READING_2" | bc | xargs printf '%.2f')
+#
+# Add incremental water usage to log file for computation
+printf "$WATER_USAGE+" >> $WATER_USAGE_MONTHLY_LOG
+fi
+
+# Set counters
+WATER_USAGE_PREVIOUS=$WATER_USAGE
+let "RUN = $RUN + 1"
+
+done
+
+# Remove trailing '+'
+sed -i 's:+$::g' $WATER_USAGE_MONTHLY_LOG
 }
 
 extract_water_reading_and_flow_state () {
@@ -125,6 +174,23 @@ WATER_FLOWING_TODAY=$(awk -F'=' '/WATER_FLOWING/ {print $2}' $WATER_REPORTS_DIR_
 WATER_FLOWING_YESTERDAY=$(awk -F'=' '/WATER_FLOWING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY)
 WATER_FLOWING_2_DAYS_AGO=$(awk -F'=' '/WATER_FLOWING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_2_DAYS_AGO)
 
+# Water Usage - Daily
+WATER_USAGE_DAILY=$(echo "$WATER_READING_TODAY-$WATER_READING_YESTERDAY" | bc | xargs printf '%.2f')
+
+# Water Usage - Monthly (cumulative total)
+calculate_water_usage_monthly
+WATER_USAGE_MONTHLY=$(echo $(cat $WATER_USAGE_MONTHLY_LOG) | bc | xargs printf '%.2f')
+
+# Publish water reading via MQTT - Today
+mqtt_publish_water_reading $MQTT_TOPIC_STATUS_WATER_READING_TODAY $WATER_READING_TODAY
+# Publish water reading via MQTT - Yesterday
+mqtt_publish_water_reading $MQTT_TOPIC_STATUS_WATER_READING_YESTERDAY $WATER_READING_YESTERDAY
+
+# Publish water usage via MQTT - Daily
+mqtt_publish_water_reading $MQTT_TOPIC_STATUS_WATER_USAGE_DAILY $WATER_USAGE_DAILY
+# Publish water usage via MQTT - Monthly
+mqtt_publish_water_reading $MQTT_TOPIC_STATUS_WATER_USAGE_MONTHLY $WATER_USAGE_MONTHLY
+
 else
 # If today's water report is missing, notify, post mqtt status
 # and quit 
@@ -135,10 +201,24 @@ fi
 }
 
 analyze_and_report_water_status () {
+# Water not flowing for 2 days
+# ---
 if [[ "$WATER_READING_TODAY" = "$WATER_READING_YESTERDAY" && "$WATER_READING_TODAY" = "$WATER_READING_2_DAYS_AGO" ]] || \
-	[[ "$WATER_FLOWING_TODAY" = "$WATER_FLOWING_YESTERDAY" && "$WATER_FLOWING_TODAY" = "$WATER_FLOWING_2_DAYS_AGO" ]]
+	[[ "$WATER_FLOWING_TODAY" = "n" && "$WATER_FLOWING_YESTERDAY" = "n" && "$WATER_FLOWING_2_DAYS_AGO" = "n" ]]
 then
-# Running low on water, send to MQTT water supply topic
+
+# Water supply is off, send to MQTT water supply topic
+mqtt_publish_water_supply_off $MQTT_TOPIC_STATUS_WATER_SUPPLY
+#
+# Water tank is running low, send to MQTT water tank topic
+mqtt_publish_water_tank_low $MQTT_TOPIC_STATUS_WATER_TANK
+
+# Water not flowing today
+# ---
+elif [[ "$WATER_READING_TODAY" = "$WATER_READING_YESTERDAY" ]] || \
+	[[ "$WATER_FLOWING_TODAY" = "n" ]]
+then
+# Water supply is off, send to MQTT water supply topic
 mqtt_publish_water_supply_off $MQTT_TOPIC_STATUS_WATER_SUPPLY
 
 else
