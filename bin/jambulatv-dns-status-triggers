@@ -308,6 +308,10 @@ update_clock_time offline
 # Kill using PID obtained y grep
 [[ "x$SSHUTTLE_PID" != "x" ]] && kill -15 $SSHUTTLE_PID
 
+# Remove stale files left behind by Internet Radio streamer
+# ---------------------------------------------------------
+[[ -e $WEBRADIO_STREAMER_PID_FILE ]] && sudo rm -f $WEBRADIO_STREAMER_PID_FILE
+
 
 else
 # Debug
