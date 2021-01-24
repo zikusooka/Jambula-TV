@@ -325,6 +325,7 @@ netdata_configure
 }
 
 upgrade_pulseaudio () {
+uninstall_src_pkgs fluidsynth
 uninstall_python_pkgs pyalsaaudio
 uninstall_src_pkgs alsa-plugins
 uninstall_src_pkgs pulseaudio 
@@ -332,6 +333,7 @@ uninstall_src_pkgs pulseaudio
 pulseaudio_install
 alsa_plugins_install
 pyalsaaudio_install
+fluidsynth_install
 }
 
 upgrade_live555 () {
