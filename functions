@@ -4313,9 +4313,11 @@ pulseaudio_install () {
 tar xvf $PROJECT_TARBALLS_DIR/pulseaudio-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v pulseaudio-* pulseaudio
 # Compile
-cd $INSTALL_SRC_DIR/pulseaudio && ./configure --prefix=$PREFIX \
---libdir=$LIBDIR --sysconfdir=$CONFDIR --localstatedir=$STATEDIR \
---enable-alsa PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
+cd $INSTALL_SRC_DIR/pulseaudio
+./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
+	--localstatedir=$STATEDIR --disable-x11 --disable-bluez5 \
+	PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
+# Install
 make_install_jambulatv
 # Add pulse groups
 for PULSE_GROUP in pulse pulse-access
