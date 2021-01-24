@@ -12575,6 +12575,18 @@ chmod -R 754 $ASTERISK_CONF_DIR
 
 # Copy logrotate file to reduce size of asterisk logs
 cp -v $PROJECT_CONFIGS_DIR/logrotate/asterisk $LOGROTATE_CONF_DIR
+
+# Permit asterisk user to run some commands as root
+cat > $SUDOERS_DIR/asterisk << EOF
+# Don't require TTY
+Defaults:asterisk    !requiretty
+# Set Command Aliases
+Cmnd_Alias ASTERISKUSER = /usr/bin/grep
+# Set User actions
+asterisk             ALL = NOPASSWD: ASTERISKUSER
+EOF
+# Change sudoer permissions
+chmod 0440 $SUDOERS_DIR/asterisk
 }
 
 chan_dongle_install () {
