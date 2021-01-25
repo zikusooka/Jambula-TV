@@ -56,6 +56,9 @@ openssl111_install
 # Install current gnutls
 gnutls_install
 
+# Install current curl
+curl_install
+
 # Install expat - needed for python3
 expat_install
 
