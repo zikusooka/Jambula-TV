@@ -207,6 +207,7 @@ openssl_configure
 wol_configure 
 system_sounds_configure
 optical_disc_drive_configure
+smartd_setup
 # Run these before icinga configure
 chrony_configure
 dnsmasq_configure

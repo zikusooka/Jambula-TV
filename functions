@@ -592,6 +592,9 @@ LXDE_AUTOSTART_FILE=$LXDE_AUTOSTART_DIR/autostart
 XDG_AUTOSTART_DIR=$CONFDIR/xdg/autostart
 
 UUID_ROOT_PARTITION=`cat /etc/fstab | sed /^#/d | grep '1 1' | awk {'print $1'} | cut -d '=' -f2`
+
+SMARTD_CONFIG_FILE=$CONFDIR/smartmontools/smartd.conf
+
 GRUB2_BOOT_DIR=/boot/grub2
 GRUB2_BOOT_FILE=$GRUB2_BOOT_DIR/grub.cfg
 GRUB2_CONFIG_DIR=/etc/grub.d
@@ -782,6 +785,9 @@ MQTT_TOPIC_PRESENCE_HOSTAPD=JambulaTV/house/presence/hostapd
 MQTT_TOPIC_PRESENCE_MIFI=JambulaTV/house/presence/mifi
 MQTT_TOPIC_PRESENCE_TRACKERJACKER=JambulaTV/house/presence/trackerjacker
 MQTT_TOPIC_STATUS_MIFI=JambulaTV/house/status/mifi
+
+# SMARTD 
+MQTT_TOPIC_SMARTD_HEALTH_INFO=JambulaTV/house/status/smartd
 
 # Presence via MiFi
 PRESENCE_VIA_MIFI_CHECK_INTERVAL_SECS=60
@@ -1243,6 +1249,7 @@ PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL=$BINARY_PREFIX/jambulatv-presence-detec
 PRESENCE_DETECTION_VIA_TRACKER_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-trackerjacker
 REVERSE_SSH_TOOL=$BINARY_PREFIX/jambulatv-reverse-ssh-tunnel
 SCREEN_DISPLAY_TOOL=$BINARY_PREFIX/jambulatv-display
+SMARTD_HEALTH_ALERT_TOOL=$BINARY_PREFIX/jambulatv-smartd-disk-health-notifications
 SMS_VIA_MODEMMANAGER_TOOL=$BINARY_PREFIX/jambulatv-sms-via-modemmanager
 SMS_WRAPPER_TOOL=$BINARY_PREFIX/jambulatv-sms-wrapper
 SOUNDS_TOOL=$BINARY_PREFIX/jambulatv-sounds
@@ -1371,8 +1378,6 @@ WGET_FAILED_NOTIFICATION_MESSAGE="Error: Failed to download the following file:"
 TVHEADEND_RESET_MESSAGE="Reset of TV server has been requested"
 TVHEADEND_NO_TUNER_FOUND_MESSAGE="No DVB-T Adapter was detected!  Please insert the DVB-T device before continuing. You must also ensure the TV Antenna is hooked up properly"
 TVHEADEND_WAITING_4_SERVER_MESSAGE="Waiting for tvheadend.service to settle. Please be patient"
-
-
 AGREEMENT_DVBT_CONFIGURE_NO_MESSAGE="You did not agree to configuring DVB-T, so quitting"
 DVBT_NETWORK_EXISTS_MESSAGE="Warning: DVB-T network ($DVBT_NETWORK_NAME) already exists"
 DVBT_MULTIPLEX_NOT_FOUND_MESSAGE="Error: No multiplexes were found for $TV_MARKET"
@@ -1434,6 +1439,7 @@ TV_RECORDING_ABORTED_MESSAGE="Aborted the TV recording: "
 JAMBULATV_UPDATES_IN_PROGRESS_NOTIFICATION_MESSAGE="IMPORTANT: System update in progress.  Please do not power off.  You will be notified when done"
 JAMBULATV_UPDATES_FAILED_NOTIFICATION_MESSAGE="WARNING: System update failed, I will try later"
 JAMBULATV_UPDATES_COMPLETED_NOTIFICATION_MESSAGE="System updates have completed.  You may now power off if desired"
+SMARTD_DISK_FAILING_NOTIFICATION_MESSAGE="WARNING: The hard drive [$DISK_INFO] is failing i.e. $DISK_NOTICE - $DISK_DATE_SEEN"
 }
 
 print_notification () {
@@ -8611,6 +8617,25 @@ mount -a
 usermod -a -G cdrom $MULTIMEDIA_USER
 #
 fi
+}
+
+smartd_setup () {
+echo "# SMART Disk Monitoring Daemon Configuration File for: JambulaTV
+#
+DEVICESCAN -H -m <nomailer> -M exec $SMARTD_HEALTH_ALERT_TOOL" > $SMARTD_CONFIG_FILE
+
+# Copy jambulatv-smartd-disk-health-notifications script, if it does 
+# not exist in bin directory
+if [[ ! -e $SMARTD_HEALTH_ALERT_TOOL ]];
+then 
+cp -v $PROJECT_BIN_DIR/jambulatv-smartd-disk-health-notifications $BINARY_PREFIX/jambulatv-smartd-disk-health-notifications
+# Make script executable
+chmod 755 $SMARTD_HEALTH_ALERT_TOOL
+fi
+
+# Enable & restart smartd systemd unit
+systemctl enable smartd.service
+systemctl restart smartd.service
 }
 
 global_settings_configure () {

@@ -1,0 +1,96 @@
+#!/bin/sh
+# This script is used by smartd daemon to notify us whenever a warning
+# or error is observed on any of our installed disks  
+#
+# NOTE: This script should not be run as a standalone, instead add it
+# to the smartmontools SMARTD configuration file i.e. smartd.conf
+#
+# Jambula Labs @copyright 2020-2021 All rights reserved
+#
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
+
+# Source install functions
+. $PROJECT_FUNCTIONS_FILE
+
+# Variables
+DISK_NODE=$SMARTD_DEVICE
+DISK_NOTICE=$(echo "$SMARTD_MESSAGE" | sed "s/Device: //g")
+DISK_INFO_1=$(echo $SMARTD_DEVICEINFO | cut -d',' -f1)
+DISK_INFO_2=$(echo $SMARTD_DEVICEINFO | rev | awk -F ' ,' '{print $1}' | rev)
+DISK_INFO="$DISK_INFO_1 $DISK_INFO_2"
+DISK_DATE_SEEN=$SMARTD_TFIRST
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+notify_via_logger () {
+# Source notification strings
+set_notifications
+#
+# Print notifciation to stdout and systemd journal 
+print_notification "$SMARTD_DISK_FAILING_NOTIFICATION_MESSAGE" text
+}
+
+notify_via_osd () {
+# Source notification strings
+set_notifications
+#
+# Print notifciation to stdout and systemd journal 
+print_notification "$SMARTD_DISK_FAILING_NOTIFICATION_MESSAGE" osd
+}
+
+notify_via_mqtt () {
+# Source notification strings
+set_notifications
+#
+# Publish disk failure notice
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_SMARTD_HEALTH_INFO" -m "$SMARTD_DISK_FAILING_NOTIFICATION_MESSAGE"
+}
+
+notify_via_telegram () {
+# Source notification strings
+set_notifications
+#
+# Send Message
+$TELEGRAM_TOOL SendMessage "[$PROJECT_NAME] $SMARTD_DISK_FAILING_NOTIFICATION_MESSAGE" &
+}
+
+notify_via_whatsapp () {
+# Source notification strings
+set_notifications
+#
+# Send Message
+sudo $WHATSAPP_TOOL sendmessage "[$PROJECT_NAME] $SMARTD_DISK_FAILING_NOTIFICATION_MESSAGE" $WHATSAPP_PHONE_NUMBER_RECIPIENT > /dev/null 2>&1
+}
+
+notify_via_email () {
+# Source notification strings
+set_notifications
+#
+EMAIL_NOTIFICATION_ADDRESS=$(query_mysql_db notification_email_address)
+EMAIL_NOTIFICATION_SUBJECT="[$PROJECT_NAME] Disk ($DISK_INFO) is Failing"
+$EMAIL_VIA_GMAIL_TOOL $EMAIL_NOTIFICATION_ADDRESS "$EMAIL_NOTIFICATION_SUBJECT" "$SMARTD_DISK_FAILING_NOTIFICATION_MESSAGE"
+}
+
+
+
+################
+#  MAIN SCRIPT #
+################
+
+notify_via_logger
+
+notify_via_mqtt
+
+notify_via_osd
+
+check_internet_connectivity_ping && notify_via_telegram
+
+check_internet_connectivity_ping && notify_via_whatsapp
+
+check_internet_connectivity_ping && notify_via_email
