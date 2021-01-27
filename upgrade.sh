@@ -68,7 +68,7 @@ kodi_addons_install
 kodi_addons_configure
 kodi_skin_customization
 kodi_scripts
-IR_REMOTE="vr-100" && kodi_remote_configure
+IR_REMOTE="vr-1100" && uninstall_src_pkgs inputlirc > /dev/null 2>&1 && kodi_remote_configure
 }
 
 upgrade_kodi_addons () {
