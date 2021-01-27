@@ -10938,7 +10938,7 @@ python3 setup.py build_lazy_extractors
 python3 setup.py build_lazy_extractors install
 #
 # Create symbolic link to youtube-dl binary in /usr/local/bin
-ln -s $PREFIX/local/bin/youtube-dl $BINARY_PREFIX/youtube-dl
+ln -s -f $PREFIX/local/bin/youtube-dl $BINARY_PREFIX/youtube-dl
 }
 
 youtube_setup () {
