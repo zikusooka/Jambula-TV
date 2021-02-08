@@ -617,7 +617,19 @@ PULSE_ROOT_CONFIG_DIR=/root/.config/pulse
 PULSE_MULTIMEDIA_USER_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.config/pulse
 PULSE_SERVER_SOCKET=$TMPDIR/pulse-server
 
+PULSE_CONTROL_CMD=$BINARY_PREFIX/pactl
+
 DEFAULT_AUDIO_OUTPUT_DRIVER=pulse
+
+ALSA_MIXER_CMD=/usr/bin/amixer
+ALSA_CONTROL_CMD=/usr/sbin/alsactl
+ALSA_STATE_FILE=/var/lib/alsa/asound.state
+ALSA_CARD_NO=0
+
+ALSA_VOLUME_MASTER="67%"
+ALSA_VOLUME_LINE_IN="2%"
+ALSA_VOLUME_LINE_IN_BOOST="0%"
+ALSA_VOLUME_OTHER="100%"
 
 CHRONY_KEYS_FILE=/etc/chrony.keys
 CHRONYC_CMD=$BINARY_PREFIX/chronyc
@@ -4397,10 +4409,10 @@ $BINARY_PREFIX/dbus-launch $BINARY_PREFIX/pulseaudio -D -n --load="module-udev-d
 fi
 
 # Default sink, source, tvcard loopback device (if any)
-PULSE_DEFAULT_SINK=$($BINARY_PREFIX/pactl info | awk -F': ' '/Default Sink/ {print $2}')
-PULSE_DEFAULT_SOURCE=$($BINARY_PREFIX/pactl info | awk -F': ' '/Default Source/ {print $2}')
+PULSE_DEFAULT_SINK=$($PULSE_CONTROL_CMD info | awk -F': ' '/Default Sink/ {print $2}')
+PULSE_DEFAULT_SOURCE=$($PULSE_CONTROL_CMD info | awk -F': ' '/Default Source/ {print $2}')
 PULSE_LINE_IN_SOURCE=$(echo $PULSE_DEFAULT_SINK | sed 's:output:input:g')
-TV_AUDIO_SOURCE=$($BINARY_PREFIX/pactl list | grep -B1 'SAA713' | grep alsa_input | cut -d : -f2 | sed 's/ //g')
+TV_AUDIO_SOURCE=$($PULSE_CONTROL_CMD list | grep -B1 'SAA713' | grep alsa_input | cut -d : -f2 | sed 's/ //g')
 
 # Notify of missing sinks or sources
 if [[ "x$PULSE_DEFAULT_SINK" = "x" ]] || [[ "x$PULSE_DEFAULT_SOURCE" = "x" ]];
@@ -4419,12 +4431,52 @@ Pulseaudio Sinks/Sources not configured
  
 % TIP: Ensure pulseaudio is running first and then execute the following commands:
 
-  $BINARY_PREFIX/pactl info | awk -F': ' '/Default Sink/ {print $2}'
-   $BINARY_PREFIX/pactl info | awk -F': ' '/Default Source/ {print $2}'
+  $PULSE_CONTROL_CMD info | awk -F': ' '/Default Sink/ {print $2}'
+  $PULSE_CONTROL_CMD info | awk -F': ' '/Default Source/ {print $2}'
 
 #
 EOF
 fi
+}
+
+alsa_mixer_configure () {
+# Master
+$ALSA_MIXER_CMD -c $ALSA_CARD_NO sset Master $ALSA_VOLUME_MASTER,$ALSA_VOLUME_MASTER unmute > /dev/null 2>&1
+logger -t $(basename $0) -s "ALSA mixer level for [Master] set to [$ALSA_VOLUME_MASTER]"
+
+# Others: Headphone, PCM, Front, Surround, Center, LFE
+$ALSA_MIXER_CMD -c $ALSA_CARD_NO scontrols | grep -v -e Master -e Mic -e Line -e IEC958 -e Capture -e Input -e Loopback -e Beep -e Auto-Mute -e Digital -e Independent | awk {'print $4'} | while read SCONTROL;
+do
+# Set other control to ${ALSA_VOLUME_OTHER}
+SCONTROL=$(echo $SCONTROL | sed "s:,0::g" | sed "s:'::g")
+$ALSA_MIXER_CMD -c $ALSA_CARD_NO sset $SCONTROL $ALSA_VOLUME_OTHER,$ALSA_VOLUME_OTHER unmute > /dev/null 2>&1
+logger -t $(basename $0) -s "ALSA mixer level for [$SCONTROL] set to [$ALSA_VOLUME_OTHER]"
+done
+
+# Loopback: Line-In interface
+$ALSA_MIXER_CMD -c $ALSA_CARD_NO set 'Loopback Mixing' Enabled > /dev/null 2>&1
+$ALSA_MIXER_CMD -c $ALSA_CARD_NO sset 'Line' $ALSA_VOLUME_LINE_IN unmute > /dev/null 2>&1
+$ALSA_MIXER_CMD -c $ALSA_CARD_NO sset 'Line Boost' $ALSA_VOLUME_LINE_IN_BOOST > /dev/null 2>&1
+
+# Save all settings
+$ALSA_CONTROL_CMD -f $ALSA_STATE_FILE store $ALSA_CARD_NO
+
+# Configure ALSA store and restore systemd units
+for SYSTEMD_UNIT in alsa-store alsa-restore
+do
+# Remove original systemd unit if it exists
+[[ -e $SYSTEMD_UNITS_DIR_SYSTEM/${SYSTEMD_UNIT}.service ]] && \
+	rm -f $SYSTEMD_UNITS_DIR_SYSTEM/${SYSTEMD_UNIT}.service
+# Copy systemd unit file ${SYSTEMD_UNIT}
+cat $PROJECT_INIT_SCRIPTS_DIR/${SYSTEMD_UNIT}.service | \
+	sed -e "s:MY_ALSA_CONTROL_CMD:$ALSA_CONTROL_CMD:g" | \
+	sed -e "s:MY_ALSA_STATE_FILE:$ALSA_STATE_FILE:g" \
+		> $SYSTEMD_UNITS_DIR_USER/${SYSTEMD_UNIT}.service
+# Reload systemd daemon
+systemctl --system daemon-reload
+# Start systemd unit
+systemctl start ${SYSTEMD_UNIT}.service
+done
 }
 
 pulseaudio_configure () {
@@ -4562,10 +4614,9 @@ load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;$NETWORK_WIRED_MASK
 load-module module-loopback latency_msec=1 source=$PULSE_LINE_IN_SOURCE sink=$PULSE_DEFAULT_SINK
 EOF
 
-# Enable ALSA loopback i.e. Line-In interface
-/usr/bin/amixer -c 0 set 'Loopback Mixing' Enabled > /dev/null 2>&1
-/usr/bin/amixer -c 0 sset 'Line' 50% unmute > /dev/null 2>&1
-/usr/bin/amixer -c 0 sset 'Line Boost' 50% > /dev/null 2>&1
+# Setup ALSA mixer levels
+# ---
+alsa_mixer_configure
 
 # Update pulseaudio config file: client.conf
 # ---
