@@ -15,12 +15,6 @@ SPEAKER_VOLUME_TYPE=$1
 SPEAKER_VOLUME_LOCATION=$2
 SPEAKER_VOLUME_LEVEL=$3
 
-# PID files for streamer tools
-FMRADIO_STREAMER_PID_FILE=$TMPDIR/fmradio_process_ids
-WEBRADIO_STREAMER_PID_FILE=$TMPDIR/webradio_process_ids
-
-PACTL_CMD=/usr/bin/pactl
-
 MPC_CMD=/usr/bin/mpc
 MPD_LOCAL_PORT=$MPD_PORT
 
@@ -38,7 +32,7 @@ cat <<EOT
 Usage: ./$(basename $0) [SPEAKER_VOLUME_TYPE] [SPEAKER_VOLUME_LOCATION] [SPEAKER_VOLUME_LEVEL or STATUS]
 
 Example: 
-./$(basename $0) [fmradio|webradio|jtvradio|system|all] localhost [100%|mute|unmute|status]
+./$(basename $0) [fmradio|webradio|jtvradio|extradio|system|all] localhost [100%|mute|unmute|status]
 
 EOT
 exit 1
@@ -54,17 +48,17 @@ SNAPCLIENT_EXIT_STATUS=$?
 }
 
 get_sink_input_index_snapcast () {
-SINK_INPUT_INDEX=$($PACTL_CMD list sink-inputs | grep -B25 'application.process.binary = \"snapclient\"' | awk -F'#' '/Sink Input/ {print $2}')
+SINK_INPUT_INDEX=$($PULSE_CONTROL_CMD list sink-inputs | grep -B25 'application.process.binary = \"snapclient\"' | awk -F'#' '/Sink Input/ {print $2}')
 }
 
 set_sink_input_mute_snapcast_localhost () {
 get_sink_input_index_snapcast
-[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PACTL_CMD set-sink-input-mute $SINK_INPUT_INDEX $1
+[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PULSE_CONTROL_CMD set-sink-input-mute $SINK_INPUT_INDEX $1
 }
 
 set_sink_input_volume_snapcast_localhost () {
 get_sink_input_index_snapcast
-[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PACTL_CMD set-sink-input-volume $SINK_INPUT_INDEX $SPEAKER_VOLUME_LEVEL
+[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PULSE_CONTROL_CMD set-sink-input-volume $SINK_INPUT_INDEX $SPEAKER_VOLUME_LEVEL
 }
 
 # MPD
@@ -89,7 +83,7 @@ $MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT volume $(echo $SPEAKER_VOLUME_LEVEL 
 # ----------
 cli_player_check_status () {
 # See if any CLI based media players are being used
-NUMBER_OF_CLI_PLAYERS=$($PACTL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | awk -F'#' '/Sink Input/ {print $2}' | wc -l)
+NUMBER_OF_CLI_PLAYERS=$($PULSE_CONTROL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | awk -F'#' '/Sink Input/ {print $2}' | wc -l)
 # Set status of CLI based player: 0=Playing 1=None
 if [[ "$NUMBER_OF_CLI_PLAYERS" -gt "0" ]];
 then
@@ -100,46 +94,46 @@ fi
 }
 
 get_sink_input_index_cli_player () {
-SINK_INPUT_INDEX=$($PACTL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | awk -F'#' '/Sink Input/ {print $2}')
+SINK_INPUT_INDEX=$($PULSE_CONTROL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | awk -F'#' '/Sink Input/ {print $2}')
 }
 
 set_sink_input_mute_cli_player_localhost () {
 get_sink_input_index_cli_player
-[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PACTL_CMD set-sink-input-mute $SINK_INPUT_INDEX $1
+[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PULSE_CONTROL_CMD set-sink-input-mute $SINK_INPUT_INDEX $1
 }
 
 set_sink_input_volume_cli_player_localhost () {
 get_sink_input_index_cli_player
-[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PACTL_CMD set-sink-input-volume $SINK_INPUT_INDEX $SPEAKER_VOLUME_LEVEL
+[[ "x$SINK_INPUT_INDEX" = "x" ]] || $PULSE_CONTROL_CMD set-sink-input-volume $SINK_INPUT_INDEX $SPEAKER_VOLUME_LEVEL
 }
 
 # System
 # ------
 check_pulse_sinks_status () {
-$PACTL_CMD list sinks | grep 'Driver: module-alsa-card.c' > /dev/null 2>&1
+$PULSE_CONTROL_CMD list sinks | grep 'Driver: module-alsa-card.c' > /dev/null 2>&1
 PULSE_SINK_STATUS=$?
 }
 
 check_pulse_sinks_volume_mute_status () {
 check_pulse_sinks_status
 [[ "$PULSE_SINK_STATUS" = "0" ]] && \
-SYSTEM_VOLUME_MUTED=$($PACTL_CMD list sinks | grep -A8 'Driver: module-alsa-card.c' | awk -F': ' '/Mute/ {print $2}')
+SYSTEM_VOLUME_MUTED=$($PULSE_CONTROL_CMD list sinks | grep -A8 'Driver: module-alsa-card.c' | awk -F': ' '/Mute/ {print $2}')
 }
 
 get_sink_index_system () {
 check_pulse_sinks_status
 [[ "$PULSE_SINK_STATUS" = "0" ]] && \
-SINK_INDEX=$($PACTL_CMD list sinks | grep -B8 'Driver: module-alsa-card.c' | awk -F'#' '/Sink #/ {print $2}')
+SINK_INDEX=$($PULSE_CONTROL_CMD list sinks | grep -B8 'Driver: module-alsa-card.c' | awk -F'#' '/Sink #/ {print $2}')
 }
 
 set_sink_mute_system_localhost () {
 get_sink_index_system 
-[[ "x$SINK_INDEX" = "x" ]] || $PACTL_CMD set-sink-mute $SINK_INDEX $1
+[[ "x$SINK_INDEX" = "x" ]] || $PULSE_CONTROL_CMD set-sink-mute $SINK_INDEX $1
 }
 
 set_sink_volume_system_localhost () {
 get_sink_index_system 
-[[ "x$SINK_INDEX" = "x" ]] || $PACTL_CMD set-sink-volume $SINK_INDEX $SPEAKER_VOLUME_LEVEL
+[[ "x$SINK_INDEX" = "x" ]] || $PULSE_CONTROL_CMD set-sink-volume $SINK_INDEX $SPEAKER_VOLUME_LEVEL
 }
 
 
@@ -202,7 +196,7 @@ elif [[ "$APP_USED_TO_PLAY" = "cliplayer" ]];
 then
 # If volume for FM radio is not muted, mute it
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
-FMRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
+FMRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
 [[ "$FMRADIO_VOLUME_MUTED" = "yes" ]] || 
 set_sink_input_mute_cli_player_localhost 1
 
@@ -224,7 +218,7 @@ elif [[ "$APP_USED_TO_PLAY" = "cliplayer" ]];
 then
 # If volume for FM radio is muted, unmute it
 [[ -e $FMRADIO_STREAMER_PID_FILE ]] && \
-FMRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
+FMRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list | grep -B20 $(awk {'print $1'} $FMRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
 if [[ "$FMRADIO_VOLUME_MUTED" = "yes" ]];
 then
 unmute_volume_fmradio_localhost
@@ -264,11 +258,11 @@ status_volume_fmradio () {
 case $SPEAKER_VOLUME_LOCATION in
 # Status of volume for fm radio on speakers at localhost
 localhost)
-$PACTL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv > /dev/null 2>&1
+$PULSE_CONTROL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv > /dev/null 2>&1
 PULSE_SINK_INPUT_STATUS=$?
 if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]] && [[ -e $FMRADIO_STREAMER_PID_FILE ]];
 then
-FMRADIO_VOLUME=$($PACTL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv | awk '/Volume/ {print $5}')
+FMRADIO_VOLUME=$($PULSE_CONTROL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv | awk '/Volume/ {print $5}')
 cat <<ET
 -----------------------------
 FM Radio
@@ -335,7 +329,7 @@ elif [[ "$APP_USED_TO_PLAY" = "cliplayer" ]];
 then
 # If volume for Internet radio is not muted, mute it
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
-WEBRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
+WEBRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
 [[ "$WEBRADIO_VOLUME_MUTED" = "yes" ]] || set_sink_input_mute_cli_player_localhost 1
 
 fi
@@ -356,7 +350,7 @@ elif [[ "$APP_USED_TO_PLAY" = "cliplayer" ]];
 then
 # If volume for Internet radio is muted, unmute it
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && \
-WEBRADIO_VOLUME_MUTED=$($PACTL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
+WEBRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list | grep -B20 $(awk {'print $1'} $WEBRADIO_STREAMER_PID_FILE) | grep -i Mute | awk -F': ' {'print $2'})
 if [[ "$WEBRADIO_VOLUME_MUTED" = "yes" ]];
 then
 unmute_volume_webradio_localhost
@@ -396,11 +390,11 @@ status_volume_webradio () {
 case $SPEAKER_VOLUME_LOCATION in
 # Status of volume for Internet radio on speakers at localhost
 localhost)
-$PACTL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv > /dev/null 2>&1
+$PULSE_CONTROL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv > /dev/null 2>&1
 PULSE_SINK_INPUT_STATUS=$?
 if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]] && [[ -e $WEBRADIO_STREAMER_PID_FILE ]];
 then
-WEBRADIO_VOLUME=$($PACTL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv | awk '/Volume/ {print $5}')
+WEBRADIO_VOLUME=$($PULSE_CONTROL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv | awk '/Volume/ {print $5}')
 cat <<ET
 -----------------------------
 Internet Radio
@@ -451,7 +445,7 @@ set_sink_input_mute_cli_player_localhost 0
 fi
 
 # Unmute Line-In based sources like CD/Cassette player
-sudo /usr/bin/amixer -c 0 sset 'Line' 20% unmute > /dev/null 2>&1
+sudo $ALSA_MIXER_CMD -c $ALSA_CARD_NO sset 'Line' $ALSA_VOLUME_LINE_IN unmute > /dev/null 2>&1
 }
 
 mute_volume_jtvradio_localhost () {
@@ -469,13 +463,13 @@ set_sink_input_mute_mpd_localhost 0
 elif [[ "$APP_USED_TO_PLAY" = "cliplayer" ]];
 then
 # If volume for JambulaTV radio is not muted, mute it
-JTVRADIO_VOLUME_MUTED=$($PACTL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | grep -i Mute | awk -F': ' {'print $2'})
+JTVRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | grep -i Mute | awk -F': ' {'print $2'})
 [[ "$JTVRADIO_VOLUME_MUTED" = "yes" ]] || set_sink_input_mute_cli_player_localhost 1
 
 fi
 
 # Mute Line-In based sources like CD/Cassette player
-sudo /usr/bin/amixer -c 0 sset 'Line' 0% mute > /dev/null 2>&1
+sudo $ALSA_MIXER_CMD -c $ALSA_CARD_NO sset 'Line' 0% mute > /dev/null 2>&1
 }
 
 adjust_volume_jtvradio_localhost () {
@@ -492,7 +486,7 @@ set_sink_input_volume_mpd_localhost
 elif [[ "$APP_USED_TO_PLAY" = "cliplayer" ]];
 then
 # If volume for JambulaTV radio is muted, unmute it
-JTVRADIO_VOLUME_MUTED=$($PACTL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | grep -i Mute | awk -F': ' {'print $2'})
+JTVRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | grep -i Mute | awk -F': ' {'print $2'})
 if [[ "$JTVRADIO_VOLUME_MUTED" = "yes" ]];
 then
 unmute_volume_jtvradio_localhost
@@ -530,12 +524,12 @@ status_volume_jtvradio () {
 case $SPEAKER_VOLUME_LOCATION in
 # Status of volume for JambulaTV radio on speakers at localhost
 localhost)
-$PACTL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv > /dev/null 2>&1
+$PULSE_CONTROL_CMD list sink-inputs | grep -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv > /dev/null 2>&1
 PULSE_SINK_INPUT_STATUS=$?
 if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]];
 then
-JTVRADIO_VOLUME=$($PACTL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv | awk '/Volume/ {print $5}')
-JTVRADIO_VOLUME_MUTED=$($PACTL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | grep -i Mute | awk -F': ' {'print $2'})
+JTVRADIO_VOLUME=$($PULSE_CONTROL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv | awk '/Volume/ {print $5}')
+JTVRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | grep -i Mute | awk -F': ' {'print $2'})
 #
 # Set volume mute status
 if [[ "$JTVRADIO_VOLUME_MUTED" = "yes" ]];
@@ -558,6 +552,100 @@ else
 cat <<ET
 -----------------------------
 JambulaTV Radio
+-----------------------------
+Status	:	Idle
+
+ET
+fi
+;;
+
+# Status of volume for JambulaTV radio on speakers at remote host
+192.168.x.x)
+:
+;;
+esac
+}
+
+
+# ---------------------------------
+# External Radio/CD/Cassette Player
+# ---------------------------------
+unmute_volume_extradio_localhost () {
+# Restore ALSA mixer levels
+sudo $ALSA_CONTROL_CMD -f $ALSA_STATE_FILE restore $ALSA_CARD_NO
+# Unmute Line-In based sources like CD/Cassette player
+sudo $ALSA_MIXER_CMD -c $ALSA_CARD_NO sset 'Line' unmute > /dev/null 2>&1
+}
+
+mute_volume_extradio_localhost () {
+# Save ALSA mixer levels
+sudo $ALSA_CONTROL_CMD -f $ALSA_STATE_FILE store $ALSA_CARD_NO
+# Mute Line-In based sources like CD/Cassette player
+sudo $ALSA_MIXER_CMD -c $ALSA_CARD_NO sset 'Line' 0% mute > /dev/null 2>&1
+}
+
+adjust_volume_extradio_localhost () {
+unmute_volume_extradio_localhost
+# If there's a volume level specified, adjust volume accordingly
+sudo $ALSA_MIXER_CMD -c $ALSA_CARD_NO sset 'Line' $SPEAKER_VOLUME_LEVEL > /dev/null 2>&1
+}
+
+control_volume_extradio () {
+case $SPEAKER_VOLUME_LOCATION in
+# Control volume of JambulaTV radio for speakers at localhost
+localhost)
+# If volume level is set at '0' then assume 'mute' has been requested
+if [[ "$ALSA_VOLUME_LINE_IN" = "0" || "$ALSA_VOLUME_LINE_IN" = "0%" ]];
+then
+# Mute volume for extradio
+mute_volume_extradio_localhost
+else
+# Increase/Decrease volume for extradio
+adjust_volume_extradio_localhost
+fi
+;;
+
+# Control volume of JambulaTV radio for speakers at remote host
+192.168.x.x)
+:
+;;
+esac
+}
+
+status_volume_extradio () {
+case $SPEAKER_VOLUME_LOCATION in
+localhost)
+# Status of volume for External radio on speakers at localhost
+$PULSE_CONTROL_CMD list sink-inputs | grep -i -v -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv > /dev/null 2>&1
+EXT_RADIO_STATUS=$?
+SYSTEM_VOLUME_STATE=$($PULSE_CONTROL_CMD list sinks | grep -B6 'Driver: module-alsa-card.c' | awk -F': ' '/State:/ {print $2}' | awk '{print $1}' | head -1)
+
+if [[ "$EXT_RADIO_STATUS" = "0" && "$SYSTEM_VOLUME_STATE" = "RUNNING" ]];
+then
+EXTRADIO_VOLUME=$(sudo $ALSA_MIXER_CMD -c $ALSA_CARD_NO sget 'Line' | awk -F: '/dB/ {print $2}' | uniq | awk {'print $3'} | sed 's:\[::g' | sed 's:\]::g')
+EXTRADIO_VOLUME_MUTED=$(sudo $ALSA_MIXER_CMD -c $ALSA_CARD_NO sget 'Line' | awk -F: '/dB/ {print $2}' | uniq | awk {'print $5'} | sed 's:\[::g' | sed 's:\]::g')
+#
+# Set volume mute status
+if [[ "$EXTRADIO_VOLUME_MUTED" = "off" ]];
+then
+VOLUME_MUTE_STATUS="Muted !!!"
+else
+VOLUME_MUTE_STATUS=Active
+fi
+
+cat <<ET
+-----------------------------
+External Radio
+-----------------------------
+Status	:	$VOLUME_MUTE_STATUS
+Volume	:	$EXTRADIO_VOLUME
+
+ET
+
+else
+cat <<ET
+-----------------------------
+External Radio
 -----------------------------
 Status	:	Idle
 
@@ -625,15 +713,15 @@ status_volume_system () {
 case $SPEAKER_VOLUME_LOCATION in
 # Status of system volume for speakers at localhost
 localhost)
-$PACTL_CMD list sinks | grep -i Volume > /dev/null 2>&1
+$PULSE_CONTROL_CMD list sinks | grep -i Volume > /dev/null 2>&1
 PULSE_SINK_STATUS=$?
 #
 [[ "$PULSE_SINK_STATUS" = "0" ]] && \
-SYSTEM_VOLUME=$($PACTL_CMD list sinks | grep -A8 'Driver: module-alsa-card.c' | awk -F'/ ' '/Volume: front-left: / {print $2}' | awk '{print $1}' | head -1)
+SYSTEM_VOLUME=$($PULSE_CONTROL_CMD list sinks | grep -A8 'Driver: module-alsa-card.c' | awk -F'/ ' '/Volume: front-left: / {print $2}' | awk '{print $1}' | head -1)
 #
 if [[ "$PULSE_SINK_STATUS" = "0" ]];
 then
-SYSTEM_VOLUME_STATE=$($PACTL_CMD list sinks | grep -B6 'Driver: module-alsa-card.c' | awk -F': ' '/State:/ {print $2}' | awk '{print $1}' | head -1)
+SYSTEM_VOLUME_STATE=$($PULSE_CONTROL_CMD list sinks | grep -B6 'Driver: module-alsa-card.c' | awk -F': ' '/State:/ {print $2}' | awk '{print $1}' | head -1)
 cat <<ET
 -----------------------------
 System Speakers (Pulseaudio)
@@ -760,6 +848,27 @@ control_volume_system
 fi
 ;;
 
+extradio)
+if [[ "$SPEAKER_VOLUME_LEVEL" = "mute" ]];
+then
+# Mute External Radio volume
+mute_volume_extradio_localhost
+
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
+then
+# Unmute External Radio volume
+unmute_volume_extradio_localhost
+
+elif [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
+then
+# Status of External Radio volume
+status_volume_extradio
+
+else
+control_volume_extradio
+fi
+;;
+
 all)
 if [[ "$SPEAKER_VOLUME_LEVEL" = "mute" ]];
 then
@@ -767,6 +876,8 @@ then
 mute_volume_fmradio_localhost
 mute_volume_webradio_localhost
 mute_volume_jtvradio_localhost
+mute_volume_extradio_localhost
+mute_volume_system_localhost
 
 elif [[ "$SPEAKER_VOLUME_LEVEL" = "unmute" ]];
 then
@@ -774,6 +885,8 @@ then
 unmute_volume_fmradio_localhost 
 unmute_volume_webradio_localhost
 unmute_volume_jtvradio_localhost
+unmute_volume_extradio_localhost
+unmute_volume_system_localhost
 
 elif [[ "$SPEAKER_VOLUME_LEVEL" = "status" ]];
 then
@@ -781,12 +894,14 @@ then
 status_volume_fmradio
 status_volume_webradio
 status_volume_jtvradio
+status_volume_extradio
 status_volume_system
 
 else
 control_volume_fmradio
 control_volume_webradio
 control_volume_jtvradio
+control_volume_extradio
 control_volume_system
 fi
 ;;
