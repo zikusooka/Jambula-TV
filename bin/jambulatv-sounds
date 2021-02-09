@@ -28,7 +28,7 @@ fi
 SOUND_EFFECTS_TEMP_SCRIPT=/tmp/sound_effects.sh
 SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep ${SOUND_EFFECTS_WAITING_PATH##*/} | awk {'print $2'}
 )
-SOUND_PLAYER_CMD="/usr/bin/mplayer"
+SOUND_PLAYER_CMD="/usr/bin/mpv"
 SOUND_AUDIO_DRIVER="$AUDIO_OUTPUT_DRIVER"
 
 ALERT_SOUND_AUDIO_GAIN=$(echo $@ | awk -F'=' '/gain/ {print $2}')
@@ -36,11 +36,11 @@ ALERT_SOUND_AUDIO_GAIN=$(echo $@ | awk -F'=' '/gain/ {print $2}')
 if [[ "x$ALERT_SOUND_AUDIO_GAIN" = "x" ]];
 then
 # No audio gain
-SOUND_PLAYER_OPTS="-really-quiet -ao $SOUND_AUDIO_DRIVER -novideo -nolirc"
+SOUND_PLAYER_OPTS="--really-quiet -ao $SOUND_AUDIO_DRIVER --no-video"
 
 else
 # With audio gain
-SOUND_PLAYER_OPTS="-really-quiet -ao $SOUND_AUDIO_DRIVER -novideo -nolirc -volume $ALERT_SOUND_AUDIO_GAIN"
+SOUND_PLAYER_OPTS="--really-quiet -ao $SOUND_AUDIO_DRIVER --no-video --volume=$ALERT_SOUND_AUDIO_GAIN"
 fi
 
 BEEP_CMD=/usr/bin/beep
