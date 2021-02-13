@@ -109,7 +109,7 @@ then
 	rsync -av -u $REMOTE_USER@$REMOTE_HOST:$WATER_REPORTS_DIR_REMOTE/$FILE $WATER_REPORTS_DIR_LOCAL/
 	done
 
-elif [[ "$REMOTE_HOST_REACHEABLE" != "0" && "$REPORT_TODAY_MISSING_LOCALHOST" != "yes" ]];
+elif [[ "$REPORT_TODAY_MISSING_LOCALHOST" != "yes" ]];
 then
 	# Continue to next since local water report was found
 	continue
@@ -147,7 +147,7 @@ WATER_READING_2=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORT_FILE_2)
 WATER_USAGE=$(echo "$WATER_READING_1 - $WATER_READING_2" | bc | xargs printf '%.2f')
 #
 # Add incremental water usage to log file for computation
-printf "$WATER_USAGE+" >> $WATER_USAGE_MONTHLY_LOG
+echo -n "$WATER_USAGE+" >> $WATER_USAGE_MONTHLY_LOG
 fi
 
 # Set counters
