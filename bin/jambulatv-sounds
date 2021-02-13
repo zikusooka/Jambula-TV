@@ -256,7 +256,7 @@ fi
 21)
 HOUR=$(date +%-H) 
 # Select greeting sound based on the time of day
-if [[ "$HOUR" -lt "5" ]];
+if [[ "$HOUR" -lt "0" ]];
 then
 ALERT_SOUND_FILE=goodnight.mp3
 elif [[ "$HOUR" -lt "12" ]];
