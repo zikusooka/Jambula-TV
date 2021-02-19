@@ -1,3 +1,89 @@
+Changes since v7.0
+--------------------
+
+* JambulaTV: Upgrade Linux kernel to latest stable version: 5.10.3 
+
+* JambulaTV: Upgrade ZoneMinder to the latest Github version: 1.35.16 
+
+* JambulaTV: Upgrade icinga2 to latest github version: r2.12.3 
+
+* JambulaTV: Update icingaweb2 sources to the latest github version 
+
+* JambulaTV: Update jambulatv-internet-radio-streamer, the Internet            radio streamer tool as follows: 
+
+* JambulaTV: Update jambulatv-fm-radio-streamer, the FM radio            streamer tool as follows: 
+
+* JambulaTV: Fix several issues with the music download tool i.e.            Update 'jambulatv-fetch-music' 
+
+* JambulaTV: Upgrade youtube-dl sources to latest version: 2021.01.08 
+
+* JambulaTV: Update icinga2 plugin 'check_dvbt2_streams' in contributed            directory i.e. Add variable of 'TV_TYPE=DVB-T2' which is            used when testing to see if TV server is in use 
+
+* JambulaTV: Add the default system sound audio output driver used by            various sound applications to the global settings file            i.e. Update the 'global_settings_configure' routines 
+
+* JambulaTV: Use the audio driver specified in global settings file when            running the sounds tool i.e. Update 'jambulatv-sounds' 
+
+* JambulaTV: Use the audio driver specified in global settings file when            running Text2Speech tool i.e. Update 'jambulatv-text2speech' 
+
+* JambulaTV: Use the audio driver specified in global settings file when            running the FM radio streamer tool            i.e. Update 'jambulatv-fm-radio-streamer' 
+
+* JambulaTV: Use the audio driver specified in global settings file when            running the Internet radio streamer tool            i.e. Update 'jambulatv-internet-radio-streamer' 
+
+* JambulaTV: Add new features and fix bugs in the water supply tool            i.e. Update 'jambulatv-water-supply' 
+
+* JambulaTV: Allow Asterisk PBX user to login into system i.e. change            the shell from '/sbin/nologin' to '/bin/bash' 
+
+* JambulaTV: Modify command used to get 'NETWORK_WIRELESS_TUNTAP_DEV'            variable in initial and main functions file 
+
+* JambulaTV: Update system information tool i.e. jambulatv-sysinfo 
+
+* JambulaTV: Improve the Internet radio and FM radio streamer tools i.e.            Update and fix bugs in 'jambulatv-internet-radio-streamer'            and 'jambulatv-fm-radio-streamer' 
+
+* JambulaTV: Add the following variable declarations used by Internet,            FM radio streamers and other tools to the global settings            file: 
+
+* JambulaTV: Remove stale PID file left behind by Internet radio streamer            tool when the Internet goes off i.e. Update the Internet/DNS            monitoring tool: jambulatv-dns-status-triggers 
+
+* JambulaTV: Upgrade Linux kernel to latest stable version: 5.10.10 
+
+* JambulaTV: Upgrade Pulseaudio sound system to version: 12.99.3 
+
+* JambulaTV: Upgrade VLC Media Player to latest version: 3.0.12 
+
+* JambulaTV: Include re-install of FluidSynth when upgrading PulseAudio            otherwise upgrade of other packages like VLC fail i.e. 
+
+* JambulaTV: Permit asterisk user to run some commands as root e.g.            /usr/bin/grep 
+
+* JambulaTV: Add 'parted' to list of allowed super user commands (sudo)            for multimedia user i.e. jambula 
+
+* JambulaTV: Add support for installation of newer releases of curl 
+
+* JambulaTV: Add voice notification support for ONLY vacation, holiday,            visitor, guest, quiet, and night modes.  Also add new            alerts for: 'Christmas season' mode, garbage collection day            assistance call for other rooms (porch, veranda, bedroom),            and when water supply is completely off 
+
+* JambulaTV: Add support for SMARTD, the disk monitoring daemon 
+
+* JambulaTV: Upgrade Kodi to the latest github version of 18.9 (Leia) 
+
+* JambulaTV: Upgrade youtube-dl sources to latest version: 2021.01.24.1 
+
+* JambulaTV: Add setup of ALSA mixer levels (including Loopback and            Line-In controls) during initial install i.e. Add the            routines 'alsa_mixer_configure' to functions file, and            include it when configuring pulseaudio sound driver 
+
+* JambulaTV: Update speaker volumes tool i.e. jambulatv-speaker-volume 
+
+* JambulaTV: Drop the use of MPlayer when playing voice alerts. Instead            switch to using the MPV utility which is more reliable            i.e. Update sounds tool 'jambulatv-sounds' 
+
+* JambulaTV: Drop the use of MPlayer when playing TTS generated voice            alerts. Instead switch to using the MPV utility which is            more reliable i.e.  Update the Text-2-Speech tool:            'jambulatv-text2speech' 
+
+* JambulaTV: Fix time period announced after midnight by the sounds            tool i.e. Update 'jambulatv-sounds' 
+
+* JambulaTV: Fix issue in which the water supply tool reports today's            water reading as missing, even when file exists locally            i.e. Update 'jambulatv-water-supply' 
+
+* JambulaTV: Switch back to using Longterm Linux 5.4.x kernel versions            i.e. Downgrade to Linux 5.4.99 
+
+* JambulaTV: Upgrade Longterm Linux kernel sources to their latest            versions 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+
 Changes since v6.9
 --------------------
 
