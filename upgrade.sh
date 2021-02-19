@@ -379,7 +379,7 @@ v4l_utils_install
 
 #upgrade_kernel 5.10.10
 #upgrade_kernel 5.9.14
-#upgrade_kernel 5.4.78
+#upgrade_kernel 5.4.99
 #upgrade_kernel 4.19.158
 #upgrade_kernel 4.4.244
 
