@@ -320,7 +320,7 @@ $MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT clear
 
 mpd_now_playing () {
 # See if song filename ends with a known music extension i.e. is locally saved
-$MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | grep -i -e '.m4a$' -e '.wma$' -e '.ogg$' -e '.wav$' -e '.mp3$' -e '.mp4$' > /dev/null 2>&1
+$MPC_CMD -h localhost -p $MPD_LOCAL_PORT search title any | grep -i -e '.m4a$' -e '.wma$' -e '.ogg$' -e '.wav$' -e '.mp3$' -e '.mp4$' > /dev/null 2>&1
 SONG_IS_STORED_LOCALLY=$?
 #
 # Get title and artist
