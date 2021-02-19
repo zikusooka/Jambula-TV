@@ -1,0 +1,9 @@
+type: conditional
+conditions:
+  - entity: media_player.now_playing
+    state: "playing"
+
+card:
+  type: gauge
+  entity: sensor.current_player_volume_level
+  name: 'Mixer'

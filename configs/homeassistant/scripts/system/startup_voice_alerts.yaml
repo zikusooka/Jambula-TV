@@ -1,0 +1,26 @@
+startup_alert_started:
+  sequence:
+
+    # 1. VOICE ALERT - sound alert notice using Intercom i.e. paging
+    # --------------------------------------------------------------
+    #
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+ 
+    # b) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+    # c) HASS startup sound effect using house speaker
+    #- service: shell_command...
+
+    # d) Home-Assistant has started
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'smart_home_system_restarted_01'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused

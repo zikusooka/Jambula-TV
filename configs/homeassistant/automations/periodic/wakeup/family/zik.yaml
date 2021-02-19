@@ -4,9 +4,14 @@ initial_state: True
 trigger:
 
   - platform: state
+    entity_id: input_boolean.bedtime_mode_zik
+    from: 'on'
+    to: 'off'
+
+  - platform: state
     entity_id: binary_sensor.bluez_zik_01
-    from: 'unavailable'
-    to: 'on'
+    from: 'on'
+    to: 'off'
 
 
 condition:
@@ -26,10 +31,6 @@ condition:
     #  entity_id: 'device_tracker.kampala'
     #  state: 'home'
       
-    # Night time mode is on
-    #- condition: template
-    #  value_template: "{{ is_state('input_boolean.night_mode', 'on') }}"
-
 
 action:
 

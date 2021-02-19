@@ -1,0 +1,4 @@
+platform: command_line
+name: "Current Player (Volume Level)"
+command: export PLAYER_IN_USE=$(/usr/bin/jambulatv-speaker-volume all localhost status | grep -B2 -i 'Active' | head -1) && if [[ "$PLAYER_IN_USE" = "FM Radio" ]]; then ACTIVE_PLAYER=fmradio; elif [[ "$PLAYER_IN_USE" = "Internet Radio" ]]; then ACTIVE_PLAYER=webradio; elif [[ "$PLAYER_IN_USE" = "JambulaTV Radio" ]]; then ACTIVE_PLAYER=jtvradio; else ACTIVE_PLAYER=system; fi && /usr/bin/jambulatv-speaker-volume $ACTIVE_PLAYER localhost status | /usr/bin/awk '/Volume/ {print $3}' | sed 's:%::'
+scan_interval: 1

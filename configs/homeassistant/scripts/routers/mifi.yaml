@@ -1,0 +1,43 @@
+mifi_battery_low:
+  sequence:
+
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Battery low sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '7'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Voice alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '5'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
+
+
+mifi_battery_full:
+  sequence:
+
+
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Battery full sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '8'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Voice alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '6'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused

@@ -1,0 +1,11 @@
+type: entity-button
+entity: script.call_maid_bedroom
+tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.call_maid_bedroom
+name: 'Call Maid (Bedroom)'
+show_name: true
+show_state: false 
+icon: 'mdi:room-service-outline'

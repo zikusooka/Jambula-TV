@@ -1,0 +1,54 @@
+# Holiday mode at startup of Home Assistant when its Christmas/NewYears
+#
+alias: Christmas Season (Holidays)
+initial_state: True
+
+
+trigger:
+  platform: homeassistant
+  event: start
+
+
+condition:
+  condition: and
+  conditions:
+
+    - condition: state
+      entity_id: 'sensor.christmas_season'
+      state: 'True'
+
+
+action:
+  
+  # Wait for voice alerts mixer status to be 'off'
+  # ---------------------------------------------
+  - wait_for_trigger:
+      - platform: state
+        entity_id: input_boolean.voice_alerts_mixer_status
+        to: "off"
+    timeout: 45
+    continue_on_timeout: true
+
+  # Set status of voice alerts mixer to 'on'
+  # ----------------------------------------
+  - service: homeassistant.turn_on
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status
+
+  # Turn on Christmas season mode
+  # -----------------------------   
+  - service: homeassistant.turn_on
+    data:
+      entity_id: input_boolean.christmas_season_mode
+
+  # Turn on Holiday mode
+  # --------------------   
+  - service: homeassistant.turn_on
+    data:
+      entity_id: input_boolean.holiday_mode
+
+  # Set status of voice alerts mixer to 'off'
+  # ----------------------------------------
+  - service: homeassistant.turn_off
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status

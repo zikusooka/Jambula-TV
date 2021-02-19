@@ -1,0 +1,27 @@
+# ---------------------------------------------------
+# Voice Alerts - configure pre-volume levels - player
+# ---------------------------------------------------
+#
+voice_alert_volume_pre_setup_player:
+  sequence:
+
+    # a) Save the current volume level
+    - service: shell_command.save_current_volume_level_player
+      data_template:
+        current_player: "{{states('sensor.current_player_cli_name')}}"
+        current_player_volume_level: "{{states('sensor.current_player_volume_level')}}%"
+        volume_level_player_file: !secret current_volume_level_player_file
+
+
+# ----------------------------------------------------
+# Voice Alerts - configure post-volume levels - player
+# ----------------------------------------------------
+#
+voice_alert_volume_post_setup_player:
+  sequence:
+
+    # a) Restore previous volume level before automation was run
+    - service: shell_command.restore_previous_volume_level_player
+      data_template:
+        current_player: "{{states('sensor.current_player_cli_name')}}"
+        volume_level_player_file: !secret current_volume_level_player_file

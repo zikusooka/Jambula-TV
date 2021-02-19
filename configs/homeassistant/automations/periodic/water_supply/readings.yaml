@@ -12,25 +12,55 @@ condition:
   condition: and
   conditions:
  
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
     # Water supply - off
     - condition: state
       entity_id: 'binary_sensor.water_supply_status'
       state: 'unavailable'
+
+    # Night mode - off
+    - condition: state
+      entity_id: 'input_boolean.night_mode'
+      state: 'off'
+
+    # Quiet mode - off
+    - condition: state
+      entity_id: 'input_boolean.quiet_mode'
+      state: 'off'
 
     # Between 6am and 7pm i.e. daytime
     - condition: time
       after: '06:00:00'
       before: '19:00:00'
 
-    # Vacation mode - off
-    - condition: state
-      entity_id: 'input_boolean.vacation_mode'
-      state: 'off'
-
 
 action:
 
-  #  SCRIPT
-  # -------
+  # Wait for voice alerts mixer status to be 'off'
+  # ---------------------------------------------
+  - wait_for_trigger:
+      - platform: state
+        entity_id: input_boolean.voice_alerts_mixer_status
+        to: "off"
+    timeout: 45
+    continue_on_timeout: true
+
+  # Set status of voice alerts mixer to 'on'
+  # ----------------------------------------
+  - service: homeassistant.turn_on
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status
+
+  # Run script
+  # ----------
   - service: script.turn_on
     entity_id: script.water_meter_reading
+
+  # Set status of voice alerts mixer to 'off'
+  # ----------------------------------------
+  - service: homeassistant.turn_off
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status

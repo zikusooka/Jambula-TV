@@ -6,12 +6,6 @@ trigger:
 
   - platform: state
     entity_id: sensor.resident3_trackerjacker_status
-    from: 'Unknown'
-    to: 'Sighted'
-
-  - platform: state
-    entity_id: sensor.resident3_trackerjacker_status
-    from: 'Away'
     to: 'Sighted'
 
 

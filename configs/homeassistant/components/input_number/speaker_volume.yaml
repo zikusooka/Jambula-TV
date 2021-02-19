@@ -3,7 +3,7 @@ fm_radio_volume:
   initial: !secret fm_radio_start_up_volume_level
   min: 0
   max: 150
-  step: 5
+  step: 1
   mode: slider
   unit_of_measurement: '%'
   icon: mdi:volume-high
@@ -11,9 +11,19 @@ fm_radio_volume:
 internet_radio_volume:
   name: Internet Radio (Volume)
   initial: !secret internet_radio_start_up_volume_level
+  min: 10
+  max: 150
+  step: 1
+  mode: slider
+  unit_of_measurement: '%'
+  icon: mdi:volume-high
+
+local_radio_volume:
+  name: Local Radio (Volume)
+  initial: !secret local_radio_start_up_volume_level
   min: 0
   max: 150
-  step: 5
+  step: 1
   mode: slider
   unit_of_measurement: '%'
   icon: mdi:volume-high

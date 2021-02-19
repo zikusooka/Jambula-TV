@@ -5,11 +5,6 @@ trigger:
 
   - platform: state
     entity_id: person.eva
-    from: 'Unknown'
-    to: 'Sighted'
-
-  - platform: state
-    entity_id: person.eva
     from: 'Away'
     to: 'Sighted'
 

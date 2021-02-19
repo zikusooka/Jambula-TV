@@ -1,0 +1,8 @@
+platform: mqtt
+name: 'Water supply status'
+state_topic: !secret mqtt_water_supply_status
+scan_interval: 5
+expire_after: 300
+#device_class: presence
+payload_on: "on"
+payload_off: "off"

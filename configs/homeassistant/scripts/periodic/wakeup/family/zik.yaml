@@ -1,58 +1,67 @@
 wakeup_zik:
   sequence:
 
-  # 1. Turn night mode (off) script
-  # -------------------------------
-    - service: script.night_mode_off
-
-
-  # 2. Disable Bedtime/WakeUp Mode at Frontend
-  # ------------------------------------------
+  # 1. Disable Bedtime Mode at Frontend
+  # -----------------------------------
     - service: homeassistant.turn_off
       data:
-        entity_id: input_boolean.bed_wakeup_mode_zik
+        entity_id: input_boolean.bedtime_mode_zik
 
 
-  # 3. Say wakeup greeting for zik
+  # 2. Say wakeup greeting for zik
   # -------------------------------
-    # a) Mute speaker volume if there is already audio playing
-    - service: shell_command.speaker_volume_mute
-    # Pause for a second - DO NOT REMOVE unless you have a fix!
-    - delay: '00:00:01'
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
 
-    # b) Voice alerts using house speakers
+    # b) Sound effect using house speakers - time of day
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: '21'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
 
+    # c) Sound effect using house speakers - name
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'zik'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
 
-    # d) Unmute speaker volume 
-    - service: shell_command.speaker_volume_unmute
+    # d) Set wakeup time volume level - player
+    - service: shell_command.set_volume_level_player
+      data_template:
+        volume_level_player: !secret mixer_start_up_volume_level_player
+
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
 
 
-  # 4. Play locally stored music
-  # ----------------------------
-  #  - service: shell_command.jtv_radio_start
+  # 3. Music
+  # --------
+    
+    - delay: 120
+
+    # If music is paused, unpause else play local playlist - jazz 
+    - service: script.music_unpause_if_paused_else_play_local_jazz
 
 
-  # 5. OTHER STUFF HERE
+    # Increase speaker volume to ~ 40%
+    #- service: shell_command.set_volume_level_system
+      #data_template:
+       # volume_level_system: !secret mixer_start_up_volume_level_system
+
+
+  # 3. Play locally stored music - Jazz
+  # -----------------------------------
+  #  - service: script.turn_on
+      #data:
+        #entity_id: script.music_play_jazz
+
+ 
+
+
+  # 4. OTHER STUFF HERE
   # -------------------
-    - service: media_player.play_media
-      data:
-        entity_id: media_player.jambulatv_server_room
-        media_content_type: video/mp4
-        media_content_id: media-source://media_source/podcasts/CordkillersEp325.mp4
 
-
-
-
-
-  # 6. Read flash briefing for zik
+  # 5. Read flash briefing for zik
   # ------------------------------
     #  Play daily flash briefing using house speakers
     #- service: shell_command.play_flash_briefing

@@ -1,0 +1,27 @@
+alias: Water Flow Today
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: input_select.water_flow_today
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+
+action:
+
+  # Set value of input text for Water Flow Today i.e. Yes or No
+  # -----------------------------------------------------------
+  - service: input_text.set_value
+    data:
+      entity_id: input_text.water_flow_today
+      value: "{{ states('input_select.water_flow_today') }}"

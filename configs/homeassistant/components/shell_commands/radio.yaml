@@ -5,6 +5,7 @@ fm_radio_stop: /usr/bin/jambulatv-fm-radio-streamer stop local
 
 # Internet Radio
 internet_radio_play_selected_station: /usr/bin/jambulatv-internet-radio-streamer restart {{station}} local
+internet_radio_play_favorite_station: /usr/bin/jambulatv-internet-radio-streamer restart 1 local
 internet_radio_control_speaker_volume: /usr/bin/jambulatv-speaker-volume webradio localhost {{volume_level}}%
 internet_radio_stop: /usr/bin/jambulatv-internet-radio-streamer stop local
 

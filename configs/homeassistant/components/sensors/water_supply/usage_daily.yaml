@@ -1,0 +1,4 @@
+platform: mqtt
+state_topic: !secret mqtt_water_usage_daily
+#expire_after: 360
+name: Water Usage Daily

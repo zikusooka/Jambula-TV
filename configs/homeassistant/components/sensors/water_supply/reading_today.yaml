@@ -1,0 +1,4 @@
+platform: mqtt
+state_topic: !secret mqtt_water_reading_today
+#expire_after: 360
+name: Water Reading Today

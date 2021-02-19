@@ -1,0 +1,18 @@
+type: conditional
+conditions:
+  - entity: input_boolean.christmas_season_mode
+    state: 'on'
+
+
+card:
+  type: entity-button
+  entity: script.music_play_christmas
+  name: 'Christmas'
+  show_name: true
+  show_state: false 
+  icon: 'mdi:trumpet'
+  tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.music_play_christmas

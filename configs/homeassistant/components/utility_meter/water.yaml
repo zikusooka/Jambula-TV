@@ -1,0 +1,6 @@
+water_reading_today:
+  source: sensor.water_reading_today
+  cycle: daily
+  tariffs:
+    - peak
+    - offpeak

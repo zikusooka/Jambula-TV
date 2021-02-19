@@ -1,0 +1,53 @@
+alias: Garbage day - Alert via voice
+initial_state: True
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/30'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    - condition: time
+      after: '07:00:00'
+      before: '12:59:00'
+      weekday:
+        - mon
+        - tue
+
+    # Vacation mode is off
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+   
+
+action:
+
+  # Wait for voice alerts mixer status to be 'off'
+  # ---------------------------------------------
+  - wait_for_trigger:
+      - platform: state
+        entity_id: input_boolean.voice_alerts_mixer_status
+        to: "off"
+    timeout: 45
+    continue_on_timeout: true
+
+  # Set status of voice alerts mixer to 'on'
+  # ----------------------------------------
+  - service: homeassistant.turn_on
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.garbage_collection_day_alert
+
+  # Set status of voice alerts mixer to 'off'
+  # ----------------------------------------
+  - service: homeassistant.turn_off
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status

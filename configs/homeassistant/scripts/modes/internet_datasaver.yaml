@@ -1,0 +1,54 @@
+internet_datasaver_enable_manual:
+  sequence:
+
+    # a) Turn on data saver mode
+    - service: shell_command.internet_data_saver_on
+
+    # b) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # c) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Internet data saver on sound effect using house speakers
+    #- service: shell_command.
+
+    # e) Voice alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '25'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # f) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
+
+
+internet_datasaver_disable_manual:
+  sequence:
+
+    # a) Turn off data saver mode
+    - service: shell_command.internet_data_saver_off
+
+    # b) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # c) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Internet data saver off sound effect using house speakers
+    #- service: shell_command.
+
+    # e) Voice alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '26'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # f) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused

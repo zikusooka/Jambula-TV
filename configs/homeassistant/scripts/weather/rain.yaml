@@ -1,0 +1,47 @@
+rainfall_coming:
+  sequence:
+
+  # Voice Alert
+  # -----------
+
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Rain and thunderstorm sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '11'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Voice alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '17'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
+
+
+    # Text weather reports
+    # --------------------
+  
+    # a) WhatsApp
+    - service: script.send_whatsapp
+      data_template:        
+        whatsapp_text: !include ../../templates/weather/rainfall_coming_notification_message.yaml
+        whatsapp_image: '/usr/share/JambulaTV/images/hass/rain_today.png'
+        whatsapp_recipient_phone: ''
+
+    # b) Telegram
+    - service: script.send_telegram
+      data_template: 
+        telegram_text: !include ../../templates/weather/rainfall_coming_notification_message.yaml
+        telegram_image: '/usr/share/JambulaTV/images/hass/rain_today.png'
+        telegram_recipient_phone: ''

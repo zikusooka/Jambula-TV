@@ -1,40 +1,50 @@
 bedtime_zik:
   sequence:
 
-  # 1. Enable Bedtime/WakeUp Mode at Frontend
-  # -----------------------------------------
+  # 1. Enable Bedtime Mode at Frontend
+  # ----------------------------------
     - service: homeassistant.turn_on
       data:
-        entity_id: input_boolean.bed_wakeup_mode_zik
+        entity_id: input_boolean.bedtime_mode_zik
 
 
   # 2. Say bedtime greeting for zik
   # -------------------------------
-    # a) Mute speaker volume if there is already audio playing
-    - service: shell_command.speaker_volume_mute
-    # Pause for a second - DO NOT REMOVE unless you have a fix!
-    - delay: '00:00:01'
 
-    # b) Bedtime mode turned on sound effect using house speakers
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Sound effect using house speakers - time of day
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'goodnight'
-        audio_gain: !secret voice_alert_audio_gain
+        sound_alert: 21
+        audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Bedtime mode turned on sound effect using house speakers
+    # c) Sound effect using house speakers - name
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'zik'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
 
-    # d) Lower speaker volume
-    - service: shell_command.speaker_volume_input
+    # d) Set bedtime volume level - player
+    - service: shell_command.set_volume_level_player
       data_template:
-        volume_level: !secret mixer_bed_time_mode_volume_level
+        volume_level_player: !secret mixer_bed_time_mode_volume_level
 
-    # e) Unmute speaker volume 
-    - service: shell_command.speaker_volume_unmute
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
 
 
-  # 3. OTHER STUFF HERE
-  # -------------------
+  # 3. Pause music after dosing off
+  # -------------------------------
+    - delay: 5
+
+    # If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+
+  # 4. Turn off light
+  # -----------------
+    - service: light.turn_off 
+      data:
+        entity_id: light.living_room

@@ -4,45 +4,45 @@ motion_detected_outside_make_noise:
 
     # Task 1 - Start capture of snapshot
     # -----------------------------------
-
+    #
     # Arm camera alarm
     - service: shell_command.zoneminder_camera_arm
       data_template:
         camera_id: !secret zoneminder_camera_001
 
+
     # Task 2 - sound alarm notice using Intercom i.e. paging
     # ------------------------------------------------------
-
-    # a) Mute speaker volume if there is already audio playing
-    - service: shell_command.speaker_volume_mute
-    # Pause for a second - DO NOT REMOVE unless you have a fix!
-    - delay: '00:00:01'
+    #
+    # a) Run script: If music is playing, pause it - player
+    - service: script.music_pause_if_playing
 
     # b) Chime alert using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: '1'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_high
 
     # c) Voice alert using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: '3'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_high
 
-    # d) Unmute speaker volume 
-    - service: shell_command.speaker_volume_unmute 
+    # d) Run script: If music is paused, unpause player - player
+    - service: script.music_unpause_if_paused
 
 
     # Task 3 - Stop capture of snapshot
     # ---------------------------------
+    # 
     # Make alarm at local server station
     - service: shell_command.beep_alerts_at_local_server
 
 
     # Task 4 - Stop capture of snapshot
     # ---------------------------------
-
+    #
     # a) Wait a bit
     - delay: '00:00:45'
 
@@ -54,6 +54,7 @@ motion_detected_outside_make_noise:
 
     # Other examples
     # --------------
+    # 
     # Make noise - Beeps
     #- service: shell_command.play_alert_at_remote_workstation
     #  data_template:

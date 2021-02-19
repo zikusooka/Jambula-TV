@@ -2,7 +2,7 @@ music_play_pop:
   sequence:
 
     # Generate playlist
-    - service: shell_command.create_local_music_playlist
+    - service: shell_command.create_local_music_playlist_without_christmas
       data_template:
         music_dir: !secret jambulatv_music_dir
         mpd_playlists_dir: !secret jambulatv_playlists_mpd_dir

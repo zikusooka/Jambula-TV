@@ -13,22 +13,24 @@ zik_is_home:
         input_file2: 'is_home_01.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'zik_is_home.mp3'
-    # b) Mute speaker volume if there is already audio playing
-    - service: shell_command.speaker_volume_mute
-    # Pause for a second - DO NOT REMOVE unless you have a fix!
-    - delay: '00:00:01'
+
+    # b) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
     # c) Chime alert using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'effects/Elevator-door-sound'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
+
     # d) Play merged audio file using house speakers
     - service: shell_command.play_merged_audio_file
       data_template:
         merged_audio_dir: !secret jambulatv_temp_dir
         merged_audio_file: 'zik_is_home.mp3'
-    # e) Unmute speaker volume 
-    - service: shell_command.speaker_volume_unmute
+
+    # d) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
 
 
   # 2. Set security Alarm
@@ -43,12 +45,10 @@ zik_is_home:
   # 3. Music
   # --------
 
-    # If music is playing, pause it
-    - service_template: >
-        {% if is_state('media_player.now_playing', 'paused') %}
-          media_player.media_play_pause
-        {% endif %}
-      entity_id: media_player.now_playing
+    - delay: 120
+  
+  # If music is paused, unpause else play local playlist - jazz 
+    - service: script.music_unpause_if_paused_else_play_local_jazz
 
 
   # 4. Send messages using  XMPP, WhatsApp, and Telegram

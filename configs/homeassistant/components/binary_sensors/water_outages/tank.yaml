@@ -1,0 +1,8 @@
+platform: mqtt
+name: 'Water tank status'
+state_topic: !secret mqtt_water_tank_status
+scan_interval: 5
+expire_after: 300
+#device_class: presence
+payload_on: "full"
+payload_off: "low"

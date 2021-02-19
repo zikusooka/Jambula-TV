@@ -1,84 +1,65 @@
 wakeup_maid:
   sequence:
 
-    # a) Mute speaker volume if there is already audio playing
-    - service: shell_command.speaker_volume_mute
-    # Pause for a second - DO NOT REMOVE unless you have a fix!
-    - delay: '00:00:01'
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
 
     # b) Voice alerts using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: '21'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
 
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'its_time_2_wakeup'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
 
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'rise_and_shine'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
 
     # b) Sound effects using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'wake_alarm_clock_gentle_01'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'wake_alarm_clock_gentle_01'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'wake_alarm_clock_gentle_01'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'wake_alarm_clock_gentle_01'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_high
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'wake_alarm_clock_gentle_01'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_high
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'wake_alarm_clock_gentle_01'
-        audio_gain: !secret voice_alert_audio_gain
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'wake_alarm_clock_gentle_01'
-        audio_gain: !secret voice_alert_audio_gain
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'wake_alarm_clock_gentle_01'
-        audio_gain: !secret voice_alert_audio_gain
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'wake_alarm_clock_gentle_01'
-        audio_gain: !secret voice_alert_audio_gain
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'wake_alarm_clock_gentle_01'
-        audio_gain: !secret voice_alert_audio_gain
-
+        audio_gain: !secret voice_alert_audio_gain_high
     # c) Voice alerts using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: '21'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_high
 
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'its_time_2_wakeup'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_high
 
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'rise_and_shine'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_high
 
-    # d) Unmute speaker volume 
-    - service: shell_command.speaker_volume_unmute
+    # d) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused

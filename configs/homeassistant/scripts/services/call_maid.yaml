@@ -1,0 +1,118 @@
+# Office - Call the maid for immediate assistance
+# -----------------------------------------------
+call_maid_office:
+  sequence:
+
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Play initial sound effect using house speaker 
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Dissonant-bells-alert-tone'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Play sound effect using house speaker
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Dissonant-bells-alert-tone'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Say maid is needed immediately
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'immediate_assistance_is_needed_in_the_office'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # f) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
+
+
+# Verandah - Call the maid for immediate assistance
+# -------------------------------------------------
+call_maid_verandah:
+  sequence:
+
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Play initial sound effect using house speaker 
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Dissonant-bells-alert-tone'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Play sound effect using house speaker
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Dissonant-bells-alert-tone'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Say maid is needed immediately
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'immediate_assistance_is_needed_at_the_verandah'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
+
+
+# Bedroom - Call the maid for immediate assistance
+# -------------------------------------------------
+call_maid_bedroom:
+  sequence:
+
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Play initial sound effect using house speaker 
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Dissonant-bells-alert-tone'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Play sound effect using house speaker
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Dissonant-bells-alert-tone'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Say maid is needed immediately
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'immediate_assistance_is_needed_in_the_bedroom'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
+
+
+# Porch - Call the maid for immediate assistance
+# ----------------------------------------------
+call_maid_porch:
+  sequence:
+
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Play initial sound effect using house speaker 
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Dissonant-bells-alert-tone'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Play sound effect using house speaker
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Dissonant-bells-alert-tone'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Say maid is needed immediately
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'immediate_assistance_is_needed_at_the_porch'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused

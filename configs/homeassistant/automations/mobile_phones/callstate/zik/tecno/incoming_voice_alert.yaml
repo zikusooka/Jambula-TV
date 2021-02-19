@@ -16,31 +16,28 @@ condition:
 
 action:
 
-  # a) Merge audio files
-  - service: shell_command.ffmpeg_concat_two_mp3
-    data_template:
-      input_directory: !secret jambulatv_sounds_dir
-      input_file1: 'incoming-phone-call-for.mp3'
-      input_file2: 'zik.mp3'
-      output_directory: !secret jambulatv_temp_dir
-      output_file: 'incoming_phone_call_4_zik.mp3'
+  # Wait for voice alerts mixer status to be 'off'
+  # ---------------------------------------------
+  - wait_for_trigger:
+      - platform: state
+        entity_id: input_boolean.voice_alerts_mixer_status
+        to: "off"
+    timeout: 45
+    continue_on_timeout: true
 
-  # b) Mute speaker volume if there is already audio playing
-  - service: shell_command.speaker_volume_mute
-  # Pause for a second - DO NOT REMOVE unless you have a fix!
-  - delay: '00:00:01'
+  # Set status of voice alerts mixer to 'on'
+  # ----------------------------------------
+  - service: homeassistant.turn_on
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status
 
-  # c) Phone call ring using house speakers
-  - service: shell_command.voice_alerts_and_sound_effects
-    data_template:
-      sound_alert: '9'
-      audio_gain: !secret voice_alert_audio_gain
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.phone_call_incoming_zik_tecno
 
-  # d) Play merged audio file using house speakers
-  - service: shell_command.play_merged_audio_file
-    data_template:
-      merged_audio_dir: !secret jambulatv_temp_dir
-      merged_audio_file: 'incoming_phone_call_4_zik.mp3'
-
-  # e) Unmute speaker volume 
-  - service: shell_command.speaker_volume_unmute 
+  # Set status of voice alerts mixer to 'off'
+  # ----------------------------------------
+  - service: homeassistant.turn_off
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status

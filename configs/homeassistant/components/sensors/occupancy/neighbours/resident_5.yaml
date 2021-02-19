@@ -1,0 +1,4 @@
+platform: mqtt
+state_topic: !secret mqtt_presence_trackerjacker_topic_resident_5
+expire_after: 360
+name: Resident5 TrackerJacker Status

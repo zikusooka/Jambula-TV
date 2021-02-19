@@ -9,10 +9,14 @@ trigger:
     #minutes: '/10'
 
 
-#condition:
-  #condition: and
-  #conditions:
- 
+condition:
+  condition: and
+  conditions:
+
+    # Internet state
+    - condition: template
+      value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
     # Pandemic mode
     #- condition: state
       #entity_id: 'input_boolean.pandemic_mode'

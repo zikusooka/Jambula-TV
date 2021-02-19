@@ -1,6 +1,33 @@
-# Mute/Unmute speaker volume
-speaker_volume_mute: /usr/bin/jambulatv-speaker-volume all localhost mute
-speaker_volume_unmute: /usr/bin/jambulatv-speaker-volume all localhost unmute
+# Mute/Unmute speaker volume - player/system
+speaker_volume_mute_player: /bin/sh -c "/usr/bin/jambulatv-speaker-volume {{current_player}} localhost mute"
+speaker_volume_unmute_player: /bin/sh -c "/usr/bin/jambulatv-speaker-volume {{current_player}} localhost unmute"
 
-# Set custom volume level
-speaker_volume_input: /usr/bin/jambulatv-speaker-volume system localhost {{volume_level}}%
+# Mute/Unmute speaker volume - all
+speaker_volume_mute_all: /bin/sh -c "/usr/bin/jambulatv-speaker-volume all localhost mute"
+speaker_volume_unmute_all: /bin/sh -c "/usr/bin/jambulatv-speaker-volume all localhost unmute"
+
+
+# Set custom volume level - player
+set_volume_level_player: /bin/sh -c "/usr/bin/jambulatv-speaker-volume {{current_player}} localhost {{volume_level_player}}%"
+#
+# Save initial startup volume - player
+save_initial_volume_level_player: /bin/sh -c "/usr/bin/echo -n {{volume_level_player}}% > {{volume_level_player_file}}"
+
+# Set custom volume level - system
+set_volume_level_system: /bin/sh -c "/usr/bin/jambulatv-speaker-volume system localhost {{volume_level_system}}%"
+#
+# Save initial startup volume - system
+save_initial_volume_level_system: /bin/sh -c "/usr/bin/echo -n {{volume_level_system}}% > {{volume_level_system_file}}"
+
+
+# Save current volume level - player
+save_current_volume_level_player: /bin/sh -c "/usr/bin/echo {{current_player_volume_level}} > {{volume_level_player_file}}"
+#
+# Restore previous volume level - player
+restore_previous_volume_level_player: /bin/sh -c "/usr/bin/jambulatv-speaker-volume {{current_player}} localhost $(/usr/bin/cat -s {{volume_level_player_file}})"
+
+# Save current volume level - system
+save_current_volume_level_system: /bin/sh -c "/usr/bin/echo {{current_system_volume_level}} > {{volume_level_system_file}}"
+#
+# Restore previous volume level - system
+restore_previous_volume_level_system: /bin/sh -c "/usr/bin/jambulatv-speaker-volume system localhost $(/usr/bin/cat -s {{volume_level_system_file}})"

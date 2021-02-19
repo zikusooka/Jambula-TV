@@ -1,0 +1,74 @@
+night_mode_on:
+  sequence:
+
+  # 1. Enable Night time Mode at Frontend
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.night_mode
+
+  # 2. Voice alerts
+  # ---
+    # a) Save current volume level of active player
+    - service: script.voice_alert_volume_pre_setup_player
+
+    # b) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # c) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Night mode turning on sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '34'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # e) Lower volume of current player
+    - service: shell_command.set_volume_level_player
+      data_template:
+        current_player: "{{states('sensor.current_player_cli_name')}}"
+        volume_level_player: !secret mixer_night_mode_volume_level
+
+    # f) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
+
+
+night_mode_off:
+  sequence:
+
+  # 1. Disable Night time Mode at Frontend
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.night_mode
+
+  # 2. Voice alerts
+  # ---
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Night mode turned off sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '35'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Increase volume of current player
+    #- service: shell_command.set_volume_level_player
+      #data_template:
+        #current_player: "{{states('sensor.current_player_cli_name')}}"
+        #volume_level_player: !secret mixer_start_up_volume_level_player
+
+    # d) Restore previous volume level of active player
+    - service: script.voice_alert_volume_post_setup_player
+
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused

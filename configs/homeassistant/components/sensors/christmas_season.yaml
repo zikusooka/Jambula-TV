@@ -1,0 +1,9 @@
+platform: template
+sensors:
+  christmas_season:
+    value_template: >
+      {% set today = states('sensor.date').split('-') %}
+      {% set month = today[1]|int %}
+      {% set day = today[2]|int %}
+      {{ month == 12 and day >= 12 or
+         month == 1 and day <= 4 }}

@@ -28,6 +28,7 @@ cards:
   - type: horizontal-stack
     cards:
       - !include ../cards/entity-button-call-maid-office.yaml
+      - !include ../cards/entity-button-call-maid-bedroom.yaml
       - !include ../cards/entity-button-call-maid-porch.yaml
 
 
@@ -44,28 +45,65 @@ cards:
       - !include ../cards/markup-welcome-message.yaml
 
 
+  # Alarms
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/entities-wakeup-alarm-times.yaml
+
+
   # Lighting
+  - type: vertical-stack
+    cards:
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/light-living-room.yaml
+          - !include ../cards/light-kitchen.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/light-bed-room.yaml
+          - !include ../cards/light-veranda.yaml
+
+      #- type: horizontal-stack
+        #cards:
+          #- !include ../cards/light-dining.yaml 
+          #- !include ../cards/light-bath-room.yaml
+ 
+      #- type: horizontal-stack
+        #cards:
+          #- !include ../cards/light-guest-bed-room.yaml
+          #- !include ../cards/light-guest-bath-room.yaml
+
+      #- type: horizontal-stack
+        #cards:
+          #- !include ../cards/light-boys-quarters.yaml
+          #- !include ../cards/light-gate.yaml
+
+
+  # Water Status
+  - type: vertical-stack
+    cards:
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-water-supply.yaml
+          - !include ../cards/conditional-water-tariff-monthly.yaml
+
+      - type: horizontal-stack
+        cards: 
+          - !include ../cards/conditional-water-reading-today.yaml
+          - !include ../cards/conditional-water-reading-yesterday.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-water-usage-daily.yaml
+          - !include ../cards/conditional-water-usage-monthly.yaml
+
+
+  # Internet and MiFi router tatus
   - type: horizontal-stack
     cards:
-      - !include ../cards/light-living-room.yaml
-      - !include ../cards/light-kitchen.yaml
-
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/light-bed-room.yaml
-      - !include ../cards/light-veranda.yaml
-      #- !include ../cards/light-dining.yaml 
-      #- !include ../cards/light-bath-room.yaml
-      #- !include ../cards/light-guest-bed-room.yaml
-      #- !include ../cards/light-guest-bath-room.yaml
-      #- !include ../cards/light-boys-quarters.yaml
-      #- !include ../cards/light-gate.yaml
-
-
-  # Internet, Water and MiFi Status
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/entity-button-water-supply.yaml
       - !include ../cards/entity-button-internet-status.yaml
       - !include ../cards/entity-button-mifi-status.yaml
 
@@ -75,6 +113,7 @@ cards:
     cards:
       - !include ../cards/gauge-cpu-usage.yaml
       - !include ../cards/sensor-disk-free.yaml
+      - !include ../cards/gauge-volume-level-system.yaml
 
 
   # MiFi Data and Battery
@@ -163,7 +202,7 @@ cards:
  
       - type: horizontal-stack
         cards:
-          - !include ../cards/entity-button-local-music-christmas.yaml
+          - !include ../cards/conditional-entity-button-local-music-christmas.yaml
 
 
   # Now Playing / Volume Controls / Stop Media Player
@@ -171,15 +210,27 @@ cards:
     cards:
       - !include ../cards/media-control-jambulatv-server.yaml
       - !include ../cards/media-control-jambulatv-client-01.yaml
-      - !include ../cards/media-control-jambulatv-snapclient.yaml
       - !include ../cards/conditional-playing-now-volume-playing.yaml
       #
+      - type: horizontal-stack
+        cards:
+
+          - !include ../cards/conditional-media-player-previous_track.yaml
+
+          - !include ../cards/conditional-media-player-volume-level.yaml
+          - !include ../cards/conditional-media-player-forward_track.yaml
+
       - type: horizontal-stack
         cards:
           - !include ../cards/conditional-playing-now-volume-paused.yaml
           - !include ../cards/conditional-media-player-stop.yaml
           - !include ../cards/conditional-media-player-pause-playing.yaml
           - !include ../cards/conditional-media-player-pause-paused.yaml
+          #- !include ../cards/conditional-media-player-volume-up.yaml
+          #- !include ../cards/conditional-media-player-volume-down.yaml
 
-          - !include ../cards/conditional-media-player-volume-up.yaml
-          - !include ../cards/conditional-media-player-volume-down.yaml
+
+
+  - type: vertical-stack
+    cards:
+      - !include ../cards/entities-water-readings-today.yaml

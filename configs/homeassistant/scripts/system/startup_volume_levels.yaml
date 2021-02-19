@@ -1,0 +1,28 @@
+startup_volume_levels_player:
+  sequence:
+
+    # Set startup volume level - player
+    - service: shell_command.set_volume_level_player
+      data_template:
+        volume_level_player: !secret mixer_start_up_volume_level_player
+   
+    # Add initial startup volume to temp volume level file - player
+    - service: shell_command.save_initial_volume_level_player
+      data_template:
+        volume_level_player: !secret mixer_start_up_volume_level_player
+        volume_level_player_file: !secret current_volume_level_player_file
+
+
+startup_volume_levels_system:
+  sequence:
+
+    # Set startup volume level - system
+    - service: shell_command.set_volume_level_system
+      data_template:
+        volume_level_system: !secret mixer_start_up_volume_level_system
+
+    # Add initial startup volume to temp volume level file - system
+    - service: shell_command.save_initial_volume_level_system
+      data_template:
+        volume_level_system: !secret mixer_start_up_volume_level_system
+        volume_level_system_file: !secret current_volume_level_system_file

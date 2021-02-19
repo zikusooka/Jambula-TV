@@ -1,28 +1,26 @@
 guest_mode_on:
   sequence:
 
-    # a) Mute speaker volume if there is already audio playing
-    - service: shell_command.speaker_volume_mute
-    # Pause for a second - DO NOT REMOVE unless you have a fix!
-    - delay: '00:00:01'
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
 
     # b) Chime alert using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: '1'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
 
     # c) Guest mode turning on sound effect using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: '38'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
 
     # d) Guest mode actions - On
     #- service: shell_command...
 
-    # e) Unmute speaker volume 
-    - service: shell_command.speaker_volume_unmute
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
 
 
 guest_mode_off:
@@ -31,22 +29,20 @@ guest_mode_off:
     # a) Guest mode actions - Off
     #- service: shell_command...
 
-    # b) Mute speaker volume if there is already audio playing
-    - service: shell_command.speaker_volume_mute
-    # Pause for a second - DO NOT REMOVE unless you have a fix!
-    - delay: '00:00:01'
+    # b) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
 
     # c) Chime alert using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: '1'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
 
     # d) Guest mode turning on sound effect using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: '39'
-        audio_gain: !secret voice_alert_audio_gain
+        audio_gain: !secret voice_alert_audio_gain_medium
 
-    # e) Unmute speaker volume 
-    - service: shell_command.speaker_volume_unmute
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused

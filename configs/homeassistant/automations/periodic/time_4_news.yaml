@@ -17,7 +17,7 @@ condition:
   condition: and
   conditions:
  
-    # Vacation mode
+    # Vacation mode is off
     - condition: state
       entity_id: 'input_boolean.vacation_mode'
       state: 'off'

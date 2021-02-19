@@ -1,13 +1,13 @@
 alias: There is a birthday today
-initial_state: False
+initial_state: True
 
 
 trigger:
 
   # Every 1 hour
   - platform: time_pattern
-    #hours: '/1'
-    minutes: '/20'
+    hours: '/1'
+    #minutes: '/20'
 
 
 condition:
@@ -17,8 +17,7 @@ condition:
     # Time of day
     - condition: time
       after: '06:00:00'
-      before: '20:59:59'
-
+      before: '23:59:59'
 
     # If sensor shows 'yes'
     - condition: template
@@ -27,28 +26,28 @@ condition:
 
 action:
 
-  # a) Mute speaker volume if there is already audio playing
-  - service: shell_command.speaker_volume_mute
-  # Pause for a second - DO NOT REMOVE unless you have a fix!
-  - delay: '00:00:01'
+  # Wait for voice alerts mixer status to be 'off'
+  # ---------------------------------------------
+  - wait_for_trigger:
+      - platform: state
+        entity_id: input_boolean.voice_alerts_mixer_status
+        to: "off"
+    timeout: 45
+    continue_on_timeout: true
 
-  # b) Chime alert using house speakers
-  - service: shell_command.voice_alerts_and_sound_effects
-    data_template:
-      sound_alert: '1'
-      audio_gain: !secret voice_alert_audio_gain
+  # Set status of voice alerts mixer to 'on'
+  # ----------------------------------------
+  - service: homeassistant.turn_on
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status
 
-  # c) Its time for news sound effect using house speakers
-  - service: shell_command.voice_alerts_and_sound_effects
-    data_template:
-      sound_alert: 'birthday_balloon'
-      audio_gain: !secret voice_alert_audio_gain
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.birthday_today
 
-  # d) Announce its time time for news using house speakers
-  - service: shell_command.voice_alerts_and_sound_effects
-    data_template:
-      sound_alert: '44'
-      audio_gain: !secret voice_alert_audio_gain
-
-  # e) Unmute speaker volume 
-  - service: shell_command.speaker_volume_unmute
+  # Set status of voice alerts mixer to 'off'
+  # ----------------------------------------
+  - service: homeassistant.turn_off
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status

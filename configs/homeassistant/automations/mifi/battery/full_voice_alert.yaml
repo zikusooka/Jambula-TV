@@ -20,25 +20,28 @@ trigger:
 
 action:
 
-  # Task 1 - sound alert notice using Intercom i.e. paging
-  # ------------------------------------------------------
+  # Wait for voice alerts mixer status to be 'off'
+  # ---------------------------------------------
+  - wait_for_trigger:
+      - platform: state
+        entity_id: input_boolean.voice_alerts_mixer_status
+        to: "off"
+    timeout: 45
+    continue_on_timeout: true
 
-  # a) Mute speaker volume if there is already audio playing
-  - service: shell_command.speaker_volume_mute
-  # Pause for a second - DO NOT REMOVE unless you have a fix!
-  - delay: '00:00:01'
+  # Set status of voice alerts mixer to 'on'
+  # ----------------------------------------
+  - service: homeassistant.turn_on
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status
 
-  # b) Battery full sound effect using house speakers
-  - service: shell_command.voice_alerts_and_sound_effects
-    data_template:
-      sound_alert: '8'
-      audio_gain: !secret voice_alert_audio_gain
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.mifi_battery_full
 
-  # c) Voice alert using house speakers
-  - service: shell_command.voice_alerts_and_sound_effects
-    data_template:
-      sound_alert: '6'
-      audio_gain: !secret voice_alert_audio_gain
-
-  # d) Unmute speaker volume 
-  - service: shell_command.speaker_volume_unmute 
+  # Set status of voice alerts mixer to 'off'
+  # ----------------------------------------
+  - service: homeassistant.turn_off
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status

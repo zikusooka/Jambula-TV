@@ -1,0 +1,40 @@
+alias: Its time for tea
+initial_state: True
+
+
+trigger:
+
+  - platform: time
+    at: '19:30:00'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Holiday mode is off
+    - condition: state
+      entity_id: 'input_boolean.holiday_mode'
+      state: 'off'
+
+    # Vacation mode is off
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+
+    # Day of week
+    - condition: time
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+        - sat
+        - sun
+
+
+action:
+
+  # Run script that says its time for tea
+  - service: script.its_time_for_tea

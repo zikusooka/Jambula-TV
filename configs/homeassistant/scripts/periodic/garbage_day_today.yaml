@@ -1,0 +1,28 @@
+garbage_collection_day_alert:
+  sequence:
+
+    # Task - Announce that today is garbage collection day
+    # ----------------------------------------------------
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Play initial sound effect using house speaker 
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Servant-bell-sound'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Play sound effect using house speaker
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'garbage_collection_today'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Say - Its garbage day today
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'garbage_clean_all_trash'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused

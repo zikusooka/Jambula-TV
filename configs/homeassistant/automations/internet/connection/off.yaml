@@ -13,40 +13,39 @@ condition:
   condition: and
   conditions:
 
-    # If Internet is still off
+    # Internet state
     - condition: template
       value_template: "{{ is_state('binary_sensor.internet', 'off') }}"
 
     # Someone at home
-    - condition: template
-      value_template: "{{ is_state('group.presence_home', 'home') }}"
-
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
 
 
 action:
 
-  # VOICE ALERT - sound alert notice using Intercom i.e. paging
-  # -----------------------------------------------------------
+  # Wait for voice alerts mixer status to be 'off'
+  # ---------------------------------------------
+  - wait_for_trigger:
+      - platform: state
+        entity_id: input_boolean.voice_alerts_mixer_status
+        to: "off"
+    timeout: 45
+    continue_on_timeout: true
 
-  # a) Mute speaker volume if there is already audio playing
-  - service: shell_command.speaker_volume_mute
-  # Pause for a second - DO NOT REMOVE unless you have a fix!
-  - delay: '00:00:01'
+  # Set status of voice alerts mixer to 'on'
+  # ----------------------------------------
+  - service: homeassistant.turn_on
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status
 
-  # b) Chime alert using house speakers
-  - service: shell_command.voice_alerts_and_sound_effects
-    data_template:
-      sound_alert: '1'
-      audio_gain: !secret voice_alert_audio_gain
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.internet_connection_off
 
-  # c) Internet off sound effect using house speakers
-  #- service: shell_command.
-
-  # d) Voice alert using house speakers
-  - service: shell_command.voice_alerts_and_sound_effects
-    data_template:
-      sound_alert: '23'
-      audio_gain: !secret voice_alert_audio_gain
-
-  # e) Unmute speaker volume 
-  - service: shell_command.speaker_volume_unmute 
+  # Set status of voice alerts mixer to 'off'
+  # ----------------------------------------
+  - service: homeassistant.turn_off
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status

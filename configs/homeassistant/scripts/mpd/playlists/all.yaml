@@ -1,9 +1,16 @@
 music_play_all:
   sequence:
 
-    # Generate playlist
-    - service: shell_command.create_local_music_playlist
-      data_template:
+    # Generate 'all' playlist depending on time of year
+    - service_template: >
+        {% if is_state('sensor.christmas_season', 'True') %}
+          shell_command.create_local_music_playlist_with_christmas
+
+        {% else %}
+          shell_command.create_local_music_playlist_without_christmas
+
+        {% endif %}
+      data:
         music_dir: !secret jambulatv_music_dir
         mpd_playlists_dir: !secret jambulatv_playlists_mpd_dir
         genre: '*'

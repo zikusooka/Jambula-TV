@@ -1,0 +1,10 @@
+platform: template
+sensors:
+  water_tariff_monthly:
+    friendly_name: 'Cost Est.'
+    unit_of_measurement: '/='
+    #value_template: "{{ (states('sensor.water_usage_monthly') | float * states('input_text.water_cost_per_unit') | float) | round ()}}"
+    value_template: "{{ '{:,}'.format( (states('sensor.water_usage_monthly') | float * states('input_text.water_cost_per_unit') | float) | round () ) }}"
+
+
+#    value_template: "{{ (states('sensor.water_usage_monthly') | float * states('input_text.water_cost_per_unit') | float) }}"

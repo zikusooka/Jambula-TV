@@ -14,15 +14,45 @@ condition:
   condition: and
   conditions:
 
-    # Vacation mode - off
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+    # Night mode - off
     - condition: state
-      entity_id: 'input_boolean.vacation_mode'
+      entity_id: 'input_boolean.night_mode'
+      state: 'off'
+
+    # Quiet mode - off
+    - condition: state
+      entity_id: 'input_boolean.quiet_mode'
       state: 'off'
 
 
 action:
 
-  #  SCRIPT
-  # -------
+  # Wait for voice alerts mixer status to be 'off'
+  # ---------------------------------------------
+  - wait_for_trigger:
+      - platform: state
+        entity_id: input_boolean.voice_alerts_mixer_status
+        to: "off"
+    timeout: 45
+    continue_on_timeout: true
+
+  # Set status of voice alerts mixer to 'on'
+  # ----------------------------------------
+  - service: homeassistant.turn_on
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status
+
+  # Run script
+  # ----------
   - service: script.turn_on
     entity_id: script.water_flow_on_alert
+
+  # Set status of voice alerts mixer to 'OFF'
+  # ----------------------------------------
+  - service: homeassistant.turn_off
+    data:
+      entity_id: input_boolean.voice_alerts_mixer_status

@@ -12,13 +12,13 @@ trigger:
     from: 'Unknown'
  
   - platform: state
-    entity_id: input_boolean.bed_wakeup_mode_zik
+    entity_id: input_boolean.bedtime_mode_zik
     to: 'on'
 
   - platform: state
     entity_id: binary_sensor.bluez_zik_01
-    from: 'on'
-    to: 'off'
+    from: 'off'
+    to: 'on'
 
 
 condition:

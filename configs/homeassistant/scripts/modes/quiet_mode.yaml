@@ -1,0 +1,69 @@
+quiet_mode_on:
+  sequence:
+
+  # 1. Enable Quiet time Mode at Frontend
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.quiet_mode
+
+  # 2. Voice alerts
+  # ---
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Quiet mode turning on sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'quiet_time_mode_activating'
+        audio_gain: !secret voice_alert_audio_gain_medium
+ 
+    # d) Save the current volume level for system
+    - service: shell_command.save_current_volume_level_system
+      data_template:
+        current_system: 'system'
+        current_system_volume_level: "{{states('sensor.current_system_volume_level')}}%"
+        volume_level_system_file: !secret current_volume_level_system_file
+   
+    # e) Mute/Lower speaker volume to ~ 0%
+    - service: shell_command.set_volume_level_system
+      data_template:
+        volume_level_system: !secret mixer_quiet_mode_volume_level
+
+
+quiet_mode_off:
+  sequence:
+
+  # 1. Disable Quiet time Mode at Frontend
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.quiet_mode
+
+  # 2. Voice alerts
+  # ---
+ 
+    # a) Unmute/Restore previous volume level for speaker
+    - service: shell_command.restore_previous_volume_level_system
+      data_template:
+        current_system: 'system'
+        volume_level_system_file: !secret current_volume_level_system_file
+
+    # b) Chime alert using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: '1'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Quiet mode turned off sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'quiet_time_mode_deactivated'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # d) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
