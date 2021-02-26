@@ -20,14 +20,19 @@ WIFI_INTERFACES_AVAILABLE=$(sudo /usr/sbin/ip link |grep jwlan | wc -l)
 # Variable specific to this script
 WIFI_SSID=$(grep -i SSID $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
 WIFI_SECURITY_KEY=$(grep -i SECURITY_KEY $INTERNET_WIFI_ISP_CONFIG | sed '/^#/d' | cut -d = -f2 | sed 's/"//g')
-OSD_TOOL_CMD="sudo /usr/bin/jambulatv-osd -m"
-AP_NOT_FOUND_MSG="WARNING - Wireless Access Point ($WIFI_SSID) Not Available"
+AP_NOT_FOUND_MSG="Wireless Access Point ($WIFI_SSID) Not Available"
 AP_SCAN_WAITING_4_OTHER_PROCESS="Waiting for another WiFi scan process to complete"
 AP_FOUND_MSG="Found your WiFi Access Point ($WIFI_SSID). Please wait while I connect to it"
-CONNECTED_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID), Assigning IP Address ..."
+ASSIGN_IP_ADDR_MSG="Requesting IP Address assignment from your WiFi Access Point..."
 INSERT_WIFI_DONGLE_MSG="Please insert your USB Wireless (WiFi) Network Adapter. I will try connecting to $WIFI_SSID shortly ..."
+CONNECTED_2_AP_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID)!"
+INTERNET_IS_OFF_MSG="Internet is Off"
+CONNECT_2_INTERNET_VIA_MIFI_MSG="Attempting to connect to the Internet using the WiFi Access Point (MiFi)"
 
 HOSTAPD_CONFIG_FILE=/etc/hostapd/hostapd.conf
+
+LOG_TYPE=file #journal
+LOG_FILE=MY_PROJECT_SYSTEM_LOG_DIR/connect_2_wifi_ap.log
 
 # Set WiFi station Interface
 WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
@@ -37,6 +42,23 @@ WIFI_STATION_INTERFACE=MY_WIFI_STATION_INTERFACE
 ###############
 #  FUNCTIONS  #
 ###############
+
+set_logging () {
+if [[ "$LOG_TYPE" = "file" ]];
+then
+LOGGER_CMD=/usr/bin/logger
+LOGGER_OPTS="-s -t INFO $(date +'%b %d %T'):"
+#
+# Print header at start of logging
+$LOGGER_CMD $LOGGER_OPTS "*** $(basename $0) - Logging to $LOG_FILE ***"
+exec 2> $LOG_FILE
+
+elif [[ "$LOG_TYPE" = "journal" ]];
+then
+LOGGER_CMD=/usr/bin/logger
+LOGGER_OPTS="-s -t $(basename $0)"
+fi
+}
 
 # Check if script is already running and internet is off
 quit_if_already_running () {
@@ -51,20 +73,29 @@ sudo rm -f $SCRIPT_RUNNING_FILE
 
 elif [[ -e "$INTERNET_OFF_FILE" ]];
 then
-logger -s -t $(basename $0) "Internet is Off"
+$LOGGER_CMD $LOGGER_OPTS $INTERNET_IS_OFF_MSG
 break
 
 elif [[ "$DNS_STATUS" != "0" ]];
 then
-logger -s -t $(basename $0) "Connecting to the Internet using the WiFi Access Point (MiFi)"
+$LOGGER_CMD $LOGGER_OPTS "$CONNECT_2_INTERNET_VIA_MIFI_MSG" 
 break 
 
 elif [[ ! -e "$SETUP_COMPLETED_FILE" ]];
 then
-logger -s -t $(basename $0) "Internet is Off"
+$LOGGER_CMD $LOGGER_OPTS $INTERNET_IS_OFF_MSG
 break
 
 else
+# Quit
+exit 1
+fi
+}
+
+quit_if_ssid_is_missing () {
+if [[ "x$WIFI_SSID" = "x" ]];
+then
+$LOGGER_CMD $LOGGER_OPTS "The preferred WiFi SSID was not found. Please review the file: $INTERNET_WIFI_ISP_CONFIG"
 # Quit
 exit 1
 fi
@@ -82,7 +113,7 @@ number_of_interfaces () {
 # Quit if less than 2 WiFi devices are detected
 if [[ "$WIFI_INTERFACES_AVAILABLE" -lt "2" ]];
 then
-logger -s -t $(basename $0) "CRITICAL: Sorry, I did not find a second and/or usable WiFi interface "
+$LOGGER_CMD $LOGGER_OPTS "CRITICAL: Sorry, I did not find a second and/or usable WiFi interface "
 exit 2
 fi
 }
@@ -95,8 +126,8 @@ WIFI_STICK_PRESENT=$?
 # Test to see if WiFi stick is now present
 until [[ "$WIFI_STICK_PRESENT" = "0" ]];
 do
-# Display success message on Screen
-$OSD_TOOL_CMD "$INSERT_WIFI_DONGLE_MSG"
+# Ask for insertion of WiFi stick
+$LOGGER_CMD $LOGGER_OPTS "$INSERT_WIFI_DONGLE_MSG"
 # Pause while waiting for insertion
 sleep 60
 # Test to see if WiFi stick is now present
@@ -110,7 +141,7 @@ sudo ps auxw | grep -v grep | grep "$WIFI_STATION_INTERFACE scan" > /dev/null 2>
 ANOTHER_WIFI_SCAN=$?
 while [[ "$ANOTHER_WIFI_SCAN" = "0" ]];
 do
-logger -s -t $(basename $0) "$AP_SCAN_WAITING_4_OTHER_PROCESS"
+$LOGGER_CMD $LOGGER_OPTS "$AP_SCAN_WAITING_4_OTHER_PROCESS"
 sleep 1
 sudo ps auxw | grep -v grep | grep "$WIFI_STATION_INTERFACE scan" > /dev/null 2>&1
 ANOTHER_WIFI_SCAN=$?
@@ -125,17 +156,17 @@ sudo /usr/sbin/ip link set $WIFI_STATION_INTERFACE up
 wait_for_other_wifi_scan_2_complete
 
 # Scan for AP and pick out preferred SSID
-DISCOVERED_WIFI_SSID=$(sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE scan | awk -F': ' '/SSID:/ {print $2}' | grep -i "\b$WIFI_SSID\b")
+DISCOVERED_WIFI_SSID=$(sudo /usr/sbin/iw dev $WIFI_STATION_INTERFACE scan | awk -F': ' '/SSID:/ {print $2}' | grep -xi "\b$WIFI_SSID\b")
 #
 # See if there's a match
 if [[ "x$DISCOVERED_WIFI_SSID" = "x" ]];
 then
 WIFI_FOUND=no
 # Notify
-logger -s -t $(basename $0) "$AP_NOT_FOUND_MSG"
+$LOGGER_CMD $LOGGER_OPTS "$AP_NOT_FOUND_MSG"
 else
 WIFI_FOUND=yes
-logger -s -t $(basename $0) "$AP_FOUND_MSG"
+$LOGGER_CMD $LOGGER_OPTS "$AP_FOUND_MSG"
 fi
 export WIFI_FOUND
 }
@@ -145,16 +176,16 @@ disconnect_4rm_access_point () {
 DHCLIENT_PID=$(sudo ps auxw | grep dhclient | grep $WIFI_STATION_INTERFACE | head -1 | awk {'print $2'})
 
 # Kill dhclient
-[[ "x$DHCLIENT_PID" = "x" ]] || sudo kill $DHCLIENT_PID >> /dev/null
+[[ "x$DHCLIENT_PID" = "x" ]] || sudo kill $DHCLIENT_PID > /dev/null 2>&1
 
 # Disconnect from Access Point
-sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE disconnect
+sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE disconnect >> $LOG_FILE 2>&1
 
 # Forget previous Access point
-sudo /usr/bin/iwctl known-networks list | grep "\b$WIFI_SSID\b" > /dev/null 2>&1
+sudo /usr/bin/iwctl known-networks list | grep -w "\b$WIFI_SSID\b" > /dev/null 2>&1
 NETWORK_EXISTS=$?
-[[ "$NETWORK_EXISTS" = "0" ]] && \
-	sudo /usr/bin/iwctl known-networks "$WIFI_SSID" forget
+[[ "$NETWORK_EXISTS" = "0" && "x$WIFI_SSID" != "x" ]] && \
+	sudo /usr/bin/iwctl known-networks "$WIFI_SSID" forget >> $LOG_FILE 2>&1
 
 # Flush Wifi station interface
 sudo /usr/sbin/ip addr flush dev $WIFI_STATION_INTERFACE 
@@ -184,17 +215,18 @@ NETWORK_HIDDEN=$?
 if [[ "$NETWORK_HIDDEN" = "0" ]];
 then
 # Hidden
-sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE connect-hidden "$WIFI_SSID" --passphrase "$WIFI_SECURITY_KEY"
+sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE connect-hidden "$WIFI_SSID" --passphrase "$WIFI_SECURITY_KEY" >> $LOG_FILE 2>&1
+
 # Not hidden
 else
-sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE connect "$WIFI_SSID" --passphrase "$WIFI_SECURITY_KEY"
+sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE connect "$WIFI_SSID" --passphrase "$WIFI_SECURITY_KEY" >> $LOG_FILE 2>&1
 fi
 
 # Do not auto connect
 sudo /usr/bin/iwctl known-networks list | grep "\b$WIFI_SSID\b" > /dev/null 2>&1
 NETWORK_EXISTS=$?
 [[ "$NETWORK_EXISTS" = "0" ]] && \
-	sudo /usr/bin/iwctl known-networks "$WIFI_SSID" set-property AutoConnect no
+	sudo /usr/bin/iwctl known-networks "$WIFI_SSID" set-property AutoConnect no >> $LOG_FILE 2>&1
 }
 
 check_link_status () {
@@ -203,15 +235,15 @@ WIFI_LINK_STATUS=$(sudo /usr/bin/iwctl station $WIFI_STATION_INTERFACE show | aw
 #
 if [[ "$WIFI_LINK_STATUS" = "disconnected" ]];
 then
-logger -s -t $(basename $0) "Connection to $WIFI_SSID failed!. Exiting ..."
+$LOGGER_CMD $LOGGER_OPTS "Connection to $WIFI_SSID failed!. Exiting ..."
 exit 1
 
 else
 # Beep to alert: Connected WiFi AP
 /usr/bin/beep
 
-# Display success message on Screen
-$OSD_TOOL_CMD "$CONNECTED_MSG"
+# Print assigning IP address notice
+$LOGGER_CMD $LOGGER_OPTS "$ASSIGN_IP_ADDR_MSG"
 fi
 }
 
@@ -224,7 +256,7 @@ cat << ET | sudo tee $DHCLIENT_ENTER_HOOKS_FILE > /dev/null 2>&1
 #!/bin/sh
 make_resolv_conf () {
 :
-logger -s -t \$(basename \$0) "Info: JambulaTV will ignore any DNS server IP addresses assigned to \$interface ..."
+$LOGGER_CMD -s -t \$(basename \$0) "Info: JambulaTV will ignore any DNS server IP addresses assigned to \$interface ..."
 } 
 ET
 
@@ -239,11 +271,11 @@ DHCLIENT_FAILED_PID=$(ps auxw | grep dhclient | grep ${WIFI_STATION_INTERFACE} |
 # Kill existing dhclient process
 [[ "x$DHCLIENT_FAILED_PID" = "x" ]] || kill $DHCLIENT_FAILED_PID
 # Clear default route
-/usr/sbin/ip route del default
+/usr/sbin/ip route del default > /dev/null 2>&1
 # Disable assignment of DNS servers by Access Point
 disable_dns_servers_assignment
 # Get IP/Gateway addresses, and other DHCP info (NOTE: Run dhclient in background!)
-sudo /sbin/dhclient -H $(hostname -s) -q -cf /dev/null -lf /var/lib/dhclient/dhclient--${WIFI_STATION_INTERFACE}.lease -pf /var/run/dhclient-${WIFI_STATION_INTERFACE}.pid ${WIFI_STATION_INTERFACE}
+sudo /sbin/dhclient -H $(hostname -s) -q -cf $LOG_FILE -lf /var/lib/dhclient/dhclient--${WIFI_STATION_INTERFACE}.lease -pf /var/run/dhclient-${WIFI_STATION_INTERFACE}.pid ${WIFI_STATION_INTERFACE}
 }
 
 wait_4_ip_address () {
@@ -251,7 +283,7 @@ IP_ADDRESS_ASSIGNED=255
 # Wait for WiFi interface to be assigned an IP address 
 while [[ "$IP_ADDRESS_ASSIGNED" != "0" ]]
 do
-logger -s -t $(basename $0) "Waiting for WiFi Interface (${WIFI_STATION_INTERFACE}) to be assigned an IP address"
+$LOGGER_CMD $LOGGER_OPTS "Waiting for WiFi Interface (${WIFI_STATION_INTERFACE}) to be assigned an IP address"
 sleep 1
 /usr/sbin/ip addr show ${WIFI_STATION_INTERFACE} | grep inet > /dev/null 2>&1
 IP_ADDRESS_ASSIGNED=$?
@@ -264,7 +296,7 @@ if [[ -e $SETUP_COMPLETED_FILE ]] && \
 	"$(systemctl is-active presence-detection-via-mifi.service)" != "active" ]];
 then
 # Start presence detection using MiFi: Restart systemd unit if enabled but not active
-logger -s -t $(basename $0) "Starting Presence Detection using MiFi Router"
+$LOGGER_CMD $LOGGER_OPTS "Starting Presence Detection using MiFi Router"
 systemctl restart presence-detection-via-mifi.service 
 fi
 }
@@ -272,7 +304,7 @@ fi
 quit_not_found () {
 if [[ $WIFI_FOUND != yes ]];
 then
-logger -s -t $(basename $0) "$AP_NOT_FOUND_MSG"
+$LOGGER_CMD $LOGGER_OPTS "$AP_NOT_FOUND_MSG"
 exit 1
 fi
 }
@@ -292,8 +324,14 @@ DNS_STATUS=$?
 #  MAIN SCRIPT  #
 #################
 
+# Set logging
+set_logging
+
 # Quit if script is already running
 quit_if_already_running
+
+# Quit if no SSID is not specified
+quit_if_ssid_is_missing
 
 # Kill ping if keep_alive function is activated
 #killall fping
@@ -307,7 +345,7 @@ OK)
 # Add script running file
 add_script_running_file
 # Started by icinga2
-logger -s -t $(basename $0) "Wireless Access Point ($WIFI_SSID) Available"
+$LOGGER_CMD $LOGGER_OPTS "Wireless Access Point ($WIFI_SSID) Available"
 ;;
 WARNING)
 # Quit script since Icinga2 detects no WiFi AP.  Before though, kill any previous WiFi
@@ -338,3 +376,6 @@ start_presence_detection_via_mifi
 
 #keep_alive
 remove_script_running_file
+
+# Print connection to AP completed notice
+$LOGGER_CMD $LOGGER_OPTS "$CONNECTED_2_AP_MSG"
