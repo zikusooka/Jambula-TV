@@ -1,6 +1,6 @@
 [Unit]
 Description=Home Assistant
-After=network-online.target syslog.target mosquitto.service jambulatv@kodi.service
+After=multi-user.target alsa-restore.service 
 
 
 [Service]
@@ -9,4 +9,4 @@ User=jambula
 ExecStart=/usr/local/bin/hass -c "/etc/JambulaTV/homeassistant"
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target
