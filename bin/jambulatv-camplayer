@@ -1,27 +1,41 @@
 #!/bin/sh
-# This is a wrapper to allow playing web based Camera streams using TVHeadend 
+# This is a wrapper to allow playing of web based Camera streams using
+# TVHeadend
+#
 # Jambula Labs @copyright 2020-2021 All rights reserved
 
 # Variables
-FFMPEG_CMD=/usr/bin/ffmpeg
-
-CAMERA_IP_ADDRESS=http://127.0.0.1
-CAMERA_PORT_NUMBER=8520
+CAMERA_ACTION=$1
+CAMERA_SERVER_IP=$2
+CAMERA_SERVER_PORT=$3
+CAMERA_ZM_PATH=$4 
+CAMERA_USER=$5
+CAMERA_PASS=$6
+CAMERA_NUMBER=$7
+CAMERA_PLAYER=$8
+CAMERA_PIPE_COMMAND_AND_OPTIONS="${@:9}"
+CAMERA_HTTP_URL="http://${CAMERA_SERVER_IP}"
 CAMERA_MODE=jpeg
 CAMERA_SCALE=100
 CAMERA_MAX_FPS=5
 CAMERA_BUFFER=1000
-CAMERA_CONNKEY=652590
-CAMERA_RAND=1507501065
-CAMERA_ACTION=$1
-CAMERA_NUMBER=$2
-CAMERA_PLAYER=$3
-CAMERA_PIPE_COMMAND_AND_OPTIONS="${@:4}"
 CAMERA_PIPE_COMMAND_AND_OPTIONS_TEMP_FILE=/tmp/camplayer-pipe-commandopts
 CAMERA_NAME=CAMERA-$CAMERA_NUMBER
-CAMERA_STREAM_URL="$CAMERA_IP_ADDRESS:$CAMERA_PORT_NUMBER/zms-inetd?mode=$CAMERA_MODE&scale=$CAMERA_SCALE&maxfps=$CAMERA_MAX_FPS&buffer=$CAMERA_BUFFER&monitor=$CAMERA_NUMBER&connkey=$CAMERA_CONNKEY&rand=$CAMERA_RAND"
 CAMERA_SERVICE_PROVIDER=jambulaTV
 CAMERA_USER_AGENT="Mozilla/5.0 (X11; Linux x86_64; rv:54.0) Gecko/20100101 Firefox/54.0"
+
+FFMPEG_CMD=/usr/bin/ffmpeg
+
+#  Check for ZM auth page
+/usr/bin/curl -s -d user=$CAMERA_USER -d pass=$CAMERA_PASS $CAMERA_HTTP_URL:$CAMERA_SERVER_PORT/api/host/login.json | grep '<title>404 Not Found</title>' > /dev/null 2>&1
+ZM_AUTH_EXISTS=$?
+#
+if [[ "x$CAMERA_USER" != "x" || "x$CAMERA_PASS" != "x" ]] && [[ "x$CAMERA_HTTP_URL" != "x" || "x$CAMERA_SERVER_PORT" != "x" ]] && [[ "$ZM_AUTH_EXISTS" != "0" ]];
+then
+ZM_API_AUTH=$(/usr/bin/curl -s -d user=$CAMERA_USER -d pass=$CAMERA_PASS $CAMERA_HTTP_URL:$CAMERA_SERVER_PORT/api/host/login.json | jq -r .credentials | cut -d = -f2)
+fi
+
+ZM_MONITOR_STREAM_URL="$CAMERA_HTTP_URL:$CAMERA_SERVER_PORT/$CAMERA_ZM_PATH?mode=$CAMERA_MODE&scale=$CAMERA_SCALE&maxfps=$CAMERA_MAX_FPS&buffer=$CAMERA_BUFFER&monitor=$CAMERA_NUMBER&auth=$ZM_API_AUTH"
 
 
 
@@ -32,32 +46,72 @@ usage () {
 if [[ "x$CAMERA_ACTION" = "x" ]];
 then
 cat <<EOF
-Usage: $(basename $0) [ACTION {play|stop}] [CAMERA NUMBER {1|2|3}] [PLAYER {ffmpeg|ffplay}]
+Usage: $(basename $0) [ACTION {play|stop}] [ZM SERVER IP] [ZM SERVER PORT] [ZM SERVER PATH] [ZM USERNAME] [ZM PASSWORD] [ZM MONITOR ID] [PLAYER {ffmpeg|ffplay}]
 EOF
 exit 1
 fi
 
 case "$CAMERA_ACTION" in
 play)
-if [[ "x$CAMERA_NUMBER" = "x" ]];
-#
+if [[ "x$CAMERA_SERVER_IP" = "x" ]];
 then
 cat <<EOF
-Usage: $(basename $0) $CAMERA_ACTION [CAMERA NUMBER {1|2|3}] [PLAYER {ffmpeg|ffplay}]
+Usage: $(basename $0) $CAMERA_ACTION [ZM SERVER IP] [ZM SERVER PORT] [ZM SERVER PATH] [ZM USERNAME] [ZM PASSWORD] [ZM MONITOR ID] [PLAYER {ffmpeg|ffplay}]
 EOF
 exit 1
-#
+
+elif [[ "x$CAMERA_SERVER_PORT" = "x" ]];
+then
+cat <<EOF
+Usage: $(basename $0) $CAMERA_ACTION $CAMERA_SERVER_IP [ZM SERVER PORT] [ZM SERVER PATH] [ZM USERNAME] [ZM PASSWORD] [ZM MONITOR ID] [PLAYER {ffmpeg|ffplay}]
+EOF
+exit 1
+
+elif [[ "x$CAMERA_ZM_PATH" = "x" ]];
+then
+cat <<EOF
+Usage: $(basename $0) $CAMERA_ACTION $CAMERA_SERVER_IP $CAMERA_SERVER_PORT [ZM SERVER PATH] [ZM USERNAME] [ZM PASSWORD] [ZM MONITOR ID] [PLAYER {ffmpeg|ffplay}]
+
+Example:
+--------
+Nginx: "zms-inetd"
+Apache: "cgi-bin-zm/nph-zms"
+
+EOF
+exit 1
+
+elif [[ "x$CAMERA_USER" = "x" ]];
+then
+cat <<EOF
+Usage: $(basename $0) $CAMERA_ACTION $CAMERA_SERVER_IP $CAMERA_SERVER_PORT $CAMERA_ZM_PATH [ZM USERNAME] [ZM PASSWORD] [ZM MONITOR ID] [PLAYER {ffmpeg|ffplay}]
+EOF
+exit 1
+
+elif [[ "x$CAMERA_PASS" = "x" ]];
+then
+cat <<EOF
+Usage: $(basename $0) $CAMERA_ACTION $CAMERA_SERVER_IP $CAMERA_SERVER_PORT $CAMERA_ZM_PATH $CAMERA_USER [ZM PASSWORD] [ZM MONITOR ID] [PLAYER {ffmpeg|ffplay}]
+EOF
+exit 1
+
+elif [[ "x$CAMERA_NUMBER" = "x" ]];
+then
+cat <<EOF
+Usage: $(basename $0) $CAMERA_ACTION $CAMERA_SERVER_IP $CAMERA_SERVER_PORT $CAMERA_ZM_PATH $CAMERA_USER $CAMERA_PASS [ZM MONITOR ID] [PLAYER {ffmpeg|ffplay}]
+EOF
+exit 1
+
 elif [[ "x$CAMERA_PLAYER" = "x" ]] || [[ "$CAMERA_PLAYER" != "ffmpeg" && "$CAMERA_PLAYER" != "ffplay" ]];
 then
 cat <<EOF
-Usage: $(basename $0) $CAMERA_ACTION $CAMERA_NUMBER [PLAYER {ffmpeg|ffplay}]
+Usage: $(basename $0) $CAMERA_ACTION $CAMERA_SERVER_IP $CAMERA_SERVER_PORT $CAMERA_ZM_PATH $CAMERA_USER $CAMERA_PASS $CAMERA_NUMBER [PLAYER {ffmpeg|ffplay}]
 EOF
 exit 1
 #
 elif [[ "$CAMERA_PLAYER" = "ffmpeg" && "$PARENT_COMMAND" != "tvheadend" && "x$CAMERA_PIPE_COMMAND_AND_OPTIONS" = "x" ]];
 then
 cat <<EOF
-Usage: $(basename $0) $CAMERA_ACTION $CAMERA_NUMBER $CAMERA_PLAYER [PIPE COMMAND] [OPTIONS]
+Usage: $(basename $0) $CAMERA_ACTION $CAMERA_SERVER_IP $CAMERA_SERVER_PORT $CAMERA_ZM_PATH $CAMERA_USER $CAMERA_PASS $CAMERA_NUMBER $CAMERA_PLAYER [PIPE COMMAND] [OPTIONS]
 EOF
 exit 1
 #
@@ -70,7 +124,7 @@ continue
 
 *)
 cat <<EOF
-Usage: $(basename $0) [ACTION {play|stop}] [CAMERA NUMBER {1|2|3}] [PLAYER {ffmpeg|ffplay}]
+Usage: $(basename $0) [ACTION {play|stop}] [ZM SERVER IP] [ZM SERVER PORT] [ZM SERVER PATH] [ZM USERNAME] [ZM PASSWORD] [ZM MONITOR ID] [PLAYER {ffmpeg|ffplay}]
 EOF
 exit 1
 ;;
@@ -88,11 +142,11 @@ player_command_ffmpeg () {
 if [[ "x$CAMERA_PIPE_COMMAND_AND_OPTIONS" = "x" ]];
 then
 # FFmpeg NO pipe command
-$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$CAMERA_USER_AGENT" -i "$CAMERA_STREAM_URL" -metadata service_provider=$CAMERA_SERVICE_PROVIDER -metadata service_name="$CAMERA_NAME" -tune zerolatency -f $1 pipe:1
+$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$CAMERA_USER_AGENT" -i "$ZM_MONITOR_STREAM_URL" -metadata service_provider=$CAMERA_SERVICE_PROVIDER -metadata service_name="$CAMERA_NAME" -tune zerolatency -f $1 pipe:1
 else
 
 # FFmpeg with pipe command
-$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$CAMERA_USER_AGENT" -i "$CAMERA_STREAM_URL" -metadata service_provider=$CAMERA_SERVICE_PROVIDER -metadata service_name="$CAMERA_NAME" -tune zerolatency -f $1 pipe:1 | $2 - > /dev/null 2>&1 &
+$FFMPEG_CMD -nostats -loglevel fatal -user-agent "$CAMERA_USER_AGENT" -i "$ZM_MONITOR_STREAM_URL" -metadata service_provider=$CAMERA_SERVICE_PROVIDER -metadata service_name="$CAMERA_NAME" -tune zerolatency -f $1 pipe:1 | $2 - > /dev/null 2>&1 &
 #
 # Write command and options to temp file - used for stopping player processes
 write_pipe_commandopts_temp $2
@@ -124,7 +178,7 @@ PID_PIPED_COMMANDOPTS=$(ps auxw | grep -Ev grep | grep "\\$(cat $CAMERA_PIPE_COM
 #################
 #  MAIN SCRIPT  #
 #################
-#
+
 # What process called this script
 PARENT_COMMAND="$(ps -o comm= $PPID)"
 
@@ -136,7 +190,7 @@ case $CAMERA_ACTION in
 play)
 # FFplay
 # -------
-[[ "$CAMERA_PLAYER" = "ffplay" ]] && player_command_ffplay "$CAMERA_STREAM_URL"
+[[ "$CAMERA_PLAYER" = "ffplay" ]] && player_command_ffplay "$ZM_MONITOR_STREAM_URL"
 
 # FFmpeg
 # --------
