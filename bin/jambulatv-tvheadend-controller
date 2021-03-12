@@ -52,7 +52,6 @@ TVHEADEND_JTV_HOME_CREATE_CHAN_TEMP_FILE=$TMPDIR/create_jtvhome_channels.sh
 TVHEADEND_JTV_HOME_CREATE_CHAN_TAG_TEMP_FILE=$TMPDIR/create_jtvhome_channel_tags.sh
 TVHEADEND_JTV_HOME_INFO_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/jtvhome-scan-info.$(date +%Y%m%d%H%M).log
 TVHEADEND_JTV_HOME_FAILED_LOG_FILE=$TVHEADEND_IPTV_LOG_DIR/jtvhome-scan-failed.$(date +%Y%m%d%H%M).log
-TVHEADEND_JTV_HOME_SERVICE_LOG_FILE=$TMPDIR/jtvhome_service_output.log
 TVHEADEND_JTV_HOME_SERVICE_UUIDS_RAW_FILE=$TMPDIR/jtvhome_service_uuid.txt
 
 TVHEADEND_PLAYLIST_4_WIRED_CLIENTS=$TMPDIR/LiveTV-Lan
@@ -111,8 +110,15 @@ check_if_in_use () {
 CURRENT_PROFILES=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq -r '.entries[] | .profile' | sed 's:null::g')
 CURRENT_CHANNELS=$($CURL_CMD $CURL_OPTS $TVHEADEND_API_URL/status/subscriptions | jq -r '.entries[] | .channel' | sed 's:null::g')
 #
-# Quit if TVH Server is being used i.e. Playing TV
+# Check to see if TVH Server is being used i.e. Playing TV
 if [ "x$CURRENT_CHANNELS" != "x" ] || [ "x$CURRENT_PROFILES" != "x" ];
+then
+TVHEADEND_SERVER_IS_USE=yes
+fi
+}
+
+quit_if_in_use () {
+if [[ "$TVHEADEND_SERVER_IS_USE" = "yes" ]];
 then
 # Source notification strings
 set_notifications
@@ -120,7 +126,23 @@ set_notifications
 print_notification "$TVHEADEND_SERVER_IN_USE_MESSAGE" text
 # Print notification using OSD tool
 print_notification "$TVHEADEND_SERVER_IN_USE_MESSAGE" osd
+#
+# Quit if TVH Server is being used
 exit 1
+fi
+}
+
+skip_if_in_use () {
+if [[ "$TVHEADEND_SERVER_IS_USE" = "yes" ]];
+then
+continue
+fi
+}
+
+restart_if_not_in_use () {
+if [[ "$TVHEADEND_SERVER_IS_USE" != "yes" ]];
+then
+sudo systemctl restart tvheadend.service
 fi
 }
 
@@ -163,8 +185,16 @@ tvheadend_restart_server () {
 # Give multimedia user permission to access tvheadend directories
 sudo chown -R $MULTIMEDIA_USER:video $TVHEADEND_CONFIG_DIR
 #
-# Restart TVHeadend
-sudo systemctl restart tvheadend.service
+# Check to see if TVHeadend server is in use, restart if it is not for 
+# all except: jtvhome
+check_if_in_use 
+#
+if [[ "$TV_TYPE" = "jtvhome" ]];
+then
+skip_if_in_use 
+else
+restart_if_not_in_use
+fi
 }
 
 pre_config () {
@@ -199,8 +229,9 @@ notify_tv_server_controller_initiated
 break
 
 else
-# Check to see if TVHeadend server is in use
+# Check to see if TVHeadend server is in use, quit if it is
 check_if_in_use 
+quit_if_in_use
 #
 # Notify when TV server controller process has been initiated
 notify_tv_server_controller_initiated
@@ -224,8 +255,9 @@ notify_tv_server_controller_initiated
 break
 
 else
-# Check to see if TVHeadend server is in use
+# Check to see if TVHeadend server is in use, quit if it is
 check_if_in_use 
+quit_if_in_use
 #
 # Notify when TV server controller process has been initiated
 notify_tv_server_controller_initiated
@@ -241,8 +273,9 @@ echo "Usage:  ./`basename $0` cctv [scan|map|all]
 exit 1
 
 else
-# Check to see if TVHeadend server is in use
+# Check to see if TVHeadend server is in use, quit if it is
 check_if_in_use
+quit_if_in_use
 #
 # Notify when TV server controller process has been initiated
 notify_tv_server_controller_initiated
@@ -258,8 +291,9 @@ echo "Usage:  ./`basename $0` jtvhome [scan|map|all]
 exit 1
 
 else
-# Check to see if TVHeadend server is in use
+# Check to see if TVHeadend server is in use, quit if it is
 check_if_in_use
+quit_if_in_use
 #
 # Notify when TV server controller process has been initiated
 notify_tv_server_controller_initiated
@@ -1709,7 +1743,7 @@ $PLAYLIST_CHANNEL ($PLAYLIST_CATEGORY)
 
 Link:	$PLAYLIST_URL
 
-Error:	$(cat $TVHEADEND_JTV_HOME_SERVICE_LOG_FILE)
+Error:	$(cat $TVHEADEND_JTV_HOME_INFO_LOG_FILE)
 
 STREAMLOG
 fi

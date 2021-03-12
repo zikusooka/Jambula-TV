@@ -7367,7 +7367,7 @@ cat >> $TVHEADEND_JTV_HOME_CREATE_NETWORK_TEMP_FILE <<EOF
 $CURL_CMD $CURL_OPTS -d "class=iptv_auto_network" -d "\$(printf $(echo -n $(cat <<EOT
 conf='{
 	"url": "http://$TVHEADEND_HTTP_IP:$PLAYLISTS_PORT/$PLAYLISTS_JTV_HOME_M3U_FILE",
-	"bouquet": true,
+	"bouquet": false,
 	"channel_number": 1000,
 	"refetch_period": 1440,
 	"ssl_peer_verify": false,
@@ -7386,7 +7386,7 @@ conf='{
 	"nid": 0,
 	"autodiscovery": 0,
 	"skipinitscan": true,
-	"idlescan": true,
+	"idlescan": false,
 	"sid_chnum": false,
 	"ignore_chnum": false,
 	"satip_source": 0,
