@@ -22,7 +22,7 @@ MUSIC_SERVICE=$1
 MUSIC_CATEGORY=$2
 MUSIC_REQUESTED=$(echo $@ | sed "s: :+:g" | cut -d'+' -f3-)
 
-TIMEOUT_PROBE="60s"
+TIMEOUT_PROBE="120s"
 TIMEOUT_CMD="/usr/bin/timeout --preserve-status $TIMEOUT_PROBE"
 
 PING_TIMEOUT=3 #9
@@ -131,7 +131,7 @@ download_music_from_youtube () {
 YOUTUBE_MUSIC_FORMAT=best
 YOUTUBE_MAX_FILE_SIZE=25m
 YOUTUBE_DL_CMD="$TIMEOUT_CMD /usr/bin/youtube-dl"
-YOUTUBE_DL_OPTS="-v -4 -i --ignore-config --prefer-insecure --no-check-certificate --geo-bypass --max-filesize $YOUTUBE_MAX_FILE_SIZE"
+YOUTUBE_DL_OPTS="-v -4 -i -c --ignore-config --prefer-insecure --no-check-certificate --geo-bypass --max-filesize $YOUTUBE_MAX_FILE_SIZE"
 YOUTUBE_ERROR_LOG_FILE=/tmp/youtube_dl_fetch_music.log
 #
 # Print started notification to systemd journal and console
@@ -139,7 +139,7 @@ clear
 logger -s -t $MUSIC_APPLICATION_ID "Downloading the song now playing [$MUSIC_NOW_PLAYING_SONG] from [$MUSIC_SERVICE], please be patient ..."
 #
 # Download & extract best audio format & convert 2 desired format - mp3
-$YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_DOWNLOADS_DIR/"%(title)s.%(artist)s.%(ext)s" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title "%(title)s.%(artist)s" $YOUTUBE_VIDEO_URL > $YOUTUBE_ERROR_LOG_FILE 2>&1
+$YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_DOWNLOADS_DIR/"%(title)s.%(ext)s" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title "%(title)s" $YOUTUBE_VIDEO_URL > $YOUTUBE_ERROR_LOG_FILE 2>&1
 FETCH_STATUS=$?
 #
 # Filter out errors from log file
