@@ -377,11 +377,12 @@ v4l_utils_install
 #DEBUGGING
 #_install_pause_check_4_errors_ $PROJECT_ATTENDANT_USERNAME $PROJECT_ATTENDANT_HOSTNAME "Insert program name here"
 
-#upgrade_kernel 5.10.10
-#upgrade_kernel 5.9.14
-#upgrade_kernel 5.4.99
-#upgrade_kernel 4.19.158
-#upgrade_kernel 4.4.244
+#upgrade_kernel 5.10.43
+#upgrade_kernel 5.4.125
+#upgrade_kernel 4.19.194
+#upgrade_kernel 4.14.236
+#upgrade_kernel 4.9.272
+#upgrade_kernel 4.4.272
 
 #upgrade_openssl
 
