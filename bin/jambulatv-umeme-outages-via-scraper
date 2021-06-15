@@ -19,16 +19,20 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 . $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Variables
-DATE_AFTER_TOMORROW_DAY_FORMAT=$(date --date='2 day' +'%A')
 DATE_TOMORROW_DAY_FORMAT=$(date --date='1 day' +'%A')
+DATE_AFTER_TOMORROW_DAY_FORMAT=$(date --date='2 day' +'%A')
 
 THIS_YEAR=$(date +%Y)
 THIS_MONTH_NAME_FULL=$(date +%B)
 THIS_MONTH_DIGIT=$(date +%m)
+THIS_MONTH_LAST_TODAY=$(date -d "-$(date +%d) days  month" +%d)
+THIS_MONTH_LAST_TODAY_DAY_OF_YEAR=$(date -d "${THIS_MONTH_NAME_FULL} ${THIS_MONTH_LAST_TODAY} ${THIS_YEAR}" +%_j)
+THIS_MONTH_TODAY_DAY_OF_YEAR=$(date +%_j)
+THIS_MONTH_DAYS_LEFT=$((${THIS_MONTH_LAST_TODAY_DAY_OF_YEAR} - ${THIS_MONTH_TODAY_DAY_OF_YEAR} -3))
 
-DATE_DIGIT_AFTER_TOMORROW=$(date --date='2 day' +'%d')
-DATE_DIGIT_TOMORROW=$(date --date='1 day' +'%d')
 DATE_DIGIT_TODAY=$(date +'%d')
+DATE_DIGIT_TOMORROW=$(date --date='1 day' +'%d')
+DATE_DIGIT_AFTER_TOMORROW=$(date --date='2 day' +'%d')
 
 CURL_CMD="/usr/bin/curl"
 CURL_OPTS="-s -S -L"
@@ -64,8 +68,10 @@ DATE_TODAY_UMEME_FORMAT=$(date +'%A,%d')
 UMEME_OUTAGES_PLANNED_FILE=/JambulaTV/Downloads/UMEME-planned-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}.xls
 ;;
 esac
-# Maximum age of outages file - 86400 (24 hours)
-MAXIMUM_AGE_OF_UMEME_OUTAGES_PLANNED_FILE=86400
+
+# Maximum age of outages file - NOTE: 1 day in seconds = 86400
+MAXIMUM_AGE_OF_UMEME_OUTAGES_PLANNED_FILE=$((${THIS_MONTH_DAYS_LEFT} * 86400))
+
 # Our output file
 UMEME_OUTAGES_PLANNED_FILE_CSV=/JambulaTV/Downloads/UMEME-planned-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}.csv
 
@@ -107,6 +113,15 @@ ping -c $PING_COUNT $PING_IP_ADDRESS > /dev/null 2>&1
 INTERNET_ALIVE=$?
 }
 
+DaySuffix() {
+  case $DATE_DIGIT_OF_SPECIFIED_DAY in
+    1|21|31) echo "st";;
+    2|22)    echo "nd";;
+    3|23)    echo "rd";;
+    *)       echo "th";;
+  esac
+}
+
 download_outages_webpage () {
 # Download latest outages web page from UMEME website
 logger -t $(basename $0) "Downloading UMEME outages web page:  $UMEME_OUTAGES_WEB_PAGE ..."
@@ -133,8 +148,11 @@ cat <<EOF
 Error: Am sorry I did not find any UMEME link to ${THIS_MONTH_NAME_FULL}'s planned power outages. 
 Please visit $UMEME_OUTAGES_WEB_PAGE to find out why its missing.
 EOF
-exit 1
 #
+# Before quiting, print 'none' if outages file is missing 
+echo none
+exit 1
+
 else
 # Remove old planned outages file
 [[ -e $UMEME_OUTAGES_PLANNED_FILE ]] && sudo rm -f $UMEME_OUTAGES_PLANNED_FILE
@@ -173,10 +191,12 @@ logger -s -t $(basename $0) "The file $UMEME_OUTAGES_PLANNED_FILE is missing or 
 
 $UMEME_OUTAGES_WEB_PAGE
 "
+#
+# Before quiting, print 'none' if outages file is missing 
+echo none
 exit 1
 
 else
-clear
 logger -t $(basename $0) "Warning: The file $UMEME_OUTAGES_PLANNED_FILE is old and may not accurately reflect the latest information on power outages
 "
 fi
@@ -197,10 +217,12 @@ outage_ongoing () {
 }
 
 outage_today () {
+# Add ordinal suffix
+DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_TODAY}
 # Set outage coming flag if date is found in outages file
 case "$UMEME_OUTAGES_FILE_FORMAT" in
 pdf)
-pdfgrep -i "\b${VILLAGE}\b" $UMEME_OUTAGES_PLANNED_FILE  | grep -i ${THIS_MONTH_NAME_FULL} | grep $DATE_DIGIT_TODAY > /dev/null 2>&1
+pdfgrep -i "\b${VILLAGE}\b" $UMEME_OUTAGES_PLANNED_FILE | grep -Ei "$DATE_DIGIT_TODAY$(DaySuffix).*${THIS_MONTH_NAME_FULL}" > /dev/null 2>&1
 OUTAGE_COMING_TODAY=$?
 ;;
 xls)
@@ -211,10 +233,12 @@ esac
 }
 
 outage_tomorrow () {
+# Add ordinal suffix
+DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_TOMORROW}
 # Set outage coming flag if date is found in outages file
 case "$UMEME_OUTAGES_FILE_FORMAT" in
 pdf)
-pdfgrep -i "\b${VILLAGE}\b" $UMEME_OUTAGES_PLANNED_FILE  | grep -i ${THIS_MONTH_NAME_FULL} | grep $DATE_DIGIT_TOMORROW > /dev/null 2>&1
+pdfgrep -i "\b${VILLAGE}\b" $UMEME_OUTAGES_PLANNED_FILE | grep -Ei "$DATE_DIGIT_TOMORROW$(DaySuffix).*${THIS_MONTH_NAME_FULL}" > /dev/null 2>&1
 OUTAGE_COMING_TOMORROW=$?
 ;;
 xls)
@@ -225,10 +249,12 @@ esac
 }
 
 outage_in_two_days_time () {
+# Add ordinal suffix
+DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_AFTER_TOMORROW}
 # Set outage coming flag if date is found in outages file
 case "$UMEME_OUTAGES_FILE_FORMAT" in
 pdf)
-pdfgrep -i "\b${VILLAGE}\b" $UMEME_OUTAGES_PLANNED_FILE  | grep -i ${THIS_MONTH_NAME_FULL} | grep $DATE_DIGIT_AFTER_TOMORROW > /dev/null 2>&1
+pdfgrep -i "\b${VILLAGE}\b" $UMEME_OUTAGES_PLANNED_FILE | grep -Ei "$DATE_DIGIT_AFTER_TOMORROW$(DaySuffix).*${THIS_MONTH_NAME_FULL}" > /dev/null 2>&1
 OUTAGE_COMING_TWO_DAYS=$?
 ;;
 xls)
@@ -268,7 +294,7 @@ outage_today
 
 tomorrow)
 outage_tomorrow
-[[ "$OUTAGE_COMING_TOMORROW" = "0" ]] && echo $VILLAGE
+[[ "$OUTAGE_COMING_TOMORROW" = "0" ]] && echo $VILLAGE 
 ;;
 
 after_tomorrow)
