@@ -13553,6 +13553,8 @@ do
 [[ -e $REQUIREMENTS_FILE ]] && sed -i 's:pip>:#pip>:g; s:pip<:#pip<:g; s:pip=:#pip=:g' $REQUIREMENTS_FILE
 # yarl: Don't re-install since the current version is what works
 [[ -e $REQUIREMENTS_FILE ]] && sed -i 's:yarl>:#yarl>:g; s:yarl<:#yarl<:g; s:yarl=:#yarl=:g' $REQUIREMENTS_FILE
+# ruamel.yaml: Don't re-install since the current version is what works
+[[ -e $REQUIREMENTS_FILE ]] && sed -i 's:ruamel.yaml:#ruamel.yaml>:g; s:ruamel.yaml<:#ruamel.yaml<:g; s:ruamel.yaml=:#ruamel.yaml=:g' $REQUIREMENTS_FILE
 done
 
 # Install dependencies for Home-Assistant using pips specified in
