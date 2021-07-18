@@ -5169,6 +5169,7 @@ cd $INSTALL_SRC_DIR/ffmpeg
 	--enable-libfdk-aac \
 	--enable-libfreetype \
 	--enable-libmp3lame \
+	--enable-libopencore-amrnb \
 	--enable-libopus \
 	--enable-libpulse \
 	--enable-librtmp \
@@ -5182,6 +5183,7 @@ cd $INSTALL_SRC_DIR/ffmpeg
 	--enable-libxml2 \
 	--enable-openal \
 	--enable-libdrm \
+	--enable-version3 \
 	--disable-libaom
 # Install
 make_install_jambulatv -j$SYSTEM_CPU_CORES
