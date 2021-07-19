@@ -54,40 +54,46 @@ Online Radio Station IDs
   3  Jazz 24 (Jazz)
   4  Radio Swiss Jazz
   5  K-Love (Christian)
-  6  Soma FM (Indie)
-  7  KEAN 105 (Country)
-  8  Hot 108 (Hip Hop)
-  9  NBSRadio (Party)
- 10  Radio Santa Claus (Christmas)
- 11  Relax (Jazz)
- 12  Relax (Latino)
- 13  Relax (Life)
- 14  Relax (Gold)
- 15  Relax (Nature)
- 16  Radio Swiss Classic
- 17  Radio Swiss Classique
- 18  The Loop (Classic Rock)
- 19  Black Gospel Radio (Gospel)
- 20  WFMV - 95.3 FM (Gospel)
- 21  Gospel Highway 11 (Gospel)
- 22  WGOK Gospel 900 (Gospel)
- 23  1.FM ReggaeTrade (Reggae)
- 24  Reggae 141 (Reggae)
- 25  Sun City 104.9 FM (Reggae)
- 26  UFDV Radio (Reggae)
- 27  FM Jamaica Radio (Reggae)
- 28  NPR (News)
- 29  BBC World Service (News)
- 30  KFM (Uganda)
- 31  Radio One (Uganda)
- 32  Sanyu FM (Uganda)
- 33  Capital FM (Uganda)
- 34  Next Radio (Uganda)
- 35  Simba FM (Uganda)
- 36  Beat FM (Uganda)
- 37  CBS Radio (Uganda)
- 38  Power FM (Uganda)
- 39  Impact FM (Uganda)
+  6  23 Indie Street (Indie)
+  7  Indie 88 - Toronto, Canda (Indie)
+  8  Indie 102.3 - Denver, CO (Indie)
+  9  SomaFM (Indie)
+ 10  KEXP (Alternative)
+ 11  ALT 98.7 -LA (Alternative)
+ 12  WDAV - Davidson College, NC (Classical)
+ 13  KEAN 105 (Country)
+ 14  Hot 108 (Hip Hop)
+ 15  NBSRadio (Party)
+ 16  Radio Santa Claus (Christmas)
+ 17  Relax (Jazz)
+ 18  Relax (Latino)
+ 19  Relax (Life)
+ 20  Relax (Gold)
+ 21  Relax (Nature)
+ 22  Radio Swiss Classic
+ 23  Radio Swiss Classique
+ 24  The Loop (Classic Rock)
+ 25  Black Gospel Radio (Gospel)
+ 26  WFMV - 95.3 FM (Gospel)
+ 27  Gospel Highway 11 (Gospel)
+ 28  WGOK Gospel 900 (Gospel)
+ 29  1.FM ReggaeTrade (Reggae)
+ 30  Reggae 141 (Reggae)
+ 31  Sun City 104.9 FM (Reggae)
+ 32  UFDV Radio (Reggae)
+ 33  FM Jamaica Radio (Reggae)
+ 34  NPR (News)
+ 35  BBC World Service (News)
+ 36  KFM (Uganda)
+ 37  Radio One (Uganda)
+ 38  Sanyu FM (Uganda)
+ 39  Capital FM (Uganda)
+ 40  Next Radio (Uganda)
+ 41  Simba FM (Uganda)
+ 42  Beat FM (Uganda)
+ 43  CBS Radio (Uganda)
+ 44  Power FM (Uganda)
+ 45  Impact FM (Uganda)
 EOF
 exit 1
 fi
@@ -130,171 +136,201 @@ WEBRADIO_STREAMER_URL="https://maestro.emfcdn.com/stream_for/k-love/tunein/aac"
 ;;
 
 6)
+# 23 Indie Street (Indie)
+WEBRADIO_STREAMER_URL="https://streamingv2.shoutcast.com/23-indie-street"
+;;
+
+7)
+# Indie 88 - Toronto, Canda (Indie)
+WEBRADIO_STREAMER_URL="http://cob-ais.leanstream.co/CINDFM"
+;;
+
+8) 
+# Indie 102.3 - Denver, CO (Indie)
+WEBRADIO_STREAMER_URL="https://stream1.cprnetwork.org/cpr3_lo"
+;;
+
+9)
 # SomaFM (Indie)
 WEBRADIO_STREAMER_URL="http://ice1.somafm.com/indiepop-128-mp3"
 ;;
 
-7)
+10)
+# KEXP (Alternative)
+WEBRADIO_STREAMER_URL="https://kexp-mp3-128.streamguys1.com/kexp128.mp3"
+;;
+
+11) 
+# ALT 98.7 -LA (Alternative)
+WEBRADIO_STREAMER_URL="http://stream.revma.ihrhls.com/zc201"
+;;
+
+12)
+# WDAV - Davidson College, NC (Classical)
+WEBRADIO_STREAMER_URL="http://audio-mp3.ibiblio.org:8000/concierto"
+;;
+
+13)
 # KEAN 105 (Country)
 WEBRADIO_STREAMER_URL="http://54.82.83.208/townsquare-keanfmaac-ibc3"
 ;;
 
-8)
+14)
 # Hot 108 (Hip Hop)
 WEBRADIO_STREAMER_URL="http://listen.hot108.com/hot108"
 ;;
 
-9)
+15)
 # NBSRadio (House/Party/Beats)
 WEBRADIO_STREAMER_URL="http://live.nsbradio.co.uk:8904/"
 ;;
 
-10)
+16)
 # Radio Santa Claus (Christmas)
 WEBRADIO_STREAMER_URL="https://streaming.radiostreamlive.com/radiosantaclaus_devices"
 ;;
 
-11)
+17)
 # Relax (Jazz)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_2"
 ;;
 
-12)
+18)
 # Relax (Latino)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_3"
 ;;
 
-13)
+19)
 # Relax (Life)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_5"
 ;;
 
-14)
+20)
 # Relax (Gold)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_4"
 ;;
 
-15)
+21)
 # Relax (Nature)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_1"
 ;;
 
-16)
+22)
 # Radio Swiss Classic (Classical)
 WEBRADIO_STREAMER_URL="http://stream.srg-ssr.ch:80/m/rsc_de/aacp_96"
 ;;
 
-17)
+23)
 # Radio Swiss Classique (Classical)
 WEBRADIO_STREAMER_URL="http://stream.srg-ssr.ch/m/rsc_fr/mp3_128"
 ;;
 
-18)
+24)
 # WLUP-FM - The Loop 97.9 FM (Classic Rock)
 WEBRADIO_STREAMER_URL="http://17013.live.streamtheworld.com/WLUPFM.mp3"
 ;;
 
-19)
+25)
 # Black Gospel Radio (Gospel)
 WEBRADIO_STREAMER_URL="http://ice64.securenetsystems.net/BGRLIVE"
 ;;
 
-20)
+26)
 # WFMV - 95.3 FM (Gospel)
 WEBRADIO_STREAMER_URL="http://ice8.securenetsystems.net/WFMV"
 ;;
 
-21)
+27)
 # WNAP - Gospel Highway 11 1110 AM (Gospel)
 WEBRADIO_STREAMER_URL="http://ice23.securenetsystems.net/WNAP"
 ;;
 
-22)
+28)
 # WGOK Gospel 900 (Gospel)
 WEBRADIO_STREAMER_URL="http://17013.live.streamtheworld.com/WGOKAM.mp3"
 ;;
 
-23)
+29)
 # 1.FM ReggaeTrade (Reggae)
 WEBRADIO_STREAMER_URL="http://strm112.1.fm/reggae_mobile_mp3"
 ;;
 
-24)
+30)
 # Reggae 141 (Reggae)
 WEBRADIO_STREAMER_URL="http://hestia2.cdnstream.com/1301_128"
 ;;
 
-25)
+31)
 # Sun City 104.9 FM (Reggae)
 WEBRADIO_STREAMER_URL="http://streams.suncityradio.fm:8000"
 ;;
 
-26)
+32)
 # UFDV Radio (Reggae)
 WEBRADIO_STREAMER_URL="http://cp3.serverse.com:7059/stream"
 ;;
 
-27)
+33)
 # FM Jamaica Radio (Reggae)
 WEBRADIO_STREAMER_URL="http://us5.internet-radio.com:8487"
 ;;
 
-28)
+34)
 # NPR - National Public Radio (News)
 WEBRADIO_STREAMER_URL="https://npr-ice.streamguys1.com/live.mp3"
 ;;
 
-29)
+35)
 # BBC World Service (News)
 WEBRADIO_STREAMER_URL="http://bbcwssc.ic.llnwd.net/stream/bbcwssc_mp1_ws-eieuk"
 ;;
 
-30) 
+36) 
 # KFM (Uganda)
 WEBRADIO_STREAMER_URL="http://81.199.17.51:8000/stream"
 ;;
 
-31)
+37)
 # Radio One (Uganda)
 WEBRADIO_STREAMER_URL="http://162.244.80.52:8740/stream/1"
 ;;
 
-32)
+38)
 # Sanyu FM (Uganda)
 WEBRADIO_STREAMER_URL="http://s44.myradiostream.com:8138"
 ;;
 
-33)
+39)
 # Capital FM (Uganda)
 WEBRADIO_STREAMER_URL="http://144.217.203.226:8316/stream/1"
 ;;
 
-34)
+40)
 # Next Radio (Uganda)
 WEBRADIO_STREAMER_URL="http://streams.radio.co/see104bedb/listen"
 ;;
 
-35)
+41)
 # Simba FM (Uganda)
 WEBRADIO_STREAMER_URL="http://www.radiosimba.ug:8000/stream"
 ;;
 
-36)
+42)
 # Beat FM (Uganda)
 WEBRADIO_STREAMER_URL="http://5230.cloudrad.io:8354"
 ;;
 
-37)
+43)
 # CBS Radio (Uganda)
 WEBRADIO_STREAMER_URL="http://41.202.239.38:88/broadwavehigh.mp3"
 ;;
 
-38) 
+44) 
 # Power FM (Uganda)
 WEBRADIO_STREAMER_URL=""
 ;;
 
-39)
+45)
 # Impact FM (Uganda)
 WEBRADIO_STREAMER_URL=""
 ;;
@@ -326,12 +362,15 @@ SONG_IS_STORED_LOCALLY=$?
 # Get title and artist
 if [[ "$SONG_IS_STORED_LOCALLY" = "0" ]];
 then
-NAME_OF_STATION=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | cut -d '/' -f2- | rev | cut -d '.' -f2- | rev | sed 's:_: :g' | sed 's:\.: :g' | sed 's:/: :g')
-NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | cut -d '/' -f2- | rev | cut -d '.' -f2- | rev | sed 's:_: :g' | sed 's:\.: :g' | sed 's:/: :g')
+NAME_OF_STATION=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | sed 's: Radio Edit::g' | sed 's:(Lyrics Video)::g' | sed 's:(Official video)::g' | sed 's:\.mp3::g' | sed 's:\.wmv::g' | cut -d '/' -f2- | awk -F'[.|-]' {'print $1'} | sed 's:[_|\.|/]: :g' | sed 's:^[_|-]::g' | sed 's:[_|-]$::g' | sed 's:^ ::g' | sed 's: $::g' | sed 's:^  ::g' | sed 's:  $::g')
+NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | cut -d'/' -f2- | sed 's: Radio Edit::g' | sed 's:(Lyrics Video)::g' | sed 's:(Official video)::g' | sed 's:\.mp3::g' | sed 's:\.wmv::g' | rev | awk -F' [:|.|-]' '{print $1 $2 $3 $4}' | rev | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:#: - :g' | sed 's:[_|\.|/]: :g' | sed "s:$NAME_OF_STATION::g" | sed 's:^[_|-]::g' | sed 's:[_|-]$::g' | sed 's:^ ::g' | sed 's: $::g' | sed 's:^  ::g' | sed 's:  $::g')
+GENRE=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT -f %file% current | awk -F'/' '{print $1}') 
 
 else
-NAME_OF_STATION=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | awk -F: '{print $1}')
-NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | rev | awk -F' :' '{print $1}' | rev | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g')
+NAME_OF_STATION=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT -f '%artist%' current)
+NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT -f '%title%' current | rev | awk -F' :' '{print $1}' | rev | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g')
+GENRE=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT -f '%genre%' current)
+[[ "x$GENRE" = "x" ]] && GENRE='Online'
 fi
 }
 
@@ -475,21 +514,22 @@ stream_now_playing
 fi
 
 # Print name of station, song, and artist if found
-if [[ "$NAME_OF_STATION" = "$NAME_OF_SONG_ARTIST" ]];
+if [[ "$NAME_OF_STATION" = "$NAME_OF_SONG_ARTIST" ]] || [[ "x$NAME_OF_STATION" = "x" && "x$NAME_OF_SONG_ARTIST" != "x" ]];
 then
 cat <<PLAYING
-$NAME_OF_SONG_ARTIST
+$NAME_OF_SONG_ARTIST [$GENRE]
 PLAYING
 
 elif [[ "x$NAME_OF_STATION" != "x" && "x$NAME_OF_SONG_ARTIST" != "x" ]];
 then
 cat <<PLAYING
-$NAME_OF_STATION - $NAME_OF_SONG_ARTIST
+$NAME_OF_STATION - $NAME_OF_SONG_ARTIST [$GENRE]
 PLAYING
 
 else
 cat <<PLAYING
 $NAME_OF_STATION
+[$GENRE]
 PLAYING
 fi
 }
