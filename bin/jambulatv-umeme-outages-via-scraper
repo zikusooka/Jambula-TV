@@ -19,6 +19,8 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 . $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Variables
+DEBUG=n #y|n - set to 'n' when in production 
+
 DATE_TOMORROW_DAY_FORMAT=$(date --date='1 day' +'%A')
 DATE_AFTER_TOMORROW_DAY_FORMAT=$(date --date='2 day' +'%A')
 
@@ -107,10 +109,30 @@ exit 0
 fi
 }
 
+set_logging_level () {
+if [[ "$DEBUG" = "y" ]];
+then
+LOGGER_CMD="/usr/bin/logger -s -t $(basename $0)"
+#
+$LOGGER_CMD "Debugging is enabled, please disable while in production"
+else
+LOGGER_CMD="/usr/bin/logger -t $(basename $0)"
+fi
+}
+
 check_internet_access () {
 # Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
 ping -c $PING_COUNT $PING_IP_ADDRESS > /dev/null 2>&1
 INTERNET_ALIVE=$?
+#
+# Quit if no Internet
+if [[ "$INTERNET_ALIVE" != "0" ]];
+then
+$LOGGER_CMD $(basename $0) "Error: You are not connected to the Internet. Please check your router and try again later!"
+# Before quiting, print 'none' 
+echo none
+exit 0
+fi
 }
 
 DaySuffix() {
@@ -123,13 +145,19 @@ DaySuffix() {
 }
 
 download_outages_webpage () {
+# Check if Internet connection is up
+check_internet_access
+
 # Download latest outages web page from UMEME website
-logger -t $(basename $0) "Downloading UMEME outages web page:  $UMEME_OUTAGES_WEB_PAGE ..."
+$LOGGER_CMD $(basename $0) "Downloading UMEME outages web page:  $UMEME_OUTAGES_WEB_PAGE ..."
 #
 $CURL_CMD $CURL_OPTS -A "$USER_AGENT" -o $UMEME_OUTAGES_OUTPUT $UMEME_OUTAGES_WEB_PAGE
 }
 
 extract_outages_file_link () {
+# Skip if no outages file was found
+[[ -s $UMEME_OUTAGES_OUTPUT ]] || continue
+#
 if [[ "$UMEME_USING_JS" = "yes" ]];
 then
 UMEME_OUTAGES_URL=$(cat $UMEME_OUTAGES_OUTPUT | jq -r .[].acf.file)
@@ -154,27 +182,26 @@ echo none
 exit 1
 
 else
+# Check if Internet connection is up
+check_internet_access
+
 # Remove old planned outages file
 [[ -e $UMEME_OUTAGES_PLANNED_FILE ]] && sudo rm -f $UMEME_OUTAGES_PLANNED_FILE
 # Fetch planned outages file
-logger -t $(basename $0) "Downloading UMEME Planned outages file for ${THIS_MONTH_NAME_FULL}:  $UMEME_OUTAGES_URL ..."
+$LOGGER_CMD $(basename $0) "Downloading UMEME Planned outages file for ${THIS_MONTH_NAME_FULL}:  $UMEME_OUTAGES_URL ..."
 wget -q -O $UMEME_OUTAGES_PLANNED_FILE $UMEME_OUTAGES_URL > /dev/null 2>&1
 fi
 }
 
 get_outages_file () {
-# Check if Internet connection is up
-check_internet_access
-
 # If UMEME output file is still fresh, set variable to yes
 [[ -e "$UMEME_OUTAGES_PLANNED_FILE" && "$(date -d "now - $(stat -c "%Z" $UMEME_OUTAGES_PLANNED_FILE) seconds" +%s)" -lt "$MAXIMUM_AGE_OF_UMEME_OUTAGES_PLANNED_FILE" ]] && UMEME_OUTAGES_PLANNED_FILE_IS_FRESH=yes
-
+#
 # See what sort of file exists
 file $UMEME_OUTAGES_PLANNED_FILE | grep -i -e 'PDF document' -e 'Composite Document' -e 'OpenDocument Text' > /dev/null 2>&1
 FILE_FORMAT_VALIDITY=$?
 
-# Download UMEME outages web page if its is not fresh & Internet is up
-if [[ "$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" != "yes" && "$INTERNET_ALIVE" = "0" ]];
+if [[ ! -e "$UMEME_OUTAGES_PLANNED_FILE" ]] || [[ "x$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" = "x" || "$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" != "yes" ]];
 then
 # Download outages web page
 download_outages_webpage
@@ -183,22 +210,21 @@ extract_outages_file_link
 # Download outages file if found
 download_outages_file_if_found
 
-elif [[ ! -s "$UMEME_OUTAGES_PLANNED_FILE" ]] || [[ "$FILE_FORMAT_VALIDITY" != "0" ]];
+elif [[ "$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" = "yes" && ! -s "$UMEME_OUTAGES_PLANNED_FILE" ]] || [[ "$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" = "yes" && "$FILE_FORMAT_VALIDITY" != "0" ]];
 then
 # No valid file, and no Internet, so quit
 clear
-logger -s -t $(basename $0) "The file $UMEME_OUTAGES_PLANNED_FILE is missing or not usable. Please download it at:
+$LOGGER_CMD $(basename $0) "The file $UMEME_OUTAGES_PLANNED_FILE is either empty or not usable. Please run this tool again to download a fresh copy.  You can also manually fetch this file from:
 
 $UMEME_OUTAGES_WEB_PAGE
+
 "
+# Remove corrupted file
+[[ -e $UMEME_OUTAGES_PLANNED_FILE ]] && rm -f $UMEME_OUTAGES_PLANNED_FILE
 #
 # Before quiting, print 'none' if outages file is missing 
 echo none
 exit 1
-
-else
-logger -t $(basename $0) "Warning: The file $UMEME_OUTAGES_PLANNED_FILE is old and may not accurately reflect the latest information on power outages
-"
 fi
 }
 
@@ -273,6 +299,9 @@ esac
 # Usage
 usage
 
+# Notify if logging is enabled
+set_logging_level
+
 # Get and prepare outages file
 get_outages_file
 prepare_outages_file
@@ -289,17 +318,17 @@ outage_ongoing
 
 today)
 outage_today
-[[ "$OUTAGE_COMING_TODAY" = "0" ]] && echo $VILLAGE
+[[ "$OUTAGE_COMING_TODAY" = "0" ]] && echo $VILLAGE || echo none
 ;;
 
 tomorrow)
 outage_tomorrow
-[[ "$OUTAGE_COMING_TOMORROW" = "0" ]] && echo $VILLAGE 
+[[ "$OUTAGE_COMING_TOMORROW" = "0" ]] && echo $VILLAGE || echo none
 ;;
 
 after_tomorrow)
 outage_in_two_days_time
-[[ "$OUTAGE_COMING_TWO_DAYS" = "0" ]] && echo $VILLAGE
+[[ "$OUTAGE_COMING_TWO_DAYS" = "0" ]] && echo $VILLAGE || echo none
 ;;
 
 any|*)
@@ -307,9 +336,9 @@ outage_today
 outage_tomorrow
 outage_in_two_days_time
 #
-[[ "$OUTAGE_COMING_TODAY" = "0" ]] && echo "Today: $VILLAGE"
-[[ "$OUTAGE_COMING_TOMORROW" = "0" ]] && echo "$DATE_TOMORROW_DAY_FORMAT: $VILLAGE"
-[[ "$OUTAGE_COMING_TWO_DAYS" = "0" ]] && echo "$DATE_AFTER_TOMORROW_DAY_FORMAT: $VILLAGE"
+[[ "$OUTAGE_COMING_TODAY" = "0" ]] && echo "Today: $VILLAGE" || echo none
+[[ "$OUTAGE_COMING_TOMORROW" = "0" ]] && echo "$DATE_TOMORROW_DAY_FORMAT: $VILLAGE" || echo none
+[[ "$OUTAGE_COMING_TWO_DAYS" = "0" ]] && echo "$DATE_AFTER_TOMORROW_DAY_FORMAT: $VILLAGE" || echo none
 ;;
 esac
 
