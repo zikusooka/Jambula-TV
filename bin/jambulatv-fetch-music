@@ -132,7 +132,7 @@ YOUTUBE_MUSIC_FORMAT=best
 YOUTUBE_MAX_FILE_SIZE=25m
 YOUTUBE_DL_CMD="$TIMEOUT_CMD /usr/bin/youtube-dl"
 YOUTUBE_DL_OPTS="-v -4 -i -c --ignore-config --prefer-insecure --no-check-certificate --geo-bypass --max-filesize $YOUTUBE_MAX_FILE_SIZE"
-YOUTUBE_ERROR_LOG_FILE=/tmp/youtube_dl_fetch_music.log
+YOUTUBE_ERROR_LOG_FILE=MY_TMPDIR/youtube_dl_fetch_music.log
 #
 # Print started notification to systemd journal and console
 clear
