@@ -60,7 +60,7 @@ sound_alert 20
 }
 
 skill_time () {
-# Un Pause Player
+# Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say Time
 $TEXT2SPEECH_TOOL "" time
@@ -68,8 +68,16 @@ $TEXT2SPEECH_TOOL "" time
 $KODI_CONTROLLER_TOOL video_play_pause
 }
 
+skill_time_world () {
+CITY_REQUESTED=$(echo "$@" | sed "s: :_:g")
+TIME_ZONE=$(/usr/bin/timedatectl list-timezones | grep -i "$CITY_REQUESTED")
+TIME_NOW=$(TZ="${TIME_ZONE}" date +"%-I %M %P")
+# Say world time
+$TEXT2SPEECH_TOOL "" custom "The time now in $@ is $TIME_NOW"
+}
+
 skill_weather_currently () {
-# Un Pause Player
+# Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say weather
 $TEXT2SPEECH_TOOL "" weather current 3
@@ -78,7 +86,7 @@ $KODI_CONTROLLER_TOOL video_play_pause
 }
 
 skill_weather_today () {
-# Un Pause Player
+# Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say weather
 $TEXT2SPEECH_TOOL "" weather today 1
@@ -87,7 +95,7 @@ $KODI_CONTROLLER_TOOL video_play_pause
 }
 
 skill_weather_later () {
-# Un Pause Player
+# Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say weather
 $TEXT2SPEECH_TOOL "" weather later 2

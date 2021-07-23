@@ -164,6 +164,12 @@ if [ "$DETECTED_PATTERN" = "WHAT IS THE TIME" ];
 then
 skill_time
 
+# World time
+elif [[ "$DETECTED_PATTERN" =~ "WHAT IS THE LOCAL TIME IN" ]];
+then
+WORLD_CITY=$(echo $DETECTED_PATTERN | sed "s:WHAT IS THE LOCAL TIME IN::g" | sed "s:^ ::g")
+skill_time_world "$WORLD_CITY" &
+
 # Weather
 elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER" ];
 then
