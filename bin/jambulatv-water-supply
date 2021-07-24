@@ -47,7 +47,7 @@ $MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "off"
 }
 
 mqtt_publish_water_supply_on () {
-$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "on"
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "available"
 }
 
 mqtt_publish_water_supply_report_today_missing () {
