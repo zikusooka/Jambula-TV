@@ -47,11 +47,11 @@ $MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "off"
 }
 
 mqtt_publish_water_supply_on () {
-$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "available"
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "yes"
 }
 
 mqtt_publish_water_supply_report_today_missing () {
-$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "unavailable"
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "no"
 }
 
 mqtt_publish_water_tank_low () {
@@ -119,6 +119,7 @@ else
 # If today's water report is missing, notify via mqtt and quit 
 mqtt_publish_water_supply_report_today_missing $MQTT_TOPIC_STATUS_WATER_SUPPLY_TODAY
 	logger -s -t $(basename $0) "Today's water report ($WATER_REPORT_TODAY) was not found either locally or at $REMOTE_HOST"
+fi
 
 # If yesterday's water report file exists:
 if [[ -s $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY ]];
@@ -140,8 +141,6 @@ then
 
 else
 	logger -s -t $(basename $0) "Yesterday's water report ($WATER_REPORT_YESTERDAY) was not found either locally or at $REMOTE_HOST"
-fi
-
 exit 0
 fi
 }
