@@ -50,10 +50,10 @@ Usage: ./$(basename $0) $WEBRADIO_STREAMER_TASK [WEB_RADIO_STATION_ID e.g. 1] [l
 Online Radio Station IDs
 ***************************************
   1  SmoothJazz.com (Jazz)
-  2  Family Life (Christian)
-  3  Jazz 24 (Jazz)
-  4  Radio Swiss Jazz
-  5  K-Love (Christian)
+  2  Jazz 24 (Jazz)
+  3  Radio Swiss Jazz
+  4  K-Love (Christian)
+  5  Family Life (Christian)
   6  23 Indie Street (Indie)
   7  Indie 88 - Toronto, Canda (Indie)
   8  Indie 102.3 - Denver, CO (Indie)
@@ -103,15 +103,11 @@ get_webradio_url () {
 case $WEBRADIO_STREAMER_STATION in
 1)
 # Smooth Jazz (Jazz)
-WEBRADIO_STREAMER_URL=http://sj64.hnux.com
+WEBRADIO_STREAMER_URL=https://smoothjazz.cdnstream1.com/2585_128.mp3
+#WEBRADIO_STREAMER_URL=http://sj64.hnux.com
 ;;
 
 2)
-# Family Life Radio (Christian)
-WEBRADIO_STREAMER_URL="http://icecast.streammyflr.org:8080/FLRstream"
-;;
-
-3)
 # Jazz24 (Jazz)
 WEBRADIO_STREAMER_URL="https://live.wostreaming.net/direct/ppm-jazz24mp3-ibc1"
 #
@@ -125,14 +121,19 @@ WEBRADIO_STREAMER_URL="https://live.wostreaming.net/direct/ppm-jazz24mp3-ibc1"
 # https://live.wostreaming.net/direct/ppm-jazz24aac48-ibc1
 ;;
 
-4) 
+3) 
 # Radio Swiss Jazz (Jazz)
 WEBRADIO_STREAMER_URL="http://stream.srg-ssr.ch:80/m/rsj/aacp_96"
 ;;
 
-5)
+4)
 # K-Love (Christian)
 WEBRADIO_STREAMER_URL="https://maestro.emfcdn.com/stream_for/k-love/tunein/aac"
+;;
+
+5)
+# Family Life Radio (Christian)
+WEBRADIO_STREAMER_URL="http://icecast.streammyflr.org:8080/FLRstream"
 ;;
 
 6)
@@ -227,7 +228,7 @@ WEBRADIO_STREAMER_URL="http://stream.srg-ssr.ch/m/rsc_fr/mp3_128"
 
 24)
 # WLUP-FM - The Loop 97.9 FM (Classic Rock)
-WEBRADIO_STREAMER_URL="http://17013.live.streamtheworld.com/WLUPFM.mp3"
+WEBRADIO_STREAMER_URL="http://208.92.55.133:3690/WLUPFM_SC"
 ;;
 
 25)
@@ -282,7 +283,7 @@ WEBRADIO_STREAMER_URL="https://npr-ice.streamguys1.com/live.mp3"
 
 35)
 # BBC World Service (News)
-WEBRADIO_STREAMER_URL="http://bbcwssc.ic.llnwd.net/stream/bbcwssc_mp1_ws-eieuk"
+WEBRADIO_STREAMER_URL="https://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
 ;;
 
 36) 
@@ -345,6 +346,8 @@ mpd_check_status () {
 # Check status of MPD server
 $MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT status > /dev/null 2>&1
 MPC_EXIT_STATUS=$?
+# Check if anything is playing
+MPC_CURRENTLY_PLAYING=$($MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT current)
 }
 
 mpd_current_playlist_stop () {
@@ -363,14 +366,16 @@ SONG_IS_STORED_LOCALLY=$?
 if [[ "$SONG_IS_STORED_LOCALLY" = "0" ]];
 then
 NAME_OF_STATION=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | sed 's: Radio Edit::g' | sed 's:(Lyrics Video)::g' | sed 's:(Official video)::g' | sed 's:\.mp3::g' | sed 's:\.wmv::g' | cut -d '/' -f2- | awk -F'[.|-]' {'print $1'} | sed 's:[_|\.|/]: :g' | sed 's:^[_|-]::g' | sed 's:[_|-]$::g' | sed 's:^ ::g' | sed 's: $::g' | sed 's:^  ::g' | sed 's:  $::g')
-NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | cut -d'/' -f2- | sed 's: Radio Edit::g' | sed 's:(Lyrics Video)::g' | sed 's:(Official video)::g' | sed 's:\.mp3::g' | sed 's:\.wmv::g' | rev | awk -F' [:|.|-]' '{print $1 $2 $3 $4}' | rev | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:#: - :g' | sed 's:[_|\.|/]: :g' | sed "s:$NAME_OF_STATION::g" | sed 's:^[_|-]::g' | sed 's:[_|-]$::g' | sed 's:^ ::g' | sed 's: $::g' | sed 's:^  ::g' | sed 's:  $::g')
+NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current | sed -r ':a; s/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g; ta; s/(, )+/, /g; s/, *$//' | cut -d'/' -f2- | sed 's: Radio Edit::g' | sed 's:(Lyrics Video)::g' | sed 's:(Official video)::g' | sed 's:\.mp3::g' | sed 's:\.wmv::g' | rev | awk -F' [:|.|-]' '{print $1 $2 $3 $4}' | rev | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:#: - :g' | sed 's:[_|\.|/]: :g' | sed "s:$NAME_OF_STATION::g" | sed 's:^[_|-]::g' | sed 's:[_|-]$::g' | sed 's:^ ::g' | sed 's: $::g' | sed 's:^  ::g' | sed 's:  $::g')
 GENRE=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT -f %file% current | awk -F'/' '{print $1}') 
 
 else
 NAME_OF_STATION=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT -f '%artist%' current)
-NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT -f '%title%' current | rev | awk -F' :' '{print $1}' | rev | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g')
+[[ "x$NAME_OF_STATION" = "x" ]] && \
+NAME_OF_STATION=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT current -f '%name%' | sed 's:^/::')
+#
+NAME_OF_SONG_ARTIST=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT -f '%title%' current | rev | awk -F' :' '{print $1}' | rev | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | sed 's/text=//' | awk -F'song_spot=' '{print $1}' | sed 's:"::g')
 GENRE=$($MPC_CMD -h localhost -p $MPD_LOCAL_PORT -f '%genre%' current)
-[[ "x$GENRE" = "x" ]] && GENRE='Online'
 fi
 }
 
@@ -513,24 +518,23 @@ else
 stream_now_playing
 fi
 
+# Quit if nothing is playing
+[[ "x$MPC_CURRENTLY_PLAYING" = "x" ]] && exit 0
+
 # Print name of station, song, and artist if found
-if [[ "$NAME_OF_STATION" = "$NAME_OF_SONG_ARTIST" ]] || [[ "x$NAME_OF_STATION" = "x" && "x$NAME_OF_SONG_ARTIST" != "x" ]];
+if [[ "$NAME_OF_STATION" = "$NAME_OF_SONG_ARTIST" && "x$NAME_OF_SONG_ARTIST" != "x" ]] || [[ "x$NAME_OF_STATION" = "x" && "x$NAME_OF_SONG_ARTIST" != "x" ]];
 then
-cat <<PLAYING
-$NAME_OF_SONG_ARTIST [$GENRE]
-PLAYING
+[[ "x$GENRE" != "x" ]] && echo "$NAME_OF_SONG_ARTIST [$GENRE]"
+[[ "x$GENRE" = "x" ]] && echo "$NAME_OF_SONG_ARTIST"
 
 elif [[ "x$NAME_OF_STATION" != "x" && "x$NAME_OF_SONG_ARTIST" != "x" ]];
 then
-cat <<PLAYING
-$NAME_OF_STATION - $NAME_OF_SONG_ARTIST [$GENRE]
-PLAYING
+[[ "x$GENRE" != "x" ]] && echo "$NAME_OF_STATION - $NAME_OF_SONG_ARTIST [$GENRE]"
+[[ "x$GENRE" = "x" ]] && echo "$NAME_OF_STATION - $NAME_OF_SONG_ARTIST"
 
 else
-cat <<PLAYING
-$NAME_OF_STATION
-[$GENRE]
-PLAYING
+[[ "x$GENRE" != "x" ]] && echo "$NAME_OF_STATION [$GENRE]"
+[[ "x$GENRE" = "x" ]] && echo "$NAME_OF_STATION"
 fi
 }
 
