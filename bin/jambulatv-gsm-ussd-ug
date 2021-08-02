@@ -187,11 +187,6 @@ logger -s -t $(basename $0) "You have activated your mobile money account. Pleas
 ussd_cancel_session_command
 exit 1
 fi
-
-
-exit
-
-
 ussd_respond_session_command "$MM_RECIPIENT_NUMBER" > /dev/null 2>&1
 ussd_respond_session_command "$MM_MIN_AMOUNT" | grep 'insufficient funds' > /dev/null 2>&1
 INSUFFICIENT_FUNDS=$?
