@@ -4368,11 +4368,21 @@ tar xvf $PROJECT_TARBALLS_DIR/pulseaudio-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v pulseaudio-* pulseaudio
 # Compile
 cd $INSTALL_SRC_DIR/pulseaudio
-./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
-	--localstatedir=$STATEDIR --disable-x11 --disable-bluez5 \
-	PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
+#
+# Build using old method i.e. configure 
+#./configure --prefix=$PREFIX --libdir=$LIBDIR --sysconfdir=$CONFDIR \
+#	--localstatedir=$STATEDIR --disable-x11 --disable-bluez5 \
+#	PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
 # Install
-make_install_jambulatv
+#make_install_jambulatv
+#
+# Build using meson for versions above 12.99.3
+meson --prefix=$PREFIX build --buildtype release -D x11=disabled -D bluez5=disabled
+cd $INSTALL_SRC_DIR/pulseaudio/build
+ninja
+# Install
+ninja install
+#
 # Add pulse groups
 for PULSE_GROUP in pulse pulse-access
 do
