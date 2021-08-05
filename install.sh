@@ -440,6 +440,7 @@ daloradius_configure
 # -----------------
 icinga2_install # ~ 33mins
 monitoring_plugins_install
+contributed_plugins_install
 check_logfiles_install
 icinga2_configure
 icingaweb2_install

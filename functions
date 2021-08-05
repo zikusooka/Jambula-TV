@@ -15102,6 +15102,11 @@ cd $INSTALL_SRC_DIR/monitoring-plugins
 make_install_jambulatv
 }
 
+contributed_plugins_install () {
+# check-systemd
+python3_module_local_install check_systemd
+}
+
 check_logfiles_install () {
 # unpack
 rsync -avz $PROJECT_GITHUB_DIR/check_logfiles/ $INSTALL_SRC_DIR/check_logfiles/
