@@ -15018,8 +15018,7 @@ set_www_user_group
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/icinga2
 # Get latest icinga2 tag
-#ICINGA2_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
-ICINGA2_TAG=v2.12.3
+ICINGA2_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
 #
 # Unpack desired git branch/tag
 case $ICINGA2_TAG in
@@ -15054,10 +15053,18 @@ cd $INSTALL_SRC_DIR/icinga2
 # Build
 mkdir -p $INSTALL_SRC_DIR/icinga2/build
 cd $INSTALL_SRC_DIR/icinga2/build
+#
+# Switch OpenSSL libraries and includes to version 1.1.1
+openssl_switch_version_101_to_111
+#
 # cMake
 cmake VERBOSE=1 ../ -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_INSTALL_LIBDIR=$LIBDIR -DCMAKE_INSTALL_SYSCONFDIR=$CONFDIR -DCMAKE_INSTALL_LOCALSTATEDIR=$STATEDIR -DICINGA2_USER=$ICINGA_USER -DICINGA2_GROUP=$ICINGA_GROUP -DICINGA2_GIT_VERSION_INFO=OFF -DICINGA2_COMMAND_GROUP=$ICINGA_CMD_GROUP -DICINGA2_PLUGINDIR=$MONITORING_PLUGINS_DIR -DICINGA2_RUNDIR=$RUNDIR -DICINGA2_SYSCONFIGFILE=$SYSCONFIG_DIR/icinga2 -DICINGA2_WITH_MYSQL=ON -DICINGA2_WITH_PGSQL=OFF -DICINGA2_WITH_TESTS=OFF -DUSE_SYSTEMD=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=FALSE
 # Make install
 make_install_jambulatv -j$SYSTEM_CPU_CORES
+#
+# Switch OpenSSL libraries and includes back to version 1.0.1 
+openssl_switch_version_111_to_101
+#
 #
 # BUG?
 # Move /usr/etc/icinga2 /etc/icinga2
