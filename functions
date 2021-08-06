@@ -15301,7 +15301,10 @@ set_www_user_group
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/icingaweb2
 # Get latest icinga2 tag
-ICINGAWEB2_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+#ICINGAWEB2_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+ICINGAWEB2_TAG=v2.8.4 # NOTE: Versions above v2.9.0 require:
+                      # icinga-php-library & icinga-php-thirdparty
+                      # And possibly php-intl i.e. extension=intl
 #
 # Unpack desired git branch/tag
 case $ICINGAWEB2_TAG in
