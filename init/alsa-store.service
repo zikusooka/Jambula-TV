@@ -11,5 +11,5 @@ Before=shutdown.target
 
 [Service]
 Type=oneshot
-ExecStart=MY_ALSA_CONTROL_CMD store -f MY_ALSA_STATE_FILE
+ExecStart=-MY_ALSA_CONTROL_CMD store -f MY_ALSA_STATE_FILE
 StandardOutput=syslog

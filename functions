@@ -622,7 +622,7 @@ PULSE_CONTROL_CMD=$BINARY_PREFIX/pactl
 DEFAULT_AUDIO_OUTPUT_DRIVER=pulse
 
 ALSA_MIXER_CMD=/usr/bin/amixer
-ALSA_CONTROL_CMD=/usr/sbin/alsactl
+ALSA_CONTROL_CMD="/usr/sbin/alsactl -U"
 ALSA_STATE_FILE=/var/lib/alsa/asound.state
 ALSA_CARD_NO=0
 
@@ -4494,7 +4494,7 @@ $ALSA_MIXER_CMD -c $ALSA_CARD_NO sset 'Line Boost' $ALSA_VOLUME_LINE_IN_BOOST > 
 $ALSA_CONTROL_CMD -f $ALSA_STATE_FILE store $ALSA_CARD_NO
 
 # Configure ALSA store and restore systemd units
-for SYSTEMD_UNIT in alsa-store alsa-restore
+for SYSTEMD_UNIT in alsa-store alsa-restore alsa-state
 do
 # Remove original systemd unit if it exists
 [[ -e $SYSTEMD_UNITS_DIR_SYSTEM/${SYSTEMD_UNIT}.service ]] && \

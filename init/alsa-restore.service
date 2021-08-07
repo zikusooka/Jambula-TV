@@ -13,5 +13,5 @@ Conflicts=shutdown.target
 
 [Service]
 Type=oneshot
-ExecStart=MY_ALSA_CONTROL_CMD restore -f MY_ALSA_STATE_FILE
+ExecStart=-MY_ALSA_CONTROL_CMD restore -f MY_ALSA_STATE_FILE
 StandardOutput=syslog
