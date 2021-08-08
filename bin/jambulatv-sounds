@@ -15,6 +15,7 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 # Variables
 SOUND_TYPE=$1
 JAMBULATV_SOUNDS_DIR="/usr/share/JambulaTV/sounds"
+TEMP_SOUNDS_DIR="/tmp"
 DEFAULT_SOUND_EFFECTS_FILE="waiting-4-online-response.wav"
 #
 # If third CLI argument is used, set it as sound effects file.  For others, use default sound effects file
@@ -360,12 +361,15 @@ ALERT_SOUND_FILE=laptop_battery_is_discharging.mp3
 ALERT_SOUND_FILE=laptop_battery_is_charging.mp3
 ;;
 [Aa-Zz]*)
-if [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]];
+# MP3 format
+if [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]] || [[ -e $TEMP_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.mp3 ]];
 then
 ALERT_SOUND_FILE=${ALERT_SOUND_NUMBER}.mp3
-elif [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.wav ]];
+# Wave format
+elif [[ -e $JAMBULATV_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.wav ]] || [[ -e $TEMP_SOUNDS_DIR/${ALERT_SOUND_NUMBER}.wav ]];
 then
 ALERT_SOUND_FILE=${ALERT_SOUND_NUMBER}.wav
+# Other formats
 else
 ALERT_SOUND_FILE=$ALERT_SOUND_NUMBER
 fi
@@ -378,10 +382,15 @@ EOT
 exit 1
 esac
 
-# Play sound file if it exists
+# Play sound file if it exists in JambulaTV sounds directory
 if [[ -e $JAMBULATV_SOUNDS_DIR/$ALERT_SOUND_FILE ]];
 then
 $SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $JAMBULATV_SOUNDS_DIR/$ALERT_SOUND_FILE
+
+# Play sound file if it exists in temporary sounds directory
+elif [[ -e $TEMP_SOUNDS_DIR/$ALERT_SOUND_FILE ]];
+then
+$SOUND_PLAYER_CMD $SOUND_PLAYER_OPTS $TEMP_SOUNDS_DIR/$ALERT_SOUND_FILE
 
 else
 clear
