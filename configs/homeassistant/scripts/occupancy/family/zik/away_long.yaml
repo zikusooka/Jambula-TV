@@ -1,0 +1,87 @@
+zik_is_away_long:
+  sequence:
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Door_close.mp3'
+        input_file2: 'zik.mp3'
+        input_file3: 'is_away_4_long.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'zik_is_away_4_long.mp3'
+
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert: Away for a long time
+    # ---------------------------------
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'zik_is_away_4_long'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    # c) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
+
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Music
+    # -----
+    #- delay: 120
+    #
+    # Run script: If music is playing, stop it
+    - service: script.music_stop
+
+    # Set security Alarm
+    # -------------------
+    # Militarize house while away
+    - service: shell_command.zoneminder_camera_arm
+      data_template:
+        camera_id: !secret zoneminder_camera_001
+
+
+    # Send messages using  XMPP, WhatsApp, and Telegram
+    # -------------------------------------------------
+    # XMPP Message
+    - service: notify.jambulatv
+      data_template:
+        title: '[JambulaTV]'
+        message: 'Zik is away for a long time' 
+
+    # WhatsApp Message
+    - service: script.send_whatsapp
+      data_template:        
+        whatsapp_text: 'Zik is away for a long time'
+        whatsapp_image: ''
+        whatsapp_recipient_phone: ''
+  
+    # Telegram Message
+    - service: script.send_telegram
+      data_template: 
+        telegram_text: 'Zik is away for a long time'
+        telegram_image: ''
+        telegram_recipient_phone: ''

@@ -1,3 +1,5 @@
+title: Overview
+icon: mdi:home
 cards:
 
   - type: custom:compact-custom-header
@@ -101,7 +103,7 @@ cards:
           - !include ../cards/conditional-water-usage-monthly.yaml
 
 
-  # Internet and MiFi router tatus
+  # Internet and MiFi router status
   - type: horizontal-stack
     cards:
       - !include ../cards/entity-button-internet-status.yaml
@@ -168,17 +170,7 @@ cards:
       - !include ../cards/conditional-motion-sensor-outside-.yaml
 
 
-  # Internet & FM Radio
-  - type: vertical-stack
-    cards:
-      - !include ../cards/conditional-internet-radio.yaml
-      - !include ../cards/conditional-fm-radio.yaml
-
-
   # Music Playlists
-
-
-
   - type: vertical-stack
     cards:
 
@@ -197,7 +189,8 @@ cards:
       - type: horizontal-stack
         cards:
           - !include ../cards/entity-button-local-music-pop.yaml
-          - !include ../cards/entity-button-local-music-folk.yaml
+          #- !include ../cards/entity-button-local-music-folk.yaml
+          - !include ../cards/entity-button-local-music-alternative.yaml
           - !include ../cards/entity-button-local-music-all.yaml
  
       - type: horizontal-stack
@@ -210,7 +203,23 @@ cards:
     cards:
       - !include ../cards/media-control-jambulatv-server.yaml
       - !include ../cards/media-control-jambulatv-client-01.yaml
+      #- !include ../cards/conditional-playing-now-volume-playing.yaml
+ 
+
+  # Internet & FM Radio
+  - type: vertical-stack
+    cards:
+      - !include ../cards/conditional-internet-radio.yaml
+      - !include ../cards/conditional-fm-radio.yaml
       - !include ../cards/conditional-playing-now-volume-playing.yaml
+
+
+  # Now Playing / Volume Controls / Stop Media Player
+  - type: vertical-stack
+    cards:
+      #- !include ../cards/media-control-jambulatv-server.yaml
+      #- !include ../cards/media-control-jambulatv-client-01.yaml
+      #- !include ../cards/conditional-playing-now-volume-playing.yaml
       #
       - type: horizontal-stack
         cards:
@@ -230,7 +239,8 @@ cards:
           #- !include ../cards/conditional-media-player-volume-down.yaml
 
 
-
-  - type: vertical-stack
+  # Garbage collected / Water is back 
+  - type: horizontal-stack
     cards:
-      - !include ../cards/entities-water-readings-today.yaml
+      - !include ../cards/entity-button-garbage-collected.yaml
+      - !include ../cards/entity-button-water-back.yaml

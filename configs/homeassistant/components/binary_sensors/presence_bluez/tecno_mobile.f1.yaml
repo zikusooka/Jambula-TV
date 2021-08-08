@@ -1,0 +1,8 @@
+platform: mqtt
+name: 'Bluez Zik 01'
+state_topic: !secret mqtt_presence_bluez_topic_tecno_f1
+scan_interval: 5
+expire_after: 300
+device_class: presence
+payload_on: "Home"
+payload_off: "Away"

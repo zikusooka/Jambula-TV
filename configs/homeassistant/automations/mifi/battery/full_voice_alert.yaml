@@ -20,28 +20,8 @@ trigger:
 
 action:
 
-  # Wait for voice alerts mixer status to be 'off'
-  # ---------------------------------------------
-  - wait_for_trigger:
-      - platform: state
-        entity_id: input_boolean.voice_alerts_mixer_status
-        to: "off"
-    timeout: 45
-    continue_on_timeout: true
-
-  # Set status of voice alerts mixer to 'on'
-  # ----------------------------------------
-  - service: homeassistant.turn_on
-    data:
-      entity_id: input_boolean.voice_alerts_mixer_status
 
   # Run script
   # ----------
   - service: script.turn_on
     entity_id: script.mifi_battery_full
-
-  # Set status of voice alerts mixer to 'off'
-  # ----------------------------------------
-  - service: homeassistant.turn_off
-    data:
-      entity_id: input_boolean.voice_alerts_mixer_status

@@ -12,36 +12,14 @@ condition:
   condition: and
   conditions:
 
-        # Do not run during startup of HASS 
-    - condition: numeric_state
-      entity_id: sensor.hass_uptime
-      above: '2'
+    # Do not run during startup of HASS 
+    - condition: template
+      value_template: "{{ is_state('script.startup_alert_started', 'off') }}"
 
 
 action:
-
-  # Wait for voice alerts mixer status to be 'off'
-  # ---------------------------------------------
-  - wait_for_trigger:
-      - platform: state
-        entity_id: input_boolean.voice_alerts_mixer_status
-        to: "off"
-    timeout: 45
-    continue_on_timeout: true
-
-  # Set status of voice alerts mixer to 'on'
-  # ----------------------------------------
-  - service: homeassistant.turn_on
-    data:
-      entity_id: input_boolean.voice_alerts_mixer_status
 
   # Run script
   # ----------
   - service: script.turn_on
     entity_id: script.internet_datasaver_enable_manual
-
-  # Set status of voice alerts mixer to 'off'
-  # ----------------------------------------
-  - service: homeassistant.turn_off
-    data:
-      entity_id: input_boolean.voice_alerts_mixer_status

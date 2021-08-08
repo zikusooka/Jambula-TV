@@ -1,0 +1,31 @@
+alias: Zik is home after a short time
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: person.zik
+    from: 'Away'
+    to: 'Home'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Laptop is off
+    - condition: template
+      value_template: "{{ is_state('person.lenovo_t61', 'home') }}"
+
+    # Last triggered more than 5 minute(s) ago
+    #- condition: template
+      #value_template: '{{ (as_timestamp(now()) - as_timestamp(states.automation.zik_is_home_after_a_short_time.last_triggered | default(0)) | int > 600)}}'
+
+    # Last triggered more than 30 minute(s) ago
+    #- condition: template
+      #value_template: '{{ (as_timestamp(now()) - as_timestamp(states.person.zik.attributes.last_triggered | default(0)) | int > 1800)}}'
+
+
+action:
+
+  - service: script.zik_is_home_short

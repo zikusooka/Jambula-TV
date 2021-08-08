@@ -1,0 +1,53 @@
+input_water_reading_for_today:
+  sequence:
+
+    # Enter water meter reading for today
+    # ---
+    - service: shell_command.input_water_reading_for_today
+      data_template:
+        water_meter_reading_today: "{{ states('input_text.water_reading_today') }}"
+        water_flow_status_today: "{{ states('input_select.water_flow_today') }}"
+
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Thank user for input
+    # --
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Input of water reading sound effect using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'thank_you'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'water_meter_reading_today_updated'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+    # c) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
+
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Report current status of water supply
+    # --
+    - service: shell_command.water_supply_reports_and_status

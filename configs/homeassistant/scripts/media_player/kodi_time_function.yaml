@@ -7,7 +7,7 @@ kodi_pvr_play:
         entity_id: media_player.jambulatv_living_room
 
     - alias: Play TV channel
-      service: media_player.play_media
+      service: media_player.media_play
       data:
         entity_id: media_player.jambulatv_living_room
         media_content_type: "CHANNEL"

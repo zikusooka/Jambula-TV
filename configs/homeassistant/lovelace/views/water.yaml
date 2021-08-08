@@ -1,0 +1,44 @@
+title: Water
+icon: mdi:water-plus
+cards:
+
+  - type: custom:compact-custom-header
+    cards:
+      main_config: true
+      clock_date: true
+      menu: overflow
+      notifications: clock
+      options: show
+
+
+  # Welcome Message
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/markup-welcome-message.yaml
+
+
+  # Water Status
+  - type: vertical-stack
+    cards:
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-water-supply.yaml
+          - !include ../cards/conditional-water-tariff-monthly.yaml
+
+      - type: horizontal-stack
+        cards: 
+          - !include ../cards/conditional-water-reading-today.yaml
+          - !include ../cards/conditional-water-reading-yesterday.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-water-usage-daily.yaml
+          - !include ../cards/conditional-water-usage-monthly.yaml
+
+
+  # Input water readings for Today / Yesterday
+  - type: vertical-stack
+    cards:
+      - !include ../cards/entities-water-readings-today.yaml
+      - !include ../cards/entities-water-readings-yesterday.yaml

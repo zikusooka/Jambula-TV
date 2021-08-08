@@ -1,0 +1,4 @@
+platform: template
+sensors:
+  last_seen_zik_bluez:
+    value_template: "{{ state_attr('device_tracker.zik_bluez', 'last_seen') }}"

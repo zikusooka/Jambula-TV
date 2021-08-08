@@ -45,12 +45,21 @@ music_unpause_if_paused:
   sequence:
 
     # If music is paused, unpause
+    #- service_template: >
+        #{% set player_status = states('media_player.now_playing') %}
+        #{% set mixer_status = states('binary_sensor.mixer_voice_alerts_status') %}
+        #{% if player_status == 'paused' and mixer_status == 'off' %}
+          #script.dummy
+    #- service_template: >
+        #{% if is_state('media_player.now_playing', 'paused') and is_state('binary_sensor.mixer_voice_alerts_status', 'off') %}
+          #media_player.media_play
+
     - service_template: >
         {% if is_state('media_player.now_playing', 'paused') %}
           media_player.media_play
 
         {% else %}
-          media_player.turn_on
+          script.dummy
 
         {% endif %}
       entity_id: media_player.now_playing
@@ -70,7 +79,7 @@ music_pause_if_playing:
           media_player.media_play_pause
 
         {% else %}
-          media_player.turn_off
+          script.dummy
 
         {% endif %}
       entity_id: media_player.now_playing

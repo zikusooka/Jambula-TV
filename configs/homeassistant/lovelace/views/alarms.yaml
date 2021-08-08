@@ -1,0 +1,23 @@
+title: Alarms
+icon: mdi:alarm-multiple
+cards:
+
+  - type: custom:compact-custom-header
+    cards:
+      main_config: true
+      clock_date: true
+      menu: overflow
+      notifications: clock
+      options: show
+
+
+  # Welcome Message
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/markup-welcome-message.yaml
+
+
+  # Alarms
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/entities-wakeup-alarm-times.yaml

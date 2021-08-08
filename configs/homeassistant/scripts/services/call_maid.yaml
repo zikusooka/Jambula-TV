@@ -3,6 +3,21 @@
 call_maid_office:
   sequence:
 
+ 
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert
+    # -----------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
@@ -28,11 +43,33 @@ call_maid_office:
     - service: script.music_unpause_if_paused
 
 
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+
 # Verandah - Call the maid for immediate assistance
 # -------------------------------------------------
 call_maid_verandah:
   sequence:
 
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+    # Voice Alert
+    # -----------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
@@ -58,11 +95,34 @@ call_maid_verandah:
     - service: script.music_unpause_if_paused
 
 
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+
 # Bedroom - Call the maid for immediate assistance
 # -------------------------------------------------
 call_maid_bedroom:
   sequence:
 
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert
+    # -----------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
@@ -88,11 +148,34 @@ call_maid_bedroom:
     - service: script.music_unpause_if_paused
 
 
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+
 # Porch - Call the maid for immediate assistance
 # ----------------------------------------------
 call_maid_porch:
   sequence:
 
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert
+    # -----------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
@@ -116,3 +199,10 @@ call_maid_porch:
 
     # e) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
+
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status

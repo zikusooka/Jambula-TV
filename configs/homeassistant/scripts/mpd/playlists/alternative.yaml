@@ -1,0 +1,22 @@
+music_play_alternative:
+  sequence:
+
+    # Generate playlist
+    - service: shell_command.create_local_music_playlist_alternative
+      data_template:
+        music_dir: !secret jambulatv_music_dir
+        mpd_playlists_dir: !secret jambulatv_playlists_mpd_dir
+        genre: 'Alternative'
+
+    # Play 
+    - service: media_player.play_media
+      data:
+        entity_id: media_player.now_playing
+        media_content_type: playlist
+        media_content_id: 'Local-Music-Alternative'
+  
+    # set volume
+    - service: media_player.volume_set
+      data:
+        entity_id: all
+        volume_level: !secret mixer_mpd_playlist_volume_level

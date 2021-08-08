@@ -1,6 +1,7 @@
 alias: Rainfall coming
 initial_state: True
 
+
 trigger:
 
   - platform: state
@@ -11,52 +12,27 @@ trigger:
     entity_id: weather.dark_sky
     to: 'rainy'
 
+  - platform: numeric_state
+    entity_id: sensor.jambulatv_precipitation
+    above: 5.6
+
+  - platform: state
+    entity_id: sensor.openweathermap_forecast_condition
+    to: 'rainy'
+
+
 condition:
   condition: and
   conditions:
 
     # Internet state
-    - condition: template
-      value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
-
-    # Time of day
-    - condition: time
-      after: '06:00:00'
-      before: '21:59:59'
-      weekday:
-        - sun
-        - mon
-        - tue
-        - wed
-        - thu
-        - fri
-        - sat
+    #- condition: template
+      #value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
 
 
 action:
-
-  # Wait for voice alerts mixer status to be 'off'
-  # ---------------------------------------------
-  - wait_for_trigger:
-      - platform: state
-        entity_id: input_boolean.voice_alerts_mixer_status
-        to: "off"
-    timeout: 45
-    continue_on_timeout: true
-
-  # Set status of voice alerts mixer to 'on'
-  # ----------------------------------------
-  - service: homeassistant.turn_on
-    data:
-      entity_id: input_boolean.voice_alerts_mixer_status
 
   # Run script
   # ----------
   - service: script.turn_on
     entity_id: script.rainfall_coming
-
-  # Set status of voice alerts mixer to 'off'
-  # ----------------------------------------
-  - service: homeassistant.turn_off
-    data:
-      entity_id: input_boolean.voice_alerts_mixer_status

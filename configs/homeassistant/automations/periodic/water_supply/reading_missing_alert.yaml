@@ -1,0 +1,51 @@
+alias: Water meter reading is missing alert
+initial_state: True
+
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/5'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+    # Water supply reading missing - Today
+    - condition: state
+      entity_id: 'binary_sensor.water_supply_status_today'
+      state: 'off'
+
+    # Water supply reading missing - Yesterday
+    - condition: state
+      entity_id: 'binary_sensor.water_supply_status_yesterday'
+      state: 'off'
+
+    # Night mode - off
+    - condition: state
+      entity_id: 'input_boolean.night_mode'
+      state: 'off'
+
+    # Quiet mode - off
+    - condition: state
+      entity_id: 'input_boolean.quiet_mode'
+      state: 'off'
+
+    # Between 6am and 7pm i.e. daytime
+    - condition: time
+      after: '06:00:00'
+      before: '23:59:00'
+
+
+action:
+
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.water_meter_reading_is_missing

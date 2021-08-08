@@ -1,6 +1,21 @@
 internet_connection_on:
   sequence:
+ 
 
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert
+    # -----------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
@@ -26,9 +41,32 @@ internet_connection_on:
     #- service: homeassistant.restart
 
 
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+
 internet_connection_off:
   sequence:
 
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert
+    # -----------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
@@ -51,6 +89,13 @@ internet_connection_off:
     - service: script.music_unpause_if_paused
 
 
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
     # Other actions - Internet off:
     # -----------------------------
     #
@@ -60,7 +105,7 @@ internet_connection_off:
           shell_command.internet_radio_stop
 
         {% else %}
-          shell_command.internet_radio_stop
+          script.dummy
 
         {% endif %}
       entity_id: input_select.internet_radio_station

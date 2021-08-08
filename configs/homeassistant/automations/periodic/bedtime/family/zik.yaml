@@ -20,6 +20,11 @@ trigger:
     from: 'off'
     to: 'on'
 
+  - platform: state
+    entity_id: binary_sensor.bluez_zik_01
+    from: 'unavailable'
+    to: 'on'
+
 
 condition:
   condition: and

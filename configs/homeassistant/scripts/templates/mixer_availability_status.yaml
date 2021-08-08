@@ -1,0 +1,20 @@
+wait_for_availability_of_mixer_voice_alerts:
+  sequence:
+    - delay: 00:00:15
+    - alias: "If mixer for voice alerts is in use, wait a bit"
+      repeat:
+        while:
+          - condition: state
+            entity_id: input_boolean.voice_alerts_mixer_status
+            state: "on"
+
+          - condition: state
+            entity_id: binary_sensor.mixer_voice_alerts_status
+            state: "on"
+
+          # Don't do it too many times
+          - condition: template
+            value_template: "{{ repeat.index <= 4 }}"
+
+        sequence:
+          - service: script.dummy

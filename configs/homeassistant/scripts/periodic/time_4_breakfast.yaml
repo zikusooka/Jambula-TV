@@ -1,5 +1,17 @@
 its_time_for_breakfast:
   sequence:
+ 
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
 
 
     # Task - Announce that its time for breakfast
@@ -21,3 +33,10 @@ its_time_for_breakfast:
 
     # d) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
+
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status

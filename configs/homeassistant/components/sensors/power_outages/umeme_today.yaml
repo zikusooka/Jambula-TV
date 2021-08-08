@@ -6,6 +6,6 @@
 
 platform: command_line
 name: "Power outage (Today)"
-command: "echo $(/usr/bin/jambulatv-umeme-outages today $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq) | sed '/^$/d'"
+command: "echo $(/usr/bin/jambulatv-umeme-outages-via-scraper today $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq) | sed '/^$/d' | tail -1"
 command_timeout: 15
 scan_interval: 180

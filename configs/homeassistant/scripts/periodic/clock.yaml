@@ -1,10 +1,21 @@
-say_time_at_top_off_hour:
+say_time_at_top_of_hour:
   sequence:
+
+ 
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
 
 
     # Task - Announce the current time at the top of the hour
     # -------------------------------------------------------
-    #
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
@@ -21,7 +32,14 @@ say_time_at_top_off_hour:
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: '41'
-        audio_gain: !secret voice_alert_audio_gain_medium
+        audio_gain: !secret voice_alert_audio_gain_high
 
     # e) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
+
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status

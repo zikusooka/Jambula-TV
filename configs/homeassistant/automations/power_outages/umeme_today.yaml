@@ -8,6 +8,16 @@ trigger:
   - platform: time
     at: '00:05:00'
 
+  - platform: template
+    value_template: "{{ not is_state('sensor.power_outage_today', 'none') }}"
+    for:
+      minutes: 1
+
+  - platform: template
+    value_template: "{{ not is_state('sensor.power_outage_today', '') }}"
+    for:
+      minutes: 1
+
 
 condition:
   condition: and
@@ -16,27 +26,18 @@ condition:
     # Power outage state not null
     - condition: template
       value_template: "{{ not is_state('sensor.power_outage_today', 'none') }}"
+    - condition: template
+      value_template: "{{ not is_state('sensor.power_outage_today', '') }}"
+
 
     # Time of day
     - condition: time
-      before: '11:59:59'
+      before: '23:59:59'
 
 
 action:
 
-# Text power outage reports
-# -------------------------
-  
-  # a) WhatsApp
-  - service: script.send_whatsapp
-    data_template:        
-      whatsapp_text: !include ../../templates/power_outages/umeme_today_notification_message.yaml
-      whatsapp_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
-      whatsapp_recipient_phone: ''
-
-  # b) Telegram
-  - service: script.send_telegram
-    data_template: 
-      telegram_text: !include ../../templates/power_outages/umeme_today_notification_message.yaml
-      telegram_image: '/usr/share/JambulaTV/images/hass/power_outage_today.png'
-      telegram_recipient_phone: ''
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.power_supply_umeme_off_today

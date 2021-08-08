@@ -5,31 +5,36 @@ initial_state: True
 trigger:
 
   - platform: time_pattern
-    hours: '/2'
+    hours: '/3'
 
   - platform: state
-    entity_id: 'binary_sensor.water_supply_status'
+    entity_id: 'binary_sensor.water_supply_status_today'
     from: 'on'
     to: 'off'
 
-  - platform: state
-    entity_id: 'binary_sensor.water_supply_status'
-    from: 'unavailable'
-    to: 'off'
+  #- platform: state
+    #entity_id: 'binary_sensor.water_supply_status_today'
+    #from: 'unavailable'
+    #to: 'off'
 
 
 condition:
   condition: and
   conditions:
 
-   # Water Flow sensor - off
+   # Water flow sensor - off
     - condition: state
-      entity_id: 'binary_sensor.water_supply_status'
+      entity_id: 'binary_sensor.water_supply_status_today'
       state: 'off'
 
     # Someone at home
     #- condition: template
       #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+   # Water back status - off
+    - condition: state
+      entity_id: 'input_boolean.water_back'
+      state: 'off'
 
    # Night mode - off
     - condition: state
@@ -44,35 +49,7 @@ condition:
 
 action:
 
-  # Wait for voice alerts mixer status to be 'off'
-  # ---------------------------------------------
-  - service_template: >
-      {% if is_state('input_boolean.voice_alerts_mixer_status', 'on') %}
-        delay: 45
-
-      {% else %}
-
-      {% endif %}
-    entity_id: input_boolean.voice_alerts_mixer_status
-
-
-
-
-
-
-  # Set status of voice alerts mixer to 'on'
-  # ----------------------------------------
-  - service: homeassistant.turn_on
-    data:
-      entity_id: input_boolean.voice_alerts_mixer_status
-
   # Run script
   # ----------
   - service: script.turn_on
     entity_id: script.water_flow_off_alert
-
-  # Set status of voice alerts mixer to 'off'
-  # ----------------------------------------
-  - service: homeassistant.turn_off
-    data:
-      entity_id: input_boolean.voice_alerts_mixer_status

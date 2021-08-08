@@ -19,9 +19,20 @@ power_supply_umeme_tomorrow:
         telegram_recipient_phone: ''
 
 
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
     # Voice Alert
-    # -----------
-    
+    # -----------    
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
@@ -44,12 +55,32 @@ power_supply_umeme_tomorrow:
     - service: script.music_unpause_if_paused
 
 
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+
 power_supply_umeme_ongoing:
   sequence:
 
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
     # Voice alert 
     # -----------
-
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
@@ -69,9 +100,15 @@ power_supply_umeme_ongoing:
     - service: script.music_unpause_if_paused
 
 
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
     # Text power outage reports
     # -------------------------
-
     # a) WhatsApp
     - service: script.send_whatsapp
       data_template:        

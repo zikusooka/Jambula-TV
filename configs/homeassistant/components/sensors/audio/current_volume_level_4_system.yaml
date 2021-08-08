@@ -1,4 +1,4 @@
 platform: command_line
 name: "Current System (Volume Level)"
 command: /usr/bin/jambulatv-speaker-volume system localhost status | /usr/bin/awk '/Volume/ {print $3}' | sed 's:%::'
-scan_interval: 1
+#scan_interval: 10

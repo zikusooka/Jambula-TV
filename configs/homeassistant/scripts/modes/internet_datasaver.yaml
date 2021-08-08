@@ -1,6 +1,19 @@
 internet_datasaver_enable_manual:
   sequence:
 
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
     # a) Turn on data saver mode
     - service: shell_command.internet_data_saver_on
 
@@ -26,8 +39,29 @@ internet_datasaver_enable_manual:
     - service: script.music_unpause_if_paused
 
 
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+
 internet_datasaver_disable_manual:
   sequence:
+
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
 
     # a) Turn off data saver mode
     - service: shell_command.internet_data_saver_off
@@ -52,3 +86,10 @@ internet_datasaver_disable_manual:
 
     # f) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
+
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status

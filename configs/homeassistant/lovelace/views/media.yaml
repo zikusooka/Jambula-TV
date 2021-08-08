@@ -1,0 +1,78 @@
+title: Overview
+icon: mdi:playlist-music
+cards:
+
+
+  # Welcome Message
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/markup-welcome-message.yaml
+
+
+  # Music Playlists
+  - type: vertical-stack
+    cards:
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-local-music-jazz.yaml
+          - !include ../cards/entity-button-local-music-christian.yaml
+          - !include ../cards/entity-button-local-music-country.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-local-music-local.yaml
+          - !include ../cards/entity-button-local-music-indie.yaml
+          - !include ../cards/entity-button-local-music-congolese.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-local-music-pop.yaml
+          #- !include ../cards/entity-button-local-music-folk.yaml
+          - !include ../cards/entity-button-local-music-alternative.yaml
+          - !include ../cards/entity-button-local-music-all.yaml
+ 
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-entity-button-local-music-christmas.yaml
+
+
+  # Now Playing / Volume Controls / Stop Media Player
+  - type: vertical-stack
+    cards:
+      - !include ../cards/media-control-jambulatv-server.yaml
+      - !include ../cards/media-control-jambulatv-client-01.yaml
+      #- !include ../cards/conditional-playing-now-volume-playing.yaml
+ 
+
+  # Internet & FM Radio
+  - type: vertical-stack
+    cards:
+      - !include ../cards/conditional-internet-radio.yaml
+      - !include ../cards/conditional-fm-radio.yaml
+      - !include ../cards/conditional-playing-now-volume-playing.yaml
+
+
+  # Now Playing / Volume Controls / Stop Media Player
+  - type: vertical-stack
+    cards:
+      #- !include ../cards/media-control-jambulatv-server.yaml
+      #- !include ../cards/media-control-jambulatv-client-01.yaml
+      #- !include ../cards/conditional-playing-now-volume-playing.yaml
+      #
+      - type: horizontal-stack
+        cards:
+
+          - !include ../cards/conditional-media-player-previous_track.yaml
+
+          - !include ../cards/conditional-media-player-volume-level.yaml
+          - !include ../cards/conditional-media-player-forward_track.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-playing-now-volume-paused.yaml
+          - !include ../cards/conditional-media-player-stop.yaml
+          - !include ../cards/conditional-media-player-pause-playing.yaml
+          - !include ../cards/conditional-media-player-pause-paused.yaml
+          #- !include ../cards/conditional-media-player-volume-up.yaml
+          #- !include ../cards/conditional-media-player-volume-down.yaml

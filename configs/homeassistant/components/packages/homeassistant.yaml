@@ -9,10 +9,10 @@ homeassistant:
   #external_url: "https://www.example.com"
 
   # The URL that Home Assistant is available on from your local network
-  #internal_url: "http://172.16.0.1:8505"
+  internal_url: "http://jambulatv-home:8505"
 
   # Lets me customize individual entities
-  customize: !include_dir_merge_named ../../customizations/entities
+  #customize: !include_dir_merge_named ../../customizations/entities
 
   # Lets me custimize all entities in a domain
   customize_domain: !include_dir_merge_named ../../customizations/domains
@@ -23,6 +23,7 @@ homeassistant:
   # List of folders that can be used as sources for sending files
   allowlist_external_dirs:
     - /tmp
+    - /JambulaTV
 
   # List of external URLs that can be fetched
   #allowlist_external_urls:
@@ -30,8 +31,12 @@ homeassistant:
 
   # A mapping of local media sources and their paths on disk
   media_dirs: 
-    music: /JambulaTV/Music
-    tv_shows: /JambulaTV/Videos/TV_Shows
-    movies: /JambulaTV/Videos/Movies
-    tv_recordings: /JambulaTV/Videos/TV_Recordings
-    podcasts: /JambulaTV/Podcasts
+    - /JambulaTV
+    #music: /JambulaTV/Music
+    #tv_shows: /JambulaTV/Videos/TV_Shows
+    #movies: /JambulaTV/Videos/Movies
+    #tv_recordings: /JambulaTV/Videos/TV_Recordings
+    #podcasts: /JambulaTV/Podcasts
+
+    #recordings: /JambulaTV/Podcasts
+    #media: /JambulaTV/Podcasts
