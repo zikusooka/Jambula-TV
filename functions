@@ -4383,6 +4383,30 @@ ninja
 # Install
 ninja install
 #
+# Cache recently shared libraries 
+ldconfig
+
+# If Upgrading, display post upgrade notice
+if [[ "$UPGRADING" = "yes" ]];
+then
+# Remove existing pulse config directory for multimedia and root users 
+[[ -d $PULSE_MULTIMEDIA_USER_CONFIG_DIR ]] && rm -rf $PULSE_MULTIMEDIA_USER_CONFIG_DIR
+[[ -d $PULSE_ROOT_CONFIG_DIR ]] && rm -rf $PULSE_ROOT_CONFIG_DIR
+# Print post upgrade notice
+cat <<ET
+IMPORTANT:
+==========
+PulseaAudio has been upgraded!
+Please re-install the following applications such that they are 
+compatible with $(pulseaudio --version)
+
+% MPD / MPC
+% Sphinx / Pocketsphinx
+% VLC
+% MPlayer
+ET
+
+else
 # Add pulse groups
 for PULSE_GROUP in pulse pulse-access
 do
@@ -4395,8 +4419,7 @@ useradd -r -c "PulseAudio System" -d $PULSE_HOME_DIR -g pulse -s /sbin/nologin p
 usermod -a -G audio pulse
 # Add multimedia users to pulse-access group
 usermod -a -G pulse-access $MULTIMEDIA_USER
-# Cache recently shared libraries 
-ldconfig
+fi
 }
 
 # Install alsa-plugins after pulseaudio install
