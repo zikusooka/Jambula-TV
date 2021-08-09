@@ -1,3 +1,125 @@
+Changes since v7.1
+--------------------
+
+* JambulaTV: Make the 'now playing' code much more reliable especially            when reporting the artist and title of locally stored song            currently playing 
+
+* JambulaTV: Add new tool 'jambulatv-water-reading-today' which enables            manual input of daily water meter readings via the            Home-Assistant frontend 
+
+* JambulaTV: Add file and journal logging support to the Connect to            WiFI AP tool i.e. Update 'jambulatv-connect-2-wifi-ap' 
+
+* JambulaTV: Fix remaining bugs and issues in the water supply tool i.e.            Update 'jambulatv-water-supply' 
+
+* JambulaTV: Add MQTT server host/port and publish command/options to            the global settings file so as to allow our current and            future tools to publish events using MQTT protocol 
+
+* JambulaTV: Add support for MQTT publishing in Asterisk dialplans            i.e. Update globals (variables) files for both Asterisk            and FreePBX 
+
+* JambulaTV: Add support for publishing the Caller ID of incoming calls            in Asterisk via MQTT protocol. This allows for integration            with other applications such as Home-Assistant 
+
+* JambulaTV: Prevent Home-Assistant from using the (typically very high)            system sound level which is set up by alsa-restore systemd            unit during the initial boot process i.e. Instead use the            startup volume levels requested by Home-Assistant 
+
+* JambulaTV: Fix issues in recently revised caller ID lookups for both            Asterisk and FreePBX dialplans 
+
+* JambulaTV: Refactor the camera player tool i.e. 'jambulatv-camplayer'            and add support for the following: 
+
+* JambulaTV: Update the contributed playlist file for CCTV cameras            i.e. Update 'jambula-cctv.m3u8' 
+
+* JambulaTV: Update Icinga2 'bluez-status-event.sh' script i.e. Source            MQTT settings such as server IP/port and command/options            from our global settings file 
+
+* JambulaTV: Disable checking of failed DVB-T2 streams using Icinga2 
+
+* JambulaTV: Fix issue where DVB-T/2 streams that are currently playing            are accidentally stopped during maintenance of the JTVHome            IPTV network i.e. jambulatv-jtvhome-maintenance.service 
+
+* JambulaTV: Fix issue where the music download tool fails to fetch            the complete song file and spills the following error: 
+
+* JambulaTV: Make the 'now playing' code much more reliable especially            when reporting the artist and title of remote online song            currently playing - NOTE: This is a follow up to commit:            ca58763695e1f82d47d3a438a80e3b6cc9c1bc5a 
+
+* JambulaTV: Rename UMEME power outages tool 'jambulatv-umeme-outages'            to 'jambulatv-umeme-outages-via-api' 
+
+* JambulaTV: Refactor the previously contributed UMEME power outages            script i.e. 'umeme_planned_outages.sh'            Rename it to 'jambulatv-umeme-outages-via-scraper' and            move it to directory containing our tools i.e. ../bin 
+
+* JambulaTV: Fix issue in Asterisk and FreePBX dialplans where callers            using the Airtel Uganda network are not identified due to            null values being returned by the caller id lookup script            'jambulatv-gsm-ussd-ug.sh' 
+
+* JambulaTV: Update initial and main functions file in order to reflect            recent changes in the UMEME (Uganda) power outages tool            i.e. Add the following variables and ensure that tools are            copied to system binary folder during initial install 
+
+* JambulaTV: Upgrade system's Linux kernel to latest version: 5.4.125 
+
+* JambulaTV: Update UMEME power outages via scraper tool            i.e. jambulatv-umeme-outages-via-scraper 
+
+* JambulaTV: Change the default DNS server IP address from Google's            8.8.8.8 to 8.8.4.4 
+
+* JambulaTV: Upgrade Home-Assistant Core to the latest Github version:            2021.6.6 
+
+* JambulaTV: Fix issue where multiple voice alerts and sounds are            processed at the same time leading to collisions 
+
+* JambulaTV: Enable flapping when checking for availability of Bluez            devices in Icinga2 monitoring software 
+
+* JambulaTV: Upgrade Home-Assistant Core to the latest Github version:            2021.7.3 
+
+* JambulaTV: Upgrade Flexget to the latest development version:            3.1.133.dev 
+
+* JambulaTV: Upgrade FFmpeg to the latest version: 4.4 (Rao) 
+
+* JambulaTV: Update UMEME power outages via scraper tool            i.e. jambulatv-umeme-outages-via-scraper 
+
+* JambulaTV: Add the following On-line based radio stations to the            Internet radio streamer tool 
+
+* JambulaTV: Add support for reporting the Genre of music currently            playing to the FM radio streamer tool 
+
+* JambulaTV: Add support for calling code (076) recently assigned to            MTN Uganda to our PBX telephone system i.e. Update the            Asterisk and FreePBX dialplan files: extensions.conf and            extensions_override_freepbx.conf respectively 
+
+* JambulaTV: Update the music download tool i.e. 'jambulatv-fetch-music' 
+
+* JambulaTV: Add support for reading of the current local time in a            requested world city using voice commands in Speech            Recognition (ASR) engine 
+
+* JambulaTV: Fix a minor issue with the water supply tool i.e. Update            jambulatv-water-supply 
+
+* JambulaTV: Refactor and rename the water supply reading tool from            'jambulatv-water-reading-today' to            'jambulatv-water-reading' and add ability to input not            only Today's water readings but also Yesterday and other            days 
+
+* JambulaTV: Fix a minor issue with the water supply status tool i.e.            Update jambulatv-water-supply 
+
+* JambulaTV: Fix issues with process locking in the sounds tool i.e.            Update 'jambulatv-sounds' 
+
+* JambulaTV: Update the stream URL(s) for the following on-line based            radio station(s) in the Internet radio streamer tool            i.e. Update 'jambulatv-internet-radio-streamer' 
+
+* JambulaTV: Update the 'now playing' code in the FM radio streamer            tool i.e. 'jambulatv-fm-radio-streamer' as follows: 
+
+* JambulaTV: Clean up GSM USSD controller tool i.e jambulatv-gsm-ussd-ug 
+
+* JambulaTV: Extend voice notification support for home arrivals and            departures i.e. presence detection. Also indicate when            a user has been away for either a long or short time 
+
+* JambulaTV: Upgrade system's Linux kernel to latest version: 5.4.137 
+
+* JambulaTV: Upgrade Pulseaudio sound system to version: 15.0 
+
+* JambulaTV: Upgrade ALSA sound system libraries, plugins, utilities,            and OSS components to their latest versions as follows 
+
+* JambulaTV: Upgrade icinga2 to the latest Github version: r2.13.0-1 
+
+* JambulaTV: Rename custom Icinga2 object check command from 'systemd'            to 'systemd-jambula' so as to differentiate it from the            officially contributed check-systemd plugin 
+
+* JambulaTV: Upgrade Icinga2 Monitoring Plugins to the latest version:            2.3.1 
+
+* JambulaTV: Add initial support for Icinga2 contributed plugins            e.g. check-systemd 
+
+* JambulaTV: Upgrade icingaweb2 to the latest working version: 2.8.4 
+
+* JambulaTV: Upgrade Sphinxbase and Pocketsphinx to latest Github            versions 
+
+* JambulaTV: Disable the use of Use Case Manager (UCM) feature in ALSA            sound system since it is not supported by soundcard i.e.            Add '-U' option to alsactl command 
+
+* JambulaTV: Add new Icinga2 attribute 'flapping_ignore_states' to            the Bluez status template. This attribute allows for            ignoring of state changes to specified states during            the flapping calculation 
+
+* JambulaTV: After upgrade of Pulseaudio, print a notice specifying any            additional tasks that are needed such as the re-install of            media related packages that use this library 
+
+* JambulaTV: Re-order the install of libmpdclient library, which is a            dependency for both MPD daemon and MPC client 
+
+* JambulaTV: Add support for playing on-the-fly FFmpeg generated sound            files located in the /tmp directory to the sounds tool            i.e. Update 'jambulatv-sounds' 
+
+* JambulaTV: Switch to new project nickname: Nabusugwe 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+
 Changes since v7.0
 --------------------
 
