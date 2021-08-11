@@ -186,7 +186,7 @@ ALERT_SOUND_NUMBER=$1
 #
 case $ALERT_SOUND_NUMBER in
 1)
-ALERT_SOUND_FILE=attention-motion-detected-00.wav
+ALERT_SOUND_FILE=chime_small.mp3
 ;;
 2)
 ALERT_SOUND_FILE=attention-motion-detected-01.mp3
@@ -198,10 +198,10 @@ ALERT_SOUND_FILE=attention-motion-detected-02.mp3
 ALERT_SOUND_FILE=attention-motion-detected-03.mp3
 ;;
 5)
-ALERT_SOUND_FILE=attention-mifi-battery-low-recharge-01.wav
+ALERT_SOUND_FILE=attention-mifi-battery-low-recharge-01.mp3
 ;;
 6)
-ALERT_SOUND_FILE=attention-mifi-battery-full-unplug-01.wav
+ALERT_SOUND_FILE=attention-mifi-battery-full-unplug-01.mp3
 ;;
 7)
 ALERT_SOUND_FILE=battery_low_01.mp3
@@ -237,7 +237,7 @@ ALERT_SOUND_FILE=thunderstorms_observed_rainfall_likely.mp3
 ALERT_SOUND_FILE=flash_briefing.mp3
 ;;
 19)
-ALERT_SOUND_FILE=coming-flash-briefing-today.wav
+ALERT_SOUND_FILE=coming-flash-briefing-today.mp3
 ;;
 20)
 DAY=$(date +%A) 
