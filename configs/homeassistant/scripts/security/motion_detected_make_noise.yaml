@@ -2,8 +2,8 @@ motion_detected_outside_make_noise:
   sequence:
 
 
-    # Task 1 - Start capture of snapshot
-    # -----------------------------------
+    # Start capture of snapshot
+    # --------------------------
     #
     # Arm camera alarm
     - service: shell_command.zoneminder_camera_arm
@@ -11,37 +11,61 @@ motion_detected_outside_make_noise:
         camera_id: !secret zoneminder_camera_001
 
 
-    # Task 2 - sound alarm notice using Intercom i.e. paging
-    # ------------------------------------------------------
-    #
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'attention-motion-detected-02.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_attention_motion_detected.mp3'
+
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert: Announce that motion was detected
+    # -----------------------------------------------
     # a) Run script: If music is playing, pause it - player
     - service: script.music_pause_if_playing
 
-    # b) Chime alert using house speakers
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: '1'
+        sound_alert: 'sound_effect_attention_motion_detected'
         audio_gain: !secret voice_alert_audio_gain_high
 
-    # c) Voice alert using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: '3'
-        audio_gain: !secret voice_alert_audio_gain_high
-
-    # d) Run script: If music is paused, unpause player - player
+    # c) Run script: If music is paused, unpause player - player
     - service: script.music_unpause_if_paused
 
 
-    # Task 3 - Stop capture of snapshot
-    # ---------------------------------
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Stop capture of snapshot
+    # -------------------------
     # 
     # Make alarm at local server station
     - service: shell_command.beep_alerts_at_local_server
 
 
-    # Task 4 - Stop capture of snapshot
-    # ---------------------------------
+    # Stop capture of snapshot
+    # -------------------------
     #
     # a) Wait a bit
     - delay: '00:00:45'

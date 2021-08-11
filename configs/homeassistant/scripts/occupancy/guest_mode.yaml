@@ -1,48 +1,109 @@
 guest_mode_on:
   sequence:
 
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'guest_visitor_mode_activating.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_guest_visitor_mode_activating.mp3'
+
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert: Announce that activating guest mode
+    # -------------------------------------------------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # b) Chime alert using house speakers
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: '1'
+        sound_alert: 'sound_effect_guest_visitor_mode_activating'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Guest mode turning on sound effect using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: '38'
-        audio_gain: !secret voice_alert_audio_gain_medium
+    # c) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
 
-    # d) Guest mode actions - On
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Guest mode actions - On
+    # -----------------------
     #- service: shell_command...
 
-    # e) Run script: If music is paused, unpause player
-    - service: script.music_unpause_if_paused
 
 
 guest_mode_off:
   sequence:
 
-    # a) Guest mode actions - Off
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'guest_visitor_mode_deactivated.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_guest_visitor_mode_deactivated.mp3'
+
+
+    # Guest mode actions - Off
+    # -------------------------
     #- service: shell_command...
 
-    # b) Run script: If music is playing, pause it
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert: Announce that guest mode deactivated
+    # --------------------------------------------------
+    # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # c) Chime alert using house speakers
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: '1'
+        sound_alert: 'sound_effect_guest_visitor_mode_deactivated'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # d) Guest mode turning on sound effect using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: '39'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # e) Run script: If music is paused, unpause player
+    # c) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
+
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status

@@ -22,13 +22,10 @@ light_switch_livingroom_on:
     # b) Play chime using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: '1'
+        sound_alert: 'chime_small'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Other actions
-    # ....
-
-    # d) Run script: If music is paused, unpause player
+    # c) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
 
 
@@ -37,3 +34,7 @@ light_switch_livingroom_on:
     - service: homeassistant.turn_off
       data:
         entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Other actions
+    # -------------

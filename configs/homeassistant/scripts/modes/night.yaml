@@ -1,74 +1,138 @@
 night_mode_on:
   sequence:
 
-  # 1. Enable Night time Mode at Frontend
+
+    # Enable Night time Mode at Frontend
+    # ----------------------------------
     - service: homeassistant.turn_on
       data:
         entity_id: input_boolean.night_mode
 
-  # 2. Voice alerts
-  # ---
-    # a) Save current volume level of active player
+
+    # Save current volume level of active player
+    # ------------------------------------------
     - service: script.voice_alert_volume_pre_setup_player
 
-    # b) Run script: If music is playing, pause it
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'night_mode_activating.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_night_mode_activating.mp3'
+
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert: Announce that Activating night mode
+    # -------------------------------------------------
+    # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # c) Chime alert using house speakers
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: '1'
+        sound_alert: 'sound_effect_night_mode_activating'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # d) Night mode turning on sound effect using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: '34'
-        audio_gain: !secret voice_alert_audio_gain_medium
+    # c) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
 
-    # e) Lower volume of current player
+
+    # Lower volume of current player
+    # -------------------------------
     - service: shell_command.set_volume_level_player
       data_template:
         current_player: "{{states('sensor.current_player_cli_name')}}"
         volume_level_player: !secret mixer_night_mode_volume_level
 
-    # f) Run script: If music is paused, unpause player
-    - service: script.music_unpause_if_paused
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
 
 
 night_mode_off:
   sequence:
 
-  # 1. Disable Night time Mode at Frontend
+
+    # Disable Night time Mode at Frontend
+    # -----------------------------------
     - service: homeassistant.turn_off
       data:
         entity_id: input_boolean.night_mode
 
-  # 2. Voice alerts
-  # ---
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'night_mode_deactivated.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_night_mode_deactivated.mp3'
+
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert: Announce that night mode deactivated
+    # -------------------------------------------------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # b) Chime alert using house speakers
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: '1'
+        sound_alert: 'sound_effect_night_mode_deactivated'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Night mode turned off sound effect using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: '35'
-        audio_gain: !secret voice_alert_audio_gain_medium
+    # e) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
 
-    # d) Increase volume of current player
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Increase volume of current player
+    # ---------------------------------
     #- service: shell_command.set_volume_level_player
       #data_template:
         #current_player: "{{states('sensor.current_player_cli_name')}}"
         #volume_level_player: !secret mixer_start_up_volume_level_player
 
-    # d) Restore previous volume level of active player
+    # Restore previous volume level of active player
+    # -----------------------------------------------
     - service: script.voice_alert_volume_post_setup_player
-
-    # e) Run script: If music is paused, unpause player
-    - service: script.music_unpause_if_paused

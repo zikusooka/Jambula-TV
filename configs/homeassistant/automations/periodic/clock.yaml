@@ -25,8 +25,8 @@ condition:
 
     # Day of week
     - condition: time
-      after: '08:00:00'
-      before: '18:00:00'
+      #after: '08:00:00'
+      #before: '18:00:00'
       weekday:
         - mon
         - tue

@@ -2,6 +2,13 @@ bedtime_zik:
   sequence:
 
 
+    # Enable Bedtime Mode at Frontend
+    # --------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.bedtime_mode_zik
+
+
     # Generate voice files
     # --------------------
     # Merge audio files
@@ -21,31 +28,45 @@ bedtime_zik:
           {% endif %}
         input_file3: 'zik'
         output_directory: !secret jambulatv_temp_dir
-        output_file: 'ding_time_for_bed_zik.mp3'
+        output_file: 'sound_effect_time_for_bed_zik.mp3'
 
 
-    # Enable Bedtime Mode at Frontend
-    # --------------------------------
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
     - service: homeassistant.turn_on
       data:
-        entity_id: input_boolean.bedtime_mode_zik
+        entity_id: input_boolean.voice_alerts_mixer_status
 
 
-    # Voice Alert: Time for bed
-    # --------------------------
+    # Voice Alert: Announce that it's time for bed
+    # --------------------------------------------- 
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
     # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'ding_time_for_bed_zik'
+        sound_alert: 'sound_effect_time_for_bed_zik'
         audio_gain: !secret voice_alert_audio_gain_medium
 
     # c) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
 
-    # d) Set bedtime volume level - player
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Set bedtime volume level - player
+    # ---------------------------------
     - service: shell_command.set_volume_level_player
       data_template:
         volume_level_player: !secret mixer_bed_time_mode_volume_level

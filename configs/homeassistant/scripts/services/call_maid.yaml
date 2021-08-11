@@ -3,7 +3,20 @@
 call_maid_office:
   sequence:
 
- 
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Dissonant-bells-alert-tone.mp3'
+        input_file2: 'Dissonant-bells-alert-tone.mp3'
+        input_file3: 'immediate_assistance_is_needed_in_the_office.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_assistance_is_needed_in_the_office.mp3'
+
+
     # Wait until voice alerts mixer status is 'off'
     # ---------------------------------------------
     - service: script.wait_for_availability_of_mixer_voice_alerts
@@ -16,30 +29,18 @@ call_maid_office:
         entity_id: input_boolean.voice_alerts_mixer_status
 
 
-    # Voice Alert
-    # -----------
+    # Voice Alert: Announce that assistance is needed in office
+    # ----------------------------------------------------------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # b) Play initial sound effect using house speaker 
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'Dissonant-bells-alert-tone'
+        sound_alert: 'sound_effect_assistance_is_needed_in_the_office'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Play sound effect using house speaker
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'Dissonant-bells-alert-tone'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # d) Say maid is needed immediately
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'immediate_assistance_is_needed_in_the_office'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # f) Run script: If music is paused, unpause player
+    # c) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
 
 
@@ -52,9 +53,22 @@ call_maid_office:
 
 
 # Verandah - Call the maid for immediate assistance
-# -------------------------------------------------
+# --------------------------------------------------
 call_maid_verandah:
   sequence:
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Dissonant-bells-alert-tone.mp3'
+        input_file2: 'Dissonant-bells-alert-tone.mp3'
+        input_file3: 'immediate_assistance_is_needed_at_the_verandah.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_assistance_is_needed_at_the_verandah.mp3'
 
 
     # Wait until voice alerts mixer status is 'off'
@@ -68,30 +82,19 @@ call_maid_verandah:
       data:
         entity_id: input_boolean.voice_alerts_mixer_status
 
-    # Voice Alert
-    # -----------
+
+    # Voice Alert: Announce that assistance is needed at the verandah
+    # ----------------------------------------------------------------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # b) Play initial sound effect using house speaker 
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'Dissonant-bells-alert-tone'
+        sound_alert: 'sound_effect_assistance_is_needed_at_the_verandah'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Play sound effect using house speaker
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'Dissonant-bells-alert-tone'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # d) Say maid is needed immediately
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'immediate_assistance_is_needed_at_the_verandah'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # e) Run script: If music is paused, unpause player
+    # c) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
 
 
@@ -109,6 +112,19 @@ call_maid_bedroom:
   sequence:
 
 
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Dissonant-bells-alert-tone.mp3'
+        input_file2: 'Dissonant-bells-alert-tone.mp3'
+        input_file3: 'immediate_assistance_is_needed_in_the_bedroom.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_assistance_is_needed_in_the_bedroom.mp3'
+
+
     # Wait until voice alerts mixer status is 'off'
     # ---------------------------------------------
     - service: script.wait_for_availability_of_mixer_voice_alerts
@@ -121,30 +137,18 @@ call_maid_bedroom:
         entity_id: input_boolean.voice_alerts_mixer_status
 
 
-    # Voice Alert
-    # -----------
+    # Voice Alert: Announce that assistance is needed in the bedroom
+    # ---------------------------------------------------------------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # b) Play initial sound effect using house speaker 
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'Dissonant-bells-alert-tone'
+        sound_alert: 'sound_effect_assistance_is_needed_in_the_bedroom'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Play sound effect using house speaker
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'Dissonant-bells-alert-tone'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # d) Say maid is needed immediately
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'immediate_assistance_is_needed_in_the_bedroom'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # e) Run script: If music is paused, unpause player
+    # c) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
 
 
@@ -162,6 +166,19 @@ call_maid_porch:
   sequence:
 
 
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Dissonant-bells-alert-tone.mp3'
+        input_file2: 'Dissonant-bells-alert-tone.mp3'
+        input_file3: 'immediate_assistance_is_needed_at_the_porch.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_assistance_is_needed_at_the_porch.mp3'
+
+
     # Wait until voice alerts mixer status is 'off'
     # ---------------------------------------------
     - service: script.wait_for_availability_of_mixer_voice_alerts
@@ -174,30 +191,18 @@ call_maid_porch:
         entity_id: input_boolean.voice_alerts_mixer_status
 
 
-    # Voice Alert
-    # -----------
+    # Voice Alert: Announce that assistance is needed at the porch
+    # -------------------------------------------------------------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # b) Play initial sound effect using house speaker 
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'Dissonant-bells-alert-tone'
+        sound_alert: 'sound_effect_assistance_is_needed_at_the_porch'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Play sound effect using house speaker
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'Dissonant-bells-alert-tone'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # d) Say maid is needed immediately
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'immediate_assistance_is_needed_at_the_porch'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # e) Run script: If music is paused, unpause player
+    # c) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
 
 

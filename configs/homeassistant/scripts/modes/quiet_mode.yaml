@@ -1,69 +1,137 @@
 quiet_mode_on:
   sequence:
 
-  # 1. Enable Quiet time Mode at Frontend
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'quiet_time_mode_activating.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_quiet_time_mode_activating.mp3'
+
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
     - service: homeassistant.turn_on
       data:
-        entity_id: input_boolean.quiet_mode
+        entity_id: input_boolean.voice_alerts_mixer_status
 
-  # 2. Voice alerts
-  # ---
+
+    # Voice Alert: Announce that activating quiet time mode
+    # ------------------------------------------------------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # b) Chime alert using house speakers
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: '1'
+        sound_alert: 'sound_effect_quiet_time_mode_activating'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Quiet mode turning on sound effect using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'quiet_time_mode_activating'
-        audio_gain: !secret voice_alert_audio_gain_medium
- 
-    # d) Save the current volume level for system
+    # c) Run script: If music is paused, unpause player
+    - service: script.music_unpause_if_paused
+
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Save the current volume level for system
+    # -----------------------------------------
     - service: shell_command.save_current_volume_level_system
       data_template:
         current_system: 'system'
         current_system_volume_level: "{{states('sensor.current_system_volume_level')}}%"
         volume_level_system_file: !secret current_volume_level_system_file
    
-    # e) Mute/Lower speaker volume to ~ 0%
+
+    # Mute/Lower speaker volume to ~ 0%
+    # ----------------------------------
     - service: shell_command.set_volume_level_system
       data_template:
         volume_level_system: !secret mixer_quiet_mode_volume_level
 
 
-quiet_mode_off:
-  sequence:
-
-  # 1. Disable Quiet time Mode at Frontend
-    - service: homeassistant.turn_off
+    # Enable Quiet time Mode at Frontend
+    # -----------------------------------
+    - service: homeassistant.turn_on
       data:
         entity_id: input_boolean.quiet_mode
 
-  # 2. Voice alerts
-  # ---
- 
-    # a) Unmute/Restore previous volume level for speaker
+
+
+quiet_mode_off:
+  sequence:
+
+
+    # Unmute/Restore previous volume level for speaker
+    # ------------------------------------------------
     - service: shell_command.restore_previous_volume_level_system
       data_template:
         current_system: 'system'
         volume_level_system_file: !secret current_volume_level_system_file
 
-    # b) Chime alert using house speakers
+
+    # Disable Quiet time Mode at Frontend
+    # ------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.quiet_mode
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'quiet_time_mode_deactivated.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_quiet_time_mode_deactivated.mp3'
+
+
+    # Wait until voice alerts mixer status is 'off'
+    # ---------------------------------------------
+    - service: script.wait_for_availability_of_mixer_voice_alerts
+
+
+    # Set status of voice alerts mixer to 'on'
+    # ----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status
+
+
+    # Voice Alert: Announce that quiet time mode deactivated
+    # ------------------------------------------------------
+    # a) Run script: If music is playing, pause it
+    - service: script.music_pause_if_playing
+
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: '1'
+        sound_alert: 'sound_effect_quiet_time_mode_deactivated'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Quiet mode turned off sound effect using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'quiet_time_mode_deactivated'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # d) Run script: If music is paused, unpause player
+    # c) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
+
+
+    # Set status of voice alerts mixer to 'off'
+    # ----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.voice_alerts_mixer_status

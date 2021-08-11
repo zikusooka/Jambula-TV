@@ -9,6 +9,19 @@ input_water_reading_for_today:
         water_flow_status_today: "{{ states('input_select.water_flow_today') }}"
 
 
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'thank_you.mp3'
+        input_file3: 'water_meter_reading_today_updated.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_water_meter_reading_today_updated.mp3'
+
+
     # Wait until voice alerts mixer status is 'off'
     # ---------------------------------------------
     - service: script.wait_for_availability_of_mixer_voice_alerts
@@ -21,20 +34,15 @@ input_water_reading_for_today:
         entity_id: input_boolean.voice_alerts_mixer_status
 
 
-    # Thank user for input
-    # --
+    # Voice Alert: Announce that water reading has been entered
+    # ---------------------------------------------------------- 
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # b) Input of water reading sound effect using house speakers
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'thank_you'
-        audio_gain: !secret voice_alert_audio_gain_high
-
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'water_meter_reading_today_updated'
+        sound_alert: 'sound_effect_water_meter_reading_today_updated'
         audio_gain: !secret voice_alert_audio_gain_high
 
     # c) Run script: If music is paused, unpause player
@@ -49,5 +57,5 @@ input_water_reading_for_today:
 
 
     # Report current status of water supply
-    # --
+    # --------------------------------------
     - service: shell_command.water_supply_reports_and_status

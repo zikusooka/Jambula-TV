@@ -2,6 +2,23 @@ internet_datasaver_enable_manual:
   sequence:
 
 
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'internet_data_saver_enabled.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_internet_data_saver_enabled.mp3'
+
+
+    # Turn on data saver mode
+    # -----------------------
+    - service: shell_command.internet_data_saver_on
+
+
     # Wait until voice alerts mixer status is 'off'
     # ---------------------------------------------
     - service: script.wait_for_availability_of_mixer_voice_alerts
@@ -14,28 +31,18 @@ internet_datasaver_enable_manual:
         entity_id: input_boolean.voice_alerts_mixer_status
 
 
-    # a) Turn on data saver mode
-    - service: shell_command.internet_data_saver_on
-
-    # b) Run script: If music is playing, pause it
+    # Voice Alert: Announce that Internet datasaver has been enabled
+    # ---------------------------------------------------------------
+    # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # c) Chime alert using house speakers
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: '1'
+        sound_alert: 'sound_effect_internet_data_saver_enabled'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # d) Internet data saver on sound effect using house speakers
-    #- service: shell_command.
-
-    # e) Voice alert using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: '25'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # f) Run script: If music is paused, unpause player
+    # c) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
 
 
@@ -51,6 +58,23 @@ internet_datasaver_disable_manual:
   sequence:
 
 
+    # Turn off data saver mode
+    # ------------------------
+    - service: shell_command.internet_data_saver_off
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'internet_data_saver_disabled.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_internet_data_saver_disabled.mp3'
+
+
     # Wait until voice alerts mixer status is 'off'
     # ---------------------------------------------
     - service: script.wait_for_availability_of_mixer_voice_alerts
@@ -63,28 +87,18 @@ internet_datasaver_disable_manual:
         entity_id: input_boolean.voice_alerts_mixer_status
 
 
-    # a) Turn off data saver mode
-    - service: shell_command.internet_data_saver_off
-
-    # b) Run script: If music is playing, pause it
+    # Voice Alert: Announce that Internet datasaver has been disabled
+    # ----------------------------------------------------------------
+    # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # c) Chime alert using house speakers
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: '1'
+        sound_alert: 'sound_effect_internet_data_saver_disabled'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # d) Internet data saver off sound effect using house speakers
-    #- service: shell_command.
-
-    # e) Voice alert using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: '26'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # f) Run script: If music is paused, unpause player
+    # c) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
 
 

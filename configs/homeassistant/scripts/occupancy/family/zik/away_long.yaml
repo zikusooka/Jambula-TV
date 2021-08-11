@@ -12,7 +12,7 @@ zik_is_away_long:
         input_file2: 'zik.mp3'
         input_file3: 'is_away_4_long.mp3'
         output_directory: !secret jambulatv_temp_dir
-        output_file: 'zik_is_away_4_long.mp3'
+        output_file: 'sound_effect_zik_is_away_4_long.mp3'
 
 
     # Wait until voice alerts mixer status is 'off'
@@ -27,15 +27,15 @@ zik_is_away_long:
         entity_id: input_boolean.voice_alerts_mixer_status
 
 
-    # Voice Alert: Away for a long time
-    # ---------------------------------
+    # Voice Alert: Announce that Zik is away for a long time
+    # -------------------------------------------------------
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
     # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'zik_is_away_4_long'
+        sound_alert: 'sound_effect_zik_is_away_4_long'
         audio_gain: !secret voice_alert_audio_gain_medium
 
     # c) Run script: If music is paused, unpause player

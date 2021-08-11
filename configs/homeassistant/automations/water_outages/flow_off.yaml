@@ -5,7 +5,7 @@ initial_state: True
 trigger:
 
   - platform: time_pattern
-    hours: '/3'
+    hours: '/1'
 
   - platform: state
     entity_id: 'binary_sensor.water_supply_status_today'

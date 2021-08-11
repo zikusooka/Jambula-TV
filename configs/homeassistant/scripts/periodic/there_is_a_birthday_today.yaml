@@ -2,6 +2,19 @@ birthday_today:
   sequence:
 
 
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'birthday_balloon.mp3'
+        input_file3: 'there_is_a_birthday_today.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_there_is_a_birthday_today.mp3'
+
+
     # Wait until voice alerts mixer status is 'off'
     # ---------------------------------------------
     - service: script.wait_for_availability_of_mixer_voice_alerts
@@ -14,28 +27,18 @@ birthday_today:
         entity_id: input_boolean.voice_alerts_mixer_status
 
 
+    # Voice Alert: Announce that there is a  birthday today
+    # ------------------------------------------------------ 
     # a) Run script: If music is playing, pause it
     - service: script.music_pause_if_playing
 
-    # b) Chime alert using house speakers
+    # b) Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: '1'
+        sound_alert: 'sound_effect_there_is_a_birthday_today'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Its time for news sound effect using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'birthday_balloon'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # d) Announce its time time for news using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: '44'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-    # e) Run script: If music is paused, unpause player
+    # c) Run script: If music is paused, unpause player
     - service: script.music_unpause_if_paused
 
 
