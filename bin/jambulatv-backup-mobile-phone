@@ -12,18 +12,24 @@
 #ENV{adb_user}=="yes", MODE="0660", GROUP="adbusers", SYMLINK+="phone_android_$env{ID_MODEL}_$env{ID_SERIAL_SHORT}", TAG+="systemd", ENV{SYSTEMD_WANTS}+="jambulatv-backup-mobile-phone@$env{ID_SERIAL_SHORT}.service"
 #
 # Jambula Labs @copyright 2020-2021 All rights reserved
-#
+
+
+
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_SYSTEM_LOG_DIR=/var/log/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
 # Variables
 PHONE_SERIAL_NUMBER=$1
-PHONE_MODEL=$(/usr/bin/journalctl -b -r | grep -m 1 -A3 "SerialNumber: $PHONE_SERIAL_NUMBER" | grep "Product:" | cut -d':' -f6- | sed 's:^ ::g')
+PHONE_MODEL=$( [[ "x$PHONE_SERIAL_NUMBER" = "x" ]] || /usr/bin/journalctl -b -r | grep -m 1 -A3 "SerialNumber: $PHONE_SERIAL_NUMBER" | grep "Product:" | cut -d':' -f6- | sed 's:^ ::g')
 PHONE_MANUFACTURER=$(/usr/bin/journalctl -b -r | grep -m 1 -A3 "SerialNumber: $PHONE_SERIAL_NUMBER" | grep "Manufacturer:" | cut -d':' -f6- | sed 's:^ ::g')
 PHONE_PRETTY_NAME=$(echo $PHONE_MODEL | sed 's: :_:g')
 PHONE_BACKUP_NAME=backup_${PHONE_SERIAL_NUMBER}.ab
 PHONE_BACKUP_DIR=/JambulaTV/Backups/Phones/${PHONE_PRETTY_NAME}
 PHONE_BACKUP_FILE=$PHONE_BACKUP_DIR/${PHONE_BACKUP_NAME}
-
-MULTIMEDIA_USER=jambula
-PROJECT_SYSTEM_LOG_DIR=/var/log/JambulaTV
 PHONE_BACKUP_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/$(echo $(basename $0) | sed 's:jambulatv-::g').log
 
 ADB_CMD="sudo /usr/bin/adb"
@@ -36,6 +42,10 @@ TAR_CMD=/usr/bin/tar
 SOUNDS_TOOL=/usr/bin/jambulatv-sounds
 SPEAKER_VOLUME_TOOL=/usr/bin/jambulatv-speaker-volume
 SOUNDS_ENABLE=1
+ALERT_SOUND_AUDIO_GAIN=140
+MULTIMEDIA_USER=jambula
+
+DEBUG=n # NOTE: 'n' = logging to file | 'y' = logging to stdout
 
 
 
@@ -46,12 +56,12 @@ SOUNDS_ENABLE=1
 alert_using_voice () {
 if [[ "$SOUNDS_ENABLE" = "1" ]];
 then
-# Mute house speakers 
-$SPEAKER_VOLUME_TOOL all localhost mute
+# Pause music player
+$MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT pause > /dev/null 2>&1
 # Play alert
-$SOUNDS_TOOL alert $1
-# Unmute house speakers if on
-$SPEAKER_VOLUME_TOOL all localhost unmute
+$SOUNDS_TOOL alert $1 gain=$ALERT_SOUND_AUDIO_GAIN
+# Unpause music player
+$MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT play > /dev/null 2>&1
 fi
 }
 
@@ -113,6 +123,9 @@ alert_using_voice 28
 }
 
 start_logging () {
+if [[ "$DEBUG" != "y" ]];
+then
+
 # If it already exists, make log file writeable by all
 [[ -e $PHONE_BACKUP_LOG_FILE ]] && sudo chmod a+w $PHONE_BACKUP_LOG_FILE
 # Start logging
@@ -123,10 +136,11 @@ $(date): $PHONE_MODEL $PHONE_SERIAL_NUMBER ($PHONE_MANUFACTURER)
 -----------------------------------------------------------------------
 EOF
 exec 2>> $PHONE_BACKUP_LOG_FILE
+fi
 }
 
 check_if_a_phone () {
-if [[ "x$PHONE_MODEL" = "x" || "$PHONE_MANUFACTURER" = "$PHONE_MODEL" ]];
+if [[ "x$PHONE_SERIAL_NUMBER" = "x" || "x$PHONE_MODEL" = "x" || "$PHONE_MANUFACTURER" = "$PHONE_MODEL" ]];
 then
 # Alert if not phone
 notification_not_a_phone
