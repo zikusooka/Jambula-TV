@@ -11,12 +11,12 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 # Source install functions
 . $PROJECT_FUNCTIONS_FILE
 
+# Source global settings
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
 SPEAKER_VOLUME_TYPE=$1
 SPEAKER_VOLUME_LOCATION=$2
 SPEAKER_VOLUME_LEVEL=$3
-
-MPC_CMD=/usr/bin/mpc
-MPD_LOCAL_PORT=$MPD_PORT
 
 
 
@@ -65,18 +65,18 @@ get_sink_input_index_snapcast
 # ---
 mpd_check_status () {
 # Check status of MPD server
-$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT status > /dev/null 2>&1
+$MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT status > /dev/null 2>&1
 MPC_EXIT_STATUS=$?
 }
 
 set_sink_input_mute_mpd_localhost () {
 # Control MPD server volume
-$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT volume $1
+$MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT volume $1
 }
 
 set_sink_input_volume_mpd_localhost () {
 # Control MPD server volume
-$MPC_CMD -q -h localhost -p $MPD_LOCAL_PORT volume $(echo $SPEAKER_VOLUME_LEVEL | sed 's:%::')
+$MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT volume $(echo $SPEAKER_VOLUME_LEVEL | sed 's:%::')
 }
 
 # CLI Player
