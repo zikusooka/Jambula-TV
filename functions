@@ -151,8 +151,11 @@ SNAPCAST_DEFAULT_SERVER_FILE=$DEFAULT_CONFIG_DIR/snapserver
 SNAPCAST_DEFAULT_CLIENT_FILE=$DEFAULT_CONFIG_DIR/snapclient
 SNAPCAST_FIFO_FILE=$TMPDIR/snapfifo
 
-# MPD
+# MPD/MPC
+MPD_IP=127.0.0.1
 MPD_PORT=$(grep -i 'mpd$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+MPC_CMD=/usr/bin/mpc
+MPC_OPTS="-q"
 
 # Remind
 REMINDERS_DIRECTORY=$PROJECT_PARTITION/Reminders
@@ -8770,6 +8773,12 @@ MQTT_PUBLISH_OPTS="$MQTT_PUBLISH_OPTS"
 
 # Default audio output driver to use for sound apps e.g. pulse, alsa
 AUDIO_OUTPUT_DRIVER=$DEFAULT_AUDIO_OUTPUT_DRIVER
+
+# MPD client command plus server IP address and port
+MPD_SERVER_IP=$MPD_IP
+MPD_SERVER_PORT=$MPD_PORT
+MPD_CLIENT_CMD=$MPC_CMD
+MPD_CLIENT_OPTS="$MPC_OPTS"
 
 # IP address used by several tools to check for Internet connectivity
 PUBLIC_DNS_SERVERS="$PUBLIC_DNS_SERVERS"
