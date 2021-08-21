@@ -4509,6 +4509,7 @@ do
 SCONTROL=$(echo $SCONTROL | sed "s:,0::g" | sed "s:'::g")
 $ALSA_MIXER_CMD -c $ALSA_CARD_NO sset $SCONTROL $ALSA_VOLUME_OTHER,$ALSA_VOLUME_OTHER unmute > /dev/null 2>&1
 logger -t $(basename $0) -s "ALSA mixer level for [$SCONTROL] set to [$ALSA_VOLUME_OTHER]"
+sleep 1
 done
 
 # Loopback: Line-In interface
