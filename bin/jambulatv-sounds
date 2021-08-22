@@ -68,6 +68,19 @@ mixer_voice_alerts_status_not_in_use () {
 $MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_MIXER_VOICE_ALERTS" -m "off"
 }
 
+music_pause_if_playing () {
+$MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT pause-if-playing > /dev/null 2>&1
+}
+
+music_play_if_paused () {
+# Check if MPC player is paused
+$MPD_CLIENT_CMD -v -h $MPD_SERVER_IP -p $MPD_SERVER_PORT | grep -i paused > /dev/null 2>&1
+MPC_PLAYER_PAUSED=$?
+#
+[[ "$MPC_PLAYER_PAUSED" = "0" ]] && \
+$MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT play
+}
+
 create_lock_file () {
 [[ -e $PROCESS_INSTANCE_LOCK_FILE ]] || \
 touch $PROCESS_INSTANCE_LOCK_FILE
@@ -415,6 +428,9 @@ wait_if_another_process_instance_is_running
 # Alert via MQTT: Mixer is being used
 mixer_voice_alerts_status_in_use
 
+# Pause music player
+music_pause_if_playing
+
 if [[ "$SOUND_TYPE" = "beep" ]];
 then
 check_for_beep_command
@@ -481,6 +497,9 @@ Usage: `basename $0` [beep|api|setup|alert]
 EOT
 exit 1
 fi
+
+# Unpause music player
+music_play_if_paused
 
 # Alert via MQTT: Mixer is NOT being used
 mixer_voice_alerts_status_not_in_use
