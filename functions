@@ -4392,9 +4392,8 @@ ldconfig
 # If Upgrading, display post upgrade notice
 if [[ "$UPGRADING" = "yes" ]];
 then
-# Remove existing pulse config directory for multimedia and root users 
+# Remove existing pulse config directory for multimedia user
 [[ -d $PULSE_MULTIMEDIA_USER_CONFIG_DIR ]] && rm -rf $PULSE_MULTIMEDIA_USER_CONFIG_DIR
-[[ -d $PULSE_ROOT_CONFIG_DIR ]] && rm -rf $PULSE_ROOT_CONFIG_DIR
 # Print post upgrade notice
 cat <<ET
 IMPORTANT:
@@ -4447,11 +4446,11 @@ $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
 }
 
 pulseaudio_query () {
-# Start pulseaudio temporarily if server is not running
+# Stop pulseaudio if server is running
 ps auxw | grep [p]ulseaudio > /dev/null 2>&1
 PULSEAUDIO_STATE=$?
-if [[ "$PULSEAUDIO_STATE" != "0" ]];
-then
+[[ "$PULSEAUDIO_STATE" = "0" ]] && killall pulseaudio
+
 # Remove exiting pulseaudio config directory
 [[ -d $PULSE_ROOT_CONFIG_DIR ]] && rm -rf $PULSE_ROOT_CONFIG_DIR
 # Create fresh pulseaudio home config directory for root user
@@ -4464,11 +4463,12 @@ ET
 
 # Launch accessible pulseaudio with a minimal set of modules using dbus
 $BINARY_PREFIX/dbus-launch $BINARY_PREFIX/pulseaudio -D -n --load="module-udev-detect" --load="module-native-protocol-unix auth-anonymous=1" --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1"
-fi
 
 # Default sink, source, tvcard loopback device (if any)
-PULSE_DEFAULT_SINK=$($PULSE_CONTROL_CMD info | awk -F': ' '/Default Sink/ {print $2}')
-PULSE_DEFAULT_SOURCE=$($PULSE_CONTROL_CMD info | awk -F': ' '/Default Source/ {print $2}')
+#PULSE_DEFAULT_SINK=$($PULSE_CONTROL_CMD info | awk -F': ' '/Default Sink/ {print $2}')
+PULSE_DEFAULT_SINK=$($PULSE_CONTROL_CMD get-default-sink)
+#PULSE_DEFAULT_SOURCE=$($PULSE_CONTROL_CMD info | awk -F': ' '/Default Source/ {print $2}')
+PULSE_DEFAULT_SOURCE=$($PULSE_CONTROL_CMD get-default-source)
 PULSE_LINE_IN_SOURCE=$(echo $PULSE_DEFAULT_SINK | sed 's:output:input:g')
 TV_AUDIO_SOURCE=$($PULSE_CONTROL_CMD list | grep -B1 'SAA713' | grep alsa_input | cut -d : -f2 | sed 's/ //g')
 
@@ -4489,8 +4489,8 @@ Pulseaudio Sinks/Sources not configured
  
 % TIP: Ensure pulseaudio is running first and then execute the following commands:
 
-  $PULSE_CONTROL_CMD info | awk -F': ' '/Default Sink/ {print $2}'
-  $PULSE_CONTROL_CMD info | awk -F': ' '/Default Source/ {print $2}'
+  $PULSE_CONTROL_CMD get-default-sink'
+  $PULSE_CONTROL_CMD get-default-source'
 
 #
 EOF
@@ -4607,10 +4607,6 @@ load-module module-zeroconf-discover
 ### that look up the default sink/source get the right value
 load-module module-default-device-restore
 
-### Automatically move streams to the default sink if the sink they are
-### connected to dies, similar for sources
-load-module module-rescue-streams
-
 ### Make sure we always have a sink around, even if it is a null sink.
 load-module module-always-sink
 
@@ -4656,7 +4652,7 @@ set-default-source $PULSE_DEFAULT_SOURCE
 ### Jambula Labs
 ### Allow access to this pulseaudio server i.e. Network audio server
 ### -----------------------------------------------------------------
-load-module module-esound-protocol-tcp auth-anonymous=1
+#load-module module-esound-protocol-tcp auth-anonymous=1
 load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;$NETWORK_WIRED_MASK;$NETWORK_WIRELESS_MASK 
 
 # Where INPUT will be played at i.e. Music Source
@@ -4670,7 +4666,7 @@ load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;$NETWORK_WIRED_MASK
 
 # Add support for playback of external audio sources (like CD, cassette player) via Line-In
 # --------------------------------------------------------------------
-load-module module-loopback latency_msec=1 source=$PULSE_LINE_IN_SOURCE sink=$PULSE_DEFAULT_SINK
+load-module module-loopback source=$PULSE_LINE_IN_SOURCE sink=$PULSE_DEFAULT_SINK
 EOF
 
 # Setup ALSA mixer levels
