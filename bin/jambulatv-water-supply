@@ -27,13 +27,15 @@ WATER_REPORT_YESTERDAY=$(date --date='yesterday' +%Y%m%d).txt
 WATER_REPORT_2_DAYS_AGO=$(date --date='2 days ago' +%Y%m%d).txt
 WATER_REPORT_3_DAYS_AGO=$(date --date='3 days ago' +%Y%m%d).txt
 
-MQTT_TOPIC_STATUS_WATER_SUPPLY_TODAY=JambulaTV/house/status/water_supply_today
-MQTT_TOPIC_STATUS_WATER_SUPPLY_YESTERDAY=JambulaTV/house/status/water_supply_yesterday
-MQTT_TOPIC_STATUS_WATER_TANK=JambulaTV/house/status/water_tank
-MQTT_TOPIC_STATUS_WATER_READING_TODAY=JambulaTV/house/status/water_reading_today
-MQTT_TOPIC_STATUS_WATER_READING_YESTERDAY=JambulaTV/house/status/water_reading_yesterday
-MQTT_TOPIC_STATUS_WATER_USAGE_DAILY=JambulaTV/house/status/water_usage_daily
-MQTT_TOPIC_STATUS_WATER_USAGE_MONTHLY=JambulaTV/house/status/water_usage_monthly
+MQTT_TOPIC_WATER_SUPPLY_REPORT_STATUS_TODAY=JambulaTV/house/status/water_report_status_today
+MQTT_TOPIC_WATER_SUPPLY_REPORT_STATUS_YESTERDAY=JambulaTV/house/status/water_report_status_yesterday
+MQTT_TOPIC_WATER_SUPPLY_FLOW_STATUS_TODAY=JambulaTV/house/status/water_flow_status_today
+MQTT_TOPIC_WATER_SUPPLY_FLOW_STATUS_YESTERDAY=JambulaTV/house/status/water_flow_status_yesterday
+MQTT_TOPIC_WATER_SUPPLY_TANK_STATUS=JambulaTV/house/status/water_tank
+MQTT_TOPIC_WATER_SUPPLY_METER_READING_TODAY=JambulaTV/house/status/water_meter_reading_today
+MQTT_TOPIC_WATER_SUPPLY_METER_READING_YESTERDAY=JambulaTV/house/status/water_meter_reading_yesterday
+MQTT_TOPIC_WATER_SUPPLY_USAGE_DAILY=JambulaTV/house/status/water_usage_daily
+MQTT_TOPIC_WATER_SUPPLY_USAGE_MONTHLY=JambulaTV/house/status/water_usage_monthly
 
 SCRIPT_USER=$(whoami)
 
@@ -42,20 +44,28 @@ SCRIPT_USER=$(whoami)
 ###############
 #  FUNCTIONS  #
 ###############
-mqtt_publish_water_supply_off () {
-$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "off"
-}
-
-mqtt_publish_water_supply_on () {
-$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "yes"
-}
-
-mqtt_publish_water_supply_report_today_missing () {
+mqtt_publish_water_supply_flow_status_is_no () {
 $MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "no"
 }
 
-mqtt_publish_water_tank_low () {
+mqtt_publish_water_supply_flow_status_is_yes () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "yes"
+}
+
+mqtt_publish_water_supply_report_not_found () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "not_found"
+}
+
+mqtt_publish_water_supply_report_found () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "found"
+}
+
+mqtt_publish_water_tank_status_is_low () {
 $MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "low"
+}
+
+mqtt_publish_water_tank_status_is_full () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$1" -m "full"
 }
 
 mqtt_publish_water_reading () {
@@ -112,18 +122,25 @@ then
 
 elif [[ "$REPORT_TODAY_MISSING_LOCALHOST" != "yes" ]];
 then
+	# Water report today was found - notify via mqtt
+	mqtt_publish_water_supply_report_found $MQTT_TOPIC_WATER_SUPPLY_REPORT_STATUS_TODAY
 	# Continue to next since local water report was found
 	continue
 
 else
-# If today's water report is missing, notify via mqtt and quit 
-mqtt_publish_water_supply_report_today_missing $MQTT_TOPIC_STATUS_WATER_SUPPLY_TODAY
+	# Water report today was NOT found - notify via mqtt
+	mqtt_publish_water_supply_report_not_found $MQTT_TOPIC_WATER_SUPPLY_REPORT_STATUS_TODAY
 	logger -s -t $(basename $0) "Today's water report ($WATER_REPORT_TODAY) was not found either locally or at $REMOTE_HOST"
+
+# Set Today's water reading to 'unknown' via MQTT
+mqtt_publish_water_reading $MQTT_TOPIC_WATER_SUPPLY_METER_READING_TODAY 'unknown'
 fi
 
 # If yesterday's water report file exists:
 if [[ -s $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY ]];
 then
+	# Water report yesterday was found - notify via mqtt
+	mqtt_publish_water_supply_report_found $MQTT_TOPIC_WATER_SUPPLY_REPORT_STATUS_YESTERDAY
 	# Extract yesterday's water meter reading
 	WATER_READING_YESTERDAY=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY)
 	# Extract yesterday's water flow status
@@ -135,13 +152,17 @@ then
 		WATER_FLOW_STATUS_YESTERDAY=no
 		fi
 	# Publish yesterday's water meter reading via mqtt
-	mqtt_publish_water_reading $MQTT_TOPIC_STATUS_WATER_READING_YESTERDAY $WATER_READING_YESTERDAY
+	mqtt_publish_water_reading $MQTT_TOPIC_WATER_SUPPLY_METER_READING_YESTERDAY $WATER_READING_YESTERDAY
 	# Publish yesterday's water flow status via mqtt
-	mqtt_publish_water_reading $MQTT_TOPIC_STATUS_WATER_SUPPLY_YESTERDAY $WATER_FLOW_STATUS_YESTERDAY
+	mqtt_publish_water_reading $MQTT_TOPIC_WATER_SUPPLY_FLOW_STATUS_YESTERDAY $WATER_FLOW_STATUS_YESTERDAY
 
 else
+	# Water report yesterday was NOT found - notify via mqtt
+	mqtt_publish_water_supply_report_not_found $MQTT_TOPIC_WATER_SUPPLY_REPORT_STATUS_YESTERDAY
 	logger -s -t $(basename $0) "Yesterday's water report ($WATER_REPORT_YESTERDAY) was not found either locally or at $REMOTE_HOST"
-exit 0
+	# Set Today's water reading to 'unknown' via MQTT
+	mqtt_publish_water_reading $MQTT_TOPIC_WATER_SUPPLY_METER_READING_YESTERDAY 'unknown'
+
 fi
 }
 
@@ -184,57 +205,80 @@ sed -i 's:+$::g' $WATER_USAGE_MONTHLY_LOG
 }
 
 extract_water_reading_and_flow_state () {
-# Water readings if today, yesterday, and 2 days ago reports exist
-if [[ -e $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_TODAY ]] && \
-   [[ -s $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY ]] && \
-   [[ -s $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_2_DAYS_AGO ]];
+# Today
+if [[ -e $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_TODAY ]];
 then
+# Water reading & flow
 WATER_READING_TODAY=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_TODAY)
-WATER_READING_YESTERDAY=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY)
-WATER_READING_2_DAYS_AGO=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_2_DAYS_AGO)
-# Water flow
 WATER_FLOWING_TODAY=$(awk -F'=' '/WATER_FLOWING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_TODAY)
+#
+# Publish water reading via MQTT
+mqtt_publish_water_reading $MQTT_TOPIC_WATER_SUPPLY_METER_READING_TODAY $WATER_READING_TODAY
+fi
+
+# Yesterday
+if [[ -s $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY ]];
+then
+# Water reading & flow 
+WATER_READING_YESTERDAY=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY)
 WATER_FLOWING_YESTERDAY=$(awk -F'=' '/WATER_FLOWING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_YESTERDAY)
+#
+# Publish water reading via MQTT
+mqtt_publish_water_reading $MQTT_TOPIC_WATER_SUPPLY_METER_READING_YESTERDAY $WATER_READING_YESTERDAY
+fi
+
+# 2 Days ago
+if [[ -s $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_2_DAYS_AGO ]];
+then
+# Water reading & flow 
+WATER_READING_2_DAYS_AGO=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_2_DAYS_AGO)
 WATER_FLOWING_2_DAYS_AGO=$(awk -F'=' '/WATER_FLOWING/ {print $2}' $WATER_REPORTS_DIR_LOCAL/$WATER_REPORT_2_DAYS_AGO)
+fi
 
-# Water Usage - Daily
+# Daily (cumulative)
+if [[ "x$WATER_READING_TODAY" != "x" && "x$WATER_READING_YESTERDAY" != "x" ]];
+then
+# Water Usage
 WATER_USAGE_DAILY=$(echo "$WATER_READING_TODAY-$WATER_READING_YESTERDAY" | bc | xargs printf '%.2f')
-
-# Water Usage - Monthly (cumulative total)
-calculate_water_usage_monthly
-WATER_USAGE_MONTHLY=$(echo $(cat $WATER_USAGE_MONTHLY_LOG) | bc | xargs printf '%.2f')
-
-# Publish water reading via MQTT - Today
-mqtt_publish_water_reading $MQTT_TOPIC_STATUS_WATER_READING_TODAY $WATER_READING_TODAY
-# Publish water reading via MQTT - Yesterday
-mqtt_publish_water_reading $MQTT_TOPIC_STATUS_WATER_READING_YESTERDAY $WATER_READING_YESTERDAY
-
-# Publish water usage via MQTT - Daily
-mqtt_publish_water_reading $MQTT_TOPIC_STATUS_WATER_USAGE_DAILY $WATER_USAGE_DAILY
-# Publish water usage via MQTT - Monthly
-mqtt_publish_water_reading $MQTT_TOPIC_STATUS_WATER_USAGE_MONTHLY $WATER_USAGE_MONTHLY
+#
+# Publish water usage via MQTT
+mqtt_publish_water_reading $MQTT_TOPIC_WATER_SUPPLY_USAGE_DAILY $WATER_USAGE_DAILY
 
 else
-# If today's water report is missing, notify, post mqtt status
-# and quit 
-mqtt_publish_water_supply_report_today_missing $MQTT_TOPIC_STATUS_WATER_SUPPLY_TODAY
-logger -s -t $(basename $0) "The required water reports ($WATER_REPORT_TODAY, $WATER_REPORT_YESTERDAY, $WATER_REPORT_2_DAYS_AGO) were not found"
-exit 0
+# Notify if either today or yesterday's water reading is null
+logger -s -t $(basename $0) "Both Yesterday and Today's water readings are required. One or all of them are missing"
+fi
+
+# Monthly (cumulative)
+calculate_water_usage_monthly
+# Water Usage
+if [[ -s $WATER_USAGE_MONTHLY_LOG ]];
+then
+WATER_USAGE_MONTHLY=$(echo $(cat $WATER_USAGE_MONTHLY_LOG) | bc | xargs printf '%.2f')
+#
+# Publish water usage via MQTT
+mqtt_publish_water_reading $MQTT_TOPIC_WATER_SUPPLY_USAGE_MONTHLY $WATER_USAGE_MONTHLY
 fi
 }
 
 analyze_and_report_water_status () {
+# Don't do anything if no readings were found
+# ---
+if [[ "x$WATER_READING_TODAY" = "x" || "x$WATER_READING_YESTERDAY" = "x" ]];
+then
+continue
+
 # Water not flowing for 2 days
 # ---
-if [[ "$WATER_READING_TODAY" = "$WATER_READING_YESTERDAY" && "$WATER_READING_TODAY" = "$WATER_READING_2_DAYS_AGO" ]] || \
+elif [[ "$WATER_READING_TODAY" = "$WATER_READING_YESTERDAY" && "$WATER_READING_TODAY" = "$WATER_READING_2_DAYS_AGO" ]] || \
 	[[ "$WATER_FLOWING_TODAY" = "n" && "$WATER_FLOWING_YESTERDAY" = "n" && "$WATER_FLOWING_2_DAYS_AGO" = "n" ]]
 then
 
 # Water supply is off, send to MQTT water supply topic
-mqtt_publish_water_supply_off $MQTT_TOPIC_STATUS_WATER_SUPPLY_TODAY
+mqtt_publish_water_supply_flow_status_is_no $MQTT_TOPIC_WATER_SUPPLY_FLOW_STATUS_TODAY
 #
 # Water tank is running low, send to MQTT water tank topic
-mqtt_publish_water_tank_low $MQTT_TOPIC_STATUS_WATER_TANK
+mqtt_publish_water_tank_status_is_low $MQTT_TOPIC_WATER_SUPPLY_TANK_STATUS
 
 # Water not flowing today
 # ---
@@ -242,11 +286,13 @@ elif [[ "$WATER_READING_TODAY" = "$WATER_READING_YESTERDAY" ]] || \
 	[[ "$WATER_FLOWING_TODAY" = "n" ]]
 then
 # Water supply is off, send to MQTT water supply topic
-mqtt_publish_water_supply_off $MQTT_TOPIC_STATUS_WATER_SUPPLY_TODAY
+mqtt_publish_water_supply_flow_status_is_no $MQTT_TOPIC_WATER_SUPPLY_FLOW_STATUS_TODAY
 
 else
 # Water is flowing: Send 'on' to MQTT water supply topic
-mqtt_publish_water_supply_on $MQTT_TOPIC_STATUS_WATER_SUPPLY_TODAY
+mqtt_publish_water_supply_flow_status_is_yes $MQTT_TOPIC_WATER_SUPPLY_FLOW_STATUS_TODAY
+# Water tank is full, send to MQTT water tank topic
+mqtt_publish_water_tank_status_is_full $MQTT_TOPIC_WATER_SUPPLY_TANK_STATUS
 fi
 }
 
