@@ -70,14 +70,11 @@ $MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_MIXER_VOICE_ALERTS" 
 
 music_pause_if_playing () {
 $MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT pause-if-playing > /dev/null 2>&1
+MPC_PLAYER_PLAYING=$?
 }
 
 music_play_if_paused () {
-# Check if MPC player is paused
-$MPD_CLIENT_CMD -v -h $MPD_SERVER_IP -p $MPD_SERVER_PORT | grep -i paused > /dev/null 2>&1
-MPC_PLAYER_PAUSED=$?
-#
-[[ "$MPC_PLAYER_PAUSED" = "0" ]] && \
+[[ "$MPC_PLAYER_PLAYING" = "0" ]] && \
 $MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT play
 }
 
