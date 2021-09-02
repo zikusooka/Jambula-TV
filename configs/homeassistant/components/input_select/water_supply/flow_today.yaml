@@ -1,7 +1,7 @@
 #Because YAML defines booleans as equivalent, any variations of ‘On’, ‘Yes’, ‘Y’, ‘Off’, ‘No’, or ‘N’ (regardless of case) used as option names will be replaced by True and False unless they are defined in quotation marks.
 
-water_flow_today:
-  name: Water Flow Today
+water_flow_status_today:
+  name: Water flow status (Today)
   options:
       - 'Select Yes or No'
       -  'Yes'

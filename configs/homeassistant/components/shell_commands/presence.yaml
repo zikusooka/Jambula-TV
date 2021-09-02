@@ -1,1 +1,1 @@
-play_presence_detected_alert_at_remote_workstation: /usr/bin/ssh {{ssh_username}}@{{ssh_host}} {{alert_command}}
+play_presence_detected_alert_at_remote_workstation: /bin/bash -c "/usr/bin/ssh {{ssh_username}}@{{ssh_host}} {{alert_command}}"

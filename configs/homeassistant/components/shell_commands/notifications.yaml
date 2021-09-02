@@ -10,7 +10,7 @@ send_whatsapp_text: sudo /usr/bin/jambulatv-whatsapp sendMessage """*[JambulaTV]
 # Twitter reports
 # ---
 # WhatsApp
-send_twitter_reports_whatsapp: sudo /usr/bin/jambulatv-whatsapp sendFileContent {{reports_file}} {{phone}} 
+send_twitter_reports_whatsapp: sudo /usr/bin/jambulatv-whatsapp sendFileContent {{reports_file}} {{phone}}
 
 # Telegram
 send_twitter_reports_telegram: sudo /usr/bin/jambulatv-telegram sendFileContent {{reports_file}} {{phone}}

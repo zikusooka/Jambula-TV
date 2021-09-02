@@ -1,2 +1,5 @@
 # Shutdown system after setting the wakeup time using rtcwake
 set_wakeup_and_shutdown_via_rtcwake: /bin/bash -c "sudo /usr/sbin/rtcwake -m off -l -t $(date +%s -d '{{alarm_time}}')"
+
+# Delete file on system i.e. temporary files
+delete_file: /bin/bash -c "sudo /usr/bin/rm -f {{directory}}/{{file}}"

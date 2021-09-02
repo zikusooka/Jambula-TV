@@ -1,0 +1,27 @@
+# Running low on disk space for Home partition
+alias: "Running low on disk space (Home)"
+initial_state: True
+
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/5'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Disk space lower than 1GB - /JambulaTV
+    - condition: numeric_state
+      entity_id: sensor.disk_free_jambulatv
+      below: '0.5'
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.disk_space_home_is_low

@@ -1,0 +1,74 @@
+input_water_reading_for_today:
+  sequence:
+
+    # Enter water meter reading for today
+    # ---
+    - service: shell_command.input_water_reading_for_today
+      data_template:
+        water_meter_reading_today: "{{ states('input_text.water_meter_reading_today') }}"
+        water_flow_status_today: "{{ states('input_select.water_flow_status_today') }}"
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'thank_you.mp3'
+        input_file3: 'water_meter_reading_today_updated.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_water_meter_reading_today_updated.mp3'
+
+
+    # Voice Alert: Announce that water reading has been entered
+    # ---------------------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_water_meter_reading_today_updated'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+    # Report current status of water supply
+    # --------------------------------------
+    - service: shell_command.water_supply_reports_and_status
+
+
+
+input_water_reading_for_yesterday:
+  sequence:
+
+    # Enter water meter reading for yesterday
+    # ---
+    - service: shell_command.input_water_reading_for_yesterday
+      data_template:
+        water_meter_reading_yesterday: "{{ states('input_text.water_meter_reading_yesterday') }}"
+        water_flow_status_yesterday: "{{ states('input_select.water_flow_status_yesterday') }}"
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'thank_you.mp3'
+        input_file2: 'water_meter_reading_yesterday_updated.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_water_meter_reading_yesterday_updated.mp3'
+
+
+    # Voice Alert: Announce that water reading has been entered
+    # ---------------------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_water_meter_reading_yesterday_updated'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+    # Report current status of water supply
+    # --------------------------------------
+    - service: shell_command.water_supply_reports_and_status

@@ -21,38 +21,13 @@ wakeup_zik:
         output_file: 'sound_effect_its_time_2_wakeup_4_zik.mp3'
 
 
-    # Wait until voice alerts mixer status is 'off'
-    # ---------------------------------------------
-    - service: script.wait_for_availability_of_mixer_voice_alerts
-
-
-    # Set status of voice alerts mixer to 'on'
-    # ----------------------------------------
-    - service: homeassistant.turn_on
-      data:
-        entity_id: input_boolean.voice_alerts_mixer_status
-
-
     # Voice Alert: Announce that it's time to wake up
     # ------------------------------------------------
-    # a) Run script: If music is playing, pause it
-    - service: script.music_pause_if_playing
-
-    # b) Play merged audio file in temp directory using house speakers
+    # Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'sound_effect_its_time_2_wakeup_4_zik'
         audio_gain: !secret voice_alert_audio_gain_medium
-
-    # c) Run script: If music is paused, unpause player
-    - service: script.music_unpause_if_paused
-
-
-    # Set status of voice alerts mixer to 'off'
-    # ----------------------------------------
-    - service: homeassistant.turn_off
-      data:
-        entity_id: input_boolean.voice_alerts_mixer_status
 
 
     # Set wakeup time volume level - player

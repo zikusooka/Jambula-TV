@@ -1,14 +1,17 @@
 # FM Radio
-fm_radio_play_selected_station: /usr/bin/jambulatv-fm-radio-streamer restart {{station}} local
-fm_radio_control_speaker_volume: /usr/bin/jambulatv-speaker-volume fmradio localhost {{volume_level}}%
-fm_radio_stop: /usr/bin/jambulatv-fm-radio-streamer stop local
+fm_radio_play_selected_station: /bin/bash -c "/usr/bin/jambulatv-fm-radio-streamer restart {{station}} local"
+fm_radio_control_speaker_volume: /bin/bash -c "/usr/bin/jambulatv-speaker-volume fmradio localhost {{volume_level}}%"
+fm_radio_stop: /bin/bash -c "/usr/bin/jambulatv-fm-radio-streamer stop local"
 
 # Internet Radio
-internet_radio_play_selected_station: /usr/bin/jambulatv-internet-radio-streamer restart {{station}} local
-internet_radio_play_favorite_station: /usr/bin/jambulatv-internet-radio-streamer restart 1 local
-internet_radio_control_speaker_volume: /usr/bin/jambulatv-speaker-volume webradio localhost {{volume_level}}%
-internet_radio_stop: /usr/bin/jambulatv-internet-radio-streamer stop local
+internet_radio_play_selected_station: /bin/bash -c "/usr/bin/jambulatv-internet-radio-streamer restart {{station}} local"
+internet_radio_play_favorite_station: /bin/bash -c "/usr/bin/jambulatv-internet-radio-streamer restart 1 local"
+internet_radio_control_speaker_volume: /bin/bash -c "/usr/bin/jambulatv-speaker-volume webradio localhost {{volume_level}}%"
+internet_radio_stop: /bin/bash -c "/usr/bin/jambulatv-internet-radio-streamer stop local"
+
+# Local Radio i.e. System speakers
+local_radio_control_speaker_volume: /bin/bash -c "/usr/bin/jambulatv-speaker-volume system localhost {{volume_level}}%"
 
 # Local music - Jazz
-jtv_radio_start: /usr/bin/ps auxw | grep [m]player > /dev/null 2>&1 || /usr/bin/mplayer -ao pulse -novideo -shuffle -loop 0 /JambulaTV/Music/Jazz/*
-jtv_radio_stop: /usr/bin/killall mplayer
+jtv_radio_start: /bin/bash -c "/usr/bin/ps auxw | grep [m]player > /dev/null 2>&1 || /usr/bin/mplayer -ao pulse -novideo -shuffle -loop 0 /JambulaTV/Music/Jazz/*"
+jtv_radio_stop: /bin/bash -c "/usr/bin/killall mplayer"

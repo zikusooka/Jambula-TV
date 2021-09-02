@@ -19,48 +19,18 @@ internet_datasaver_enable_manual:
     - service: shell_command.internet_data_saver_on
 
 
-    # Wait until voice alerts mixer status is 'off'
-    # ---------------------------------------------
-    - service: script.wait_for_availability_of_mixer_voice_alerts
-
-
-    # Set status of voice alerts mixer to 'on'
-    # ----------------------------------------
-    - service: homeassistant.turn_on
-      data:
-        entity_id: input_boolean.voice_alerts_mixer_status
-
-
     # Voice Alert: Announce that Internet datasaver has been enabled
     # ---------------------------------------------------------------
-    # a) Run script: If music is playing, pause it
-    - service: script.music_pause_if_playing
-
-    # b) Play merged audio file in temp directory using house speakers
+    # Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'sound_effect_internet_data_saver_enabled'
         audio_gain: !secret voice_alert_audio_gain_medium
 
-    # c) Run script: If music is paused, unpause player
-    - service: script.music_unpause_if_paused
-
-
-    # Set status of voice alerts mixer to 'off'
-    # ----------------------------------------
-    - service: homeassistant.turn_off
-      data:
-        entity_id: input_boolean.voice_alerts_mixer_status
-
 
 
 internet_datasaver_disable_manual:
   sequence:
-
-
-    # Turn off data saver mode
-    # ------------------------
-    - service: shell_command.internet_data_saver_off
 
 
     # Generate voice files
@@ -75,35 +45,15 @@ internet_datasaver_disable_manual:
         output_file: 'sound_effect_internet_data_saver_disabled.mp3'
 
 
-    # Wait until voice alerts mixer status is 'off'
-    # ---------------------------------------------
-    - service: script.wait_for_availability_of_mixer_voice_alerts
-
-
-    # Set status of voice alerts mixer to 'on'
-    # ----------------------------------------
-    - service: homeassistant.turn_on
-      data:
-        entity_id: input_boolean.voice_alerts_mixer_status
+    # Turn off data saver mode
+    # ------------------------
+    - service: shell_command.internet_data_saver_off
 
 
     # Voice Alert: Announce that Internet datasaver has been disabled
     # ----------------------------------------------------------------
-    # a) Run script: If music is playing, pause it
-    - service: script.music_pause_if_playing
-
-    # b) Play merged audio file in temp directory using house speakers
+    # Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'sound_effect_internet_data_saver_disabled'
         audio_gain: !secret voice_alert_audio_gain_medium
-
-    # c) Run script: If music is paused, unpause player
-    - service: script.music_unpause_if_paused
-
-
-    # Set status of voice alerts mixer to 'off'
-    # ----------------------------------------
-    - service: homeassistant.turn_off
-      data:
-        entity_id: input_boolean.voice_alerts_mixer_status

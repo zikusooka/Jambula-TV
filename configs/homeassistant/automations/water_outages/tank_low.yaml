@@ -5,7 +5,7 @@ initial_state: True
 trigger:
 
   - platform: time_pattern
-    hours: '/1'
+    minutes: '/5'
 
   - platform: state
     entity_id: 'binary_sensor.water_tank_status'
@@ -22,14 +22,22 @@ condition:
   condition: and
   conditions:
 
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
     # Water Tank sensor - off
     - condition: state
       entity_id: 'binary_sensor.water_tank_status'
       state: 'off'
 
-    # Someone at home
-    #- condition: template
-      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+    # Water reading (Yesterday) - exists
+    - condition: template
+      value_template: "{{ not is_state('sensor.water_meter_reading_yesterday', 'unknown') }}"
+
+    # Water reading (Today) - exists
+    - condition: template
+      value_template: "{{ not is_state('sensor.water_meter_reading_today', 'unknown') }}"
 
     # Night mode - off
     - condition: state

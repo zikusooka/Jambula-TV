@@ -5,13 +5,11 @@ initial_state: True
 trigger:
 
   - platform: state
-    entity_id: 'binary_sensor.water_supply_status_today'
-    from: 'off'
+    entity_id: 'binary_sensor.water_flow_status_today'
     to: 'on'
 
   - platform: state
-    entity_id: 'input_boolean.water_back'
-    from: 'off'
+    entity_id: 'input_boolean.water_supply_back_on'
     to: 'on'
 
 
@@ -23,6 +21,18 @@ condition:
     #- condition: template
       #value_template: "{{ is_state('group.presence_home', 'home') }}"
 
+    # Water reading (Yesterday) - exists
+    - condition: template
+      value_template: "{{ not is_state('sensor.water_meter_reading_yesterday', 'unknown') }}"
+
+    # Water reading (Today) - exists
+    - condition: template
+      value_template: "{{ not is_state('sensor.water_meter_reading_today', 'unknown') }}"
+ 
+    # Do not trigger if initial state change to 'on' like at startup
+    - condition: template
+      value_template: "{{ not is_state('binary_sensor.water_flow_status_today', 'unavailable') }}"
+ 
     # Night mode - off
     - condition: state
       entity_id: 'input_boolean.night_mode'

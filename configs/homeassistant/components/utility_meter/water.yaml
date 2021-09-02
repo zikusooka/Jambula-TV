@@ -1,5 +1,5 @@
-water_reading_today:
-  source: sensor.water_reading_today
+water_supply_meter_reading_today:
+  source: input_number.water_meter_reading_today
   cycle: daily
   tariffs:
     - peak

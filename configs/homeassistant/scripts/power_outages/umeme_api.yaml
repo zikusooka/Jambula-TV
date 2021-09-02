@@ -31,38 +31,13 @@ power_supply_umeme_tomorrow:
         output_file: 'sound_effect_planned_power_outage_tomorrow.mp3'
 
 
-    # Wait until voice alerts mixer status is 'off'
-    # ---------------------------------------------
-    - service: script.wait_for_availability_of_mixer_voice_alerts
-
-
-    # Set status of voice alerts mixer to 'on'
-    # ----------------------------------------
-    - service: homeassistant.turn_on
-      data:
-        entity_id: input_boolean.voice_alerts_mixer_status
-
-
     # Voice Alert: Announce that theres a planned power outage tomorrow
     # -----------------------------------------------------------------
-    # a) Run script: If music is playing, pause it
-    - service: script.music_pause_if_playing
-
-    # b) Play merged audio file in temp directory using house speakers
+    # Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'sound_effect_planned_power_outage_tomorrow'
         audio_gain: !secret voice_alert_audio_gain_medium
-
-    # c) Run script: If music is paused, unpause player
-    - service: script.music_unpause_if_paused
-
-
-    # Set status of voice alerts mixer to 'off'
-    # ----------------------------------------
-    - service: homeassistant.turn_off
-      data:
-        entity_id: input_boolean.voice_alerts_mixer_status
 
 
 
@@ -99,35 +74,10 @@ power_supply_umeme_ongoing:
         output_file: 'sound_effect_unplanned_emergency_power_outage_currently.mp3'
 
 
-    # Wait until voice alerts mixer status is 'off'
-    # ---------------------------------------------
-    - service: script.wait_for_availability_of_mixer_voice_alerts
-
-
-    # Set status of voice alerts mixer to 'on'
-    # ----------------------------------------
-    - service: homeassistant.turn_on
-      data:
-        entity_id: input_boolean.voice_alerts_mixer_status
-
-
     # Voice Alert: Announce that theres an unplanned power outage
     # ------------------------------------------------------------
-    # a) Run script: If music is playing, pause it
-    - service: script.music_pause_if_playing
-
-    # b) Play merged audio file in temp directory using house speakers
+    # Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'sound_effect_unplanned_emergency_power_outage_currently'
         audio_gain: !secret voice_alert_audio_gain_medium
-
-    # c) Run script: If music is paused, unpause player
-    - service: script.music_unpause_if_paused
-
-
-    # Set status of voice alerts mixer to 'off'
-    # ----------------------------------------
-    - service: homeassistant.turn_off
-      data:
-        entity_id: input_boolean.voice_alerts_mixer_status

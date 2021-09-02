@@ -5,7 +5,7 @@ initial_state: True
 trigger:
 
   - platform: time_pattern
-    minutes: '/35'
+    minutes: '/5'
 
 
 condition:
@@ -13,11 +13,16 @@ condition:
   conditions:
  
     - condition: time
-      after: '07:00:00'
-      before: '23:59:00'
+      #after: '07:00:00'
+      #before: '23:59:00'
       weekday:
         - mon
         - tue
+        - wed
+        - thu
+        - fri
+        - sat
+        - sun
         
     # Garbage collected status is off
     - condition: state

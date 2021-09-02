@@ -3,7 +3,7 @@ entity: script.water_back
 tap_action:
   action: call-service
   confirmation:
-    text: Garbage back?
+    text: Water back?
   service: script.turn_on
   service_data:
     entity_id: script.water_back

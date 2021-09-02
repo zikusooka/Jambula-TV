@@ -1,1 +1,1 @@
-localhost_is_subscribed_to_tvheadend: /usr/bin/curl -s http://127.0.0.1:9981/api/status/subscriptions | jq -r '.entries[] | select(.hostname == "127.0.0.1") | .state'
+localhost_is_subscribed_to_tvheadend: /bin/bash -c "/usr/bin/curl -s http://127.0.0.1:9981/api/status/subscriptions | jq -r '.entries[] | select(.hostname == "127.0.0.1") | .state'"

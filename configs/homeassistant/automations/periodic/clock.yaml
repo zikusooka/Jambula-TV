@@ -5,8 +5,8 @@ initial_state: True
 trigger:
 
   - platform: time_pattern
-    minutes: '59'
-    seconds: '56'
+    minutes: '00'
+    seconds: '00'
 
 
 condition:
@@ -33,6 +33,8 @@ condition:
         - wed
         - thu
         - fri
+        - sat
+        - sun
 
     # Night mode - off
     - condition: state

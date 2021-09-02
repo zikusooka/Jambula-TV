@@ -1,4 +1,4 @@
 platform: mqtt
-state_topic: !secret mqtt_water_reading_yesterday
+state_topic: !secret mqtt_water_meter_reading_yesterday
 force_update: true
-name: Water Reading Yesterday
+name: Water meter reading (Yesterday)

@@ -1,8 +1,8 @@
 # Water supply reports and status
-water_supply_reports_and_status: /usr/bin/jambulatv-water-supply
+water_supply_reports_and_status: /bin/bash -c "/usr/bin/jambulatv-water-supply"
 
 # Water reading for Today
-input_water_reading_for_today: /usr/bin/jambulatv-water-reading today {{water_meter_reading_today}} {{water_flow_status_today}}
+input_water_reading_for_today: /bin/bash -c "/usr/bin/jambulatv-water-reading today {{water_meter_reading_today}} {{water_flow_status_today}}"
 
 # Water reading for Yesterday
-input_water_reading_for_yesterday: /usr/bin/jambulatv-water-reading yesterday {{water_meter_reading_yesterday}} {{water_flow_status_yesterday}}
+input_water_reading_for_yesterday: /bin/bash -c "/usr/bin/jambulatv-water-reading yesterday {{water_meter_reading_yesterday}} {{water_flow_status_yesterday}}"

@@ -1,14 +1,14 @@
 type: conditional
 conditions:
-  - entity: sensor.water_reading_yesterday
+  - entity: sensor.water_meter_reading_yesterday
     state_not: 'none'
 
-  - entity: sensor.water_reading_yesterday
+  - entity: sensor.water_meter_reading_yesterday
     state_not: 'unknown'
 
 card:
   type: sensor
-  entity: sensor.water_reading_yesterday
+  entity: sensor.water_meter_reading_yesterday
   name: 'Meter (Yesterday)'
   icon: 'mdi:water'
   show_name: false

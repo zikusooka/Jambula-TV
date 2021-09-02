@@ -1,0 +1,7 @@
+platform: mqtt
+name: 'Water flow status (Yesterday)'
+state_topic: !secret mqtt_water_flow_status_yesterday
+scan_interval: 5
+expire_after: 300
+payload_on: "yes"
+payload_off: "no"

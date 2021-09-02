@@ -1,0 +1,8 @@
+platform: mqtt
+name: 'Water report status (Today)'
+state_topic: !secret mqtt_water_report_status_today
+scan_interval: 5
+expire_after: 300
+#device_class: presence
+payload_on: "found"
+payload_off: "not_found"

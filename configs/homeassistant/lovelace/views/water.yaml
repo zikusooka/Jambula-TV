@@ -11,12 +11,6 @@ cards:
       options: show
 
 
-  # Welcome Message
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/markup-welcome-message.yaml
-
-
   # Water Status
   - type: vertical-stack
     cards:
@@ -35,6 +29,12 @@ cards:
         cards:
           - !include ../cards/conditional-water-usage-daily.yaml
           - !include ../cards/conditional-water-usage-monthly.yaml
+
+
+  # Welcome Message
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/markup-welcome-message.yaml
 
 
   # Input water readings for Today / Yesterday

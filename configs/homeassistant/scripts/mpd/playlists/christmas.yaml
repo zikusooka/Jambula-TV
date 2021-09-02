@@ -14,7 +14,13 @@ music_play_christmas:
         entity_id: media_player.now_playing
         media_content_type: playlist
         media_content_id: 'Local-Music-Christmas'
-  
+
+     # Shuffle
+    - service: media_player.shuffle_set
+      data:
+        entity_id: media_player.now_playing
+        shuffle: 'true'
+ 
     # set volume
     - service: media_player.volume_set
       data:

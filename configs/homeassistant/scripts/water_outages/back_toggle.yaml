@@ -1,9 +1,0 @@
-water_back:
-  sequence:
-
-
-    # Toggle status of water is back
-    # ------------------------------
-    - service: homeassistant.toggle
-      data:
-        entity_id: input_boolean.water_back

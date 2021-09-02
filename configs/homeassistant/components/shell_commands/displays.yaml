@@ -1,5 +1,5 @@
 # Turn off monitor at remote workstation
-turn_off_monitor_at_remote_workstation: /usr/bin/ssh {{ssh_username}}@{{ssh_host}} {{monitor_off_command}}
+turn_off_monitor_at_remote_workstation: /bin/bash -c "/usr/bin/ssh {{ssh_username}}@{{ssh_host}} {{monitor_off_command}}"
 
 # Turn back on monitor at remote workstation
-turn_on_monitor_at_remote_workstation: /usr/bin/ssh {{ssh_username}}@{{ssh_host}} {{monitor_on_command}}
+turn_on_monitor_at_remote_workstation: /bin/bash -c "/usr/bin/ssh {{ssh_username}}@{{ssh_host}} {{monitor_on_command}}"

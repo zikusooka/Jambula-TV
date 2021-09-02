@@ -1,7 +1,7 @@
 # Fetch Twitter reports
-fetch_twitter_reports_all: sudo /usr/bin/jambulatv-twitter {{village}} all
-fetch_twitter_reports_covid: sudo /usr/bin/jambulatv-twitter {{village}} covid
-fetch_twitter_reports_power_umeme: sudo /usr/bin/jambulatv-twitter {{village}} power_umeme
-fetch_twitter_reports_power_uetcl: sudo /usr/bin/jambulatv-twitter {{village}} power_uetcl
-fetch_twitter_reports_power_eskom: sudo /usr/bin/jambulatv-twitter {{village}} power_eskom
-fetch_twitter_reports_newspapers: sudo /usr/bin/jambulatv-twitter {{village}} newspapers
+fetch_twitter_reports_all: /bin/bash -c "sudo /usr/bin/jambulatv-twitter {{village}} all"
+fetch_twitter_reports_covid: /bin/bash -c "sudo /usr/bin/jambulatv-twitter {{village}} covid"
+fetch_twitter_reports_power_umeme: /bin/bash -c "sudo /usr/bin/jambulatv-twitter {{village}} power_umeme"
+fetch_twitter_reports_power_uetcl: /bin/bash -c "sudo /usr/bin/jambulatv-twitter {{village}} power_uetcl"
+fetch_twitter_reports_power_eskom: /bin/bash -c "sudo /usr/bin/jambulatv-twitter {{village}} power_eskom"
+fetch_twitter_reports_newspapers: /bin/bash -c "sudo /usr/bin/jambulatv-twitter {{village}} newspapers"

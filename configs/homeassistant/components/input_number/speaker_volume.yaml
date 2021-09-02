@@ -1,7 +1,7 @@
 fm_radio_volume:
   name: FM Radio (Volume)
   initial: !secret fm_radio_start_up_volume_level
-  min: 0
+  min: 10
   max: 150
   step: 1
   mode: slider
@@ -21,7 +21,7 @@ internet_radio_volume:
 local_radio_volume:
   name: Local Radio (Volume)
   initial: !secret local_radio_start_up_volume_level
-  min: 0
+  min: 10
   max: 150
   step: 1
   mode: slider

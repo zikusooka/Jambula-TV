@@ -1,0 +1,47 @@
+water_back:
+  sequence:
+
+    # Set water supply is gone boolean to 'Off'
+    # -----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.water_supply_gone_off
+    #
+    # Set water supply is back on boolean to 'On'
+    # ------------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.water_supply_back_on
+
+
+    # Update water meter reading for today
+    # ------------------------------------
+    - service: shell_command.input_water_reading_for_today
+      data_template:
+        water_meter_reading_today: "{{ states('sensor.water_meter_reading_today') }}"
+        water_flow_status_today: "yes"
+
+
+
+water_gone:
+  sequence:
+
+    # Set water supply is back on boolean to 'Off'
+    # ------------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.water_supply_back_on
+    #
+    # Set water supply is gone boolean to 'On'
+    # -----------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.water_supply_gone_off
+
+
+    # Update water meter reading for today
+    # ------------------------------------
+    - service: shell_command.input_water_reading_for_today
+      data_template:
+        water_meter_reading_today: "{{ states('sensor.water_meter_reading_today') }}"
+        water_flow_status_today: "no"
