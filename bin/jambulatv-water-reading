@@ -30,6 +30,9 @@ WATER_FLOW=$3
 #  MAIN SCRIPT  #
 #################
 
+# Quit if water reading is unknown
+[[ "$WATER_READING" = "unknown" ]] && exit 0
+
 # set variables depending on day requested
 case $DAY_REQUESTED in
 [Tt]oday)
@@ -65,10 +68,9 @@ if [[ -e $WATER_REPORTS_FILE ]] && [[ "x$WATER_READING" != "x" ]];
 then
 clear
 cat <<ET
-There's already a water report for: $(date +'%A, %_d %B %Y')
+Updating already existing water report for: $(date +'%A, %_d %B %Y')
 
 ET
-exit 1
 fi
 
 # Create water reports directory if non-existent
