@@ -145,7 +145,7 @@ $CURL_CMD $CURL_OPTS -A "$USER_AGENT" -o $TTS_OUTPUT_FILE "http://translate.goog
 text2speech_ibm () {
 # API Key
 IBM_API_KEY=$(query_mysql_db watson_tts_api_key)
-IBM_API_ENDPOINT="https://gateway-lon.watsonplatform.net/text-to-speech/api"
+IBM_API_ENDPOINT="https://api.eu-gb.text-to-speech.watson.cloud.ibm.com/instances/0d2c8590-15ed-4065-9774-3d681d9a47ee"
 # Connect to API Endpoint
 $CURL_CMD $CURL_OPTS -A "$USER_AGENT" -u "apikey:$IBM_API_KEY" -H "Content-Type: application/json" -H "Accept: audio/wav" -d "{\"text\":\"$1\"}" -o $TTS_OUTPUT_FILE "$IBM_API_ENDPOINT/v1/synthesize?voice=en-US_AllisonVoice"
 }
