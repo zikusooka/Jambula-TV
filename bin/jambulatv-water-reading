@@ -8,7 +8,12 @@
 #        command e.g:
 #
 #        ./jambulatv-water-reading [today|yesterday] [67.37] [yes|no]
-#  
+#
+#        To reset and archive old water reports prior to last billing
+#        date:
+#
+#        ./jambulatv-water-reading reset 2021-08-09
+#
 #        You can also use this script interactively at a remote 
 #        PC e.g. located in kitchen, and entry input is guided by
 #        GUI interface i.e. interface.  Ensure you can connect to
@@ -18,6 +23,7 @@
 
 # Variables
 WATER_REPORTS_DIR=/var/tmp/water_reports
+WATER_ARCHIVES_DIR=$WATER_REPORTS_DIR/archives
 OPERATOR_USER=jambula
 
 DAY_REQUESTED=$1
@@ -26,13 +32,92 @@ WATER_FLOW=$3
 
 
 
-#################
-#  MAIN SCRIPT  #
-#################
+###############
+#  FUNCTIONS  #
+###############
 
-# Quit if water reading is unknown
-[[ "$WATER_READING" = "unknown" ]] && exit 0
+check_if_user_using_x_display () {
+# Check if user is using X display
+loginctl list-sessions | grep $(whoami) | grep seat > /dev/null 2>&1
+USING_X=$?
+}
 
+create_water_reports_directory () {
+# Create water reports directory if non-existent
+[[ -d $WATER_REPORTS_DIR ]] || mkdir -p $WATER_REPORTS_DIR
+}
+
+usage_reset () {
+# Day requested = reset
+if [[ "$USING_X" != "0" && "$DAY_REQUESTED" = "reset" && "x$WATER_READING" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) reset [Date meter was last read e.g. 2021-08-09]
+ET
+exit 0
+fi
+}
+
+usage_reading () {
+# Day requested is empty
+if [[ "$USING_X" != "0" && "x$DAY_REQUESTED" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) [today|yesterday] [Water Reading e.g. 70.87] [Water flow e.g. y|n]
+ET
+exit 0
+
+# Water reading is empty
+elif [[ "$USING_X" != "0" && "x$WATER_READING" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $DAY_REQUESTED [Water Reading e.g. 70.87] [Water flow e.g. y|n]
+ET
+exit 0
+
+# Water reading is unknown
+elif [[ "$USING_X" != "0" && "x$WATER_READING" = "unknown" ]];
+then
+exit 0
+
+# Water flow not specified
+elif [[ "$USING_X" != "0" && "x$WATER_FLOW" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $DAY_REQUESTED $WATER_READING [Water flow e.g. y|n]
+ET
+exit 0
+fi
+}
+
+reset_readings_if_requested () {
+# Set loop runs
+RUN=0
+END=45
+
+# Create water archives directory if non-existent
+[[ -d $WATER_ARCHIVES_DIR ]] || mkdir -p $WATER_ARCHIVES_DIR
+
+# Cycle through all previous days before bill date
+while [[ "$RUN" -le "$END" ]];
+do
+
+# Set report file name/path
+WATER_LAST_BILLED_DATE=$(echo $WATER_READING | sed "s:-::g")
+WATER_REPORTS_FILE=$WATER_REPORTS_DIR/$(date --date="$RUN days ago $WATER_LAST_BILLED_DATE" +%Y%m%d).txt
+#
+# Copy report into archives directory
+[[ -e $WATER_REPORTS_FILE ]] && mv -v $WATER_REPORTS_FILE $WATER_ARCHIVES_DIR/
+#
+# Set counters
+let "RUN = $RUN + 1"
+done
+
+# Notify that water readings for previous month have been archived
+logger -s -t $(basename $0) "INFO: The reading reports prior to the water billing date of $(date --date="$WATER_READING" +"%d %b %Y") have been archived"
+}
+
+set_variables_depending_on_day () {
 # set variables depending on day requested
 case $DAY_REQUESTED in
 [Tt]oday)
@@ -60,85 +145,132 @@ WATER_REPORTS_FILE=$WATER_REPORTS_DIR/$(date +%Y%m%d).txt
 READING_TIMESTAMP="$(date +'%A, %_d %B %Y') - $(date +'%_I:%M %p')"
 ;;
 esac
+}
 
-
-# Quit if there's already a water report for today
-[[ -e $WATER_REPORTS_FILE ]] && . $WATER_REPORTS_FILE
-if [[ -e $WATER_REPORTS_FILE ]] && [[ "x$WATER_READING" != "x" ]];
+# ---------
+# Using CLI
+# ---------
+add_water_reading_cli () {
+# Day of water meter reading
+if [[ "$USING_X" != "0" && "x$DAY_REQUESTED" != "x" ]];
 then
-clear
-cat <<ET
-Updating already existing water report for: $(date +'%A, %_d %B %Y')
-
-ET
+DAY_REQUESTED=$DAY_REQUESTED
+export DAY_REQUESTED
 fi
+#
+# Water meter reading
+if [[ "$USING_X" = "0" && "x$WATER_READING" != "x" ]];
+then
+WATER_READING=$WATER_READING
+# Export water meter reading
+export WATER_READING
+fi
+#
+# Water supply flow status for today
+if [[ "$USING_X" != "0" && "x$WATER_FLOW" != "x" ]];
+then
 
-# Create water reports directory if non-existent
-[[ -d $WATER_REPORTS_DIR ]] || mkdir -p $WATER_REPORTS_DIR
+	case $WATER_FLOW in
+	Yes|yes)
+	WATER_FLOWING=y
+	;;
+	No|no)
+	WATER_FLOWING=n
+	;;
+	*)
+	WATER_FLOWING=n
+	;;
+	esac
+fi
+export WATER_FLOWING
+}
 
+# ---------
+# Using GUI
+# ---------
+add_water_reading_gui () {
+# Ask for day of water meter reading
+if [[ "$USING_X" = "0" && "x$DAY_REQUESTED" = "x" ]];
+then
+DAY_REQUESTED=$(zenity --title "DAY OF READING" --entry --text "Enter the day for the water meter reading (e.g. today, yesterday, 2_days_ago, 3_days_ago)")
+export DAY_REQUESTED
+fi
+#
+# Ask for water meter reading
+if [[ "$USING_X" = "0" && "x$WATER_READING" = "x" ]];
+then
+WATER_READING=$(zenity --title "WATER READING" --entry --text "Enter the water meter reading for $DAY_REQUESTED (e.g. 35.40)")
+# Export water meter reading
+export WATER_READING
+fi
+#
+# Water supply flow status for today
+if [[ "$USING_X" = "0" && "x$WATER_FLOW" = "x" ]];
+then
+# Ask weather water is flowing
+zenity --title "WATER FLOW" --question --text "Is the water flowing today?"
+WATER_FLOW_STATUS=$?
+	if [[ "$WATER_FLOW_STATUS" = "0" ]];
+	then
+	WATER_FLOWING=y
+	else
+	WATER_FLOWING=n
+	fi
+export WATER_FLOWING
+fi
+}
 
-# Create report header
+create_water_report_header () {
+# Create water supply report header
 cat > $WATER_REPORTS_FILE <<ET
 # ==============================================================
 # Water report for $READING_TIMESTAMP 
 # ==============================================================
 
 ET
+}
 
-# Ask for day of water reading
-if [[ "x$DAY_REQUESTED" = "x" ]];
-then
-DAY_REQUESTED=$(zenity --title "DAY OF READING" --entry --text "Enter the day for the water meter reading (e.g. today, yesterday, 2_days_ago, 3_days_ago)")
-
-else
-DAY_REQUESTED=$DAY_REQUESTED
-fi
-
-# Ask for water reading
-if [[ "x$WATER_READING" = "x" ]];
-then
-WATER_READING=$(zenity --title "WATER READING" --entry --text "Enter the water meter reading for $DAY_REQUESTED (e.g. 35.40)")
-
-else
-WATER_READING=$WATER_READING
-fi
-#
+create_water_report_body () {
+# Enter water meter readings into report file
+add_water_reading_cli
+add_water_reading_gui
 echo "WATER_READING=$WATER_READING" >> $WATER_REPORTS_FILE
+echo "WATER_FLOWING=$WATER_FLOWING" >> $WATER_REPORTS_FILE
+}
 
-# Water flow status for today
-if [[ "x$WATER_FLOW" = "x" ]];
-then
-	# Ask weather water is flowing
-	zenity --title "WATER FLOW" --question --text "Is the water flowing today?"
-	WATER_FLOW_STATUS=$?
-	if [[ "$WATER_FLOW_STATUS" = "0" ]];
-	then
-	echo "WATER_FLOWING=y" >> $WATER_REPORTS_FILE
-
-	else
-	echo "WATER_FLOWING=n" >> $WATER_REPORTS_FILE
-	fi
-
-else
-	if [[ "$WATER_FLOW" = "Yes" || "$WATER_FLOW" = "yes" ]];
-	then
-	echo "WATER_FLOWING=y" >> $WATER_REPORTS_FILE
-
-	elif [[ "$WATER_FLOW" = "No" || "$WATER_FLOW" = "no" ]];
-	then
-	echo "WATER_FLOWING=n" >> $WATER_REPORTS_FILE
-
-	else
-	echo "WATER_FLOWING=n" >> $WATER_REPORTS_FILE
-	fi
-fi
-
-
-# Create report footer 
+create_water_report_footer () {
+# Create water supply report header footer 
 cat >> $WATER_REPORTS_FILE <<ET
 
 ET
+}
 
-
+set_permissions () {
 # Change ownership of water reports directory
-chown -R $OPERATOR_USER:$OPERATOR_USER $WATER_REPORTS_DIR
+sudo chown -R $OPERATOR_USER:$OPERATOR_USER $WATER_REPORTS_DIR
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+check_if_user_using_x_display
+
+create_water_reports_directory
+
+if [[ "$DAY_REQUESTED" = "reset" ]];
+then
+usage_reset
+reset_readings_if_requested 
+
+else
+usage_reading
+set_variables_depending_on_day
+create_water_report_header
+create_water_report_body
+create_water_report_footer
+fi
+
+set_permissions
