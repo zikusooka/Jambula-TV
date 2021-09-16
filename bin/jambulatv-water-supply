@@ -167,41 +167,31 @@ fi
 }
 
 calculate_water_usage_monthly () {
-RUN=1
-END=30
+RUN=0
+END=45
 WATER_USAGE_MONTHLY_LOG=/tmp/water_usage_monthly_log
 
 # Remove previous monthly water usage log file if it exists
-[[ -e $WATER_USAGE_MONTHLY_LOG ]] && rm -f $WATER_USAGE_MONTHLY_LOG
+[[ -e $WATER_USAGE_MONTHLY_LOG ]] && sudo rm -f $WATER_USAGE_MONTHLY_LOG
 
-# Cycle through all 30 days
-while [[ "$RUN" -ge "1" && "$RUN" -le "$END" ]];
+# Cycle through today and all water reports in the last 30 days
+while [[ "$RUN" -ge "0" && "$RUN" -le "$END" ]];
 do
 
-let "PREVIOUS_RUN=$RUN-1"
-WATER_REPORT_FILE_1=$WATER_REPORTS_DIR_LOCAL/$(date --date="$PREVIOUS_RUN days ago" +%Y%m%d).txt
-WATER_REPORT_FILE_2=$WATER_REPORTS_DIR_LOCAL/$(date --date="$RUN days ago" +%Y%m%d).txt
+# Set water report file
+WATER_REPORT_FILE=$WATER_REPORTS_DIR_LOCAL/$(date --date="$RUN days ago" +%Y%m%d).txt
 #
-if [[ -f "$WATER_REPORT_FILE_1" ]] && [[ -f "$WATER_REPORT_FILE_2" ]];
+# Extract water meter reading if it exists for this day
+if [[ -s $WATER_REPORT_FILE ]];
 then
-#
-WATER_READING_1=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORT_FILE_1)
-WATER_READING_2=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORT_FILE_2)
-#
-WATER_USAGE=$(echo "$WATER_READING_1 - $WATER_READING_2" | bc | xargs printf '%.2f')
-#
-# Add incremental water usage to log file for computation
-echo -n "$WATER_USAGE+" >> $WATER_USAGE_MONTHLY_LOG
+WATER_READING_DAILY=$(awk -F'=' '/WATER_READING/ {print $2}' $WATER_REPORT_FILE)
+# Pipe to temp file, if reading has a value - it really should!
+[[ "x$WATER_READING_DAILY" = "x" ]] || echo "$WATER_READING_DAILY" >> $WATER_USAGE_MONTHLY_LOG
 fi
 
 # Set counters
-WATER_USAGE_PREVIOUS=$WATER_USAGE
 let "RUN = $RUN + 1"
-
 done
-
-# Remove trailing '+'
-sed -i 's:+$::g' $WATER_USAGE_MONTHLY_LOG
 }
 
 extract_water_reading_and_flow_state () {
@@ -254,8 +244,13 @@ calculate_water_usage_monthly
 # Water Usage
 if [[ -s $WATER_USAGE_MONTHLY_LOG ]];
 then
-WATER_USAGE_MONTHLY=$(echo $(cat $WATER_USAGE_MONTHLY_LOG) | bc | xargs printf '%.2f')
-#
+# Set water meter readings for first and last day of month
+WATER_READING_FIRST_DAY_OF_MONTH=$(sort -n $WATER_USAGE_MONTHLY_LOG | head -1)
+WATER_READING_LAST_DAY_OF_MONTH=$(sort -n $WATER_USAGE_MONTHLY_LOG | tail -1)
+
+# Calculate water usage for previous month
+WATER_USAGE_MONTHLY=$(echo ${WATER_READING_LAST_DAY_OF_MONTH}-${WATER_READING_FIRST_DAY_OF_MONTH} | bc | xargs printf '%.2f')
+
 # Publish water usage via MQTT
 mqtt_publish_water_reading $MQTT_TOPIC_WATER_SUPPLY_USAGE_MONTHLY $WATER_USAGE_MONTHLY
 fi
