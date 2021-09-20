@@ -1,6 +1,8 @@
 #!/bin/sh
 # This tool backs up data from a mobile smart phone plugged into a
-# USB port using Android Debug Bridge (ADB) 
+# USB port using Android Debug Bridge (ADB)
+# There's also support fro restoring backups to the phone using
+# the command line interface (CLI)
 #
 # Prerequisites: 
 # --------------
@@ -13,8 +15,6 @@
 #
 # Jambula Labs @copyright 2020-2021 All rights reserved
 
-
-
 # Source global settings
 PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
@@ -23,17 +23,13 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 . $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Variables
-PHONE_SERIAL_NUMBER=$1
-PHONE_MODEL=$( [[ "x$PHONE_SERIAL_NUMBER" = "x" ]] || /usr/bin/journalctl -b -r | grep -m 1 -A3 "SerialNumber: $PHONE_SERIAL_NUMBER" | grep "Product:" | cut -d':' -f6- | sed 's:^ ::g')
-PHONE_MANUFACTURER=$(/usr/bin/journalctl -b -r | grep -m 1 -A3 "SerialNumber: $PHONE_SERIAL_NUMBER" | grep "Manufacturer:" | cut -d':' -f6- | sed 's:^ ::g')
-PHONE_PRETTY_NAME=$(echo $PHONE_MODEL | sed 's: :_:g')
-PHONE_BACKUP_NAME=backup_${PHONE_SERIAL_NUMBER}.ab
-PHONE_BACKUP_DIR=/JambulaTV/Backups/Phones/${PHONE_PRETTY_NAME}
-PHONE_BACKUP_FILE=$PHONE_BACKUP_DIR/${PHONE_BACKUP_NAME}
-PHONE_BACKUP_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/$(echo $(basename $0) | sed 's:jambulatv-::g').log
+PHONE_TASK=$1
+PHONE_SERIAL_NUMBER=$2
+PHONE_RESTORE_DATE=$3
 
 ADB_CMD="sudo /usr/bin/adb"
 ADB_BACKUP_OPTS="-shared -apk -all" # (DO NOT USE -system or -nosystem)
+ADB_RESTORE_OPTS="" 
 DD_CMD="sudo /usr/bin/dd"
 STAT_CMD=/usr/bin/stat
 LOGGER_CMD=/usr/bin/logger
@@ -45,6 +41,7 @@ SOUNDS_ENABLE=1
 ALERT_SOUND_AUDIO_GAIN=140
 MULTIMEDIA_USER=jambula
 
+PHONE_BACKUP_RESTORE_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/$(echo $(basename $0) | sed 's:jambulatv-::g').log
 DEBUG=n # NOTE: 'n' = logging to file | 'y' = logging to stdout
 
 
@@ -52,6 +49,31 @@ DEBUG=n # NOTE: 'n' = logging to file | 'y' = logging to stdout
 ###############
 #  FUNCTIONS  #
 ###############
+
+identify_phone () {
+PHONE_MODEL=$( [[ "x$PHONE_SERIAL_NUMBER" = "x" ]] || /usr/bin/journalctl -b -r | grep -m 1 -A3 "SerialNumber: $PHONE_SERIAL_NUMBER" | grep "Product:" | cut -d':' -f6- | sed 's:^ ::g')
+PHONE_MANUFACTURER=$(/usr/bin/journalctl -b -r | grep -m 1 -A3 "SerialNumber: $PHONE_SERIAL_NUMBER" | grep "Manufacturer:" | cut -d':' -f6- | sed 's:^ ::g')
+}
+
+variables_4_phone_backup () {
+identify_phone
+#
+PHONE_PRETTY_NAME=$(echo $PHONE_MODEL | sed 's: :_:g')
+PHONE_BACKUP_NAME=backup_${PHONE_SERIAL_NUMBER}
+PHONE_BACKUP_EXT=ab
+PHONE_BACKUP_DIR=/JambulaTV/Backups/Phones/${PHONE_PRETTY_NAME}
+PHONE_BACKUP_FILE=$PHONE_BACKUP_DIR/${PHONE_BACKUP_NAME}.${PHONE_BACKUP_EXT}
+}
+
+variables_4_phone_restore () {
+identify_phone
+#
+PHONE_PRETTY_NAME=$(echo $PHONE_MODEL | sed 's: :_:g')
+PHONE_RESTORE_NAME=backup_${PHONE_SERIAL_NUMBER}
+PHONE_RESTORE_EXT=ab
+PHONE_RESTORE_DIR=/JambulaTV/Backups/Phones/${PHONE_PRETTY_NAME}
+PHONE_RESTORE_FILE=$PHONE_RESTORE_DIR/${PHONE_RESTORE_NAME}.${PHONE_RESTORE_DATE}.${PHONE_RESTORE_EXT}
+}
 
 alert_using_voice () {
 if [[ "$SOUNDS_ENABLE" = "1" ]];
@@ -127,15 +149,15 @@ if [[ "$DEBUG" != "y" ]];
 then
 
 # If it already exists, make log file writeable by all
-[[ -e $PHONE_BACKUP_LOG_FILE ]] && sudo chmod a+w $PHONE_BACKUP_LOG_FILE
+[[ -e $PHONE_BACKUP_RESTORE_LOG_FILE ]] && sudo chmod a+w $PHONE_BACKUP_RESTORE_LOG_FILE
 # Start logging
-cat >> $PHONE_BACKUP_LOG_FILE <<EOF
+cat >> $PHONE_BACKUP_RESTORE_LOG_FILE <<EOF
 
 -----------------------------------------------------------------------
 $(date): $PHONE_MODEL $PHONE_SERIAL_NUMBER ($PHONE_MANUFACTURER)
 -----------------------------------------------------------------------
 EOF
-exec 2>> $PHONE_BACKUP_LOG_FILE
+exec 2>> $PHONE_BACKUP_RESTORE_LOG_FILE
 fi
 }
 
@@ -158,7 +180,9 @@ sudo mkdir -p $PHONE_BACKUP_DIR
 # Give ownership of backup directory to multimedia user i.e. jambula
 sudo chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PHONE_BACKUP_DIR/
 
-elif [[ ! -x $PHONE_BACKUP_DIR ]];
+# When restoring, check if backup directory has some files in it
+# or if backing up and folder is not accessible
+elif [[ "$PHONE_TASK" = "backup" && "$(ls -al $PHONE_BACKUP_DIR | wc -l)" -lt "3" ]] || [[ ! -x $PHONE_BACKUP_DIR ]];
 then
 # Alert using console if backup directory is not accessible
 notification_backup_dir_is_not_accessible
@@ -240,11 +264,11 @@ then
 # Set date of previous archive
 DATE_OF_PREVIOUS_ARCHIVE=$($STAT_CMD $PHONE_BACKUP_FILE | awk -F': ' '/Modify/ {print $2}'| awk {'print $1'} | sed 's:-::g')
 #
-mv -v ${PHONE_BACKUP_FILE} ${PHONE_BACKUP_FILE}_${DATE_OF_PREVIOUS_ARCHIVE}
+mv -v ${PHONE_BACKUP_FILE} ${PHONE_BACKUP_NAME}.${DATE_OF_PREVIOUS_ARCHIVE}.${PHONE_BACKUP_EXT}
 fi
 }
 
-backup_pre_tasks () {
+all_pre_tasks () {
 # Start logging to file
 start_logging
 
@@ -262,22 +286,21 @@ query_if_device_is_connected
 
 # Query device parameters
 query_device_params
+}
+
+
+# ------
+# Backup
+# ------
+backup_pre_tasks () {
+# Setup backup variables
+variables_4_phone_backup
+
+# Run pre_tasks for all operations
+all_pre_tasks
 
 # Backup old android formatted .ab archive
 backup_old_archive
-}
-
-backup_create_archive () {
-# Alert at start of backup
-notification_start
-# Alert to unlock and confirm backup
-notification_unlock_confirm
-
-# Create backup using adb tool
-$ADB_CMD -s ${PHONE_SERIAL_NUMBER} backup $ADB_BACKUP_OPTS -f $PHONE_BACKUP_FILE
-
-# Alert to unplug/disconnect the phone
-notification_disconnect_phone
 }
 
 backup_extract_archive () {
@@ -292,9 +315,27 @@ fi
 sudo chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PHONE_BACKUP_DIR/*
 }
 
+backup_create_archive () {
+backup_pre_tasks
+#
+# Alert at start of backup
+notification_start
+# Alert to unlock and confirm backup
+notification_unlock_confirm
+
+# Create backup using adb tool
+$ADB_CMD -s ${PHONE_SERIAL_NUMBER} backup $ADB_BACKUP_OPTS -f $PHONE_BACKUP_FILE
+
+# Alert to unplug/disconnect the phone
+notification_disconnect_phone
+
+# Unpack files needed for short term backup
+backup_extract_archive
+}
+
 backup_post_tasks () {
-# Remove android archive files that are 2 weeks+ old to save space
-DAYS_OLD=14
+# Remove android archive files that are 8 weeks+ old to save space
+DAYS_OLD=56
 find $PHONE_BACKUP_DIR -type f -name "${PHONE_BACKUP_NAME}*" -mtime +${DAYS_OLD} -exec rm -f {} \;
 
 # Stop ADB server if it is running
@@ -305,21 +346,96 @@ notification_end
 }
 
 
+# -------
+# Restore
+# -------
+usage_restore () {
+if [[ "x$PHONE_SERIAL_NUMBER" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) restore [PHONE_SERIAL_NUMBER]
+ET
+exit 1
+
+elif [[ "x$PHONE_RESTORE_DATE" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) restore $PHONE_SERIAL_NUMBER [RESTORE_DATE e.g. 20210919]
+ET
+exit 1
+fi
+}
+
+check_if_restore_file_exists () {
+if [[ ! -s $PHONE_RESTORE_FILE ]];
+then
+cat <<ET
+The file: $PHONE_RESTORE_FILE is missing
+ET
+exit 1
+fi
+}
+
+restore_pre_tasks () {
+# Setup restore variables
+variables_4_phone_restore
+
+# Check for restore file
+check_if_restore_file_exists
+
+# Run pre_tasks for all operations
+all_pre_tasks
+}
+
+restore_archive_2_phone () {
+restore_pre_tasks 
+#
+# Alert at start of restore
+#notification_start
+# Alert to unlock and confirm backup
+notification_unlock_confirm
+
+# Restore backup using adb tool
+$ADB_CMD -s ${PHONE_SERIAL_NUMBER} restore $RESTORE_OPTS $PHONE_RESTORE_FILE
+
+# Alert to unplug/disconnect the phone
+notification_disconnect_phone
+}
+
+restore_post_tasks () {
+# Stop ADB server if it is running
+stop_adb_server
+
+# Alert at completion of restoration
+#notification_end
+}
+
+
 
 #################
 #  MAIN SCRIPT  #
 #################
 
-# Pre-setup tasks
-backup_pre_tasks
+case $PHONE_TASK in
 
-# Backup and create android formated .ab archive
+backup)
 backup_create_archive
-
-# Unpack archive
-backup_extract_archive
-
-# Post-cleanup tasks
 backup_post_tasks
-
 exit 0
+;;
+
+restore)
+usage_restore
+restore_archive_2_phone
+restore_post_tasks
+exit 0
+;;
+
+*)
+cat <<ET
+Usage: $(basename $0) [backup|restore] [SERIAL NUMBER]
+ET
+
+exit 1
+;;
+esac
