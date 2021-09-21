@@ -2972,13 +2972,27 @@ userdel -r netdata
 uninstall_mpv () {
 if [[ -d $INSTALL_SRC_DIR/mpv ]];
 then
+
+# Run waf configure incase build directory is missing
+[[ ! -d $INSTALL_SRC_DIR/mpv/build ]] && cd $INSTALL_SRC_DIR/mpv && waf configure --prefix=/usr --libdir=$LIBDIR
+#
 # change to sources dir
 cd $INSTALL_SRC_DIR/mpv
 # uninstall
 waf uninstall
-cd $INSTALL_SRC_DIR
+#
 # remove sources dir
+cd $INSTALL_SRC_DIR
 rm -rf $INSTALL_SRC_DIR/mpv
+#
+# Remove other leftover mpv files and directories
+[[ -d $INCDIR/mpv ]] && rm -rf $INCDIR/mpv
+
+elif [[ "$UPGRADING" = "yes" ]];
+then
+# Quit since no MPV sources exist
+echo "MPV sources were not found.  Please first sync to $INSTALL_SRC_DIR/mpv, and re-run uninstall"
+exit 1
 fi
 }
 
