@@ -37,11 +37,10 @@ ALERT_SOUND_AUDIO_GAIN=$(echo $@ | awk -F'=' '/gain/ {print $2}')
 if [[ "x$ALERT_SOUND_AUDIO_GAIN" = "x" ]];
 then
 # No audio gain
-SOUND_PLAYER_OPTS="--really-quiet -ao $SOUND_AUDIO_DRIVER --no-video"
-
+SOUND_PLAYER_OPTS="--really-quiet -ao $SOUND_AUDIO_DRIVER --no-video --pulse-allow-suspended=yes"
 else
 # With audio gain
-SOUND_PLAYER_OPTS="--really-quiet -ao $SOUND_AUDIO_DRIVER --no-video --volume=$ALERT_SOUND_AUDIO_GAIN"
+SOUND_PLAYER_OPTS="--really-quiet -ao $SOUND_AUDIO_DRIVER --no-video --volume=$ALERT_SOUND_AUDIO_GAIN --pulse-allow-suspended=yes"
 fi
 
 BEEP_CMD=/usr/bin/beep
