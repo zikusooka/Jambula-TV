@@ -37,7 +37,7 @@ DATE_DIGIT_TOMORROW=$(date --date='1 day' +'%d')
 DATE_DIGIT_AFTER_TOMORROW=$(date --date='2 day' +'%d')
 
 CURL_CMD="/usr/bin/curl"
-CURL_OPTS="-s -S -L"
+CURL_OPTS="-s -S -L -k"
 
 USER_AGENT="Mozilla/5.0 (X11; Linux x86_64; rv:54.0) Gecko/20100101 Firefox/54.0"
 
@@ -189,7 +189,7 @@ check_internet_access
 [[ -e $UMEME_OUTAGES_PLANNED_FILE ]] && sudo rm -f $UMEME_OUTAGES_PLANNED_FILE
 # Fetch planned outages file
 $LOGGER_CMD $(basename $0) "Downloading UMEME Planned outages file for ${THIS_MONTH_NAME_FULL}:  $UMEME_OUTAGES_URL ..."
-wget -q -O $UMEME_OUTAGES_PLANNED_FILE $UMEME_OUTAGES_URL > /dev/null 2>&1
+wget -q --no-check-certificate -O $UMEME_OUTAGES_PLANNED_FILE $UMEME_OUTAGES_URL > /dev/null 2>&1
 fi
 }
 
