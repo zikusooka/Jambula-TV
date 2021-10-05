@@ -1,3 +1,4 @@
 platform: mqtt
 devices:
   zik_bluez: !secret mqtt_presence_bluez_topic_itel_it2163
+qos: 1

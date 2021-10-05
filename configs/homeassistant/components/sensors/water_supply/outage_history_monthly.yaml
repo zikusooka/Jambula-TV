@@ -1,0 +1,8 @@
+platform: history_stats
+name: Number of times water was off (Monthly)
+entity_id: binary_sensor.water_flow_status_today
+state: 'off'
+type: count
+end: '{{ now().replace(hour=0, minute=0, second=0) }}'
+duration:
+  days: 30

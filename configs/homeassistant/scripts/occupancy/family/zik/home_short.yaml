@@ -1,4 +1,4 @@
-zik_is_home_short:
+zik_home_after_short_time:
   sequence:
 
 
@@ -10,9 +10,9 @@ zik_is_home_short:
         input_directory: !secret jambulatv_sounds_dir
         input_file1: 'Elevator-door-sound.mp3'
         input_file2: 'zik.mp3'
-        input_file3: 'is_back_after_short_time.mp3'
+        input_file3: 'home_after_short_time.mp3'
         output_directory: !secret jambulatv_temp_dir
-        output_file: 'sound_effect_zik_is_back_after_short_time.mp3'
+        output_file: 'sound_effect_zik_home_after_short_time.mp3'
 
 
     # Voice Alert: Announce that Zik is back after a short time
@@ -20,36 +20,5 @@ zik_is_home_short:
     # Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'sound_effect_zik_is_back_after_short_time'
+        sound_alert: 'sound_effect_zik_home_after_short_time'
         audio_gain: !secret voice_alert_audio_gain_medium
-
-
-    # Set security Alarm
-    # --------------------
-    # Demilitarize House
-    - service: shell_command.zoneminder_camera_disarm
-      data_template:
-        camera_id: !secret zoneminder_camera_001
-
-
-    # Send messages using  XMPP, WhatsApp, and Telegram
-    # -------------------------------------------------
-    # XMPP Message
-    - service: notify.jambulatv
-      data_template:
-        title: '[JambulaTV]'
-        message: 'Zik is home after a short time'
-
-    # WhatsApp Message
-    - service: script.send_whatsapp
-      data_template:        
-        whatsapp_text: 'Zik is home after a short time'
-        whatsapp_image: ''
-        whatsapp_recipient_phone: ''
-  
-    # Telegram Message
-    - service: script.send_telegram
-      data_template: 
-        telegram_text: 'Zik is home after a short time'
-        telegram_image: ''
-        telegram_recipient_phone: ''

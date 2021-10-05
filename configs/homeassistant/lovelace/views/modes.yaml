@@ -1,5 +1,5 @@
-title: Alarms
-icon: mdi:alarm-multiple
+title: Modes
+icon: mdi:toggle-switch
 cards:
 
 
@@ -9,7 +9,7 @@ cards:
       - !include ../cards/markup-welcome-message.yaml
 
 
-  # Alarms
-  - type: horizontal-stack
+  # Modes
+  - type: vertical-stack
     cards:
-      - !include ../cards/entities-wakeup-alarm-times.yaml
+      - !include ../cards/entities-modes.yaml

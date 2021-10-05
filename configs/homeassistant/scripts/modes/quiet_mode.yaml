@@ -22,12 +22,12 @@ quiet_mode_on:
         sound_alert: 'sound_effect_quiet_time_mode_activating'
         audio_gain: !secret voice_alert_audio_gain_medium
 
+    - delay: 00:00:03
 
     # Save the current volume level for system
     # -----------------------------------------
     - service: shell_command.save_current_volume_level_system
       data_template:
-        current_system: 'system'
         current_system_volume_level: "{{states('sensor.current_system_volume_level')}}%"
         volume_level_system_file: !secret current_volume_level_system_file
    
@@ -55,7 +55,6 @@ quiet_mode_off:
     # ------------------------------------------------
     - service: shell_command.restore_previous_volume_level_system
       data_template:
-        current_system: 'system'
         volume_level_system_file: !secret current_volume_level_system_file
 
 

@@ -2,19 +2,12 @@ title: CCTV
 icon: mdi:cctv
 cards:
 
-  - type: custom:compact-custom-header
-    cards:
-      main_config: true
-      clock_date: true
-      menu: overflow
-      notifications: clock
-      options: show
-
 
   # Welcome Message
   - type: horizontal-stack
     cards:
       - !include ../cards/markup-welcome-message.yaml
+
 
   # Live Cameras
   - type: horizontal-stack

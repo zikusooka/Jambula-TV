@@ -26,7 +26,7 @@ custom_header:
 swipe_nav:
   animate: swipe
   prevent_default: true
-  skip_tabs: '0,1,2,3,4,5,6,7,8,9,10'
+  skip_tabs: '9,10'
   swipe_amount: 15
   wrap: true
 
@@ -34,18 +34,10 @@ swipe_nav:
 views:
 
   - !include lovelace/views/dashboard.yaml
-#  - !include lovelace/views/livingroom.yaml
-#  - !include lovelace/views/kitchen.yaml
-#  - !include lovelace/views/bedrooms.yaml
-#  - !include lovelace/views/bathrooms.yaml
-#  - !include lovelace/views/security.yaml
-#
-
-
   - !include lovelace/views/lights.yaml
   - !include lovelace/views/media.yaml
   - !include lovelace/views/cctv.yaml
   - !include lovelace/views/alarms.yaml
   - !include lovelace/views/water.yaml
   - !include lovelace/views/power.yaml
-
+  - !include lovelace/views/modes.yaml

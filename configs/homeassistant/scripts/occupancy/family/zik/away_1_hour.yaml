@@ -1,4 +1,4 @@
-zik_away_for_a_long_time:
+zik_away_for_more_than_1_hour:
   sequence:
 
 
@@ -10,17 +10,17 @@ zik_away_for_a_long_time:
         input_directory: !secret jambulatv_sounds_dir
         input_file1: 'Door_close.mp3'
         input_file2: 'zik.mp3'
-        input_file3: 'away_long_time.mp3'
+        input_file3: 'away_more_than_1_hour.mp3'
         output_directory: !secret jambulatv_temp_dir
-        output_file: 'sound_effect_zik_away_for_a_long_time.mp3'
+        output_file: 'sound_effect_zik_away_for_more_than_1_hour.mp3'
 
 
-    # Voice Alert: Announce that Zik has been away for a long time
+    # Voice Alert: Announce that Zik has been away for more than 1 hour
     # ------------------------------------------------------
     # Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'sound_effect_zik_away_for_a_long_time'
+        sound_alert: 'sound_effect_zik_away_for_more_than_1_hour'
         audio_gain: !secret voice_alert_audio_gain_medium
 
 
@@ -60,18 +60,18 @@ zik_away_for_a_long_time:
     - service: notify.jambulatv
       data_template:
         title: '[JambulaTV]'
-        message: 'Zik has been away for a long time'
+        message: 'Zik has been away for more than 1 hour'
 
     # WhatsApp Message
     - service: script.send_whatsapp
       data_template:        
-        whatsapp_text: 'Zik has been away for a long time'
+        whatsapp_text: 'Zik has been away for more than 1 hour'
         whatsapp_image: ''
         whatsapp_recipient_phone: ''
   
     # Telegram Message
     - service: script.send_telegram
       data_template: 
-        telegram_text: 'Zik has been away for a long time'
+        telegram_text: 'Zik has been away for more than 1 hour'
         telegram_image: ''
         telegram_recipient_phone: ''

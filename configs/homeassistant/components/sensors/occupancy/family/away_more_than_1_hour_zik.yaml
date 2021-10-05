@@ -1,0 +1,9 @@
+platform: history_stats
+name: Away for more than 1 hour (Zik)
+entity_id: person.zik 
+state: 'Away'
+type: time
+end: '{{ now() }}'
+duration:
+  hours: 1
+  minutes: 0

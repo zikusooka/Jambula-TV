@@ -45,6 +45,7 @@ bedtime_zik:
     - service: shell_command.set_volume_level_player
       data_template:
         volume_level_player: !secret mixer_bed_time_mode_volume_level
+        current_player: "{{states('sensor.current_player_cli_name')}}"
 
 
     # Turn off light

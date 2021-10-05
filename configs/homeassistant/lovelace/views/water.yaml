@@ -2,13 +2,11 @@ title: Water
 icon: mdi:water-plus
 cards:
 
-  - type: custom:compact-custom-header
+
+  # Welcome Message
+  - type: horizontal-stack
     cards:
-      main_config: true
-      clock_date: true
-      menu: overflow
-      notifications: clock
-      options: show
+      - !include ../cards/markup-welcome-message.yaml
 
 
   # Water Status
@@ -30,11 +28,16 @@ cards:
           - !include ../cards/conditional-water-usage-daily.yaml
           - !include ../cards/conditional-water-usage-monthly.yaml
 
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-water-last-billed-date.yaml
 
-  # Welcome Message
+
+  # Garbage collected / Water is back 
   - type: horizontal-stack
     cards:
-      - !include ../cards/markup-welcome-message.yaml
+      - !include ../cards/entity-button-water-back.yaml
+      - !include ../cards/entity-button-water-gone.yaml
 
 
   # Input water readings for Today / Yesterday

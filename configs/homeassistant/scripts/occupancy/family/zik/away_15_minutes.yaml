@@ -1,4 +1,4 @@
-zik_away_for_a_short_time:
+zik_away_for_more_than_15_minutes:
   sequence:
 
 
@@ -10,9 +10,9 @@ zik_away_for_a_short_time:
         input_directory: !secret jambulatv_sounds_dir
         input_file1: 'Airport-announcement-chime-sound.mp3'
         input_file2: 'zik.mp3'
-        input_file3: 'away_short_time.mp3'
+        input_file3: 'away_more_than_15_minutes.mp3'
         output_directory: !secret jambulatv_temp_dir
-        output_file: 'sound_effect_zik_away_short_time.mp3'
+        output_file: 'sound_effect_zik_away_more_than_15_minutes.mp3'
 
 
     # Voice Alert: Announce that Zik is away briefly (a short time)
@@ -20,5 +20,5 @@ zik_away_for_a_short_time:
     # Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'sound_effect_zik_away_short_time'
+        sound_alert: 'sound_effect_zik_away_more_than_15_minutes'
         audio_gain: !secret voice_alert_audio_gain_medium

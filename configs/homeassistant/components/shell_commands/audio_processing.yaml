@@ -8,9 +8,19 @@ ffmpeg_concat_seven_mp3: /bin/bash -c "[[ -s {{output_directory}}/{{output_file}
 
 play_merged_audio_file_using_vlc: /bin/bash -c "/usr/bin/cvlc --quiet --nodaemon --play-and-exit --aout pulse --gain 2 --no-video --no-sout-display-video {{merged_audio_dir}}/{{merged_audio_file}}"
 
+# MPD playlists
+# ---
+# All genres - Christmas season
+create_local_music_playlist_with_christmas_all: /bin/bash -c "/usr/bin/find {{music_dir}}/ -type f | grep -v '{{music_dir}}/fmradio' | sed 's:{{music_dir}}/::g' | /usr/bin/shuf > {{mpd_playlists_dir}}/Local-Music-all.m3u; exit 0"
 
-create_local_music_playlist_without_christmas: /bin/bash -c "/usr/bin/find {{music_dir}}/{{genre}} -type f | grep -i -v -e '{{music_dir}}/fmradio' -e 'Christmas' | sed 's:{{music_dir}}/::g' | /usr/bin/shuf > {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp > {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp >> {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp >> {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp >> {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp >> {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; rm -f {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp; exit 0"
+# All genres - Regular season
+create_local_music_playlist_without_christmas_all: /bin/bash -c "/usr/bin/find {{music_dir}}/ -type f | grep -i -v -e '{{music_dir}}/fmradio' -e 'Christmas' | sed 's:{{music_dir}}/::g' | /usr/bin/shuf > {{mpd_playlists_dir}}/Local-Music-all.m3u; exit 0"
 
-create_local_music_playlist_with_christmas: /bin/bash -c "/usr/bin/find {{music_dir}}/{{genre}} -type f | grep -v '{{music_dir}}/fmradio' | sed 's:{{music_dir}}/::g' | /usr/bin/shuf > {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp > {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp >> {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp >> {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp >> {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp >> {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; rm -f {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u.tmp; exit 0"
+# Combine several genres - Alternative
+create_local_music_playlist_alternative: /bin/bash -c "/usr/bin/find {{music_dir}}/{Rock,Indie,Pop,Folk,Electronic,Electropop,Soul,Blues} -type f | sed 's:{{music_dir}}/::g' | /usr/bin/shuf > {{mpd_playlists_dir}}/Local-Music-Alternative.m3u; exit 0"
 
-create_local_music_playlist_alternative: /bin/bash -c "/usr/bin/find {{music_dir}}/{Rock,Indie,Pop,Folk,Electronic,Electropop} -type f | sed 's:{{music_dir}}/::g' | /usr/bin/shuf > {{mpd_playlists_dir}}/Local-Music-Alternative.m3u.tmp; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-Alternative.m3u.tmp > {{mpd_playlists_dir}}/Local-Music-Alternative.m3u; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-Alternative.m3u.tmp >> {{mpd_playlists_dir}}/Local-Music-Alternative.m3u; /usr/bin/shuf {{mpd_playlists_dir}}/Local-Music-Alternative.m3u.tmp >> {{mpd_playlists_dir}}/Local-Music-Alternative.m3u; rm -f {{mpd_playlists_dir}}/Local-Music-Alternative.m3u.tmp; exit 0"
+# Specific genres - Regular season
+create_local_music_playlist_without_christmas: /bin/bash -c "/usr/bin/find {{music_dir}}/{{genre}} -type f | grep -i -v -e '{{music_dir}}/fmradio' -e 'Christmas' | sed 's:{{music_dir}}/::g' | /usr/bin/shuf > {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; exit 0"
+
+# Specific genres - Christmas season
+create_local_music_playlist_with_christmas: /bin/bash -c "/usr/bin/find {{music_dir}}/{{genre}} -type f | grep -v '{{music_dir}}/fmradio' | sed 's:{{music_dir}}/::g' | /usr/bin/shuf > {{mpd_playlists_dir}}/Local-Music-{{genre}}.m3u; exit 0"

@@ -1,0 +1,25 @@
+# Record current volume levels
+alias: "Record current volume levels"
+initial_state: True
+
+trigger:
+
+  - platform: time_pattern
+    seconds: '/10'
+    #minutes: '/1'
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.current_volume_levels_player
+
+  - service: script.turn_on
+    entity_id: script.current_volume_levels_system

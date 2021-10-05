@@ -1,5 +1,5 @@
-# Running low on disk space for Home partition
-alias: "Running low on disk space (Home)"
+# Running low on disk space for /JambulaTV partition
+alias: "Running low on disk space (/JambulaTV)"
 initial_state: True
 
 
@@ -13,10 +13,10 @@ condition:
   condition: and
   conditions:
 
-    # Disk space lower than 1GB - /JambulaTV
+    # Disk space lower than threshold - /JambulaTV
     - condition: numeric_state
       entity_id: sensor.disk_free_jambulatv
-      below: '0.5'
+      below: !secret disk_space_jambulatv_threshold
 
 
 action:

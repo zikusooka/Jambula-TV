@@ -4,32 +4,38 @@ music_play_all:
     # Generate 'all' playlist depending on time of year
     - service_template: >
         {% if is_state('sensor.christmas_season', 'True') %}
-          shell_command.create_local_music_playlist_with_christmas
+          shell_command.create_local_music_playlist_with_christmas_all
 
         {% else %}
-          shell_command.create_local_music_playlist_without_christmas
+          shell_command.create_local_music_playlist_without_christmas_all
 
         {% endif %}
       data:
         music_dir: !secret jambulatv_music_dir
         mpd_playlists_dir: !secret jambulatv_playlists_mpd_dir
-        genre: '*'
+        genre: 'all'
 
     # Play 
     - service: media_player.play_media
       data:
         entity_id: media_player.now_playing
         media_content_type: playlist
-        media_content_id: 'Local-Music-*'
+        media_content_id: 'Local-Music-all'
 
-     # Shuffle
+    # Shuffle
     - service: media_player.shuffle_set
       data:
         entity_id: media_player.now_playing
         shuffle: 'true'
- 
+
+    # Repeat
+    - service: media_player.repeat_set
+      data:
+        entity_id: media_player.now_playing
+        repeat: 'all'
+  
     # set volume
     - service: media_player.volume_set
       data:
-        entity_id: all
+        entity_id: media_player.now_playing
         volume_level: !secret mixer_mpd_playlist_volume_level

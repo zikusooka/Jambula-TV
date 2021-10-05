@@ -11,7 +11,20 @@ night_mode_on:
 
     # Save current volume level of active player
     # ------------------------------------------
-    - service: script.voice_alert_volume_pre_setup_player
+    # Save the current volume level
+    - service: shell_command.save_current_volume_level_player
+      data_template:
+        current_player: "{{states('sensor.current_player_cli_name')}}"
+        current_player_volume_level: "{{states('sensor.current_player_volume_level')}}%"
+        volume_level_player_file: !secret previous_volume_level_player_file
+
+    # Save current volume level of system
+    # -----------------------------------
+    # Save the current volume level - system
+    - service: shell_command.save_current_volume_level_system
+      data_template:
+        current_system_volume_level: "{{states('sensor.current_system_volume_level')}}%"
+        volume_level_system_file: !secret previous_volume_level_system_file
 
 
     # Generate voice files
@@ -34,6 +47,7 @@ night_mode_on:
         sound_alert: 'sound_effect_night_mode_activating'
         audio_gain: !secret voice_alert_audio_gain_medium
 
+    - delay: 00:00:01
 
     # Lower volume of current player
     # -------------------------------
@@ -41,6 +55,13 @@ night_mode_on:
       data_template:
         current_player: "{{states('sensor.current_player_cli_name')}}"
         volume_level_player: !secret mixer_night_mode_volume_level
+    
+    # Lower volume of current system
+    # -------------------------------
+    - service: shell_command.set_volume_level_system
+      data_template:
+        current_system: "{{states('sensor.current_system_cli_name')}}"
+        volume_level_system: !secret mixer_night_mode_volume_level
 
 
 
@@ -67,6 +88,24 @@ night_mode_off:
         output_file: 'sound_effect_night_mode_deactivated.mp3'
 
 
+    # Restore previous volume level before automation was run - system
+    # ----------------------------------------------------------------
+    - service: shell_command.restore_previous_volume_level_system
+      data_template:
+        volume_level_system_file: !secret previous_volume_level_system_file   # a) Restore previous volume level before automation was run
+    - service: shell_command.restore_previous_volume_level_system
+      data_template:
+        volume_level_system_file: !secret previous_volume_level_system_file
+
+
+    # Restore previous volume level before automation was run - player
+    # ----------------------------------------------------------------
+    - service: shell_command.restore_previous_volume_level_player
+      data_template:
+        current_player: "{{states('sensor.current_player_cli_name')}}"
+        volume_level_player_file: !secret previous_volume_level_player_file
+
+
     # Voice Alert: Announce that night mode deactivated
     # -------------------------------------------------
     # Play merged audio file in temp directory using house speakers
@@ -74,15 +113,3 @@ night_mode_off:
       data_template:
         sound_alert: 'sound_effect_night_mode_deactivated'
         audio_gain: !secret voice_alert_audio_gain_medium
-
-
-    # Increase volume of current player
-    # ---------------------------------
-    #- service: shell_command.set_volume_level_player
-      #data_template:
-        #current_player: "{{states('sensor.current_player_cli_name')}}"
-        #volume_level_player: !secret mixer_start_up_volume_level_player
-
-    # Restore previous volume level of active player
-    # -----------------------------------------------
-    - service: script.voice_alert_volume_post_setup_player

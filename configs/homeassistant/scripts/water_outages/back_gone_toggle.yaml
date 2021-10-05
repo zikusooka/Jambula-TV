@@ -22,6 +22,11 @@ water_back:
         water_flow_status_today: "yes"
 
 
+    # Retrieve status of current water supply
+    # ----------------------------------------
+    - service: shell_command.water_supply_reports_and_status
+
+
 
 water_gone:
   sequence:
@@ -45,3 +50,8 @@ water_gone:
       data_template:
         water_meter_reading_today: "{{ states('sensor.water_meter_reading_today') }}"
         water_flow_status_today: "no"
+
+
+    # Retrieve status of current water supply
+    # ----------------------------------------
+    - service: shell_command.water_supply_reports_and_status

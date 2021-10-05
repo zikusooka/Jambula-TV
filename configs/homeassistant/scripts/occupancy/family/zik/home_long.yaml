@@ -1,4 +1,4 @@
-zik_is_home_long:
+zik_home_after_long_time:
   sequence:
 
 
@@ -10,9 +10,9 @@ zik_is_home_long:
         input_directory: !secret jambulatv_sounds_dir
         input_file1: 'Metal-gate-opening-sound-effect.mp3'
         input_file2: 'zik.mp3'
-        input_file3: 'is_back_after_long_time.mp3'
+        input_file3: 'home_after_long_time.mp3'
         output_directory: !secret jambulatv_temp_dir
-        output_file: 'sound_effect_zik_is_back_after_long_time.mp3'
+        output_file: 'sound_effect_zik_home_after_long_time.mp3'
 
 
     # Voice Alert: Announce that Zik is back after a long time
@@ -20,7 +20,7 @@ zik_is_home_long:
     # Play merged audio file in temp directory using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'sound_effect_zik_is_back_after_long_time'
+        sound_alert: 'sound_effect_zik_home_after_long_time'
         audio_gain: !secret voice_alert_audio_gain_medium
 
 
@@ -46,18 +46,18 @@ zik_is_home_long:
     - service: notify.jambulatv
       data_template:
         title: '[JambulaTV]'
-        message: 'Zik is home after a long time'
+        message: 'Zik home after a long time'
 
     # WhatsApp Message
     - service: script.send_whatsapp
       data_template:        
-        whatsapp_text: 'Zik is home after a long time'
+        whatsapp_text: 'Zik home after a long time'
         whatsapp_image: ''
         whatsapp_recipient_phone: ''
   
     # Telegram Message
     - service: script.send_telegram
       data_template: 
-        telegram_text: 'Zik is home after a long time'
+        telegram_text: 'Zik home after a long time'
         telegram_image: ''
         telegram_recipient_phone: ''

@@ -15,14 +15,20 @@ music_play_christmas:
         media_content_type: playlist
         media_content_id: 'Local-Music-Christmas'
 
-     # Shuffle
+    # Shuffle
     - service: media_player.shuffle_set
       data:
         entity_id: media_player.now_playing
         shuffle: 'true'
  
+    # Repeat
+    - service: media_player.repeat_set
+      data:
+        entity_id: media_player.now_playing
+        repeat: 'all'
+  
     # set volume
     - service: media_player.volume_set
       data:
-        entity_id: all
+        entity_id: media_player.now_playing
         volume_level: !secret mixer_mpd_playlist_volume_level

@@ -9,12 +9,8 @@ trigger:
 
   - platform: state
     entity_id: 'binary_sensor.water_flow_status_today'
+    from: 'on'
     to: 'off'
-
-  - platform: state
-    entity_id: 'input_boolean.water_supply_gone_off'
-    to: 'on'
-
 
 
 condition:

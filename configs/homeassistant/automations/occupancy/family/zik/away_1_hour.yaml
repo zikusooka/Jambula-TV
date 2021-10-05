@@ -1,4 +1,4 @@
-alias: Zik has been away for a long time
+alias: Zik has been away for more than 1 hour
 initial_state: True
 
 trigger:
@@ -16,4 +16,4 @@ condition:
 
 
 action:
-  - service: script.zik_away_for_a_long_time
+  - service: script.zik_away_for_more_than_1_hour

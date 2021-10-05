@@ -1,31 +1,21 @@
 startup_volume_levels_player:
-# Not working because player = jtvradio - run command with jtvradio to
-# see why
   sequence:
 
     # Set startup volume level - player
-    - service: shell_command.set_volume_level_player
+    - service: shell_command.configure_startup_volume_level_player
       data_template:
-        volume_level_player: !secret mixer_start_up_volume_level_player
         current_player: "{{states('sensor.current_player_cli_name')}}"
+        startup_volume_level_player: !secret mixer_start_up_volume_level_player
+        current_volume_level_player_file: !secret current_volume_level_player_file
 
-    # Add initial startup volume to temp volume level file - player
-    - service: shell_command.save_initial_volume_level_player
-      data_template:
-        volume_level_player: !secret mixer_start_up_volume_level_player
-        volume_level_player_file: !secret current_volume_level_player_file
 
 
 startup_volume_levels_system:
   sequence:
 
     # Set startup volume level - system
-    - service: shell_command.set_volume_level_system
+    - service: shell_command.configure_startup_volume_level_system
       data_template:
-        volume_level_system: !secret mixer_start_up_volume_level_system
 
-    # Add initial startup volume to temp volume level file - system
-    - service: shell_command.save_initial_volume_level_system
-      data_template:
-        volume_level_system: !secret mixer_start_up_volume_level_system
-        volume_level_system_file: !secret current_volume_level_system_file
+        startup_volume_level_system: !secret mixer_start_up_volume_level_system
+        current_volume_level_system_file: !secret current_volume_level_system_file

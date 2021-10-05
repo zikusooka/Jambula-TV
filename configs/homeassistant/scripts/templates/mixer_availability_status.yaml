@@ -1,9 +1,5 @@
 wait_for_availability_of_mixer_voice_alerts:
   sequence:
-    - service: script.dummy
-
-zikkywait_for_availability_of_mixer_voice_alerts:
-  sequence:
     - delay: 00:00:10
     - alias: "If mixer for voice alerts is in use, wait a bit"
       repeat:
