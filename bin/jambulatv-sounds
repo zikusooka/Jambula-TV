@@ -14,8 +14,9 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 
 # Variables
 SOUND_TYPE=$1
+TMPDIR="/tmp"
 JAMBULATV_SOUNDS_DIR="/usr/share/JambulaTV/sounds"
-TEMP_SOUNDS_DIR="/tmp"
+TEMP_SOUNDS_DIR="$TMPDIR"
 DEFAULT_SOUND_EFFECTS_FILE="waiting-4-online-response.wav"
 #
 # If third CLI argument is used, set it as sound effects file.  For others, use default sound effects file
@@ -32,15 +33,29 @@ SOUND_EFFECTS_TEMP_SCRIPT_PID=$(ps auxw | grep -v grep | grep ${SOUND_EFFECTS_WA
 SOUND_PLAYER_CMD="/usr/bin/mpv"
 SOUND_AUDIO_DRIVER="$AUDIO_OUTPUT_DRIVER"
 
+SNAPCAST_FIFO_FILE="$TMPDIR/snapfifo"
 ALERT_SOUND_AUDIO_GAIN=$(echo $@ | awk -F'=' '/gain/ {print $2}')
-# 
-if [[ "x$ALERT_SOUND_AUDIO_GAIN" = "x" ]];
+#
+# Set sound player CLI options depending on snapcast and audio gain 
+if [[ -e $SNAPCAST_FIFO_FILE ]] && [[ "x$ALERT_SOUND_AUDIO_GAIN" = "x" ]];
 then
-# No audio gain
+# Snapcast - no audio gain
+SOUND_PLAYER_OPTS="--really-quiet --no-video --audio-display=no --audio-channels=stereo --audio-samplerate=48000 --audio-format=s16 --ao=pcm --ao-pcm-file=$SNAPCAST_FIFO_FILE"
+
+elif [[ -e $SNAPCAST_FIFO_FILE ]] && [[ "x$ALERT_SOUND_AUDIO_GAIN" != "x" ]];
+then
+# Snapcast - with audio gain
+SOUND_PLAYER_OPTS="--really-quiet --no-video --audio-display=no --audio-channels=stereo --audio-samplerate=48000 --audio-format=s16 --ao=pcm --ao-pcm-file=$SNAPCAST_FIFO_FILE --volume=$ALERT_SOUND_AUDIO_GAIN"
+
+elif [[ ! -e $SNAPCAST_FIFO_FILE ]] && [[ "x$ALERT_SOUND_AUDIO_GAIN" = "x" ]];
+then
+# No snapcast - no audio gain
 SOUND_PLAYER_OPTS="--really-quiet -ao $SOUND_AUDIO_DRIVER --no-video --pulse-allow-suspended=yes"
-else
-# With audio gain
-SOUND_PLAYER_OPTS="--really-quiet -ao $SOUND_AUDIO_DRIVER --no-video --volume=$ALERT_SOUND_AUDIO_GAIN --pulse-allow-suspended=yes"
+
+elif [[ ! -e $SNAPCAST_FIFO_FILE ]] && [[ "x$ALERT_SOUND_AUDIO_GAIN" != "x" ]];
+then
+# No snapcast - With audio gain
+SOUND_PLAYER_OPTS="--really-quiet -ao $SOUND_AUDIO_DRIVER --no-video --pulse-allow-suspended=yes --volume=$ALERT_SOUND_AUDIO_GAIN"
 fi
 
 BEEP_CMD=/usr/bin/beep
@@ -423,6 +438,9 @@ wait_if_another_process_instance_is_running
 
 # Alert via MQTT: Mixer is being used
 mixer_voice_alerts_status_in_use
+
+# Allow multimedia user i.e. jambula to write to snapcast fifo file
+[[ -e $SNAPCAST_FIFO_FILE ]] && sudo chmod 664 $SNAPCAST_FIFO_FILE
 
 # Pause music player
 music_pause_if_playing

@@ -11193,6 +11193,9 @@ ET
 # Change permissions of config directory to owner
 chown -R mpd:mpd $PROJECT_SYSTEM_CONF_DIR/mpd
 #
+# Add multimedia user to mpd group
+usermod -a -G mpd $MULTIMEDIA_USER
+#
 # Create symbolic link to podcasts directory so we can play using MPD
 [[ -L $USER_MUSIC_DIR/podcasts ]] || \
 	ln -s $PODCASTS_DIRECTORY $USER_MUSIC_DIR/podcasts
