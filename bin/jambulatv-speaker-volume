@@ -441,7 +441,6 @@ elif [[ "$APP_USED_TO_PLAY" = "cliplayer" ]];
 then
 # toggle/unmute volume using CLI player if it is running 
 set_sink_input_mute_cli_player_localhost 0
-
 fi
 
 # Unmute Line-In based sources like CD/Cassette player
@@ -463,7 +462,7 @@ set_sink_input_mute_mpd_localhost 0
 elif [[ "$APP_USED_TO_PLAY" = "cliplayer" ]];
 then
 # If volume for JambulaTV radio is not muted, mute it
-JTVRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | grep -i Mute | awk -F': ' {'print $2'})
+JTVRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' -e 'application.process.binary = \"snapclient\"' | grep -i Mute | awk -F': ' {'print $2'} | tail -1)
 [[ "$JTVRADIO_VOLUME_MUTED" = "yes" ]] || set_sink_input_mute_cli_player_localhost 1
 
 fi
@@ -486,7 +485,7 @@ set_sink_input_volume_mpd_localhost
 elif [[ "$APP_USED_TO_PLAY" = "cliplayer" ]];
 then
 # If volume for JambulaTV radio is muted, unmute it
-JTVRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | grep -i Mute | awk -F': ' {'print $2'})
+JTVRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' -e 'application.process.binary = \"snapclient\"' | grep -i Mute | awk -F': ' {'print $2'} | tail -1)
 if [[ "$JTVRADIO_VOLUME_MUTED" = "yes" ]];
 then
 unmute_volume_jtvradio_localhost
@@ -529,7 +528,7 @@ PULSE_SINK_INPUT_STATUS=$?
 if [[ "$PULSE_SINK_INPUT_STATUS" = "0" ]];
 then
 JTVRADIO_VOLUME=$($PULSE_CONTROL_CMD list sink-inputs | grep -B20 -i -e snapclient -e mpd -e mplayer -e vlc -e ffplay -e mpv | awk '/Volume/ {print $5}')
-JTVRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' | grep -i Mute | awk -F': ' {'print $2'})
+JTVRADIO_VOLUME_MUTED=$($PULSE_CONTROL_CMD list sink-inputs | grep -B40 -e 'application.process.binary = \"mplayer\"' -e 'application.process.binary = \"vlc\"' -e 'application.process.binary = \"ffplay\"' -e 'application.process.binary = \"mpv\"' -e 'application.process.binary = \"snapclient\"' | grep -i Mute | awk -F': ' {'print $2'} | tail -1)
 #
 # Set volume mute status
 if [[ "$JTVRADIO_VOLUME_MUTED" = "yes" ]];
