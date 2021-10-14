@@ -1,5 +1,5 @@
 # Water supply reports and status
-water_supply_reports_and_status: /bin/bash -c "/usr/bin/jambulatv-water-supply"
+water_supply_reports_and_status: /bin/bash -c "/usr/bin/jambulatv-water-supply {{water_last_billed_date}}"
 
 # Water reading for Today
 input_water_reading_for_today: /bin/bash -c "/usr/bin/jambulatv-water-reading today {{water_meter_reading_today}} {{water_flow_status_today}}"

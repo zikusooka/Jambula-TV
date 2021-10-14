@@ -32,8 +32,12 @@ cards:
         cards:
           - !include ../cards/conditional-water-last-billed-date.yaml
 
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-water-cost-per-unit.yaml
 
-  # Garbage collected / Water is back 
+
+  # Water is back or gone
   - type: horizontal-stack
     cards:
       - !include ../cards/entity-button-water-back.yaml

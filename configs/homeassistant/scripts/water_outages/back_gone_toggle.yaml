@@ -25,6 +25,8 @@ water_back:
     # Retrieve status of current water supply
     # ----------------------------------------
     - service: shell_command.water_supply_reports_and_status
+      data_template:
+        water_last_billed_date: "{{ states('input_datetime.water_supply_last_billed_date') }}"
 
 
 
@@ -55,3 +57,5 @@ water_gone:
     # Retrieve status of current water supply
     # ----------------------------------------
     - service: shell_command.water_supply_reports_and_status
+      data_template:
+        water_last_billed_date: "{{ states('input_datetime.water_supply_last_billed_date') }}"

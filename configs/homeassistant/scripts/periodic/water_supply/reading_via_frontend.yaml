@@ -34,6 +34,8 @@ input_water_reading_for_today:
     # Report current status of water supply
     # --------------------------------------
     - service: shell_command.water_supply_reports_and_status
+      data_template:
+        water_last_billed_date: "{{ states('input_datetime.water_supply_last_billed_date') }}"
 
 
 
@@ -72,3 +74,5 @@ input_water_reading_for_yesterday:
     # Report current status of water supply
     # --------------------------------------
     - service: shell_command.water_supply_reports_and_status
+      data_template:
+        water_last_billed_date: "{{ states('input_datetime.water_supply_last_billed_date') }}"
