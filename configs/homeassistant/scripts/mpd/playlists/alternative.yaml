@@ -1,12 +1,13 @@
 music_play_alternative:
   sequence:
 
-    # Generate playlist
+    # Generate playlist and mark rotation selected
     - service: shell_command.create_local_music_playlist_alternative
       data_template:
         music_dir: !secret jambulatv_music_dir
         mpd_playlists_dir: !secret jambulatv_playlists_mpd_dir
         genre: 'Alternative'
+        rotation_file: !secret now_playing_music_rotation_file
 
     # Play 
     - service: media_player.play_media

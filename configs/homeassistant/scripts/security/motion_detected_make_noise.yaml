@@ -55,7 +55,7 @@ motion_detected_outside_make_noise:
     # --------------
     # 
     # Make noise - Beeps
-    #- service: shell_command.play_alert_at_remote_workstation
+    #- service: shell_command.run_command_at_remote_workstation
     #  data_template:
     #    ssh_username: !secret operator_001_ssh_username
     #    ssh_host: !secret operator_001_ssh_host

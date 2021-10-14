@@ -1,0 +1,17 @@
+type: conditional
+conditions:
+  - entity: media_player.now_playing
+    state: "playing"
+
+card:
+  type: markdown
+  content: |
+    
+    <p align="center">
+    <ha-icon icon="mdi:music-box-multiple"></ha-icon>
+    </p>
+    <p align="center">
+    <b>
+    {{ states('sensor.now_playing_rotation') }}
+    </b>
+    </p>

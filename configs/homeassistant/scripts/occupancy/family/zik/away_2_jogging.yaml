@@ -1,0 +1,34 @@
+zik_has_gone_jogging:
+  sequence:
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airport-announcement-chime-sound.mp3'
+        input_file2: 'zik.mp3'
+        input_file3: 'has_gone_jogging.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_zik_has_gone_jogging.mp3'
+
+
+    # Voice Alert: Announce that Zik has gone jogging
+    # -----------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_zik_has_gone_jogging'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+    # Laptop: Lock
+    # ------------
+    # Lock user's laptop if it is reachable
+    - service: shell_command.run_command_at_remote_workstation
+      data_template:
+        ssh_username: !secret operator_001_ssh_username
+        ssh_host: !secret operator_001_ssh_host
+        alert_command: "/usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav && /usr/bin/gxmessage -center -ontop -sticky -timeout 20 -title Locking-Laptop Zik is away, locking this laptop shortly && sudo loginctl lock-sessions"

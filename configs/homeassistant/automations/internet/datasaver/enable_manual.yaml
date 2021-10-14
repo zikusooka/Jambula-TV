@@ -12,9 +12,10 @@ condition:
   condition: and
   conditions:
 
-    # Do not run during startup of HASS 
-    - condition: template
-      value_template: "{{ is_state('script.startup_alert_started', 'off') }}"
+    # 1 minute(s) or more after startup of HASS
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime_minutes
+      above: 1.0
 
 
 action:

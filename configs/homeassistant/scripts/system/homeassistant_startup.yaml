@@ -44,6 +44,6 @@ hass_startup:
 
     # Play music player if it is paused (BUG)
     # ---------------------------------------
-    - service: media_player.media_play
-      data:
-        entity_id: media_player.now_playing
+    #- service: media_player.media_play
+      #data:
+        #entity_id: media_player.now_playing

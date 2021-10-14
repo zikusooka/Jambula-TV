@@ -32,18 +32,14 @@ zik_away_for_more_than_1_hour:
         camera_id: !secret zoneminder_camera_001
 
 
-    # Laptop
-    # ------
-    # Lock the laptop screen to avoid prying eyes
-    - service_template: >
-        {% if is_state('person.lenovo_t61', 'home') %}
-          shell_command.play_alert_at_remote_workstation
-            data_template:
-              ssh_username: !secret operator_001_ssh_username
-              ssh_host: !secret operator_001_ssh_host
-              alert_command: "/usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav ; /usr/bin/gxmessage -center -ontop -sticky -timeout 20 -title Zik has been away for a long time"
-        {% endif %}
-      entity_id: person.lenovo_t61
+    # Laptop: Lock
+    # ------------
+    # Lock user's laptop if it is reachable
+    - service: shell_command.run_command_at_remote_workstation
+      data_template:
+        ssh_username: !secret operator_001_ssh_username
+        ssh_host: !secret operator_001_ssh_host
+        alert_command: "/usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav && /usr/bin/gxmessage -center -ontop -sticky -timeout 20 -title Locking-Laptop Zik is away, locking this laptop shortly && sudo loginctl lock-sessions"
 
 
     # Music

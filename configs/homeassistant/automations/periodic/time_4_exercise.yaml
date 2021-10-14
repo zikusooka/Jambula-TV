@@ -1,0 +1,31 @@
+alias: Its time for exercise
+initial_state: True
+
+trigger:
+
+  # Exercise starts at 6:25pm
+  - platform: time
+    at: '18:25:00'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Day of week
+    - condition: time
+      weekday:
+        - mon
+        - wed
+        - fri
+
+    # Vacation mode is off
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+
+
+action:
+
+  # Run script
+  - service: script.its_time_for_exercise

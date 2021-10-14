@@ -6,12 +6,16 @@ trigger:
 
   - platform: time_pattern
     seconds: '/10'
-    #minutes: '/1'
 
 
 condition:
   condition: and
   conditions:
+
+    # 1 minute(s) or more after startup of HASS
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime_minutes
+      above: 2.0
 
 
 action:

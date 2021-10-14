@@ -11,19 +11,10 @@ homeassistant:
   # The URL that Home Assistant is available on from your local network
   internal_url: "http://jambulatv-home:8505"
 
-  # Lets me customize individual entities
-  #customize: !include_dir_merge_named ../../customizations/entities
-
-  # Lets me custimize all entities in a domain
-  customize_domain: !include_dir_merge_named ../../customizations/domains
-
-  # Lets me custimize entities based on a matching pattern
-  customize_glob: !include_dir_merge_named ../../customizations/globs
-
   # List of folders that can be used as sources for sending files
   allowlist_external_dirs:
-    - /tmp
-    - /JambulaTV
+    - "/tmp"
+    - "/JambulaTV"
 
   # List of external URLs that can be fetched
   #allowlist_external_urls:
@@ -40,3 +31,12 @@ homeassistant:
 
     #recordings: /JambulaTV/Podcasts
     #media: /JambulaTV/Podcasts
+
+  # Lets me customize individual entities
+  #customize: !include_dir_merge_named ../../customizations/entities
+
+  # Lets me custimize all entities in a domain
+  customize_domain: !include_dir_merge_named ../../customizations/domains
+
+  # Lets me custimize entities based on a matching pattern
+  customize_glob: !include_dir_merge_named ../../customizations/globs

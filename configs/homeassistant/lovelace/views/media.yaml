@@ -62,17 +62,19 @@ cards:
       #
       - type: horizontal-stack
         cards:
-
-          - !include ../cards/conditional-media-player-previous_track.yaml
-
-          - !include ../cards/conditional-media-player-volume-level.yaml
-          - !include ../cards/conditional-media-player-forward_track.yaml
-
-      - type: horizontal-stack
-        cards:
           - !include ../cards/conditional-playing-now-volume-paused.yaml
           - !include ../cards/conditional-media-player-stop.yaml
           - !include ../cards/conditional-media-player-pause-playing.yaml
           - !include ../cards/conditional-media-player-pause-paused.yaml
           #- !include ../cards/conditional-media-player-volume-up.yaml
           #- !include ../cards/conditional-media-player-volume-down.yaml
+          - !include ../cards/conditional-rotation-now-playing.yaml
+
+
+      - type: horizontal-stack
+        cards:
+
+          - !include ../cards/conditional-media-player-previous_track.yaml
+
+          - !include ../cards/conditional-media-player-volume-level.yaml
+          - !include ../cards/conditional-media-player-forward_track.yaml

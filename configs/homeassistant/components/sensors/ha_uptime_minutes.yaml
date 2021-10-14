@@ -1,0 +1,5 @@
+platform: template
+sensors:
+  hass_uptime_minutes:
+    value_template: >
+      {{ (as_timestamp(now()) - as_timestamp(states('sensor.hass_uptime'))) // 60| round (0)  }}

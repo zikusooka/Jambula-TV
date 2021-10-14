@@ -32,6 +32,16 @@ zik_home_after_long_time:
         camera_id: !secret zoneminder_camera_001
 
 
+    # Laptop: Unlock
+    # --------------
+    # Unlock user's laptop if it is reachable
+    - service: shell_command.run_command_at_remote_workstation
+      data_template:
+        ssh_username: !secret operator_001_ssh_username
+        ssh_host: !secret operator_001_ssh_host
+        alert_command: "sudo loginctl unlock-sessions && /usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav && /usr/bin/gxmessage -center -ontop -sticky -timeout 0 -title Unlocked-Laptop Laptop unlocked"
+
+
     # Music
     # -----
     #- delay: 120
