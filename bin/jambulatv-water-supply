@@ -2,9 +2,11 @@
 #
 # This script is used to extract water meter readings from remote
 # machine and determine whether water supply is sufficient or not
-# NOTE: At this time,  no sensors are available, so readings are
+# NOTE: At this time, no sensors are available, so readings are
 # done manually by attendant at remote PC i.e. kitchen box
 # You can find that script in the project's contributed directory
+#
+# Usage: ./jambulatv-water-supply [LAST BILL DATE e.g. 2021-08-12]
 #
 # Jambula Labs @copyright 2020-2021 All rights reserved
 
@@ -19,6 +21,10 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 # other variables
 REMOTE_HOST=jambulatv-client2
 REMOTE_USER=jambula
+
+WATER_LAST_BILL_DATE="$1"
+WATER_USAGE_MONTHLY_LOG=/tmp/water_usage_monthly_log
+
 WATER_REPORTS_DIR_REMOTE=$STATEDIR/tmp/water_reports
 WATER_REPORTS_DIR_LOCAL=$STATEDIR/tmp/water_reports
 
@@ -38,6 +44,7 @@ MQTT_TOPIC_WATER_SUPPLY_USAGE_DAILY=JambulaTV/house/status/water_usage_daily
 MQTT_TOPIC_WATER_SUPPLY_USAGE_MONTHLY=JambulaTV/house/status/water_usage_monthly
 
 SCRIPT_USER=$(whoami)
+
 
 
 
@@ -162,14 +169,20 @@ else
 	logger -s -t $(basename $0) "Yesterday's water report ($WATER_REPORT_YESTERDAY) was not found either locally or at $REMOTE_HOST"
 	# Set Today's water reading to 'unknown' via MQTT
 	mqtt_publish_water_reading $MQTT_TOPIC_WATER_SUPPLY_METER_READING_YESTERDAY 'unknown'
-
 fi
 }
 
 calculate_water_usage_monthly () {
+# Get number of days since the last water bill was issued
+if [[ "x$WATER_LAST_BILL_DATE" != "x" ]];
+then
+DAYS_SINCE_LAST_BILL_DATE=$( echo $(( ($(date +%s) - $(date +%s -ud "$WATER_LAST_BILL_DATE" )) / 3600 / 24 )) )
+else
+DAYS_SINCE_LAST_BILL_DATE=45
+fi
+#
 RUN=0
-END=45
-WATER_USAGE_MONTHLY_LOG=/tmp/water_usage_monthly_log
+END=$DAYS_SINCE_LAST_BILL_DATE
 
 # Remove previous monthly water usage log file if it exists
 [[ -e $WATER_USAGE_MONTHLY_LOG ]] && sudo rm -f $WATER_USAGE_MONTHLY_LOG
