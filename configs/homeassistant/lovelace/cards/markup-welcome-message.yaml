@@ -1,6 +1,10 @@
 type: markdown
-content: Hi there, Welcome to **JambulaTV**, your smart home automation and entertainment hub. 
-
+content: |
+  <center>
+  <ha-icon icon="mdi:home-automation"></ha-icon>
+  <br>
+  Hi there, Welcome to <b>JambulaTV</b>, your smart home automation and entertainment hub.
+  </center>
 
 
 #The following events are coming up [[ sensor.time.state ]] [[ sensor.time.attributes.icon]] **[[ sensor.power_outage_today.state ]]** 

@@ -2,6 +2,13 @@ title: Overview
 icon: mdi:home
 cards:
 
+  # Welcome Message
+  - type: vertical-stack
+    cards:
+      - !include ../cards/markup-dashboard-message.yaml
+      - !include ../cards/markup-welcome-message.yaml
+
+
   # Weather
   - type: horizontal-stack
     cards:
@@ -30,12 +37,6 @@ cards:
     cards:
       - !include ../cards/entity-filter-temperature-outdoors.yaml
       - !include ../cards/entity-filter-temperature-indoors.yaml
-
-
-  # Welcome Message
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/markup-welcome-message.yaml
 
 
   # Alarms

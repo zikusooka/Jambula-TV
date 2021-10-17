@@ -1,36 +1,33 @@
 title: Power
-icon: power
+icon: mdi:lightning-bolt
 cards:
-
-
-  # Water Status
-  - type: vertical-stack
-    cards:
-
-      - type: horizontal-stack
-        cards:
-          - !include ../cards/entity-button-water-supply.yaml
-          - !include ../cards/conditional-water-tariff-monthly.yaml
-
-      - type: horizontal-stack
-        cards: 
-          - !include ../cards/conditional-water-reading-today.yaml
-          - !include ../cards/conditional-water-reading-yesterday.yaml
-
-      - type: horizontal-stack
-        cards:
-          - !include ../cards/conditional-water-usage-daily.yaml
-          - !include ../cards/conditional-water-usage-monthly.yaml
-
 
   # Welcome Message
   - type: horizontal-stack
     cards:
-      - !include ../cards/markup-welcome-message.yaml
+      - !include ../cards/markup-electricity-message.yaml
 
 
-  # Input water readings for Today / Yesterday
+  # Electricity Status
   - type: vertical-stack
     cards:
-      - !include ../cards/entities-water-readings-today.yaml
-      - !include ../cards/entities-water-readings-yesterday.yaml
+
+      #- type: horizontal-stack
+        #cards:
+          #- !include ../cards/entity-button-electricity-supply.yaml
+          #- !include ../cards/conditional-electricity-tariff-monthly.yaml
+
+      - type: horizontal-stack
+        cards: 
+          - !include ../cards/conditional-electricity-reading-today.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-electricity-usage-daily.yaml
+          - !include ../cards/conditional-electricity-usage-monthly.yaml
+
+
+  # Input electricity reading for Today
+  - type: vertical-stack
+    cards:
+      - !include ../cards/entities-electricty-readings-daily.yaml

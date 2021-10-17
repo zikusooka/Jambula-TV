@@ -1,10 +1,10 @@
 # FM Radio
-fm_radio_play_selected_station: /bin/bash -c "/usr/bin/jambulatv-fm-radio-streamer restart {{station}} local"
+fm_radio_play_selected_station: /bin/bash -c "/usr/bin/jambulatv-fm-radio-streamer restart '{{station}}' local"
 fm_radio_control_speaker_volume: /bin/bash -c "/usr/bin/jambulatv-speaker-volume fmradio localhost {{volume_level}}%"
 fm_radio_stop: /bin/bash -c "/usr/bin/jambulatv-fm-radio-streamer stop local"
 
 # Internet Radio
-internet_radio_play_selected_station: /bin/bash -c "/usr/bin/jambulatv-internet-radio-streamer restart {{station}} local"
+internet_radio_play_selected_station: /bin/bash -c "/usr/bin/jambulatv-internet-radio-streamer restart '{{station}}' local"
 internet_radio_play_favorite_station: /bin/bash -c "/usr/bin/jambulatv-internet-radio-streamer restart 1 local"
 internet_radio_control_speaker_volume: /bin/bash -c "/usr/bin/jambulatv-speaker-volume webradio localhost {{volume_level}}%"
 internet_radio_stop: /bin/bash -c "/usr/bin/jambulatv-internet-radio-streamer stop local"

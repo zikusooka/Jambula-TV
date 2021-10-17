@@ -6,12 +6,13 @@ conditions:
 card:
   type: markdown
   content: |
-    
-    <p align="center">
+    <center>
+    <p>
     <ha-icon icon="mdi:music-box-multiple"></ha-icon>
     </p>
-    <p align="center">
+    <p>
     <b>
     {{ states('sensor.now_playing_rotation') }}
     </b>
+    </center>
     </p>

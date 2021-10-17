@@ -1,4 +1,4 @@
 platform: command_line
 name: "Current System (Volume Level)"
-command: /usr/bin/jambulatv-speaker-volume system localhost status | /usr/bin/awk '/Volume/ {print $3}' | sed 's:%::'
-#scan_interval: 10
+command: if [[ "$(/usr/bin/jambulatv-speaker-volume system localhost status | /usr/bin/awk '/Status/ {print $3}' | sed 's:%::')" = "Muted" ]]; then /usr/bin/printf 0; else /usr/bin/jambulatv-speaker-volume system localhost status | /usr/bin/awk '/Volume/ {print $3}' | sed 's:%::'; fi
+scan_interval: 5

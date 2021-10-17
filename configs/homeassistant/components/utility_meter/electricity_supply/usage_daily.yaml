@@ -1,0 +1,4 @@
+electricity_usage_daily:
+  source: sensor.electricity_supply_meter_reading_daily
+  name: Daily Electricity Usage
+  cycle: daily

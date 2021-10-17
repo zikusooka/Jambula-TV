@@ -1,0 +1,24 @@
+# Restore volume of current player if muted - bug
+alias: "Unmute volume of current player"
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.current_player_volume_level
+    to: '0'
+    for:
+      minutes: 2
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.unmute_volume_4_current_player

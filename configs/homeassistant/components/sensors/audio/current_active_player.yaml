@@ -1,3 +1,3 @@
 platform: command_line
 name: "Current Player (CLI Name)"
-command: export PLAYER_IN_USE=$(/usr/bin/jambulatv-speaker-volume all localhost status | grep -B2 -i 'Active' | head -1) && if [[ "$PLAYER_IN_USE" = "FM Radio" ]]; then ACTIVE_PLAYER=fmradio; elif [[ "$PLAYER_IN_USE" = "Internet Radio" ]]; then ACTIVE_PLAYER=webradio; elif [[ "$PLAYER_IN_USE" = "JambulaTV Radio" ]]; then ACTIVE_PLAYER=jtvradio; else ACTIVE_PLAYER=system; fi && /usr/bin/echo $ACTIVE_PLAYER
+command: export PLAYER_IN_USE=$(/usr/bin/jambulatv-speaker-volume all localhost status | grep -B2 -i -e 'Active' -e 'Muted' | head -1) && if [[ "$PLAYER_IN_USE" = "FM Radio" ]]; then ACTIVE_PLAYER=fmradio; elif [[ "$PLAYER_IN_USE" = "Internet Radio" ]]; then ACTIVE_PLAYER=webradio; elif [[ "$PLAYER_IN_USE" = "JambulaTV Radio" ]]; then ACTIVE_PLAYER=jtvradio; else ACTIVE_PLAYER=system; fi && /usr/bin/echo $ACTIVE_PLAYER
