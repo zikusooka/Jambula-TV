@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+# This script is used by icinga2 to check for availability of
+# WiFi device specified even if it is not connected to any
+# Access Point
+#
+# NOTE: You need to have your icinga2 environment properly setup
+#
+# The heavy lifting i.e. scanning is done by the Wireshark based 
+# CLI tool 'tshark'.  Therefore, ensure that Wireshark is 
+# installed on your system.
+# 
+# Also, a separate Wireless interface that supports monitor mode 
+# is required
+#
+# To capture packets as a non-root user:
+# sudo setcap cap_net_raw,cap_net_admin+eip $(which dumpcap)
+#
+# If you're still having trouble capturing packets as a non-root
+# user, check out the following Wireshark wiki page:
+#
+# https://wiki.wireshark.org/CaptureSetup/CapturePrivileges#Most_UNIXes
+#
+# Feel free to contact me at: josephzik AT gmail.com
+#
+# Joseph Zikusooka @copyright 2021-2022 All rights reserved
+#
+
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import subprocess
+import sys
+
+OK       = 0
+WARNING  = 1
+CRITICAL = 2
+UNKNOWN  = 3
+
+
+def get_args():
+   """
+   Supports the command-line arguments listed below.
+   """
+   parser = argparse.ArgumentParser(description="tshark")
+   parser._optionals.title = "Options"
+   parser.add_argument('-i', '--interface', required=True, help='WiFi interface i.e. wlan0', dest='interface', type=str, default=['wlan0'])
+   parser.add_argument('-c', '--count', required=False, help='Send count number of packets then exit', dest='count', type=str)
+   parser.add_argument('-t', '--timeout', required=True, help='Wait timeout seconds for the response', dest='timeout', type=str)
+   parser.add_argument('-d', '--delay', required=False, help='Wait delay seconds between pings', dest='delay', type=str)
+   parser.add_argument('-a', '--address', required=True, help='MAC Address', dest='address', type=str)
+   args = parser.parse_args()
+   return args
+
+
+def main():
+   """
+   Simple WiFi Scanner
+   """
+   args            = get_args()
+   interface       = args.interface
+   count           = args.count
+   timeout         = args.timeout
+   delay           = args.delay
+   address         = args.address
+
+   command_sniff_packets = ['/usr/bin/tshark', '-Q', '-I', '-l', '-i', interface, '-a', 'duration:%s' % timeout, '-T', 'fields', '-e', 'frame.time', '-e', 'wlan.sa', '-e', 'radiotap.dbm_antsignal', '-e', 'wlan.sa_resolved', '-e', 'wlan.ssid']
+   command_filter_mac = ['/usr/bin/grep', '-i', address]
+
+   sniff_packets = subprocess.Popen(command_sniff_packets, stdout=subprocess.PIPE)
+   filter_mac = subprocess.Popen(command_filter_mac, stdin=sniff_packets.stdout, stdout=subprocess.PIPE)
+
+   sniff_packets.wait()
+   sniff_packets.stdout.close()
+   output = filter_mac.communicate()
+
+   if filter_mac.returncode == 0:
+     print (f"Status of WiFi device [{address}] is: Present")
+     sys.exit(OK)
+
+   elif filter_mac.returncode == 1:
+     print (f"Status of WiFi device [{address}] is: Absent")
+     sys.exit(CRITICAL)
+
+   else:
+     print (f"Status of WiFi device [{address}] is: Unknown")
+     print (filter_mac.returncode)
+     sys.exit(UNKNOWN)
+
+
+if __name__ == "__main__":
+  main()
+
+sys.exit ()
