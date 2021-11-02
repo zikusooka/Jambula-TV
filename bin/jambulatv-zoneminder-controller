@@ -14,6 +14,17 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 
 ZM_ACTION=$1
 ZM_CAMERA_ID=$2
+ZM_ROOT_URL=$3
+ZM_ADMIN_USER=$4
+ZM_ADMIN_PASS=$5
+# If another ZM server instance is specified
+if [[ "x$ZM_ROOT_URL" != "x" ]];
+then
+ZONEMINDER_WEB_URL=$ZM_ROOT_URL
+ZONEMINDER_API_URL=$ZONEMINDER_WEB_URL/api
+ZONEMINDER_ADMIN_USER=$ZM_ADMIN_USER
+ZONEMINDER_ADMIN_PASS=$ZM_ADMIN_PASS
+fi
 
 
 
@@ -22,11 +33,17 @@ ZM_CAMERA_ID=$2
 ###############
 
 usage () {
-if [[ "x$ZM_ACTION" = "x" || "x$ZM_CAMERA_ID" = "x" ]];
+if [[ "x$ZM_ROOT_URL" = "x" ]] && [[ "x$ZM_ACTION" = "x" || "x$ZM_CAMERA_ID" = "x" ]];
 then
 cat <<ET
-Usage: $(basename $0) [ZM_ACTION] [ZM_CAMERA_ID]
+Usage: $(basename $0) [ZM_ACTION] [ZM_CAMERA_ID] [ZM_ROOT_URL] [ZM_ADMIN_USER] [ZM_ADMIN_PASS]
+ET
+exit 1
 
+elif [[ "x$ZM_ROOT_URL" != "x" ]] && [[ "x$ZM_ADMIN_USER" = "x" || "x$ZM_ADMIN_PASS" = "x" ]]
+then
+cat <<ET
+Usage: $(basename $0) [ZM_ACTION] [ZM_CAMERA_ID] [ZM_ROOT_URL] [ZM_ADMIN_USER] [ZM_ADMIN_PASS]
 ET
 exit 1
 fi
