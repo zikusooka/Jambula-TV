@@ -1,0 +1,123 @@
+#!/bin/sh
+# The purpose of this tool is to listen to keyboard and mouse events/
+# presses at a remote PC i.e. Check if a remote host is active or idle
+#
+# This could be useful in detecting presence of persons in some 
+# environments
+#
+# NOTE: Currently, only Linux based PCs are supported 
+#
+# Jambula Labs @copyright 2020-2021 All rights reserved
+#
+#
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
+
+# Variables
+SSH_HOST=$1
+SSH_USER=$2
+
+DEVICE_INPUT_PATH=/dev/input
+WATCH_KEYBOARD_EVENTS_FILE=/tmp/remote_pc_keyboard_events_4_$SSH_HOST
+WATCH_MOUSE_EVENTS_FILE=/tmp/remote_pc_mice_events_4_$SSH_HOST
+
+MQTT_TOPIC_STATUS_REMOTE_PC="JambulaTV/house/status/remote_pc/$SSH_HOST"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+usage (){
+if [[ "x$SSH_HOST" = "x" || "x$SSH_USER" = "x" ]];
+then
+clear
+# Usage
+cat <<EOF
+Usage: $(basename $0) [ssh_ip_address] [ssh_user]
+
+IMPORTANT: Use IP address and not hostname
+
+EOF
+# Quit
+exit 1
+fi
+}
+
+connectivity_2_remote_host () {
+PING_COUNT=2
+PING_TIMEOUT=2
+REMOTE_HOST=$SSH_HOST
+ping -c $PING_COUNT -W $PING_TIMEOUT $REMOTE_HOST > /dev/null 2>&1
+REMOTE_HOST_REACHEABLE=$?
+
+# Quit if remote PC is not reacheable
+if [[ "$REMOTE_HOST_REACHEABLE" != "0" ]];
+then
+# Notify via logger when there's NO connectivity to remote host
+logger -s -t $(basename $0) "The remote host at $REMOTE_HOST 
+is not reacheable. Please check that it is powered on"
+exit 1
+fi
+}
+
+remote_pc_status_active () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_REMOTE_PC" -m "active"
+}
+
+remote_pc_status_idle () {
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_REMOTE_PC" -m "idle"
+}
+
+check_4_keyboard_activity () {
+# Remove previous watch file
+[[ -e $WATCH_KEYBOARD_EVENTS_FILE ]] && \
+	sudo rm -f $WATCH_KEYBOARD_EVENTS_FILE
+# Listen for events
+for KEYBOARD_EVENTS_FILE in $(ssh $SSH_USER@$SSH_HOST "sudo ls -l $DEVICE_INPUT_PATH/by-path/ | grep -i kbd | awk {'print \$11'} | sed 's:../::g'")
+do
+echo --- Checking $KEYBOARD_EVENTS_FILE for events ---
+ssh $SSH_USER@$SSH_HOST "sudo timeout 5s cat $DEVICE_INPUT_PATH/$KEYBOARD_EVENTS_FILE" >> $WATCH_KEYBOARD_EVENTS_FILE 2>&1
+done
+}
+
+check_4_mice_activity () {
+MOUSE_EVENTS_FILE=mice
+# Remove previous watch file
+[[ -e $WATCH_MOUSE_EVENTS_FILE ]] && \
+	sudo rm -f $WATCH_MOUSE_EVENTS_FILE
+# Listen for events
+echo --- Checking $MOUSE_EVENTS_FILE for events ---
+ssh $SSH_USER@$SSH_HOST "sudo timeout 5s cat $DEVICE_INPUT_PATH/$MOUSE_EVENTS_FILE" >> $WATCH_MOUSE_EVENTS_FILE 2>&1
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+# Usage
+usage
+
+# Check if remote PC is up
+connectivity_2_remote_host
+
+# Check for keyboard activity
+check_4_keyboard_activity
+
+# Check for mice activity
+check_4_mice_activity
+
+# Check if Idle or Active
+if [[ ! -s "$WATCH_MOUSE_EVENTS_FILE" ]] && [[ ! -s "$WATCH_KEYBOARD_EVENTS_FILE" ]];
+then
+# Alert via MQTT: Idle
+remote_pc_status_idle
+
+else
+# Alert via MQTT: Active
+remote_pc_status_active
+fi
