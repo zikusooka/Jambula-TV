@@ -350,6 +350,8 @@ bwm_ng_install
 bandwidth_measurement_setup
 trackerjacker_install
 trackerjacker_configure
+wireshark_install
+wireshark_configure
 adb_install
 adb_sync_setup
 libmaxminddb_install

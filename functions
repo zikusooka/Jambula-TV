@@ -11916,6 +11916,30 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TRACKERJACKER_CONFIG_DIR
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $TRACKERJACKER_LOG_FILE
 }
 
+wireshark_install () {
+tar xvf $PROJECT_TARBALLS_DIR/wireshark-*.tar.xz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v wireshark-* wireshark
+# Build
+mkdir $INSTALL_SRC_DIR/wireshark/build
+cd $INSTALL_SRC_DIR/wireshark/build
+cmake -Wno-dev -G Ninja \
+	-DCMAKE_INSTALL_PREFIX=$PREFIX \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DBUILD_wireshark=OFF \
+	..
+ninja -j$SYSTEM_CPU_CORES
+# Install
+ninja install
+}
+
+wireshark_configure () {
+# Add smarthome user to wireshark capture group
+usermod -a -G wireshark $HOMEASSISTANT_USER
+
+# Setup network privileges for dumpcap
+setcap cap_net_raw,cap_net_admin+eip $(which dumpcap)
+}
+
 adb_install () {
 # Unzip Android SDK platform tools package
 unzip -d $INSTALL_SRC_DIR/ $PROJECT_ZIPS_DIR/platform-tools_*-linux.zip
