@@ -1,0 +1,11 @@
+# Adds an iframe panel to the Home Assistant frontend
+# This allows for easy access to external web link straight from 
+# Home Asssitant's UI
+#
+# https://www.home-assistant.io/components/panel_iframe/
+#
+zm_remote:
+  title: ZoneMinder Remote
+  icon: mdi:cctv
+  url: "http://192.168.0.151/zm"
+  #url: !secret panel_iframe_netdata_url

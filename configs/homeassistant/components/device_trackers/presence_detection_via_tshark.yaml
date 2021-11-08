@@ -1,0 +1,7 @@
+platform: mqtt
+devices:
+  zik_tshark: !secret mqtt_presence_tshark_topic_zik
+  lenovo_t61_tshark: !secret mqtt_presence_tshark_topic_lenovo_t61
+  cidea_tshark: !secret mqtt_presence_tshark_topic_cidea
+  mifi_tshark: !secret mqtt_presence_tshark_topic_mifi
+consider_home: 180

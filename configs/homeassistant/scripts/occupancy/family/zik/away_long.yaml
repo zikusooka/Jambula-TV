@@ -27,9 +27,7 @@ zik_away_for_a_long_time:
     # Set security Alarm
     # -------------------
     # Militarize house while away
-    - service: shell_command.zoneminder_camera_arm
-      data_template:
-        camera_id: !secret zoneminder_camera_001
+    - service: script.security_camera_001_arm
 
 
     # Laptop: Lock
@@ -46,8 +44,8 @@ zik_away_for_a_long_time:
     # -----
     #- delay: 120
     #
-    # Run script: If music is playing, stop it
-    #- service: script.music_stop
+    # Play local playlist - jazz
+    - service: script.music_play_jazz
 
 
     # Send messages using  XMPP, WhatsApp, and Telegram

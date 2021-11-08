@@ -1,14 +1,10 @@
 motion_detected_outside_make_noise:
   sequence:
 
-
     # Start capture of snapshot
     # --------------------------
-    #
     # Arm camera alarm
-    - service: shell_command.zoneminder_camera_arm
-      data_template:
-        camera_id: !secret zoneminder_camera_001
+    - service: script.security_camera_001_arm
 
 
     # Generate voice files
@@ -32,8 +28,8 @@ motion_detected_outside_make_noise:
         audio_gain: !secret voice_alert_audio_gain_medium
 
 
-    # Stop capture of snapshot
-    # -------------------------
+    # Beep at local server
+    # --------------------
     # 
     # Make alarm at local server station
     - service: shell_command.beep_alerts_at_local_server
@@ -41,14 +37,9 @@ motion_detected_outside_make_noise:
 
     # Stop capture of snapshot
     # -------------------------
-    #
-    # a) Wait a bit
-    - delay: '00:00:45'
-
-    # b) Disarm camera alarm
-    - service: shell_command.zoneminder_camera_disarm
-      data_template:
-        camera_id: !secret zoneminder_camera_001
+    # Disarm camera alarm
+    - service: script.security_camera_001_disarm_wait
+  
 
 
     # Other examples

@@ -9,6 +9,13 @@ unmute_volume_4_current_player:
         current_player: 'jtvradio'
 
 
+    # Restore previous volume level before volume was muted
+    # -----------------------------------------------------
+    - service: shell_command.restore_previous_volume_level_player
+      data_template:
+        current_player: "{{states('sensor.current_player_cli_name')}}"
+        volume_level_player_file: !secret previous_volume_level_player_file
+
     # Generate voice files
     # --------------------
     # Merge audio files

@@ -14,6 +14,18 @@ condition:
   condition: and
   conditions:
 
+    # 2 minute(s) or more after startup of HASS
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime_minutes
+      above: 2.0
+ 
+    # Zik is not using the Laptop i.e. Kampala idle for 1 hour
+    - condition: state
+      entity_id: sensor.pc_usage_status_for_kampala
+      state: 'idle'
+      for:
+        hours: 1
+
 
 action:
   - service: script.zik_away_for_more_than_1_hour

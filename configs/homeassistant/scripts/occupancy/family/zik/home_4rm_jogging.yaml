@@ -24,6 +24,21 @@ zik_has_returned_4rm_jogging:
         audio_gain: !secret voice_alert_audio_gain_medium
 
 
+    # Music
+    # -----
+    #- delay: 120
+    #
+    # Play local playlist - congolese
+    - service: script.music_play_congolese
+
+
+    # Increase speaker volume to party mode levels
+    # --------------------------------------------
+    - service: shell_command.set_volume_level_system
+      data_template:
+        volume_level_system: !secret mixer_party_mode_volume_level_player
+
+
     # Laptop: Unlock
     # --------------
     # Unlock user's laptop if it is reachable

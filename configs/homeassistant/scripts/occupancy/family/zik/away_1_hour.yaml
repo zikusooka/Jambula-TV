@@ -27,10 +27,8 @@ zik_away_for_more_than_1_hour:
     # Set security Alarm
     # -------------------
     # Militarize house while away
-    - service: shell_command.zoneminder_camera_arm
-      data_template:
-        camera_id: !secret zoneminder_camera_001
-
+    - service: script.security_camera_001_arm
+  
 
     # Laptop: Lock
     # ------------

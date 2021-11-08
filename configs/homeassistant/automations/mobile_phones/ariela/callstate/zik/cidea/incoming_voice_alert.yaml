@@ -1,0 +1,22 @@
+# Phone call - Incoming (Voice Alert)
+alias: "Play voice alert when phone call is incoming for Zik (C-Idea)"
+initial_state: True
+
+
+trigger:
+  - platform: state
+    entity_id: sensor.phone_call_status_for_zik_cidea
+    to: 'ringing'
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.phone_call_incoming_zik_cidea

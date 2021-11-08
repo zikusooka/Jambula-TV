@@ -14,6 +14,13 @@ condition:
   condition: and
   conditions:
 
+    # Zik is not using the Laptop i.e. Kampala idle for 15 mins
+    - condition: state
+      entity_id: sensor.pc_usage_status_for_kampala
+      state: 'idle'
+      for:
+        minutes: 15
+
 
 action:
   - service: script.zik_away_for_more_than_15_minutes

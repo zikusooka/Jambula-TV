@@ -1,7 +1,7 @@
 # Arm camera alarm
 # ----------------
-zoneminder_camera_arm: /bin/bash -c "/bin/echo /usr/bin/jambulatv-zoneminder-controller arm {{camera_id}} | /usr/bin/at -M now"
+zoneminder_camera_arm: /bin/bash -c "/bin/echo /usr/bin/jambulatv-zoneminder-controller arm {{zm_monitor_id}} {{zm_url}} {{zm_user}} {{zm_pass}} | /usr/bin/at -M now"
 
 # Disarm camera alarm
 # -------------------
-zoneminder_camera_disarm: /bin/bash -c "/bin/echo /usr/bin/jambulatv-zoneminder-controller disarm {{camera_id}} | /usr/bin/at -M now" 
+zoneminder_camera_disarm: /bin/bash -c "/bin/echo /usr/bin/jambulatv-zoneminder-controller disarm {{zm_monitor_id}} {{zm_url}} {{zm_user}} {{zm_pass}} | /usr/bin/at -M now"

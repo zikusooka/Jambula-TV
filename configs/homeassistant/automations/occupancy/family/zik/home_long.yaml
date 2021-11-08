@@ -18,6 +18,11 @@ condition:
       entity_id: !secret presence_away_for_long_sensor_1_hour_zik
       above: !secret presence_away_for_short_threshold
 
+    # Zik is not using the Laptop i.e. Kampala is idle
+    - condition: state
+      entity_id: sensor.pc_usage_status_for_kampala
+      state: idle
+
     # Laptop is off
     #- condition: template
       #value_template: "{{ not is_state('person.lenovo_t61', 'home') }}"

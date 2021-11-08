@@ -3,7 +3,9 @@ id: josephzik
 #user_id:
 device_trackers:
   - device_tracker.zik_bluez
-  - device_tracker.zik_trackerjacker
+  - device_tracker.zik_tshark
+  - device_tracker.mifi_tshark
+  - device_tracker.zik_watch
+  #- device_tracker.zik_trackerjacker
   #- device_tracker.zik_hostapd
-  - device_tracker.zik_mifi 
-  #- device_tracker.zik_watch
+  #- device_tracker.zik_mifi

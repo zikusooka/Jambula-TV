@@ -2,7 +2,7 @@ platform: template
 sensors:
   water_tariff_monthly:
     friendly_name: 'Cost Est.'
-    unit_of_measurement: '/='
+    #unit_of_measurement: '/='
     #value_template: "{{ '{:,}'.format( (states('sensor.water_usage_monthly') | float * states('input_text.water_cost_per_unit') | float) | round () ) }}"
     # Water cost: Round off monthly usage to next integer
     value_template: "{{ states('sensor.water_usage_monthly') | round(0, 'ceil') * states('input_text.water_cost_per_unit') | round (0) }}"
