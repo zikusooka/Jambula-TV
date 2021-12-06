@@ -28,6 +28,7 @@ PHONE_SERIAL_NUMBER=$2
 PHONE_RESTORE_DATE=$3
 
 ADB_CMD="sudo /usr/bin/adb"
+ADB_PORT=5555
 ADB_BACKUP_OPTS="-shared -apk -all" # (DO NOT USE -system or -nosystem)
 ADB_RESTORE_OPTS="" 
 DD_CMD="sudo /usr/bin/dd"
@@ -99,49 +100,57 @@ notification_enable_usb_debugging () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Please enable USB Debugging (Developer options) on your phone ($PHONE_MODEL - $PHONE_SERIAL_NUMBER) before connecting it to the server"
 # Alert using voice
-alert_using_voice 30
+alert_using_voice mobile_device_enable_usb_debug
 }
 
 notification_authorize_connection () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Please accept the prompt currently displayed on your phone screen. Save it to 'always' allow USB debugging with this specific server"
 # Alert using voice
-alert_using_voice 32
+alert_using_voice mobile_device_accept_prompt_save
 }
 
 notification_timed_out_waiting_4_input () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Time out - failed to get user input. Quitting ..."
 # Alert using voice
-alert_using_voice 33
+alert_using_voice phone_backup_failed_2_get_input_quit
 }
 
 notification_start () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Starting backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER - $PHONE_MAC_ADDRESS - $PHONE_IP_ADDRESS"
 # Alert using voice
-alert_using_voice 27
+alert_using_voice mobile_device_backup_starting
 }
 
 notification_unlock_confirm () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Please unlock your phone and confirm the backup operation"
 # Alert using voice
-alert_using_voice 31
+alert_using_voice mobile_device_unlock_confirm_backup
 }
 
 notification_disconnect_phone () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Feel free to unplug your phone, while we complete the rest of the backup processes"
 # Alert using voice
-alert_using_voice 29
+alert_using_voice mobile_device_backup_feel_free_2_unplug
 }
 
-notification_end () {
+notification_backup_completed () {
 # Alert using console
 $LOGGER_CMD -s -t $(basename $0) "Completed backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER - $PHONE_MAC_ADDRESS - $PHONE_IP_ADDRESS"
 # Alert using voice
-alert_using_voice 28
+alert_using_voice mobile_device_backup_completed
+}
+
+notification_backup_skip () {
+# Alert using console
+$LOGGER_CMD -s -t $(basename $0) "Skipped backup of $PHONE_MODEL - $PHONE_SERIAL_NUMBER - $PHONE_MANUFACTURER - $PHONE_MAC_ADDRESS - $PHONE_IP_ADDRESS"
+# Alert using voice
+alert_using_voice mobile_device_backup_skipped
+alert_using_voice mobile_device_unplug
 }
 
 start_logging () {
@@ -159,6 +168,10 @@ $(date): $PHONE_MODEL $PHONE_SERIAL_NUMBER ($PHONE_MANUFACTURER)
 EOF
 exec 2>> $PHONE_BACKUP_RESTORE_LOG_FILE
 fi
+}
+
+enable_wifi_networking () {
+$ADB_CMD tcpip $ADB_PORT 
 }
 
 check_if_a_phone () {
@@ -202,6 +215,11 @@ stop_adb_server () {
 ps auxw | grep adb | grep -v grep > /dev/null 2>&1
 ADB_STATUS=$?
 [[ "$ADB_STATUS" = "0" ]] && $ADB_CMD kill-server
+}
+
+restart_adb_server () {
+stop_adb_server
+start_adb_server
 }
 
 query_if_device_is_connected () {
@@ -259,7 +277,7 @@ PHONE_IP_ADDRESS=$($ADB_CMD -s ${PHONE_SERIAL_NUMBER} shell ip addr show wlan0 |
 }
 
 backup_old_archive () {
-if [[ -e $PHONE_BACKUP_FILE ]];
+if [[ -s $PHONE_BACKUP_FILE ]];
 then
 # Set date of previous archive
 DATE_OF_PREVIOUS_ARCHIVE=$($STAT_CMD $PHONE_BACKUP_FILE | awk -F': ' '/Modify/ {print $2}'| awk {'print $1'} | sed 's:-::g')
@@ -275,17 +293,20 @@ start_logging
 # Check to see if device is actually a phone.  If not quit
 check_if_a_phone
 
-# Create, or if it already exists, make backups directory accessible
-check_if_backup_dir_exists_and_is_accessible
-
-# Start ADB server if it is not running
-start_adb_server
+# Restart ADB server
+restart_adb_server
 
 # Query device existence
 query_if_device_is_connected
 
 # Query device parameters
 query_device_params
+
+# Create, or if it already exists, make backups directory accessible
+check_if_backup_dir_exists_and_is_accessible
+
+# Enable wireless networking
+enable_wifi_networking
 }
 
 
@@ -304,7 +325,7 @@ backup_old_archive
 }
 
 backup_extract_archive () {
-if [[ -e $PHONE_BACKUP_FILE ]];
+if [[ -s $PHONE_BACKUP_FILE ]];
 then
 cd $PHONE_BACKUP_DIR && \
 	$DD_CMD if=$PHONE_BACKUP_FILE bs=24 skip=1 | \
@@ -326,14 +347,16 @@ notification_unlock_confirm
 # Create backup using adb tool
 $ADB_CMD -s ${PHONE_SERIAL_NUMBER} backup $ADB_BACKUP_OPTS -f $PHONE_BACKUP_FILE
 
-# Alert to unplug/disconnect the phone
-notification_disconnect_phone
+# Alert to unplug/disconnect the phone if backed up file exists
+[[ -s $PHONE_BACKUP_FILE ]] && notification_disconnect_phone
 
 # Unpack files needed for short term backup
 backup_extract_archive
 }
 
 backup_post_tasks () {
+if [[ -s $PHONE_BACKUP_FILE ]];
+then
 # Remove android archive files that are 8 weeks+ old to save space
 DAYS_OLD=56
 find $PHONE_BACKUP_DIR -type f -name "${PHONE_BACKUP_NAME}*" -mtime +${DAYS_OLD} -exec rm -f {} \;
@@ -342,7 +365,12 @@ find $PHONE_BACKUP_DIR -type f -name "${PHONE_BACKUP_NAME}*" -mtime +${DAYS_OLD}
 stop_adb_server
 
 # Alert at completion of backup
-notification_end
+notification_backup_completed
+
+else
+# Alert at failed backup
+notification_backup_skip
+fi
 }
 
 
@@ -407,7 +435,7 @@ restore_post_tasks () {
 stop_adb_server
 
 # Alert at completion of restoration
-#notification_end
+#notification_restore_completed
 }
 
 
