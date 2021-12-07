@@ -9077,6 +9077,13 @@ conf-file=$CONFDIR/dnsmasq-conf.conf
 resolv-file=$CONFDIR/dnsmasq-resolv.conf" >> $CONFDIR/dnsmasq.conf
 fi
 #
+# Remove default systemd unit if it exists
+[[ -e $SYSTEMD_UNITS_DIR_SYSTEM/dnsmasq.service ]] && \
+	rm -f $SYSTEMD_UNITS_DIR_SYSTEM/dnsmasq.service
+# Copy systemd unit file dnsmasq
+cp -v $PROJECT_INIT_SCRIPTS_DIR/dnsmasq.service $SYSTEMD_UNITS_DIR_USER/
+# Reload systemd daemon
+systemctl --system daemon-reload
 # Enable dnsmasq if needed
 systemctl enable dnsmasq.service
 # Reload dnsmasq
