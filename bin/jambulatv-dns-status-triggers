@@ -58,6 +58,21 @@ MAXIMUM_AGE_OF_GEOIP_COUNTRY_DATA=604800 # 1 week
 ###############
 #  FUNCTIONS  #
 ###############
+
+restart_dnsmasq_alert_if_failed () {
+systemctl restart dnsmasq.service > /dev/null 2>&1
+systemctl -q is-active dnsmasq.service && DNSMASQ_EXIT_STATUS=$?
+if [[ "$DNSMASQ_EXIT_STATUS" != "0" ]];
+then
+# Log error to journal
+logger -s -t $(basename $0) "Error: dnsmasq.service failed to start. Please check syntax of the configuration file: /etc/dnsmasq.conf"
+# Voice alert: Play sound effects i.e. failing
+jambulatv-sounds alert on_life_support
+# Voice alert: Announce
+jambulatv-sounds alert critical_system_service_failed
+fi
+}
+
 get_system_dns_settings () {
 # Number of DNS settings
 NUMBER_OF_DNS=$(sed '/127.0.0.1/d' /etc/resolv.conf | sed 's/^nameserver //g' | sed '/^[a-z]/d' | sed '/^[A-Z]/d' | sed '/^#/d' | sed '/ /d' | uniq | wc -l)
@@ -175,17 +190,25 @@ do
 done
 #
 # Clean up domains.txt file
+# ---
+# Fix general typos
 grep -v -e ^address -e \# $DNS_BLOCKING_CACHE_DIR/domains.txt | while read LINE
 do
 sed -i "s|$LINE|\#$LINE|g" $DNS_BLOCKING_CACHE_DIR/domains.txt 
 sleep 1
 done
 #
+# Fix incomplete domains, and IP address i.e. wrong format
+cat $DNS_BLOCKING_CACHE_DIR/domains.txt | grep -v -e '0.0.0.0$' -e '::$' -e '^#' | while read BAD_FORMAT
+do
+sed -i "s|$BAD_FORMAT|#$BAD_FORMAT|" $DNS_BLOCKING_CACHE_DIR/domains.txt 
+done
+#
 # Give multimedia user permission to access DNS cache directory
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $DNS_BLOCKING_CACHE_DIR
 #
 # Restart dnsmasq.service
-systemctl restart dnsmasq.service
+restart_dnsmasq_alert_if_failed
 }
 
 update_geoip_databases () {
@@ -280,14 +303,20 @@ echo "$(date): New State = Down | Old State = Up" >> $DEBUG_FILE
 #
 # Add entries to dnsmasq for local resolution
 # --------------------------------------------
+# Set hostname depending on connection type i.e. Wired or Wireless
 cat > $INTERNET_OFF_FILE <<EOT
-address=/#/$NETWORK_WIRELESS_HOTSPOT_IP
+localise-queries
 EOT
-# Add Wired ethernet IP address if link is UP
-[[ "x$NETWORK_IP_ADDRESS" = "x" ]] || \
-	echo "address=/#/$NETWORK_IP_ADDRESS" >> $INTERNET_OFF_FILE
+# Specify Wireless IP address
+#cat >> $INTERNET_OFF_FILE <<EOT
+#address=/#/$NETWORK_WIRELESS_HOTSPOT_IP
+#EOT
+# Specify Wired IP address
+#[[ "x$NETWORK_IP_ADDRESS" = "x" ]] || \
+#	echo "address=/#/$NETWORK_IP_ADDRESS" >> $INTERNET_OFF_FILE
+#
 # Restart dnsmasq.service
-systemctl restart dnsmasq.service
+restart_dnsmasq_alert_if_failed
 
 
 #  Since Internet is now down - Stop stuff that requires connectivity 
@@ -319,15 +348,20 @@ echo "$(date): Unknown - New State = [$DNS_STATUS] | Old State = [$LAST_DNS_STAT
 
 # Add entries to dnsmasq for local resolution
 # --------------------------------------------
+# Set hostname depending on connection type i.e. Wired or Wireless
 cat > $INTERNET_OFF_FILE <<EOT
-address=/#/$NETWORK_WIRELESS_HOTSPOT_IP
+localise-queries
 EOT
-# Add Wired ethernet IP address if link is UP
-[[ "x$NETWORK_IP_ADDRESS" = "x" ]] || \
-	echo "address=/#/$NETWORK_IP_ADDRESS" >> $INTERNET_OFF_FILE
+# Specify Wireless IP address
+#cat >> $INTERNET_OFF_FILE <<EOT
+#address=/#/$NETWORK_WIRELESS_HOTSPOT_IP
+#EOT
+# Specify Wired IP address
+#[[ "x$NETWORK_IP_ADDRESS" = "x" ]] || \
+#	echo "address=/#/$NETWORK_IP_ADDRESS" >> $INTERNET_OFF_FILE
 #
 # Restart dnsmasq.service
-systemctl restart dnsmasq.service
+restart_dnsmasq_alert_if_failed
 
 # Quit
 exit
