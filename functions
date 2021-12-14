@@ -9340,8 +9340,11 @@ make prefix=$PREFIX install
 }
 
 chrony_configure () {
-# Copy chrony.conf file
-cp -v $PROJECT_CONFIGS_DIR/chrony.conf.sample $CONFDIR/chrony.conf
+# Copy chrony.conf file and allow our local networks
+cat $PROJECT_CONFIGS_DIR/chrony.conf.sample | \
+	sed "s:MY_NETWORK_WIRED_MASK:$NETWORK_WIRED_MASK:g" | \
+	sed "s:MY_NETWORK_WIRELESS_MASK:$NETWORK_WIRELESS_MASK:g" \
+		> $CONFDIR/chrony.conf
 # Add chronyc password to keys files
 echo "1 $CHRONYC_PASSWD" > $CHRONY_KEYS_FILE
 # Enable chronyd if needed

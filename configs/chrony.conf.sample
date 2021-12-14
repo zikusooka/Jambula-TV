@@ -11,7 +11,8 @@ rtcsync
 
 makestep 10 3
 
-allow 192.168/16
+allow MY_NETWORK_WIRED_MASK
+allow MY_NETWORK_WIRELESS_MASK
 
 #bindcmdaddress 127.0.0.1
 #bindcmdaddress ::1
