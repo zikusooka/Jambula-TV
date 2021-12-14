@@ -16185,8 +16185,8 @@ bonjour_configure () {
 # Create avahi-daemon config file
 cat > $CONFDIR/avahi/avahi-daemon.conf << EOF
 [server]
-#host-name=$PROJECT_NAME
-#domain-name=local
+#host-name=
+domain-name=local
 browse-domains=$PROJECT_DOMAINS
 use-ipv4=yes
 use-ipv6=no
