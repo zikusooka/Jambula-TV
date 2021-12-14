@@ -7,6 +7,8 @@
 # Variables
 PROJECT_NAME=JambulaTV
 PROJECT_NICKNAME=Nabusugwe
+PROJECT_SYSTEM_TYPE=server
+PROJECT_SYSTEM_NO=01
 PROJECT_URL="https://www.jambulatv.com"
 PROJECT_TRACKER_URL="https://issues.jambulatv.com"
 PROJECT_DOMAINS="jambulatv.com, jambula.net" 
@@ -8371,14 +8373,14 @@ cp -v $PROJECT_CONTRIB_DIR/hwdata/oui.txt \
 }
 
 wired_interfaces_configure () {
-# Configure hostname
-HOSTNAME=$SYSTEM_IDENTIFIER.$PROJECT_NAME
+# Set hostname for wired
+HOSTNAME=${PROJECT_SYSTEM_TYPE}${PROJECT_SYSTEM_NO}-$PROJECT_NAME
 # Use 'hostnamectl'
 hostname $HOSTNAME 
 echo "$HOSTNAME" > $HOSTNAME_FILE
-# Add IP Address to hosts file
-echo "# JambulaTV IP-Hostname
-$NETWORK_IP_ADDRESS	$HOSTNAME $PROJECT_NAME" >> /etc/hosts
+# Add IP Address to hosts file for wired
+echo "# FQDN Hostname (Wired)
+$NETWORK_IP_ADDRESS	$HOSTNAME.local	$HOSTNAME" >> /etc/hosts
 # Remove IPv6 localhost address
 sed -i "s/::1/#::1/g" /etc/hosts
 # Configure dhclient so it picks up specific options from DHCP server on network, if it
@@ -8613,6 +8615,12 @@ fi
 }
 
 wireless_interfaces_configure () {
+# Set hostname for wireless
+HOSTNAME=${PROJECT_SYSTEM_TYPE}${PROJECT_SYSTEM_NO}-$PROJECT_NAME
+# Add IP Address to hosts file for wireless
+echo "# FQDN Hostname (Wireless)
+$NETWORK_WIRELESS_HOTSPOT_IP	$HOSTNAME.local	$HOSTNAME" >> /etc/hosts
+#
 # Get wireless parameters
 get_wireless_interface_parameters
 
