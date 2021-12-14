@@ -148,6 +148,7 @@ FirewallRule allow tcp port 554
 FirewallRule allow tcp port 1161
 FirewallRule allow tcp port 1242
 FirewallRule allow tcp port 1646
+FirewallRule allow tcp port 2049
 FirewallRule allow tcp port 4212
 FirewallRule allow tcp port 5000
 FirewallRule allow tcp port 5060
@@ -158,6 +159,7 @@ FirewallRule allow tcp port 5353
 FirewallRule allow tcp port 5354
 FirewallRule allow tcp port 5554
 FirewallRule allow tcp port 8089
+FirewallRule allow tcp port 8502
 FirewallRule allow tcp port 8504
 FirewallRule allow tcp port 8505
 FirewallRule allow tcp port 8510
@@ -235,6 +237,8 @@ FirewallRule allow tcp port 36667
 # --------------------------------
 FirewallRule allow udp port 53	
 FirewallRule allow udp port 67
+FirewallRule allow udp port 123
+FirewallRule allow udp port 323
 FirewallRule allow udp port 554
 FirewallRule allow udp port 1900
 FirewallRule allow udp port 5060
