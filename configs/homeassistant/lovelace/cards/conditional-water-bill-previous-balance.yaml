@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: input_datetime.water_supply_last_billed_date
+    state_not: 'unknown'
+  #- entity: input_datetime.water_supply_last_billed_date
+    #state_not: ''
+
+card:
+  type: entities
+  entities:
+    - entity: input_text.water_bill_previous_balance
+      name: 'Previous Water Bill Balance'
+      icon: 'mdi:water'
+      show_name: true
+      show_icon: false

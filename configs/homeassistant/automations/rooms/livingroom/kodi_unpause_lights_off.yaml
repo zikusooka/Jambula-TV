@@ -1,7 +1,7 @@
 alias: "Media player unpaused"
 trigger:
   - platform: state
-    entity_id: media_player.jambulatv_living_room
+    entity_id: media_player.jambulatv_pi_living_room
     from: 'paused'
     to: 'playing'
 condition:

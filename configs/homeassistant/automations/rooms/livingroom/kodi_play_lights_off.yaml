@@ -1,7 +1,7 @@
 alias: "Media player playing"
 trigger:
   - platform: state
-    entity_id: media_player.jambulatv_living_room
+    entity_id: media_player.jambulatv_pi_living_room
     to: 'playing'
     from: 'idle'
 #condition:
@@ -18,7 +18,7 @@ condition:
     state: 'below_horizon'
 
   - condition: template 
-    value_template: '{{ states.media_player.jambulatv_living_room.attributes.media_content_type == "video" }}'
+    value_template: '{{ states.media_player.jambulatv_pi_living_room.attributes.media_content_type == "video" }}'
 
 action:
   - service: scene.turn_on

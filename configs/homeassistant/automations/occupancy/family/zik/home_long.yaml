@@ -8,7 +8,7 @@ trigger:
     from: 'Away'
     to: 'Home'
 
-
+    
 condition:
   condition: and
   conditions:
@@ -16,16 +16,8 @@ condition:
     # Away for a long time sensor is greater than short threshold
     - condition: numeric_state
       entity_id: !secret presence_away_for_long_sensor_1_hour_zik
+      below: !secret presence_away_for_long_threshold
       above: !secret presence_away_for_short_threshold
-
-    # Zik is not using the Laptop i.e. Kampala is idle
-    - condition: state
-      entity_id: sensor.pc_usage_status_for_kampala
-      state: idle
-
-    # Laptop is off
-    #- condition: template
-      #value_template: "{{ not is_state('person.lenovo_t61', 'home') }}"
 
     # Last triggered more than 5 minute(s) ago
     #- condition: template

@@ -1,0 +1,32 @@
+alias: Set previous water bill balance
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: input_text.water_bill_previous_balance
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+
+action:
+
+  # Set previous water bill balance
+  # ---
+  - service: input_number.set_value
+    data_template:
+      entity_id: input_number.water_bill_previous_balance
+      value: "{{ states('input_text.water_bill_previous_balance') }}"
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.input_previous_water_bill_balance

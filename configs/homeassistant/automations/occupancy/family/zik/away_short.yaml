@@ -10,23 +10,15 @@ trigger:
     for:
       minutes: 3
 
-  - platform: state
-    entity_id: !secret presence_away_for_short_sensor_15_minutes_zik
-    to: !secret presence_away_for_short_threshold
-    for:
-      minutes: 3
-
 
 condition:
   condition: and
   conditions:
 
-    # Zik is not using the Laptop i.e. Kampala idle for 15 mins
-    - condition: state
-      entity_id: sensor.pc_usage_status_for_kampala
-      state: 'idle'
-      for:
-        minutes: 15
+    # 15 minute(s) or more after startup of HASS
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime_minutes
+      above: 15
 
 
 action:

@@ -1,0 +1,103 @@
+tablet_battery_low_tecno:
+  sequence:
+
+ 
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'battery_low_01.mp3'
+        input_file2: 'recharge_battery_4_tablet_in_kitchen.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_tablet_battery_low_in_kitchen.mp3'
+
+
+    # Voice Alert: Announce that tablet battery is low
+    # ------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_tablet_battery_low_in_kitchen'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+tablet_battery_low_c_idea:
+  sequence:
+
+ 
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'battery_low_01.mp3'
+        input_file2: 'recharge_battery_4_tablet_in_livingroom.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_tablet_battery_low_in_livingroom.mp3'
+
+
+    # Voice Alert: Announce that tablet battery is low
+    # ------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_tablet_battery_low_in_livingroom'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+tablet_battery_full_tecno:
+  sequence:
+ 
+ 
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'battery_charging_01.mp3'
+        input_file2: 'completed_charge_battery_4_tablet_in_kitchen.mp3'
+        input_file3: 'battery_charger_power_off.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_tablet_battery_charging_completed_in_kitchen.mp3'
+
+
+    # Voice Alert: Announce that tablet battery charging completed
+    # ------------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_tablet_battery_charging_completed_in_kitchen'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+tablet_battery_full_c_idea:
+  sequence:
+ 
+ 
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'battery_charging_01.mp3'
+        input_file2: 'completed_charge_battery_4_tablet_in_livingroom.mp3'
+        input_file3: 'battery_charger_power_off.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_tablet_battery_charging_completed_in_livingroom.mp3'
+
+
+    # Voice Alert: Announce that tablet battery charging completed
+    # ------------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_tablet_battery_charging_completed_in_livingroom'
+        audio_gain: !secret voice_alert_audio_gain_medium

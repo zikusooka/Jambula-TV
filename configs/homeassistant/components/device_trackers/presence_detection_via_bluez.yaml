@@ -2,4 +2,6 @@ platform: mqtt
 devices:
   zik_bluez: !secret mqtt_presence_bluez_topic_itel_it2163
   zik_watch: !secret mqtt_presence_bluez_topic_gd19s
+  zik_iphone_7: !secret mqtt_presence_bluez_topic_iphone_7
 qos: 1
+source_type: bluetooth

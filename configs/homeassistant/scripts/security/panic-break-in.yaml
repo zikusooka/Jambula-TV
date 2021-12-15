@@ -1,0 +1,98 @@
+panic_break_in:
+  sequence:
+
+    # Start capture of snapshot
+    # --------------------------
+    # Arm camera alarm
+    - service: script.security_camera_001_arm
+
+
+    # Start display of camera events at all tablets
+    # ---------------------------------------------
+    # C Idea
+    - service: shell_command.open_zm_camera_at_tecno_f1
+    # Tecno F1
+    - service: shell_command.open_zm_camera_at_tecno_f1
+
+
+    # Send XMPP message
+    # -----------------
+    - service: notify.jambulatv
+      data_template:
+        title: '[JambulaTV]'
+        message: !secret panic_break_in_incident_high
+
+ 
+    # Send SMS message using ModemManager
+    # -----------------------------------
+    # Contact 1
+    - service: shell_command.send_sms_text_via_modem_manager
+      data_template:        
+        sms_network: !secret sms_network_1
+        sms_phone: !secret sms_contact_1
+        sms_message: !secret panic_break_in_incident_high
+    # Contact 2
+    - service: shell_command.send_sms_text_via_modem_manager
+      data_template:        
+        sms_network: !secret sms_network_2
+        sms_phone: !secret sms_contact_2
+        sms_message: !secret panic_break_in_incident_high
+ 
+    # Send SMS message using MiFi router
+    # ----------------------------------
+    # Contact 1
+    - service: shell_command.send_sms_text_via_mifi_app
+      data_template:        
+        sms_network: !secret sms_network_1
+        sms_phone: !secret sms_contact_1
+        sms_message: !secret panic_break_in_incident_high
+    # Contact 2
+    - service: shell_command.send_sms_text_via_modem_manager
+      data_template:        
+        sms_network: !secret sms_network_2
+        sms_phone: !secret sms_contact_2
+        sms_message: !secret panic_break_in_incident_high
+  
+    # Send SMS message using Asterisk
+    # -------------------------------
+    # Contact 1
+    - service: shell_command.send_sms_text_via_asterisk
+      data_template:        
+        sms_network: !secret sms_network_1
+        sms_phone: !secret sms_contact_1
+        sms_message: !secret panic_break_in_incident_high
+    # Contact 2
+    - service: shell_command.send_sms_text_via_modem_manager
+      data_template:        
+        sms_network: !secret sms_network_2
+        sms_phone: !secret sms_contact_2
+        sms_message: !secret panic_break_in_incident_high
+
+
+    # Send WhatsApp messages
+    # ----------------------
+    # Contact 1
+    - service: script.send_whatsapp
+      data_template:        
+        whatsapp_text: !secret panic_break_in_incident_high
+        whatsapp_image: ''
+        whatsapp_recipient_phone: !secret whatsapp_contact_1
+    # Contact 2
+    - service: script.send_whatsapp
+      data_template:        
+        whatsapp_text: !secret panic_break_in_incident_high
+        whatsapp_image: ''
+        whatsapp_recipient_phone: !secret whatsapp_contact_2
+  
+
+    # Attempt Phone calls
+    # -------------------
+
+
+    # Activate sirens
+    # ---------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'Fire-alarm-sound-effect'
+        audio_gain: !secret voice_alert_audio_gain_high

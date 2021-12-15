@@ -1,0 +1,67 @@
+tablet_incoming_call_tecno:
+  sequence:
+ 
+
+    # Send notification using XMPP
+    # -----------------------------
+    # XMPP Message
+    - service: notify.jambulatv
+      data_template:
+        title: '[JambulaTV]'
+        message: 'There is an incoming phone call on Kitchen tablet from: {{ states("sensor.incoming_phone_caller_id_via_adb_4_tecno_f1") }}'
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'phone_one_ring_01.mp3'
+        input_file2: 'incoming_phone_call_tablet_in_kitchen.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_ring_incoming_phone_call_in_kitchen.mp3'
+
+
+    # Voice Alert: Announce that there's an incoming phone call
+    # ----------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_ring_incoming_phone_call_in_kitchen'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+tablet_incoming_call_c_idea:
+  sequence:
+ 
+
+    # Send notification using XMPP
+    # -----------------------------
+    # XMPP Message
+    - service: notify.jambulatv
+      data_template:
+        title: '[JambulaTV]'
+        message: 'There is an incoming phone call on Living room tablet from: {{ states("sensor.incoming_phone_caller_id_via_adb_4_c_idea") }}'
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'phone_one_ring_01.mp3'
+        input_file2: 'incoming_phone_call_tablet_in_livingroom.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_ring_incoming_phone_call_in_livingroom.mp3'
+
+
+    # Voice Alert: Announce that there's an incoming phone call
+    # ----------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_ring_incoming_phone_call_in_livingroom'
+        audio_gain: !secret voice_alert_audio_gain_medium

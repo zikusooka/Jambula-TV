@@ -1,0 +1,13 @@
+type: entity-button
+entity: script.panic_break_in
+tap_action:
+  action: call-service
+  confirmation:
+    text: Are you sure there is a break-in happening
+  service: script.turn_on
+  service_data:
+    entity_id: script.panic_break_in
+name: 'Panic (Break-In)'
+show_name: true
+show_state: false
+icon: 'mdi:exit-run'

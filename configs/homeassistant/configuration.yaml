@@ -20,7 +20,7 @@ mqtt:
   #client_id: !secret mqtt_client_id
 
 
-#notify: !include_dir_list components/notifiers
+notify: !include_dir_list components/notifiers
 #
 #
 zoneminder:

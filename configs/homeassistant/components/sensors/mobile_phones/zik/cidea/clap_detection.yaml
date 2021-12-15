@@ -1,0 +1,6 @@
+platform: mqtt
+name: "Phone clap detection for Tablet (C-Idea)"
+state_topic: "JambulaTV/Phones/Zik/sensor/android_cm2000_microphone/attributes"
+#unit_of_measurement: ''
+value_template: "{{ value_json.clap_detected }}"
+json_attributes_topic: "JambulaTV/Phones/Zik/sensor/android_cm2000_microphone/attributes"

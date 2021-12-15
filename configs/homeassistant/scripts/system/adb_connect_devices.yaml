@@ -1,0 +1,57 @@
+adb_connect_2_all_devices:
+  sequence:
+
+    # ADB: Connect to all Android devices
+    # ------------------------------------
+    # Connect to all ADB devices
+    - service: shell_command.adb_connect_2_all_devices
+
+
+
+adb_connected_above_threshold:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files 
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'adb_devices_connected.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_adb_devices_connected.mp3'
+
+
+    # Voice Alert: Announce that all Android devices connected
+    # --------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_adb_devices_connected'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+adb_connected_below_threshold:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files (ADB not connected)
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'adb_devices_not_connected.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_adb_devices_not_connected.mp3'
+
+
+    # Voice Alert: Announce that all Android devices connected
+    # --------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_adb_devices_not_connected'
+        audio_gain: !secret voice_alert_audio_gain_medium

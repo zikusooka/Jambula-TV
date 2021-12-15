@@ -2,3 +2,4 @@ platform: mqtt
 devices:
   zik_mifi: !secret mqtt_presence_mifi_topic_zik
   lenovo_t61_mifi: !secret mqtt_presence_mifi_topic_lenovo_t61
+source_type: router

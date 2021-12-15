@@ -1,5 +1,5 @@
 platform: mqtt
 name: "Phone Alarm for Zik (C-Idea)"
-state_topic: "JambulaTV/Phones/Zik/sensor/android_cidea_nextalarm/attributes"
+state_topic: "JambulaTV/Phones/Zik/sensor/android_cm2000_nextalarm/attributes"
 value_template: "{{ value_json.state }}"
-json_attributes_topic: "JambulaTV/Phones/Zik/sensor/android_cidea_nextalarm/attributes"
+json_attributes_topic: "JambulaTV/Phones/Zik/sensor/android_cm2000_nextalarm/attributes"

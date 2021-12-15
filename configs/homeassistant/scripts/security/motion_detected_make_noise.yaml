@@ -7,6 +7,12 @@ motion_detected_outside_make_noise:
     - service: script.security_camera_001_arm
 
 
+    # Start display of camera event at tablet
+    # ---------------------------------------
+    # Show camera event at tablet - Tecno F1
+    - service: shell_command.open_zm_camera_at_tecno_f1
+
+
     # Generate voice files
     # --------------------
     # Merge audio files
@@ -40,6 +46,12 @@ motion_detected_outside_make_noise:
     # Disarm camera alarm
     - service: script.security_camera_001_disarm_wait
   
+
+    # Stop display of camera event at tablet
+    # --------------------------------------
+    # Close camera event at tablet - Tecno F1
+    - service: shell_command.close_zm_camera_at_tecno_f1
+
 
 
     # Other examples

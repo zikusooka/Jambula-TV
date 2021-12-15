@@ -1,11 +1,11 @@
 # Phone call - Incoming (Voice Alert)
-alias: "Play voice alert when phone call is incoming for Zik (C-Idea)"
+alias: "Play voice alert when phone call is incoming at C-Idea tablet"
 initial_state: True
 
 
 trigger:
   - platform: state
-    entity_id: sensor.phone_call_status_for_zik_cidea
+    entity_id: sensor.phone_call_status_via_adb_4_c_idea
     to: 'ringing'
 
 
@@ -19,4 +19,4 @@ action:
   # Run script
   # ----------
   - service: script.turn_on
-    entity_id: script.phone_call_incoming_zik_cidea
+    entity_id: script.tablet_incoming_call_c_idea

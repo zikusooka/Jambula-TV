@@ -48,6 +48,36 @@ bedtime_zik:
         current_player: "{{states('sensor.current_player_cli_name')}}"
 
 
+    # Turn off TV
+    # -----------
+    # Power off PC running kodi media center
+    - service: shell_command.run_command_at_remote_workstation
+      data_template:
+        ssh_username: root
+        ssh_host: !secret sensor_kodi_02_host
+        alert_command: "sudo poweroff"
+
+
+    # Turn off TV
+    # -----------
+    # Power off raspberry pi running kodi media center
+    - service: shell_command.run_command_at_remote_workstation
+      data_template:
+        ssh_username: pi
+        ssh_host: !secret sensor_kodi_03_host
+        alert_command: "sudo poweroff"
+
+
+    # Turn off Laptop
+    # ---------------
+    # Power off user's laptop if it is reachable
+    - service: shell_command.run_command_at_remote_workstation
+      data_template:
+        ssh_username: !secret operator_001_ssh_username
+        ssh_host: !secret operator_001_ssh_host
+        alert_command: "/usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav && /usr/bin/gxmessage -center -ontop -sticky -timeout 30 -title Poweroff-Laptop Shutting down laptop && /home/zik/Scripts/close-firefox.sh && /home/zik/Scripts/close-gedit.sh && /home/zik/Scripts/close-gnucash.sh && /home/zik/Scripts/close-libreoffice.sh && sudo /usr/sbin/poweroff"
+
+
     # Turn off light
     # ---------------
     - service: light.turn_off 
@@ -87,3 +117,8 @@ bedtime_zik:
       data_template:
         alarm_time: "{{states('input_datetime.wakeup_time_zik')}}"
         #alarm_time: "{{states('sensor.phone_alarm_for_zik_tecno')}}"
+    # OR
+    # b) Shutdown system now i.e. '0' minutes
+    - service: shell_command.shutdown_server
+      data_template:
+        minutes: 0

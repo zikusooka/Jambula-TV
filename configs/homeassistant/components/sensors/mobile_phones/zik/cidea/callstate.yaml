@@ -1,5 +1,5 @@
 platform: mqtt
 name: "Phone call status for Zik (C-Idea)"
-state_topic: "JambulaTV/Phones/Zik/sensor/android_cidea_callstate/attributes"
+state_topic: "JambulaTV/Phones/Zik/sensor/android_cm2000_callstate/attributes"
 value_template: "{{ value_json.state }}"
-json_attributes_topic : "JambulaTV/Phones/Zik/sensor/android_cidea_callstate/attributes"
+json_attributes_topic : "JambulaTV/Phones/Zik/sensor/android_cm2000_callstate/attributes"

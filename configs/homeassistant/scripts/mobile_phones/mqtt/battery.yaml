@@ -9,7 +9,7 @@ phone_battery_low_tecno:
       data_template:
         input_directory: !secret jambulatv_sounds_dir
         input_file1: 'battery_low_01.mp3'
-        input_file2: 'phone-battery-low-for.mp3'
+        input_file2: 'phone_battery_recharge_for'
         input_file3: 'zik.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_phone_battery_low_4_zik.mp3'

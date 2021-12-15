@@ -107,7 +107,8 @@ cards:
     cards:
       - !include ../cards/gauge-cpu-usage.yaml
       - !include ../cards/sensor-disk-free.yaml
-      - !include ../cards/gauge-volume-level-system.yaml
+      #- !include ../cards/gauge-volume-level-system.yaml
+      - !include ../cards/gauge-android-devices-connected.yaml
 
 
   # MiFi Data and Battery

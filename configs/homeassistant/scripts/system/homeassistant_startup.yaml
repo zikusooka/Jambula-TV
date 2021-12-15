@@ -38,6 +38,12 @@ hass_startup:
       entity_id: script.current_volume_levels_system
 
 
+    # ADB: Connect to all specified Android based devices
+    # ----------------------------------------------------
+    - service: script.turn_on
+      entity_id: script.adb_connect_2_all_devices
+
+
     # Voice alert: Announce startup of smart home system
     # --------------------------------------------------
     - service: script.turn_on

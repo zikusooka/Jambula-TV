@@ -1,3 +1,13 @@
+# SMS (Text) messages
+# ---
+# Using ModemManager
+send_sms_text_via_modem_manager: "sudo /usr/bin/jambulatv-sms-wrapper -c modemmanager -n {{sms_network}} -p {{sms_phone}} -m {{sms_message}}"
+# Using MiFi
+send_sms_text_via_mifi_app: "sudo /usr/bin/jambulatv-sms-wrapper -c mifiapp -n {{sms_network}} -p {{sms_phone}} -m {{sms_message}}"
+# Using Asterisk
+send_sms_text_via_asterisk: "sudo /usr/bin/jambulatv-sms-wrapper -c asterisk -n -n {{sms_network}} -p {{sms_phone}} -m {{sms_message}}"
+
+
 # Telegram (General)
 send_telegram_text: sudo /usr/bin/jambulatv-telegram sendmessage """*[JambulaTV]* {{message}}""" {{phone}}
 send_telegram_image: sudo /usr/bin/jambulatv-telegram sendImageDisk """{{image_path}} {{phone}}"""
