@@ -1,3 +1,113 @@
+Changes since v7.2
+--------------------
+
+* JambulaTV: Remove old and unused Python 3 modules in pips directory            i.e. Reduce the size of this repository 
+
+* JambulaTV: Convert voice alert files '1', '5', '6', and '19' from WAV            to MP3 format in sounds tool i.e. Update 'jambulatv-sounds' 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Add support for pausing of background music while mobile            phone backup tool plays the voice notification alerts            i.e. Update 'jambulatv-backup-mobile-phone' 
+
+* JambulaTV: Add the MPD server IP address and port settings plus MPC            client command and options to our global settings file 
+
+* JambulaTV: Use our global settings file to source the MPD server IP            address/port settings and the MPC client command/options            when using the Internet radio streamer tool            i.e. Update 'jambulatv-internet-radio-streamer' 
+
+* JambulaTV: Use our global settings file to source the MPD server IP            address/port settings and the MPC client command/options            when using the FM radio streamer tool            i.e. Update 'jambulatv-fm-radio-streamer' 
+
+* JambulaTV: Use our global settings file to source the MPD server IP            address/port settings and the MPC client command/options            when using the speaker volumes tool            i.e. Update 'jambulatv-speaker-volume' 
+
+* JambulaTV: Fix issue where some mixer levels for ALSA sound system            remain unchanged even after requesting a change during            initial install and setup 
+
+* JambulaTV: Fix issue where locking of current process does not happen            for simultaneous runs of the sounds tool 
+
+* JambulaTV: Add support for pausing of background music while voice            notification alerts are being played by the sounds tool            i.e. Update 'jambulatv-sounds' 
+
+* JambulaTV: Fix issue where the startup of Pulseaudio produces errors            due to recent upgrade and major change in version            Issue caused by deprecation of module-rescue-stream and            unsupported module-esound-protocol-tcp in meson builds 
+
+* JambulaTV: Fix several issues with the water supply tool i.e. Update            and refactor 'jambulatv-water-supply' 
+
+* JambulaTV: If the meter reading specified on the command line of the            water supply reading tool is 'unknown', quit processing            i.e. Update 'jambulatv-water-reading' 
+
+* JambulaTV: Fix issue with hanging of the sounds tool when un-pausing            the MPC player i.e. Update 'jambulatv-sounds' 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Add voice notification support for low disk storage            i.e. Alert when running low on hard drive space 
+
+* JambulaTV: Update IBM Watson API endpoint URL in the Text-to-Speech            tool necessitated by recent changes by IBM i.e. Update            'jambulatv-text2speech' 
+
+* JambulaTV: Add support for updating the date when the water company            last issued an invoice to the water supply reading tool            i.e. Update 'jambulatv-water-reading' 
+
+* JambulaTV: Fix issue where monthly usage is incorrectly calculated by            the water supply tool i.e. Update 'jambulatv-water-supply' 
+
+* JambulaTV: Add initial support for restoring previously archived            android data to the mobile phone backup tool 
+
+* JambulaTV: Refactor the uninstall routines for MPV music player in            initial and main functions files i.e. 'uninstall_mpv' 
+
+* JambulaTV: Allow MPV sound player to use pulseaudio sound system            even when the sink has been suspended so as to avoid            hanging of mpv command.  This resolves an issue where            audio sound from the music player and speaker system            is frequently cut off, leading to missed voice alerts            and notifications 
+
+* JambulaTV: Fix issue where some Android clients e.g. tablets fail to            connect to the wireless hotspot 
+
+* JambulaTV: Ignore expired SSL certificate when connecting to API            endpoint used in the UMEME power outages via scraper            tool i.e. Update 'jambulatv-umeme-outages-via-scraper' 
+
+* JambulaTV: Add support for playing voice notifications and alerts            via Snapcast-based clients e.g smart phones and tablets            in addition to the house speakers 
+
+* JambulaTV: Add voice notification support for presence detection            when a user has been away from home for more than 15            minutes and over 1 hour 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Fix issue where speaker volumes tool does not indicate            when the volume of audio player has been muted 
+
+* JambulaTV: Add voice notification support for presence detection            when a user has gone and returned from jogging plus            alert when it is time for exercise for specified days 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Improve the extraction of Home-Assistant variables from            secrets.yaml file using the command line interface i.e.            Update 'jambulatv-homeassistant-secrets' tool 
+
+* JambulaTV: Add support for specifying last billed date to the water            supply tool in order to get an accurate number of days            in previous month i.e. Update 'jambulatv-water-supply' 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Add voice notification support for daily reminders to             input electricity meter readings via the frontend             interface 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Add support for wireless (WiFi) presence detection using            Icinga2 monitoring software 
+
+* JambulaTV: Add support for controlling non-local (remote) ZoneMinder            servers using the CLI based controller tool            i.e. Update 'jambulatv-zoneminder-controller' 
+
+* JambulaTV: Add a new tool named 'jambulatv-remote-pc-usage-status'            It's purpose is to listen to keyboard and mouse events/            presses at a remote PC i.e. Use it to check if a remote            computer is active or idle.  This could be useful in            detecting presence of persons in some environments 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Add support for tshark, a command line (CLI) version of            wireshark which is a network protocol analyzer. It allows            for capture of packet data from a live network.            Specifically, we use it here to monitor specified WiFi            devices and report when they are seen whether or not they            are connected to an access point 
+
+* JambulaTV: Add WiFi networking support to the mobile phone backup            tool i.e. Update 'jambulatv-backup-mobile-phone' 
+
+* JambulaTV: Add newly generated TTS voice alert sound files to the            contributed sounds directory 
+
+* JambulaTV: Upgrade system's Linux kernel to latest version: 5.4.163 
+
+* JambulaTV: Replace the default systemd unit file for DNSMasq with            customized one i.e. Add 'dnsmasq.service' to project            init directory. Our version adds a '--test' option to            dnsmasq command so that syntax checking of the            configuration file is done before service is started 
+
+* JambulaTV: Fix issue where critical dnsmasq service fails to restart            when activated by the Internet/DNS monitoring tool during            an Internet status change of 'UP' or 'DOWN'            Issue is caused by badly formatted DNS blocking list that            is downloaded by the 'jambulatv-dns-status-triggers' tool 
+
+* JambulaTV: Change and rename system hostname to 'server01-JambulaTV' 
+
+* JambulaTV: Configure dnsmasq so that it allocates default system DNS            domains to DHCP server clients i.e. Update 'dnsmasq.conf' 
+
+* JambulaTV: Make Avahi daemon use the default system hostname and            domain-name of 'local'. This fixes minor issues with            the discovery of hosts locally 
+
+* JambulaTV: Add new domain name 'jambula.cc' to the list of project's            universal domains 
+
+* JambulaTV: Allow access to the time server for not only wired but            also wireless clients i.e. Update 'chrony.conf' and            include both our 192.168.X.X and 172.16.X.X subnets 
+
+* JambulaTV: Add the following port(s) to the list of rules allowed            by the firewall for NoDogSplash or coovachilli if            applicable: 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+
 Changes since v7.1
 --------------------
 
