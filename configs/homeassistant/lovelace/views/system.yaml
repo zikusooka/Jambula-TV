@@ -1,0 +1,24 @@
+title: System
+icon: mdi:server-network
+cards:
+
+
+  # Welcome Message
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/markup-system-message.yaml
+
+
+  # Reboot/Poweroff system
+  - type: vertical-stack
+    cards:
+      - !include ../cards/entity-button-system-reboot.yaml
+      - !include ../cards/entity-button-system-cancel_poweroff.yaml
+      - !include ../cards/entity-button-system-poweroff.yaml
+
+
+  # Reboot/Poweroff clients
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/entity-button-client-001-reboot.yaml
+      - !include ../cards/entity-button-client-001-poweroff.yaml

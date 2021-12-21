@@ -6,17 +6,17 @@ initial_state: True
 trigger:
 
   - platform: time_pattern
-    minutes: '/2'
+    minutes: '/20'
 
 
 condition:
   condition: and
   conditions:
 
-    # 1 minute(s) or more after startup of HASS
+    # 3 minute(s) or more after startup of HASS
     - condition: numeric_state
       entity_id: sensor.hass_uptime_minutes
-      above: 1
+      above: 3
 
     # Battery level: Less than threshold
     - condition: numeric_state

@@ -1,0 +1,13 @@
+type: entity-button
+entity: script.server_shutdown
+hold_action:
+  action: call-service
+  confirmation:
+    text: Shutdown system and disable smart home functions?
+  service: script.turn_on
+  service_data:
+    entity_id: script.server_shutdown
+name: 'Shutdown system'
+show_name: true
+show_state: false
+icon: 'mdi:power-plug'

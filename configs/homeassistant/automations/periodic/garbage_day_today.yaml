@@ -16,7 +16,7 @@ condition:
       after: '07:00:00'
       before: '18:59:00'
       weekday:
-        - sun
+        - mon
         
     # Garbage collected status is off
     - condition: state

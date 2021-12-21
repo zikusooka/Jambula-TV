@@ -1,0 +1,28 @@
+music_previous_track:
+  sequence:
+    - service: media_player.media_previous_track
+      data:
+        entity_id: media_player.now_playing
+
+
+music_forward_track:
+  sequence:
+    - service: media_player.media_next_track
+      data:
+        entity_id: media_player.now_playing
+
+
+music_single_track_on:
+  sequence:
+    - service: shell_command.mpc_single_mode_on
+      data_template:
+        mpc_host: !secret mpd_server_host
+        mpc_port: !secret mpd_server_port
+
+
+music_single_track_off:
+  sequence:
+    - service: shell_command.mpc_single_mode_off
+      data_template:
+        mpc_host: !secret mpd_server_host
+        mpc_port: !secret mpd_server_port

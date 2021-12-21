@@ -50,7 +50,7 @@ cards:
     cards:
       - !include ../cards/conditional-internet-radio.yaml
       - !include ../cards/conditional-fm-radio.yaml
-      - !include ../cards/conditional-playing-now-volume-playing.yaml
+      #- !include ../cards/conditional-playing-now-volume-playing.yaml
 
 
   # Now Playing / Volume Controls / Stop Media Player
@@ -58,16 +58,25 @@ cards:
     cards:
       #- !include ../cards/media-control-jambulatv-server.yaml
       #- !include ../cards/media-control-jambulatv-client-01.yaml
-      #- !include ../cards/conditional-playing-now-volume-playing.yaml
+      - !include ../cards/conditional-playing-now-volume-playing.yaml
+      #- !include ../cards/gauge-android-devices-connected.yaml
       #
       - type: horizontal-stack
         cards:
+
+          - !include ../cards/conditional-media-player-volume-down.yaml
+          #- !include ../cards/conditional-media-player-volume-level.yaml
+          - !include ../cards/gauge-volume-level-player.yaml       
+          - !include ../cards/conditional-media-player-volume-up.yaml
+
+ 
+      - type: horizontal-stack
+        cards:
+
           - !include ../cards/conditional-playing-now-volume-paused.yaml
           - !include ../cards/conditional-media-player-stop.yaml
           - !include ../cards/conditional-media-player-pause-playing.yaml
           - !include ../cards/conditional-media-player-pause-paused.yaml
-          #- !include ../cards/conditional-media-player-volume-up.yaml
-          #- !include ../cards/conditional-media-player-volume-down.yaml
           - !include ../cards/conditional-rotation-now-playing.yaml
 
 
@@ -75,6 +84,12 @@ cards:
         cards:
 
           - !include ../cards/conditional-media-player-previous_track.yaml
-
-          - !include ../cards/conditional-media-player-volume-level.yaml
+          - !include ../cards/conditional-media-player-loop_track.yaml
           - !include ../cards/conditional-media-player-forward_track.yaml
+
+  - type: vertical-stack
+    cards:
+      #- !include ../cards/media-control-jambulatv-server.yaml
+      #- !include ../cards/media-control-jambulatv-client-01.yaml
+      - !include ../cards/conditional-playing-now-volume-playing.yaml
+      - !include ../cards/gauge-android-devices-connected.yaml

@@ -5,7 +5,13 @@ icinga2_restart: /bin/bash -c "sudo /usr/bin/systemctl restart icinga2.service"
 set_wakeup_and_shutdown_via_rtcwake: /bin/bash -c "sudo /usr/sbin/rtcwake -m off -l -t $(date +%s -d '{{alarm_time}}')"
 
 # Shutdown server
-shutdown_server: /bin/bash -c "sudo /usr/sbin/shutdown -h +{{minutes}}"
+server_shutdown: /bin/bash -c "sudo /usr/sbin/shutdown -h +{{minutes}}"
+
+# Restart server
+server_restart: /bin/bash -c "sudo /usr/sbin/shutdown -r +{{minutes}}"
+
+# Cancel shutdown/reboot
+server_cancel_shutdown: /bin/bash -c "sudo /usr/sbin/shutdown -c"
 
 # Delete file on system i.e. temporary files
 delete_file: /bin/bash -c "sudo /usr/bin/rm -f {{directory}}/{{file}}"

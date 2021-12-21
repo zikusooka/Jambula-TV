@@ -5,4 +5,7 @@ sensors:
     unit_of_measurement: '/='
     # Water cost: Round off monthly usage to next integer
     #value_template: "{{ states('sensor.water_usage_monthly') | round(0, 'ceil') * states('input_text.water_cost_per_unit') | round (0) }}"
-    value_template: "{{ (states('sensor.water_usage_monthly') | round(0, 'ceil') * states('input_text.water_cost_per_unit') | round (0) ) + states('input_number.water_bill_previous_balance') | round (0) }}"
+    
+#value_template: "{{ (states('sensor.water_usage_monthly') | round(0, 'ceil') * states('input_text.water_cost_per_unit') | round (0) ) + states('input_number.water_bill_previous_balance') | round (0) }}"
+
+    value_template: "{{ (states('sensor.water_usage_monthly') | int | round(0, 'ceil') * states('input_text.water_cost_per_unit') | int | round (0) ) + states('input_number.water_bill_previous_balance') | int | round (0) }}"

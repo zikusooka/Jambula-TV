@@ -1,0 +1,13 @@
+type: entity-button
+entity: script.client_001_restart
+double_tap_action:
+  action: call-service
+  confirmation:
+    text: Restart client 1?
+  service: script.turn_on
+  service_data:
+    entity_id: script.client_001_restart
+name: 'Restart client 1'
+show_name: true
+show_state: false
+icon: 'mdi:restart'

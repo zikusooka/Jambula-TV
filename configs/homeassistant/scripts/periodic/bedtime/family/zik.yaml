@@ -119,6 +119,6 @@ bedtime_zik:
         #alarm_time: "{{states('sensor.phone_alarm_for_zik_tecno')}}"
     # OR
     # b) Shutdown system now i.e. '0' minutes
-    - service: shell_command.shutdown_server
+    - service: shell_command.server_shutdown
       data_template:
         minutes: 0

@@ -90,9 +90,7 @@ night_mode_off:
 
     # Restore previous volume level before automation was run - system
     # ----------------------------------------------------------------
-    - service: shell_command.restore_previous_volume_level_system
-      data_template:
-        volume_level_system_file: !secret previous_volume_level_system_file   # a) Restore previous volume level before automation was run
+    # a) Restore previous volume level before automation was run
     - service: shell_command.restore_previous_volume_level_system
       data_template:
         volume_level_system_file: !secret previous_volume_level_system_file

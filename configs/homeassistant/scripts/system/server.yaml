@@ -1,0 +1,97 @@
+server_shutdown:
+  sequence:
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'server_shutting_down_shortly_standby.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_server_shutting_down_shortly_standby.mp3'
+
+
+    # Voice Alert: Announce that system is shutting down shortly
+    # ----------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_server_shutting_down_shortly_standby'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+    # Restart server after one minute
+    # --------------------------------
+    # Reboot system now i.e. '1' minutes
+    - service: shell_command.server_shutdown
+      data_template:
+        minutes: 1
+
+
+
+server_restart:
+  sequence:
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'server_restarting_shortly_standby.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_server_restarting_shortly_standby.mp3'
+
+
+    # Voice Alert: Announce that system is rebooting shortly
+    # ------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_server_restarting_shortly_standby'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+    # Restart server after one minute
+    # --------------------------------
+    # Reboot system now i.e. '1' minutes
+    - service: shell_command.server_restart
+      data_template:
+        minutes: 1
+
+
+
+server_cancel_shutdown:
+  sequence:
+
+
+    # Cancel shutdown/restart of server
+    # ---------------------------------
+    # Cancel system poweroff/reboot
+    - service: shell_command.server_cancel_shutdown
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'chime_small.mp3'
+        input_file2: 'server_poweroff_cancelled.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_server_poweroff_cancelled.mp3'
+
+
+    # Voice Alert: Announce that system is rebooting shortly
+    # ------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_server_poweroff_cancelled'
+        audio_gain: !secret voice_alert_audio_gain_medium

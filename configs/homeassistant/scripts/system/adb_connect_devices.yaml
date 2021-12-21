@@ -17,7 +17,7 @@ adb_connected_above_threshold:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Connection-established-sound-effect.mp3'
         input_file2: 'adb_devices_connected.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_adb_devices_connected.mp3'
@@ -42,7 +42,7 @@ adb_connected_below_threshold:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'adb_devices_not_connected.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_adb_devices_not_connected.mp3'

@@ -4,18 +4,19 @@ conditions:
     state: "playing"
 
 card:
+  name: 'Loop'
+  icon: 'mdi:skip-backward'
   type: entity-button
-  entity: script.music_volume_up
+  entity: script.music_single_track_on
+
+  double_tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.music_single_track_on
+
   tap_action:
     action: call-service
     service: script.turn_on
     service_data:
-      entity_id: script.music_volume_up
-  hold_action:
-    action: call-service
-    repeat: 300
-    service: script.turn_on
-    service_data:
-      entity_id: script.music_volume_up
-  name: 'Increase'
-  icon: 'mdi:volume-plus'
+      entity_id: script.music_single_track_off
