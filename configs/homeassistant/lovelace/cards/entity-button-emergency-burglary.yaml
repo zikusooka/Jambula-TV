@@ -1,0 +1,17 @@
+type: entity-button
+entity: script.emergency_burglary
+tap_action:
+  action: call-service
+  confirmation:
+    text: Is this really an emergency?
+  service: script.turn_on
+  service_data:
+    entity_id: script.emergency_burglary
+hold_action:
+  service: script.turn_on
+  service_data:
+    entity_id: script.emergency_burglary
+name: 'Burglary'
+show_name: true
+show_state: false
+icon: 'mdi:exit-run'

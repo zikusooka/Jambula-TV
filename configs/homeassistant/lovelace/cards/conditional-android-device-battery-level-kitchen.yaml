@@ -1,0 +1,10 @@
+type: conditional
+conditions:
+  - entity: sensor.connected_status_via_adb_4_tecno_f1
+    state: "Connected"
+
+card:
+  type: sensor
+  entity: sensor.battery_level_via_adb_4_tecno_f1
+  name: 'Level'
+  icon: 'mdi:battery-outline'

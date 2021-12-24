@@ -26,7 +26,7 @@ bedtime_zik:
           {% else %}
           'goodevening.mp3'
           {% endif %}
-        input_file3: 'zik'
+        input_file3: 'zik.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_time_for_bed_zik.mp3'
 
@@ -51,21 +51,21 @@ bedtime_zik:
     # Turn off TV
     # -----------
     # Power off PC running kodi media center
-    - service: shell_command.run_command_at_remote_workstation
-      data_template:
-        ssh_username: root
-        ssh_host: !secret sensor_kodi_02_host
-        alert_command: "sudo poweroff"
+    #- service: shell_command.run_command_at_remote_workstation
+      #data_template:
+        #ssh_username: root
+        #ssh_host: !secret sensor_kodi_02_host
+        #alert_command: "sudo poweroff"
 
 
     # Turn off TV
     # -----------
     # Power off raspberry pi running kodi media center
-    - service: shell_command.run_command_at_remote_workstation
-      data_template:
-        ssh_username: pi
-        ssh_host: !secret sensor_kodi_03_host
-        alert_command: "sudo poweroff"
+    #- service: shell_command.run_command_at_remote_workstation
+      #data_template:
+        #ssh_username: pi
+        #ssh_host: !secret sensor_kodi_03_host
+        #alert_command: "sudo poweroff"
 
 
     # Turn off Laptop
@@ -75,7 +75,8 @@ bedtime_zik:
       data_template:
         ssh_username: !secret operator_001_ssh_username
         ssh_host: !secret operator_001_ssh_host
-        alert_command: "/usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav && /usr/bin/gxmessage -center -ontop -sticky -timeout 30 -title Poweroff-Laptop Shutting down laptop && /home/zik/Scripts/close-firefox.sh && /home/zik/Scripts/close-gedit.sh && /home/zik/Scripts/close-gnucash.sh && /home/zik/Scripts/close-libreoffice.sh && sudo /usr/sbin/poweroff"
+        #alert_command: "/usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav && /usr/bin/gxmessage -center -ontop -sticky -timeout 30 -title Poweroff-Laptop Shutting down laptop && /home/zik/Scripts/close-firefox.sh && /home/zik/Scripts/close-gedit.sh && /home/zik/Scripts/close-gnucash.sh && /home/zik/Scripts/close-libreoffice.sh && sudo /usr/sbin/poweroff"
+        alert_command: "/usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav && /usr/bin/gxmessage -center -ontop -sticky -timeout 30 -title Poweroff-Laptop Shutting down laptop"
 
 
     # Turn off light
@@ -110,15 +111,15 @@ bedtime_zik:
     # Shutdown this system
     # ---------------------
     # a) Delay 15 mins before shutdown to allow notifications to go out
-    - delay: '00:15:00'
+    #- delay: '00:15:00'
 
     # b) Set wake up time before shutting down system
-    - service: shell_command.set_wakeup_and_shutdown_via_rtcwake
-      data_template:
-        alarm_time: "{{states('input_datetime.wakeup_time_zik')}}"
+    #- service: shell_command.set_wakeup_and_shutdown_via_rtcwake
+      #data_template:
+        #alarm_time: "{{states('input_datetime.wakeup_time_zik')}}"
         #alarm_time: "{{states('sensor.phone_alarm_for_zik_tecno')}}"
     # OR
     # b) Shutdown system now i.e. '0' minutes
-    - service: shell_command.server_shutdown
-      data_template:
-        minutes: 0
+    #- service: shell_command.server_shutdown
+      #data_template:
+        #minutes: 0

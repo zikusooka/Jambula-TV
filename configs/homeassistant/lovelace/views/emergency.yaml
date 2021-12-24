@@ -6,4 +6,12 @@ cards:
   # Panic buttons
   - type: horizontal-stack
     cards:
-      - !include ../cards/entity-button-panic-break-in.yaml
+      - !include ../cards/entity-button-emergency-burglary.yaml
+      - !include ../cards/entity-button-emergency-fire.yaml
+
+
+  - type: horizontal-stack
+    cards:
+
+      - !include ../cards/entity-button-emergency-medical.yaml
+      - !include ../cards/entity-button-emergency-kidnap.yaml

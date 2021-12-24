@@ -1,0 +1,3 @@
+platform: command_line
+name: Connected status via adb 4 C Idea
+command: /bin/bash -c 'ADB_CMD=/usr/bin/adb; $ADB_CMD devices | sed "1d;$d" | grep device | grep $(/usr/bin/jambulatv-homeassistant-secrets adb_ip_address_c_idea) >> /dev/null 2>&1; if [[ "$?" = "0" ]]; then echo Connected; else echo Disconnected; fi'
