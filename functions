@@ -11959,7 +11959,7 @@ setcap cap_net_raw,cap_net_admin+eip $(which dumpcap)
 
 adb_install () {
 # Unzip Android SDK platform tools package
-unzip -d $INSTALL_SRC_DIR/ $PROJECT_ZIPS_DIR/platform-tools_*-linux.zip
+unzip -d $INSTALL_SRC_DIR/ $PROJECT_ZIPS_DIR/platform-tools*-linux.zip
 cd $INSTALL_SRC_DIR && 
 	mv -v platform-tools android-sdk-platform-tools
 # Copy adb to binary directory
