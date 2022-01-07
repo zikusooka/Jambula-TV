@@ -314,8 +314,17 @@ squid_configure
 }
 
 upgrade_yowsup () {
+# Uninstall yowsup python2
 uninstall_python_pkgs yowsup python2
-yowsup3_python2_install 
+[[ -d $INSTALL_SRC_DIR/yowsup ]] && rm -rf $INSTALL_SRC_DIR/yowsup
+rm -f $(whereis yowsup-cli)
+# Uninstall consonance python2
+uninstall_python_pkgs consonance python2
+[[ -d $INSTALL_SRC_DIR/consonance ]] && rm -rf $INSTALL_SRC_DIR/consonance
+# Install consonance
+python_consonance_install $PYTHON_CONSONANCE_VERSION
+# Install yowsup
+yowsup3_python2_install
 }
 
 upgrade_netdata () {
@@ -451,7 +460,7 @@ v4l_utils_install
 
 #upgrade_squid
 
-#upgrade_yowsup
+#upgrade_yowsup # Remember to set version of consonance in functions
 
 #upgrade_netdata 
 
