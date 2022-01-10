@@ -22,8 +22,9 @@ MUSIC_SERVICE=$1
 MUSIC_CATEGORY=$2
 MUSIC_REQUESTED=$(echo $@ | sed "s: :+:g" | cut -d'+' -f3-)
 
-TIMEOUT_PROBE="120s"
-TIMEOUT_CMD="/usr/bin/timeout --preserve-status $TIMEOUT_PROBE"
+TIMEOUT_PROBE="15m" # Increase if ffmpeg processing takes a long time 
+                    # i.e. slow systems 
+TIMEOUT_CMD="/usr/bin/timeout $TIMEOUT_PROBE"
 
 PING_TIMEOUT=3 #9
 PING_IP_ADDRESS=$PING_IP_ADDRESS
@@ -105,6 +106,8 @@ fi
 #
 YOUTUBE_SEARCH_TEXT=$(echo $MUSIC_NOW_PLAYING_SONG | sed 's:-: :g' | sed 's: :+:g')
 YOUTUBE_VARIABLES_TEMP_FILE=$(grep ^YOUTUBE_VARIABLES_TEMP_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g' | cut -d '.' -f1 | sed "s:\$YOUTUBE_SEARCH_TEMP_DIR:MY_TMPDIR:g").${YOUTUBE_SEARCH_TEXT}
+YOUTUBE_VIDEO_IDS_FOUND_FILE=$(grep ^YOUTUBE_PLAYLIST_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g' | cut -d '.' -f1 | sed "s:\$YOUTUBE_SEARCH_TEMP_DIR:MY_TMPDIR:g").${YOUTUBE_SEARCH_TEXT}
+YOUTUBE_WATCH_URL=$(grep ^YOUTUBE_WATCH_URL $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g')
 
 # Print searching notification to systemd journal and console
 clear
@@ -128,8 +131,8 @@ fi
 }
 
 download_music_from_youtube () {
-YOUTUBE_MUSIC_FORMAT=best
-YOUTUBE_MAX_FILE_SIZE=25m
+YOUTUBE_MUSIC_FORMAT=m4a
+YOUTUBE_MAX_FILE_SIZE=30m
 YOUTUBE_DL_CMD="$TIMEOUT_CMD /usr/bin/youtube-dl"
 YOUTUBE_DL_OPTS="-v -4 -i -c --ignore-config --prefer-insecure --no-check-certificate --geo-bypass --max-filesize $YOUTUBE_MAX_FILE_SIZE"
 YOUTUBE_ERROR_LOG_FILE=MY_TMPDIR/youtube_dl_fetch_music.log
@@ -146,6 +149,9 @@ FETCH_STATUS=$?
 grep "File is larger than max-filesize" $YOUTUBE_ERROR_LOG_FILE > /dev/null 2>&1
 ERROR_FILE_IS_LARGE=$?
 #
+grep "ERROR: unable to download video data" $YOUTUBE_ERROR_LOG_FILE > /dev/null 2>&1
+ERROR_VIDEO_DATA_FAIL=$?
+#
 if [[ "$FETCH_STATUS" = "0"  && "$ERROR_FILE_IS_LARGE" != "0" ]];
 then
 # Print completed notification to systemd journal and console
@@ -158,11 +164,35 @@ then
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_NOW_PLAYING_SONG] because the file is larger than i.e. $YOUTUBE_MAX_FILE_SIZE"
 
-elif [[ "$FETCH_STATUS" != "0"  && "$ERROR_FILE_IS_LARGE" != "0" ]];
+elif [[ "$FETCH_STATUS" = "124" ]];
 then
+# Print error log for timeouts to systemd journal and console
+clear
+logger -s -t $MUSIC_APPLICATION_ID "Error: The default timeout period of $TIMEOUT_PROBE is not long enough for this song. Please look for another version of '$MUSIC_NOW_PLAYING_SONG'.  Alternatively, you can increase the value of [TIMEOUT_PROBE] in this tool and then try again"
+
+elif [[ ! -s "$YOUTUBE_ERROR_LOG_FILE" ]] || [[ ! -e "$YOUTUBE_ERROR_LOG_FILE" ]];
+then
+# Print error log for failed connection to server to systemd journal and console
+clear
+logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_NOW_PLAYING_SONG] because connection to Youtube servers was probably dropped or interrupted due to a bad Internet connection. Please try again"
+
+elif [[ "$ERROR_VIDEO_DATA_FAIL" = "0" ]];
+then
+# Print error log for failed video data download to systemd journal and console
+clear
+logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the video data for the song [$MUSIC_NOW_PLAYING_SONG] using the automatically selected video ID. Please try manually using the command and URL(s) below:
+
+$YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_DOWNLOADS_DIR/\"%(title)s.%(ext)s\" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title \"%(title)s\" [YOUTUBE-URL]
+
+$(for VIDEOID in $(tail -n+2 ${YOUTUBE_VIDEO_IDS_FOUND_FILE})
+do
+echo ${YOUTUBE_WATCH_URL}=$VIDEOID
+done)"
+
+else
 # Print error log for unfinished fetch to systemd journal and console
 clear
-logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_NOW_PLAYING_SONG] because the process did not complete. Please try again"
+logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_NOW_PLAYING_SONG] due to an unknown reason. Please try again"
 fi
 }
 
