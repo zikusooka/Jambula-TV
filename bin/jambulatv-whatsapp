@@ -223,7 +223,7 @@ MOBILE_NETWORK_CODE=$(awk "NR==$NETWORK_NUMBER" $COUNTRY_MCC_MNC_RAW_FILE | cut 
 
 update_yowsup_env_android_version_md5 () {
 PYTHON_VERSION_USED=2 && set_python_version
-YOWSUP_VERSION=3.2.3
+YOWSUP_VERSION=3.3.0
 YOWSUP_ENV_ANDROID_FILE=$PYTHON_SITEDIR/yowsup-${YOWSUP_VERSION}-py${PYTHON_MINOR_VERSION_NUMBER}.egg/yowsup/env/env_android.py
 #
 WHATSAPP_APK_NAME=com.whatsapp
@@ -239,7 +239,7 @@ if [[ "$WHATSAPP_APK_COUNT" = "0" ]];
 then
 cd $TMPDIR
 echo "Downloading WhatsApp apk from the Google Play store, please be patient ..."
-$GPLAYCLI_CMD -av -p -d $WHATSAPP_APK_NAME
+$GPLAYCLI_CMD -av -p -y -d $WHATSAPP_APK_NAME
 fi
 
 # Set the new apk version & MD5 
