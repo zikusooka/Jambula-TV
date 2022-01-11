@@ -1,0 +1,90 @@
+#!/bin/sh
+#
+# Jambula Labs @copyright 2022-2023 All rights reserved
+
+CURL_CMD=/usr/bin/curl
+CURL_OPTS="-s" 
+
+REMOTE_CLIENT_ADDRESS=$1
+REMOTE_CLIENT_USER=$2
+REMOTE_CLIENT_PORT_KODI=$3
+REMOTE_CLIENT_PORT_MOTION=$4
+
+KODI_HTTP_USER=""
+KODI_HTTP_PASS="" 
+KODI_HTTP_IP=$REMOTE_CLIENT_ADDRESS
+KODI_HTTP_PORT=$REMOTE_CLIENT_PORT_KODI
+
+MOTION_IP=$REMOTE_CLIENT_ADDRESS
+MOTION_PORT=$REMOTE_CLIENT_PORT_MOTION
+MOTION_SNAPSHOT_URL="http://$MOTION_IP:$MOTION_PORT/0/action/snapshot"
+MOTION_TARGET_DIR=/var/lib/motion
+MOTION_WWW_DIR=/var/www/html/motion
+
+TIMESTAMP="$(date +%Y%m%d%H%M%S)"
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+usage () {
+if [[ "x$REMOTE_CLIENT_ADDRESS" = "x" || "x$REMOTE_CLIENT_USER" = "x" || "x$REMOTE_CLIENT_PORT_KODI" = "x" || "x$REMOTE_CLIENT_PORT_MOTION" = "x" ]];
+then
+# Display usage and quit
+cat <<ET
+Usage: $(basename $0) [REMOTE_CLIENT_ADDRESS] [REMOTE_CLIENT_USER] [REMOTE_CLIENT_PORT_KODI] [REMOTE_CLIENT_PORT_MOTION]
+ET
+exit 0
+fi
+}
+
+capture_motion_event () {
+# Capture snapshot from camera
+$CURL_CMD $CURL_OPTS -o /dev/null $MOTION_SNAPSHOT_URL
+
+# Create snapshots web directory if non-existent
+ssh $REMOTE_CLIENT_USER@$REMOTE_CLIENT_ADDRESS sudo mkdir -p $MOTION_WWW_DIR
+
+# Move and rename snapshot to WWW accessible directory	
+ssh $REMOTE_CLIENT_USER@$REMOTE_CLIENT_ADDRESS sudo cp -vfL $MOTION_TARGET_DIR/lastsnap.jpg $MOTION_WWW_DIR/
+}
+
+kodi_screensaver_status () {
+KODI_SCREENSAVER_STATUS=$($CURL_CMD $CURL_OPTS -X POST -H "Content-Type: application/json" -u $KODI_HTTP_USER:$KODI_HTTP_PASS -d '{"jsonrpc": "2.0", "method": "XBMC.GetInfoBooleans", "params":{"booleans":["System.ScreenSaverActive"]},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc | jq .result[])
+}
+
+kodi_screensaver_poke () {
+# Poke screen if screensaver is active
+if [ "$KODI_SCREENSAVER_STATUS" = "true" ];
+then
+# Input.Select
+$CURL_CMD $CURL_OPTS -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Input.Select","id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc
+fi
+}
+
+kodi_addon_script_doorbell () {
+$CURL_CMD $CURL_OPTS -X POST -H "Content-Type: application/json" -u "$KODI_HTTP_USER:$KODI_HTTP_PASS" -d '{"jsonrpc":"2.0","method":"Addons.ExecuteAddon","params":{"addonid":"script.doorbell"},"id":1}' http://$KODI_HTTP_IP:$KODI_HTTP_PORT/jsonrpc > /dev/null 2>&1
+}
+
+cctv_alarm_activate_kodi_doorbell () {
+kodi_screensaver_status
+kodi_screensaver_poke 
+kodi_addon_script_doorbell &
+}
+
+
+
+#################
+#  MAIN SCRIPT  #
+#################
+
+# Usage
+usage
+
+# Capture event image
+capture_motion_event
+
+# Activate plugin at kodi
+cctv_alarm_activate_kodi_doorbell
