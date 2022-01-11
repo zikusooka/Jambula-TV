@@ -11,7 +11,7 @@
 
 # Mic Source
 # ---
-#PS_MIC_SOURCE=$(unset DISPLAY; /usr/bin/pactl info | awk -F': ' '/Default Source/ {print $2}')
+PS_MIC_SOURCE=$(unset DISPLAY; /usr/bin/pactl info | awk -F': ' '/Default Source/ {print $2}')
 #
 # To find other mic sources other than default, run the command:
 # unset DISPLAY; pactl list sources short
