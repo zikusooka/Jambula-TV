@@ -1623,22 +1623,11 @@ probe_remote_host_using_nmap () {
 NMAP_PROBE_HOST=$1
 # Ping scan remote host using nmap
 NMAP_HOST_STATUS=$($NMAP_CMD $NMAP_OPTS_GENERAL $NMAP_OPTS_PING_SCAN $NMAP_PROBE_HOST 2>&1 | grep -Evi -e 'Failed' -e 'WARNING' -e '^#' | awk '$4=="Status:" && $5=="Up" {print $5}')
+#
 # Set Internet status exit value based on previous ping scan
 if [[ "$NMAP_HOST_STATUS" = "Up" ]];
 then
 INTERNET_STATUS_VAL=0
-# Notify tools that use this function that ICMP ping requests are either blocked by server
-# or the ISP is filtering access to this host 
-PING_ICMP_REQUESTS_BLOCKED=yes
-export PING_ICMP_REQUESTS_BLOCKED
-#
-# Source notification strings
-set_notifications
-# Print notifciation to stdout and systemd journal 
-print_notification "$HOST_IS_BLOCKED_NOTIFICATION_MESSAGE" text
-# Print notification using OSD tool
-print_notification "$HOST_IS_BLOCKED_NOTIFICATION_MESSAGE" osd
-
 else
 INTERNET_STATUS_VAL=255
 fi
@@ -1690,15 +1679,30 @@ else
 REMOTE_HOST_NAME=$PING_HOST_NAME
 fi
 
-# Check to see if there's atleast an Internet connection whether filtered or not
+# Host status checks
+# ..................
+# Check if there's at least an Internet connection whether filtered or not
 $PING_CMD $PING_OPTS $DEFAULT_REMOTE_HOST_NAME_2_PING > /dev/null 2>&1
 INTERNET_IS_REACHEABLE=$?
-#
+
+# If host specified, run extra tests
+if [[ "x$PING_HOST_NAME" != "x" ]];
+then
+# Check if the specified host's website domain is accessible
+$CURL_CMD $CURL_OPTS -kLS -m 60 -o /dev/null $REMOTE_HOST_NAME > /dev/null 2>&1
+HOST_IS_REACHEABLE=$?
+
+# Use nmap to do a ping scan of the remote as ICMP ping requests 
+probe_remote_host_using_nmap $REMOTE_HOST_NAME
+fi
+
+# Connectivity tests
+# ...................
 if [[ "$INTERNET_IS_REACHEABLE" != "0" ]];
 then
 # 1. If there is NO Internet at all, send to spool if applicable,
-# notify and quit immediately
-# ..............................................................
+#    notify and quit immediately
+#    ...........................................................
 # Source notification strings
 set_notifications
 # Print notifciation to stdout and systemd journal 
@@ -1711,27 +1715,11 @@ print_notification "$NO_INTERNET_NOTIFICATION_MESSAGE" text
 #
 # Quit script, since there's no internet
 exit $EXIT_VALUE
-fi
 
-# 2. If there's an Internet connection, check to see if the HTTPS port
-# (443) is closed i.e. Internet is being filtered
-# .....................................................................
-HTTPS_PORT_CLOSED=$($NMAP_CMD $NMAP_OPTS_GENERAL $NMAP_OPTS_ONLINE_SCAN -p 443 $REMOTE_HOST_NAME 2>&1 | awk -F':' '/closed/ {print $3}' | cut -d '/' -f2)
-#
-# Check if HTTPS port is closed even if we can ping and reach host
-if [[ "$HTTPS_PORT_CLOSED" != "closed" && "$INTERNET_IS_REACHEABLE" = "0" ]];
-then
-# Back out and continue with the rest of the tasks
-break
-
-else
-# 3. Use nmap to do a ping scan of the remote as ICMP ping requests 
-# may be either blocked by server or the ISP is filtering access to 
-# this host
-# .....................................................................
-probe_remote_host_using_nmap $REMOTE_HOST_NAME
-#
-if [[ "$INTERNET_STATUS_VAL" != "0" ]];
+# 2. Check if blocked by server or the ISP is filtering access to 
+#    the specified host 
+#   .............................................................
+elif [[ "$INTERNET_STATUS_VAL" != "0" && "x$PING_HOST_NAME" != "x" ]];
 then
 # Notify and quit when remote host is not alive i.e. dead
 # Source notification strings
@@ -1740,10 +1728,23 @@ set_notifications
 print_notification "$HOST_NOT_REACHEABLE_NOTIFICATION_MESSAGE" text
 # Print notification using OSD tool
 print_notification "$HOST_NOT_REACHEABLE_NOTIFICATION_MESSAGE" osd
+#
 # Quit script, since there's no internet
 exit $EXIT_VALUE
-fi
 
+elif [[ "$HOST_IS_REACHEABLE" != "0" ]] && [[ "x$PING_HOST_NAME" != "x" ]];
+then
+# Notify tools that use this function that ICMP ping requests are either blocked by server
+# or the ISP is filtering access to this host 
+PING_ICMP_REQUESTS_BLOCKED=yes
+export PING_ICMP_REQUESTS_BLOCKED
+#
+# Source notification strings
+set_notifications
+# Print notifciation to stdout and systemd journal 
+print_notification "$HOST_IS_BLOCKED_NOTIFICATION_MESSAGE" text
+# Print notification using OSD tool
+print_notification "$HOST_IS_BLOCKED_NOTIFICATION_MESSAGE" osd
 fi
 }
 
