@@ -1,0 +1,112 @@
+#!/usr/local/bin/python3
+ 
+from bs4 import BeautifulSoup
+import requests
+import subprocess
+import sys
+import unidecode
+
+# Copyright
+__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2022-2023 All rights reserved'
+
+tmp_dir = 'MY_TMPDIR'
+data_share_dir = 'MY_PROJECT_SYSTEM_SHARE_DIR'
+sounds_dir = data_share_dir + '/' + 'sounds'
+web_docroot = data_share_dir + '/' + 'html'
+
+tts_output_dir = tmp_dir + '/' + 'tts' + '/' + 'news'   
+tts_input_file = tmp_dir + '/' + 'tts_output.wav'    
+tts_concat_input_file = tts_output_dir + '/' + 'input_files_news_scraper.txt'
+
+speech2text_tool = 'MY_TEXT2SPEECH_TOOL'
+
+
+
+def make_soup(url):
+    r  = requests.get(url)
+    data = r.text
+    return BeautifulSoup(data, 'html.parser')
+
+
+def fetch_bbc_world_news():
+    url_uk_bbc_news = 'https://www.bbc.co.uk/programmes/p002vsn1/episodes/player'
+    output_filename = 'bbc_news_summary.mp3'
+    tts_output_file = tmp_dir + '/' + output_filename
+    episode_url = make_soup(url_uk_bbc_news).select("a.block-link__target")[0] \
+            .attrs['href']
+    file_url = make_soup(episode_url).select("a.popup__list__item")[0] \
+            .attrs['href']
+    file_link = "https:" +file_url
+
+    # Download news file
+    subprocess.check_call(['/usr/bin/wget', '-q', '-c', '-O', tts_output_file, file_link]) 
+
+def fetch_monitor_ug_news():
+    news_page_file = 'monitor.html'
+    news_page_dir = web_docroot + '/'
+    url_remote = 'https://www.monitor.co.ug/uganda/news'
+    url_local = f'http://localhost/{news_page_file}'
+    output_filename = 'monitor_news_summary.mp3'
+    headlines_max = 17
+    tts_output_file = tmp_dir + '/' + output_filename
+
+    # Download news web page locally first in order to avoid Cloudfare checks and other access denial issues
+    subprocess.check_call(['/usr/bin/curl', '-kLsS', '-m', '60', '-A', 'Mozilla/5.0', '-o', tmp_dir + '/' + news_page_file, url_remote]) 
+
+    # Clean up news page file to make text-to-speech a bit smoother
+    # ?
+
+    # Move news page file to web server's document root directory
+    subprocess.check_call(['/usr/bin/sudo', '/usr/bin/cp', '-v', tmp_dir + '/' + news_page_file, news_page_dir]) 
+
+    headlines = make_soup(url_local).find_all(class_='teaser-image-large_title title-small')
+    current_news = []
+
+    for headline in headlines:
+        story = headline.get_text().rstrip()
+        # remove accents
+        story = unidecode.unidecode(story)
+        # remove 'PRIME' string if first word on line
+        story = story.replace('PRIME', '', 1)
+
+        #print(story)
+        current_news.append(story)
+        
+    # Create concatenate directory
+    subprocess.check_call(['/usr/bin/mkdir', '-p', tts_output_dir])
+
+    # Remove previous news input file used to concatenate
+    subprocess.check_call(['sudo', '/usr/bin/rm', '-f', tts_concat_input_file])
+
+    for i in range(0,headlines_max):
+        subprocess.check_call([speech2text_tool , '""', 'custom', current_news[i].strip(), 'concatenate=yes'])
+
+        print(f'\t {i} {current_news[i].strip()}')
+
+        # Convert tts file and move to concatenate directory 
+        subprocess.check_call(['/usr/bin/ffmpeg', '-loglevel', 'quiet', '-y', '-i', tts_input_file, tts_output_dir + '/' + '%s.mp3' %i])
+
+        # Create input file for ffmpeg concatenation
+        concat_string = f"file '{tts_output_dir}/{i}.mp3'" 
+        silence_string = f"file {sounds_dir}/silence_1s.mp3'" 
+        f = open(tts_concat_input_file, 'a')
+        f.write(concat_string)
+        f.write('\n')
+        f.write(silence_string)
+        f.write('\n')
+        f.close()
+
+        # Merge all files into one nice mp3 file
+        subprocess.check_call(['/usr/bin/ffmpeg', '-loglevel', 'quiet', '-y', '-f', 'concat', '-safe', '0', '-i', tts_concat_input_file, '-c', 'copy', tts_output_file])
+
+
+
+# Fetch BBC world news
+print(f'Compiling news: BBC World ...')
+fetch_bbc_world_news()
+
+# Fetch Monitor Uganda news
+print(f'Compiling news: Daily Monitor ...')
+fetch_monitor_ug_news()
+
+sys.exit()

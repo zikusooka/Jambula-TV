@@ -110,6 +110,7 @@ PROJECT_SYSTEM_LOG_DIR=$LOGDIR/$PROJECT_NAME
 PROJECT_SYSTEM_LIB_DIR=$STATEDIR/lib/$PROJECT_NAME
 PROJECT_SYSTEM_CACHE_DIR=$STATEDIR/cache/$PROJECT_NAME
 PROJECT_SYSTEM_ICONS_DIR=$PROJECT_SYSTEM_SHARE_DIR/picons
+PROJECT_SYSTEM_SOUNDS_DIR=$PROJECT_SYSTEM_SHARE_DIR/sounds
 PROJECT_VERSION=$(cd $PROJECT_BASE_DIR && git tag -l | tail -1)
 PROJECT_RELEASE_FILE=$PROJECT_SYSTEM_CONF_DIR/release
 PROJECT_DVBT_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/dvbt-settings.cfg
@@ -806,6 +807,8 @@ MQTT_TOPIC_STATUS_MIFI=JambulaTV/house/status/mifi
 MQTT_TOPIC_INCOMING_PHONE_CALL='JambulaTV/house/phonecalls/incoming'
 # SMARTD 
 MQTT_TOPIC_SMARTD_HEALTH_INFO=JambulaTV/house/status/smartd
+# Flash briefing
+MQTT_TOPIC_FLASH_BRIEFING=JambulaTV/house/status/flash_briefing
 
 # Presence via MiFi
 PRESENCE_VIA_MIFI_CHECK_INTERVAL_SECS=60
@@ -1244,6 +1247,7 @@ COOVA_CHILLI_TOOL=$BINARY_PREFIX/jambulatv-chilli
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
 EPG_GENERIC_TVGUIDE_TOOL=$BINARY_PREFIX/jambulatv-tvguide-fta-generic
 FETCH_NEWS_TOOL=$BINARY_PREFIX/jambulatv-fetch-news
+FETCH_NEWS_VIA_SCRAPER_TOOL=$BINARY_PREFIX/jambulatv-fetch-news-via-scraper
 FMRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-fm-radio-streamer
 GENERATE_LOCAL_CONF_TOOL=$BINARY_PREFIX/jambulatv-generate-local-conf
 GEOLOCATION_TOOL=$BINARY_PREFIX/jambulatv-whereami
@@ -13753,6 +13757,19 @@ do
 # Make script executable
 chmod 755 $BINARY_PREFIX/$TOOL_NAME
 done
+
+
+# Other tools:
+# -----------
+# jambulatv-fetch-news-via-scraper: News fetch tool that uses the scraper method to collect headlines used in the respective ASR skill
+[[ -e $FETCH_NEWS_VIA_SCRAPER_TOOL ]] || \
+	cat $PROJECT_BIN_DIR/jambulatv-fetch-news-via-scraper | \
+		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
+		sed -e "s:MY_PROJECT_SYSTEM_SHARE_DIR:$PROJECT_SYSTEM_SHARE_DIR:g" | \
+		sed -e "s:MY_TEXT2SPEECH_TOOL:$TEXT2SPEECH_TOOL:g" \
+			> $FETCH_NEWS_VIA_SCRAPER_TOOL
+# Make script executable
+chmod 755 $FETCH_NEWS_VIA_SCRAPER_TOOL 
 } 
 
 home_automation_services () {
