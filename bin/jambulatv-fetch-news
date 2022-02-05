@@ -8,6 +8,7 @@ RSS_FEEDS_FILE=MY_PROJECT_SYSTEM_CONF_DIR/rss-feeds.cfg
 RSS_OUTPUT_FILE=MY_TMPDIR/rss_output.txt # Hardcoded in Termfeed sources
 CATEGORIES_TMP_FILE=MY_TMPDIR/rss_categories
 
+FEED_CMD=MY_BINARY_PREFIX/feed
 TEXT_2_SPEECH_TOOL_PATH=MY_BINARY_PREFIX/jambulatv-text2speech
 
 
@@ -46,7 +47,7 @@ In $RSS_CATEGORY news
  
 EOF
 # Fetch titles and add to RSS outputfile
-/usr/bin/feed $RSS_URL > /dev/null 2>&1
+$FEED_CMD $RSS_URL > /dev/null 2>&1
 done
 }
 

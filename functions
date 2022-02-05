@@ -11743,6 +11743,9 @@ patch -p1 $INSTALL_SRC_DIR/TermFeed/termfeed/feed.py < $PROJECT_PATCHES_DIR/term
 cd $INSTALL_SRC_DIR/TermFeed 
 # Compile
 $PYTHON_INSTALL_CMD --install-lib=$PYTHON_SITEDIR
+
+# Create symbolic link in /usr/bin
+[ -x $BINARY_PREFIX/feed ] || ln -s $PREFIX/local/bin/feed $BINARY_PREFIX/feed
 }
 
 usbreset_install () {
