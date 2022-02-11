@@ -18,8 +18,8 @@ tts_output_dir = tmp_dir + '/' + 'tts' + '/' + 'news'
 tts_input_file = tmp_dir + '/' + 'tts_output.wav'    
 tts_concat_input_file = tts_output_dir + '/' + 'input_files_news_scraper.txt'
 
-speech2text_tool = 'MY_TEXT2SPEECH_TOOL'
-
+text2speech_tool = 'MY_TEXT2SPEECH_TOOL'
+text2speech_api = 'MY_TTS_API'
 
 
 def make_soup(url):
@@ -79,7 +79,7 @@ def fetch_monitor_ug_news():
     subprocess.check_call(['sudo', '/usr/bin/rm', '-f', tts_concat_input_file])
 
     for i in range(0,headlines_max):
-        subprocess.check_call([speech2text_tool , '""', 'custom', current_news[i].strip(), 'concatenate=yes'])
+        subprocess.check_call([text2speech_tool, text2speech_api, 'custom', current_news[i].strip(), 'concatenate=yes'])
 
         print(f'\t {i} {current_news[i].strip()}')
 

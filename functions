@@ -13777,7 +13777,8 @@ done
 	cat $PROJECT_BIN_DIR/jambulatv-fetch-news-via-scraper | \
 		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
 		sed -e "s:MY_PROJECT_SYSTEM_SHARE_DIR:$PROJECT_SYSTEM_SHARE_DIR:g" | \
-		sed -e "s:MY_TEXT2SPEECH_TOOL:$TEXT2SPEECH_TOOL:g" \
+		sed -e "s:MY_TEXT2SPEECH_TOOL:$TEXT2SPEECH_TOOL:g" | \
+		sed -e "s:MY_TTS_API:$TTS_PROVIDER_API:g" \
 			> $FETCH_NEWS_VIA_SCRAPER_TOOL
 # Make script executable
 chmod 755 $FETCH_NEWS_VIA_SCRAPER_TOOL 
