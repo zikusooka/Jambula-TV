@@ -10,7 +10,7 @@
 # Disclaimer: We do not work for UMEME, neither do I have direct access# to their servers, so this script may break should there be changes 
 # to their website
 #
-# Jambula Labs @copyright 2020-2021 All rights reserved
+# Jambula Labs @copyright 2022-2023 All rights reserved
 
 # Source global settings
 PROJECT_NAME=JambulaTV
@@ -23,6 +23,9 @@ DEBUG=n #y|n - set to 'n' when in production
 
 DATE_TOMORROW_DAY_FORMAT=$(date --date='1 day' +'%A')
 DATE_AFTER_TOMORROW_DAY_FORMAT=$(date --date='2 day' +'%A')
+DATE_DIGIT_TODAY=$(date +'%-d')
+DATE_DIGIT_TOMORROW=$(date --date='1 day' +'%d')
+DATE_DIGIT_AFTER_TOMORROW=$(date --date='2 day' +'%d')
 
 THIS_YEAR=$(date +%Y)
 THIS_MONTH_NAME_FULL=$(date +%B)
@@ -30,11 +33,9 @@ THIS_MONTH_DIGIT=$(date +%m)
 THIS_MONTH_LAST_TODAY=$(date -d "-$(date +%d) days  month" +%d)
 THIS_MONTH_LAST_TODAY_DAY_OF_YEAR=$(date -d "${THIS_MONTH_NAME_FULL} ${THIS_MONTH_LAST_TODAY} ${THIS_YEAR}" +%_j)
 THIS_MONTH_TODAY_DAY_OF_YEAR=$(date +%_j)
-THIS_MONTH_DAYS_LEFT=$((${THIS_MONTH_LAST_TODAY_DAY_OF_YEAR} - ${THIS_MONTH_TODAY_DAY_OF_YEAR} -3))
+THIS_MONTH_DAYS_LEFT=$((${THIS_MONTH_LAST_TODAY} - ${DATE_DIGIT_TODAY}))
 
-DATE_DIGIT_TODAY=$(date +'%d')
-DATE_DIGIT_TOMORROW=$(date --date='1 day' +'%d')
-DATE_DIGIT_AFTER_TOMORROW=$(date --date='2 day' +'%d')
+NEXT_MONTH_NAME_FULL=$(date --date='1 month' +%B)
 
 CURL_CMD="/usr/bin/curl"
 CURL_OPTS="-s -S -L -k"
@@ -62,6 +63,7 @@ DATE_AFTER_TOMORROW_UMEME_FORMAT=$(date --date='2 day' +'%d %B')
 DATE_TOMORROW_UMEME_FORMAT=$(date --date='1 day' +'%d %B')
 DATE_TODAY_UMEME_FORMAT=$(date +'%d %B')
 UMEME_OUTAGES_PLANNED_FILE=/JambulaTV/Downloads/UMEME-planned-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}.pdf
+UMEME_VILLAGES_SCHEDULED_FILE=/tmp/umeme_villages_scheduled_4_outages
 ;;
 xls)
 DATE_AFTER_TOMORROW_UMEME_FORMAT=$(date --date='2 day' +'%A,%d')
@@ -70,9 +72,6 @@ DATE_TODAY_UMEME_FORMAT=$(date +'%A,%d')
 UMEME_OUTAGES_PLANNED_FILE=/JambulaTV/Downloads/UMEME-planned-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}.xls
 ;;
 esac
-
-# Maximum age of outages file - NOTE: 1 day in seconds = 86400
-MAXIMUM_AGE_OF_UMEME_OUTAGES_PLANNED_FILE=$((${THIS_MONTH_DAYS_LEFT} * 86400))
 
 # Our output file
 UMEME_OUTAGES_PLANNED_FILE_CSV=/JambulaTV/Downloads/UMEME-planned-outages-${THIS_YEAR}-${THIS_MONTH_DIGIT}.csv
@@ -124,15 +123,6 @@ check_internet_access () {
 # Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
 ping -c $PING_COUNT $PING_IP_ADDRESS > /dev/null 2>&1
 INTERNET_ALIVE=$?
-#
-# Quit if no Internet
-if [[ "$INTERNET_ALIVE" != "0" ]];
-then
-$LOGGER_CMD $(basename $0) "Error: You are not connected to the Internet. Please check your router and try again later!"
-# Before quiting, print 'none' 
-echo none
-exit 0
-fi
 }
 
 DaySuffix() {
@@ -148,10 +138,17 @@ download_outages_webpage () {
 # Check if Internet connection is up
 check_internet_access
 
+# Quit if no Internet
+if [[ "$INTERNET_ALIVE" = "0" ]];
+then
 # Download latest outages web page from UMEME website
 $LOGGER_CMD $(basename $0) "Downloading UMEME outages web page:  $UMEME_OUTAGES_WEB_PAGE ..."
 #
 $CURL_CMD $CURL_OPTS -A "$USER_AGENT" -o $UMEME_OUTAGES_OUTPUT $UMEME_OUTAGES_WEB_PAGE
+
+else
+$LOGGER_CMD $(basename $0) "Warning: You are not connected to the Internet. Using previously saved power outages data!"
+fi
 }
 
 extract_outages_file_link () {
@@ -185,23 +182,39 @@ else
 # Check if Internet connection is up
 check_internet_access
 
-# Remove old planned outages file
-[[ -e $UMEME_OUTAGES_PLANNED_FILE ]] && sudo rm -f $UMEME_OUTAGES_PLANNED_FILE
-# Fetch planned outages file
-$LOGGER_CMD $(basename $0) "Downloading UMEME Planned outages file for ${THIS_MONTH_NAME_FULL}:  $UMEME_OUTAGES_URL ..."
-wget -q --no-check-certificate -O $UMEME_OUTAGES_PLANNED_FILE $UMEME_OUTAGES_URL > /dev/null 2>&1
+# Skip if no Internet
+[[ "$INTERNET_ALIVE" = "0" ]] || continue
+
+	# Fetch next month's planned outage file if a few days remaining
+	if [[ "$THIS_MONTH_DAYS_LEFT" -le "3" ]] && [[ ! -e "${UMEME_OUTAGES_PLANNED_FILE}.next" ]];
+	then
+	# Rename planned outages file
+	[[ -e $UMEME_OUTAGES_PLANNED_FILE ]] && mv -v $UMEME_OUTAGES_PLANNED_FILE ${UMEME_OUTAGES_PLANNED_FILE}.current
+	# Fetch planned outages file
+	$LOGGER_CMD $(basename $0) "Downloading UMEME Planned outages file for ${NEXT_MONTH_NAME_FULL}:  $UMEME_OUTAGES_URL ..."
+	wget -c --no-check-certificate -O ${UMEME_OUTAGES_PLANNED_FILE}.next $UMEME_OUTAGES_URL > /dev/null 2>&1
+
+	# Unite this and next month's files if different
+	diff ${UMEME_OUTAGES_PLANNED_FILE}.current ${UMEME_OUTAGES_PLANNED_FILE}.next > /dev/null 2>&1
+	DIFF=$?
+	[[ "$DIFF" != "0" ]] && pdfunite ${UMEME_OUTAGES_PLANNED_FILE}.current ${UMEME_OUTAGES_PLANNED_FILE}.next ${UMEME_OUTAGES_PLANNED_FILE}
+
+	elif [[ "$THIS_MONTH_DAYS_LEFT" -le "3" ]];
+	then
+	continue
+
+	else
+	# Remove next file used during previous month
+	[[ -e "${UMEME_OUTAGES_PLANNED_FILE}.next" ]] && sudo rm -f ${UMEME_OUTAGES_PLANNED_FILE}.next
+	# Fetch this month's planned outages file
+	$LOGGER_CMD $(basename $0) "Downloading UMEME Planned outages file for ${THIS_MONTH_NAME_FULL}:  $UMEME_OUTAGES_URL ..."
+	wget -c --no-check-certificate -O $UMEME_OUTAGES_PLANNED_FILE $UMEME_OUTAGES_URL > /dev/null 2>&1
+	fi
 fi
 }
 
 get_outages_file () {
-# If UMEME output file is still fresh, set variable to yes
-[[ -e "$UMEME_OUTAGES_PLANNED_FILE" && "$(date -d "now - $(stat -c "%Z" $UMEME_OUTAGES_PLANNED_FILE) seconds" +%s)" -lt "$MAXIMUM_AGE_OF_UMEME_OUTAGES_PLANNED_FILE" ]] && UMEME_OUTAGES_PLANNED_FILE_IS_FRESH=yes
-#
-# See what sort of file exists
-file $UMEME_OUTAGES_PLANNED_FILE | grep -i -e 'PDF document' -e 'Composite Document' -e 'OpenDocument Text' > /dev/null 2>&1
-FILE_FORMAT_VALIDITY=$?
-
-if [[ ! -e "$UMEME_OUTAGES_PLANNED_FILE" ]] || [[ "x$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" = "x" || "$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" != "yes" ]];
+if [[ ! -e "$UMEME_OUTAGES_PLANNED_FILE" ]] || [[ "$THIS_MONTH_DAYS_LEFT" -le "3" ]];
 then
 # Download outages web page
 download_outages_webpage
@@ -209,8 +222,13 @@ download_outages_webpage
 extract_outages_file_link
 # Download outages file if found
 download_outages_file_if_found
+fi
 
-elif [[ "$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" = "yes" && ! -s "$UMEME_OUTAGES_PLANNED_FILE" ]] || [[ "$UMEME_OUTAGES_PLANNED_FILE_IS_FRESH" = "yes" && "$FILE_FORMAT_VALIDITY" != "0" ]];
+# See what sort of file was downloaded
+file $UMEME_OUTAGES_PLANNED_FILE | grep -i -e 'PDF document' -e 'Composite Document' -e 'OpenDocument Text' > /dev/null 2>&1
+FILE_FORMAT_VALIDITY=$?
+
+if [[ ! -s "$UMEME_OUTAGES_PLANNED_FILE" ]] || [[ "$FILE_FORMAT_VALIDITY" != "0" ]];
 then
 # No valid file, and no Internet, so quit
 clear
@@ -228,7 +246,7 @@ exit 1
 fi
 }
 
-prepare_outages_file () {
+prepare_outages_file_if_xls () {
 # Covert xls to csv
 [[ "$UMEME_OUTAGES_FILE_FORMAT" = "xls" ]] && \
 	xls2csv -x $UMEME_OUTAGES_PLANNED_FILE -s cp1252 -d 8859-1 | sed "s:\"::g"> $UMEME_OUTAGES_PLANNED_FILE_CSV
@@ -248,7 +266,7 @@ DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_TODAY}
 # Set outage coming flag if date is found in outages file
 case "$UMEME_OUTAGES_FILE_FORMAT" in
 pdf)
-pdfgrep -i "\b${VILLAGE}\b" $UMEME_OUTAGES_PLANNED_FILE | grep -Ei "$DATE_DIGIT_TODAY$(DaySuffix).*${THIS_MONTH_NAME_FULL}" > /dev/null 2>&1
+pdfgrep -C line -i "$DATE_DIGIT_TODAY$(DaySuffix).${THIS_MONTH_NAME_FULL}" $UMEME_OUTAGES_PLANNED_FILE | grep -i "\b${VILLAGE}\b" > /dev/null 2>&1
 OUTAGE_COMING_TODAY=$?
 ;;
 xls)
@@ -264,7 +282,7 @@ DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_TOMORROW}
 # Set outage coming flag if date is found in outages file
 case "$UMEME_OUTAGES_FILE_FORMAT" in
 pdf)
-pdfgrep -i "\b${VILLAGE}\b" $UMEME_OUTAGES_PLANNED_FILE | grep -Ei "$DATE_DIGIT_TOMORROW$(DaySuffix).*${THIS_MONTH_NAME_FULL}" > /dev/null 2>&1
+pdfgrep -C line -i "$DATE_DIGIT_TOMORROW$(DaySuffix).${THIS_MONTH_NAME_FULL}" $UMEME_OUTAGES_PLANNED_FILE | grep -i "\b${VILLAGE}\b" > /dev/null 2>&1
 OUTAGE_COMING_TOMORROW=$?
 ;;
 xls)
@@ -280,7 +298,7 @@ DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_AFTER_TOMORROW}
 # Set outage coming flag if date is found in outages file
 case "$UMEME_OUTAGES_FILE_FORMAT" in
 pdf)
-pdfgrep -i "\b${VILLAGE}\b" $UMEME_OUTAGES_PLANNED_FILE | grep -Ei "$DATE_DIGIT_AFTER_TOMORROW$(DaySuffix).*${THIS_MONTH_NAME_FULL}" > /dev/null 2>&1
+pdfgrep -C line -i "$DATE_DIGIT_AFTER_TOMORROW$(DaySuffix).${THIS_MONTH_NAME_FULL}" $UMEME_OUTAGES_PLANNED_FILE | grep -i "\b${VILLAGE}\b" > /dev/null 2>&1
 OUTAGE_COMING_TWO_DAYS=$?
 ;;
 xls)
@@ -304,13 +322,18 @@ set_logging_level
 
 # Get and prepare outages file
 get_outages_file
-prepare_outages_file
+prepare_outages_file_if_xls
+
+# Remove previous villages scheduled outages file if existent
+[[ -e $UMEME_VILLAGES_SCHEDULED_FILE ]] && sudo rm -f $UMEME_VILLAGES_SCHEDULED_FILE
 
 # Check for selected power outage areas
 IFS="," MY_VILLAGES=($LIST_OF_AREAS)
 for VILLAGE in ${MY_VILLAGES[@]};
+
 do
 VILLAGE=$(echo "$VILLAGE" | sed "s:^ ::g" | sed "s:$ ::g")
+
 case $OUTAGE_DAY in
 ongoing)
 outage_ongoing
@@ -318,28 +341,29 @@ outage_ongoing
 
 today)
 outage_today
-[[ "$OUTAGE_COMING_TODAY" = "0" ]] && echo $VILLAGE || echo none
+[[ "$OUTAGE_COMING_TODAY" = "0" ]] && echo -n "$VILLAGE " >> $UMEME_VILLAGES_SCHEDULED_FILE
 ;;
 
 tomorrow)
 outage_tomorrow
-[[ "$OUTAGE_COMING_TOMORROW" = "0" ]] && echo $VILLAGE || echo none
+[[ "$OUTAGE_COMING_TOMORROW" = "0" ]] && echo -n "$VILLAGE " >> $UMEME_VILLAGES_SCHEDULED_FILE
 ;;
 
 after_tomorrow)
 outage_in_two_days_time
-[[ "$OUTAGE_COMING_TWO_DAYS" = "0" ]] && echo $VILLAGE || echo none
-;;
-
-any|*)
-outage_today
-outage_tomorrow
-outage_in_two_days_time
-#
-[[ "$OUTAGE_COMING_TODAY" = "0" ]] && echo "Today: $VILLAGE" || echo none
-[[ "$OUTAGE_COMING_TOMORROW" = "0" ]] && echo "$DATE_TOMORROW_DAY_FORMAT: $VILLAGE" || echo none
-[[ "$OUTAGE_COMING_TWO_DAYS" = "0" ]] && echo "$DATE_AFTER_TOMORROW_DAY_FORMAT: $VILLAGE" || echo none
+[[ "$OUTAGE_COMING_TWO_DAYS" = "0" ]] && echo -n "$VILLAGE " >> $UMEME_VILLAGES_SCHEDULED_FILE
 ;;
 esac
 
 done
+
+
+# Print village(s) scheduled for power outage if any, else just print 'none'
+# ---
+if [[ -e $UMEME_VILLAGES_SCHEDULED_FILE ]];
+then
+cat $UMEME_VILLAGES_SCHEDULED_FILE
+
+else
+echo none
+fi
