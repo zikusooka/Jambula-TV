@@ -43,7 +43,7 @@ IMPORTANT: Use IP address and not hostname
 
 EOF
 # Quit
-exit 1
+exit 0
 fi
 }
 
@@ -60,7 +60,7 @@ then
 # Notify via logger when there's NO connectivity to remote host
 logger -s -t $(basename $0) "The remote host at $REMOTE_HOST 
 is not reacheable. Please check that it is powered on"
-exit 1
+exit 0
 fi
 }
 
