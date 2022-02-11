@@ -1,7 +1,7 @@
 #!/bin/sh
 # This is an API for JambulaTV weather requests
 #
-# Jambula Labs @copyright 2020-2021 All rights reserved
+# Jambula Labs @copyright 2022-2023 All rights reserved
 #
 # Usage: jambulatv-weather-api [LAT] [LONG] [current|today|later] [API] [debug (optiona)]
 
@@ -29,8 +29,8 @@ ARG5=$5 # Debug #ARG5=debug
 #  Weather API(s)
 # ----------------
 #
-# 1. Weather Underground
-# -----------------------
+# 1. Weather Underground (No longer active !!!)
+# ---------------------------------------------
 # Register: https://www.wunderground.com/weather/api
 # Docs: https://www.wunderground.com/weather/api/d/docs
 #
@@ -51,14 +51,14 @@ OWM_APIURL="api.openweathermap.org/data/2.5"
 # Weather API Keys
 DEFAULT_WUNDERGROUND_APIKEY="2b0d6572c90d3e4a"
 DEFAULT_DARKSKY_APIKEY="e1b066fec8590435bc79b3dd735b380c"
-DEFAULT_OWM_APIKEY="9141b00d5d6fcf3074a72efdb07d6135"
+DEFAULT_OWM_APIKEY="539c3b8cec52a4cf2061ad49b5483a0c"
 
 # Set default Weather API used
 # ----------------------------
 API_SERVICE=$ARG4
 if [[ "x$API_SERVICE" = "x" ]];
 then
-API=1
+API=$WEATHER_PROVIDER_API
 else
 API=$API_SERVICE
 fi
@@ -167,8 +167,6 @@ cat << EOF
 Usage: $(basename $0) [LATITUDE] [LONGITUDE] [current|today|later] [API] [debug (optiona)]
 
 EOF
-# TTS - Say error out loud
-/usr/bin/jambulatv-text2speech custom "To get the weather forecast, please first set your preferred location"
 # Exit
 exit 1
 fi
@@ -182,8 +180,6 @@ if [ "$INTERNET_ALIVE" != "0" ];
 then
 # Log error of no Internet
 logger -s -t $(basename $0) "Error: Could not check the weather since there's no Internet connectivity"
-# TTS - Say error out loud
-/usr/bin/jambulatv-text2speech custom "Am sorry I was unable to connect to the Internet" > /dev/null 2>&1
 # Quit script, since there's no internet.  Leave exit status at 0 so systemd service works
 exit 0
 
@@ -203,13 +199,41 @@ AGE_OF_CURRENT_WEATHER_DATA=3600
 fi
 }
 
+test_validity_of_weather_data_file () {
+# current
+if jq empty $CURRENT_WEATHER_RAW_DATA_FILE > /dev/null 2>&1 && [[ -s $CURRENT_WEATHER_RAW_DATA_FILE ]];
+then
+CURRENT_WEATHER_RAW_DATA_FILE_VALID=yes
+else
+CURRENT_WEATHER_RAW_DATA_FILE_VALID=no
+fi
+
+# today
+if jq empty $TODAY_WEATHER_RAW_DATA_FILE > /dev/null 2>&1 && [[ -s $TODAY_WEATHER_RAW_DATA_FILE ]];
+then
+TODAY_WEATHER_RAW_DATA_FILE_VALID=yes
+else
+TODAY_WEATHER_RAW_DATA_FILE_VALID=no
+fi
+
+# later
+if jq empty $LATER_WEATHER_RAW_DATA_FILE > /dev/null 2>&1 && [[ -s $LATER_WEATHER_RAW_DATA_FILE ]];
+then
+LATER_WEATHER_RAW_DATA_FILE_VALID=yes
+else
+LATER_WEATHER_RAW_DATA_FILE_VALID=no
+fi
+
+export CURRENT_WEATHER_RAW_DATA_FILE_VALID TODAY_WEATHER_RAW_DATA_FILE_VALID LATER_WEATHER_RAW_DATA_FILE_VALID
+}
+
 make_weather_data_file_writeable () {
 for DATA_FILE in \
 	$CURRENT_WEATHER_RAW_DATA_FILE \
 	$LATER_WEATHER_RAW_DATA_FILE \
 	$TODAY_WEATHER_RAW_DATA_FILE
 do
-chmod a+w $DATA_FILE
+sudo chmod a+w $DATA_FILE
 done
 }
 
@@ -428,13 +452,25 @@ cp -v $LATER_WEATHER_RAW_DATA_FILE $TODAY_WEATHER_RAW_DATA_FILE
 make_weather_data_file_writeable
 fi
 
+# Test validity of weather data files
+test_validity_of_weather_data_file
+
+if [[ "$CURRENT_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then
 # Set current weather variables
 CURRENT_SUMMARY=$(jq -r ".current_observation.weather" $CURRENT_WEATHER_RAW_DATA_FILE | sed 's:[,|"]::g' | sed 's:\.::g')
 CURRENT_TEMPERATURE=$(jq ".current_observation.temp_c" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 CURRENT_HUMIDITY=$(jq -r ".current_observation.relative_humidity" $CURRENT_WEATHER_RAW_DATA_FILE | sed 's:%::')
 CURRENT_WIND_SPEED=$(jq -r ".current_observation.wind_kph" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 CURRENT_WIND_BEARING=$(jq -r ".current_observation.wind_degrees" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-#
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$CURRENT_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
+
+if [[ "$TODAY_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then
 # Set today weather variables
 TODAY_TITLE=$(jq -r ".forecast.txt_forecast.forecastday[0] | .title" $TODAY_WEATHER_RAW_DATA_FILE)
 # Metric not returning values consistently - issue is with wunderground API
@@ -446,7 +482,14 @@ TODAY_HUMIDITY=$(jq -r ".forecast.simpleforecast.forecastday[0].avehumidity" $TO
 TODAY_PRECIP_PROBABILITY=$(jq -r ".forecast.simpleforecast.forecastday[0].pop" $TODAY_WEATHER_RAW_DATA_FILE)
 TODAY_WIND_SPEED=$(jq -r ".forecast.simpleforecast.forecastday[0].avewind | .kph" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 TODAY_WIND_BEARING=$(jq -r ".forecast.simpleforecast.forecastday[0].avewind | .degrees" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-#
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$TODAY_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
+
+if [[ "$LATER_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then
 # Set later weather variables
 LATER_TITLE=$(jq -r ".forecast.txt_forecast.forecastday[1] | .title" $LATER_WEATHER_RAW_DATA_FILE)
 # Metric not returning values consistently - issue is with wunderground API
@@ -458,6 +501,11 @@ LATER_HUMIDITY=$(jq -r ".forecast.simpleforecast.forecastday[1].avehumidity" $LA
 LATER_PRECIP_PROBABILITY=$(jq -r ".forecast.simpleforecast.forecastday[1].pop" $TODAY_WEATHER_RAW_DATA_FILE)
 LATER_WIND_SPEED=$(jq -r ".forecast.simpleforecast.forecastday[1].avewind | .kph" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 LATER_WIND_BEARING=$(jq -r ".forecast.simpleforecast.forecastday[1].avewind | .degrees" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$LATER_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
 }
 
 weather_openweathermap () {
@@ -486,13 +534,25 @@ cp -v $LATER_WEATHER_RAW_DATA_FILE $TODAY_WEATHER_RAW_DATA_FILE
 make_weather_data_file_writeable
 fi
 
+# Test validity of weather data files
+test_validity_of_weather_data_file
+
+if [[ "$CURRENT_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then
 # Set current weather variables
 CURRENT_SUMMARY=$(jq -r ".weather[0].description" $CURRENT_WEATHER_RAW_DATA_FILE)
 CURRENT_TEMPERATURE=$(jq ".main.temp" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 CURRENT_HUMIDITY=$(jq -r ".main.humidity" $CURRENT_WEATHER_RAW_DATA_FILE | sed 's:%::')
 CURRENT_WIND_SPEED=$(jq -r ".wind.speed" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 CURRENT_WIND_BEARING=$(jq -r ".wind.deg" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-#
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$CURRENT_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
+
+if [[ "$TODAY_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then
 # Set today weather variables
 TODAY_PERIOD=0
 TODAY_TITLE=$(jq -r ".list[$TODAY_PERIOD].dt_txt" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d")
@@ -500,18 +560,17 @@ TODAY_SUMMARY=$(jq -r ".list[$TODAY_PERIOD].weather[0].description" $TODAY_WEATH
 TODAY_TEMPERATURE_MAX=$(jq -r ".list[$TODAY_PERIOD].main.temp_max" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
 TODAY_TEMPERATURE_MIN=$(jq -r ".list[$TODAY_PERIOD].main.temp_min" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
 TODAY_HUMIDITY=$(jq -r ".list[$TODAY_PERIOD].main.humidity" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d")
-
-# Fix! - Rain in mm
-#TODAY_PRECIP_PROBABILITY=$(echo "$(jq -r ".list[$TODAY_PERIOD].rain" $TODAY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 1" | bc | xargs printf '%.0f')
-# For now - rough estimates
-RAINFALL_AMOUNT=$(echo "$(jq -r ".list[$TODAY_PERIOD].rain" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d" | awk {'print $2'} | sed 's:[,|"]::g') * 1" | bc | xargs printf '%.0f')
-# Use workaround function to set percentages instead of millimeters 
-probabiblity_of_rain_mm_workaround
-TODAY_PRECIP_PROBABILITY=$WORKAROUND_PRECIP_PROBABILITY
-
+TODAY_PRECIP_PROBABILITY=$(echo "$(jq -r ".list[$TODAY_PERIOD].rain" $TODAY_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
 TODAY_WIND_SPEED=$(jq -r ".list[$TODAY_PERIOD].wind.speed" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
 TODAY_WIND_BEARING=$(jq -r ".list[$TODAY_PERIOD].wind.deg" $TODAY_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
-#
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$TODAY_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
+
+if [[ "$LATER_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then 
 # Set later weather variables
 LATER_PERIOD=1
 LATER_TITLE=$(jq -r ".list[$LATER_PERIOD].dt_txt" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d")
@@ -519,17 +578,14 @@ LATER_SUMMARY=$(jq -r ".list[$LATER_PERIOD].weather[0].description" $LATER_WEATH
 LATER_TEMPERATURE_MAX=$(jq -r ".list[$LATER_PERIOD].main.temp_max" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
 LATER_TEMPERATURE_MIN=$(jq -r ".list[$LATER_PERIOD].main.temp_min" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
 LATER_HUMIDITY=$(jq -r ".list[$LATER_PERIOD].main.humidity" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d")
-
-# Fix! - Rain in mm
-#LATER_PRECIP_PROBABILITY=$(echo "$(jq -r ".list[$LATER_PERIOD].rain" $LATER_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 1" | bc | xargs printf '%.0f')
-# For now - rough estimates
-RAINFALL_AMOUNT=$(echo "$(jq -r ".list[$LATER_PERIOD].rain" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d" | awk {'print $2'} | sed 's:[,|"]::g') * 1" | bc | xargs printf '%.0f')
-# Use workaround function to set percentages instead of millimeters 
-probabiblity_of_rain_mm_workaround
-LATER_PRECIP_PROBABILITY=$WORKAROUND_PRECIP_PROBABILITY
-
+LATER_PRECIP_PROBABILITY=$(echo "$(jq -r ".list[$LATER_PERIOD].rain" $LATER_WEATHER_RAW_DATA_FILE | awk {'print $2'} | sed 's:[,|"]::g') * 100" | bc | xargs printf '%.0f')
 LATER_WIND_SPEED=$(jq -r ".list[$LATER_PERIOD].wind.speed" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
 LATER_WIND_BEARING=$(jq -r ".list[$LATER_PERIOD].wind.deg" $LATER_WEATHER_RAW_DATA_FILE | sed "/null/d" | xargs printf '%.0f')
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$LATER_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
 }
 
 weather_darksky_net () {
@@ -555,13 +611,25 @@ $CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d exclude=currently,hourly,minutely,
 make_weather_data_file_writeable
 fi
 
+# Test validity of weather data files
+test_validity_of_weather_data_file
+
+if [[ "$CURRENT_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then
 # Set current weather variables
 CURRENT_SUMMARY=$(jq -r ".currently.summary" $CURRENT_WEATHER_RAW_DATA_FILE | sed 's:[,|"]::g' | sed 's:\.::g')
 CURRENT_TEMPERATURE=$(jq ".currently.temperature" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 CURRENT_HUMIDITY=$(echo "$(jq ".currently.humidity"  $CURRENT_WEATHER_RAW_DATA_FILE) * 100" | bc | xargs printf '%.0f')
 CURRENT_WIND_SPEED=$(jq -r ".currently.windSpeed" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 CURRENT_WIND_BEARING=$(jq -r ".currently.windBearing" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-#
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$CURRENT_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
+
+if [[ "$TODAY_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then
 # Set today weather variables
 TODAY_TITLE=$(date -d "@$(jq -r ".daily.data[0].uvIndexTime" $TODAY_WEATHER_RAW_DATA_FILE)")
 TODAY_SUMMARY=$(jq -r ".daily.data[0].summary" $TODAY_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
@@ -571,19 +639,29 @@ TODAY_HUMIDITY=$(echo "$(jq -r ".daily.data[0].humidity" $TODAY_WEATHER_RAW_DATA
 TODAY_PRECIP_PROBABILITY=$(echo "$(jq -r ".daily.data[0].precipProbability" $TODAY_WEATHER_RAW_DATA_FILE) * 100" | bc | xargs printf '%.0f')
 TODAY_WIND_SPEED=$(jq -r ".daily.data[0].windSpeed" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 TODAY_WIND_BEARING=$(jq -r ".daily.data[0].windBearing" $TODAY_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-#
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$TODAY_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
+
+if [[ "$LATER_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then
 # Set later weather variables
 LATER_PERIOD=4
 LATER_TITLE=$(date -d "@$(jq -r ".hourly.data[$LATER_PERIOD].time" $LATER_WEATHER_RAW_DATA_FILE)")
 LATER_SUMMARY=$(jq -r ".hourly.data[$LATER_PERIOD].summary" $LATER_WEATHER_RAW_DATA_FILE | cut -d '.' -f1)
 LATER_TEMPERATURE_MAX=$(jq -r ".hourly.data[$LATER_PERIOD].temperature" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-
 LATER_TEMPERATURE_MIN=$(jq -r ".hourly.data[$LATER_PERIOD].temperature" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
-
 LATER_HUMIDITY=$(echo "$(jq -r ".hourly.data[$LATER_PERIOD].humidity" $LATER_WEATHER_RAW_DATA_FILE) * 100" | bc | xargs printf '%.0f')
 LATER_PRECIP_PROBABILITY=$(echo "$(jq -r ".hourly.data[$LATER_PERIOD].precipProbability" $LATER_WEATHER_RAW_DATA_FILE) * 100" | bc | xargs printf '%.0f')
 LATER_WIND_SPEED=$(jq -r ".hourly.data[$LATER_PERIOD].windSpeed" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
 LATER_WIND_BEARING=$(jq -r ".hourly.data[$LATER_PERIOD].windBearing" $LATER_WEATHER_RAW_DATA_FILE | xargs printf '%.0f')
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$LATER_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
 }
 
 

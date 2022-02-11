@@ -1311,6 +1311,8 @@ ASR_SKILLS_FILE=$BINARY_PREFIX/jambulatv-asr-skills
 # Pocketsphinx
 POCKETSPHINX_DATA_DIR=$PROJECT_SYSTEM_SHARE_DIR/pocketsphinx
 
+WEATHER_PROVIDER_API=3 # Default API used > 1=Weather Underground 2=OpenWeatherMap 3=DarkSky
+
 # HTTP Headers
 # ------------
 # MacOS
@@ -8821,6 +8823,9 @@ SMS_PHONE_NUMBER=$SMS_PHONE_NUMBER_DEFAULT
 
 # Text 2 Speech default API used # 1=iSpeech 2=google 3=watson
 TTS_PROVIDER_API=$TTS_PROVIDER_API
+
+# Weather default API used # 1=Weather Underground 2=OpenWeatherMap 3=DarkSky
+WEATHER_PROVIDER_API=$WEATHER_PROVIDER_API
 
 # Internet data saver mode
 INTERNET_DATA_SAVER_MODE=off
