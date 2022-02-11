@@ -1,0 +1,299 @@
+#!/usr/local/bin/python3
+
+"""
+    JambulaTV: Date/Time Announcer
+    Copyright (C) Jambula Labs 2022-2023 All Rights Reserved
+
+"""
+
+from datetime import datetime
+import inflect
+import subprocess
+import argparse
+import os
+import errno
+import sys
+
+
+# Copyright
+__author__ = 'Joseph Zikusooka'
+__copyright__ = 'Jambula Labs @copyright 2022-2023 All rights reserved'
+__credits__ = ["JambulaTV", "https://www.jambulatv.com"]
+__license__ = "GPL 3"
+__version__ = "1.0.0"
+__email__ = 'josephzik@gmail.com'
+__status__ = "Production"
+
+
+tmp_dir = '/tmp'
+data_share_dir = '/usr/share/JambulaTV'
+
+tts_concat_input_file = tmp_dir + '/' + 'input_files_datetime.txt'
+
+sounds_tool = '/usr/bin/jambulatv-sounds'
+sounds_dir = data_share_dir + '/' + 'sounds'
+ 
+output_filename_date = 'date_today.mp3'
+output_filename_time_now = 'time_now.mp3'
+output_filename_time_selected = 'time_selected.mp3'
+
+DateDayofWeek = datetime.now().strftime('%A')
+DateToday = datetime.now().strftime('%d')
+DateMonth = datetime.now().strftime('%B')
+DateYear = datetime.now().strftime('%Y')
+
+TimeNowHour = datetime.now().strftime('%-I')
+TimeNowMinute = datetime.now().strftime('%M')
+TimeNowMeridiem = datetime.now().strftime('%P')
+ 
+UserName = os.getlogin()
+
+# Usage i.e. parse arguments/help message
+parser = argparse.ArgumentParser(description='JambulaTV: Say the date today and time now')
+parser.add_argument('--date', dest='date', choices=['today', 'tomorrow'], help='[date]', type=str, required=False)
+parser.add_argument('--time', dest='time', help='[time]', type=str, required=False)
+
+args = parser.parse_args()
+DATE = args.date
+TIME = args.time
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+def setup_tts_directory ():
+  # Remove previous input file used to concatenate
+  if os.path.exists(tts_concat_input_file):
+    subprocess.check_call(['sudo', '/usr/bin/rm', '-f', tts_concat_input_file])
+
+
+def concatenate_audio_clips (tts_output_file=''):
+  # Remove previous output file
+  if os.path.exists(tts_output_file):
+    subprocess.check_call(['sudo', '/usr/bin/rm', '-f', tts_output_file])
+
+  # Merge all files into one nice mp3 file
+  subprocess.check_call(['/usr/bin/ffmpeg', '-loglevel', 'quiet', '-y', '-f', 'concat', '-safe', '0', '-i', tts_concat_input_file, '-c', 'copy', tts_output_file])
+
+
+def get_date_today (dt='', **kwargs):
+  p = inflect.engine()
+  date_today = p.ordinal(dt)
+  return date_today
+
+
+def convert_ordinal_to_words (ord='', **kwargs):
+  p = inflect.engine()
+  date_ordinal = p.number_to_words(ord)
+  return date_ordinal
+
+
+def get_year (yr='', **kwargs):
+  p = inflect.engine()
+  year = p.number_to_words(yr,group=2)
+  return year
+
+
+def get_hour (hr='', **kwargs):
+  p = inflect.engine()
+  hour = p.number_to_words(hr)
+  return hour
+
+
+def get_minute (min='', **kwargs):
+  p = inflect.engine()
+  minute = p.number_to_words(min,group=2,zero='oh')
+  return minute
+
+
+
+# --------------
+#  Date (Today)
+# --------------
+
+def setup_audio_clip_files_for_date ():
+  # Locally available sound clips
+  day_of_the_week = DateDayofWeek
+  day_of_the_week = day_of_the_week.lower() + '.mp3'
+  date_today = get_date_today (DateToday)
+  date_today = convert_ordinal_to_words (date_today) + '.mp3'
+  month = DateMonth
+  month = month.lower() + '.mp3'
+  year = get_year(DateYear)
+  year = year.replace('-', '_', 1)
+  year_part1, year_part2 = year.split(', ', 1)
+  year_part1 = year_part1 + '.mp3'
+  year_part2 = year_part2.replace('forty', 'fourty', 1) + '.mp3'
+  header = 'today_is.mp3'
+
+  # Clean up TTS directory before concatenation
+  setup_tts_directory () 
+
+  # Create input file for ffmpeg concatenation
+  for i in header, day_of_the_week, date_today, month, year_part1, year_part2:
+      concat_string = f"file '{sounds_dir}/{i}'" 
+      f = open(tts_concat_input_file, 'a')
+      f.write(concat_string)
+      f.write('\n')
+      f.close()
+
+
+def join_audio_clip_files_for_date ():
+  # Set output file name
+  tts_output_file = tmp_dir + '/' + output_filename_date
+
+  # Create input file used to concatenate
+  setup_audio_clip_files_for_date ()
+
+  # Concatenate audio clip files 
+  concatenate_audio_clips (tts_output_file=tts_output_file)
+
+
+def announce_today_is ():
+  # Log
+  print (f'Today is: {DateDayofWeek} {DateToday} {DateMonth} {DateYear}')
+
+  # Concatenate
+  join_audio_clip_files_for_date ()
+
+  # Sound alert
+  alert_sound = output_filename_date.replace('.mp3', '', 1)
+  subprocess.check_call([sounds_tool, 'alert', alert_sound])
+  
+
+
+# ---------------
+#  Time (Current)
+# ---------------
+
+def setup_audio_clips_for_time_now ():
+  hour = get_hour (hr=TimeNowHour)
+  minute = get_minute (min=TimeNowMinute)        
+  # Locally available sound clips
+  hour = hour + '.mp3'
+  minute = minute.replace('-', '_', 1) + '.mp3' 
+  minute = minute.replace(' ', '_', 1) 
+  minute = minute.replace('forty', 'fourty', 1) 
+  meridiem = TimeNowMeridiem
+  meridiem = meridiem.lower() + '.mp3'
+  header = 'time_now_is.mp3'
+
+  # Clean up TTS directory before concatenation
+  setup_tts_directory () 
+
+  # Create input file for ffmpeg concatenation
+  for i in header, hour, minute, meridiem:
+      concat_string = f"file '{sounds_dir}/{i}'" 
+      f = open(tts_concat_input_file, 'a')
+      f.write(concat_string)
+      f.write('\n')
+      f.close()
+
+
+def join_audio_clip_files_for_time_now ():
+  # Set output file name
+  tts_output_file = tmp_dir + '/' + output_filename_time_now
+
+  # Create input file used to concatenate
+  setup_audio_clips_for_time_now ()
+
+  # Concatenate audio clip files 
+  concatenate_audio_clips (tts_output_file=tts_output_file)
+
+
+def announce_time_now_is ():
+  # Log
+  print (f'The time now is: {TimeNowHour}:{TimeNowMinute} {TimeNowMeridiem}')
+
+  # Concatenate
+  join_audio_clip_files_for_time_now ()
+
+  # Sound alert
+  alert_sound = output_filename_time_now.replace('.mp3', '', 1)
+  subprocess.check_call([sounds_tool, 'alert', alert_sound])
+
+
+
+# -----------------
+#  Time (Selected)
+# -----------------
+
+def setup_audio_clips_for_time_selected ():
+  hour = get_hour (hr=selected_hour)
+  minute = get_minute (min=selected_minute)        
+
+  # Locally available sound clips
+  hour = hour + '.mp3'
+  minute = minute.replace('-', '_', 1) + '.mp3' 
+  minute = minute.replace(' ', '_', 1) 
+  minute = minute.replace('forty', 'fourty', 1) 
+  meridiem = selected_meridiem 
+  meridiem = meridiem.lower() + '.mp3'
+  header = 'wakeup_time_recommended_for_good_sleep'
+  #header = 'wakeup_time_recommended_is'
+  header = header + '.mp3'
+
+  # Clean up TTS directory before concatenation
+  setup_tts_directory () 
+
+  # Create input file for ffmpeg concatenation
+  for i in header, hour, minute, meridiem:
+      concat_string = f"file '{sounds_dir}/{i}'" 
+      f = open(tts_concat_input_file, 'a')
+      f.write(concat_string)
+      f.write('\n')
+      f.close()
+
+
+def join_audio_clip_files_for_time_selected ():
+  # Set output file name
+  tts_output_file = tmp_dir + '/' + output_filename_time_selected
+
+  # Create input file used to concatenate
+  setup_audio_clips_for_time_selected ()
+
+  # Concatenate audio clip files 
+  concatenate_audio_clips (tts_output_file=tts_output_file)
+
+
+def announce_time_selected_is ():
+  # Log
+  print (f'The time requested is: {selected_hour}:{selected_minute} {selected_meridiem}')
+
+  # Concatenate
+  join_audio_clip_files_for_time_selected ()
+  
+  # Sound alert
+  alert_sound = output_filename_time_selected.replace('.mp3', '', 1)
+  subprocess.check_call([sounds_tool, 'alert', alert_sound])
+
+
+
+##########
+#  MAIN  #
+##########
+
+if DATE == 'today':
+  announce_today_is ()
+
+elif DATE == 'tomorrow':
+  print('Date Tomorrow - Not yet implemented')
+
+
+# Time
+elif TIME == 'now':
+  announce_time_now_is ()
+
+else:
+  time_requested = TIME
+  selected_time = time_requested
+  selected_hour = selected_time.split()[0]
+  selected_minute = selected_time.split()[1]
+  selected_meridiem = selected_time.split()[2]
+  #
+  announce_time_selected_is ()
+
+# Quit
+sys.exit()

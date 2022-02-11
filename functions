@@ -1244,6 +1244,7 @@ CAMPLAYER_TOOL=$BINARY_PREFIX/jambulatv-camplayer
 CCTV_KODI_EVENT_ALERT_TOOL=$BINARY_PREFIX/jambulatv-cctv-event-via-kodi
 CONNECT_WIFI_AP_TOOL=$BINARY_PREFIX/jambulatv-connect-2-wifi-ap
 COOVA_CHILLI_TOOL=$BINARY_PREFIX/jambulatv-chilli
+DATE_TIME_TOOL=$BINARY_PREFIX/jambulatv-datetime
 EMAIL_VIA_GMAIL_TOOL=$BINARY_PREFIX/jambulatv-email 
 EPG_GENERIC_TVGUIDE_TOOL=$BINARY_PREFIX/jambulatv-tvguide-fta-generic
 FETCH_NEWS_TOOL=$BINARY_PREFIX/jambulatv-fetch-news
@@ -13747,6 +13748,7 @@ home_automation_tools () {
 for TOOL_NAME in \
 ${BACKUP_REMOTE_PC_TO_USB_DISK_TOOL##*/} \
 ${CCTV_KODI_EVENT_ALERT_TOOL##*/} \
+${DATE_TIME_TOOL##*/} \
 ${INTERNET_DATA_SAVER_TOOL##*/} \
 ${LIGHTS_TOOL##*/} \
 ${PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL##*/} \
