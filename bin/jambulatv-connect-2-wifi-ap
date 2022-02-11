@@ -28,6 +28,7 @@ INSERT_WIFI_DONGLE_MSG="Please insert your USB Wireless (WiFi) Network Adapter. 
 CONNECTED_2_AP_MSG="Successfully connected to your WiFi Access Point ($WIFI_SSID)!"
 INTERNET_IS_OFF_MSG="Internet is Off"
 CONNECT_2_INTERNET_VIA_MIFI_MSG="Attempting to connect to the Internet using the WiFi Access Point (MiFi)"
+DISCONNECT_FROM_INTERNET_MSG="Disconnecting from the WiFi Access Point (MiFi)"
 
 HOSTAPD_CONFIG_FILE=/etc/hostapd/hostapd.conf
 
@@ -84,6 +85,11 @@ break
 elif [[ ! -e "$SETUP_COMPLETED_FILE" ]];
 then
 $LOGGER_CMD $LOGGER_OPTS $INTERNET_IS_OFF_MSG
+break
+
+elif [[ "$ICINGA2_AP_STATUS" = "WARNING" ]];
+then
+$LOGGER_CMD $LOGGER_OPTS $DISCONNECT_FROM_INTERNET_MSG
 break
 
 else
