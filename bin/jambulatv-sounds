@@ -434,7 +434,7 @@ fi
 #################
 
 # Prevent another instance of this tool from running at the same time
-wait_if_another_process_instance_is_running
+[[ "$SOUND_TYPE" = "api" ]] || wait_if_another_process_instance_is_running
 
 # Alert via MQTT: Mixer is being used
 mixer_voice_alerts_status_in_use
