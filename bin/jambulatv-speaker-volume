@@ -25,7 +25,7 @@ SPEAKER_VOLUME_LEVEL=$3
 ###############
 usage_all () {
 # Quit if there are missing CLI arguments
-if [[ "xSPEAKER_VOLUME_TYPE" = "x" || "x$SPEAKER_VOLUME_LOCATION" = "x" || "x$SPEAKER_VOLUME_LEVEL" = "x" ]];
+if [[ "x$SPEAKER_VOLUME_TYPE" = "x" || "x$SPEAKER_VOLUME_LOCATION" = "x" || "x$SPEAKER_VOLUME_LEVEL" = "x" ]];
 then
 clear
 cat <<EOT
