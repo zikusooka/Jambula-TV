@@ -173,7 +173,7 @@ skill_time_world "$WORLD_CITY" &
 # Weather
 elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER" ];
 then
-skill_weather &
+skill_weather_currently &
 
 # Weather - Currently
 elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER CURRENTLY" ];
