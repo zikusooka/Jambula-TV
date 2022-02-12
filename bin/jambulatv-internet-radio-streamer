@@ -1,7 +1,7 @@
 #!/bin/sh
 # This script starts up an Internet stream
 #
-# Jambula Labs @copyright 2020-2021 All rights reserved
+# Jambula Labs @copyright 2022-2023 All rights reserved
 
 # Variables
 PROJECT_NAME=JambulaTV
@@ -31,7 +31,7 @@ WEBRADIO_STREAMER_CLIENT_LOCATION=${@:$WEBRADIO_STREAMER_NUMBER_OF_ARGS}
 usage_all () {
 clear
 cat <<EOF
-Usage: ./$(basename $0) [start|stop|restart|playing] [WEB_RADIO_STATION_ID] [local (Optional)]
+Usage: ./$(basename $0) [start|stop|restart] [WEB_RADIO_STATION_ID] [local (Optional)]
 
 EOF
 exit 1
@@ -355,28 +355,6 @@ $MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT stop
 $MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT clear
 }
 
-mpd_now_playing () {
-# See if song filename ends with a known music extension i.e. is locally saved
-$MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT playlist | grep -i -e '.m4a$' -e '.wma$' -e '.ogg$' -e '.wav$' -e '.mp3$' -e '.mp4$' > /dev/null 2>&1
-SONG_IS_STORED_LOCALLY=$?
-#
-# Get title and artist
-if [[ "$SONG_IS_STORED_LOCALLY" = "0" ]];
-then
-NAME_OF_STATION=$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT current | sed 's: Radio Edit::g' | sed 's:(Lyrics Video)::g' | sed 's:(Official video)::g' | sed 's:\.mp3::g' | sed 's:\.wmv::g' | cut -d '/' -f2- | awk -F'[.|-]' {'print $1'} | sed 's:[_|\.|/]: :g' | sed 's:^[_|-]::g' | sed 's:[_|-]$::g' | sed 's:^ ::g' | sed 's: $::g' | sed 's:^  ::g' | sed 's:  $::g')
-NAME_OF_SONG_ARTIST=$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT current | sed -r ':a; s/\b([[:alnum:]]+)\b(.*)\b\1\b/\1\2/g; ta; s/(, )+/, /g; s/, *$//' | cut -d'/' -f2- | sed 's: Radio Edit::g' | sed 's:(Lyrics Video)::g' | sed 's:(Official video)::g' | sed 's:\.mp3::g' | sed 's:\.wmv::g' | rev | awk -F' [:|.|-]' '{print $1 $2 $3 $4}' | rev | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:#: - :g' | sed 's:[_|\.|/]: :g' | sed "s:$NAME_OF_STATION::g" | sed 's:^[_|-]::g' | sed 's:[_|-]$::g' | sed 's:^ ::g' | sed 's: $::g' | sed 's:^  ::g' | sed 's:  $::g')
-GENRE=$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT -f %file% current | awk -F'/' '{print $1}') 
-
-else
-NAME_OF_STATION=$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT -f '%artist%' current)
-[[ "x$NAME_OF_STATION" = "x" ]] && \
-NAME_OF_STATION=$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT current -f '%name%' | sed 's:^/::')
-#
-NAME_OF_SONG_ARTIST=$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT -f '%title%' current | rev | awk -F' :' '{print $1}' | rev | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | sed 's/text=//' | awk -F'song_spot=' '{print $1}' | sed 's:"::g')
-GENRE=$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT -f '%genre%' current)
-fi
-}
-
 internet_radio_via_mpd_start () {
 # Stop and clear current playlist
 mpd_current_playlist_stop
@@ -491,51 +469,6 @@ $0 start $WEBRADIO_STREAMER_STATION $WEBRADIO_STREAMER_CLIENT_LOCATION
 #stream_local
 }
 
-stream_now_playing () {
-# Get age of log file
-AGE_OF_WEBRADIO_STREAMER_LOG_FILE=$(date -d "now - $(stat -c "%Y" $WEBRADIO_STREAMER_LOG_FILE) seconds" +%s)
-# Only show 'now playing' if the age of log file is less than 1 minute
-if [[ "$AGE_OF_WEBRADIO_STREAMER_LOG_FILE" -lt "60" ]];
-then
-NAME_OF_STATION=$(/usr/bin/awk '/Name   : / {print $3}' $WEBRADIO_STREAMER_LOG_FILE | /usr/bin/head -1 | /usr/bin/sort -u)
-NAME_OF_SONG_ARTIST=$(/usr/bin/grep -a -oP "(?<=ICY Info: StreamTitle=').+?(?=';)" $WEBRADIO_STREAMER_LOG_FILE | /usr/bin/tail -1)
-fi
-}
-
-playing_now () {
-# Check status of MPD server
-mpd_check_status
-#
-# Fetch 'Now Playing' info if MPD server is running
-if [[ "$MPC_EXIT_STATUS" = "0" ]];
-then
-mpd_now_playing
-
-else
-# Get 'Now Playing' info 
-stream_now_playing
-fi
-
-# Quit if nothing is playing
-[[ "x$MPC_CURRENTLY_PLAYING" = "x" ]] && exit 0
-
-# Print name of station, song, and artist if found
-if [[ "$NAME_OF_STATION" = "$NAME_OF_SONG_ARTIST" && "x$NAME_OF_SONG_ARTIST" != "x" ]] || [[ "x$NAME_OF_STATION" = "x" && "x$NAME_OF_SONG_ARTIST" != "x" ]];
-then
-[[ "x$GENRE" != "x" ]] && echo "$NAME_OF_SONG_ARTIST [$GENRE]"
-[[ "x$GENRE" = "x" ]] && echo "$NAME_OF_SONG_ARTIST"
-
-elif [[ "x$NAME_OF_STATION" != "x" && "x$NAME_OF_SONG_ARTIST" != "x" ]];
-then
-[[ "x$GENRE" != "x" ]] && echo "$NAME_OF_STATION - $NAME_OF_SONG_ARTIST [$GENRE]"
-[[ "x$GENRE" = "x" ]] && echo "$NAME_OF_STATION - $NAME_OF_SONG_ARTIST"
-
-else
-[[ "x$GENRE" != "x" ]] && echo "$NAME_OF_STATION [$GENRE]"
-[[ "x$GENRE" = "x" ]] && echo "$NAME_OF_STATION"
-fi
-}
-
 
 
 #################
@@ -556,10 +489,6 @@ stream_stop
 
 restart)
 stream_restart
-;;
-
-playing)
-playing_now
 ;;
 
 *)
