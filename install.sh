@@ -339,6 +339,7 @@ vpn_tunnel_sshuttle_setup
 rtl_sdr_install
 fm_radio_streamer_setup
 internet_radio_streamer_setup 
+radio_playlist_setup
 TermFeed_install
 usbreset_install
 screen_resolution_configure

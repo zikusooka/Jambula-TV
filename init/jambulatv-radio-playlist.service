@@ -1,0 +1,18 @@
+[Unit]
+Description=MY_PROJECT_NAME radio playlist generator
+Requires=mpd.service
+
+[Service]
+User=MY_MULTIMEDIA_USER
+#
+EnvironmentFile=-MY_GLOBAL_SETTINGS_FILE
+Environment=PLAYLIST_JTVRADIO_FILE=MY_PLAYLIST_RADIO
+Environment=PLAYLIST_RADIO_TOOL=MY_RADIO_PLAYLIST_TOOL
+Environment=PLAYLIST_INPUT=jtvradio
+#
+ExecStartPre=/bin/bash -c "if [[ -e $PLAYLIST_JTVRADIO_FILE ]]; then sudo chown $(whoami):$(whoami) $PLAYLIST_JTVRADIO_FILE; mv -v $PLAYLIST_JTVRADIO_FILE $PLAYLIST_JTVRADIO_FILE.$$(date '+%%Y%%m%%d_%%H%%M'); fi"
+ExecStart=/bin/bash -c "while true; do $PLAYLIST_RADIO_TOOL $PLAYLIST_INPUT >> $PLAYLIST_JTVRADIO_FILE 2>&1; $MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT idle; done"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

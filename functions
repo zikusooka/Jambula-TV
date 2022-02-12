@@ -140,6 +140,8 @@ PLAYLISTS_IPTV_WORLD_M3U_FILE=jambula-iptv.m3u8
 PLAYLISTS_CCTV_LOCAL_M3U_FILE=jambula-cctv.m3u8
 PLAYLISTS_JTV_HOME_M3U_FILE=jambula-home.m3u8
 
+PLAYLIST_RADIO=$TMPDIR/playlist.radio
+
 RTMP_HLS_INPUT="$PROJECT_SYSTEM_SHARE_DIR/clips/video/jtv_home_streaming_test_01.mkv"
 RTMP_HLS_URL="rtmp://127.0.0.1:8560/hls"
 RTMP_HLS_ALL_STREAMS_FILE=$TMPDIR/rtmp_hls_streams_4_jtv_home.txt
@@ -1271,6 +1273,7 @@ PPP_DIAL_TOOL=$BINARY_PREFIX/jambulatv-ppp-dialer
 PRESENCE_DETECTION_VIA_MIFI_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-mifi
 PRESENCE_DETECTION_VIA_ACCESS_POINT_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-hostapd
 PRESENCE_DETECTION_VIA_TRACKER_TOOL=$BINARY_PREFIX/jambulatv-presence-detection-via-trackerjacker
+RADIO_PLAYLIST_TOOL=$BINARY_PREFIX/jambulatv-radio-playlist
 REMOTE_PC_USAGE_STATUS_TOOL=$BINARY_PREFIX/jambulatv-remote-pc-usage-status
 REVERSE_SSH_TOOL=$BINARY_PREFIX/jambulatv-reverse-ssh-tunnel
 SCREEN_DISPLAY_TOOL=$BINARY_PREFIX/jambulatv-display
@@ -11738,6 +11741,30 @@ internet_radio_streamer_setup () {
 	cp -v $PROJECT_BIN_DIR/jambulatv-internet-radio-streamer $WEBRADIO_STREAMER_TOOL
 # Make script executable
 chmod 755 $WEBRADIO_STREAMER_TOOL
+}
+
+radio_playlist_setup () {
+# Copy jambulatv-radio-playlist script, if none exists in bin directory
+[[ -e $RADIO_PLAYLIST_TOOL ]] || cat $PROJECT_BIN_DIR/jambulatv-radio-playlist | \
+	sed -e "s:MY_PROJECT_NAME:$PROJECT_NAME:g" \
+		> $RADIO_PLAYLIST_TOOL
+# Make script executable
+chmod 755 $RADIO_PLAYLIST_TOOL
+
+# Setup systemd unit
+# ---
+# Configure and copy systemd unit (.service) file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-radio-playlist.service ]] || \
+	cat $PROJECT_INIT_SCRIPTS_DIR/jambulatv-radio-playlist.service | \
+		sed -e "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
+		sed -e "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" | \
+		sed -e "s:MY_GLOBAL_SETTINGS_FILE:$PROJECT_GLOBAL_SETTINGS_FILE:g" | \
+		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
+		sed -e "s:MY_RADIO_PLAYLIST_TOOL:$RADIO_PLAYLIST_TOOL:g" | \
+		sed -e "s:MY_PLAYLIST_RADIO:$PLAYLIST_RADIO:g" \
+			> $SYSTEMD_UNITS_DIR_USER/jambulatv-radio-playlist.service
+# Enable systemd unit
+systemctl enable jambulatv-radio-playlist.service
 }
 
 TermFeed_install () {
