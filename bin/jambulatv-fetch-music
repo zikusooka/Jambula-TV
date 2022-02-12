@@ -1,11 +1,11 @@
 #!/bin/sh
 # This script will fetch music videos from Youtube, and other sites 
 # Downloads are converted to desired audio format and saved in 
-# temporary music folder from your selected news sources i.e. rss feeds
-# Use it with voice recognition tool to read out headlines
-# Jambula Labs @copyright 2020-2021 All rights reserved
+# temporary music folder 
 #
-#
+# Jambula Labs @copyright 2022-2023 All rights reserved
+# ---
+
 # Source global settings
 PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
@@ -16,7 +16,8 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 MUSIC_APPLICATION_ID=MY_PROJECT_NAME-Music-Downloader
 MUSIC_DOWNLOADS_DIR=MY_MUSIC_DOWNLOADS_DIRECTORY
 MUSIC_DESIRED_FORMAT=mp3
-MUSIC_NOW_PLAYING_FILE=MY_MUSIC_NOW_PLAYING_FILE
+
+PLAYLIST_RADIO_FILE=MY_PLAYLIST_RADIO
 
 MUSIC_SERVICE=$1
 MUSIC_CATEGORY=$2
@@ -39,7 +40,7 @@ check_internet_access () {
 # Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
 ping -w $PING_TIMEOUT $PING_IP_ADDRESS > /dev/null 2>&1
 INTERNET_ALIVE=$?
-if [ "$INTERNET_ALIVE" != "0" ];
+if [[ "$INTERNET_ALIVE" != "0" ]];
 then
 # Log error of no Internet
 logger -s -t $(basename $0) "Error: Could not download music since there's no Internet connectivity"
@@ -63,7 +64,7 @@ fi
 usage_youtube_now () {
 clear
 cat <<ET
-Usage:  ./$(basename $0) youtube [playing|demand]
+Usage:  ./$(basename $0) youtube [playing|previous|demand]
 
 ET
 exit 1
@@ -73,19 +74,33 @@ pre_setup_youtube () {
 case $MUSIC_CATEGORY in
 
 playing)
-# If music is playing now, check for existence of 'now playing' file
-if [[ ! -s $MUSIC_NOW_PLAYING_FILE ]];
+# If music is playing now, check for existence of 'playlist.radio' file - Give it a few seconds after first try fails
+if [[ ! -s $PLAYLIST_RADIO_FILE ]];
 then
-echo "Error: The file $MUSIC_NOW_PLAYING_FILE was not found"
+sleep 5
+elif [[ ! -s $PLAYLIST_RADIO_FILE ]];
+then
+echo "Error: The file $PLAYLIST_RADIO_FILE was not found"
 exit 1
 fi
 # Set music name of song now playing
-MUSIC_NOW_PLAYING_SONG=$(head -1 $MUSIC_NOW_PLAYING_FILE | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g')
+MUSIC_TITLE=$(uniq -u $PLAYLIST_RADIO_FILE | tail -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g')
+;;
+
+previous)
+# If music is previous, check for existence of 'playlist.radio' file 
+if [[ ! -s $PLAYLIST_RADIO_FILE ]];
+then
+echo "Error: The file $PLAYLIST_RADIO_FILE was not found"
+exit 1
+fi
+# Set music name of song previously played
+MUSIC_TITLE=$(uniq -u $PLAYLIST_RADIO_FILE | tail -2 | head -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g')
 ;;
 
 demand)
 # Set music name of song requested for
-MUSIC_NOW_PLAYING_SONG=$MUSIC_REQUESTED
+MUSIC_TITLE=$MUSIC_REQUESTED
 ;;
 
 *)
@@ -98,20 +113,20 @@ search_4_music_using_youtube () {
 YOUTUBE_CMD="MY_YOUTUBE_DL_SEARCH_TOOL"
 #
 # Ensure song is specified
-if [[ "x$MUSIC_NOW_PLAYING_SONG" = "x" ]];
+if [[ "x$MUSIC_TITLE" = "x" ]];
 then
 logger -s -t $MUSIC_APPLICATION_ID "Error: The title of the song was not specified, quitting ..."
 exit 1
 fi
 #
-YOUTUBE_SEARCH_TEXT=$(echo $MUSIC_NOW_PLAYING_SONG | sed 's:-: :g' | sed 's: :+:g')
+YOUTUBE_SEARCH_TEXT=$(echo $MUSIC_TITLE | sed 's:-: :g' | sed 's: :+:g')
 YOUTUBE_VARIABLES_TEMP_FILE=$(grep ^YOUTUBE_VARIABLES_TEMP_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g' | cut -d '.' -f1 | sed "s:\$YOUTUBE_SEARCH_TEMP_DIR:MY_TMPDIR:g").${YOUTUBE_SEARCH_TEXT}
 YOUTUBE_VIDEO_IDS_FOUND_FILE=$(grep ^YOUTUBE_PLAYLIST_FILE $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g' | cut -d '.' -f1 | sed "s:\$YOUTUBE_SEARCH_TEMP_DIR:MY_TMPDIR:g").${YOUTUBE_SEARCH_TEXT}
 YOUTUBE_WATCH_URL=$(grep ^YOUTUBE_WATCH_URL $YOUTUBE_CMD | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g')
 
 # Print searching notification to systemd journal and console
 clear
-logger -s -t $MUSIC_APPLICATION_ID "Searching for [$MUSIC_NOW_PLAYING_SONG] from [$MUSIC_SERVICE], please be patient ..."
+logger -s -t $MUSIC_APPLICATION_ID "Searching for [$MUSIC_TITLE] from [$MUSIC_SERVICE], please be patient ..."
 #
 # Search for music from Youtube
 $YOUTUBE_CMD "$YOUTUBE_SEARCH_TEXT" > /dev/null 2>&1
@@ -139,7 +154,7 @@ YOUTUBE_ERROR_LOG_FILE=MY_TMPDIR/youtube_dl_fetch_music.log
 #
 # Print started notification to systemd journal and console
 clear
-logger -s -t $MUSIC_APPLICATION_ID "Downloading the song now playing [$MUSIC_NOW_PLAYING_SONG] from [$MUSIC_SERVICE], please be patient ..."
+logger -s -t $MUSIC_APPLICATION_ID "Downloading the song [$MUSIC_TITLE] from [$MUSIC_SERVICE], please be patient ..."
 #
 # Download & extract best audio format & convert 2 desired format - mp3
 $YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_DOWNLOADS_DIR/"%(title)s.%(ext)s" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title "%(title)s" $YOUTUBE_VIDEO_URL > $YOUTUBE_ERROR_LOG_FILE 2>&1
@@ -156,31 +171,31 @@ if [[ "$FETCH_STATUS" = "0"  && "$ERROR_FILE_IS_LARGE" != "0" ]];
 then
 # Print completed notification to systemd journal and console
 clear
-logger -s -t $MUSIC_APPLICATION_ID "Completed download of the song [$MUSIC_NOW_PLAYING_SONG]. It is saved under: $MUSIC_DOWNLOADS_DIR"
+logger -s -t $MUSIC_APPLICATION_ID "Completed download of the song [$MUSIC_TITLE]. It is saved under: $MUSIC_DOWNLOADS_DIR"
 
 elif [[ "$FETCH_STATUS" = "0"  && "$ERROR_FILE_IS_LARGE" = "0" ]];
 then
 # Print error log for large files to systemd journal and console
 clear
-logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_NOW_PLAYING_SONG] because the file is larger than i.e. $YOUTUBE_MAX_FILE_SIZE"
+logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_TITLE] because the file is larger than i.e. $YOUTUBE_MAX_FILE_SIZE"
 
 elif [[ "$FETCH_STATUS" = "124" ]];
 then
 # Print error log for timeouts to systemd journal and console
 clear
-logger -s -t $MUSIC_APPLICATION_ID "Error: The default timeout period of $TIMEOUT_PROBE is not long enough for this song. Please look for another version of '$MUSIC_NOW_PLAYING_SONG'.  Alternatively, you can increase the value of [TIMEOUT_PROBE] in this tool and then try again"
+logger -s -t $MUSIC_APPLICATION_ID "Error: The default timeout period of $TIMEOUT_PROBE is not long enough for this song. Please look for another version of '$MUSIC_TITLE'.  Alternatively, you can increase the value of [TIMEOUT_PROBE] in this tool and then try again"
 
 elif [[ ! -s "$YOUTUBE_ERROR_LOG_FILE" ]] || [[ ! -e "$YOUTUBE_ERROR_LOG_FILE" ]];
 then
 # Print error log for failed connection to server to systemd journal and console
 clear
-logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_NOW_PLAYING_SONG] because connection to Youtube servers was probably dropped or interrupted due to a bad Internet connection. Please try again"
+logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_TITLE] because connection to Youtube servers was probably dropped or interrupted due to a bad Internet connection. Please try again"
 
 elif [[ "$ERROR_VIDEO_DATA_FAIL" = "0" ]];
 then
 # Print error log for failed video data download to systemd journal and console
 clear
-logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the video data for the song [$MUSIC_NOW_PLAYING_SONG] using the automatically selected video ID. Please try manually using the command and URL(s) below:
+logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the video data for the song [$MUSIC_TITLE] using the automatically selected video ID. Please try manually using the command and URL(s) below:
 
 $YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_DOWNLOADS_DIR/\"%(title)s.%(ext)s\" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title \"%(title)s\" [YOUTUBE-URL]
 
@@ -192,7 +207,7 @@ done)"
 else
 # Print error log for unfinished fetch to systemd journal and console
 clear
-logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_NOW_PLAYING_SONG] due to an unknown reason. Please try again"
+logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_TITLE] due to an unknown reason. Please try again"
 fi
 }
 
