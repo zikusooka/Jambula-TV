@@ -13438,7 +13438,10 @@ text2speech_setup () {
 # Copy jambulatv-text2speech script, if it does not exist in bin directory and add custom User-Agent string
 [[ -e $TEXT2SPEECH_TOOL ]] || \
 	cat $PROJECT_BIN_DIR/jambulatv-text2speech | \
+		sed -e "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
+		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
 		sed -e "s:MY_USER_AGENT:$DEFAULT_USER_AGENT:g" | \
+		sed -e "s:MY_SOUNDS_TOOL:$SOUNDS_TOOL:g" | \
 		sed -e "s:MY_SPEAKER_VOLUME_TOOL:$SPEAKER_VOLUME_TOOL:g" | \
 		sed "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" \
 			> $TEXT2SPEECH_TOOL 
