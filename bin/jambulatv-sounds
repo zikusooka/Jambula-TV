@@ -3,7 +3,7 @@
 # This is a general helper script used by other tools to generate 
 # sounds at certain points of processing
 #
-# Jambula Labs @copyright 2020-2021 All rights reserved
+# Jambula Labs @copyright 2022-2023 All rights reserved
 #
 #
 # Source global settings
@@ -34,7 +34,7 @@ SOUND_PLAYER_CMD="/usr/bin/mpv"
 SOUND_AUDIO_DRIVER="$AUDIO_OUTPUT_DRIVER"
 
 SNAPCAST_FIFO_FILE="$TMPDIR/snapfifo"
-ALERT_SOUND_AUDIO_GAIN=$(echo $@ | awk -F'=' '/gain/ {print $2}')
+ALERT_SOUND_AUDIO_GAIN=$(echo $@ | awk -F'gain=' '{print $2}' | awk '{print $1}')
 #
 # Set sound player CLI options depending on snapcast and audio gain 
 if [[ -e $SNAPCAST_FIFO_FILE ]] && [[ "x$ALERT_SOUND_AUDIO_GAIN" = "x" ]];
