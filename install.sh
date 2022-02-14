@@ -499,6 +499,7 @@ backup_mobile_phones_setup
 # HomeAssistant
 homeassistant_core_install
 homeassistant_core_configure
+homeassistant_skin_customization
 # HomeAssistant-CLI
 homeassistant_cli_install
 

@@ -13743,6 +13743,18 @@ cp -v $PROJECT_INIT_SCRIPTS_DIR/home-assistant.service $SYSTEMD_UNITS_DIR_USER/
 systemctl enable home-assistant.service
 }
 
+homeassistant_skin_customization () {
+PYTHON_VERSION_USED=3 && set_python_version
+#
+# Change title at login/authorize page 
+sed -i "s:Home Assistant:$PROJECT_NAME:g" $PYTHON_SITEDIR/hass_frontend/authorize.html
+# Replace icons with our own
+rsync -av $PROJECT_SYSTEM_SHARE_DIR/images/hass/favicon* $PYTHON_SITEDIR/hass_frontend/static/icons/
+
+# Replace login text with our welcome message
+sed -i "s|\"You're about to give {clientId} access to your Home Assistant instance.\",\"ui.panel.page-authorize.logging_in_to_with\":\"Logging in to \*\*{locationName}\*\* with \*\*{authProviderName}\*\*.\"|\"Welcome to $PROJECT_NAME, your smart home entertainment and automation hub\"|" $PYTHON_SITEDIR/hass_frontend/static/translations/page-authorize/en-ca*json
+}
+
 homeassistant_cli_install () {
 PYTHON_VERSION_USED=3 && set_python_version
 
