@@ -2,7 +2,7 @@
 # This is a set of voice recognition skills used by JambulaTV 
 # It is used by the Speech-to-Text tool
 #
-# Jambula Labs @copyright 2020-2021 All rights reserved
+# Jambula Labs @copyright 2022-2023 All rights reserved
 
 # Variables
 PROJECT_NAME=JambulaTV
@@ -13,57 +13,240 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 . $PROJECT_FUNCTIONS_FILE
 
 
+# Variables - Flash briefing
+ALL_BRIEF_CONCAT_DIR=$TMPDIR/tts/flash_briefing_intro
+ALL_BRIEF_CONCAT_INPUT_FILE=$TMPDIR/input_files_flash_briefing_all.txt
+ALL_BRIEF_FILE=$TMPDIR/flash_briefing_intro.mp3
+ALL_BRIEF_ALERT_SOUND=$(echo ${ALL_BRIEF_FILE##*/} | sed 's:.mp3::') 
+ALL_BRIEF_DATE=$(date '+%A %-d %B %Y') 
+
+# Variables - Reminders
+REMINDERS_TOOL=/usr/bin/jambulatv-remind
+REMINDERS_SCHEDULED="$($REMINDERS_TOOL text)"
+REMINDERS_TEMP_FILE=$(grep ^TODAYS_REMINDERS_FILE $REMINDERS_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'} | sed 's/"//g' | cut -d '.' -f1)
+REMINDERS_CONCAT_DIR=$TMPDIR/tts/reminders
+REMINDERS_CONCAT_INPUT_FILE=$TMPDIR/input_files_reminders.txt
+REMINDERS_FILE=$TMPDIR/reminders_today.mp3
+REMINDERS_ALERT_SOUND=$(echo ${REMINDERS_FILE##*/} | sed 's:.mp3::')
+
+# Variables - Power outages
+POWER_OUTAGE_DATE_TODAY=$(date '+%A %d %B')
+POWER_OUTAGE_DATE_TOMORROW=$(date --date='tomorrow' '+%A %d %B')
+POWER_OUTAGES_CONCAT_DIR=$TMPDIR/tts/power_outages
+POWER_OUTAGES_CONCAT_INPUT_FILE=$TMPDIR/input_files_power_outages.txt
+POWER_OUTAGES_FILE=$TMPDIR/power_outages_today.mp3
+POWER_OUTAGES_ALERT_SOUND=$(echo ${POWER_OUTAGES_FILE##*/} | sed 's:.mp3::')
+
+# Variables - Weather
+WEATHER_REPORT_CONCAT_DIR=$TMPDIR/tts/weather_currently
+WEATHER_REPORT_CONCAT_INPUT_FILE=$TMPDIR/input_files_weather_currently.txt
+WEATHER_REPORT_FILE=$TMPDIR/weather_summary_currently.mp3
+WEATHER_REPORT_ALERT_SOUND=$(echo ${WEATHER_REPORT_FILE##*/} | sed 's:.mp3::')
+
+WEATHER_REPORT_CONCAT_DIR=$TMPDIR/tts/weather_today
+WEATHER_REPORT_CONCAT_INPUT_FILE=$TMPDIR/input_files_weather_today.txt
+WEATHER_REPORT_FILE=$TMPDIR/weather_forecast_today.mp3
+WEATHER_REPORT_ALERT_SOUND=$(echo ${WEATHER_REPORT_FILE##*/} | sed 's:.mp3::')
+
+WEATHER_REPORT_CONCAT_DIR=$TMPDIR/tts/weather_later
+WEATHER_REPORT_CONCAT_INPUT_FILE=$TMPDIR/input_files_weather_later.txt
+WEATHER_REPORT_FILE=$TMPDIR/weather_forecast_later.mp3
+WEATHER_REPORT_ALERT_SOUND=$(echo ${WEATHER_REPORT_FILE##*/} | sed 's:.mp3::')
+
+# Variables - News
+NEWS_BRIEF_CONCAT_DIR=$TMPDIR/tts/news
+NEWS_BRIEF_CONCAT_INPUT_FILE=$TMPDIR/input_files_news.txt
+NEWS_BRIEF_FILE=$TMPDIR/news_briefing_today.mp3
+NEWS_BRIEF_ALERT_SOUND=$(echo ${NEWS_BRIEF_FILE##*/} | sed 's:.mp3::')
+NEWS_SUMMARY_AUDIO_FILENAME_4_BBC=bbc_news_summary.mp3
+NEWS_SUMMARY_AUDIO_FILENAME_4_MONITOR=monitor_news_summary.mp3
+
+# Variables - MOTD
+MESSAGE_OF_THE_DAY=$(/usr/bin/fortune -s -n 80)
+MESSAGE_OF_THE_DAY_CONCAT_DIR=$TMPDIR/tts/motd
+MESSAGE_OF_THE_DAY_CONCAT_INPUT_FILE=$TMPDIR/input_files_motd.txt
+MESSAGE_OF_THE_DAY_FILE=$TMPDIR/message_of_the_day.mp3
+MESSAGE_OF_THE_DAY_ALERT_SOUND=$(echo ${MESSAGE_OF_THE_DAY_FILE##*/} | sed 's:.mp3::')
+
+# Variables - Signout
+DAY_OF_WEEK=$(date +%A) 
+DAYS_GREETING_CONCAT_DIR=$TMPDIR/tts/flash_briefing_sign_out
+DAYS_GREETING_CONCAT_INPUT_FILE=$TMPDIR/input_files_days_greeting.txt
+DAYS_GREETING_FILE=$TMPDIR/flash_briefing_sign_out.mp3
+DAYS_GREETING_ALERT_SOUND=$(echo ${DAYS_GREETING_FILE##*/} | sed 's:.mp3::')
+
+# Variables - Miscellaneous
+SILENCE_1_SECS_AUDIO_FILE=$PROJECT_SYSTEM_SOUNDS_DIR/silence_1s.mp3
+SILENCE_2_SECS_AUDIO_FILE=$PROJECT_SYSTEM_SOUNDS_DIR/silence_2s.mp3
+
+
+
+###############
+#  FUNCTIONS  #
+###############
+
+query_and_set_freshness_of_target_file () {
+TARGET_FILE=$1
+MAXIMUM_AGE_OF_TARGET_FILE=$2
+
+# If Flash briefing today file of size exists, set variable to yes
+if [[ -s "$TARGET_FILE" ]];
+then
+TARGET_FILE_IS_PRESENT=yes
+else
+TARGET_FILE_IS_PRESENT=no
+fi
+
+# If Flash briefing today file is still fresh, set variable to yes
+if [[ -e "$TARGET_FILE" && "$(date -d "now - $(stat -c "%Y" $TARGET_FILE) seconds" +%s)" -lt "$MAXIMUM_AGE_OF_TARGET_FILE" ]];
+then
+TARGET_FILE_IS_FRESH=yes
+else
+TARGET_FILE_IS_FRESH=no
+fi
+}
+
+play_audio_test () {
+# To play audio or not
+echo $@ | grep -e 'play=no' -e 'play=n' > /dev/null 2>&1
+EXTRA_ARG_PLAY=$?
+if [[ "$EXTRA_ARG_PLAY" = "0" ]];
+then
+PLAY_AUDIO=no
+else
+PLAY_AUDIO=yes
+fi
+}
+
+mqtt_publish_flash_briefing_status () {
+# Use the following states: | pending | ready | failed
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_FLASH_BRIEFING" -m "$1"
+}
+
+audio_merge_pre_setup () {
+AUDIO_INPUT_FILE=$1
+AUDIO_OUTPUT_DIR=$2
+AUDIO_OUTPUT_FILE=$3
+
+# Create the directory to store audio clips if non-existent
+[[ -d $AUDIO_OUTPUT_DIR ]] || mkdir -p $AUDIO_OUTPUT_DIR
+
+# Remove existing and previous audio clip
+[[ -e "${AUDIO_OUTPUT_DIR}/${AUDIO_OUTPUT_FILE}.mp3" ]] && sudo rm -f ${AUDIO_OUTPUT_DIR}/${AUDIO_OUTPUT_FILE}.mp3
+
+# If format of input audio clip is not 'mp3', perform conversion using FFmpeg other wise copy into clips directory
+if [[ "${AUDIO_INPUT_FILE##*.}" != "mp3" ]];
+then
+$FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -i $TMPDIR/$AUDIO_INPUT_FILE ${AUDIO_OUTPUT_DIR}/${AUDIO_OUTPUT_FILE}.mp3 
+
+elif [[ -e $TMPDIR/$AUDIO_INPUT_FILE ]];
+then
+cp $TMPDIR/$AUDIO_INPUT_FILE ${AUDIO_OUTPUT_DIR}/${AUDIO_OUTPUT_FILE}.mp3
+
+elif [[ -e $PROJECT_SYSTEM_SOUNDS_DIR/$AUDIO_INPUT_FILE ]];
+then
+cp $PROJECT_SYSTEM_SOUNDS_DIR/${AUDIO_INPUT_FILE} ${AUDIO_OUTPUT_DIR}/${AUDIO_OUTPUT_FILE}.mp3
+fi
+}
+
+wifi_ap_discovery_configure () {
+ICINGA_API_USER=root
+ICINGA_API_PASS=$(awk -F'= ' '/password/ {print $2; exit;}' $ICINGA2_API_USERS_CONF_FILE | sed "s:\"::g")
+ICINGA_SERVICE_NAME="JambulaTV!Discover%20Wifi%20Access%20Point"
+CURL_OPTS="-iksS"
+
+# Enable/Disable WiFi access point service discovery in Icinga via API
+$CURL_CMD $CURL_OPTS -u $ICINGA_API_USER:$ICINGA_API_PASS -H "Accept:application/json" "https://localhost:5665/v1/objects/services/$ICINGA_SERVICE_NAME" -d '{ "attrs":{ "enable_event_handler":"'"$1"'" } }' > /dev/null 2>&1
+}
+
+
+# -----------
+# Initialize
+# -----------
+play_audio_test $@
+
 
 ############
 #  SKILLS  #
 ############
 
-mute_speakers_localhost () {
-$SPEAKER_VOLUME_TOOL all localhost status | grep -i Active > /dev/null 2>&1
-SPEAKER_AUDIO_STATUS=$?
-[[ "$SPEAKER_AUDIO_STATUS" = "0" ]] && \
-$SPEAKER_VOLUME_TOOL all localhost mute
+check_internet_connectivity () {
+# Check for internet connectivity - IMPORTANT: Don't use DNS to ping use actual IP address
+REMOTE_HOST_NAME=8.8.4.4
+PING_COUNT=3
+PING_TIMEOUT=3
+
+# Ping
+ping -c $PING_COUNT -W $PING_TIMEOUT $REMOTE_HOST_NAME > /dev/null 2>&1
+INTERNET_STATUS_VAL=$?
+#
 }
 
-unmute_speakers_localhost () {
-$SPEAKER_VOLUME_TOOL all localhost status | grep -i Active > /dev/null 2>&1
-SPEAKER_AUDIO_STATUS=$?
-[[ "$SPEAKER_AUDIO_STATUS" = "0" ]] && \
-$SPEAKER_VOLUME_TOOL all localhost unmute
+skill_connect_2_internet () {
+INTERNET_METHOD=$1
+check_internet_connectivity
+
+if [[ "$INTERNET_STATUS_VAL" != "0" ]];
+then
+# Connect to the Internet if unreacheable
+logger -s -t $(basename $0) "Attempting to connect to the Internet. Please wait ..."
+#
+# Connect via method specified
+case $INTERNET_METHOD in
+mifi)    
+# Enable WiFi access point service discovery in Icinga via API
+wifi_ap_discovery_configure 1
+# Restart iwd - temporary fix
+sudo /usr/bin/systemctl restart iwd.service
+sleep 3
+# Connect
+sudo $CONNECT_WIFI_AP_TOOL UP
+;;
+*)
+$0 mifi
+;;
+esac
+fi
 }
 
-sound_alert () {
-# Mute house speakers if there's audio playing
-mute_speakers_localhost
-# Play alert sound specified
-$SOUNDS_TOOL alert $1
-# Unmute house speakers if there's audio playing
-unmute_speakers_localhost
+skill_disconnect_4rm_internet () {
+INTERNET_METHOD=$1
+check_internet_connectivity
+
+if [[ "$INTERNET_STATUS_VAL" = "0" ]];
+then
+# Connect to the Internet if unreacheable
+logger -s -t $(basename $0) "Disconnecting from the Internet"
+#
+# Connect via method specified
+case $INTERNET_METHOD in
+mifi)
+# Disable WiFi access point service discovery in Icinga via API
+wifi_ap_discovery_configure 0
+# Disconnect
+sudo $CONNECT_WIFI_AP_TOOL WARNING
+;;
+*)
+$0 mifi
+;;
+esac
+fi
 }
 
-sound_effect_flash () {
-sound_alert 18
-}
-
-sound_upcoming_briefing () {
-sound_alert 19
-}
-
-sound_greeting () {
-# Say time of day
-sound_alert 21
-}
-
-sound_happy_day () {
-# Say Happy 'Day of Week'
-sound_alert 20
+skill_date () {
+# Pause Player
+$KODI_CONTROLLER_TOOL video_play_pause noreplay
+# Say time now
+$DATE_TIME_TOOL --date today
+# Un Pause Player
+$KODI_CONTROLLER_TOOL video_play_pause
 }
 
 skill_time () {
 # Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
-# Say Time
-$TEXT2SPEECH_TOOL "" time
+# Say time now
+$DATE_TIME_TOOL --time now
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 }
@@ -77,42 +260,202 @@ $TEXT2SPEECH_TOOL "" custom "The time now in $@ is $TIME_NOW"
 }
 
 skill_weather_currently () {
+LATITUDE=$1
+LONGITUDE=$2
+DEBUG=$3
+
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup weather_current.mp3 $WEATHER_REPORT_CONCAT_DIR 1
+
+# Compile weather
+$TEXT2SPEECH_TOOL "" weather current "" "$DEBUG" "$LATITUDE" "$LONGITUDE" concatenate=yes
+#
+# Copy audio clip(s) to tts directory for merging
+audio_merge_pre_setup tts_output.wav $WEATHER_REPORT_CONCAT_DIR 2
+
+# If weather report was not fetched, skip compilation and use saved clip to notify of failure
+if [[ ! -s $WEATHER_REPORT_CONCAT_DIR/2.mp3 ]];
+then
+FETCHED_WEATHER=no
+cp -f $PROJECT_SYSTEM_SOUNDS_DIR/weather_not_generated.mp3 $WEATHER_REPORT_FILE
+
+else
+# Create input file used to concatenate audio files
+[[ -e $WEATHER_REPORT_CONCAT_INPUT_FILE ]] && sudo rm -f $WEATHER_REPORT_CONCAT_INPUT_FILE
+for CLIP in $(seq 1 2)
+do
+cat >> $WEATHER_REPORT_CONCAT_INPUT_FILE <<ET
+file '$WEATHER_REPORT_CONCAT_DIR/${CLIP}.mp3'
+ET
+done
+
+# Merge into one nice file
+$FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $WEATHER_REPORT_CONCAT_INPUT_FILE -c copy $WEATHER_REPORT_FILE
+fi
+
+# Play audio  
+if [[ "$PLAY_AUDIO" != "no" ]];
+then
 # Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
-# Say weather
-$TEXT2SPEECH_TOOL "" weather current 3
+# Log
+[[ "$FETCHED_WEATHER" = "no" ]] || logger -s -t $(basename $0) "Playing the current weather summary ..."
+# Play
+$SOUNDS_TOOL alert $WEATHER_REPORT_ALERT_SOUND
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
+fi
 }
 
 skill_weather_today () {
+LATITUDE=$1
+LONGITUDE=$2
+DEBUG=$3
+
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup weather_forecast.mp3 $WEATHER_REPORT_CONCAT_DIR 1
+
+# Say weather
+$TEXT2SPEECH_TOOL "" weather today "" "$DEBUG" "$LATITUDE" "$LONGITUDE" concatenate=yes
+#
+# Copy audio clip(s) to tts directory for merging
+audio_merge_pre_setup tts_output.wav $WEATHER_REPORT_CONCAT_DIR 2
+
+# If weather report was not fetched, skip compilation and use saved clip to notify of failure
+if [[ ! -s $WEATHER_REPORT_CONCAT_DIR/2.mp3 ]];
+then
+FETCHED_WEATHER=no
+cp -f $PROJECT_SYSTEM_SOUNDS_DIR/weather_not_generated.mp3 $WEATHER_REPORT_FILE
+
+else
+# Create input file used to concatenate audio files
+[[ -e $WEATHER_REPORT_CONCAT_INPUT_FILE ]] && sudo rm -f $WEATHER_REPORT_CONCAT_INPUT_FILE
+for CLIP in $(seq 1 2)
+do
+cat >> $WEATHER_REPORT_CONCAT_INPUT_FILE <<ET
+file '$WEATHER_REPORT_CONCAT_DIR/${CLIP}.mp3'
+ET
+done
+
+# Merge into one nice file
+$FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $WEATHER_REPORT_CONCAT_INPUT_FILE -c copy $WEATHER_REPORT_FILE
+fi
+
+# Play audio  
+if [[ "$PLAY_AUDIO" != "no" ]];
+then
 # Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
-# Say weather
-$TEXT2SPEECH_TOOL "" weather today 1
+# Log
+[[ "$FETCHED_WEATHER" = "no" ]] || logger -s -t $(basename $0) "Playing today's weather forecast ..."
+# Play
+$SOUNDS_TOOL alert $WEATHER_REPORT_ALERT_SOUND
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
+fi
 }
 
 skill_weather_later () {
+LATITUDE=$1
+LONGITUDE=$2
+DEBUG=$3
+
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup weather_forecast.mp3 $WEATHER_REPORT_CONCAT_DIR 1
+
+# Say weather
+$TEXT2SPEECH_TOOL "" weather today "" "$DEBUG" "$LATITUDE" "$LONGITUDE" concatenate=yes
+#
+# Copy audio clip(s) to tts directory for merging
+audio_merge_pre_setup tts_output.wav $WEATHER_REPORT_CONCAT_DIR 2
+
+# If weather report was not fetched, skip compilation and use saved clip to notify of failure
+if [[ ! -s $WEATHER_REPORT_CONCAT_DIR/2.mp3 ]];
+then
+FETCHED_WEATHER=no
+cp -f $PROJECT_SYSTEM_SOUNDS_DIR/weather_not_generated.mp3 $WEATHER_REPORT_FILE
+
+else
+# Create input file used to concatenate audio files
+[[ -e $WEATHER_REPORT_CONCAT_INPUT_FILE ]] && sudo rm -f $WEATHER_REPORT_CONCAT_INPUT_FILE
+for CLIP in $(seq 1 2)
+do
+cat >> $WEATHER_REPORT_CONCAT_INPUT_FILE <<ET
+file '$WEATHER_REPORT_CONCAT_DIR/${CLIP}.mp3'
+ET
+done
+
+# Merge into one nice file
+$FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $WEATHER_REPORT_CONCAT_INPUT_FILE -c copy $WEATHER_REPORT_FILE
+fi
+
+# Play audio  
+if [[ "$PLAY_AUDIO" != "no" ]];
+then
 # Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
-# Say weather
-$TEXT2SPEECH_TOOL "" weather later 2
+# Log
+[[ "$FETCHED_WEATHER" = "no" ]] || logger -s -t $(basename $0) "Playing weather forecast later ..."
+# Play
+$SOUNDS_TOOL alert $WEATHER_REPORT_ALERT_SOUND
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
-}
-
-skill_weather () {
-# Say default weather report
-skill_weather_currently 
+fi
 }
 
 skill_headlines_start () {
-# Header voice
-$TEXT2SPEECH_TOOL "" custom "Here is whats making news today"
-# Fetch news
-$FETCH_NEWS_TOOL
+# Fetch news headlines
+$FETCH_NEWS_VIA_SCRAPER_TOOL > /dev/null 2>&1
+
+# If no news was fetched, skip compilation and use saved clip to notify of failure
+if [[ ! -s "$TMPDIR/$NEWS_SUMMARY_AUDIO_FILENAME_4_BBC" ]] && [[ ! -s "$TMPDIR/$NEWS_SUMMARY_AUDIO_FILENAME_4_MONITOR" ]];
+then
+FETCHED_NEWS=no
+cp -f $PROJECT_SYSTEM_SOUNDS_DIR/news_summary_not_generated.mp3 $NEWS_BRIEF_FILE
+
+else
+# Copy system sound file for header into tts directory
+[[ -s "$TMPDIR/$NEWS_SUMMARY_AUDIO_FILENAME_4_BBC" ]] && \
+	audio_merge_pre_setup news_globally.mp3 $NEWS_BRIEF_CONCAT_DIR header_global
+
+	# Copy system sound file for global news into tts directory
+	audio_merge_pre_setup bbc_news_summary.mp3 $NEWS_BRIEF_CONCAT_DIR bbc
+
+# Copy system sound file for header into tts directory
+[[ -s "$TMPDIR/$NEWS_SUMMARY_AUDIO_FILENAME_4_MONITOR" ]] && \
+	audio_merge_pre_setup news_locally.mp3 $NEWS_BRIEF_CONCAT_DIR header_local
+
+	# Copy system sound file for local news into tts directory
+	audio_merge_pre_setup monitor_news_summary.mp3 $NEWS_BRIEF_CONCAT_DIR monitor
+
+# Copy system sound file for footer into tts directory
+audio_merge_pre_setup news_summary_completed.mp3 $NEWS_BRIEF_CONCAT_DIR footer
+
+# Create input file used to concatenate audio files
+[[ -e $NEWS_BRIEF_CONCAT_INPUT_FILE ]] && sudo rm -f $NEWS_BRIEF_CONCAT_INPUT_FILE
+for CLIP in header_global bbc header_local monitor footer
+do
+
+if [[ -e $NEWS_BRIEF_CONCAT_DIR/${CLIP}.mp3 ]];
+then
+cat >> $NEWS_BRIEF_CONCAT_INPUT_FILE <<ET
+file '$NEWS_BRIEF_CONCAT_DIR/${CLIP}.mp3'
+ET
+fi
+done
+
+# Merge into one nice file
+$FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $NEWS_BRIEF_CONCAT_INPUT_FILE -c copy $NEWS_BRIEF_FILE
+fi
+
+# Play audio  
+if [[ "$PLAY_AUDIO" != "no" ]];
+then
+# Log
+[[ "$FETCHED_NEWS" = "no" ]] || logger -s -t $(basename $0) "Playing today's news headlines ..."
+# Play
+$SOUNDS_TOOL alert $NEWS_BRIEF_ALERT_SOUND
+fi
 }
 
 skill_headlines_stop () {
@@ -122,7 +465,130 @@ touch $TTS_OUTPUT_FILE
 }
 
 skill_reminders () {
-$TEXT2SPEECH_TOOL "" custom "$(/usr/bin/remind /JambulaTV/Reminders/)"
+# Ensure that reminders exist today before proceeding
+if [[ "$REMINDERS_SCHEDULED" != "none" ]];
+then
+
+# Header 
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup reminders_scheduled.mp3 $REMINDERS_CONCAT_DIR 1
+
+# Remove spaces in reminders file
+[[ -e ${REMINDERS_TEMP_FILE}.clean ]] && sudo rm -f ${REMINDERS_TEMP_FILE}.clean
+sed /^$/d $REMINDERS_TEMP_FILE > ${REMINDERS_TEMP_FILE}.clean
+
+# Count number of reminders
+REMINDERS_NUMBER=$(wc -l ${REMINDERS_TEMP_FILE}.clean | awk '{print $1}')
+
+# Cycle through all reminders
+COUNT=2
+#
+cat ${REMINDERS_TEMP_FILE}.clean | while read REMINDER
+do
+# Read todays reminders
+$TEXT2SPEECH_TOOL "" custom "$REMINDER" concatenate=yes
+audio_merge_pre_setup tts_output.wav $REMINDERS_CONCAT_DIR $COUNT
+# Set next count number
+let "COUNT = $COUNT + 1"
+done
+
+# Create input file used to concatenate audio files
+[[ -e $REMINDERS_CONCAT_INPUT_FILE ]] && sudo rm -f $REMINDERS_CONCAT_INPUT_FILE
+#
+let "COUNT = $REMINDERS_NUMBER + 1"
+for CLIP in $(seq 1 $COUNT)
+do
+cat >> $REMINDERS_CONCAT_INPUT_FILE <<ET
+file '$SILENCE_1_SECS_AUDIO_FILE'
+file '$REMINDERS_CONCAT_DIR/${CLIP}.mp3'
+ET
+done
+
+# Merge into one nice file
+$FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $REMINDERS_CONCAT_INPUT_FILE -c copy $REMINDERS_FILE
+
+# Play audio  
+if [[ "$PLAY_AUDIO" != "no" ]];
+then
+# Log
+logger -s -t $(basename $0) "Playing scheduled reminders ..."
+# Play
+$SOUNDS_TOOL alert $REMINDERS_ALERT_SOUND
+fi
+
+else
+# Log
+logger -s -t $(basename $0) "No scheduled reminders found"
+fi
+}
+
+skill_power_outages () {
+check_internet_connectivity
+#
+[[ "$INTERNET_STATUS_VAL" = "0" ]] && \
+	POWER_OUTAGE_ONGOING=$($UMEME_OUTAGES_VIA_API_TOOL ongoing $(jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | sed 's:^none::g' | sed '/^$/d' | paste -s -d' \n')
+
+POWER_OUTAGE_TODAY=$($UMEME_OUTAGES_VIA_SCRAPER_TOOL today $(jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | sed 's:^none::g' | sed '/^$/d' | paste -s -d' \n')
+POWER_OUTAGE_TOMORROW=$($UMEME_OUTAGES_VIA_SCRAPER_TOOL tomorrow $(jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | sed 's:^none::g' | sed '/^$/d' | paste -s -d' \n')
+
+# Header
+if [[ "x$POWER_OUTAGE_ONGOING" = "x" && "x$POWER_OUTAGE_TODAY" = "x" && "x$POWER_OUTAGE_TOMORROW" = "x" ]];
+then
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup power_outages_no_scheduled.mp3 $POWER_OUTAGES_CONCAT_DIR header
+
+else
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup power_outages_yes_scheduled.mp3 $POWER_OUTAGES_CONCAT_DIR header
+fi
+
+# Alert for a possible power outage
+if [[ "x$POWER_OUTAGE_ONGOING" != "x" ]];
+then
+# Copy system sound file for on-going power outage into tts directory
+audio_merge_pre_setup power_outages_ongoing.mp3 $POWER_OUTAGES_CONCAT_DIR ongoing
+fi
+
+# Alert for a power outage today
+if [[ "x$POWER_OUTAGE_TODAY" != "x" ]];
+then
+# Copy system sound file for power outage today into tts director
+audio_merge_pre_setup power_outages_today.mp3 $POWER_OUTAGES_CONCAT_DIR today
+fi
+
+# Alert for a power outage tomorrow
+if [[ "x$POWER_OUTAGE_TOMORROW" != "x" ]];
+then
+# Copy system sound file for power outage tomorrow into tts director
+audio_merge_pre_setup power_outages_today.mp3 $POWER_OUTAGES_CONCAT_DIR tomorrow
+fi
+
+# Create input file used to concatenate audio files
+[[ -e $POWER_OUTAGES_CONCAT_INPUT_FILE ]] && sudo rm -f $POWER_OUTAGES_CONCAT_INPUT_FILE
+for CLIP in header ongoing today tomorrow
+do
+
+if [[ -e $POWER_OUTAGES_CONCAT_DIR/${CLIP}.mp3 ]];
+then
+cat >> $POWER_OUTAGES_CONCAT_INPUT_FILE <<ET
+file '$POWER_OUTAGES_CONCAT_DIR/${CLIP}.mp3'
+file '$SILENCE_1_SECS_AUDIO_FILE'
+ET
+fi
+
+done
+
+# Merge into one nice file
+$FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $POWER_OUTAGES_CONCAT_INPUT_FILE -c copy $POWER_OUTAGES_FILE
+
+# Play audio  
+if [[ "$PLAY_AUDIO" != "no" ]];
+then
+# Log
+logger -s -t $(basename $0) "Playing power outages schedule ..."
+# Play
+$SOUNDS_TOOL alert $POWER_OUTAGES_ALERT_SOUND
+fi
 }
 
 skill_calendar_events () {
@@ -153,28 +619,256 @@ $TEXT2SPEECH_TOOL "" custom "That is all for $CALENDAR_EVENT_ASR_PERIOD"
 }
 
 skill_motd () {
-$TEXT2SPEECH_TOOL "" custom "Today's message of the day is \"\\pau=1000\\\" $(/usr/bin/fortune -s -n 80)"
+# Ensure that message of the day exists before proceeding
+if [[ "x$MESSAGE_OF_THE_DAY" != "x" ]];
+then
+# Add text output for debugging purposes
+cat > $MESSAGE_OF_THE_DAY_CONCAT_DIR/motd.txt <<ET
+$MESSAGE_OF_THE_DAY]
+ET
+
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup message_of_the_day_header.mp3 $MESSAGE_OF_THE_DAY_CONCAT_DIR 1
+
+$TEXT2SPEECH_TOOL "" custom "$MESSAGE_OF_THE_DAY" concatenate=yes
+audio_merge_pre_setup tts_output.wav $MESSAGE_OF_THE_DAY_CONCAT_DIR 2
+
+# Create input file used to concatenate audio files
+[[ -e $MESSAGE_OF_THE_DAY_CONCAT_INPUT_FILE ]] && sudo rm -f $MESSAGE_OF_THE_DAY_CONCAT_INPUT_FILE
+for CLIP in $(seq 1 2)
+do
+cat >> $MESSAGE_OF_THE_DAY_CONCAT_INPUT_FILE <<ET
+file '$MESSAGE_OF_THE_DAY_CONCAT_DIR/${CLIP}.mp3'
+ET
+done
+
+# Merge into one nice file
+$FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $MESSAGE_OF_THE_DAY_CONCAT_INPUT_FILE -c copy $MESSAGE_OF_THE_DAY_FILE
+
+# Play audio  
+if [[ "$PLAY_AUDIO" != "no" ]];
+then
+# Log
+logger -s -t $(basename $0) "Playing today's message of the day ..."
+# Play
+$SOUNDS_TOOL alert $MESSAGE_OF_THE_DAY_ALERT_SOUND
+fi
+
+else
+# Log
+logger -s -t $(basename $0) "No message of the day found"
+# Play
+$SOUNDS_TOOL alert reminders_none_scheduled
+fi
 }
 
-skill_flash_briefing () {
-# Play sound effects for flash briefing
-sound_effect_flash
-# Say greeting
-sound_greeting
-# Play sound - upcoming flash briefing
-sound_upcoming_briefing
-# Read reminders
-skill_reminders
-# Read weather
-skill_weather
-# Read news headlines
+skill_flash_briefing_intro () {
+# Copy system sound effects file for flash briefing into tts directory
+audio_merge_pre_setup flash_briefing.mp3 $ALL_BRIEF_CONCAT_DIR  1
+
+# Copy system sound file for 'flash briefing coming up' into tts directory
+audio_merge_pre_setup flash_briefing_coming_up_for_today.mp3 $ALL_BRIEF_CONCAT_DIR 2
+
+# Create input file used to concatenate audio files
+[[ -e $ALL_BRIEF_CONCAT_INPUT_FILE ]] && sudo rm -f $ALL_BRIEF_CONCAT_INPUT_FILE 
+for CLIP in $(seq 1 2)
+do
+cat >> $ALL_BRIEF_CONCAT_INPUT_FILE <<ET
+file '$ALL_BRIEF_CONCAT_DIR/${CLIP}.mp3'
+ET
+done
+
+# Merge into one nice file
+$FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $ALL_BRIEF_CONCAT_INPUT_FILE -c copy $ALL_BRIEF_FILE
+
+# Play audio  
+if [[ "$PLAY_AUDIO" != "no" ]];
+then
+# Log
+logger -s -t $(basename $0) "Playing flash briefing intro ..."
+# Play
+$SOUNDS_TOOL alert $ALL_BRIEF_ALERT_SOUND
+fi
+}
+
+skill_flash_briefing_sign_out () {
+# Copy system sound effects file for flash briefing into tts directory
+audio_merge_pre_setup flash_briefing.mp3 $DAYS_GREETING_CONCAT_DIR  1
+
+# Copy system sound file for 'flash briefing coming up' into tts directory
+audio_merge_pre_setup flash_briefing_concluded_for_today.mp3 $DAYS_GREETING_CONCAT_DIR 2
+
+# Copy system sound file for happy day into tts directory
+day_of_week=$(date +%A | tr '[:upper:]' '[:lower:]')
+audio_merge_pre_setup happy_${day_of_week}.mp3 $DAYS_GREETING_CONCAT_DIR 3
+
+# Create input file used to concatenate audio files
+[[ -e $DAYS_GREETING_CONCAT_INPUT_FILE ]] && sudo rm -f $DAYS_GREETING_CONCAT_INPUT_FILE
+for CLIP in $(seq 1 3)
+do
+cat >> $DAYS_GREETING_CONCAT_INPUT_FILE <<ET
+file '$DAYS_GREETING_CONCAT_DIR/${CLIP}.mp3'
+ET
+done
+
+# Merge into one nice file
+$FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $DAYS_GREETING_CONCAT_INPUT_FILE -c copy $DAYS_GREETING_FILE
+
+# Play audio  
+if [[ "$PLAY_AUDIO" != "no" ]];
+then
+# Log
+logger -s -t $(basename $0) "Playing day's signout greeting ..."
+# Play
+$SOUNDS_TOOL alert $DAYS_GREETING_ALERT_SOUND
+fi
+}
+
+skill_flash_briefing_all_merge_audio () {
+FLASH_BRIEFING_AUDIO_OUTPUT_FILE=$TMPDIR/flash_briefing_today.mp3
+FLASH_BRIEFING_CONCAT_INPUT_FILE=$TMPDIR/input_files_flash_briefing_today.txt
+
+# Create input file used to concatenate audio files
+[[ -e $FLASH_BRIEFING_CONCAT_INPUT_FILE ]] && sudo rm -f $FLASH_BRIEFING_CONCAT_INPUT_FILE
+
+# Merge into one single file for texts and later use
+cat > $FLASH_BRIEFING_CONCAT_INPUT_FILE <<ET
+file '$ALL_BRIEF_FILE'
+file '$SILENCE_2_SECS_AUDIO_FILE'
+file '$REMINDERS_FILE'
+file '$SILENCE_2_SECS_AUDIO_FILE'
+file '$POWER_OUTAGES_FILE'
+file '$SILENCE_2_SECS_AUDIO_FILE'
+file '$WEATHER_REPORT_FILE'
+file '$SILENCE_2_SECS_AUDIO_FILE'
+file '$NEWS_BRIEF_FILE'
+file '$SILENCE_2_SECS_AUDIO_FILE'
+file '$MESSAGE_OF_THE_DAY_FILE'
+file '$SILENCE_2_SECS_AUDIO_FILE'
+file '$DAYS_GREETING_FILE'
+ET
+
+# Remove previous briefing
+[[ -s $FLASH_BRIEFING_AUDIO_OUTPUT_FILE ]] && sudo rm -f $FLASH_BRIEFING_AUDIO_OUTPUT_FILE
+#
+$FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $FLASH_BRIEFING_CONCAT_INPUT_FILE -c copy $FLASH_BRIEFING_AUDIO_OUTPUT_FILE
+}
+
+skill_flash_briefing_play_summaries () {
+mqtt_publish_flash_briefing_status reading
+
+# Play each summary with added effect of current music playing as opposed to silence between briefings
+for ALERT_SOUND in \
+$ALL_BRIEF_ALERT_SOUND \
+$REMINDERS_ALERT_SOUND \
+$POWER_OUTAGES_ALERT_SOUND \
+$WEATHER_REPORT_ALERT_SOUND \
+$NEWS_BRIEF_ALERT_SOUND \
+$MESSAGE_OF_THE_DAY_ALERT_SOUND \
+$DAYS_GREETING_ALERT_SOUND
+do
+$SOUNDS_TOOL alert $ALERT_SOUND
+sleep 5
+done
+}
+
+skill_flash_briefing_compile_generate_and_read () {
+PREP_STANDBY_ALERT_SOUND=flash_briefing_preparing_for_today_standby
+
+# MQTT alert: Started generation of flash briefing
+mqtt_publish_flash_briefing_status started
+
+# Voice Alert: Preparing briefing, standby
+$SOUNDS_TOOL alert $PREP_STANDBY_ALERT_SOUND
+	
+# Connect to the Internet        
+skill_connect_2_internet mifi
+
+# Fetch and compile news headlines
 skill_headlines_start
-# Read message of the day
+
+# Fetch weather and generate summery
+skill_weather_currently $1 $2
+
+# Get reminders
+skill_reminders
+
+# Get power outages info
+skill_power_outages
+
+# Generate flash intro
+skill_flash_briefing_intro
+
+# Generate MOTD
 skill_motd
-# Say time
+
+# Sign out greeting for the day
+skill_flash_briefing_sign_out
+
+# Merge all the following summaries into one single audio file. Use it to play later, or send with texts!
+# ---
+# Flash intro
+# Reminders
+# Power outages
+# Weather
+# News
+# Read message of the day
+# Sign out with today's greeting
+# 
+skill_flash_briefing_all_merge_audio
+	
+# Disonnect from the Internet
+skill_disconnect_4rm_internet mifi
+
+if [[ -s $FLASH_BRIEFING_AUDIO_OUTPUT_FILE ]];
+then
+
+# Play each summary of the briefing
+skill_flash_briefing_play_summaries
+
+# MQTT Alert: Flash briefing was succesfully completed
+mqtt_publish_flash_briefing_status completed
+
+else
+# MQTT Alert: Flash briefing failed
+mqtt_publish_flash_briefing_status failed
+# Log
+logger -s -t $(basename $0) "Failed to prepare flash briefing for today, quitting ..."
+exit 0
+fi
+}
+
+skill_flash_briefing_exists_read () {
+# MQTT alert: Reading flash briefing
+mqtt_publish_flash_briefing_status reading
+
+# Play each summary of the briefing
+skill_flash_briefing_play_summaries
+
+# MQTT Alert: Flash briefing was succesfully completed
+mqtt_publish_flash_briefing_status completed
+}
+
+skill_flash_briefing_all () {
+FLASH_BRIEFING_AUDIO_OUTPUT_FILE=$TMPDIR/flash_briefing_today.mp3
+FLASH_BRIEFING_ALERT_SOUND=$(echo ${FLASH_BRIEFING_AUDIO_OUTPUT_FILE##*/} | sed 's:.mp3::')
+FLASH_BRIEFING_EXPIRY_TIME=3600
+
+# Check freshness of the flash briefing today file
+query_and_set_freshness_of_target_file $FLASH_BRIEFING_AUDIO_OUTPUT_FILE $FLASH_BRIEFING_EXPIRY_TIME 
+#
+if [[ "$TARGET_FILE_IS_FRESH" = "yes" ]];
+	then
+	# Read the already generated flash briefing today file
+	skill_flash_briefing_exists_read
+
+	else
+	# Compile and generate flash briefing today file
+	skill_flash_briefing_compile_generate_and_read
+fi
+
+# Say time - Note unlike other, this must be in realtime, so no concatenation please
 skill_time
-# Wish a good day
-sound_happy_day
 }
 
 skill_lights_on () {
@@ -360,7 +1054,7 @@ MUSIC_PLAYLIST=/JambulaTV/Playlists/music_jazz.m3u
 esac
 #
 # Remove old playlist
-[ -e $MUSIC_PLAYLIST ] && rm -f $MUSIC_PLAYLIST
+[ -e $MUSIC_PLAYLIST ] && sudo rm -f $MUSIC_PLAYLIST
 # Generate playlist - TODO: Cache playlist and refresh periodically
 find $(find $USER_MUSIC_DIR -type d -iname $MUSIC_CATEGORY) -type f | grep -E "*(\.mp3|\.mp4|\.wav|\.m4a|\.webm)" | while read SONG
 do 
@@ -389,7 +1083,7 @@ MUSIC_PLAYLIST=/JambulaTV/Playlists/music_internet_various.m3u
 esac
 #
 # Remove old playlist
-[ -e $MUSIC_PLAYLIST ] && rm -f $MUSIC_PLAYLIST
+[ -e $MUSIC_PLAYLIST ] && sudo rm -f $MUSIC_PLAYLIST
 #
 # Generate playlist
 echo "$STATION_URL" >> "$MUSIC_PLAYLIST"
@@ -573,14 +1267,14 @@ kill $TTS_PID
 
 skill_mute_speech_recognition () {
 $TEXT2SPEECH_TOOL "" custom "Geeez \"\\pau=1000\\\" Am I that noisy? \"\\pau=1000\\\" OK \"\\pau=500\\\" I will go off line for now"
-[ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
+[ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && sudo rm -f $TEXT_2_SPEECH_OUTPUT_FILE
 touch $TEXT_2_SPEECH_OUTPUT_FILE
 sudo chattr +i $TEXT_2_SPEECH_OUTPUT_FILE
 }
 
 skill_unmute_speech_recognition () {
 sudo chattr -i $TEXT_2_SPEECH_OUTPUT_FILE 
-[ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && rm -f $TEXT_2_SPEECH_OUTPUT_FILE
+[ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && sudo rm -f $TEXT_2_SPEECH_OUTPUT_FILE
 $TEXT2SPEECH_TOOL "" custom "You missed me \"\\pau=500\\\" Right? \"\\pau=1000\\\" OK \"\\pau=500\\\"  I am baack"
 }
 
