@@ -1,7 +1,7 @@
 #!/bin/sh
 # This script queries all the udev associated properties for an inserted  USB device 
 #
-# Jambula Labs @copyright 2020-2021 All rights reserved
+# Jambula Labs @copyright 2022-2023 All rights reserved
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by

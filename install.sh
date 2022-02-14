@@ -2,7 +2,7 @@
 # This is the initial file used by JambulaTV installation program.
 # It mainly sources routines from the main functions file
 #
-# Jambula Labs @copyright 2020-2021 All rights reserved
+# Jambula Labs @copyright 2022-2023 All rights reserved
 
 # Variables
 PROJECT_NAME=JambulaTV
