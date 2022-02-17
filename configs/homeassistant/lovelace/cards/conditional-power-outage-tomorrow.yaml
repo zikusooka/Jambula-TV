@@ -1,6 +1,9 @@
 type: conditional
 conditions:
   - entity: sensor.power_outage_tomorrow
+    state_not: ' '
+
+  - entity: sensor.power_outage_tomorrow
     state_not: 'none'
 
   - entity: sensor.power_outage_tomorrow
@@ -10,7 +13,7 @@ card:
   type: entities
   entities:
     - entity: sensor.power_outage_tomorrow
-      name: 'Power Outages (Tomorrow)'
+      name: 'Tomorrow'
       icon: 'mdi:power-plug-off'
       show_name: false
       show_icon: true

@@ -5,8 +5,9 @@
 #
 
 platform: google_translate
-cache: true
+#cache: true
+#cache_dir: /tmp/tts
 cache_dir: /tmp/tts
-time_memory: 300
-base_url: http://127.0.0.1:8505
-service_name: google_say
+#time_memory: 300
+#base_url: http://127.0.0.1:8505
+#service_name: google_say

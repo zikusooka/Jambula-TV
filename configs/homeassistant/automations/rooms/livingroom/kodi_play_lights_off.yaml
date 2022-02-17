@@ -2,8 +2,12 @@ alias: "Media player playing"
 trigger:
   - platform: state
     entity_id: media_player.jambulatv_pi_living_room
-    to: 'playing'
     from: 'idle'
+    to: 'playing'
+    for:
+      minutes: 1
+
+
 #condition:
 #  - condition: state
 #     entity_id: sun.sun
@@ -20,9 +24,7 @@ condition:
   - condition: template 
     value_template: '{{ states.media_player.jambulatv_pi_living_room.attributes.media_content_type == "video" }}'
 
+
 action:
   - service: scene.turn_on
     entity_id: scene.LivingRoom_Off
-
-  # Run night mode (on) script
-  - service: script.night_mode_on

@@ -1,7 +1,6 @@
 bedtime_zik:
   sequence:
 
-
     # Enable Bedtime Mode at Frontend
     # --------------------------------
     - service: homeassistant.turn_on
@@ -9,43 +8,30 @@ bedtime_zik:
         entity_id: input_boolean.bedtime_mode_zik
 
 
-    # Generate voice files
-    # --------------------
-    # Merge audio files
-    - service: shell_command.ffmpeg_concat_three_mp3
-      data_template:
-        input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'Airplane-ding-sound.mp3'
-        input_file2: >
-          {% if now().strftime('%H')|int < 5 %}
-          'goodnight.mp3'
-          {% elif now().strftime('%H')|int < 12 %}
-          'goodmorning.mp3'
-          {% elif now().strftime('%H')|int < 18 %}
-          'goodafternoon.mp3'
-          {% else %}
-          'goodevening.mp3'
-          {% endif %}
-        input_file3: 'zik.mp3'
-        output_directory: !secret jambulatv_temp_dir
-        output_file: 'sound_effect_time_for_bed_zik.mp3'
+    # Voice Alert: Play greeting if bedtime 4 all wasn't activated
+    # -------------------------------------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.bed_time_activated_all', 'off') %}
+          script.bedtime_greeting_announce_zik
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.bedtime_greeting_announce_zik
 
 
-    # Voice Alert: Announce that it's time for bed
-    # --------------------------------------------- 
-    # Play merged audio file in temp directory using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'sound_effect_time_for_bed_zik'
-        audio_gain: !secret voice_alert_audio_gain_medium
+    # If bedtime for all was activated; don't set volumes here
+    # --------------------------------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.bed_time_activated_all', 'off') %}
+          script.bedtime_volume_levels_player_all
 
+        {% else %}
+          script.dummy
 
-    # Set bedtime volume level - player
-    # ---------------------------------
-    - service: shell_command.set_volume_level_player
-      data_template:
-        volume_level_player: !secret mixer_bed_time_mode_volume_level
-        current_player: "{{states('sensor.current_player_cli_name')}}"
+        {% endif %}
+      entity_id: script.bedtime_volume_levels_player_all
 
 
     # Turn off TV
@@ -84,23 +70,6 @@ bedtime_zik:
     - service: light.turn_off 
       data:
         entity_id: light.living_room
-
-
-    # Text weather reports
-    # ---------------------
-    # a) WhatsApp
-    - service: script.send_whatsapp
-      data_template:
-        whatsapp_text: !include ../../../../templates/weather/daily_report_notification_message.yaml
-        whatsapp_image: ''
-        whatsapp_recipient_phone: ''
-
-    # b) Telegram
-    - service: script.send_telegram
-      data_template: 
-        telegram_text: !include ../../../../templates/weather/daily_report_notification_message.yaml
-        telegram_image: ''
-        telegram_recipient_phone: ''
 
 
     # Backup up remote PC i.e. Laptop

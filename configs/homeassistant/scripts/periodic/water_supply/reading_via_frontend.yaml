@@ -11,11 +11,18 @@ input_water_reading_for_today:
 
     # Generate voice files
     # --------------------
+    # Remove previous sound effects file for reminding water input
+    - service: shell_command.delete_file_dir_specified
+      data_template:
+        directory: !secret jambulatv_temp_dir
+        file: 'sound_effect_input_water_reading_today.mp3'
+
+
     # Merge audio files
     - service: shell_command.ffmpeg_concat_three_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'thank_you.mp3'
         input_file3: 'water_meter_reading_today_updated.mp3'
         output_directory: !secret jambulatv_temp_dir
@@ -52,6 +59,13 @@ input_water_reading_for_yesterday:
 
     # Generate voice files
     # --------------------
+    # Remove previous sound effects file for reminding water input
+    - service: shell_command.delete_file_dir_specified
+      data_template:
+        directory: !secret jambulatv_temp_dir
+        file: 'sound_effect_input_water_reading_yesterday.mp3'
+
+
     # Merge audio files
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:

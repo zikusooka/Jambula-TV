@@ -7,13 +7,9 @@ trigger:
     entity_id: input_boolean.internet_data_saver
     to: 'off'
 
-#condition:
-  #condition: and
-  #conditions:
-
-    # Someone at home
-    #- condition: template
-    #  value_template: "{{ is_state('group.presence_home', 'home') }}"
+condition:
+  condition: and
+  conditions:
 
 
 action:

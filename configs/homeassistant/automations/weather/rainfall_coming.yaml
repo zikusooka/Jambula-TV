@@ -5,10 +5,6 @@ initial_state: True
 trigger:
 
   - platform: state
-    entity_id: sensor.pws_weather_1h
-    to: 'Chance of a Thunderstorm'
-
-  - platform: state
     entity_id: weather.dark_sky
     to: 'rainy'
 
@@ -16,9 +12,17 @@ trigger:
     entity_id: sensor.jambulatv_precipitation
     above: 5.6
 
-  - platform: state
-    entity_id: sensor.openweathermap_forecast_condition
-    to: 'rainy'
+  - platform: numeric_state
+    entity_id: sensor.openweathermap_rain
+    above: 0.8
+
+  - platform: numeric_state
+    entity_id: sensor.openweathermap_forecast_precipitation
+    above: 3.55
+
+  - platform: numeric_state
+    entity_id: sensor.openweathermap_forecast_precipitation_probability
+    above: 90
 
 
 condition:
@@ -26,8 +30,13 @@ condition:
   conditions:
 
     # Internet state
-    #- condition: template
-      #value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+    - condition: template
+      value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+    # 3 minute(s) or more after startup of HASS
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime_minutes
+      above: 3
 
 
 action:

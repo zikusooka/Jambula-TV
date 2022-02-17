@@ -25,7 +25,7 @@ condition:
     # DarkSky
     - condition: numeric_state
       entity_id: sensor.darksky_precip_probability_0d
-      above: 90
+      above: 50
 
 
 action:

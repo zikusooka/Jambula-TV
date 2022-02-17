@@ -26,6 +26,16 @@ condition:
       entity_id: 'sensor.water_meter_reading_today'
       state: 'unknown'
 
+    # Bedtime (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Wakeup time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.wakeup_time_activated_all'
+      state: 'off'
+
     # Night mode - off
     - condition: state
       entity_id: 'input_boolean.night_mode'

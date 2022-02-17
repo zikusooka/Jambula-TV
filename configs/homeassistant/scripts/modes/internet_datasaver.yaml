@@ -1,48 +1,26 @@
 internet_datasaver_enable_manual:
   sequence:
 
-
-    # Generate voice files
-    # --------------------
-    # Merge audio files
-    - service: shell_command.ffmpeg_concat_two_mp3
-      data_template:
-        input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
-        input_file2: 'internet_data_saver_enabled.mp3'
-        output_directory: !secret jambulatv_temp_dir
-        output_file: 'sound_effect_internet_data_saver_enabled.mp3'
-
-
     # Turn on data saver mode
     # -----------------------
     - service: shell_command.internet_data_saver_on
 
 
-    # Voice Alert: Announce that Internet datasaver has been enabled
-    # ---------------------------------------------------------------
-    # Play merged audio file in temp directory using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'sound_effect_internet_data_saver_enabled'
-        audio_gain: !secret voice_alert_audio_gain_medium
+    # Disable discovery of WiFi access point i.e. Don't connect to MiFi automatically
+    - service: script.icinga_wifi_ap_service_discovery_disable
+
+
+    # Voice Alert: Internet data saver mode enabled
+    # ---------------------------------------------
+    - service: script.internet_data_saver_enabled
 
 
 
 internet_datasaver_disable_manual:
   sequence:
 
-
-    # Generate voice files
-    # --------------------
-    # Merge audio files
-    - service: shell_command.ffmpeg_concat_two_mp3
-      data_template:
-        input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
-        input_file2: 'internet_data_saver_disabled.mp3'
-        output_directory: !secret jambulatv_temp_dir
-        output_file: 'sound_effect_internet_data_saver_disabled.mp3'
+    # Enable discovery of WiFi access point i.e. Connect to MiFi automatically
+    - service: script.icinga_wifi_ap_service_discovery_enable
 
 
     # Turn off data saver mode
@@ -50,10 +28,32 @@ internet_datasaver_disable_manual:
     - service: shell_command.internet_data_saver_off
 
 
-    # Voice Alert: Announce that Internet datasaver has been disabled
-    # ----------------------------------------------------------------
-    # Play merged audio file in temp directory using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
-      data_template:
-        sound_alert: 'sound_effect_internet_data_saver_disabled'
-        audio_gain: !secret voice_alert_audio_gain_medium
+    # Voice Alert: Internet data saver mode disabled
+    # ---------------------------------------------
+    - service: script.internet_data_saver_disabled
+
+
+
+internet_datasaver_enable_auto_no_alert:
+  sequence:
+
+    # Turn on data saver mode
+    # -----------------------
+    - service: shell_command.internet_data_saver_on
+
+
+    # Disable discovery of WiFi access point i.e. Don't connect to MiFi automatically
+    - service: script.icinga_wifi_ap_service_discovery_disable
+
+
+
+internet_datasaver_disable_auto_no_alert:
+  sequence:
+
+    # Enable discovery of WiFi access point i.e. Connect to MiFi automatically
+    - service: script.icinga_wifi_ap_service_discovery_enable
+
+
+    # Turn off data saver mode
+    # ------------------------
+    - service: shell_command.internet_data_saver_off

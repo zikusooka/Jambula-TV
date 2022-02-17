@@ -1,0 +1,27 @@
+icinga_wifi_ap_service_discovery_enable:
+  sequence:
+
+    # Enable WiFi access point service discovery in Icinga via API
+    - service: shell_command.icinga2_services_set_attribute
+      data_template:
+        file: 
+        icinga_api_user: !secret icinga_api_username
+        icinga_api_pass: !secret icinga_api_password
+        icinga_service_name: !secret icinga_api_service_wifi_ap_discovery
+        icinga_service_attribute_name: 'enable_event_handler'
+        icinga_service_attribute_value: 1
+
+
+
+icinga_wifi_ap_service_discovery_disable:
+  sequence:
+
+    # Disable WiFi access point service discovery in Icinga via API
+    - service: shell_command.icinga2_services_set_attribute
+      data_template:
+        file: 
+        icinga_api_user: !secret icinga_api_username
+        icinga_api_pass: !secret icinga_api_password
+        icinga_service_name: !secret icinga_api_service_wifi_ap_discovery
+        icinga_service_attribute_name: 'enable_event_handler'
+        icinga_service_attribute_value: 0

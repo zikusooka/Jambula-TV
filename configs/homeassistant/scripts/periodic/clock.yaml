@@ -5,7 +5,7 @@ say_time_at_top_of_hour:
     # Generate voice files
     # --------------------
     # Remove previous sound effects file for hourly clock
-    - service: shell_command.delete_file
+    - service: shell_command.delete_file_dir_specified
       data_template:
         directory: !secret jambulatv_temp_dir
         file: 'sound_effect_the_time_now_is_hour.mp3'

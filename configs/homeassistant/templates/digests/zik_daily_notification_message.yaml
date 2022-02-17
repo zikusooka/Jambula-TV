@@ -19,13 +19,13 @@ Power outages:*
 *
 Weather:*
 \r
-{{states('weather.dark_sky')}} (DarkSky)
+{{states('sensor.openweathermap_forecast_condition')}} (OpenWeatherMap)
 \r
 \r
 *
 Rain chances:*
 \r
-{{states('sensor.darksky_precip_probability_0d')|int}}% chance of rainfall - {{states('sensor.darksky_summary_0d')}} (DarkSky)
+{{states('sensor.openweathermap_forecast_precipitation_probability')|int}}% chance of rainfall - {{states('sensor.openweathermap_forecast_condition')}} (OpenWeatherMap)
 \r
 \r
 Have a great day!

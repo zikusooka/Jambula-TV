@@ -1,0 +1,15 @@
+say_current_temperature_outside:
+  sequence:
+
+    # Voice Alert: Current temperature outside
+    # -----------------------------------------
+    # Announce current temperature outside if known
+    - service_template: >
+        {% if not is_state('sensor.outside_temperature', 'unknown') %}
+          script.temperature_current_outside
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.temperature_current_outside

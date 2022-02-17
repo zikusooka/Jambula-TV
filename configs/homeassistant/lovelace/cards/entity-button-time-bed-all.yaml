@@ -1,0 +1,12 @@
+type: entity-button
+entity: script.bedtime_all
+name: 'Bedtime (All)'
+show_name: true
+show_state: false
+icon: 'mdi:bed'
+
+tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.bedtime_all

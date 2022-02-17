@@ -16,8 +16,19 @@ condition:
     # Power outage state not null
     - condition: template
       value_template: "{{ not is_state('sensor.power_outage_tomorrow', 'none') }}"
+
     - condition: template
       value_template: "{{ not is_state('sensor.power_outage_tomorrow', '') }}"
+
+    # Bedtime (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Wakeup time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.wakeup_time_activated_all'
+      state: 'off'
 
 
 action:

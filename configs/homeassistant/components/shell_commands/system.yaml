@@ -1,6 +1,3 @@
-# Restart Icinga2
-icinga2_restart: /bin/bash -c "sudo /usr/bin/systemctl restart icinga2.service"
-
 # Shutdown system after setting the wakeup time using rtcwake
 set_wakeup_and_shutdown_via_rtcwake: /bin/bash -c "sudo /usr/sbin/rtcwake -m off -l -t $(date +%s -d '{{alarm_time}}')"
 
@@ -13,5 +10,7 @@ server_restart: /bin/bash -c "sudo /usr/sbin/shutdown -r +{{minutes}}"
 # Cancel shutdown/reboot
 server_cancel_shutdown: /bin/bash -c "sudo /usr/sbin/shutdown -c"
 
-# Delete file on system i.e. temporary files
-delete_file: /bin/bash -c "sudo /usr/bin/rm -f {{directory}}/{{file}}"
+# Delete directory(s)/file(s) on system i.e. temporary files
+delete_directory_contents: /bin/bash -c "sudo /usr/bin/rm -rf {{directory}}"
+delete_file_dir_specified: /bin/bash -c "sudo /usr/bin/rm -f {{directory}}/{{file}}"
+delete_file_path_specified: /bin/bash -c "sudo /usr/bin/rm -f {{file}}"

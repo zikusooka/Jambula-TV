@@ -4,7 +4,7 @@ music_unpause_if_paused_else_play_internet_or_local_jazz:
     # If music is paused, unpause else play Internet or local - jazz 
     - service_template: >
         {% if is_state('media_player.now_playing', 'paused') %}
-          media_player.media_play
+          media_player.play_media
 
         {% elif is_state('binary_sensor.internet', 'on') %}
           shell_command.internet_radio_play_favorite_station
@@ -27,10 +27,13 @@ music_unpause_if_paused_else_play_local_jazz:
     # If music is paused, unpause else play local playlist - jazz 
     - service_template: >
         {% if is_state('media_player.now_playing', 'paused') %}
-          media_player.media_play
+          media_player.media_play_pause
+
+        {% elif not is_state('media_player.now_playing', 'playing') %}
+          script.music_play_jazz
 
         {% else %}
-          script.music_play_jazz
+          script.dummy
 
         {% endif %}
       entity_id: media_player.now_playing
@@ -47,7 +50,7 @@ music_unpause_if_paused:
     # If music is paused, unpause
     - service_template: >
         {% if is_state('media_player.now_playing', 'paused') %}
-          media_player.media_play
+          media_player.media_play_pause
 
         {% else %}
           script.dummy
@@ -61,7 +64,7 @@ music_unpause_if_paused:
           #script.dummy
     #- service_template: >
         #{% if is_state('media_player.now_playing', 'paused') and is_state('binary_sensor.mixer_voice_alerts_status', 'off') %}
-          #media_player.media_play
+          #media_player.play_media
 
     # Unpause == Unmute audio input from external player
     - service: shell_command.speaker_volume_unmute_player

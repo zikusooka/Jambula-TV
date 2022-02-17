@@ -6,7 +6,14 @@ cards:
   - type: vertical-stack
     cards:
       - !include ../cards/markup-dashboard-message.yaml
-      - !include ../cards/markup-welcome-message.yaml
+      - !include ../cards/conditional-custom-date-time.yaml
+      - !include ../cards/conditional-markup-reminders.yaml
+
+
+  # Now playing
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/conditional-playing-now-volume-playing.yaml
 
 
   # Weather
@@ -18,18 +25,10 @@ cards:
             state: 'on'
             #state: 'off'
         card:
-          type: 'custom:weather-card'
+          type: custom:weather-card
           entity: weather.dark_sky
           #entity: weather.openweathermap
-          #- !include ../cards/custom-weather-darksky.yaml
-
-
-  # Call maid for assistance
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/entity-button-call-maid-office.yaml
-      - !include ../cards/entity-button-call-maid-bedroom.yaml
-      - !include ../cards/entity-button-call-maid-porch.yaml
+          icons: "/local/lovelace/icons/weather-card"
 
 
   # Temperatures - Outdoors and Indoors
@@ -39,10 +38,22 @@ cards:
       - !include ../cards/entity-filter-temperature-indoors.yaml
 
 
-  # Alarms
-  - type: horizontal-stack
+  # Motion detection
+  - type: vertical-stack
     cards:
-      - !include ../cards/entities-wakeup-alarm-times.yaml
+      - !include ../cards/conditional-motion-sensor-outside.yaml
+
+
+  # Persons
+  - type: vertical-stack
+    cards:
+      - !include ../cards/entity-filter-person.yaml
+
+
+  # Modes
+  - type: vertical-stack
+    cards:
+      - !include ../cards/entities-modes.yaml
 
 
   # Lighting
@@ -82,17 +93,14 @@ cards:
       - type: horizontal-stack
         cards:
           - !include ../cards/entity-button-water-supply.yaml
-          - !include ../cards/conditional-water-tariff-monthly.yaml
-
-      - type: horizontal-stack
-        cards: 
-          - !include ../cards/conditional-water-reading-today.yaml
-          - !include ../cards/conditional-water-reading-yesterday.yaml
-
-      - type: horizontal-stack
-        cards:
           - !include ../cards/conditional-water-usage-daily.yaml
-          - !include ../cards/conditional-water-usage-monthly.yaml
+
+
+  # Live Cameras
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/picture-entity-zoneminder-camera-back-yard.yaml
+      - !include ../cards/picture-entity-motion-camera-front-gate.yaml
 
 
   # Internet and MiFi router status
@@ -107,8 +115,14 @@ cards:
     cards:
       - !include ../cards/gauge-cpu-usage.yaml
       - !include ../cards/sensor-disk-free.yaml
-      #- !include ../cards/gauge-volume-level-system.yaml
-      - !include ../cards/gauge-android-devices-connected.yaml
+
+
+  # Player/System volumes 
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/gauge-system-speaker-volume-level.yaml
+      - !include ../cards/conditional-media-player-volume-level.yaml
+      - !include ../cards/conditional-media-server-volume-level.yaml       
 
 
   # MiFi Data and Battery
@@ -124,12 +138,6 @@ cards:
       #- !include ../cards/conditional-mifi-battery-level.yaml
 
 
-  # Reminders
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/conditional-reminders.yaml
-
-
   # Power Outages
   - type: vertical-stack
     cards:
@@ -138,103 +146,13 @@ cards:
       - !include ../cards/conditional-power-outage-ongoing.yaml
 
 
-  # Persons
-  - type: vertical-stack
-    cards:
-      - !include ../cards/entity-filter-person.yaml
-
-
-  # Live Cameras
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/picture-entity-zoneminder-camera-front-gate.yaml
-      - !include ../cards/picture-entity-zoneminder-camera-back-yard.yaml
-
-
-  # Modes
-  - type: vertical-stack
-    cards:
-      - !include ../cards/entities-modes.yaml
-
-
-  # Motion detection
-  - type: vertical-stack
-    cards:
-      - !include ../cards/conditional-motion-sensor-outside-.yaml
-
-
-  # Music Playlists
-  - type: vertical-stack
-    cards:
-
-      - type: horizontal-stack
-        cards:
-          - !include ../cards/entity-button-local-music-jazz.yaml
-          - !include ../cards/entity-button-local-music-christian.yaml
-          - !include ../cards/entity-button-local-music-country.yaml
-
-      - type: horizontal-stack
-        cards:
-          - !include ../cards/entity-button-local-music-local.yaml
-          - !include ../cards/entity-button-local-music-indie.yaml
-          - !include ../cards/entity-button-local-music-congolese.yaml
-
-      - type: horizontal-stack
-        cards:
-          - !include ../cards/entity-button-local-music-pop.yaml
-          #- !include ../cards/entity-button-local-music-folk.yaml
-          - !include ../cards/entity-button-local-music-alternative.yaml
-          - !include ../cards/entity-button-local-music-all.yaml
- 
-      - type: horizontal-stack
-        cards:
-          - !include ../cards/conditional-entity-button-local-music-christmas.yaml
-
-
-  # Now Playing / Volume Controls / Stop Media Player
-  - type: vertical-stack
-    cards:
-      - !include ../cards/media-control-jambulatv-server.yaml
-      - !include ../cards/media-control-jambulatv-client-01.yaml
-      #- !include ../cards/conditional-playing-now-volume-playing.yaml
- 
-
-  # Internet & FM Radio
-  - type: vertical-stack
-    cards:
-      - !include ../cards/conditional-internet-radio.yaml
-      - !include ../cards/conditional-fm-radio.yaml
-      - !include ../cards/conditional-playing-now-volume-playing.yaml
-
-
-  # Now Playing / Volume Controls / Stop Media Player
-  - type: vertical-stack
-    cards:
-      #- !include ../cards/media-control-jambulatv-server.yaml
-      #- !include ../cards/media-control-jambulatv-client-01.yaml
-      #- !include ../cards/conditional-playing-now-volume-playing.yaml
-      #
-      - type: horizontal-stack
-        cards:
-
-          - !include ../cards/conditional-media-player-previous_track.yaml
-          - !include ../cards/conditional-media-player-loop_track.yaml
-          - !include ../cards/conditional-media-player-forward_track.yaml
-
-      - type: horizontal-stack
-        cards:
-          - !include ../cards/conditional-playing-now-volume-paused.yaml
-          - !include ../cards/conditional-media-player-stop.yaml
-          - !include ../cards/conditional-media-player-pause-playing.yaml
-          - !include ../cards/conditional-media-player-pause-paused.yaml
-          - !include ../cards/conditional-media-player-volume-up.yaml
-          - !include ../cards/conditional-media-player-volume-level.yaml
-          - !include ../cards/conditional-media-player-volume-down.yaml
-
-
-  # Garbage collected / Water is back 
+  # Garbage collected
   - type: horizontal-stack
     cards:
       - !include ../cards/entity-button-garbage-collected.yaml
-      - !include ../cards/entity-button-water-back.yaml
-      - !include ../cards/entity-button-water-gone.yaml
+
+
+  # Android devices 
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/gauge-android-devices-connected.yaml

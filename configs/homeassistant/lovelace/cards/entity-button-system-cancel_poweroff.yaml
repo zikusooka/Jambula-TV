@@ -1,13 +1,12 @@
 type: entity-button
 entity: script.server_cancel_shutdown
-tap_action:
-  action: call-service
-  confirmation:
-    text: Cancel server shutdown/reboot?
-  service: script.turn_on
-  service_data:
-    entity_id: script.server_cancel_shutdown
 name: 'Cancel shutdown/reboot'
 show_name: true
 show_state: false
 icon: 'mdi:restart-off'
+
+tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.server_cancel_shutdown

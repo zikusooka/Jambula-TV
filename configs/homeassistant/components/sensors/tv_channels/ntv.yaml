@@ -1,0 +1,3 @@
+platform: command_line
+name: DVBT2 TV Channel UUID NTV
+command: TV_ADDRESS=$(/usr/bin/jambulatv-homeassistant-secrets tv_server_ip_address); TV_PORT=$(/usr/bin/jambulatv-homeassistant-secrets tv_server_stream_port); TV_CHANNEL=$(/usr/bin/jambulatv-homeassistant-secrets tv_channel_ntv); curl -s http://$TV_ADDRESS:$TV_PORT/api/channel/grid?limit=100000 | jq -r '.entries[] | select(.name | contains("'"$TV_CHANNEL"'")) | .uuid'

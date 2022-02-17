@@ -8,10 +8,10 @@ trigger:
     from: 'on'
     to: 'off'
 
-  - platform: state
-    entity_id: binary_sensor.bluez_zik_01
-    from: 'on'
-    to: 'off'
+  #- platform: state
+    #entity_id: binary_sensor.bluez_zik_01
+    #from: 'on'
+    #to: 'off'
 
 
 condition:
@@ -39,4 +39,5 @@ action:
   - service: script.turn_on
     data:
       entity_id:
-        - script.wakeup_zik
+        - script.wakeup_via_input_zik
+        - script.wakeup_via_all_zik

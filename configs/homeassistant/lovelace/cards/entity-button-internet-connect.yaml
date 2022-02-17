@@ -1,0 +1,20 @@
+type: entity-button
+entity: script.internet_connect_wifi_ap
+name: 'Internet (Connect)'
+show_name: true
+show_state: false
+icon: 'mdi:router-wireless'
+
+double_tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.internet_connect_wifi_ap
+
+tap_action:
+  action: call-service
+  confirmation:
+    text: Connect to the Internet?
+  service: script.turn_on
+  service_data:
+    entity_id: script.internet_connect_wifi_ap

@@ -1,0 +1,29 @@
+kodi_pvr_play_living_room_client_01:
+  sequence:
+
+    - alias: Turn TV on
+      service: media_player.turn_on
+      data:
+        entity_id: media_player.jambulatv_server_room
+        #entity_id: media_player.jambulatv_pi_living_room
+        #entity_id: media_player.jambulatv_pi_living_room
+
+    - alias: Play TV channel
+      service: media_player.play_media
+
+      target:
+
+        entity_id: media_player.jambulatv_living_room
+
+      data:
+        media_content_type: 'CHANNEL'
+        media_content_id: >
+          {% if (now().hour < 20) or ((now().hour == 18) and (now().minute == 59)) %}
+            '30'
+          {% elif (now().hour < 22) or ((now().hour == 20) and (now().minute == 40)) %}
+            '28'
+          {% elif (now().hour == 3) and (now().minute == 1) %}
+            '30'
+          {% else %}
+            '30'
+          {% endif %}

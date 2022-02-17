@@ -1,0 +1,4 @@
+platform: mqtt
+state_topic: !secret mqtt_flash_briefing_status_topic
+expire_after: 1200
+name: Flash briefing status

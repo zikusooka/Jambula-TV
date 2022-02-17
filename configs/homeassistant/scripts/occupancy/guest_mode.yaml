@@ -8,7 +8,7 @@ guest_mode_on:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'guest_visitor_mode_activating.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_guest_visitor_mode_activating.mp3'
@@ -39,7 +39,7 @@ guest_mode_off:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'guest_visitor_mode_deactivated.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_guest_visitor_mode_deactivated.mp3'

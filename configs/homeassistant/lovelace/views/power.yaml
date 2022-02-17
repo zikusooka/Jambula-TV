@@ -18,6 +18,11 @@ cards:
           #- !include ../cards/conditional-electricity-tariff-monthly.yaml
 
       - type: horizontal-stack
+        cards:
+          - !include ../cards/entities-power-outages.yaml
+
+
+      - type: horizontal-stack
         cards: 
           - !include ../cards/conditional-electricity-reading-today.yaml
 

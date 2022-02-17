@@ -8,7 +8,7 @@ laptop_battery_charging:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'laptop_battery_is_charging.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_laptop_battery_is_charging.mp3'
@@ -52,7 +52,7 @@ laptop_battery_discharging:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'laptop_battery_is_discharging.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_laptop_battery_is_discharging.mp3'

@@ -1,0 +1,5 @@
+# Restart server
+icinga2_restart: /bin/bash -c "sudo /usr/bin/systemctl restart icinga2.service > /dev/null 2>&1 &"
+
+# Services handling via API
+icinga2_services_set_attribute: /usr/bin/curl -iksS -u {{icinga_api_user}}:{{icinga_api_pass}} -H 'Accept:application/json' 'https://localhost:5665/v1/objects/services/{{icinga_service_name}}' -d '{ "attrs":{ "{{icinga_service_attribute_name}}":"{{icinga_service_attribute_value}}" } }'

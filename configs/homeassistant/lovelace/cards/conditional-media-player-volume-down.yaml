@@ -11,11 +11,5 @@ card:
     service: script.turn_on
     service_data:
       entity_id: script.music_volume_down
-  hold_action:
-    action: call-service
-    repeat: 300
-    service: script.turn_on
-    service_data:
-      entity_id: script.music_volume_up
   name: 'Decrease'
   icon: 'mdi:volume-minus'

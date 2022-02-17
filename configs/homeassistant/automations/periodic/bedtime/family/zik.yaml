@@ -15,15 +15,15 @@ trigger:
     entity_id: input_boolean.bedtime_mode_zik
     to: 'on'
 
-  - platform: state
-    entity_id: binary_sensor.bluez_zik_01
-    from: 'off'
-    to: 'on'
+  #- platform: state
+    #entity_id: binary_sensor.bluez_zik_01
+    #from: 'off'
+    #to: 'on'
 
-  - platform: state
-    entity_id: binary_sensor.bluez_zik_01
-    from: 'unavailable'
-    to: 'on'
+  #- platform: state
+    #entity_id: binary_sensor.bluez_zik_01
+    #from: 'unavailable'
+    #to: 'on'
 
 
 condition:

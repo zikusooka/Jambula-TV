@@ -8,7 +8,7 @@ server_shutdown:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'server_shutting_down_shortly_standby.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_server_shutting_down_shortly_standby.mp3'
@@ -42,7 +42,7 @@ server_restart:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'server_restarting_shortly_standby.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_server_restarting_shortly_standby.mp3'
@@ -82,7 +82,7 @@ server_cancel_shutdown:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'server_poweroff_cancelled.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_server_poweroff_cancelled.mp3'

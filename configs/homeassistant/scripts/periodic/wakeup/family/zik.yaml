@@ -1,4 +1,33 @@
-wakeup_zik:
+wakeup_via_alarm_zik:
+  sequence:
+
+    # Disable Bedtime Mode at Frontend
+    # -----------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.bedtime_mode_zik
+
+    # If bedtime for all was activated; don't up volumes here
+    - service_template: >
+        {% if is_state('input_boolean.wakeup_time_activated_all', 'off') %}
+          script.wakeup_time_volume_levels_system_player_all
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.wakeup_time_volume_levels_system_player_all
+
+
+    # Voice Alert: Play wake up greeting
+    # -----------------------------------
+    - service: script.turn_on
+      data:
+        entity_id: script.wakeup_time_announce
+
+
+
+wakeup_via_input_zik:
   sequence:
 
     # Disable Bedtime Mode at Frontend
@@ -8,63 +37,67 @@ wakeup_zik:
         entity_id: input_boolean.bedtime_mode_zik
 
 
-    # Generate voice files
-    # --------------------
-    # Merge audio files
-    - service: shell_command.ffmpeg_concat_three_mp3
+    # If bedtime for all was activated; don't up volumes here
+    # -------------------------------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.wakeup_time_activated_all', 'off') %}
+          script.wakeup_time_volume_levels_system_player_all
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.wakeup_time_volume_levels_system_player_all
+
+
+    # Voice Alert: Play greeting if wakeup time 4 all wasn't activated
+    # -----------------------------------------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.wakeup_time_activated_all', 'off') %}
+          script.wakeup_time_greeting_announce_zik
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.wakeup_time_greeting_announce_zik
+
+
+
+wakeup_via_all_zik:
+  sequence:
+
+    # Disable Bedtime Mode at Frontend
+    # -----------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.bedtime_mode_zik
+
+
+    # Send daily digest for today
+    # ---------------------------
+    - service_template: >
+        {% if is_state('binary_sensor.internet', 'on') %}
+          script.daily_digest_notify
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.daily_digest_notify
+
+
+    # Send flash briefing (audio) for today
+    # -------------------------------------
+    #
+    # Telegram
+    - service: shell_command.send_telegram_audio
       data_template:
-        input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'wake_alarm_clock_gentle_01'
-        input_file2: 'its_time_2_wakeup'
-        input_file3: 'rise_and_shine'
-        output_directory: !secret jambulatv_temp_dir
-        output_file: 'sound_effect_its_time_2_wakeup_4_zik.mp3'
-
-
-    # Voice Alert: Announce that it's time to wake up
-    # ------------------------------------------------
-    # Play merged audio file in temp directory using house speakers
-    - service: shell_command.voice_alerts_and_sound_effects
+        audio_path: !secret flash_briefing_today_audio_file
+        phone: ''
+    #
+    # WhatsApp
+    - service: shell_command.send_whatsapp_audio
       data_template:
-        sound_alert: 'sound_effect_its_time_2_wakeup_4_zik'
-        audio_gain: !secret voice_alert_audio_gain_medium
-
-
-    # Set wakeup time volume level - player
-    # --------------------------------------
-    - service: shell_command.set_volume_level_player
-      data_template:
-        volume_level_player: !secret mixer_start_up_volume_level_player
-
-
-    # Music
-    # ------
-    - delay: 120
-
-    # If music is paused, unpause else play local playlist - jazz 
-    - service: script.music_unpause_if_paused_else_play_local_jazz
-
-
-    # Increase speaker volume to ~ 40%
-    # ---------------------------------
-    #- service: shell_command.set_volume_level_system
-      #data_template:
-       # volume_level_system: !secret mixer_start_up_volume_level_system
-
-
-    # Play locally stored music - Jazz
-    # ---------------------------------
-    #- service: script.turn_on
-      #data:
-        #entity_id: script.music_play_jazz
-
- 
-
-    # OTHER STUFF HERE
-    # -----------------
-
-
-    # 5. Read flash briefing for zik
-    # ------------------------------
-    #  Play daily flash briefing using house speakers
-    #- service: shell_command.play_flash_briefing
+        audio_path: !secret flash_briefing_today_audio_file
+        phone: ''

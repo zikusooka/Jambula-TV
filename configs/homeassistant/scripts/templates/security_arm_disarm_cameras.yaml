@@ -38,3 +38,18 @@ security_camera_001_disarm_now:
         zm_url: !secret zoneminder_host_remote_01
         zm_user: !secret zoneminder_username_remote_01
         zm_pass: !secret zoneminder_password_remote_01
+
+
+
+security_event_display_at_kodi:
+  sequence:
+
+    # Motion detected snapshot at kodi
+    # --------------------------------
+    # Display snapshot of camera motion event at kodi
+    - service: shell_command.cctv_event_display_at_kodi
+      data_template:
+        remote_client_address: !secret client_001_ssh_host
+        remote_client_user: !secret client_001_ssh_username
+        remote_client_port_kodi: !secret sensor_kodi_03_port
+        remote_client_port_motion: !secret motion_web_control_port

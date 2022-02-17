@@ -1,25 +1,13 @@
 motion_detected_outside_make_noise:
   sequence:
 
-    # Start capture of snapshot
-    # --------------------------
-    # Arm camera alarm
-    - service: script.security_camera_001_arm
-
-
-    # Start display of camera event at tablet
-    # ---------------------------------------
-    # Show camera event at tablet - Tecno F1
-    - service: shell_command.open_zm_camera_at_tecno_f1
-
-
     # Generate voice files
     # --------------------
     # Merge audio files
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'attention-motion-detected-02.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_attention_motion_detected.mp3'
@@ -31,7 +19,25 @@ motion_detected_outside_make_noise:
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'sound_effect_attention_motion_detected'
-        audio_gain: !secret voice_alert_audio_gain_medium
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+    # Display at Kodi 
+    # ---------------
+    # Arm camera alarm
+    - service: script.security_event_display_at_kodi
+
+
+    # Start capture of snapshot
+    # --------------------------
+    # Arm camera alarm
+    - service: script.security_camera_001_arm
+
+
+    # Start display of camera event at tablet
+    # ---------------------------------------
+    # Show camera event at tablet - Tecno F1
+    #- service: shell_command.open_zm_camera_at_tecno_f1
 
 
     # Beep at local server
@@ -50,7 +56,7 @@ motion_detected_outside_make_noise:
     # Stop display of camera event at tablet
     # --------------------------------------
     # Close camera event at tablet - Tecno F1
-    - service: shell_command.close_zm_camera_at_tecno_f1
+    #- service: shell_command.close_zm_camera_at_tecno_f1
 
 
 

@@ -9,31 +9,13 @@ night_mode_on:
         entity_id: input_boolean.night_mode
 
 
-    # Save current volume level of active player
-    # ------------------------------------------
-    # Save the current volume level
-    - service: shell_command.save_current_volume_level_player
-      data_template:
-        current_player: "{{states('sensor.current_player_cli_name')}}"
-        current_player_volume_level: "{{states('sensor.current_player_volume_level')}}%"
-        volume_level_player_file: !secret previous_volume_level_player_file
-
-    # Save current volume level of system
-    # -----------------------------------
-    # Save the current volume level - system
-    - service: shell_command.save_current_volume_level_system
-      data_template:
-        current_system_volume_level: "{{states('sensor.current_system_volume_level')}}%"
-        volume_level_system_file: !secret previous_volume_level_system_file
-
-
     # Generate voice files
     # --------------------
     # Merge audio files
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'night_mode_activating.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_night_mode_activating.mp3'
@@ -49,25 +31,24 @@ night_mode_on:
 
     - delay: 00:00:01
 
+   
+    # Lower volume of current system
+    # -------------------------------
+    - service: shell_command.set_volume_level_system
+      data_template:
+        volume_level_system: !secret mixer_night_mode_volume_level_system
+
     # Lower volume of current player
     # -------------------------------
     - service: shell_command.set_volume_level_player
       data_template:
         current_player: "{{states('sensor.current_player_cli_name')}}"
-        volume_level_player: !secret mixer_night_mode_volume_level
-    
-    # Lower volume of current system
-    # -------------------------------
-    - service: shell_command.set_volume_level_system
-      data_template:
-        current_system: "{{states('sensor.current_system_cli_name')}}"
-        volume_level_system: !secret mixer_night_mode_volume_level
-
+        volume_level_player: !secret mixer_night_mode_volume_level_player
+ 
 
 
 night_mode_off:
   sequence:
-
 
     # Disable Night time Mode at Frontend
     # -----------------------------------
@@ -82,26 +63,20 @@ night_mode_off:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'night_mode_deactivated.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_night_mode_deactivated.mp3'
 
 
-    # Restore previous volume level before automation was run - system
-    # ----------------------------------------------------------------
-    # a) Restore previous volume level before automation was run
-    - service: shell_command.restore_previous_volume_level_system
-      data_template:
-        volume_level_system_file: !secret previous_volume_level_system_file
+    # Reset volume to day time levels - system
+    # ----------------------------------------
+    - service: script.volume_levels_reset_system
 
 
-    # Restore previous volume level before automation was run - player
-    # ----------------------------------------------------------------
-    - service: shell_command.restore_previous_volume_level_player
-      data_template:
-        current_player: "{{states('sensor.current_player_cli_name')}}"
-        volume_level_player_file: !secret previous_volume_level_player_file
+    # Reset volume to day time levels - player
+    # ----------------------------------------
+    - service: script.volume_levels_reset_player
 
 
     # Voice Alert: Announce that night mode deactivated

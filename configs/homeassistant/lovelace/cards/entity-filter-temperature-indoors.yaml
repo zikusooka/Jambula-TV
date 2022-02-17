@@ -1,7 +1,7 @@
 type: entity-filter
 entities:
   - entity: sensor.outside_temperature
-    name: 'Temperature (Indoors)'
+    name: 'Indoor'
 
 state_filter:
   - operator: "!="

@@ -7,7 +7,7 @@ light_switch_livingroom_on:
     # Play chime using house speakers
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
-        sound_alert: 'chime_small'
+        sound_alert: 'Airplane-ding-sound'
         audio_gain: !secret voice_alert_audio_gain_medium
 
 

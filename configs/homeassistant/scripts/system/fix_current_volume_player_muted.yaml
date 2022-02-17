@@ -6,7 +6,7 @@ unmute_volume_4_current_player:
     # --------------------------------------
     - service: shell_command.speaker_volume_unmute_player
       data_template:
-        current_player: 'jtvradio'
+        current_player: "{{states('sensor.current_player_cli_name')}}"
 
 
     # Restore previous volume level before volume was muted

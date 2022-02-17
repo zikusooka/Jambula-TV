@@ -1,0 +1,9 @@
+flash_briefing_all: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=no; skill_flash_briefing_all {{latitude}} {{longitude}} > /dev/null 2>&1 &"
+time_now: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=yes; skill_time > /dev/null 2>&1 &"
+date_today: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=yes; skill_date > /dev/null 2>&1 &"
+date_today_time_now: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=yes; skill_date; skill_time > /dev/null 2>&1"
+
+
+power_outages: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=yes; skill_power_outages > /dev/null 2>&1 &"
+
+wakeup_time_recommended: /usr/bin/jambulatv-datetime --time '{{wakeup_time_recommended}}'

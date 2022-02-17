@@ -20,4 +20,4 @@ its_time_for_exercise:
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'sound_effect_its_time_4_exercise'
-        audio_gain: !secret voice_alert_audio_gain_medium
+        audio_gain: !secret voice_alert_audio_gain_low

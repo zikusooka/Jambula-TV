@@ -20,7 +20,7 @@ its_time_for_news:
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'sound_effect_its_time_4_news'
-        audio_gain: !secret voice_alert_audio_gain_medium
+        audio_gain: !secret voice_alert_audio_gain_low
 
 
     # Start Live TV streaming on tablet in the living room
@@ -28,30 +28,19 @@ its_time_for_news:
     # Launch NTV on C-Idea tablet
     - service: shell_command.start_dvbt2_stream_c_idea
       data_template:
-        tv_channel: !secret tv_channel_uuid_smart24tv
+        tv_channel: "{{states('sensor.dvbt2_tv_channel_uuid_ntv')}}"
+
 
     # Start Live TV streaming on tablet in the kitchen
     # -------------------------------------------------
     # Launch NTV on Tecno F1 tablet
     - service: shell_command.start_dvbt2_stream_tecno_f1
       data_template:
-        tv_channel: !secret tv_channel_uuid_ntv
+        tv_channel: "{{states('sensor.dvbt2_tv_channel_uuid_ntv')}}"
 
 
     # Start Live TV streaming on JambulaTV-Pi in the living room
     # -----------------------------------------------------------
-    # Launch live TV on raspberrypi in living room
-    - service: media_player.media_play
-      data_template:
-        entity_id: media_player.jambulatv_pi_living_room
-        media_content_type: "CHANNEL"
-        media_content_id: >
-          {% if (now().hour < 20) or ((now().hour == 18) and (now().minute == 59)) %}
-            'NTV'
-          {% elif (now().hour < 22) or ((now().hour == 20) and (now().minute == 40)) %}
-            'NTV'
-          {% elif (now().hour == 3) and (now().minute == 1) %}
-            'NTV'
-          {% else %}
-            'NTV'
-          {% endif %}
+    # Launch live TV on raspberrypi in living room 
+    - service: script.turn_on
+      entity_id: script.kodi_pvr_play_living_room_client_01

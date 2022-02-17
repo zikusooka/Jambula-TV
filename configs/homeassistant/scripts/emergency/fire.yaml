@@ -28,53 +28,77 @@ emergency_fire:
     - service: notify.jambulatv
       data_template:
         title: '[JambulaTV]'
-        message: !secret emergency_fire_incident_high
+        message: !include ../../templates/emergencies/message_alert_long_fire.yaml
 
  
     # Send SMS message using ModemManager
     # -----------------------------------
     # Contact 1
-    - service: shell_command.send_sms_text_via_modem_manager
+    - service: script.send_sms_via_modem_manager
       data_template:        
-        sms_network: !secret sms_network_1
-        sms_phone: !secret sms_contact_1
-        sms_message: !secret emergency_fire_incident_high
+        sms_mobile_network: !secret sms_network_1
+        sms_phone_number: !secret sms_contact_1
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_fire.yaml
+    #
     # Contact 2
-    - service: shell_command.send_sms_text_via_modem_manager
+    - service: script.send_sms_via_modem_manager
       data_template:        
-        sms_network: !secret sms_network_2
-        sms_phone: !secret sms_contact_2
-        sms_message: !secret emergency_fire_incident_high
+        sms_mobile_network: !secret sms_network_2
+        sms_phone_number: !secret sms_contact_2
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_fire.yaml
+
  
-    # Send SMS message using MiFi router
-    # ----------------------------------
-    # Contact 1
-    - service: shell_command.send_sms_text_via_mifi_app
-      data_template:        
-        sms_network: !secret sms_network_1
-        sms_phone: !secret sms_contact_1
-        sms_message: !secret emergency_fire_incident_high
-    # Contact 2
-    - service: shell_command.send_sms_text_via_modem_manager
-      data_template:        
-        sms_network: !secret sms_network_2
-        sms_phone: !secret sms_contact_2
-        sms_message: !secret emergency_fire_incident_high
-  
     # Send SMS message using Asterisk
     # -------------------------------
     # Contact 1
-    - service: shell_command.send_sms_text_via_asterisk
+    - service: script.send_sms_via_asterisk
       data_template:        
-        sms_network: !secret sms_network_1
-        sms_phone: !secret sms_contact_1
-        sms_message: !secret emergency_fire_incident_high
+        sms_mobile_network: !secret sms_network_1
+        sms_phone_number: !secret sms_contact_1
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_fire.yaml
+    #
     # Contact 2
-    - service: shell_command.send_sms_text_via_modem_manager
+    - service: script.send_sms_via_asterisk
       data_template:        
-        sms_network: !secret sms_network_2
-        sms_phone: !secret sms_contact_2
-        sms_message: !secret emergency_fire_incident_high
+        sms_mobile_network: !secret sms_network_2
+        sms_phone_number: !secret sms_contact_2
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_fire.yaml
+
+
+    # Connect to the Internet in order to perform the following tasks
+    # ---------------------------------------------------------------
+    - service: script.internet_connect_wifi_ap
+
+
+    # Wait for MiFi router to be reachable i.e. status is 'on'
+    # -------------------------------------------------------
+    - wait_template: "{{ is_state('binary_sensor.mifi_status', 'on') }}"
+      timeout: 120
+      continue_on_timeout: true
+
+
+    # Send SMS message using MiFi router
+    # ----------------------------------
+    # Contact 1
+    - service: script.send_sms_via_mifi
+      data_template:        
+        sms_mobile_network: !secret sms_network_1
+        sms_phone_number: !secret sms_contact_1
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_fire.yaml
+    #
+    # Contact 2
+    - service: script.send_sms_via_mifi
+      data_template:        
+        sms_mobile_network: !secret sms_network_2
+        sms_phone_number: !secret sms_contact_2
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_fire.yaml
+
+
+    # Wait until SMS messages via MiFi router have been sent
+    # ------------------------------------------------------
+    - wait_template: "{{ is_state('script.send_sms_via_mifi', 'off') }}"
+      timeout: 60
+      continue_on_timeout: true
 
 
     # Send WhatsApp messages
@@ -82,16 +106,37 @@ emergency_fire:
     # Contact 1
     - service: script.send_whatsapp
       data_template:        
-        whatsapp_text: !secret emergency_fire_incident_high
+        whatsapp_text: !include ../../templates/emergencies/message_alert_long_fire.yaml
         whatsapp_image: ''
         whatsapp_recipient_phone: !secret whatsapp_contact_1
+    #
     # Contact 2
     - service: script.send_whatsapp
       data_template:        
-        whatsapp_text: !secret emergency_fire_incident_high
+        whatsapp_text: !include ../../templates/emergencies/message_alert_long_fire.yaml
         whatsapp_image: ''
         whatsapp_recipient_phone: !secret whatsapp_contact_2
-  
+
+
+    # Wait until all WhatsApp messages have been sent
+    # -----------------------------------------------
+    - wait_template: "{{ is_state('script.send_whatsapp', 'off') and is_state('sensor.whatsapp_messages_unsent', '0') }}"
+      timeout: 300
+      continue_on_timeout: true
+
+
+    # Disconnect from the Internet if data saver mode is enabled
+    # ----------------------------------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.internet_data_saver', 'on') %}
+          script.internet_disconnect_wifi_ap
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: input_boolean.internet_data_saver
+
 
     # Attempt Phone calls
     # -------------------
@@ -100,6 +145,11 @@ emergency_fire:
     # Activate sirens
     # ---------------
     # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'fire_brigade_notified'
+        audio_gain: !secret voice_alert_audio_gain_high
+
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'Fire-alarm-sound-effect'

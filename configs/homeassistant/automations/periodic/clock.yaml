@@ -13,6 +13,11 @@ condition:
   condition: and
   conditions:
  
+    # Bedtime for all is off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
     # Holiday mode is off
     - condition: state
       entity_id: 'input_boolean.holiday_mode'

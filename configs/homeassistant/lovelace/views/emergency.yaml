@@ -1,17 +1,20 @@
 title: Emergency
-icon: mdi:shield-home
+icon: mdi:ambulance
 cards:
 
 
-  # Panic buttons
-  - type: horizontal-stack
+  # Emergencies
+  - type: vertical-stack
     cards:
-      - !include ../cards/entity-button-emergency-burglary.yaml
-      - !include ../cards/entity-button-emergency-fire.yaml
+      - !include ../cards/markup-emergency-message.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-emergency-burglary.yaml
+          - !include ../cards/entity-button-emergency-fire.yaml
 
 
-  - type: horizontal-stack
-    cards:
-
-      - !include ../cards/entity-button-emergency-medical.yaml
-      - !include ../cards/entity-button-emergency-kidnap.yaml
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-emergency-medical.yaml
+          - !include ../cards/entity-button-emergency-kidnap.yaml

@@ -1,4 +1,4 @@
 platform: command_line
 name: "Now playing rotation"
-command: /bin/bash -c "if [[ -s $(/usr/bin/jambulatv-homeassistant-secrets now_playing_music_rotation_file) ]]; then /usr/bin/cat $(/usr/bin/jambulatv-homeassistant-secrets now_playing_music_rotation_file); else echo ''; fi"
+command: /bin/bash -c "if [[ -s $(/usr/bin/jambulatv-homeassistant-secrets radio_rotation_playing_file) ]]; then /usr/bin/cat $(/usr/bin/jambulatv-homeassistant-secrets radio_rotation_playing_file); else echo ''; fi"
 scan_interval: 10

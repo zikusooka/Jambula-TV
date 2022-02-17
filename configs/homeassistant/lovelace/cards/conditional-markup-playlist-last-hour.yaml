@@ -1,0 +1,13 @@
+type: conditional
+conditions:
+  - entity: media_player.now_playing
+    state: "playing"
+
+card:
+  type: markdown
+  content: |
+    <center>
+    <ha-icon icon="mdi:playlist"></ha-icon>
+    <br>
+    {{ states('sensor.playlist_last_hour') }}
+    </center>

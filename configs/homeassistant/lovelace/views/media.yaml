@@ -64,8 +64,7 @@ cards:
         cards:
 
           - !include ../cards/conditional-media-player-volume-down.yaml
-          #- !include ../cards/conditional-media-player-volume-level.yaml
-          - !include ../cards/gauge-volume-level-player.yaml       
+          - !include ../cards/conditional-media-server-volume-level.yaml       
           - !include ../cards/conditional-media-player-volume-up.yaml
 
  
@@ -86,8 +85,10 @@ cards:
           - !include ../cards/conditional-media-player-loop_track.yaml
           - !include ../cards/conditional-media-player-forward_track.yaml
 
-  - type: vertical-stack
-    cards:
-      #- !include ../cards/media-control-jambulatv-server.yaml
-      #- !include ../cards/media-control-jambulatv-client-01.yaml
-      - !include ../cards/conditional-playing-now-volume-playing.yaml
+
+
+
+      - type: horizontal-stack
+        cards:
+
+          - !include ../cards/conditional-markup-playlist-last-hour.yaml

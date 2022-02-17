@@ -1,13 +1,20 @@
 type: entity-button
 entity: script.server_restart
-double_tap_action:
+name: 'Restart system'
+show_name: true
+show_state: false
+icon: 'mdi:restart'
+
+hold_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.server_restart
+
+tap_action:
   action: call-service
   confirmation:
     text: Restart system?
   service: script.turn_on
   service_data:
     entity_id: script.server_restart
-name: 'Restart system'
-show_name: true
-show_state: false
-icon: 'mdi:restart'

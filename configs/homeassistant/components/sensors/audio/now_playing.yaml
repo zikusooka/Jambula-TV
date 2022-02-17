@@ -1,4 +1,4 @@
 platform: command_line
 name: "Now Playing"
-command: /usr/bin/jambulatv-internet-radio-streamer playing > /tmp/now_playing; /usr/bin/jambulatv-fm-radio-streamer playing >> /tmp/now_playing; /usr/bin/cat /tmp/now_playing | /usr/bin/sort -u | /usr/bin/head -1
+command: /bin/bash -c "if [[ -s $(/usr/bin/jambulatv-homeassistant-secrets radio_playlist_file) ]]; then /usr/bin/uniq -u $(/usr/bin/jambulatv-homeassistant-secrets radio_playlist_file) | tail -1; else echo ''; fi"
 scan_interval: 10

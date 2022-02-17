@@ -1,9 +1,31 @@
-type: entity-filter
-entities:
-  - person.zik
-  - person.eva
-state_filter:
-  - 'home'
-  - 'Home'
-  - 'Sighted'
-  - 'sighted'
+type: conditional
+conditions:
+  - entity: person.zik
+    state_not: 'not_2home'
+
+  - entity: person.zik
+    state_not: '2unknown'
+
+card:
+  type: entity-filter
+  entities:
+    - person.zik
+    - person.arlette
+  state_filter:
+    - 'home'
+    - 'Home'
+    - 'Sighted'
+    - 'sighted'
+    - 'not_home'
+
+
+#type: entity-filter
+#entities:
+#  - person.zik
+#  - person.shushu
+#state_filter:
+#  - 'home'
+#  - 'Home'
+#  - 'Sighted'
+#  - 'sighted'
+

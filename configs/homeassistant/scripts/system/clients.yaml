@@ -1,14 +1,13 @@
 client_001_shutdown:
   sequence:
 
-
     # Generate voice files
     # --------------------
     # Merge audio files
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'client_shutting_down.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_client_shutting_down.mp3'
@@ -37,14 +36,13 @@ client_001_shutdown:
 client_001_restart:
   sequence:
 
-
     # Generate voice files
     # --------------------
     # Merge audio files
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'client_restarting.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_client_restarting.mp3'

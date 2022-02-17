@@ -13,3 +13,9 @@ cards:
   - type: horizontal-stack
     cards:
       - !include ../cards/entities-wakeup-alarm-times.yaml
+
+  # Bed/Wakeup times
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/entity-button-time-bed-all.yaml
+      - !include ../cards/entity-button-time-wakeup-all.yaml 

@@ -1,0 +1,4 @@
+platform: command_line
+name: "Playlist (Last Hour)"
+command: /bin/bash -c "if [[ -s $(/usr/bin/jambulatv-homeassistant-secrets radio_playlist_file) ]]; then /usr/bin/uniq -u $(/usr/bin/jambulatv-homeassistant-secrets radio_playlist_file) | tail -5 | cut -d'[' -f1 | tac; else echo ''; fi"
+scan_interval: 10

@@ -17,6 +17,21 @@ condition:
     #- condition: template
       #value_template: "{{ is_state('group.presence_home', 'home') }}"
 
+    # Wakeup time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.wakeup_time_activated_all'
+      state: 'off'
+
+    # Bedtime time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bed_time_activated_all'
+      state: 'off'
+
+    # Internet data saver mode is NOT enabled - off
+    - condition: state
+      entity_id: 'input_boolean.internet_data_saver'
+      state: 'off'
+
 
 action:
 

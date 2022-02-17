@@ -1,0 +1,6 @@
+platform: template
+sensors:
+  local_time:
+    value_template: >
+      {% set dummy = states('sensor.time') %}
+      {{ (as_timestamp(now()) | timestamp_custom('%A, %-d %B %Y   %-I:%M %p')) }}

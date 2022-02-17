@@ -1,0 +1,24 @@
+# Alert if overall processor usage is very high i.e.100%+
+alias: "Processor usage (Overall) is very high"
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.processor_use
+    to: '100'
+    for:
+      minutes: 2
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.cpu_usage_high_overall_alert_via_speakers

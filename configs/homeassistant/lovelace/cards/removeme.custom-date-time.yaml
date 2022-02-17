@@ -1,0 +1,19 @@
+type: 'custom:button-card'
+icon: 'mdi:clock'
+entity: sensor.local_time
+show_icon: true
+show_label: false
+show_name: false
+show_state: true
+styles:
+  state:
+    - font-size: 1.5em #18px
+    - font-weight: bold
+    - font-family: Saira
+    - text-align: center
+    - text-transform: uppercase
+    - color: "#bfbdbf"
+
+  card:
+    - border: '1px solid rgb(255, 255, 255)'
+    - height: 50px

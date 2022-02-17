@@ -1,0 +1,30 @@
+title: Weather
+icon: mdi:weather-partly-cloudy
+cards:
+
+
+  # Outside/Indoor temperature
+  - type: vertical-stack
+    cards:
+      - !include ../cards/markup-weather-message.yaml
+
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-filter-temperature-outdoors.yaml
+          - !include ../cards/entity-filter-temperature-indoors.yaml
+
+
+  # Forecasts
+  - type: horizontal-stack
+    cards:
+        - type: conditional
+          conditions:
+            - entity: binary_sensor.internet
+              #state: 'on'
+              state: 'off'
+          card:
+            type: 'custom:weather-card'
+            entity: weather.dark_sky
+            #entity: weather.openweathermap
+            #- !include ../cards/custom-weather-darksky.yaml

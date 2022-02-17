@@ -17,6 +17,11 @@ condition:
     #- condition: template
     #  value_template: "{{ is_state('group.presence_home', 'home') }}"
 
+    # 1 minute(s) or more after startup of HASS
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime_minutes
+      above: 1
+
 
 action:
  

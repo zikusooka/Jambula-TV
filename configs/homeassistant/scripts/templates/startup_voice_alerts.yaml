@@ -8,7 +8,7 @@ startup_alert_started:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_small.mp3'
+        input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'smart_home_system_restarted_01.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_smart_home_system_restarted.mp3'

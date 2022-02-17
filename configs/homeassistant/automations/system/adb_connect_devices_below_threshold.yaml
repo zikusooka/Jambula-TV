@@ -1,6 +1,6 @@
 # Connected ADB devices - Below Threshold (Voice Alert)
 alias: "Play voice alert when connected ADB devices are below the minimum threshold"
-initial_state: True
+initial_state: False
 
 
 trigger:
@@ -12,6 +12,11 @@ trigger:
 condition:
   condition: and
   conditions:
+
+    # Bedtime for all is off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
 
     # 3 minute(s) or more after startup of HASS
     - condition: numeric_state

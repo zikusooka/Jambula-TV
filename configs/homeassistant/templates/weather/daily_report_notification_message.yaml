@@ -1,27 +1,27 @@
 "Here's the Weather forecast for your area:
 \r
 \r
---------
-Dark Sky
---------
+--------------
+OpenWeatherMap
+--------------
 \r
 \r
-Rain Chance: *{{states('sensor.darksky_precip_probability_0d')|int}}%*
+Rain Chance: *{{states('sensor.openweathermap_forecast_precipitation_probability')|int}}%*
 \r
 \r
-Temperature (Current): *{{states('sensor.darksky_temperature')|int}}*
+Temperature (Current): *{{states('sensor.openweathermap_temperature')|int}}*
 \r
 \r
-Temperature (High): *{{states('sensor.darksky_daytime_high_temperature_0d')|int}}*
+Temperature (High): *{{states('sensor.openweathermap_forecast_temperature')|int}}*
 \r
 \r
-Temperature (Overnight Low): *{{states('sensor.darksky_overnight_low_temperature_0d')|int}}*
+Temperature (Low): *{{states('sensor.openweathermap_forecast_temperature_low')|int}}*
 \r
 \r
-Summary (Later): *{{states('sensor.darksky_summary_0d')}}*
+Summary (Later): *{{states('sensor.openweathermap_forecast_condition')}}*
 \r
 \r
-Summary (Current): *{{states('sensor.darksky_summary')}}*
+Summary (Current): *{{states('sensor.openweathermap_condition')}}*
 \r
 \r
 \r

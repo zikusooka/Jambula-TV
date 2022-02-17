@@ -1,0 +1,123 @@
+wakeup_time_all:
+  sequence:
+
+    # Set status of wakeup time activated to 'on'
+    # -------------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.wakeup_time_activated_all
+
+
+    # Disable Bedtime Mode at Frontend
+    # --------------------------------
+    - service: homeassistant.turn_off
+      entity_id: input_boolean.bedtime_mode_all
+
+
+    # Disable Night Mode at Frontend
+    # ------------------------------
+    #- service: homeassistant.turn_off
+      #entity_id: input_boolean.night_mode
+
+
+
+
+
+    # If its day time, disable night mode 
+    # -----------------------------------
+    - service_template: >
+        {% if is_state('sun.sun', 'above_horizon') %}
+          homeassistant.turn_off
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+
+      entity_id: input_boolean.night_mode
+
+
+
+
+
+
+
+
+    # If its day time, set wakeup time volume levels for all - (System & Player) 
+    # --------------------------------------------------------------------------
+    - service_template: >
+        {% if is_state('sun.sun', 'above_horizon') %}
+          script.volume_levels_reset_player
+
+          #script.wakeup_time_volume_levels_system_player_all
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+
+      entity_id: script.volume_levels_reset_player
+
+
+    # Voice Alert: Play wakeup time greeting
+    # ---------------------------------------
+    - service: script.wakeup_time_greeting_announce_everybody
+
+
+    # Wait for greeting to complete
+    # -----------------------------
+    - wait_template: "{{ is_state('script.wakeup_time_greeting_announce_everybody', 'off') }}"
+      timeout: 15
+      continue_on_timeout: true
+
+
+    # Voice Alert: Time now
+    # ---------------------
+    - service: shell_command.date_today_time_now
+    - delay: 15
+
+
+    # Voice Alert: Announce current local temperature outside 
+    # -------------------------------------------------------
+    - service_template: >
+        {% if not is_state('sensor.outside_temperature', 'unknown') %}
+          script.temperature_current_outside
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.temperature_current_outside
+
+   
+    # Unpause/play music 
+    # ------------------
+    - service: script.music_unpause_if_paused_else_play_local_jazz
+
+
+    # Flash briefing for today - Connects to Internet if necessary
+    # ------------------------------------------------------------
+    - service: script.flash_briefing_today
+
+
+    # Wait for flash briefing being prepared to either be ready or fail
+    # ------------------------------------------------------------------
+    - wait_template: "{{ is_state('sensor.flash_briefing_status', 'completed') or is_state('sensor.flash_briefing_status', 'failed') }}"
+      timeout: 780
+      continue_on_timeout: true
+
+
+    # Run wakeup time routines for occupants
+    # --------------------------------------
+    # Zik
+    - service: script.wakeup_via_all_zik
+    
+    # Others
+    #
+
+
+    # Set status of wakeup time activated to 'off'
+    # -------------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.wakeup_time_activated_all

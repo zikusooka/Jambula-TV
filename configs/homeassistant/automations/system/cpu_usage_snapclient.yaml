@@ -1,0 +1,32 @@
+# Alert if snapclient processor usage is very high i.e.100%+
+alias: "Processor usage (Snapclient) is very high"
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.cpu_usage_snapclient
+    from: 'ok'
+    to: 'critical'
+    for:
+      minutes: 2
+
+  - platform: state
+    entity_id: sensor.cpu_usage_snapclient
+    from: 'warning'
+    to: 'critical'
+    for:
+      minutes: 2
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.cpu_usage_high_critical_process_alert_via_speakers
