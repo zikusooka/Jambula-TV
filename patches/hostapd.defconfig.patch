@@ -1,6 +1,6 @@
---- defconfig.orig	2020-05-04 06:02:42.376871614 +0300
-+++ defconfig	2020-05-04 06:07:40.678864036 +0300
-@@ -115,9 +115,9 @@
+--- defconfig	2022-01-23 17:22:34.275763363 +0300
++++ defconfig	2022-02-18 15:14:29.947907298 +0300
+@@ -115,11 +115,11 @@
  #CONFIG_EAP_TEAP=y
  
  # Wi-Fi Protected Setup (WPS)
@@ -10,8 +10,11 @@
 -#CONFIG_WPS_UPNP=y
 +CONFIG_WPS_UPNP=y
  # Enable WPS support with NFC config method
- #CONFIG_WPS_NFC=y
+-#CONFIG_WPS_NFC=y
++CONFIG_WPS_NFC=y
  
+ # EAP-IKEv2
+ #CONFIG_EAP_IKEV2=y
 @@ -139,10 +139,10 @@
  #CONFIG_RADIUS_SERVER=y
  
@@ -74,13 +77,13 @@
  #CONFIG_SQLITE=y
 @@ -348,18 +348,18 @@
  # For more details refer to:
- # http://wireless.kernel.org/en/users/Documentation/acs
+ # https://wireless.wiki.kernel.org/en/users/documentation/acs
  #
 -#CONFIG_ACS=y
 +CONFIG_ACS=y
  
  # Multiband Operation support
- # These extentions facilitate efficient use of multiple frequency bands
+ # These extensions facilitate efficient use of multiple frequency bands
  # available to the AP and the devices that may associate with it.
 -#CONFIG_MBO=y
 +CONFIG_MBO=y
@@ -103,3 +106,16 @@
  
  # Opportunistic Wireless Encryption (OWE)
  # Experimental implementation of draft-harkins-owe-07.txt
+@@ -404,9 +404,9 @@
+ #CONFIG_PASN=y
+ 
+ # Device Provisioning Protocol (DPP) (also known as Wi-Fi Easy Connect)
+-CONFIG_DPP=y
++#CONFIG_DPP=n
+ # DPP version 2 support
+-CONFIG_DPP2=y
++#CONFIG_DPP2=n
+ # DPP version 3 support (experimental and still changing; do not enable for
+ # production use)
+-#CONFIG_DPP3=y
++#CONFIG_DPP3=n
