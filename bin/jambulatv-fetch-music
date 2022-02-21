@@ -54,17 +54,36 @@ if [[ -d $MUSIC_DOWNLOADS_DIR ]];
 then
 # Ensure music downloads directory is accessible to user of this tool
 sudo chown -R $(whoami) $MUSIC_DOWNLOADS_DIR
-
 else
 # Create temporary music downloads directory if non-existent
 mkdir -p $MUSIC_DOWNLOADS_DIR
 fi
 }
 
-usage_youtube_now () {
+create_music_genre_directory () {
+if [[ "x$MUSIC_GENRE" != "x" ]];
+then
+MUSIC_OUTPUT_DIR=${MUSIC_DOWNLOADS_DIR}/${MUSIC_GENRE}
+else
+MUSIC_OUTPUT_DIR=${MUSIC_DOWNLOADS_DIR}/Unsorted
+fi
+#
+[[ -d $MUSIC_OUTPUT_DIR ]] || mkdir -p $MUSIC_OUTPUT_DIR
+}
+
+usage_youtube_playing_previous () {
 clear
 cat <<ET
 Usage:  ./$(basename $0) youtube [playing|previous|demand]
+
+ET
+exit 1
+}
+
+usage_youtube_demand () {
+clear
+cat <<ET
+Usage:  ./$(basename $0) youtube demand genre=[GENRE]
 
 ET
 exit 1
@@ -84,7 +103,8 @@ echo "Error: The file $PLAYLIST_RADIO_FILE was not found"
 exit 1
 fi
 # Set music name of song now playing
-MUSIC_TITLE=$(uniq -u $PLAYLIST_RADIO_FILE | tail -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g')
+MUSIC_TITLE=$(uniq $PLAYLIST_RADIO_FILE | tail -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | rev | cut -d'[' -f2- | rev | sed 's: $::g')
+MUSIC_GENRE=$(uniq $PLAYLIST_RADIO_FILE | tail -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | awk '{print $NF}')
 ;;
 
 previous)
@@ -95,16 +115,21 @@ echo "Error: The file $PLAYLIST_RADIO_FILE was not found"
 exit 1
 fi
 # Set music name of song previously played
-MUSIC_TITLE=$(uniq -u $PLAYLIST_RADIO_FILE | tail -2 | head -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g')
+MUSIC_TITLE=$(uniq $PLAYLIST_RADIO_FILE | tail -2 | head -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | rev | cut -d'[' -f2- | rev | sed 's: $::g')
+MUSIC_GENRE=$(uniq $PLAYLIST_RADIO_FILE | tail -2 | head -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | awk '{print $NF}')
 ;;
 
 demand)
 # Set music name of song requested for
-MUSIC_TITLE=$MUSIC_REQUESTED
+MUSIC_TITLE=$(echo $MUSIC_REQUESTED | awk -F'genre=' '/genre=/ {print $1}')
+MUSIC_GENRE=$(echo $MUSIC_REQUESTED | awk -F'genre=' '{print $2}' | awk '{print $1}')
+#
+# Quit and print usage if genre is not specified
+[[ "x$MUSIC_GENRE" = "x" ]] && usage_youtube_demand
 ;;
 
 *)
-usage_youtube_now
+usage_youtube_playing_previous
 ;;
 esac
 }
@@ -152,12 +177,15 @@ YOUTUBE_DL_CMD="$TIMEOUT_CMD /usr/bin/youtube-dl"
 YOUTUBE_DL_OPTS="-v -4 -i -c --ignore-config --prefer-insecure --no-check-certificate --geo-bypass --max-filesize $YOUTUBE_MAX_FILE_SIZE"
 YOUTUBE_ERROR_LOG_FILE=MY_TMPDIR/youtube_dl_fetch_music.log
 #
+# Create genre sub directory where music will be stored
+create_music_genre_directory
+
 # Print started notification to systemd journal and console
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Downloading the song [$MUSIC_TITLE] from [$MUSIC_SERVICE], please be patient ..."
 #
 # Download & extract best audio format & convert 2 desired format - mp3
-$YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_DOWNLOADS_DIR/"%(title)s.%(ext)s" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title "%(title)s" $YOUTUBE_VIDEO_URL > $YOUTUBE_ERROR_LOG_FILE 2>&1
+$YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_OUTPUT_DIR/"%(title)s.%(ext)s" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title "%(title)s" $YOUTUBE_VIDEO_URL > $YOUTUBE_ERROR_LOG_FILE 2>&1
 FETCH_STATUS=$?
 #
 # Filter out errors from log file
@@ -171,7 +199,7 @@ if [[ "$FETCH_STATUS" = "0"  && "$ERROR_FILE_IS_LARGE" != "0" ]];
 then
 # Print completed notification to systemd journal and console
 clear
-logger -s -t $MUSIC_APPLICATION_ID "Completed download of the song [$MUSIC_TITLE]. It is saved under: $MUSIC_DOWNLOADS_DIR"
+logger -s -t $MUSIC_APPLICATION_ID "Completed download of the song [$MUSIC_TITLE]. It is saved under: $MUSIC_OUTPUT_DIR"
 
 elif [[ "$FETCH_STATUS" = "0"  && "$ERROR_FILE_IS_LARGE" = "0" ]];
 then
@@ -197,7 +225,7 @@ then
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the video data for the song [$MUSIC_TITLE] using the automatically selected video ID. Please try manually using the command and URL(s) below:
 
-$YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_DOWNLOADS_DIR/\"%(title)s.%(ext)s\" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title \"%(title)s\" [YOUTUBE-URL]
+$YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_OUTPUT_DIR/\"%(title)s.%(ext)s\" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title \"%(title)s\" [YOUTUBE-URL]
 
 $(for VIDEOID in $(tail -n+2 ${YOUTUBE_VIDEO_IDS_FOUND_FILE})
 do
