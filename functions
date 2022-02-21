@@ -139,7 +139,6 @@ PLAYLISTS_PORT=$(grep -i 'playlists$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 PLAYLISTS_IPTV_WORLD_M3U_FILE=jambula-iptv.m3u8
 PLAYLISTS_CCTV_LOCAL_M3U_FILE=jambula-cctv.m3u8
 PLAYLISTS_JTV_HOME_M3U_FILE=jambula-home.m3u8
-
 PLAYLIST_RADIO=$TMPDIR/playlist.radio
 
 RTMP_HLS_INPUT="$PROJECT_SYSTEM_SHARE_DIR/clips/video/jtv_home_streaming_test_01.mkv"
@@ -148,6 +147,7 @@ RTMP_HLS_ALL_STREAMS_FILE=$TMPDIR/rtmp_hls_streams_4_jtv_home.txt
 
 MUSIC_DOWNLOADS_DIRECTORY=$PROJECT_PARTITION/Downloads/Music
 MUSIC_NOW_PLAYING_FILE=$TMPDIR/now_playing
+MUSIC_NOW_ROTATION_FILE=$STATEDIR/tmp/now_rotation
 
 # Snapcast
 SNAPCAST_SERVER_PORT=$(grep -i 'snapcast server$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
@@ -11746,7 +11746,8 @@ chmod 755 $WEBRADIO_STREAMER_TOOL
 radio_playlist_setup () {
 # Copy jambulatv-radio-playlist script, if none exists in bin directory
 [[ -e $RADIO_PLAYLIST_TOOL ]] || cat $PROJECT_BIN_DIR/jambulatv-radio-playlist | \
-	sed -e "s:MY_PROJECT_NAME:$PROJECT_NAME:g" \
+	sed -e "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
+	sed -e "s:MY_MUSIC_NOW_ROTATION_FILE:$MUSIC_NOW_ROTATION_FILE:g" \
 		> $RADIO_PLAYLIST_TOOL
 # Make script executable
 chmod 755 $RADIO_PLAYLIST_TOOL

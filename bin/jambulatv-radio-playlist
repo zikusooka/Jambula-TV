@@ -13,6 +13,7 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 
 # Variables
 INPUT=$1
+MUSIC_NOW_ROTATION_FILE=MY_MUSIC_NOW_ROTATION_FILE
 
 
 
@@ -73,7 +74,13 @@ NAME_OF_STATION=$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT -f '%art
 NAME_OF_STATION=$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT current -f '%name%' | sed 's:^/::')
 #
 NAME_OF_SONG_ARTIST=$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT -f '%title%' current | rev | awk -F' :' '{print $1}' | rev | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | sed 's/text=//' | awk -F'song_spot=' '{print $1}' | sed 's:"::g')
-GENRE=$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT -f '%genre%' current)
+	if [[ -e $MUSIC_NOW_ROTATION_FILE ]];
+	then
+	GENRE=$(cat $MUSIC_NOW_ROTATION_FILE)
+	else
+	#$($MPD_CLIENT_CMD -h $MPD_SERVER_IP -p $MPD_SERVER_PORT -f '%genre%' current) # Stations don't usually respect this, so don't bother
+	GENRE=Uknown
+	fi
 fi
 }
 
