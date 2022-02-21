@@ -1309,7 +1309,7 @@ ZONEMINDER_ZMS_INETD_TOOL=$BINARY_PREFIX/jambulatv-zms-inetd
 [[ -e $TEXT2SPEECH_TOOL ]] && \
 TTS_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $TEXT2SPEECH_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'}) # IMPORTANT: Must be on 'ext4' partition i.e. /var
 # TTS provider
-TTS_PROVIDER_API=3 # Default API used > 1=iSpeech 2=google 3=watson
+TTS_PROVIDER_API=2 # Default API used > 1=iSpeech 2=google 3=watson
 # Skills 
 ASR_SKILLS_FILE=$BINARY_PREFIX/jambulatv-asr-skills
 # Pocketsphinx
