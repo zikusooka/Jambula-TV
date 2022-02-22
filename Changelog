@@ -1,3 +1,109 @@
+Changes since v7.3
+--------------------
+
+* JambulaTV: Add support for the following features to Home-Assistant            and fix a few bugs and issues discovered 
+
+* JambulaTV: Add all options of 'shutdown' to list of allowed super            user commands (sudo) for multimedia user i.e. jambula 
+
+* JambulaTV: Update the Home-Assistant front-end interface and fix bugs            as follows: 
+
+* JambulaTV: Upgrade youtube-dl sources to latest version: 2021.12.17 
+
+* JambulaTV: Upgrade Android Debug Bridge (ADB) platform tools to the            latest version: 31.0.3-7562133 
+
+* JambulaTV: Upgrade yowsup to the latest Github version: v3.3.0 
+
+* JambulaTV: Update gplaycli sources to the latest Github version 
+
+* JambulaTV: Upgrade Flexget to the latest development version: 3.2.9 
+
+* JambulaTV: Fix several issues with the music download tool i.e.            Update 'jambulatv-fetch-music' 
+
+* JambulaTV: Upgrade system's Linux kernel to latest version: 5.4.170 
+
+* JambulaTV: Due to the recent upgrade of yowsup-cli, change version            of Yowsup in the WhatsApp tool from 3.2.3 to 3.3.0            i.e. Update 'jambulatv-whatsapp' 
+
+* JambulaTV: Add new tool named 'jambulatv-cctv-event-via-kodi' which            is used to connect to a remote host running motion CCTV            software and generate a snapshot image when motion is            detected.  The image is used by Kodi's 'script.doorbell'            plugin to display on the screen 
+
+* JambulaTV: Fix 'skill_headlines' typo in the voice recognition skills            tool i.e. Update 'jambulatv-asr-skills' 
+
+* JambulaTV: Restore use of default microphone in the Speech-to-Text            tool i.e. Update 'jambulatv-speech2text' 
+
+* JambulaTV: Add new tool named 'jambulatv-fetch-news-via-scraper' which            is used to download an audio summary of the latest global            news from the BBC (UK) plus local news from Daily Monitor            (Uganda) 
+
+* JambulaTV: Update TermFeed_install routines to include a symlink for            the 'feed' program inside binary directory i.e. /usr/bin 
+
+* JambulaTV: Fix issue where 'check_internet_connectivity_ping' routines            in main functions do not work as expected i.e. In some            cases, failed to alert when there was actual ISP filtering            and blocking access of sites like facebook.com as was the            the case in Uganda 
+
+* JambulaTV: Update the weather API tool i.e. jambulatv-weather-api 
+
+* JambulaTV: Update the tool used to check for the activity and state            of a remote PC i.e. jambulatv-remote-pc-usage-status 
+
+* JambulaTV: Fix issue where the wireless access point (MiFi) fails to            disconnect completely 
+
+* JambulaTV: Do not wait for unlocking of another instance of sounds            tool if a sound type of 'api' is requested i.e.            Update jambulatv-sounds 
+
+* JambulaTV: Fix typo in 'usage_all' routines of speaker volumes tool            i.e. Update jambulatv-speaker-volume 
+
+* JambulaTV: Change name of the skill used to call the weather from            'skill_weather' to 'skill_weather_currently' in            the Speech-to-Text tool due to upcoming changes in the            ASR skills tool i.e. Update 'jambulatv-speech2text' 
+
+* JambulaTV: Improve the extraction of Home-Assistant variables from            'secrets.yaml' file using the command line Interface            i.e. Update 'jambulatv-homeassistant-secrets' tool 
+
+* JambulaTV: Add a new tool named 'jambulatv-datetime' which is used            to announce either the date today or current time and            also supports reading a specified time 
+
+* JambulaTV: Make some minor changes to the newly added fetch news via            scraper tool i.e. Update 'jambulatv-fetch-news-via-scraper' 
+
+* JambulaTV: Refactor and update the UMEME power outages via scraper            tool i.e. jambulatv-umeme-outages-via-scraper 
+
+* JambulaTV: Add and install inflect, a Python3 dependency module used            by the recently added Date/Time announcer tool            i.e. jambulatv-datetime 
+
+* JambulaTV: Fix issue where rtorrent process lingers around even after            the command 'systemctl stop' has been invoked 
+
+* JambulaTV: Add new tool named jambulatv-radio-playlist, which is used            to display the current music song playing i.e. now playing 
+
+* JambulaTV: Remove 'now playing' code from Internet radio streamer tool            There's a new standalone tool i.e. jambulatv-radio-playlist 
+
+* JambulaTV: Remove 'now playing' code from the FM radio streamer tool            There's a new standalone tool i.e. jambulatv-radio-playlist 
+
+* JambulaTV: Add support for fetching previously played (outgoing) song            title to the music download tool i.e. jambulatv-fetch-music 
+
+* JambulaTV: Fix issue where specifying 'gain=' as a command option on            some of our tools does not produce the expected result in            a situation where multiple arguments in similar form are            specified.  For example, if 'gain=' and 'concatenate=' are            called in the Text-2-Speech tool, the values returned for            those variables will be incorrect. Correcting it here in            the sounds tool just to be thorough 
+
+* JambulaTV: Update the Text-2-speech tool 'jambulatv-text2speech' as            follows: 
+
+* JambulaTV: Refactor ASR skills tool especially the flash briefing and            related code routines i.e. Update 'jambulatv-asr-skills' 
+
+* JambulaTV: Upgrade system's Linux kernel to latest version: 5.4.178 
+
+* JambulaTV: Add 'homeassistant_skin_customization' routines to initial            install and functions files. These are mainly for purposes            of customizing the web based interface used to log into            our home assistant instance 
+
+* JambulaTV: Update the copyright notice everywhere it is specified in            this project 
+
+* JambulaTV: Add mysql-connector package to the list of commonly used            Python3 modules that are installed during initial setup 
+
+* JambulaTV: Improve and add new features (including fixes) to the smart            home software i.e. Update Home-Assistant automations,            scripts, components and several configuration files as            follows: 
+
+* JambulaTV: Add several new TTS generated voice alert sound file(s) to            the project's contributed sounds directory 
+
+* JambulaTV: Upgrade hostapd WiFi server to the latest version of:            hostapd v2.11-devel-hostap_2_10-70-gd2e11b7+ 
+
+* JambulaTV: Add support for displaying the genre of the song playing            for online radio stations to the radio playlist tool            i.e. Update 'jambulatv-radio-playlist' 
+
+* JambulaTV: Add support for downloading previously played music song to            the fetch music tool i.e. Update 'jambulatv-fetch-music' 
+
+* JambulaTV: Fix typo in rTorrent configuration template i.e. Remove            extra '.sessions_rtorrent' under session directory in            rtorrent.rc file 
+
+* JambulaTV: Change the default Text-to-Speech API service provider back            to '2' i.e. Google, as it's not as limiting as IBM Watson 
+
+* JambulaTV: Modify the way the home automation engine i.e. Home-Assistant            is started i.e. Update systemd unit: home-assistant.service 
+
+* JambulaTV: Fix issue in date/time tool i.e. jambulatv-datetime where            the date is not read after the twentieth day of the month 
+
+* JambulaTV: Add support for downloading previously played music song            to the ASR skills i.e. Update 'jambulatv-skills' file 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+
 Changes since v7.2
 --------------------
 
