@@ -237,7 +237,7 @@ skill_date () {
 # Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say time now
-$DATE_TIME_TOOL --date today
+$DATE_TIME_TOOL --date today > /dev/null 2>&1
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 }
@@ -246,7 +246,7 @@ skill_time () {
 # Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say time now
-$DATE_TIME_TOOL --time now
+$DATE_TIME_TOOL --time now > /dev/null 2>&1
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 }
@@ -469,24 +469,28 @@ skill_reminders () {
 if [[ "$REMINDERS_SCHEDULED" != "none" ]];
 then
 
-# Header 
 # Copy system sound file for header into tts directory
 audio_merge_pre_setup reminders_scheduled.mp3 $REMINDERS_CONCAT_DIR 1
 
 # Remove spaces in reminders file
 [[ -e ${REMINDERS_TEMP_FILE}.clean ]] && sudo rm -f ${REMINDERS_TEMP_FILE}.clean
-sed /^$/d $REMINDERS_TEMP_FILE > ${REMINDERS_TEMP_FILE}.clean
+sed '/^$/d' $REMINDERS_TEMP_FILE | sed '/^ /d' > ${REMINDERS_TEMP_FILE}.clean
 
 # Count number of reminders
 REMINDERS_NUMBER=$(wc -l ${REMINDERS_TEMP_FILE}.clean | awk '{print $1}')
 
 # Cycle through all reminders
-COUNT=2
+COUNT=0
 #
-cat ${REMINDERS_TEMP_FILE}.clean | while read REMINDER
+uniq -u ${REMINDERS_TEMP_FILE}.clean | while read REMINDER
 do
+# Skip blank lines
+[[ "x$REMINDER" = "x" ]] && continue
+#
 # Read todays reminders
+Reminder=[$REMINDER]
 $TEXT2SPEECH_TOOL "" custom "$REMINDER" concatenate=yes
+
 audio_merge_pre_setup tts_output.wav $REMINDERS_CONCAT_DIR $COUNT
 # Set next count number
 let "COUNT = $COUNT + 1"
@@ -517,8 +521,20 @@ $SOUNDS_TOOL alert $REMINDERS_ALERT_SOUND
 fi
 
 else
+
+REMINDERS=no
 # Log
 logger -s -t $(basename $0) "No scheduled reminders found"
+#
+if [[ "$PLAY_AUDIO" != "no" ]];
+then
+# Play
+$SOUNDS_TOOL alert reminders_none_scheduled
+else
+# Announce later
+cp -f $PROJECT_SYSTEM_SOUNDS_DIR/reminders_none_scheduled.mp3 $REMINDERS_FILE
+fi
+
 fi
 }
 
@@ -657,8 +673,6 @@ fi
 else
 # Log
 logger -s -t $(basename $0) "No message of the day found"
-# Play
-$SOUNDS_TOOL alert reminders_none_scheduled
 fi
 }
 
@@ -1108,6 +1122,10 @@ $TEXT2SPEECH_TOOL "" custom "The song currently playing is. $MUSIC_NOW_PLAYING_S
 
 skill_music_download_playing_now () {
 $MUSIC_DOWNLOAD_TOOL youtube playing
+}
+
+skill_music_download_played_previously () {
+$MUSIC_DOWNLOAD_TOOL youtube previous
 }
 
 skill_fmradio_start () {
