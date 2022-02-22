@@ -118,7 +118,8 @@ def setup_audio_clip_files_for_date ():
   day_of_the_week = DateDayofWeek
   day_of_the_week = day_of_the_week.lower() + '.mp3'
   date_today = get_date_today (DateToday)
-  date_today = convert_ordinal_to_words (date_today) + '.mp3'
+  date_today = convert_ordinal_to_words (date_today) + '.mp3'  
+  date_today = date_today.replace('-', '_', 1)
   month = DateMonth
   month = month.lower() + '.mp3'
   year = get_year(DateYear)
@@ -296,4 +297,4 @@ else:
   announce_time_selected_is ()
 
 # Quit
-sys.exit()
+sys.exit(0)
