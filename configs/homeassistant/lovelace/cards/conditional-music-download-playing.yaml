@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: media_player.now_playing
+    state: "playing"
+
+card:
+  type: entity-button
+  entity: script.music_download_playing
+  tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.music_download_playing
+  name: 'Download (Playing)'
+  icon: 'mdi:cloud-download'

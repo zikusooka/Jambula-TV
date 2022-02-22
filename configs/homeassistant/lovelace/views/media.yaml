@@ -92,3 +92,10 @@ cards:
         cards:
 
           - !include ../cards/conditional-markup-playlist-last-hour.yaml
+
+
+      - type: horizontal-stack
+        cards:
+
+          - !include ../cards/conditional-music-download-previous.yaml
+          - !include ../cards/conditional-music-download-playing.yaml

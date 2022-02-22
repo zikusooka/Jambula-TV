@@ -1,6 +1,6 @@
 # Internet data saver - Commands
-internet_data_saver_on: /bin/bash -c "/usr/bin/jambulatv-internet-data-saver on"
-internet_data_saver_off: /bin/bash -c "/usr/bin/jambulatv-internet-data-saver off"
+internet_data_saver_on: /bin/bash -c "/usr/bin/jambulatv-internet-data-saver on > /dev/null 2>&1 &"
+internet_data_saver_off: /bin/bash -c "/usr/bin/jambulatv-internet-data-saver off > /dev/null 2>&1 &"
 
 # Internet - Connect/Disconnect
 #internet_connect_wifi_ap: /bin/bash -c 'sudo /usr/bin/systemctl restart iwd.service > /dev/null 2>&1 ; sleep 5; sudo /usr/bin/jambulatv-connect-2-wifi-ap UP > /dev/null 2>&1'

@@ -8,5 +8,5 @@ platform: command_line
 name: "Power outage (Tomorrow)"
 #command: "echo $(/usr/bin/jambulatv-umeme-outages-via-scraper tomorrow $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq) | uniq | sed 's:^none::g' | sed '/^$/d' | paste -s -d' \n'"
 command: "echo $(/usr/bin/jambulatv-umeme-outages-via-scraper tomorrow $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq)"
-command_timeout: 10
+command_timeout: 15
 scan_interval: 300

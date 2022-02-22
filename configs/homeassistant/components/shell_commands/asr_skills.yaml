@@ -1,9 +1,17 @@
+# Flash briefing
 flash_briefing_all: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=no; skill_flash_briefing_all {{latitude}} {{longitude}} > /dev/null 2>&1 &"
-time_now: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=yes; skill_time > /dev/null 2>&1 &"
-date_today: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=yes; skill_date > /dev/null 2>&1 &"
-date_today_time_now: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=yes; skill_date; skill_time > /dev/null 2>&1"
 
+# Date and time
+date_today: /bin/bash -c ". /usr/bin/jambulatv-asr-skills; skill_date > /dev/null 2>&1"
+time_now: /bin/bash -c ". /usr/bin/jambulatv-asr-skills; skill_time > /dev/null 2>&1"
+date_today_time_now: /bin/bash -c ". /usr/bin/jambulatv-asr-skills; skill_date; skill_time > /dev/null 2>&1"
 
-power_outages: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=yes; skill_power_outages > /dev/null 2>&1 &"
+# Power outages
+power_outages: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=yes; skill_power_outages > /dev/null 2>&1"
 
+# Bedtime routines
 wakeup_time_recommended: /usr/bin/jambulatv-datetime --time '{{wakeup_time_recommended}}'
+
+# Music downloads
+music_download_playing_now: /bin/bash -c ". /usr/bin/jambulatv-asr-skills; skill_music_download_playing_now > /dev/null 2>&1 &"
+music_download_played_previously: /bin/bash -c ". /usr/bin/jambulatv-asr-skills; skill_music_download_played_previously > /dev/null 2>&1 &"

@@ -9,14 +9,14 @@ trigger:
     from: 'ok'
     to: 'critical'
     for:
-      minutes: 2
+      minutes: 3
 
   - platform: state
     entity_id: sensor.cpu_usage_snapclient
     from: 'warning'
     to: 'critical'
     for:
-      minutes: 2
+      minutes: 3
 
 
 condition:

@@ -49,8 +49,6 @@ wakeup_time_all:
         {% if is_state('sun.sun', 'above_horizon') %}
           script.volume_levels_reset_player
 
-          #script.wakeup_time_volume_levels_system_player_all
-
         {% else %}
           script.dummy
 
@@ -58,9 +56,15 @@ wakeup_time_all:
 
       entity_id: script.volume_levels_reset_player
 
+      #script.wakeup_time_volume_levels_system_player_all
+
+
+
+
 
     # Voice Alert: Play wakeup time greeting
     # ---------------------------------------
+    - service: script.volume_levels_reset_player
     - service: script.wakeup_time_greeting_announce_everybody
 
 
@@ -74,8 +78,7 @@ wakeup_time_all:
     # Voice Alert: Time now
     # ---------------------
     - service: shell_command.date_today_time_now
-    - delay: 15
-
+    - delay: 10
 
     # Voice Alert: Announce current local temperature outside 
     # -------------------------------------------------------
