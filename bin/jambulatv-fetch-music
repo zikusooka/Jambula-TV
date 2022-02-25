@@ -30,6 +30,8 @@ TIMEOUT_CMD="/usr/bin/timeout $TIMEOUT_PROBE"
 PING_TIMEOUT=3 #9
 PING_IP_ADDRESS=$PING_IP_ADDRESS
 
+SOUNDS_TOOL=MY_SOUNDS_TOOL
+
 
 
 ###############
@@ -104,7 +106,13 @@ exit 1
 fi
 # Set music name of song now playing
 MUSIC_TITLE=$(uniq $PLAYLIST_RADIO_FILE | tail -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | rev | cut -d'[' -f2- | rev | sed 's: $::g')
-MUSIC_GENRE=$(uniq $PLAYLIST_RADIO_FILE | tail -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | awk '{print $NF}')
+# Set music genre
+MUSIC_GENRE=$(uniq $PLAYLIST_RADIO_FILE | tail -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | awk '{print $NF}' | sed 's:\[::' | sed 's:\]::')
+# Set voice alert commands
+MUSIC_SEARCH_STARTED_VOICE_CMD="$SOUNDS_TOOL alert searching_current_song"
+MUSIC_DOWNLOAD_STARTED_VOICE_CMD="$SOUNDS_TOOL alert download_current_song_started"
+MUSIC_DOWNLOAD_COMPLETED_VOICE_CMD="$SOUNDS_TOOL alert download_song_requested_completed"
+MUSIC_DOWNLOAD_FAILED_VOICE_CMD="$SOUNDS_TOOL alert download_current_song_failed"
 ;;
 
 previous)
@@ -116,7 +124,13 @@ exit 1
 fi
 # Set music name of song previously played
 MUSIC_TITLE=$(uniq $PLAYLIST_RADIO_FILE | tail -2 | head -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | rev | cut -d'[' -f2- | rev | sed 's: $::g')
-MUSIC_GENRE=$(uniq $PLAYLIST_RADIO_FILE | tail -2 | head -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | awk '{print $NF}')
+# Set music genre
+MUSIC_GENRE=$(uniq $PLAYLIST_RADIO_FILE | tail -2 | head -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | awk '{print $NF}' | sed 's:\[::' | sed 's:\]::')
+# Set voice alert commands
+MUSIC_SEARCH_STARTED_VOICE_CMD="$SOUNDS_TOOL alert searching_previous_song"
+MUSIC_DOWNLOAD_STARTED_VOICE_CMD="$SOUNDS_TOOL alert download_previous_song_started"
+MUSIC_DOWNLOAD_COMPLETED_VOICE_CMD="$SOUNDS_TOOL alert download_song_requested_completed"
+MUSIC_DOWNLOAD_FAILED_VOICE_CMD="$SOUNDS_TOOL alert download_previous_song_failed"
 ;;
 
 demand)
@@ -153,6 +167,9 @@ YOUTUBE_WATCH_URL=$(grep ^YOUTUBE_WATCH_URL $YOUTUBE_CMD | cut -d '=' -f2 | head
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Searching for [$MUSIC_TITLE] from [$MUSIC_SERVICE], please be patient ..."
 #
+# Voice alert: Announce that searching has started
+$MUSIC_SEARCH_STARTED_VOICE_CMD
+#
 # Search for music from Youtube
 $YOUTUBE_CMD "$YOUTUBE_SEARCH_TEXT" > /dev/null 2>&1
 #
@@ -184,6 +201,9 @@ create_music_genre_directory
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Downloading the song [$MUSIC_TITLE] from [$MUSIC_SERVICE], please be patient ..."
 #
+# Voice alert: Announce that download started 
+$MUSIC_DOWNLOAD_STARTED_VOICE_CMD
+#
 # Download & extract best audio format & convert 2 desired format - mp3
 $YOUTUBE_DL_CMD $YOUTUBE_DL_OPTS -f $YOUTUBE_MUSIC_FORMAT -x --audio-format $MUSIC_DESIRED_FORMAT -o $MUSIC_OUTPUT_DIR/"%(title)s.%(ext)s" --restrict-filenames --embed-thumbnail --add-metadata --metadata-from-title "%(title)s" $YOUTUBE_VIDEO_URL > $YOUTUBE_ERROR_LOG_FILE 2>&1
 FETCH_STATUS=$?
@@ -200,24 +220,33 @@ then
 # Print completed notification to systemd journal and console
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Completed download of the song [$MUSIC_TITLE]. It is saved under: $MUSIC_OUTPUT_DIR"
+#
+# Voice alert: Announce that download completed 
+$MUSIC_DOWNLOAD_COMPLETED_VOICE_CMD
 
 elif [[ "$FETCH_STATUS" = "0"  && "$ERROR_FILE_IS_LARGE" = "0" ]];
 then
 # Print error log for large files to systemd journal and console
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_TITLE] because the file is larger than i.e. $YOUTUBE_MAX_FILE_SIZE"
+# Voice alert: Announce that download failed
+$MUSIC_DOWNLOAD_FAILED_VOICE_CMD
 
 elif [[ "$FETCH_STATUS" = "124" ]];
 then
 # Print error log for timeouts to systemd journal and console
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Error: The default timeout period of $TIMEOUT_PROBE is not long enough for this song. Please look for another version of '$MUSIC_TITLE'.  Alternatively, you can increase the value of [TIMEOUT_PROBE] in this tool and then try again"
+# Voice alert: Announce that download failed
+$MUSIC_DOWNLOAD_FAILED_VOICE_CMD
 
 elif [[ ! -s "$YOUTUBE_ERROR_LOG_FILE" ]] || [[ ! -e "$YOUTUBE_ERROR_LOG_FILE" ]];
 then
 # Print error log for failed connection to server to systemd journal and console
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_TITLE] because connection to Youtube servers was probably dropped or interrupted due to a bad Internet connection. Please try again"
+# Voice alert: Announce that download failed
+$MUSIC_DOWNLOAD_FAILED_VOICE_CMD
 
 elif [[ "$ERROR_VIDEO_DATA_FAIL" = "0" ]];
 then
@@ -231,11 +260,15 @@ $(for VIDEOID in $(tail -n+2 ${YOUTUBE_VIDEO_IDS_FOUND_FILE})
 do
 echo ${YOUTUBE_WATCH_URL}=$VIDEOID
 done)"
+# Voice alert: Announce that download failed
+$MUSIC_DOWNLOAD_FAILED_VOICE_CMD
 
 else
 # Print error log for unfinished fetch to systemd journal and console
 clear
 logger -s -t $MUSIC_APPLICATION_ID "Error: Failed to download the song [$MUSIC_TITLE] due to an unknown reason. Please try again"
+# Voice alert: Announce that download failed
+$MUSIC_DOWNLOAD_FAILED_VOICE_CMD
 fi
 }
 

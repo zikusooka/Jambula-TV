@@ -11126,6 +11126,7 @@ $PYTHON_INSTALL_CMD --prefix=$PREFIX --install-lib=$PYTHON_SITEDIR
 
 music_download_tool_setup () {
 [[ -e $MUSIC_DOWNLOAD_TOOL ]] || cat $PROJECT_BIN_DIR/jambulatv-fetch-music | \
+	sed -e "s:MY_SOUNDS_TOOL:$SOUNDS_TOOL:g" | \
 	sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
 	sed -e "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
 	sed -e "s:MY_MUSIC_DOWNLOADS_DIRECTORY:$MUSIC_DOWNLOADS_DIRECTORY:g" | \
