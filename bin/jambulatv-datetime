@@ -46,16 +46,16 @@ TimeNowHour = datetime.now().strftime('%-I')
 TimeNowMinute = datetime.now().strftime('%M')
 TimeNowMeridiem = datetime.now().strftime('%P')
  
-UserName = os.getlogin()
-
 # Usage i.e. parse arguments/help message
 parser = argparse.ArgumentParser(description='JambulaTV: Say the date today and time now')
 parser.add_argument('--date', dest='date', choices=['today', 'tomorrow'], help='[date]', type=str, required=False)
 parser.add_argument('--time', dest='time', help='[time]', type=str, required=False)
+parser.add_argument('--volume', dest='volume', help='[volume]', type=str, required=False, default='140')
 
 args = parser.parse_args()
 DATE = args.date
 TIME = args.time
+VOL = args.volume
 
 
 
@@ -161,7 +161,7 @@ def announce_today_is ():
 
   # Sound alert
   alert_sound = output_filename_date.replace('.mp3', '', 1)
-  subprocess.check_call([sounds_tool, 'alert', alert_sound])
+  subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + VOL])
   
 
 
@@ -213,7 +213,7 @@ def announce_time_now_is ():
 
   # Sound alert
   alert_sound = output_filename_time_now.replace('.mp3', '', 1)
-  subprocess.check_call([sounds_tool, 'alert', alert_sound])
+  subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + VOL])
 
 
 
@@ -268,7 +268,7 @@ def announce_time_selected_is ():
   
   # Sound alert
   alert_sound = output_filename_time_selected.replace('.mp3', '', 1)
-  subprocess.check_call([sounds_tool, 'alert', alert_sound])
+  subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + VOL])
 
 
 
