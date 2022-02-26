@@ -9769,11 +9769,21 @@ make_install_jambulatv
 libtorrent_install () {
 rsync -av $PROJECT_GITHUB_DIR/libtorrent/ $INSTALL_SRC_DIR/libtorrent/
 cd $INSTALL_SRC_DIR/libtorrent
+#
+# Generate configure script
 ./autogen.sh
+#
+# Print libtorrent version
+VERS=$(grep 'PACKAGE_VERSION=' configure | cut -d"=" -f2 | sed "s:'::g")
+echo "Installing libtorrent version [$VERS]"
+#
+# Run configure script
 ./configure --prefix=$PREFIX --libdir=$LIBDIR
+#
+# Compile and Install
 make_install_jambulatv
 # Clean up - saves upto 150MB
-make clean
+#make clean
 }
 
 rtorrent_install () {
@@ -9781,13 +9791,17 @@ rsync -av $PROJECT_GITHUB_DIR/rtorrent/ $INSTALL_SRC_DIR/rtorrent/
 cd $INSTALL_SRC_DIR/rtorrent
 # Patch for color
 # patch -p1 < $PROJECT_PATCHES_DIR/rtorrent_color.patch
-# Compile
+# Generate configure script
 ./autogen.sh
+#
+# Run configure script
 ./configure --prefix=/usr --libdir=$LIBDIR --with-xmlrpc-c \
 	PKG_CONFIG_PATH=/usr/lib/pkgconfig
+#
+# Compile and Install
 make_install_jambulatv
 # Clean up - saves upto 260MB
-make clean
+#make clean
 #
 # Add rtorrent user/group
 useradd -r -M -c "Rtorrent Server User" rtorrent -s /sbin/nologin

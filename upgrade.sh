@@ -380,6 +380,13 @@ uninstall_src_pkgs v4l-utils
 v4l_utils_install
 }
 
+upgrade_rtorrent () {
+uninstall_src_pkgs rtorrent
+uninstall_src_pkgs libtorrent
+libtorrent_install
+rtorrent_install 
+}
+
 
 
 #################
@@ -477,3 +484,5 @@ v4l_utils_install
 #upgrade_nginx
 
 #upgrade_v4l_utils
+
+#upgrade_rtorrent
