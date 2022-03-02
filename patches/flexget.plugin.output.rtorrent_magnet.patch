@@ -1,0 +1,57 @@
+--- rtorrent_magnet.py		2020-09-16 05:44:28.899938520 +0300
++++ rtorrent_magnet.py		2022-02-27 15:23:45.569892004 +0300
+@@ -1,5 +1,6 @@
+ import os
+ import re
++import subprocess
+ 
+ from loguru import logger
+ 
+@@ -24,7 +25,7 @@
+ 
+     d10:magnet-uri88:xt=urn:btih:190F1ABAED7AE7252735A811149753AA83E34309&dn=URL+Escaped+Torrent+Namee
+ 
+-    This plugin will check if a download URL is a magnet link, and then create the appropriate torrent file.
++    This plugin will check if a download URL is a a good or bad magnet link, and then create or download the torrent file respectively.
+ 
+     Example:
+       rtorrent_magnet: ~/torrents/
+@@ -44,6 +45,15 @@
+                 f.write('d10:magnet-uri%d:%se' % (len(entry['url']), entry['url']))
+         entry['output'] = path
+ 
++
++    def download_torrent_file(self, task, entry, path):
++        path = os.path.join(path, '%s.torrent' % entry['title'])
++        path = os.path.expanduser(path)
++
++        logger.info('Downloading Torrent: {}', entry['title'])
++        subprocess.check_call(['/usr/bin/wget', '--no-verbose', '--progress', 'dot', '--continue', '--no-check-certificate', '--output-document', path, entry['url']])
++
++
+     # Run after download plugin to only pick up entries it did not already handle
+     @plugin.priority(0)
+     def on_task_output(self, task, config):
+@@ -56,11 +66,21 @@
+                 continue
+ 
+             for url in entry.get('urls', [entry['url']]):
++
++                """ Fix BUG: rTorrent not picking up badly formatted torrent files generated from magnet link """
++
++                if url.endswith('.torrent'):
++                    logger.debug('A badly formatted magnet URI detected for url {} ({})', url, entry['title'])
++                    self.download_torrent_file(task, entry, entry.get('path', config))
++                    break
++
+                 if url.startswith('magnet:'):
+-                    logger.debug('Magnet URI detected for url {} ({})', url, entry['title'])
++                    logger.debug('A well formatted magnet URI detected for url {} ({})', url, entry['title'])
++
+                     if pat.search(url):
+                         self.write_torrent_file(task, entry, entry.get('path', config))
+                         break
++
+                     else:
+                         logger.warning('Unrecognized Magnet URI Format: {}', url)
+ 

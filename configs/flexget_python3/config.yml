@@ -48,17 +48,19 @@ templates:
 # Settings - TV Series
 # ---------------------
     _settings_for_series: &settings_for_series
-      quality: "h264 xvid 720p !h265 !480p"
+      quality: "!h265" 
       exact: yes
       propers: no 
       identified_by: ep
+      season_packs: no
       ep_regexp:
         - s(\d+)e(\d+)
         - s(\d+)ep(\d+)
       tracking: backfill
       timeframe: 1 hours
-      target: "h264"
+      target: "1080p 480p hdtv h264"
       upgrade: yes
+      specials: no
 
 # Trakt Credentials
 # -----------------
@@ -197,7 +199,10 @@ templates:
         - (?i)[ .]vostfr[ .]: {from: title}
         - (?i)[ .]web-dl[ .]: {from: title} 
         - (?i)[ .]webscr[ .]: {from: title}
-        - (?i)[ .]HC.HDRip[ .]: {from: title}
+        - (维|克|托|中|英|字|幕|人|影|视|你|爱|多|双|语|精|校|深|组) : {from: title}
+        - (HC.HDRip|HEVC.x265|HEVC-PSA|WEBRip.x265|x265-MiNX): {from: title}
+
+
     content_filter:
       require:
         - '*.avi'
@@ -211,13 +216,16 @@ templates:
         - 'password.txt'
         - 'password.zip'
         - '*.wmv'
-        - '*.HC.HDRip.*'
     verify_ssl_certificates: no
     domain_delay:
       rarbg.to: 5 seconds
-    magnets: no
+      1337x: 10 seconds
+      thepiratebay: 10 seconds
+    magnets: yes
     torrent_scrub: rtorrent
     torrent_alive: yes
+    cfscraper: no
+
     notify:
       task: 
         template: jambula.html
@@ -238,6 +246,12 @@ templates:
 # WhatsApp
 # --------
   send_whatsapp_notification: 
+
+  # Re-order rtorrent_magnet and exec plugins
+    plugin_priority:
+      rtorrent_magnet: 230
+      exec: 240
+
   # Run on_output exec
     exec:
       allow_background: yes
@@ -247,9 +261,9 @@ templates:
           # Send text message of queued content via WhatsApp
           - /bin/sudo "{? whatsapp.send_script ?}" sendmessage "$(cat {{INFO_FILE}})" 
           # Download content poster
-          - /usr/bin/curl -k -L -s -o "{{IMAGE_FILE}}" "{{IMAGE_URL}}"
+          #- /usr/bin/curl -k -L -s -o "{{IMAGE_FILE}}" "{{IMAGE_URL}}"
           # Send poster of queued content via WhatsApp
-          - /bin/sudo "{? whatsapp.send_script ?}" sendimage "{{IMAGE_FILE}}" 
+          #- /bin/sudo "{? whatsapp.send_script ?}" sendimage "{{IMAGE_FILE}}" 
       on_exit:
         for_accepted: 
           # Message sent notice
@@ -259,6 +273,12 @@ templates:
 # Telegram
 # --------
   send_telegram_notification: 
+
+  # Re-order rtorrent_magnet and exec plugins
+    plugin_priority:
+      rtorrent_magnet: 230
+      exec: 240
+
   # Run on_output exec
     exec:
       allow_background: yes
@@ -368,9 +388,10 @@ templates:
       - send_telegram_notification
     priority: 10
     thetvdb_lookup: yes
+    trakt_lookup: yes
     tvmaze_lookup: yes
     content_size:
-      max: 490
+      max: 360
     free_space:
       path: '{? tv.path ?}'
       space: 1000
@@ -389,33 +410,31 @@ templates:
         trakt_list:
           <<: *trakt_for_series
     discover:
+      interval: 1 hour
       release_estimations: ignore
       what: 
         - next_series_episodes:
             from_start: yes
       from:
-        - torrentz: good
         - 1337x:
             order_by: seeders
         - rarbg:
             category:
-              - x264 720p
               - x264 1080p
               - XviD
               - SDTV
               - HDTV
             sorted_by: seeders
-            ranked: True
             use_tvdb: True
             min_leechers: 1
             min_seeders: 1
-        #- piratebay:
-            #category: video
-            #sort_by: seeds
-      interval: 1 hour
-    max_reruns: 1
+        - piratebay:
+            category: tv
+            sort_by: seeds
+        - limetorrents:
+            category: tv
 
-
+    
 # Move TV Series to Kodi
 # ----------------------
   move_tv_series_2_kodi:
@@ -528,12 +547,10 @@ templates:
         # locally requested
         - movie_list: locally_added
       from:
-        - torrentz: good
         - 1337x:
             order_by: seeders
         - rarbg:
             category:
-              - x264 720p
               - x264 1080p
               - XviD
               - SDTV
@@ -543,9 +560,9 @@ templates:
             use_tvdb: True
             min_leechers: 1
             min_seeders: 1
-        #- piratebay:
-            #category: video
-            #sort_by: seeds
+        - piratebay:
+            category: video
+            sort_by: seeds
       interval: 1 day
     max_reruns: 1
 

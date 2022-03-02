@@ -9583,6 +9583,8 @@ patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT
 #patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/notifiers/notify.py < $PROJECT_PATCHES_DIR/flexget.plugin.notifiers.python3.patch
 # rss plugin - extract podcast poster image URLs
 patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/input/rss.py < $PROJECT_PATCHES_DIR/flexget.plugin.input.rss.python3.patch
+# rtorrent_magnet plugin - download torrent file directly if magnet URI is badly formatted
+patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/output/rtorrent_magnet.py < $PROJECT_PATCHES_DIR/flexget.plugin.output.rtorrent_magnet.patch
 #
 # Install
 cd $INSTALL_SRC_DIR/Flexget
