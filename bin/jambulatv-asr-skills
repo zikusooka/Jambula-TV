@@ -12,6 +12,7 @@ PROJECT_FUNCTIONS_FILE=$PROJECT_SYSTEM_CONF_DIR/functions
 # Source install functions
 . $PROJECT_FUNCTIONS_FILE
 
+SOUNDS_VOLUME_LEVEL=160
 
 # Variables - Flash briefing
 ALL_BRIEF_CONCAT_DIR=$TMPDIR/tts/flash_briefing_intro
@@ -34,7 +35,7 @@ POWER_OUTAGE_DATE_TODAY=$(date '+%A %d %B')
 POWER_OUTAGE_DATE_TOMORROW=$(date --date='tomorrow' '+%A %d %B')
 POWER_OUTAGES_CONCAT_DIR=$TMPDIR/tts/power_outages
 POWER_OUTAGES_CONCAT_INPUT_FILE=$TMPDIR/input_files_power_outages.txt
-POWER_OUTAGES_FILE=$TMPDIR/power_outages_today.mp3
+POWER_OUTAGES_FILE=$TMPDIR/power_outages_coming_up.mp3
 POWER_OUTAGES_ALERT_SOUND=$(echo ${POWER_OUTAGES_FILE##*/} | sed 's:.mp3::')
 
 # Variables - Weather
@@ -60,6 +61,8 @@ NEWS_BRIEF_FILE=$TMPDIR/news_briefing_today.mp3
 NEWS_BRIEF_ALERT_SOUND=$(echo ${NEWS_BRIEF_FILE##*/} | sed 's:.mp3::')
 NEWS_SUMMARY_AUDIO_FILENAME_4_BBC=bbc_news_summary.mp3
 NEWS_SUMMARY_AUDIO_FILENAME_4_MONITOR=monitor_news_summary.mp3
+NEWS_EXPIRY_TIME_4_BBC=7200
+NEWS_EXPIRY_TIME_4_MONITOR=7200
 
 # Variables - MOTD
 MESSAGE_OF_THE_DAY=$(/usr/bin/fortune -s -n 80)
@@ -206,6 +209,11 @@ sudo $CONNECT_WIFI_AP_TOOL UP
 $0 mifi
 ;;
 esac
+
+else
+# Internet was already on
+INTERNET_ALREADY_CONNECTED=yes
+export INTERNET_ALREADY_CONNECTED
 fi
 }
 
@@ -213,7 +221,7 @@ skill_disconnect_4rm_internet () {
 INTERNET_METHOD=$1
 check_internet_connectivity
 
-if [[ "$INTERNET_STATUS_VAL" = "0" ]];
+if [[ "$INTERNET_STATUS_VAL" = "0" && "$INTERNET_ALREADY_CONNECTED" != "yes" ]];
 then
 # Connect to the Internet if unreacheable
 logger -s -t $(basename $0) "Disconnecting from the Internet"
@@ -237,7 +245,7 @@ skill_date () {
 # Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say time now
-$DATE_TIME_TOOL --date today > /dev/null 2>&1
+$DATE_TIME_TOOL --date today --volume $SOUNDS_VOLUME_LEVEL > /dev/null 2>&1
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 }
@@ -246,7 +254,7 @@ skill_time () {
 # Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Say time now
-$DATE_TIME_TOOL --time now > /dev/null 2>&1
+$DATE_TIME_TOOL --time now --volume $SOUNDS_VOLUME_LEVEL > /dev/null 2>&1
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 }
@@ -301,7 +309,7 @@ $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Log
 [[ "$FETCHED_WEATHER" = "no" ]] || logger -s -t $(basename $0) "Playing the current weather summary ..."
 # Play
-$SOUNDS_TOOL alert $WEATHER_REPORT_ALERT_SOUND
+$SOUNDS_TOOL alert $WEATHER_REPORT_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 fi
@@ -349,7 +357,7 @@ $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Log
 [[ "$FETCHED_WEATHER" = "no" ]] || logger -s -t $(basename $0) "Playing today's weather forecast ..."
 # Play
-$SOUNDS_TOOL alert $WEATHER_REPORT_ALERT_SOUND
+$SOUNDS_TOOL alert $WEATHER_REPORT_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 fi
@@ -397,15 +405,37 @@ $KODI_CONTROLLER_TOOL video_play_pause noreplay
 # Log
 [[ "$FETCHED_WEATHER" = "no" ]] || logger -s -t $(basename $0) "Playing weather forecast later ..."
 # Play
-$SOUNDS_TOOL alert $WEATHER_REPORT_ALERT_SOUND
+$SOUNDS_TOOL alert $WEATHER_REPORT_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 # Un Pause Player
 $KODI_CONTROLLER_TOOL video_play_pause
 fi
 }
 
 skill_headlines_start () {
-# Fetch news headlines
-$FETCH_NEWS_VIA_SCRAPER_TOOL > /dev/null 2>&1
+# Test for freshness of news - BBC
+query_and_set_freshness_of_target_file $TMPDIR/$NEWS_SUMMARY_AUDIO_FILENAME_4_BBC $NEWS_EXPIRY_TIME_4_BBC 
+NEWS_FRESH_BBC=$TARGET_FILE_IS_FRESH
+
+# Test for freshness of news - Monitor
+query_and_set_freshness_of_target_file $TMPDIR/$NEWS_SUMMARY_AUDIO_FILENAME_4_MONITOR $NEWS_EXPIRY_TIME_4_MONITOR
+NEWS_FRESH_MONITOR=$TARGET_FILE_IS_FRESH
+
+# If news files for BBC and Monitor are not fresh, fetch latest
+if [[ "$NEWS_FRESH_BBC" = "no" ]] || [[ "$NEWS_FRESH_MONITOR" = "no" ]];
+then
+# Remove old news
+for OLD_NEWS in \
+$TMPDIR/$NEWS_SUMMARY_AUDIO_FILENAME_4_BBC \
+$TMPDIR/$NEWS_SUMMARY_AUDIO_FILENAME_4_MONITOR
+do
+[[ -e "$OLD_NEWS" ]] && sudo rm -f $OLD_NEWS
+done
+#
+# If Internet is available, fetch latest news headlines 
+check_internet_connectivity
+#
+[[ "$INTERNET_STATUS_VAL" = "0" ]] && $FETCH_NEWS_VIA_SCRAPER_TOOL > /dev/null 2>&1
+fi
 
 # If no news was fetched, skip compilation and use saved clip to notify of failure
 if [[ ! -s "$TMPDIR/$NEWS_SUMMARY_AUDIO_FILENAME_4_BBC" ]] && [[ ! -s "$TMPDIR/$NEWS_SUMMARY_AUDIO_FILENAME_4_MONITOR" ]];
@@ -454,7 +484,10 @@ then
 # Log
 [[ "$FETCHED_NEWS" = "no" ]] || logger -s -t $(basename $0) "Playing today's news headlines ..."
 # Play
-$SOUNDS_TOOL alert $NEWS_BRIEF_ALERT_SOUND
+$SOUNDS_TOOL alert $NEWS_BRIEF_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
+#
+# Remove this non-news file since we do not want it to be replayed if still fresh
+[[ "$FETCHED_NEWS" = "no" ]] && sudo rm -f $NEWS_BRIEF_FILE
 fi
 }
 
@@ -465,6 +498,9 @@ touch $TTS_OUTPUT_FILE
 }
 
 skill_reminders () {
+# If existent, remove audio clip for reminders
+[[ -e $REMINDERS_FILE ]] && sudo rm -f $REMINDERS_FILE
+
 # Ensure that reminders exist today before proceeding
 if [[ "$REMINDERS_SCHEDULED" != "none" ]];
 then
@@ -480,7 +516,7 @@ sed '/^$/d' $REMINDERS_TEMP_FILE | sed '/^ /d' > ${REMINDERS_TEMP_FILE}.clean
 REMINDERS_NUMBER=$(wc -l ${REMINDERS_TEMP_FILE}.clean | awk '{print $1}')
 
 # Cycle through all reminders
-COUNT=0
+COUNT=2
 #
 uniq -u ${REMINDERS_TEMP_FILE}.clean | while read REMINDER
 do
@@ -488,9 +524,7 @@ do
 [[ "x$REMINDER" = "x" ]] && continue
 #
 # Read todays reminders
-Reminder=[$REMINDER]
 $TEXT2SPEECH_TOOL "" custom "$REMINDER" concatenate=yes
-
 audio_merge_pre_setup tts_output.wav $REMINDERS_CONCAT_DIR $COUNT
 # Set next count number
 let "COUNT = $COUNT + 1"
@@ -517,7 +551,7 @@ then
 # Log
 logger -s -t $(basename $0) "Playing scheduled reminders ..."
 # Play
-$SOUNDS_TOOL alert $REMINDERS_ALERT_SOUND
+$SOUNDS_TOOL alert $REMINDERS_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 fi
 
 else
@@ -529,7 +563,7 @@ logger -s -t $(basename $0) "No scheduled reminders found"
 if [[ "$PLAY_AUDIO" != "no" ]];
 then
 # Play
-$SOUNDS_TOOL alert reminders_none_scheduled
+$SOUNDS_TOOL alert reminders_none_scheduled gain=$SOUNDS_VOLUME_LEVEL
 else
 # Announce later
 cp -f $PROJECT_SYSTEM_SOUNDS_DIR/reminders_none_scheduled.mp3 $REMINDERS_FILE
@@ -541,42 +575,34 @@ fi
 skill_power_outages () {
 check_internet_connectivity
 #
-[[ "$INTERNET_STATUS_VAL" = "0" ]] && \
-	POWER_OUTAGE_ONGOING=$($UMEME_OUTAGES_VIA_API_TOOL ongoing $(jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | sed 's:^none::g' | sed '/^$/d' | paste -s -d' \n')
-
-POWER_OUTAGE_TODAY=$($UMEME_OUTAGES_VIA_SCRAPER_TOOL today $(jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | sed 's:^none::g' | sed '/^$/d' | paste -s -d' \n')
-POWER_OUTAGE_TOMORROW=$($UMEME_OUTAGES_VIA_SCRAPER_TOOL tomorrow $(jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | sed 's:^none::g' | sed '/^$/d' | paste -s -d' \n')
+if [[ "$INTERNET_STATUS_VAL" = "0" ]];
+then
+POWER_OUTAGE_ONGOING=$($UMEME_OUTAGES_VIA_API_TOOL ongoing $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | sed '/^$/d' | paste -s -d' \n')
+else
+POWER_OUTAGE_ONGOING="none"
+fi
+POWER_OUTAGE_TODAY=$($UMEME_OUTAGES_VIA_SCRAPER_TOOL today $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | grep -i -v -e umeme | sed '/^$/d' | paste -s -d' \n')
+POWER_OUTAGE_TOMORROW=$($UMEME_OUTAGES_VIA_SCRAPER_TOOL tomorrow $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | grep -i -v -e umeme | sed '/^$/d' | paste -s -d' \n')
 
 # Header
-if [[ "x$POWER_OUTAGE_ONGOING" = "x" && "x$POWER_OUTAGE_TODAY" = "x" && "x$POWER_OUTAGE_TOMORROW" = "x" ]];
+if [[ "$POWER_OUTAGE_ONGOING" != "none" ]];
 then
 # Copy system sound file for header into tts directory
-audio_merge_pre_setup power_outages_no_scheduled.mp3 $POWER_OUTAGES_CONCAT_DIR header
+audio_merge_pre_setup unplanned_emergency_power_outage_currently.mp3 $POWER_OUTAGES_CONCAT_DIR header
+
+elif [[ "$POWER_OUTAGE_TODAY" != "none" ]];
+then
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup planned_power_outage_today.mp3 $POWER_OUTAGES_CONCAT_DIR header
+
+elif [[ "$POWER_OUTAGE_TOMORROW" != "none" ]];
+then
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup planned_power_outage_tomorrow.mp3 $POWER_OUTAGES_CONCAT_DIR header
 
 else
 # Copy system sound file for header into tts directory
-audio_merge_pre_setup power_outages_yes_scheduled.mp3 $POWER_OUTAGES_CONCAT_DIR header
-fi
-
-# Alert for a possible power outage
-if [[ "x$POWER_OUTAGE_ONGOING" != "x" ]];
-then
-# Copy system sound file for on-going power outage into tts directory
-audio_merge_pre_setup power_outages_ongoing.mp3 $POWER_OUTAGES_CONCAT_DIR ongoing
-fi
-
-# Alert for a power outage today
-if [[ "x$POWER_OUTAGE_TODAY" != "x" ]];
-then
-# Copy system sound file for power outage today into tts director
-audio_merge_pre_setup power_outages_today.mp3 $POWER_OUTAGES_CONCAT_DIR today
-fi
-
-# Alert for a power outage tomorrow
-if [[ "x$POWER_OUTAGE_TOMORROW" != "x" ]];
-then
-# Copy system sound file for power outage tomorrow into tts director
-audio_merge_pre_setup power_outages_today.mp3 $POWER_OUTAGES_CONCAT_DIR tomorrow
+audio_merge_pre_setup power_outages_no_scheduled.mp3 $POWER_OUTAGES_CONCAT_DIR header
 fi
 
 # Create input file used to concatenate audio files
@@ -601,9 +627,9 @@ $FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $POWER
 if [[ "$PLAY_AUDIO" != "no" ]];
 then
 # Log
-logger -s -t $(basename $0) "Playing power outages schedule ..."
+logger -s -t $(basename $0) "Playing power outages scheduled ..."
 # Play
-$SOUNDS_TOOL alert $POWER_OUTAGES_ALERT_SOUND
+$SOUNDS_TOOL alert $POWER_OUTAGES_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 fi
 }
 
@@ -667,7 +693,7 @@ then
 # Log
 logger -s -t $(basename $0) "Playing today's message of the day ..."
 # Play
-$SOUNDS_TOOL alert $MESSAGE_OF_THE_DAY_ALERT_SOUND
+$SOUNDS_TOOL alert $MESSAGE_OF_THE_DAY_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 fi
 
 else
@@ -701,7 +727,7 @@ then
 # Log
 logger -s -t $(basename $0) "Playing flash briefing intro ..."
 # Play
-$SOUNDS_TOOL alert $ALL_BRIEF_ALERT_SOUND
+$SOUNDS_TOOL alert $ALL_BRIEF_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 fi
 }
 
@@ -734,7 +760,7 @@ then
 # Log
 logger -s -t $(basename $0) "Playing day's signout greeting ..."
 # Play
-$SOUNDS_TOOL alert $DAYS_GREETING_ALERT_SOUND
+$SOUNDS_TOOL alert $DAYS_GREETING_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 fi
 }
 
@@ -781,7 +807,7 @@ $NEWS_BRIEF_ALERT_SOUND \
 $MESSAGE_OF_THE_DAY_ALERT_SOUND \
 $DAYS_GREETING_ALERT_SOUND
 do
-$SOUNDS_TOOL alert $ALERT_SOUND
+[[ -e $TMPDIR/${ALERT_SOUND}.mp3 ]] && $SOUNDS_TOOL alert $ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 sleep 5
 done
 }
@@ -793,7 +819,7 @@ PREP_STANDBY_ALERT_SOUND=flash_briefing_preparing_for_today_standby
 mqtt_publish_flash_briefing_status started
 
 # Voice Alert: Preparing briefing, standby
-$SOUNDS_TOOL alert $PREP_STANDBY_ALERT_SOUND
+$SOUNDS_TOOL alert $PREP_STANDBY_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 	
 # Connect to the Internet        
 skill_connect_2_internet mifi
@@ -849,6 +875,15 @@ mqtt_publish_flash_briefing_status failed
 # Log
 logger -s -t $(basename $0) "Failed to prepare flash briefing for today, quitting ..."
 exit 0
+fi
+
+# Clean up
+# -------
+# If news or weather was not fetched, nuke associated files and entire briefing that was just generated and read
+if [[ "$FETCHED_NEWS" = "no" ]] || [[ "$FETCHED_WEATHER" = "no" ]];
+then 
+sudo rm -f $NEWS_BRIEF_FILE $WEATHER_REPORT_FILE
+sudo rm -f $FLASH_BRIEFING_AUDIO_OUTPUT_FILE
 fi
 }
 
@@ -947,7 +982,7 @@ then
 # Let user know there's already a recording and quit
 $TEXT2SPEECH_TOOL "" custom "Am sorry, there is already another recording in progress. To end that recording, please say \"\\pau=1000\\\" STOP RECORDING TV CHANNEL. \"\\pau=1000\\\"  Then repeat your request"
 # Quit
-exit 1
+exit 0
 
 else
 # Record TV channel now
@@ -968,7 +1003,7 @@ then
 # Let user know there's no recording to stop
 $TEXT2SPEECH_TOOL "" custom "Am sorry, there is no recording for me to stop"
 # Quit
-exit 1
+exit 0
 
 else
 # Stop recording TV channel now
