@@ -60,7 +60,20 @@ def get_args():
    parser.add_argument('-d', '--delay', required=False, help='Wait delay seconds between pings', dest='delay', type=str)
    parser.add_argument('-a', '--address', required=True, help='MAC Address', dest='address', type=str)
    args = parser.parse_args()
+
    return args
+
+
+def interface_setup ():
+   """
+   Set interface to UP
+   """
+   args            = get_args()
+   interface       = args.interface
+
+   command_interface_up = ['/usr/bin/sudo', '/usr/sbin/ip', 'link', 'set', interface, 'up']
+
+   subprocess.check_call(command_interface_up)
 
 
 def main():
@@ -99,6 +112,6 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
 
-sys.exit ()
+  interface_setup ()
+  main()
