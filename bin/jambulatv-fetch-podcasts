@@ -10,7 +10,9 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 #
 # Other variables
 ARIA2_CMD=/usr/bin/aria2c 
-ARIA2_OPTIONS="-c -D -q --log-level=notice"
+ARIA2_OPTIONS="--daemon=true --quiet=true --continue=true --check-certificate=false --disable-ipv6=true --async-dns=false"
+# Use for debugging
+#ARIA2_OPTIONS="--continue=true --check-certificate=false --disable-ipv6=true --async-dns=false --console-log-level=debug"
 #
 YOUTUBE_DL_CMD="/usr/bin/youtube-dl"
 YOUTUBE_DL_OPTS="-q -4 -i --ignore-config --prefer-insecure --no-check-certificate --geo-bypass --hls-prefer-ffmpeg"
