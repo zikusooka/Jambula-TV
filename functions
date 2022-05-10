@@ -1292,6 +1292,7 @@ TWITTER_TOOL=$BINARY_PREFIX/jambulatv-twitter
 UMEME_OUTAGES_VIA_API_TOOL=$BINARY_PREFIX/jambulatv-umeme-outages-via-api
 UMEME_OUTAGES_VIA_SCRAPER_TOOL=$BINARY_PREFIX/jambulatv-umeme-outages-via-scraper
 VLM_VOD_DELETE_TOOL=$BINARY_PREFIX/jambulatv-delete-video-on-demand
+WEATHER_VIA_SCRAPER_TOOL=$BINARY_PREFIX/jambulatv-weather-via-scraper
 WEBRADIO_STREAMER_TOOL=$BINARY_PREFIX/jambulatv-internet-radio-streamer
 WHATSAPP_TOOL=$BINARY_PREFIX/jambulatv-whatsapp
 XMPP_TOOL=$BINARY_PREFIX/jambulatv-xmpp
@@ -13820,7 +13821,8 @@ ${UMEME_OUTAGES_VIA_API_TOOL##*/} \
 ${UMEME_OUTAGES_VIA_SCRAPER_TOOL##*/} \
 ${USSD_CONTROLLER_TOOL##*/} \
 ${WATER_READING_TOOL##*/} \
-${WATER_SUPPLY_TOOL##*/}
+${WATER_SUPPLY_TOOL##*/} \
+${WEATHER_VIA_SCRAPER_TOOL##*/}
 
 do
 # Copy script, if it does not exist in bin directory
