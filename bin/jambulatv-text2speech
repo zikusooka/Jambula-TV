@@ -186,8 +186,8 @@ api_test_endpoint_output
 
 text2speech_ibm () {
 # API Key
-IBM_API_KEY="kO9JEzelVfQjyWt9BIRsuiSjzEZX-a5aXhFiiU-GDMf9"
-IBM_API_INSTANCE="f58b0647-5cf0-4229-9295-90ae8cff2a1d"
+IBM_API_KEY="HD_mX9h6uXDTe11TFCSTeA3sUidmNKxsL3rK86gX-CIs"
+IBM_API_INSTANCE="51e12098-3974-41d7-9473-aec035c3778f"
 IBM_API_URL="https://api.eu-gb.text-to-speech.watson.cloud.ibm.com"
 IBM_API_ENDPOINT="$IBM_API_URL/instances/$IBM_API_INSTANCE"
 
@@ -302,10 +302,10 @@ WEATHER_LONGITUDE=$7
 if [[ "$WEATHER_DEBUG" = "debug" ]];
 then
 # Debugging enabled
-. /usr/bin/jambulatv-weather-api "$WEATHER_LATITUDE" "$WEATHER_LONGITUDE" $WEATHER_PERIOD $WEATHER_API debug
+. /usr/bin/jambulatv-weather-api "$WEATHER_LATITUDE" "$WEATHER_LONGITUDE" "$WEATHER_PERIOD" "$WEATHER_API" debug
 else
 # Debugging disabled
-. /usr/bin/jambulatv-weather-api "$WEATHER_LATITUDE" "$WEATHER_LONGITUDE" $WEATHER_PERIOD $WEATHER_API
+. /usr/bin/jambulatv-weather-api "$WEATHER_LATITUDE" "$WEATHER_LONGITUDE" "$WEATHER_PERIOD" "$WEATHER_API"
 fi
 
 # TTS text message
