@@ -48,10 +48,14 @@ ARG5=$5 # Debug #ARG5=debug
 WUNDERGROUND_APIURL="http://api.wunderground.com/api"
 DARKSKY_APIURL="https://api.darksky.net/forecast"
 OWM_APIURL="api.openweathermap.org/data/2.5"
+ACCUWEATHER_APIURL="http://dataservice.accuweather.com"
+
 # Weather API Keys
 DEFAULT_WUNDERGROUND_APIKEY="2b0d6572c90d3e4a"
 DEFAULT_DARKSKY_APIKEY="e1b066fec8590435bc79b3dd735b380c"
 DEFAULT_OWM_APIKEY="539c3b8cec52a4cf2061ad49b5483a0c"
+DEFAULT_ACCUWEATHER_APIKEY="1TVmru2NWnvGAAGSvq8MlVH3WiTzNpDy"
+DEFAULT_ACCUWEATHER_MINUTECAST_APIKEY="pqiwIrn8D3wt4racxYohdHj6gaI8qUoG"
 
 # Set default Weather API used
 # ----------------------------
@@ -71,10 +75,14 @@ PING_IP_ADDRESS=$PING_IP_ADDRESS
 
 TERM=xterm
 
+# Location file (used by AccuWeather)
+WEATHER_LOCATION_RAW_DATA_FILE=/tmp/weather_location_api_${API}.json
+
 # Weather raw data files
 CURRENT_WEATHER_RAW_DATA_FILE=/tmp/weather_current_api_${API}.json
 TODAY_WEATHER_RAW_DATA_FILE=/tmp/weather_today_api_${API}.json
 LATER_WEATHER_RAW_DATA_FILE=/tmp/weather_later_api_${API}.json
+MINUTECAST_WEATHER_RAW_DATA_FILE=/tmp/weather_minutecast_api_${API}.json
 
 # Weather Times
 HOUR_NOW=$(date +%H)
@@ -115,10 +123,11 @@ DEBUG_REQUESTED=$ARG5
 # Debugging
 if [[ "$DEBUG_REQUESTED" = "debug" ]];
 then
-# What to do with null values in City, Neighbourhood, Country when using CLI argu,ents
-[[ "x$CITY" = "x" ]] && CITY_FOUND="Not found" || CITY_FOUND=$CITY
+# What to do with null values in City, Neighbourhood, Country when using CLI arguments
+[[ "x$LOCATION_NAME" = "x" ]] || CITY=$LOCATION_NAME && COUNTRY=$LOCATION_COUNTRY
+[[ "x$CITY" = "x" ]] && CITY_FOUND="Not found" || CITY_FOUND=$CITY || CITY_FOUND=$LOCATION_NAME
 [[ "x$COUNTRY" = "x" ]] && COUNTRY_FOUND="Not found" || COUNTRY_FOUND=$COUNTRY
-[[ "x$NEIGHBOURHOOD" = "x" ]] && NEIGHBOURHOOD_FOUND="Not found" || NEIGHBOURHOOD_FOUND=$CITY
+[[ "x$NEIGHBOURHOOD" = "x" ]] && NEIGHBOURHOOD_FOUND=$CITY || NEIGHBOURHOOD_FOUND=$NEIGHBOURHOOD
 # Print summary
 clear
 cat <<EOT
@@ -233,7 +242,7 @@ for DATA_FILE in \
 	$LATER_WEATHER_RAW_DATA_FILE \
 	$TODAY_WEATHER_RAW_DATA_FILE
 do
-sudo chmod a+w $DATA_FILE
+[[ -e $DATA_FILE ]] && sudo chmod a+w $DATA_FILE
 done
 }
 
@@ -311,10 +320,11 @@ WIND_BEARING=$CURRENT_WIND_BEARING
 # Set wind direction
 set_wind_direction_using_degrees
 # Set text message
-WEATHER_FORECAST_DESCRIPTION="Currently ${CURRENT_SUMMARY}.  The temperature is ${CURRENT_TEMPERATURE} degrees celcius.  Humidity is $CURRENT_HUMIDITY percent.  $WIND_DIRECTION winds are blowing at $CURRENT_WIND_SPEED kilometres per hour.  Later today ${LATER_SUMMARY}.  Data provided by $WEATHER_API_NAME"
+WEATHER_FORECAST_DESCRIPTION="Currently ${CURRENT_SUMMARY}.  The temperature is ${CURRENT_TEMPERATURE} degrees celcius.  Humidity is $CURRENT_HUMIDITY percent.  $WIND_DIRECTION winds are blowing at $CURRENT_WIND_SPEED kilometres per hour.  Later ${LATER_SUMMARY}.  Data provided by $WEATHER_API_NAME"
 # Set weather variables for debugging purposes
 WEATHER_VARIABLES=$(echo "
 -------------------------------------------------------------------------------
+CURRENT_OBSERVED_TIME:		$CURRENT_TITLE
 CURRENT_SUMMARY:		$CURRENT_SUMMARY
 CURRENT_TEMPERATURE:		$CURRENT_TEMPERATURE
 CURRENT_HUMIDITY:		$CURRENT_HUMIDITY
@@ -334,7 +344,7 @@ WIND_BEARING=$TODAY_WIND_BEARING
 # Set wind direction
 set_wind_direction_using_degrees
 # Set text message
-WEATHER_FORECAST_DESCRIPTION="Today expect ${TODAY_SUMMARY}.  Temperatures will reach highs of $TODAY_TEMPERATURE_MAX and lows of $TODAY_TEMPERATURE_MIN degrees celsius. The chance of rain is $TODAY_PRECIP_PROBABILITY percent.  The humidity will be $TODAY_HUMIDITY percent.  $WIND_DIRECTION winds will be blowing at $TODAY_WIND_SPEED kilometres per hour.  Data provided by $WEATHER_API_NAME"
+WEATHER_FORECAST_DESCRIPTION="Today ${TODAY_SUMMARY}.  Highs of $TODAY_TEMPERATURE_MAX and lows of $TODAY_TEMPERATURE_MIN degrees celsius. Chance of rain is $TODAY_PRECIP_PROBABILITY percent.  $WIND_DIRECTION winds at $TODAY_WIND_SPEED kilometres per hour.  Data provided by $WEATHER_API_NAME"
 # Set weather variables for debugging purposes
 WEATHER_VARIABLES=$(echo "
 -------------------------------------------------------------------------------
@@ -358,7 +368,7 @@ WIND_BEARING=$LATER_WIND_BEARING
 # Set wind direction
 set_wind_direction_using_degrees
 # Set text message
-WEATHER_FORECAST_DESCRIPTION="Later today ${LATER_SUMMARY}.  Temperatures will reach highs of $LATER_TEMPERATURE_MAX and lows of $LATER_TEMPERATURE_MIN degrees celsius.  The chance of rain is $LATER_PRECIP_PROBABILITY percent.  Humidity will be $LATER_HUMIDITY percent.  $WIND_DIRECTION winds will be blowing at $LATER_WIND_SPEED kilometres per hour.  Data provided by $WEATHER_API_NAME"
+WEATHER_FORECAST_DESCRIPTION="Later ${LATER_SUMMARY}.  Highs of $LATER_TEMPERATURE_MAX and lows of $LATER_TEMPERATURE_MIN degrees celsius.  Chance of rain is $LATER_PRECIP_PROBABILITY percent.  $WIND_DIRECTION winds at $LATER_WIND_SPEED kilometres per hour.  Data provided by $WEATHER_API_NAME"
 # Set weather variables for debugging purposes
 WEATHER_VARIABLES=$(echo "
 -------------------------------------------------------------------------------
@@ -417,6 +427,8 @@ weather_api_endpoints_and_keys () {
 DB_WUNDERGROUND_APIKEY=$(query_mysql_db wunderground_api_key)
 DB_DARKSKY_APIKEY=$(query_mysql_db darksky_api_key)
 DB_OWM_APIKEY=$(query_mysql_db openweathermap_api_key)
+DB_ACCUWEATHER_APIKEY=$(query_mysql_db accuweather_api_key)
+DB_ACCUWEATHER_MINUTECAST_APIKEY=$(query_mysql_db accuweather_minutecast_api_key)
 
 # Set weather API keys
 [[ "x$DB_WUNDERGROUND_APIKEY" != "x" ]] && WUNDERGROUND_APIKEY=$DB_WUNDERGROUND_APIKEY || \
@@ -425,6 +437,10 @@ DB_OWM_APIKEY=$(query_mysql_db openweathermap_api_key)
 	DARKSKY_APIKEY=$DEFAULT_DARKSKY_APIKEY
 [[ "x$DB_OWM_APIKEY" != "x" ]] && OWM_APIKEY=$DB_OWM_APIKEY || \
 	OWM_APIKEY=$DEFAULT_OWM_APIKEY
+[[ "x$DB_ACCUWEATHER_APIKEY" != "x" ]] && ACCUWEATHER_APIKEY=$DB_ACCUWEATHER_APIKEY || \
+	ACCUWEATHER_APIKEY=$DEFAULT_ACCUWEATHER_APIKEY
+[[ "x$DB_ACCUWEATHER_MINUTECAST_APIKEY" != "x" ]] && ACCUWEATHER_MINUTECAST_APIKEY=$DB_ACCUWEATHER_MINUTECAST_APIKEY || \
+	ACCUWEATHER_MINUTECAST_APIKEY=$DEFAULT_ACCUWEATHER_MINUTECAST_APIKEY
 }
 
 weather_underground () {
@@ -440,6 +456,8 @@ check_age_of_weather_data_file
 # Fetch weather information only if age is more than 15 minutes ago
 if [ "$AGE_OF_CURRENT_WEATHER_DATA" -ge "900" ];
 then
+check_internet_access
+#
 # Fetch current weather information
 $CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" $WUNDERGROUND_APIURL/$WUNDERGROUND_APIKEY/conditions/q/$LATITUDE,$LONGITUDE.json > $CURRENT_WEATHER_RAW_DATA_FILE
 # Fetch hourly weather information - Not included in Free API 
@@ -524,6 +542,8 @@ check_age_of_weather_data_file
 # Fetch weather information only if age is more than 15 minutes ago
 if [ "$AGE_OF_CURRENT_WEATHER_DATA" -ge "900" ];
 then
+check_internet_access
+#
 # Fetch current weather information
 $CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d lat=$LATITUDE -d lon=$LONGITUDE -d units=metric -d appid=$OWM_APIKEY $OWM_APIURL/weather | jq . > $CURRENT_WEATHER_RAW_DATA_FILE
 # Fetch forecast weather information
@@ -601,6 +621,8 @@ check_age_of_weather_data_file
 # Fetch weather information only if age is more than 15 minutes ago
 if [ "$AGE_OF_CURRENT_WEATHER_DATA" -ge "900" ];
 then
+check_internet_access
+#
 # Fetch current weather information
 $CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d exclude=hourly,minutely,daily,alerts,flags -d units=uk2 $DARKSKY_APIURL/$DARKSKY_APIKEY/$LATITUDE,$LONGITUDE | jq . > $CURRENT_WEATHER_RAW_DATA_FILE
 # Fetch hourly weather information
@@ -664,6 +686,131 @@ exit 0
 fi
 }
 
+weather_accuweather () {
+# Curl options: Keep here 
+CURL_OPTS="-G -s -S -L -m 60 -k"
+# Set API Name
+WEATHER_API_NAME="AccuWeather"
+# Set weather API key
+weather_api_endpoints_and_keys
+
+# Get the time of day
+CURRENT_HOUR=$(date +%H)
+FORECAST_HOUR=$(date --date="3 hours" +%-H)
+if [[ "$FORECAST_HOUR" -ge "20" ]] || [[ "$FORECAST_HOUR" -le "6" ]];
+then
+FORECAST_PERIOD=Night
+else
+FORECAST_PERIOD=Day
+fi
+export FORECAST_PERIOD
+
+# Check age of previous weather data files
+check_age_of_weather_data_file
+
+# Set location ID
+if [[ -s "$WEATHER_LOCATION_RAW_DATA_FILE" ]];
+then
+LOCATION_ID=$(cat $WEATHER_LOCATION_RAW_DATA_FILE | jq -r .AdministrativeArea.ID)
+LOCATION_NAME=$(cat $WEATHER_LOCATION_RAW_DATA_FILE | jq -r .AdministrativeArea.LocalizedName)
+LOCATION_COUNTRY=$(cat $WEATHER_LOCATION_RAW_DATA_FILE | jq -r .Country.LocalizedName)
+fi
+
+if [[ ! -s "$WEATHER_LOCATION_RAW_DATA_FILE" ]] || [[ "x$LOCATION_ID" = "x" || "$LOCATION_ID" = "null" ]];
+then
+check_internet_access
+#
+# fetch Location information
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d apikey="$ACCUWEATHER_APIKEY" "$ACCUWEATHER_APIURL/locations/v1/cities/geoposition/search" -d q="$LATITUDE,$LONGITUDE" > $WEATHER_LOCATION_RAW_DATA_FILE
+#
+LOCATION_ID=$(cat $WEATHER_LOCATION_RAW_DATA_FILE | jq -r .AdministrativeArea.ID)
+LOCATION_NAME=$(cat $WEATHER_LOCATION_RAW_DATA_FILE | jq -r .AdministrativeArea.LocalizedName)
+LOCATION_COUNTRY=$(cat $WEATHER_LOCATION_RAW_DATA_FILE | jq -r .Country.LocalizedName)
+fi
+
+# Fetch weather information only if age is more than 15 minutes ago
+if [ "$AGE_OF_CURRENT_WEATHER_DATA" -ge "900" ];
+then
+check_internet_access
+#
+# Fetch current weather information
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d apikey="$ACCUWEATHER_APIKEY" -d language="en-GB" -d details="True" -d Metric="True" "$ACCUWEATHER_APIURL/currentconditions/v1/$LOCATION_ID" > $CURRENT_WEATHER_RAW_DATA_FILE
+
+# Fetch 5 day weather information
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d apikey="$ACCUWEATHER_APIKEY" -d language="en-GB" -d details="True" -d Metric="True" "$ACCUWEATHER_APIURL/forecasts/v1/daily/5day/$LOCATION_ID" > $LATER_WEATHER_RAW_DATA_FILE
+
+# Fetch 1 day weather information
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d apikey="$ACCUWEATHER_APIKEY" -d language="en-GB" -d details="True" -d Metric="True" "$ACCUWEATHER_APIURL/forecasts/v1/daily/1day/$LOCATION_ID" > $TODAY_WEATHER_RAW_DATA_FILE
+
+# Fetch minutecast weather information
+$CURL_CMD $CURL_OPTS -A "$HTTP_USER_AGENT" -d apikey="$ACCUWEATHER_MINUTECAST_APIKEY" -d q="${LATITUDE}%2C${LONGITUDE}" -d language="en-GB" "$ACCUWEATHER_APIURL/forecasts/v1/minute" > $MINUTECAST_WEATHER_RAW_DATA_FILE
+
+# Make weather data files writeable
+make_weather_data_file_writeable
+fi
+
+# Test validity of weather data files
+test_validity_of_weather_data_file
+
+# Currently
+# ---------
+if [[ "$CURRENT_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then
+# Set current weather variables
+CURRENT_TITLE=$(date -d "@$(jq -r '.[].EpochTime' $CURRENT_WEATHER_RAW_DATA_FILE)")
+CURRENT_SUMMARY=$(jq -r ".[].WeatherText" $CURRENT_WEATHER_RAW_DATA_FILE | sed 's:[,|"]::g' | sed 's:\.::g')
+CURRENT_TEMPERATURE=$(jq -r ".[].RealFeelTemperature.Metric.Value" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+CURRENT_HUMIDITY=$(jq -r ".[].RelativeHumidity" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+CURRENT_WIND_SPEED=$(jq -r ".[].Wind.Speed.Metric.Value" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+CURRENT_WIND_BEARING=$(jq -r ".[].Wind.Direction.Degrees" $CURRENT_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$CURRENT_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
+
+# Today
+# -----
+if [[ "$LATER_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then
+# Set today weather variables
+	TODAY_TITLE=$(date -d "@$(jq -r '.DailyForecasts[0].EpochDate' $LATER_WEATHER_RAW_DATA_FILE)")
+	TODAY_SUMMARY=$(jq -r ".DailyForecasts[0].${FORECAST_PERIOD}.LongPhrase" $LATER_WEATHER_RAW_DATA_FILE)
+	TODAY_TEMPERATURE_MAX=$(jq -r ".DailyForecasts[0].Temperature.Maximum.Value" $LATER_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+	TODAY_TEMPERATURE_MIN=$(jq -r ".DailyForecasts[0].Temperature.Minimum.Value" $LATER_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+	TODAY_HUMIDITY="" # Accuweather does not give us humidity beyond today - OK for us
+	TODAY_PRECIP_PROBABILITY=$(jq -r ".DailyForecasts[0].${FORECAST_PERIOD}.PrecipitationProbability" $LATER_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+	TODAY_WIND_SPEED=$(jq -r ".DailyForecasts[0].${FORECAST_PERIOD}.Wind.Speed.Value" $LATER_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+	TODAY_WIND_BEARING=$(jq -r ".DailyForecasts[0].${FORECAST_PERIOD}.Wind.Direction.Degrees" $LATER_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+
+
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$LATER_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
+
+# Later
+# -----
+if [[ "$LATER_WEATHER_RAW_DATA_FILE_VALID" = "yes" ]];
+then
+	LATER_TITLE=$(date -d "@$(jq -r '.DailyForecasts[0].EpochDate' $LATER_WEATHER_RAW_DATA_FILE)")
+	LATER_SUMMARY=$(jq -r ".DailyForecasts[0].${FORECAST_PERIOD}.LongPhrase" $LATER_WEATHER_RAW_DATA_FILE)
+	LATER_TEMPERATURE_MAX=$(jq -r ".DailyForecasts[0].Temperature.Maximum.Value" $LATER_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+	LATER_TEMPERATURE_MIN=$(jq -r ".DailyForecasts[0].Temperature.Minimum.Value" $LATER_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+	LATER_HUMIDITY="" # Accuweather does not give us humidity beyond today - OK for us
+	LATER_PRECIP_PROBABILITY=$(jq -r ".DailyForecasts[0].${FORECAST_PERIOD}.PrecipitationProbability" $LATER_WEATHER_RAW_DATA_FILE | bc | xargs printf "%.0f")
+	LATER_WIND_SPEED=$(jq -r ".DailyForecasts[0].${FORECAST_PERIOD}.Wind.Speed.Value" $LATER_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+	LATER_WIND_BEARING=$(jq -r ".DailyForecasts[0].${FORECAST_PERIOD}.Wind.Direction.Degrees" $LATER_WEATHER_RAW_DATA_FILE | xargs printf "%.0f")
+
+else
+# Log error: Invalid weather data file
+logger -s -t $(basename $0) "Error: The weather raw data file [$LATER_WEATHER_RAW_DATA_FILE] is invalid, please try again later"
+exit 0
+fi
+}
+
 
 
 #################
@@ -674,8 +821,6 @@ set_geolocation_coordinates
 
 usage
 
-check_internet_access
-
 case $API in
 1)
 weather_underground
@@ -685,6 +830,9 @@ weather_openweathermap
 ;;
 3)
 weather_darksky_net
+;;
+4)
+weather_accuweather
 ;;
 esac
 
