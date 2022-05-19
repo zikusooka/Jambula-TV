@@ -129,6 +129,8 @@ check_4_wifi_dongle () {
 sudo /usr/bin/iwctl device list | grep ${WIFI_STATION_INTERFACE} > /dev/null 2>&1
 WIFI_STICK_PRESENT=$?
 #
+# Restart iWD if WiFi stick was not seen
+[[ "$WIFI_STICK_PRESENT" != "0" ]] && sudo /usr/bin/systemctl restart iwd.service
 # Test to see if WiFi stick is now present
 until [[ "$WIFI_STICK_PRESENT" = "0" ]];
 do
