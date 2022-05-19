@@ -56,9 +56,9 @@ PS_OLD_CONTINUOUS_PID=$(ps auxw | grep -v grep | grep 'pocketsphinx_continuous' 
 
 # TTS/ASR Speech tools
 # ---
-TEXT_2_SPEECH_TOOL_PATH=/usr/bin/jambulatv-text2speech
+TEXT_2_SPEECH_TOOL_PATH=MY_TEXT2SPEECH_TOOL
 TEXT_2_SPEECH_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $TEXT_2_SPEECH_TOOL_PATH | cut -d '=' -f2 | head -1 | awk {'print $1'})
-JAMBULATV_SKILLS_FILE=/usr/bin/jambulatv-asr-skills
+JAMBULATV_SKILLS_FILE=MY_BINARY_PREFIX/jambulatv-asr-skills
 
 # Miscellaneous
 # ---
@@ -71,6 +71,36 @@ WATCH_OPTS="-n 0 -F -s $WATCH_INTERVAL"
 ###############
 #  FUNCTIONS  #
 ###############
+get_geolocation () {
+GEOLOCATION_TOOL=MY_GEOLOCATION_TOOL
+GEOLOCATION_FILE=MY_PROJECT_SYSTEM_CONF_DIR/geolocation.txt
+# Lookup current location if the geolocation file does not exist
+[[ -e $GEOLOCATION_FILE ]] || $GEOLOCATION_TOOL > /dev/null 2>&1
+#
+CITY=$(grep -i city $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2 | sed "s:\"::g")
+COUNTRY=$(grep -i country $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2 | sed "s:\"::g")
+LATITUDE=$(grep -i latitude $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2 | sed "s:\"::g" | xargs printf '%.2f')
+LONGITUDE=$(grep -i longitude $GEOLOCATION_FILE | sed '/^$/d' | sed '/^#/d' | cut -d '=' -f2 | sed "s:\"::g" | xargs printf '%.2f') 
+}
+
+set_weather_variables () {
+HASS_SECRETS_TOOL=MY_BINARY_PREFIX/jambulatv-homeassistant-secrets
+HASS_SECRETS_FILE=MY_PROJECT_SYSTEM_CONF_DIR/homeassistant/secrets.yaml
+WEATHER_TOOL_TYPE=scraper #scraper|api
+#
+if [[ -e $HASS_SECRETS_FILE ]];
+then
+WEATHER_LATITUDE="$($HASS_SECRETS_TOOL weather_latitude)"
+WEATHER_LONGITUDE="$($HASS_SECRETS_TOOL weather_longitude)"
+WEATHER_LOCATION="$($HASS_SECRETS_TOOL weather_location)"
+
+else
+get_geolocation
+WEATHER_LATITUDE="$LATITUDE"
+WEATHER_LONGITUDE="$LONGITUDE"
+WEATHER_LOCATION="$CITY, $COUNTRY"
+fi
+}
 
 setup_default_microphone () {
 # Set to desired source i.e. microphone
@@ -170,25 +200,46 @@ then
 WORLD_CITY=$(echo $DETECTED_PATTERN | sed "s:WHAT IS THE LOCAL TIME IN::g" | sed "s:^ ::g")
 skill_time_world "$WORLD_CITY" &
 
-# Weather
-elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER" ];
+# Weather - Detailed
+elif [[ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER" && "$WEATHER_TOOL_TYPE" = "api" ]];
 then
-skill_weather_currently &
+set_weather_variables
+skill_weather_currently api $WEATHER_LATITUDE $WEATHER_LONGITUDE &
+skill_weather_later api $WEATHER_LATITUDE $WEATHER_LONGITUDE &
+elif [[ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER" && "$WEATHER_TOOL_TYPE" = "scraper" ]];
+then
+set_weather_variables
+skill_weather_currently scraper "$WEATHER_LOCATION" &
 
 # Weather - Currently
-elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER CURRENTLY" ];
+elif [[ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER CURRENTLY" && "$WEATHER_TOOL_TYPE" = "api" ]];
 then
-skill_weather_currently &
+set_weather_variables
+skill_weather_currently api $WEATHER_LATITUDE $WEATHER_LONGITUDE &
+elif [[ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER CURRENTLY" && "$WEATHER_TOOL_TYPE" = "scraper" ]];
+then
+set_weather_variables
+skill_weather_currently scraper "$WEATHER_LOCATION" &
 
 # Weather - Today
-elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER TODAY" ];
+elif [[ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER TODAY" && "$WEATHER_TOOL_TYPE" = "api" ]];
 then
-skill_weather_today &
+set_weather_variables
+skill_weather_today api $WEATHER_LATITUDE $WEATHER_LONGITUDE &
+elif [[ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER TODAY" && "$WEATHER_TOOL_TYPE" = "scraper" ]];
+then
+set_weather_variables
+skill_weather_today scraper "$WEATHER_LOCATION" &
 
 # Weather - Later
-elif [ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER LATER" ];
+elif [[ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER LATER" && "$WEATHER_TOOL_TYPE" = "api" ]];
 then
-skill_weather_later &
+set_weather_variables
+skill_weather_later api $WEATHER_LATITUDE $WEATHER_LONGITUDE &
+elif [[ "$DETECTED_PATTERN" = "WHAT IS THE WEATHER LATER" && "$WEATHER_TOOL_TYPE" = "scraper" ]];
+then
+set_weather_variables
+skill_weather_later scraper "$WEATHER_LOCATION" &
 
 # Headlines (Start)
 elif [ "$DETECTED_PATTERN" = "WHAT ARE THE HEADLINES" ];

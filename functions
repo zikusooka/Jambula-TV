@@ -16155,6 +16155,10 @@ rsync -av $PROJECT_CONTRIB_DIR/speech_tts_asr/pocketsphinx/ $POCKETSPHINX_DATA_D
 	cat $PROJECT_BIN_DIR/jambulatv-speech2text | \
 		sed -e "s:MY_PREFIX:$PREFIX:g" | \
 		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
+		sed -e "s:MY_BINARY_PREFIX:$BINARY_PREFIX:g" | \
+		sed -e "s:MY_PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" | \
+		sed -e "s:MY_GEOLOCATION_TOOL:$GEOLOCATION_TOOL:g" | \
+		sed -e "s:MY_TEXT2SPEECH_TOOL:$TEXT2SPEECH_TOOL:g" | \
 		sed -e "s:MY_POCKETSPHINX_DATA_DIR:$POCKETSPHINX_DATA_DIR:g" | \
 		sed -e "s:MY_JAMBULATV_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" \
 			> $SPEECH2TEXT_TOOL
