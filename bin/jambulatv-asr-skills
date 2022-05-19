@@ -38,22 +38,6 @@ POWER_OUTAGES_CONCAT_INPUT_FILE=$TMPDIR/input_files_power_outages.txt
 POWER_OUTAGES_FILE=$TMPDIR/power_outages_coming_up.mp3
 POWER_OUTAGES_ALERT_SOUND=$(echo ${POWER_OUTAGES_FILE##*/} | sed 's:.mp3::')
 
-# Variables - Weather
-WEATHER_REPORT_CONCAT_DIR=$TMPDIR/tts/weather_currently
-WEATHER_REPORT_CONCAT_INPUT_FILE=$TMPDIR/input_files_weather_currently.txt
-WEATHER_REPORT_FILE=$TMPDIR/weather_summary_currently.mp3
-WEATHER_REPORT_ALERT_SOUND=$(echo ${WEATHER_REPORT_FILE##*/} | sed 's:.mp3::')
-
-WEATHER_REPORT_CONCAT_DIR=$TMPDIR/tts/weather_today
-WEATHER_REPORT_CONCAT_INPUT_FILE=$TMPDIR/input_files_weather_today.txt
-WEATHER_REPORT_FILE=$TMPDIR/weather_forecast_today.mp3
-WEATHER_REPORT_ALERT_SOUND=$(echo ${WEATHER_REPORT_FILE##*/} | sed 's:.mp3::')
-
-WEATHER_REPORT_CONCAT_DIR=$TMPDIR/tts/weather_later
-WEATHER_REPORT_CONCAT_INPUT_FILE=$TMPDIR/input_files_weather_later.txt
-WEATHER_REPORT_FILE=$TMPDIR/weather_forecast_later.mp3
-WEATHER_REPORT_ALERT_SOUND=$(echo ${WEATHER_REPORT_FILE##*/} | sed 's:.mp3::')
-
 # Variables - News
 NEWS_BRIEF_CONCAT_DIR=$TMPDIR/tts/news
 NEWS_BRIEF_CONCAT_INPUT_FILE=$TMPDIR/input_files_news.txt
@@ -268,18 +252,36 @@ $TEXT2SPEECH_TOOL "" custom "The time now in $@ is $TIME_NOW"
 }
 
 skill_weather_currently () {
-LATITUDE=$1
-LONGITUDE=$2
-DEBUG=$3
+WEATHER_REPORT_CONCAT_DIR=$TMPDIR/tts/weather_currently
+WEATHER_REPORT_CONCAT_INPUT_FILE=$TMPDIR/input_files_weather_currently.txt
+WEATHER_REPORT_FILE=$TMPDIR/weather_summary_currently.mp3
+WEATHER_REPORT_ALERT_SOUND=$(echo ${WEATHER_REPORT_FILE##*/} | sed 's:.mp3::')
+WEATHER_TOOL_TYPE=$1
+#
+if [[ "$WEATHER_TOOL_TYPE" = "scraper" ]];
+then
+WEATHER_LOCATION="$2"
+TTS_API=$3
+DEBUG=$4
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup weather_forecast.mp3 $WEATHER_REPORT_CONCAT_DIR 1
+# Scrape weather data from weather.com
+$WEATHER_VIA_SCRAPER_TOOL --task fetch --location "$WEATHER_LOCATION" 
+# Copy sound file for current weather and forecast into tts directory for merging
+audio_merge_pre_setup weather_forecast_weather_com.mp3 $WEATHER_REPORT_CONCAT_DIR 2
 
+else
+LATITUDE=$2
+LONGITUDE=$3
+TTS_API=$4
+DEBUG=$5
 # Copy system sound file for header into tts directory
 audio_merge_pre_setup weather_current.mp3 $WEATHER_REPORT_CONCAT_DIR 1
-
 # Compile weather
-$TEXT2SPEECH_TOOL "" weather current "" "$DEBUG" "$LATITUDE" "$LONGITUDE" concatenate=yes
-#
+$TEXT2SPEECH_TOOL "$TTS_API" weather current "" "$DEBUG" "$LATITUDE" "$LONGITUDE" concatenate=yes
 # Copy audio clip(s) to tts directory for merging
 audio_merge_pre_setup tts_output.wav $WEATHER_REPORT_CONCAT_DIR 2
+fi
 
 # If weather report was not fetched, skip compilation and use saved clip to notify of failure
 if [[ ! -s $WEATHER_REPORT_CONCAT_DIR/2.mp3 ]];
@@ -316,18 +318,37 @@ fi
 }
 
 skill_weather_today () {
-LATITUDE=$1
-LONGITUDE=$2
-DEBUG=$3
-
+WEATHER_REPORT_CONCAT_DIR=$TMPDIR/tts/weather_today
+WEATHER_REPORT_CONCAT_INPUT_FILE=$TMPDIR/input_files_weather_today.txt
+WEATHER_REPORT_FILE=$TMPDIR/weather_forecast_today.mp3
+WEATHER_REPORT_ALERT_SOUND=$(echo ${WEATHER_REPORT_FILE##*/} | sed 's:.mp3::')
+WEATHER_TOOL_TYPE=$1
+#
+if [[ "$WEATHER_TOOL_TYPE" = "scraper" ]];
+then
+WEATHER_LOCATION="$2"
+TTS_API=$3
+DEBUG=$4
 # Copy system sound file for header into tts directory
 audio_merge_pre_setup weather_forecast.mp3 $WEATHER_REPORT_CONCAT_DIR 1
+# Scrape weather data from weather.com
+$WEATHER_VIA_SCRAPER_TOOL --task fetch --location "$WEATHER_LOCATION" 
+# Copy sound file for current weather and forecast into tts directory for merging
+audio_merge_pre_setup weather_forecast_weather_com.mp3 $WEATHER_REPORT_CONCAT_DIR 2
 
-# Say weather
-$TEXT2SPEECH_TOOL "" weather today "" "$DEBUG" "$LATITUDE" "$LONGITUDE" concatenate=yes
+else
+LATITUDE=$2
+LONGITUDE=$3
+TTS_API=$4
+DEBUG=$5
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup weather_forecast.mp3 $WEATHER_REPORT_CONCAT_DIR 1
+# Compile weather
+$TEXT2SPEECH_TOOL "$TTS_API" weather today "" "$DEBUG" "$LATITUDE" "$LONGITUDE" concatenate=yes
 #
 # Copy audio clip(s) to tts directory for merging
 audio_merge_pre_setup tts_output.wav $WEATHER_REPORT_CONCAT_DIR 2
+fi
 
 # If weather report was not fetched, skip compilation and use saved clip to notify of failure
 if [[ ! -s $WEATHER_REPORT_CONCAT_DIR/2.mp3 ]];
@@ -364,18 +385,38 @@ fi
 }
 
 skill_weather_later () {
-LATITUDE=$1
-LONGITUDE=$2
-DEBUG=$3
-
+WEATHER_REPORT_CONCAT_DIR=$TMPDIR/tts/weather_later
+WEATHER_REPORT_CONCAT_INPUT_FILE=$TMPDIR/input_files_weather_later.txt
+WEATHER_REPORT_FILE=$TMPDIR/weather_forecast_later.mp3
+WEATHER_REPORT_ALERT_SOUND=$(echo ${WEATHER_REPORT_FILE##*/} | sed 's:.mp3::')
+WEATHER_TOOL_TYPE=$1
+#
+if [[ "$WEATHER_TOOL_TYPE" = "scraper" ]];
+then
+WEATHER_LOCATION="$2"
+TTS_API=$3
+DEBUG=$4
 # Copy system sound file for header into tts directory
 audio_merge_pre_setup weather_forecast.mp3 $WEATHER_REPORT_CONCAT_DIR 1
+# Scrape weather data from weather.com
+$WEATHER_VIA_SCRAPER_TOOL --task fetch --location "$WEATHER_LOCATION"
+# Copy sound file for current weather and forecast into tts directory for merging
+audio_merge_pre_setup weather_forecast_weather_com.mp3 $WEATHER_REPORT_CONCAT_DIR 2
 
-# Say weather
-$TEXT2SPEECH_TOOL "" weather today "" "$DEBUG" "$LATITUDE" "$LONGITUDE" concatenate=yes
+else
+LATITUDE=$2
+LONGITUDE=$3
+TTS_API=$4
+DEBUG=$5
+# Copy system sound file for header into tts directory
+audio_merge_pre_setup weather_forecast.mp3 $WEATHER_REPORT_CONCAT_DIR 1
+# Compile weather
+$TEXT2SPEECH_TOOL "$TTS_API" weather later "" "$DEBUG" "$LATITUDE" "$LONGITUDE" concatenate=yes
 #
 # Copy audio clip(s) to tts directory for merging
 audio_merge_pre_setup tts_output.wav $WEATHER_REPORT_CONCAT_DIR 2
+#
+fi
 
 # If weather report was not fetched, skip compilation and use saved clip to notify of failure
 if [[ ! -s $WEATHER_REPORT_CONCAT_DIR/2.mp3 ]];
