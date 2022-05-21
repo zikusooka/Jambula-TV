@@ -254,7 +254,6 @@ update_clock_time online
 # ---
 if [[ "$INTERNET_DATA_SAVER_MODE" != "on" || "$INTERNET_DATA_SAVER_MODE" != "ON" ]];
 then
-
 # Refresh DNS blocking lists
 refresh_dns_blocklists 
 
@@ -280,16 +279,13 @@ check_4_updates
 # Create a reverse SSH tunnel for remote connection when Internet is UP
 reverse_ssh_tunnel
 
-fi
-
-
 # Clear instant messaging queues i.e. messages waiting in spool dir
 # ---
 # WhatsApp
 send_whatsapp_messages_spooled
 # Telegram
 send_telegram_messages_spooled
-
+fi
 
 
 ############################
