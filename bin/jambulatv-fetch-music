@@ -110,9 +110,9 @@ MUSIC_TITLE=$(uniq $PLAYLIST_RADIO_FILE | tail -1 | sed 's: - :#:g' | cut -d"#" 
 MUSIC_GENRE=$(uniq $PLAYLIST_RADIO_FILE | tail -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | awk '{print $NF}' | sed 's:\[::' | sed 's:\]::')
 # Set voice alert commands
 MUSIC_SEARCH_STARTED_VOICE_CMD="$SOUNDS_TOOL alert searching_current_song"
-MUSIC_DOWNLOAD_STARTED_VOICE_CMD="$SOUNDS_TOOL alert download_current_song_started"
+MUSIC_DOWNLOAD_STARTED_VOICE_CMD="$SOUNDS_TOOL alert download_song_requested_started"
 MUSIC_DOWNLOAD_COMPLETED_VOICE_CMD="$SOUNDS_TOOL alert download_song_requested_completed"
-MUSIC_DOWNLOAD_FAILED_VOICE_CMD="$SOUNDS_TOOL alert download_current_song_failed"
+MUSIC_DOWNLOAD_FAILED_VOICE_CMD="$SOUNDS_TOOL alert download_song_requested_failed"
 ;;
 
 previous)
@@ -128,9 +128,9 @@ MUSIC_TITLE=$(uniq $PLAYLIST_RADIO_FILE | tail -2 | head -1 | sed 's: - :#:g' | 
 MUSIC_GENRE=$(uniq $PLAYLIST_RADIO_FILE | tail -2 | head -1 | sed 's: - :#:g' | cut -d"#" -f1- | rev | cut -d '#' -f1-2 | rev | sed 's:^ ::g' | sed 's:[(|)]::g' | sed 's: Radio Edit::g' | sed 's:#: - :g' | awk '{print $NF}' | sed 's:\[::' | sed 's:\]::')
 # Set voice alert commands
 MUSIC_SEARCH_STARTED_VOICE_CMD="$SOUNDS_TOOL alert searching_previous_song"
-MUSIC_DOWNLOAD_STARTED_VOICE_CMD="$SOUNDS_TOOL alert download_previous_song_started"
+MUSIC_DOWNLOAD_STARTED_VOICE_CMD="$SOUNDS_TOOL alert download_song_requested_started"
 MUSIC_DOWNLOAD_COMPLETED_VOICE_CMD="$SOUNDS_TOOL alert download_song_requested_completed"
-MUSIC_DOWNLOAD_FAILED_VOICE_CMD="$SOUNDS_TOOL alert download_previous_song_failed"
+MUSIC_DOWNLOAD_FAILED_VOICE_CMD="$SOUNDS_TOOL alert download_song_requested_failed"
 ;;
 
 demand)
