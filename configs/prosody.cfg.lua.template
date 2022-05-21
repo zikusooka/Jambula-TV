@@ -3,6 +3,7 @@
 
 ---------- Server-wide settings ----------
 
+--daemonize = false
 pidfile = "MY_RUNDIR/prosody/prosody.pid"
 
 admins = { "MY_SYSTEM_IDENTIFIER@MY_PROJECT_NAME" }
@@ -79,12 +80,12 @@ archive_expires_after = "1w"
 
 -- Logging configuration
 log = {
-	info = "prosody.log"; -- Change 'info' to 'debug' for verbose logging
-	error = "prosody.error";
+	info = "MY_PROJECT_SYSTEM_LOG_DIR/prosody/info.log"; -- Change 'info' to 'debug' for verbose logging
+	error = "MY_PROJECT_SYSTEM_LOG_DIR/prosody/error.log";
+	debug = "MY_PROJECT_SYSTEM_LOG_DIR/prosody/debug.log";
 	-- "*syslog"; -- Uncomment this for logging to syslog
 	-- "*console"; -- Log to the console, useful for debugging with daemonize=false
 }
-
 
 -- statistics = "internal"
 

@@ -14136,6 +14136,7 @@ cat $PROJECT_CONFIGS_DIR/prosody.cfg.lua.template | \
 	sed "s:MY_RUNDIR:$RUNDIR:g" | \
 	sed "s:MY_SYSTEM_IDENTIFIER:$SYSTEM_IDENTIFIER:g" | \
 	sed "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
+	sed "s:MY_PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
 	sed "s:MY_PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" \
 		> $PROJECT_SYSTEM_CONF_DIR/prosody/prosody.cfg.lua
 #
@@ -14143,7 +14144,7 @@ cat $PROJECT_CONFIGS_DIR/prosody.cfg.lua.template | \
 ssl_cert_key_generate $PROJECT_SYSTEM_CONF_DIR/prosody/certs/JambulaTV.crt $PROJECT_SYSTEM_CONF_DIR/prosody/certs/JambulaTV.key 7300
 #
 # Create prosody log directory if it does not exist
-[[ -e $PROJECT_SYSTEM_LOG_DIR/prosody ]] || touch $PROJECT_SYSTEM_LOG_DIR/prosody
+[[ -d $PROJECT_SYSTEM_LOG_DIR/prosody ]] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/prosody
 #
 # Give prosody user the ownership to config and data/log directories
 chown -R prosody:prosody $VARLIBDIR/prosody
