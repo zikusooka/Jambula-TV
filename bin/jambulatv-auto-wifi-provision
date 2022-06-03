@@ -3,6 +3,11 @@
 # Use it to autoconnect for first time Android users.  iOs clients can copy and paste
 # WiFi passphrase 
 # Requires: qrencode, VLC, convert (ImageMagick) utilities
+#
+# Usage: ./jambulatv-auto-wifi-provision
+# 	 Options: 
+#	-nodisplay: If no X-display is running i.e. console mode
+#
 # Jambula Labs @copyright 2022-2023 All rights reserved
 
 # Variables
@@ -201,8 +206,9 @@ create_auto_wifi_qrcode_4_android_ios
 
 destroy_auto_wifi_qrcode_and_osd &
 
+if [[ "$1" != "-nodisplay" ]];
+then
 display_auto_wifi_qrcode_4_android_ios
-
 display_osd_message_4_auto_wifi_provisioning
-
 clean_up
+fi

@@ -10932,7 +10932,7 @@ usermod -a -G $HOSTAPD_GROUP $MULTIMEDIA_USER
 [[ -f $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service ]] && mv -v $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service $DBUS_SYSTEM_SERVICES_DIR/fi.w1.wpa_supplicant1.service.disabled
 
 # Copy over auto wifi provisioning tool, if none exists in bin directory
-[ -e $AUTO_WIFI_PROVISION_TOOL ] || cat $PROJECT_BIN_DIR/jambulatv-auto-wifi-provision | \
+[[ -e $AUTO_WIFI_PROVISION_TOOL ]] || cat $PROJECT_BIN_DIR/jambulatv-auto-wifi-provision | \
 	sed -e "s:MY_OUR_WIFI_DEVICES_FILE:$OUR_WIFI_DEVICES_FILE:g" | \
 	sed -e "s:MY_MULTIMEDIA_USER:$MULTIMEDIA_USER:g" | \
 	sed -e "s:MY_SOUNDS_TOOL:$SOUNDS_TOOL:g" | \
