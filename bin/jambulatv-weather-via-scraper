@@ -27,6 +27,8 @@ from gtts import gTTS
 __author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2022-2023 All rights reserved'
 
 default_weather_source = 'https://weather.com/en-UG/weather'
+# Debugging
+#default_weather_source = 'http://192.168.0.101:8000' 
 weather_source_search_domain = urlparse(default_weather_source).netloc
 
 tmp_dir = '/tmp'
@@ -39,8 +41,10 @@ weather_ten_day_page_filename = 'weather_com_ten_day.html'
 weather_today_local_url = f'http://localhost/{weather_today_page_filename}'    
 weather_ten_day_local_url = f'http://localhost/{weather_ten_day_page_filename}'
 weather_today_page_filepath = f'{data_share_dir}/html/{weather_today_page_filename}'
+weather_ten_day_page_filepath = f'{data_share_dir}/html/{weather_ten_day_page_filename}'
 weather_today_page_file_freshness_threshold = 900
 tts_output_file_freshness_threshold = 900
+text_output_file_freshness_threshold = 900
 
 tts_output_dir = tmp_dir + '/' + 'tts' + '/' + 'weather'   
 tts_input_file = tmp_dir + '/' + 'tts_output.wav'    
@@ -79,6 +83,8 @@ def check_internet_connectivity():
     http = urllib3.PoolManager(timeout=3.0)
     try:
         r = http.request('GET', 'http://172.217.170.196', preload_content=False)
+        # Debugging
+        #r = http.request('GET', 'http://192.168.0.101:8000', preload_content=False)
         code = r.status
         r.release_conn()
         if code == 200:
@@ -116,8 +122,10 @@ def make_soup(url):
     return soup
 
 def download_save_weather_page(FILE, URL):
-            subprocess.check_call(['/usr/bin/curl', '-kLsS', '-m', '60', '-A', 'Mozilla/5.0', '-o', tmp_dir + '/' + FILE, URL]) 
-            subprocess.check_call(['/usr/bin/sudo', '/usr/bin/cp', tmp_dir + '/' + FILE, weather_pages_dir])
+    if os.path.exists(FILE):
+        subprocess.check_call(['/usr/bin/sudo', '/usr/bin/rm', tmp_dir + '/' + FILE])
+    subprocess.check_call(['/usr/bin/curl', '-kLsS', '-m', '60', '-A', 'Mozilla/5.0', '-o', tmp_dir + '/' + FILE, URL])
+    subprocess.check_call(['/usr/bin/sudo', '/usr/bin/cp', tmp_dir + '/' + FILE, weather_pages_dir])
 
 def search_and_fetch_weather_data():
     WEATHER_SEARCH_STRING = f'"{LOCATION}" "en-TT" "Weather" "Today" "Weather Forecast and Conditions'
@@ -126,9 +134,10 @@ def search_and_fetch_weather_data():
     file_is_fresh = check_file_freshness(FILE,FRESHNESS_THRESHOLD_SECS)
     # Remove weather forecast text and audio output files if not fresh
     if (file_is_fresh == False or file_is_fresh == None):
-        for outputfile in [text_output_file, tts_output_file]:
+        #for outputfile in [text_output_file, tts_output_file]:
+        for outputfile in [weather_today_page_filepath, weather_ten_day_page_filepath, text_output_file, tts_output_file]:
             if os.path.exists(outputfile):
-                os.remove(outputfile)
+                subprocess.check_call(['sudo', '/usr/bin/rm', '-f', outputfile])
     # Check for Internet connectivity
     site_is_reachable = check_internet_connectivity()
     if site_is_reachable == False:
@@ -141,11 +150,15 @@ def search_and_fetch_weather_data():
             search_url_parts = urlparse(SEARCH_URL)
             canonicalCityId = search_url_parts.path
             canonicalCityId = canonicalCityId.rsplit('/', 1)[1]
-            #print (f'Canonical City ID = {canonicalCityId}')
             # Weather URL (Today)
             WEATHER_TODAY_URL = default_weather_source + '/today/l/' + canonicalCityId
             # Weather URL (10-Day)
             WEATHER_TENDAY_URL = default_weather_source + '/tenday/l/' + canonicalCityId
+            #
+            # Debugging
+            #print (f'Canonical City ID = {canonicalCityId}')
+            #WEATHER_TODAY_URL = default_weather_source + '/today.html' 
+            #WEATHER_TENDAY_URL = default_weather_source + '/tenday.html' #Debugging
             #print (f'Today link: {WEATHER_TODAY_URL}')
             #print (f'10-Day link: {WEATHER_TENDAY_URL}')
             # TODAY
@@ -197,12 +210,10 @@ def scrape_read_weather_today():
         temperature_period1 = (temp_high_low)[1]
         forecast_period2 = (temp_high_low)[2]
         temperature_period2 = (temp_high_low)[3]
-
         try:
             precipitation_current = extract_precipitation_data_current()
         except:
             precipitation_current = None
-
         weather_precipitation = f'{precipitation_current}.'
         weather_header = f''
         weather_footer = f'Source: {weather_source_search_domain} as of {weather_time}'
@@ -210,22 +221,19 @@ def scrape_read_weather_today():
         weather_conditions = f'{summary_current}'
         weather_temperature_period1 = f'{forecast_period1} time highs of {temperature_period1} and'
         weather_temperature_period2 = f'{forecast_period2} time lows of {temperature_period2}'
-        
         if TimeNowHour <= '17':
             weather_temperature_period = f'{weather_temperature_period1} {weather_temperature_period2} degrees celsius '
         else:
             weather_temperature_period = f'{weather_temperature_period2} degrees celsius'
-
         if precipitation_current is not None:
-            tts_text_message = f'{weather_precipitation} Currently the temperature is {weather_temperature} degrees celsius and {weather_conditions}'
+            tts_text_message = f'{weather_precipitation} Currently {weather_conditions} and the temperature is {weather_temperature} degrees celsius.'
         else:
-            tts_text_message = f'Currently the temperature is {weather_temperature} degrees celsius and {weather_conditions}'
+            tts_text_message = f'Currently {weather_conditions} and the temperature is {weather_temperature} degrees celsius.'
         return tts_text_message, weather_footer
 
 def scrape_read_weather_ten_day():
     soup_ten_day = make_soup(weather_ten_day_local_url)
     weather_ten_days = soup_ten_day.select('.DailyContent--DailyContent--KcPxD')
-    
     tts_text_message = []
     count = 1
     for weather_forecast in weather_ten_days:
@@ -263,6 +271,10 @@ def scrape_read_weather_ten_day():
     tts_text_message = tts_text_message.replace('Winds S ', 'South winds ')
     tts_text_message = tts_text_message.replace('Winds E ', 'East winds ')
     tts_text_message = tts_text_message.replace('Winds W ', 'West winds ')
+    tts_text_message = tts_text_message.replace('Winds ENE ', 'East North East winds ')
+    tts_text_message = tts_text_message.replace('Winds ESE ', 'East South East winds ')
+    tts_text_message = tts_text_message.replace('Winds WNW ', 'West North West winds ')
+    tts_text_message = tts_text_message.replace('Winds WSW ', 'West South West winds ')
     for wind_direction in [ 'Winds NNE ', 'Winds NE ' ]:
         tts_text_message = tts_text_message.replace(wind_direction, "North East winds ")
     for wind_direction in [ 'Winds NNW ', 'Winds NW ' ]:
@@ -271,24 +283,24 @@ def scrape_read_weather_ten_day():
         tts_text_message = tts_text_message.replace(wind_direction, "South East winds ")
     for wind_direction in [ 'Winds SSW ', 'Winds SW ' ]:
         tts_text_message = tts_text_message.replace(wind_direction, "South West winds ")
+    tts_text_message = tts_text_message.replace('km/h', 'kilometers per hour')
     return tts_text_message
 
 def save_weather_forecast_summary():
     for outputfile in [text_output_file, tts_output_file]:
         if os.path.exists(outputfile):
-            os.remove(outputfile)
+            subprocess.check_call(['/usr/bin/sudo', '/usr/bin/rm', outputfile])
     tts_text_today, weather_footer = scrape_read_weather_today()
     tts_text_ten_day = scrape_read_weather_ten_day()
     print(f'Saving weather forecast summary for {LOCATION} ...')
     for forecast in [tts_text_today, tts_text_ten_day]:
         f = open(text_output_file, 'a')
-        f.write(f'{forecast}. ')
+        f.write(f'{forecast} ')
         f.close()
     f = open(text_output_file, 'a')
     f.write(f'{weather_footer}')
     f.close
-
-    if os.path.exists(text_output_file):
+    if os.path.exists(text_output_file) and os.stat(text_output_file).st_size != 0 and TASK != 'display':
         for line in fileinput.input(files = text_output_file):
             weather_summary_text = line
             try:
@@ -297,14 +309,18 @@ def save_weather_forecast_summary():
                 googleTTS.save(tts_output_file)
             except:
                 print(f'Error: Failed to convert weather forecast summary from text into speech')
+    if os.path.exists(tts_output_file) and os.stat(tts_output_file).st_size == 0:
+        subprocess.check_call(['/usr/bin/sudo', '/usr/bin/rm', tts_output_file])
 
 def display_weather_forecast():
-    if not os.path.exists(text_output_file):
+    FILE = text_output_file
+    FRESHNESS_THRESHOLD_SECS = text_output_file_freshness_threshold
+    file_is_fresh = check_file_freshness(FILE,FRESHNESS_THRESHOLD_SECS)
+    if not os.path.exists(text_output_file) or os.stat(text_output_file).st_size == 0 or (file_is_fresh == False):
         search_and_fetch_weather_data()
         save_weather_forecast_summary()
-    if os.path.exists(text_output_file):
-        for line in fileinput.input(files = text_output_file):
-            weather_summary_text = line
+    for line in fileinput.input(files = text_output_file):
+        weather_summary_text = line
         print(f'Displaying weather forecast for {LOCATION} ...')
         print (f'{weather_summary_text}')
 
@@ -312,21 +328,17 @@ def read_weather_forecast():
     FILE = tts_output_file
     FRESHNESS_THRESHOLD_SECS = tts_output_file_freshness_threshold
     file_is_fresh = check_file_freshness(FILE,FRESHNESS_THRESHOLD_SECS)
-    if not os.path.exists(tts_output_file) or file_is_fresh == False:
+    if not os.path.exists(tts_output_file) or os.stat(tts_output_file).st_size == 0 or file_is_fresh == False:
         search_and_fetch_weather_data()
         save_weather_forecast_summary()
-        for line in fileinput.input(files = text_output_file):
-            weather_summary_text = line
-
-    if os.path.exists(text_output_file) and file_is_fresh == True:
+    if os.path.exists(tts_output_file) and os.stat(tts_output_file).st_size != 0:
         sounds_alert = os.path.splitext(tts_output_file)[0]
         sounds_alert = sounds_alert.rsplit('/', 1)[1]
         print(f'Reading weather forecast for {LOCATION} ...')
-        for line in fileinput.input(files = text_output_file):
-            weather_summary_text = line
-        print (f'{weather_summary_text}')    
         subprocess.check_call([sounds_tool, 'alert', sounds_alert, 'gain=%s' %sounds_gain])
-  
+    else:
+        print(f'Error: The file {tts_output_file} is does not exist')
+
         
 if __name__ == "__main__":
 
