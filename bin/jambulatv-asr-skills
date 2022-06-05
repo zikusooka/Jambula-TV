@@ -248,7 +248,7 @@ CITY_REQUESTED=$(echo "$@" | sed "s: :_:g")
 TIME_ZONE=$(/usr/bin/timedatectl list-timezones | grep -i "$CITY_REQUESTED")
 TIME_NOW=$(TZ="${TIME_ZONE}" date +"%-I %M %P")
 # Say world time
-$TEXT2SPEECH_TOOL "" custom "The time now in $@ is $TIME_NOW"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "The time now in $@ is $TIME_NOW"
 }
 
 skill_weather_currently () {
@@ -534,7 +534,7 @@ fi
 
 skill_headlines_stop () {
 killall ${FETCH_NEWS_TOOL##*/} && killall ${TEXT2SPEECH_TOOL##*/}
-$TEXT2SPEECH_TOOL "" custom "Okay, I will stop reading the news"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "Okay, I will stop reading the news"
 touch $TTS_OUTPUT_FILE
 }
 
@@ -565,7 +565,7 @@ do
 [[ "x$REMINDER" = "x" ]] && continue
 #
 # Read todays reminders
-$TEXT2SPEECH_TOOL "" custom "$REMINDER" concatenate=yes
+$TEXT2SPEECH_TOOL "$TTS_API" custom "$REMINDER" concatenate=yes
 audio_merge_pre_setup tts_output.wav $REMINDERS_CONCAT_DIR $COUNT
 # Set next count number
 let "COUNT = $COUNT + 1"
@@ -622,8 +622,8 @@ POWER_OUTAGE_ONGOING=$($UMEME_OUTAGES_VIA_API_TOOL ongoing $(/usr/bin/jambulatv-
 else
 POWER_OUTAGE_ONGOING="none"
 fi
-POWER_OUTAGE_TODAY=$($UMEME_OUTAGES_VIA_SCRAPER_TOOL today $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | grep -i -v -e umeme | sed '/^$/d' | paste -s -d' \n')
-POWER_OUTAGE_TOMORROW=$($UMEME_OUTAGES_VIA_SCRAPER_TOOL tomorrow $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | grep -i -v -e umeme | sed '/^$/d' | paste -s -d' \n')
+POWER_OUTAGE_TODAY=$($UMEME_OUTAGES_VIA_SCRAPER_TOOL today $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | grep -i none > /dev/null 2>&1 && echo none)
+POWER_OUTAGE_TOMORROW=$($UMEME_OUTAGES_VIA_SCRAPER_TOOL tomorrow $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | grep -i none > /dev/null 2>&1 && echo none)
 
 # Header
 if [[ "$POWER_OUTAGE_ONGOING" != "none" ]];
@@ -668,7 +668,7 @@ $FFMPEG_CMD $FFMPEG_OPTS -nostdin -loglevel quiet -y -f concat -safe 0 -i $POWER
 if [[ "$PLAY_AUDIO" != "no" ]];
 then
 # Log
-logger -s -t $(basename $0) "Playing power outages scheduled ..."
+logger -s -t $(basename $0) "Playing status of power outages ..."
 # Play
 $SOUNDS_TOOL alert $POWER_OUTAGES_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 fi
@@ -686,19 +686,19 @@ $CALENDAR_EVENTS_TOOL $CALENDAR_EVENT_START $CALENDAR_EVENT_END
 
 # If no events are found, say it 
 [ -s $CALENDAR_TEXT_2_SPEECH_INPUT_FILE ] || \
-	$TEXT2SPEECH_TOOL "" custom "No events are scheduled for $CALENDAR_EVENT_ASR_PERIOD" 
+	$TEXT2SPEECH_TOOL "$TTS_API" custom "No events are scheduled for $CALENDAR_EVENT_ASR_PERIOD" 
 # Quit if no events found
 [ -s $CALENDAR_TEXT_2_SPEECH_INPUT_FILE ] || exit 0
 
 # Say header message
-$TEXT2SPEECH_TOOL "" custom "The following events are scheduled for $CALENDAR_EVENT_ASR_PERIOD"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "The following events are scheduled for $CALENDAR_EVENT_ASR_PERIOD"
 # Cycle through speech-to-text input file and say event summary
 cat $CALENDAR_TEXT_2_SPEECH_INPUT_FILE | while read EVENT_SUMMARY
 do
-$TEXT2SPEECH_TOOL "" custom "The $EVENT_SUMMARY"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "The $EVENT_SUMMARY"
 done
 # Say footer message
-$TEXT2SPEECH_TOOL "" custom "That is all for $CALENDAR_EVENT_ASR_PERIOD"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "That is all for $CALENDAR_EVENT_ASR_PERIOD"
 }
 
 skill_motd () {
@@ -713,7 +713,7 @@ ET
 # Copy system sound file for header into tts directory
 audio_merge_pre_setup message_of_the_day_header.mp3 $MESSAGE_OF_THE_DAY_CONCAT_DIR 1
 
-$TEXT2SPEECH_TOOL "" custom "$MESSAGE_OF_THE_DAY" concatenate=yes
+$TEXT2SPEECH_TOOL "$TTS_API" custom "$MESSAGE_OF_THE_DAY" concatenate=yes
 audio_merge_pre_setup tts_output.wav $MESSAGE_OF_THE_DAY_CONCAT_DIR 2
 
 # Create input file used to concatenate audio files
@@ -869,10 +869,10 @@ skill_connect_2_internet mifi
 skill_headlines_start
 
 # Fetch weather and generate summery
-skill_weather_currently $1 $2
+skill_weather_currently "$@"
 
 # Get reminders
-skill_reminders
+skill_reminders "$@"
 
 # Get power outages info
 skill_power_outages
@@ -954,7 +954,7 @@ if [[ "$TARGET_FILE_IS_FRESH" = "yes" ]];
 
 	else
 	# Compile and generate flash briefing today file
-	skill_flash_briefing_compile_generate_and_read
+	skill_flash_briefing_compile_generate_and_read "$1" "$2" "$3" "$4" "$5"
 fi
 
 # Say time - Note unlike other, this must be in realtime, so no concatenation please
@@ -1021,7 +1021,7 @@ $KODI_CONTROLLER_TOOL tv_record_status
 if [ "$TV_RECORDING_CURRENT_STATUS" = "true" ];
 then
 # Let user know there's already a recording and quit
-$TEXT2SPEECH_TOOL "" custom "Am sorry, there is already another recording in progress. To end that recording, please say \"\\pau=1000\\\" STOP RECORDING TV CHANNEL. \"\\pau=1000\\\"  Then repeat your request"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "Am sorry, there is already another recording in progress. To end that recording, please say \"\\pau=1000\\\" STOP RECORDING TV CHANNEL. \"\\pau=1000\\\"  Then repeat your request"
 # Quit
 exit 0
 
@@ -1042,7 +1042,7 @@ $KODI_CONTROLLER_TOOL tv_record_status
 if [ "$TV_RECORDING_CURRENT_STATUS" = "false" ];
 then
 # Let user know there's no recording to stop
-$TEXT2SPEECH_TOOL "" custom "Am sorry, there is no recording for me to stop"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "Am sorry, there is no recording for me to stop"
 # Quit
 exit 0
 
@@ -1193,7 +1193,7 @@ $KODI_CONTROLLER_TOOL music_play_pause
 skill_music_read_playing_now () {
 MUSIC_NOW_PLAYING_SONG=$(tail -1 $MUSIC_NOW_PLAYING_FILE | cut -d')' -f2- | sed 's:^ ::g')
 # Use text to speech
-$TEXT2SPEECH_TOOL "" custom "The song currently playing is. $MUSIC_NOW_PLAYING_SONG"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "The song currently playing is. $MUSIC_NOW_PLAYING_SONG"
 }
 
 skill_music_download_playing_now () {
@@ -1298,7 +1298,7 @@ fi
 if [[ "$MIFI_REACHEABLE" != "0" || "x$DATA_BALANCE_LEFT_MB" = "x" ]];
 then
 # Alert using voice
-$TEXT2SPEECH_TOOL "" custom "I am sorry, but I failed to get the Internet data balance from your router. Please check that it is powered on"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "I am sorry, but I failed to get the Internet data balance from your router. Please check that it is powered on"
 # quit
 exit 0
 fi
@@ -1307,11 +1307,11 @@ fi
 if [[ "$DATA_BALANCE_LEFT_PERCENT" -ge "$DATA_BALANCE_THRESHOLD_LOW" ]];
 then
 # Only read the balance left
-$TEXT2SPEECH_TOOL "" custom "The remaining balance for your Internet data is $DATA_BALANCE_LEFT_MB"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "The remaining balance for your Internet data is $DATA_BALANCE_LEFT_MB"
 
 else
 # Read balance left and Warn when data is about to run out
-$TEXT2SPEECH_TOOL "" custom "The remaining balance for your Internet data is $DATA_BALANCE_LEFT_MB. Please recharge as soon as possible"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "The remaining balance for your Internet data is $DATA_BALANCE_LEFT_MB. Please recharge as soon as possible"
 fi
 }
 
@@ -1333,21 +1333,21 @@ sudo asterisk -rx "console hangup"
 
 skill_connect_2_hotspot () {
 sudo $AUTO_WIFI_PROVISION_TOOL &
-$TEXT2SPEECH_TOOL "" custom "Please scan the QR Code displayed on the TV Screen to get the Wifi password.  For Android devices, you may connect automatically"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "Please scan the QR Code displayed on the TV Screen to get the Wifi password.  For Android devices, you may connect automatically"
 }
 
 skill_display_off () {
-#$TEXT2SPEECH_TOOL "" custom "Turning off Display"
+#$TEXT2SPEECH_TOOL "$TTS_API" custom "Turning off Display"
 . $SCREEN_DISPLAY_TOOL off
 }
 
 skill_display_on () {
-#$TEXT2SPEECH_TOOL "" custom "Turning on Display"
+#$TEXT2SPEECH_TOOL "$TTS_API" custom "Turning on Display"
 . $SCREEN_DISPLAY_TOOL on
 }
 
 skill_power_off () {
-$TEXT2SPEECH_TOOL "" custom "Turning off system"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "Turning off system"
 systemctl poweroff -i
 }
 
@@ -1360,7 +1360,7 @@ kill $TTS_PID
 }
 
 skill_mute_speech_recognition () {
-$TEXT2SPEECH_TOOL "" custom "Geeez \"\\pau=1000\\\" Am I that noisy? \"\\pau=1000\\\" OK \"\\pau=500\\\" I will go off line for now"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "Geeez \"\\pau=1000\\\" Am I that noisy? \"\\pau=1000\\\" OK \"\\pau=500\\\" I will go off line for now"
 [ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && sudo rm -f $TEXT_2_SPEECH_OUTPUT_FILE
 touch $TEXT_2_SPEECH_OUTPUT_FILE
 sudo chattr +i $TEXT_2_SPEECH_OUTPUT_FILE
@@ -1369,9 +1369,9 @@ sudo chattr +i $TEXT_2_SPEECH_OUTPUT_FILE
 skill_unmute_speech_recognition () {
 sudo chattr -i $TEXT_2_SPEECH_OUTPUT_FILE 
 [ -e $TEXT_2_SPEECH_OUTPUT_FILE ] && sudo rm -f $TEXT_2_SPEECH_OUTPUT_FILE
-$TEXT2SPEECH_TOOL "" custom "You missed me \"\\pau=500\\\" Right? \"\\pau=1000\\\" OK \"\\pau=500\\\"  I am baack"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "You missed me \"\\pau=500\\\" Right? \"\\pau=1000\\\" OK \"\\pau=500\\\"  I am baack"
 }
 
 skill_unknown () {
-$TEXT2SPEECH_TOOL "" custom "Am sorry, I did not understand what you said"
+$TEXT2SPEECH_TOOL "$TTS_API" custom "Am sorry, I did not understand what you said"
 }
