@@ -15,6 +15,7 @@ import sys
 import urllib3
 from googlesearch import search
 import os
+from dotenv import load_dotenv
 import ssl
 import warnings
 import unidecode
@@ -62,6 +63,14 @@ DateDayofWeek = datetime.now().strftime('%a')
 DateToday = datetime.now().strftime('%d')
 TimeNowHour = datetime.now().strftime('%-H')
 
+project_global_settings_file = '/etc/JambulaTV/global-settings.cfg'
+load_dotenv(project_global_settings_file)
+
+mqtt_broker_ip = os.environ['MQTT_BROKER_IP']
+mqtt_broker_port = os.environ['MQTT_BROKER_PORT']
+mqtt_topic_weather_dot_com = 'JambulaTV/house/status/weather/weather_dot_com'
+mqtt_payload_weather_dot_com = 'rain'
+
 
 def usage ():
     parser = argparse.ArgumentParser(description='JambulaTV: Display, read, and save the weather forecast for a given location')
@@ -93,6 +102,11 @@ def check_internet_connectivity():
             return False
     except:
         return False
+
+def mqtt_publish (mqtt_topic, mqtt_payload):
+    cmd = [ '/usr/bin/mosquitto_pub', '--quiet', '-h', mqtt_broker_ip, '-p', mqtt_broker_port, '-t', mqtt_topic, '-m', mqtt_payload ]
+    publish = subprocess.check_call(cmd)
+    return publish
 
 def check_file_freshness(FILE, FRESHNESS_THRESHOLD_SECS):
     try:
@@ -229,7 +243,7 @@ def scrape_read_weather_today():
             tts_text_message = f'{weather_precipitation} Currently {weather_conditions} and the temperature is {weather_temperature} degrees celsius.'
         else:
             tts_text_message = f'Currently {weather_conditions} and the temperature is {weather_temperature} degrees celsius.'
-        return tts_text_message, weather_footer
+        return tts_text_message, weather_footer, precipitation_current
 
 def scrape_read_weather_ten_day():
     soup_ten_day = make_soup(weather_ten_day_local_url)
@@ -290,7 +304,7 @@ def save_weather_forecast_summary():
     for outputfile in [text_output_file, tts_output_file]:
         if os.path.exists(outputfile):
             subprocess.check_call(['/usr/bin/sudo', '/usr/bin/rm', outputfile])
-    tts_text_today, weather_footer = scrape_read_weather_today()
+    tts_text_today, weather_footer, precipitation_current = scrape_read_weather_today()
     tts_text_ten_day = scrape_read_weather_ten_day()
     print(f'Saving weather forecast summary for {LOCATION} ...')
     for forecast in [tts_text_today, tts_text_ten_day]:
@@ -339,7 +353,7 @@ def read_weather_forecast():
     else:
         print(f'Error: The file {tts_output_file} is does not exist')
 
-        
+
 if __name__ == "__main__":
 
     hide_python3_upgrade_warnings()    
@@ -352,6 +366,8 @@ if __name__ == "__main__":
     if TASK == 'fetch':
         search_and_fetch_weather_data()
         save_weather_forecast_summary()
+        if precipitation_current is not None:
+            weather_dot_com_alert_via_mqtt = mqtt_publish(mqtt_topic_weather_dot_com, mqtt_payload_weather_dot_com)
 
     elif TASK == 'display':
         display_weather_forecast()
