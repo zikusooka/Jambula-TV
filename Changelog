@@ -1,3 +1,77 @@
+Changes since v7.4
+--------------------
+
+* JambulaTV: Add support for adjusting the volume level in the Date/Time            tool i.e. Update 'jambulatv-datetime' 
+
+* JambulaTV: Add new TTS generated voice alert sound files that are used            when downloading music songs 
+
+* JambulaTV: Add support for voice notification alerts to music download            tool i.e. update'jambulatv-fetch-music' 
+
+* JambulaTV: Refactor rTorrent install routines in main functions file 
+
+* JambulaTV: Upgrade Flexget to the latest development version: 3.3.2 
+
+* JambulaTV: Update the ASR skills tool i.e. 'jambulatv-asr-skills' as            follows: 
+
+* JambulaTV: Add new TTS generated voice alert sound files that are used            when reporting power outages 
+
+* JambulaTV: Before promiscuously querying for nearby WiFi devices, bring            UP the monitor interface if it is down i.e. Update icinga2            plugin: check_tshark 
+
+* JambulaTV: Add 'iwlist' to list of allowed super user commands (sudo)            for multimedia user i.e. jambula 
+
+* JambulaTV: Fix issue where some podcasts e.g. HASS are not downloaded            by 'jambulatv-fetch-podcasts' tool 
+
+* JambulaTV: Upgrade system's Linux kernel to latest version: 5.4.190 
+
+* JambulaTV: Add a new tool named 'jambulatv-weather-via-scraper' which            is used to fetch, display, and read weather forecasts from            weather.com, which is a much more reliable source for our            service area 
+
+* JambulaTV: Add support for Accuweather.com forecasts to our weather            API tool i.e. Update 'jambulatv-weather-via-scraper' 
+
+* JambulaTV: Update the Text-2-speech tool 'jambulatv-text2speech' as            follows: 
+
+* JambulaTV:  Add support for weather forecasts provided by weather.com             to our ASR skills i.e. Update 'jambulatv-skills' file 
+
+* JambulaTV: Add support for weather forecasts services that use the            scraper based tool (e.g. weather.com) to Speech-to-Text            tool i.e. Update 'jambulatv-speech2text' 
+
+* JambulaTV: Add new TTS generated voice alert sound files that are used            when reading weather forecasts 
+
+* JambulaTV: Add new TTS generated voice alert sound files that are used            when the electricity power credits (i.e. UMEME Yaka units)            are running low or used-up 
+
+* JambulaTV: Add more TTS generated voice alert sound files that are used            when downloading music songs while streaming internet radio 
+
+* JambulaTV: Add new TTS generated voice alert sound files that are used            when the Internet data credit is running low or used-up 
+
+* JambulaTV: Add and install google, a Python3 dependency module used by the            recently added weather tool i.e. jambulatv-weather-via-scraper 
+
+* JambulaTV: Add geopy Python3 dependency module to the list of common            requirements installed during initial setup 
+
+* JambulaTV: Update the stream URL(s) for the following on-line based            radio station(s) in the Internet radio streamer tool            i.e. Update 'jambulatv-internet-radio-streamer' 
+
+* JambulaTV: Fix issue with connect to AP tool where USB dongle is seen            as absent despite it being actually present 
+
+* JambulaTV: Do not send queued chat messages (Telegram/WhatsApp) when            Internet Data-Saver mode is enabled and Internet status            changes to UP i.e. Update the Internet/DNS monitoring            tool: jambulatv-dns-status-triggers 
+
+* JambulaTV: Change some voice notification sounds used in the music            download tool i.e. update'jambulatv-fetch-music' 
+
+* JambulaTV: Update prosody configuration and include info, error and            debug logging in custom directory 
+
+* JambulaTV: Improve reliability of the weather via scraper tool            i.e. Update 'jambulatv-weather-via-scraper' 
+
+* JambulaTV: Add support for generating QR codes containing WiFi hotspot            credentials when X display is absent i.e. In console mode 
+
+* JambulaTV: Explicitly specify Text-To-Speech API service to be used by            routines in the ASR skills tool i.e.'jambulatv-asr-skills' 
+
+* JambulaTV: Update the stream URL(s) for the following on-line based            radio station(s) in the Internet radio streamer tool            i.e. Update 'jambulatv-internet-radio-streamer' 
+
+* JambulaTV: Upgrade system's Linux kernel to latest version: 5.4.196 
+
+* JambulaTV: Add support for publishing of alerts to the MQTT broker            whenever precipitation is observed by the weather via            scraper tool i.e. Update 'jambulatv-weather-via-scraper' 
+
+* JambulaTV: Add python-dotenv Python3 dependency module to the list            of common requirements installed during initial setup 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+
 Changes since v7.3
 --------------------
 
