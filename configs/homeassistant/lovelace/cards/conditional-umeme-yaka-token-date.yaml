@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: input_datetime.umeme_yaka_token_entry_date
+    state_not: 'none'
+
+  - entity: input_datetime.umeme_yaka_token_entry_date
+    state_not: 'unknown'
+
+card:
+  type: entity
+  entity: input_datetime.umeme_yaka_token_entry_date
+  name: 'Token Date'
+  icon: 'mdi:lightning-bolt'
+  show_name: true
+  show_icon: false

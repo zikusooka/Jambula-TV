@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: input_text.umeme_yaka_usage_estimate_daily
+    state_not: 'none'
+
+  - entity: input_text.umeme_yaka_usage_estimate_daily
+    state_not: 'unknown'
+
+card:
+  type: entity
+  entity: input_text.umeme_yaka_usage_estimate_daily
+  name: 'Daily Usage (Kwh)'
+  icon: 'mdi:lightning-bolt'
+  show_name: true
+  show_icon: false

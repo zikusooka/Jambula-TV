@@ -1,9 +1,6 @@
 type: conditional
 conditions:
   - entity: sensor.power_outage_today
-    state_not: ' '
-
-  - entity: sensor.power_outage_today
     state_not: 'none'
 
   - entity: sensor.power_outage_today

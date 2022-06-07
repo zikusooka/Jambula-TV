@@ -1,0 +1,9 @@
+# This is an input boolean to use in scenarios when Internet
+# is already connected and so do not disconnect after script
+#
+# https://www.home-assistant.io/components/input_boolean/
+#
+internet_already_connected:
+  name: Internet already connected
+  initial: false
+  icon: mdi:network-wireless

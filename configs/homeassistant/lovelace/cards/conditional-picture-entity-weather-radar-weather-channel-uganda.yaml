@@ -1,0 +1,11 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.internet
+    state: "on"
+
+
+card:
+  type: iframe
+  url: 'https://weather.com/weather/radar/interactive/l/db8858731a826656d67e981af920b97256cdb3946fef661ebf1d47212c7e921c'
+  aspect_ratio: '0.7'
+  #aspect_ratio: '70%'

@@ -1,0 +1,12 @@
+# Weather forecast reports
+# ---
+#
+# Fetch using API tool
+fetch_weather_reports_using_api: /bin/bash -c "/usr/bin/jambulatv-weather-api {{weather_latitude}} {{weather_longitude}} today {{weather_api}}"
+
+# Read using api tool
+say_weather_reports_using_api: /bin/bash -c '/usr/bin/jambulatv-text2speech "{{tts_api}}" weather "{{weather_period}}" "{{weather_api}}" "" "{{weather_latitude}}" "{{weather_longitude}}" concatenate=no volume="{{tts_volume_level}}"'
+
+
+# Weather reports using Scraper tool
+weather_reports_using_scraper: /bin/bash -c '/usr/bin/jambulatv-weather-via-scraper --task {{task}} --location "{{weather_location}}" > /dev/null 2>&1 &'

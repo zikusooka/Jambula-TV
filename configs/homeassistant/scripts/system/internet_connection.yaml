@@ -1,3 +1,23 @@
+internet_already_connected:
+  sequence:
+
+    # Set status of internet already connected 'on'
+    # ---------------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.internet_already_connected
+
+
+    - service_template: >
+        {% if is_state('input_boolean.wakeup_time_activated_all', 'off') and is_state('input_boolean.bed_time_activated_all', 'off') %}
+          script.internet_already_connected_alert
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: input_boolean.wakeup_time_activated_all
+
+
+
 internet_connect_wifi_ap:
   sequence:
 
@@ -9,7 +29,6 @@ internet_connect_wifi_ap:
    
     # Voice Alert: Connecting to Internet
     # -----------------------------------
-        #{% if is_state('input_boolean.wakeup_time_activated_all', 'off') %}
     - service_template: >
         {% if is_state('input_boolean.wakeup_time_activated_all', 'off') and is_state('input_boolean.bed_time_activated_all', 'off') %}
           script.internet_connecting
@@ -26,13 +45,8 @@ internet_connect_wifi_ap:
     - service_template: >
         {% if not is_state('binary_sensor.internet', 'on') %}
           shell_command.internet_connect_wifi_ap
-
-        {% elif is_state('input_boolean.wakeup_time_activated_all', 'on') %}
-          script.dummy
-
         {% else %}
           script.internet_already_connected
-
         {% endif %}
       entity_id: binary_sensor.internet
 
@@ -47,12 +61,12 @@ internet_connect_wifi_ap:
     # Check and alert if connection to the Internet succeeded
     # -------------------------------------------------------
     - service_template: >
-        {% if not is_state('binary_sensor.internet', 'on') %}
+        {% if not is_state('binary_sensor.internet', 'on') and is_state('input_boolean.wakeup_time_activated_all', 'on') %}
           script.internet_connect_failed
-
+        {% elif not is_state('binary_sensor.internet', 'on') and is_state('input_boolean.wakeup_time_activated_all', 'off') %}
+          script.internet_connect_failed_try_again
         {% else %}
           script.dummy
-
         {% endif %}
       entity_id: binary_sensor.internet
 
@@ -69,16 +83,11 @@ internet_disconnect_wifi_ap:
  
     # Voice Alert: Disconnecting from Internet
     # -----------------------------------------
-    #- service: script.turn_on
-      #entity_id: script.internet_disconnecting
-
     - service_template: >
         {% if is_state('input_boolean.wakeup_time_activated_all', 'off') and is_state('input_boolean.bed_time_activated_all', 'off') %}
           script.internet_disconnecting
-
         {% else %}
           script.dummy
-
         {% endif %}
       entity_id: input_boolean.wakeup_time_activated_all
 
@@ -88,10 +97,8 @@ internet_disconnect_wifi_ap:
     - service_template: >
         {% if is_state('binary_sensor.internet', 'on') %}
           shell_command.internet_disconnect_wifi_ap
-
         {% else %}
           script.dummy
-
         {% endif %}
       entity_id: binary_sensor.internet
 

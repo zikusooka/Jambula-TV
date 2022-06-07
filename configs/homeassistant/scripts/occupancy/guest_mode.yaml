@@ -25,7 +25,7 @@ guest_mode_on:
 
     # Guest mode actions - On
     # -----------------------
-    #- service: shell_command...
+    - service: shell_command.qrcodes_generate_wifi_hotspot_credentials
 
 
 

@@ -1,0 +1,47 @@
+title: MiFi Router
+icon: mdi:router-wireless-settings
+cards:
+
+  # Internet and Mobile network information
+  - type: vertical-stack
+    cards:
+      - !include ../cards/entity-button-internet-status.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-mifi-network-connection-status.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-mifi-network-signal-strength.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-mifi-network-provider.yaml
+          - !include ../cards/conditional-mifi-network-type.yaml
+
+
+  # MiFi router status
+  - type: vertical-stack
+    cards:
+      - !include ../cards/entity-button-mifi-status.yaml
+
+  # MiFi battery levels
+      - type: vertical-stack
+        cards:
+          - !include ../cards/conditional-mifi-battery-charge.yaml
+          - !include ../cards/conditional-mifi-battery-status.yaml
+          - !include ../cards/conditional-mifi-battery-level.yaml
+
+
+  # MiFi data balance
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/conditional-mifi-data-balance-percent.yaml
+      - !include ../cards/conditional-mifi-data-balance-amount.yaml
+
+
+# MiFi SMS inbox messages
+  - type: vertical-stack
+    cards:
+      - !include ../cards/conditional-mifi-sms-messages.yaml

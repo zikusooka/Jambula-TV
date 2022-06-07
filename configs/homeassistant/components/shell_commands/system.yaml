@@ -14,3 +14,7 @@ server_cancel_shutdown: /bin/bash -c "sudo /usr/sbin/shutdown -c"
 delete_directory_contents: /bin/bash -c "sudo /usr/bin/rm -rf {{directory}}"
 delete_file_dir_specified: /bin/bash -c "sudo /usr/bin/rm -f {{directory}}/{{file}}"
 delete_file_path_specified: /bin/bash -c "sudo /usr/bin/rm -f {{file}}"
+
+# Create/append content to a file on the fly
+file_content_create: /bin/bash -c "/usr/bin/echo {{content}} > {{file}}"
+file_content_append: /bin/bash -c "/usr/bin/echo {{content}} >> {{file}}"

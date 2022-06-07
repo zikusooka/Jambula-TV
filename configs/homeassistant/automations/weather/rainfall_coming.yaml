@@ -4,25 +4,47 @@ initial_state: True
 
 trigger:
 
-  - platform: state
-    entity_id: weather.dark_sky
-    to: 'rainy'
+  #- platform: state
+    #entity_id: weather.dark_sky
+    #to: 'rainy'
 
-  - platform: numeric_state
-    entity_id: sensor.jambulatv_precipitation
-    above: 5.6
+  #- platform: numeric_state
+    #entity_id: sensor.jambulatv_precipitation
+    #above: 5.6
 
-  - platform: numeric_state
-    entity_id: sensor.openweathermap_rain
-    above: 0.8
+  #- platform: numeric_state
+    #entity_id: sensor.openweathermap_rain
+    #above: 0.8
 
   - platform: numeric_state
     entity_id: sensor.openweathermap_forecast_precipitation
-    above: 3.55
+    above: 4.00
 
   - platform: numeric_state
     entity_id: sensor.openweathermap_forecast_precipitation_probability
     above: 90
+ 
+  - platform: state
+    entity_id: weather.jambulatv
+    to: 'rainy'
+
+  - platform: state
+    entity_id: weather.jambulatv_hourly
+    to: 'rainy'
+
+  #- platform: state
+    #entity_id: weather.dark_sky
+
+  #- platform: numeric_state
+    #entity_id: sensor.openweathermap_rain
+
+  #- platform: numeric_state
+    #entity_id: sensor.openweathermap_forecast_precipitation
+
+  #- platform: numeric_state
+    #entity_id: sensor.openweathermap_forecast_precipitation_probability
+
+
 
 
 condition:
@@ -37,6 +59,20 @@ condition:
     - condition: numeric_state
       entity_id: sensor.hass_uptime_minutes
       above: 3
+
+
+
+    #- condition: numeric_state
+      #entity_id: sensor.openweathermap_forecast_precipitation
+      #above: 4
+
+    #- condition: numeric_state
+      #entity_id: sensor.openweathermap_forecast_precipitation_probability
+      #above: 90
+
+    - condition: template
+      value_template: "{{ not is_state('sensor.openweathermap_forecast_precipitation_probability', 'unknown') }}"
+
 
 
 action:

@@ -2,6 +2,8 @@ type: conditional
 conditions:
   - entity: media_player.now_playing
     state: "playing"
+  - entity: binary_sensor.internet
+    state: "on"
 
 card:
   type: entity-button

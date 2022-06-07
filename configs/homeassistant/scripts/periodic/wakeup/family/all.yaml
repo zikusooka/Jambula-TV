@@ -14,57 +14,30 @@ wakeup_time_all:
       entity_id: input_boolean.bedtime_mode_all
 
 
-    # Disable Night Mode at Frontend
-    # ------------------------------
-    #- service: homeassistant.turn_off
-      #entity_id: input_boolean.night_mode
-
-
-
-
-
     # If its day time, disable night mode 
     # -----------------------------------
     - service_template: >
         {% if is_state('sun.sun', 'above_horizon') %}
           homeassistant.turn_off
-
         {% else %}
           script.dummy
-
         {% endif %}
-
       entity_id: input_boolean.night_mode
-
-
-
-
-
-
 
 
     # If its day time, set wakeup time volume levels for all - (System & Player) 
     # --------------------------------------------------------------------------
     - service_template: >
         {% if is_state('sun.sun', 'above_horizon') %}
-          script.volume_levels_reset_player
-
+          script.volume_levels_reset_system_player
         {% else %}
           script.dummy
-
         {% endif %}
-
-      entity_id: script.volume_levels_reset_player
-
-      #script.wakeup_time_volume_levels_system_player_all
-
-
-
+      entity_id: script.volume_levels_reset_system_player
 
 
     # Voice Alert: Play wakeup time greeting
     # ---------------------------------------
-    - service: script.volume_levels_reset_player
     - service: script.wakeup_time_greeting_announce_everybody
 
 
@@ -78,21 +51,26 @@ wakeup_time_all:
     # Voice Alert: Time now
     # ---------------------
     - service: shell_command.date_today_time_now
-    - delay: 10
+    - delay: 15
 
     # Voice Alert: Announce current local temperature outside 
     # -------------------------------------------------------
     - service_template: >
         {% if not is_state('sensor.outside_temperature', 'unknown') %}
           script.temperature_current_outside
-
         {% else %}
           script.dummy
-
         {% endif %}
       entity_id: script.temperature_current_outside
 
-   
+
+    # Wait for temperature outside announcement to complete
+    # -----------------------------------------------------
+    - wait_template: "{{ is_state('script.temperature_current_outside', 'off') }}"
+      timeout: 20
+      continue_on_timeout: true
+
+
     # Unpause/play music 
     # ------------------
     - service: script.music_unpause_if_paused_else_play_local_jazz
@@ -100,7 +78,10 @@ wakeup_time_all:
 
     # Flash briefing for today - Connects to Internet if necessary
     # ------------------------------------------------------------
-    - service: script.flash_briefing_today
+    #- service: script.flash_briefing_weather_via_api
+    - service: script.flash_briefing_weather_via_scraper
+      data:
+        location: !secret weather_location
 
 
     # Wait for flash briefing being prepared to either be ready or fail

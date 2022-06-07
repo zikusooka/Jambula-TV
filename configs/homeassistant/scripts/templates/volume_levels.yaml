@@ -89,6 +89,18 @@ volume_levels_reset_system:
 
 
 
+volume_levels_reset_system_player:
+  sequence:
+
+    # Reset volume levels for all - (System & Player)
+    - service: script.turn_on
+      entity_id: script.volume_levels_reset_system
+    
+    - service: script.turn_on
+      entity_id: script.volume_levels_reset_player
+
+
+
 bedtime_volume_levels_player_all:
   sequence:
 
@@ -126,7 +138,6 @@ wakeup_time_volume_levels_player_all:
         current_player: "{{states('sensor.current_player_cli_name')}}"
 
 
-
 wakeup_time_volume_levels_system_all:
   sequence:
 
@@ -151,3 +162,14 @@ wakeup_time_volume_levels_system_player_all:
     
     - service: script.turn_on
       entity_id: script.wakeup_time_volume_levels_player_all
+
+
+
+tv_movie_time_volume_levels_player:
+  sequence:
+
+    # Set TV/Movie time volume level - player
+    - service: shell_command.set_volume_level_player
+      data_template:
+        volume_level_player: !secret mixer_tv_movie_time_mode_volume_level_player
+        current_player: "{{states('sensor.current_player_cli_name')}}"

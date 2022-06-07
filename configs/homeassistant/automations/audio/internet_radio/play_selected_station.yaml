@@ -20,16 +20,7 @@ condition:
 
 action:
 
-  # Turn off FM radio if on
-  - service: shell_command.fm_radio_stop
-
-  # Turn on Internet radio
-  - service: shell_command.internet_radio_play_selected_station
-    data_template:
-      station: "{{ states('input_select.internet_radio_station') }}"
-
-  # set volume
-  - service: media_player.volume_set
-    data:
-      entity_id: media_player.now_playing
-      volume_level: !secret internet_radio_start_up_volume_level
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.play_internet_radio

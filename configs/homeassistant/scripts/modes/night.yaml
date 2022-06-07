@@ -69,14 +69,9 @@ night_mode_off:
         output_file: 'sound_effect_night_mode_deactivated.mp3'
 
 
-    # Reset volume to day time levels - system
-    # ----------------------------------------
-    - service: script.volume_levels_reset_system
-
-
-    # Reset volume to day time levels - player
-    # ----------------------------------------
-    - service: script.volume_levels_reset_player
+    # Reset volume to day time levels - system & player
+    # -------------------------------------------------
+    - service: script.volume_levels_reset_system_player
 
 
     # Voice Alert: Announce that night mode deactivated

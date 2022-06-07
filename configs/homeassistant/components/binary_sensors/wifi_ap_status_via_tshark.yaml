@@ -1,0 +1,7 @@
+platform: mqtt
+name: WiFi AP Status
+state_topic: !secret mqtt_presence_tshark_topic_mifi
+scan_interval: 5
+device_class: power
+payload_on: "Home"
+payload_off: "Away"

@@ -1,7 +1,7 @@
 platform: mqtt
 name: 'Mixer voice alerts (status)'
 state_topic: !secret mqtt_status_mixer_voice_alerts
-scan_interval: 1
+scan_interval: 3
 device_class: sound
 payload_on: "on"
 payload_off: "off"

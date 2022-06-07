@@ -8,10 +8,10 @@ bedtime_all:
         entity_id: input_boolean.bed_time_activated_all
 
 
-    # Enable Bedtime Mode at Frontend
-    # -------------------------------
-    - service: homeassistant.turn_on
-      entity_id: input_boolean.bedtime_mode_all
+    # Increase speaker volume so bedtime briefing can be heard
+    # ---------------------------------------------------------
+    - service: script.turn_on
+      entity_id: script.volume_levels_reset_system
 
 
     # Voice Alert: Play bedtime greeting
@@ -30,7 +30,7 @@ bedtime_all:
     # Voice Alert: Time now
     # ---------------------
     - service: shell_command.date_today_time_now
-    - delay: 25
+    - delay: 15
 
 
     # Voice Alert: Recommended wakeup time
@@ -46,10 +46,8 @@ bedtime_all:
     - service_template: >
         {% if not is_state('sensor.outside_temperature', 'unknown') %}
           script.temperature_current_outside
-
         {% else %}
           script.dummy
-
         {% endif %}
       entity_id: script.temperature_current_outside
     - delay: 5
@@ -57,8 +55,14 @@ bedtime_all:
 
     # Connect to the Internet and fetch fresh stuff
     # ---------------------------------------------
-    - service: script.turn_on
-      entity_id: script.internet_connect_wifi_ap
+    - service: script.internet_connect_wifi_ap
+
+
+    # Wait for MiFi router to be reachable i.e. status is 'on'
+    # -------------------------------------------------------
+    - wait_template: "{{ is_state('binary_sensor.mifi_status', 'on') }}"
+      timeout: 60
+      continue_on_timeout: true
 
 
     # Notify of any power outages tomorrow or today depending on current time
@@ -67,22 +71,17 @@ bedtime_all:
     - delay: 10
 
 
-    #  Voice Alert: Read tonight and tomorrow's weather
-    #  ------------------------------------------------
+    #  Voice Alert: Read current weather and forecast
+    #  ----------------------------------------------
     - service_template: >
-        {% if is_state('binary_sensor.internet', 'on') and (now().hour > 18) %}
-          shell_command.text2speech_weather_later
-
-        {% elif is_state('binary_sensor.internet', 'on') and (now().hour < 18) %}
-          shell_command.text2speech_weather_today
-
+        {% if is_state('binary_sensor.internet', 'on') %}
+          script.say_weather_forecast_using_scraper
         {% else %}
           script.dummy
-
         {% endif %}
       entity_id: binary_sensor.internet
 
-   
+    
     # Run bedtime routines for occupants
     # -----------------------------------
     # Zik
@@ -104,12 +103,10 @@ bedtime_all:
     # Disconnect from the Internet if data saver mode is enabled
     # ----------------------------------------------------------
     - service_template: >
-        {% if is_state('input_boolean.internet_data_saver', 'on') %}
+        {% if is_state('input_boolean.internet_data_saver', 'on') and is_state('input_boolean.internet_already_connected', 'off') %}
           script.internet_disconnect_wifi_ap
-
         {% else %}
           script.dummy
-
         {% endif %}
       entity_id: input_boolean.internet_data_saver
 
@@ -123,11 +120,10 @@ bedtime_all:
         audio_gain: !secret voice_alert_audio_gain_medium
 
 
-    # Set status of bed time activated to 'off'
-    # -----------------------------------------
-    - service: homeassistant.turn_off
-      data:
-        entity_id: input_boolean.bed_time_activated_all
+    # Enable Bedtime Mode at Frontend
+    # -------------------------------
+    - service: homeassistant.turn_on
+      entity_id: input_boolean.bedtime_mode_all
 
 
     # Set bedtime volume levels for all - player
@@ -140,3 +136,12 @@ bedtime_all:
     # -------------------------------
     - service: script.turn_on
       entity_id: script.music_pause_if_playing
+
+
+    # Set status of bed time activated to 'off'
+    # -----------------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.bed_time_activated_all
+
+

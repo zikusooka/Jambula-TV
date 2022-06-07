@@ -36,6 +36,11 @@ condition:
       entity_id: 'input_boolean.wakeup_time_activated_all'
       state: 'off'
 
+    # Bedtime time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bed_time_activated_all'
+      state: 'off'
+
     # Night mode - off
     - condition: state
       entity_id: 'input_boolean.night_mode'

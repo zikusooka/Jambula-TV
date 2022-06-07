@@ -10,8 +10,19 @@ cards:
 
 
   # Live Cameras
-  - type: horizontal-stack
-    cards:
+  #- type: horizontal-stack
+    #cards:
       #- !include ../cards/picture-entity-zoneminder-camera-front-gate.yaml
-      - !include ../cards/picture-entity-zoneminder-camera-back-yard.yaml
-      - !include ../cards/picture-entity-motion-camera-front-gate.yaml
+      #- !include ../cards/picture-entity-zoneminder-camera-back-yard.yaml
+  
+      #- !include ../cards/picture-entity-motion-camera-front-gate.yaml
+      #- !include ../cards/picture-entity-motion-camera-front-door.yaml
+ 
+      #- !include ../cards/picture-entity-ipwebcam-camera-front-gate.yaml
+
+
+
+  # Photo gallery
+  - type: vertical-stack
+    cards:
+      - !include ../cards/custom-gallery-pictures.yaml

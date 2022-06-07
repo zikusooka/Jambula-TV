@@ -2,8 +2,7 @@ its_time_for_news:
   sequence:
 
  
-    # Generate voice files
-    # --------------------
+
     # Merge audio files
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:

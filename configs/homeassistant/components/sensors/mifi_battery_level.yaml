@@ -1,4 +1,4 @@
 platform: command_line
 name: "MiFi Battery Level"
 command: "/usr/bin/jambulatv-mifi-query $(/usr/bin/jambulatv-homeassistant-secrets mifi_address mifi_username mifi_password) battery | grep -i 'Battery Level' | awk {'print $3'} | sed 's:%::'"
-scan_interval: 120
+scan_interval: 60

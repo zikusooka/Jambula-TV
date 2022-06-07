@@ -121,12 +121,10 @@ emergency_kidnap:
     # Disconnect from the Internet if data saver mode is enabled
     # ----------------------------------------------------------
     - service_template: >
-        {% if is_state('input_boolean.internet_data_saver', 'on') %}
+        {% if is_state('input_boolean.internet_data_saver', 'on') and is_state('input_boolean.internet_already_connected', 'off') %}
           script.internet_disconnect_wifi_ap
-
         {% else %}
           script.dummy
-
         {% endif %}
       entity_id: input_boolean.internet_data_saver
 

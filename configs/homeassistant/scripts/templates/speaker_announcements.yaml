@@ -173,7 +173,12 @@ temperature_current_outside:
     - service: shell_command.ffmpeg_concat_four_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'Airplane-ding-sound.mp3'
+        input_file1: >
+          {% if is_state('input_boolean.wakeup_time_activated_all', 'off') and is_state('input_boolean.bed_time_activated_all', 'off') %}
+          'Airplane-ding-sound.mp3'
+          {% else %}
+          'silence_1s.mp3'
+          {% endif %}
         input_file2: 'temperature_current_outside.mp3'
         input_file3: >
           {% if (states('sensor.outside_temperature') | int | round (0)) == 1 %}
@@ -268,7 +273,7 @@ temperature_current_outside:
     - service: shell_command.voice_alerts_and_sound_effects
       data_template:
         sound_alert: 'sound_effect_current_temperature_outside_is'
-        audio_gain: !secret voice_alert_audio_gain_low
+        audio_gain: !secret voice_alert_audio_gain_medium
 
 
 
@@ -322,7 +327,7 @@ internet_connect_succeeded:
 
 
 
-internet_connect_failed:
+internet_connect_failed_try_again:
   sequence:
 
     # Generate voice files
@@ -333,6 +338,31 @@ internet_connect_failed:
         input_directory: !secret jambulatv_sounds_dir
         input_file1: 'Airplane-ding-sound.mp3'
         input_file2: 'internet_connection_failed_try_again.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_connection_to_the_internet_failed.mp3'
+
+
+    # Voice Alert: Announce that I failed to connect to the Internet
+    # -------------------------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_connection_to_the_internet_failed'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+internet_connect_failed:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_connection_failed.mp3'
         output_directory: !secret jambulatv_temp_dir
         output_file: 'sound_effect_connection_to_the_internet_failed.mp3'
 
@@ -397,7 +427,7 @@ internet_disconnected:
 
 
 
-internet_already_connected:
+internet_already_connected_alert:
   sequence:
 
     # Generate voice files
@@ -472,18 +502,6 @@ internet_data_saver_disabled:
 
 
 
-flash_briefing_today:
-  sequence:
-
-    # Play flash briefing for today
-    # -----------------------------
-    - service: shell_command.flash_briefing_all
-      data_template:
-        latitude: !secret homeassistant_latitude
-        longitude: !secret homeassistant_longitude
-
-
-
 cpu_usage_high_critical_process_alert_via_speakers:
   sequence:
 
@@ -531,3 +549,28 @@ cpu_usage_high_overall_alert_via_speakers:
       data_template:
         sound_alert: 'sound_effect_cpu_usage_high_performance_degrade'
         audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+say_weather_update_coming_up:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'weather_update_for_area_coming_up.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_weather_update_for_area_coming_up.mp3'
+
+
+    # Voice Alert: Weather update for your area
+    # ------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_weather_update_for_area_coming_up'
+        audio_gain: !secret voice_alert_audio_gain_medium

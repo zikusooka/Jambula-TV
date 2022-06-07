@@ -7,10 +7,10 @@ speaker_volume_mute_all: /bin/bash -c "/usr/bin/jambulatv-speaker-volume all loc
 speaker_volume_unmute_all: /bin/bash -c "/usr/bin/jambulatv-speaker-volume all localhost unmute"
 
 # Configure startup volume - player
-configure_startup_volume_level_player: /bin/bash -c "if [[ -e {{current_volume_level_player_file}} ]]; then /usr/bin/jambulatv-speaker-volume player localhost $(/usr/bin/cat -s {{current_volume_level_player_file}}); else /usr/bin/jambulatv-speaker-volume {{current_player}} localhost {{startup_volume_level_player}}%; fi"
+configure_startup_volume_level_player: /bin/bash -c "if [[ -e {{current_volume_level_player_file}} ]]; then /usr/bin/jambulatv-speaker-volume {{current_player}} localhost $(/usr/bin/cat -s {{current_volume_level_player_file}}) > /dev/null 2>&1; else /usr/bin/jambulatv-speaker-volume {{current_player}} localhost {{startup_volume_level_player}}% > /dev/null 2>&1; fi"
 #
 # Configure startup volume - system
-configure_startup_volume_level_system: /bin/bash -c "if [[ -e {{current_volume_level_system_file}} ]]; then /usr/bin/jambulatv-speaker-volume system localhost $(/usr/bin/cat -s {{current_volume_level_system_file}}); else /usr/bin/jambulatv-speaker-volume system localhost {{startup_volume_level_system}}%; fi"
+configure_startup_volume_level_system: /bin/bash -c "if [[ -e {{current_volume_level_system_file}} ]]; then /usr/bin/jambulatv-speaker-volume system localhost $(/usr/bin/cat -s {{current_volume_level_system_file}}) > /dev/null 2>&1; else /usr/bin/jambulatv-speaker-volume system localhost {{startup_volume_level_system}}% > /dev/null 2>&1; fi"
 #
 # Set custom volume level - player
 set_volume_level_player: /bin/bash -c "/usr/bin/jambulatv-speaker-volume {{current_player}} localhost {{volume_level_player}}%"

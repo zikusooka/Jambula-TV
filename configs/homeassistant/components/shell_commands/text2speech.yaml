@@ -1,7 +1,1 @@
-text2speech_time_current: /bin/bash -c "/usr/bin/jambulatv-text2speech '{{tts_api}}' time volume='{{tts_volume_level}}'"
-
-text2speech_say_text: /bin/bash -c "/usr/bin/jambulatv-text2speech '{{tts_api}}' custom '{{tts_text}}' volume='{{tts_volume_level}}'"
-
-text2speech_weather_today: /bin/bash -c "/usr/bin/jambulatv-text2speech '{{tts_api}}' weather today '{{weather_api}}' volume='{{tts_volume_level}}'"
-text2speech_weather_current: /bin/bash -c "/usr/bin/jambulatv-text2speech '{{tts_api}}' weather current '{{weather_api}}' volume='{{tts_volume_level}}'"
-text2speech_weather_later: /bin/bash -c "/usr/bin/jambulatv-text2speech '{{tts_api}}' weather later '{{weather_api}}' volume='{{tts_volume_level}}'"
+text2speech_say_text: /bin/bash -c "/usr/bin/jambulatv-text2speech '{{tts_api}}' custom '{{tts_text}}' volume='{{tts_volume_level}}' concatenate='{{tts_concatenate}}'"

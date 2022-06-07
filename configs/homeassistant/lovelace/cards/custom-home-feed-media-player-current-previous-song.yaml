@@ -1,0 +1,17 @@
+type: 'custom:home-feed-card'
+title: 'Playlist this hour'
+card_id: main_feed
+show_empty: false
+id_filter: ^home_feed_.*
+more_info_on_tap: true
+state_color: true
+entities:
+  #- entity: sensor.now_playing
+    #icon: 'mdi:playlist-music'
+  #- entity: sensor.previously_played
+    #icon: 'mdi:playlist-music'
+
+  - entity: sensor.playlist_last_hour
+    icon: 'mdi:playlist-music'
+    max_items: 5
+    content_template: '{{state}}'

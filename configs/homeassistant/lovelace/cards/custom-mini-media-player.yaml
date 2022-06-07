@@ -1,0 +1,77 @@
+type: 'custom:mini-media-player'
+entity: media_player.now_playing
+icon: mdi:spotify
+artwork: cover
+source: icon
+info: scroll
+volume_stateless: false
+
+hide:
+  info: true
+  volume: false
+  volume_level: false
+  play_stop: false
+  repeat: false
+  source: true
+  power: true
+  icon_state: false
+
+shortcuts:
+  columns: 2 # Max buttons per row
+  buttons:
+
+    # African
+    - icon: mdi:piano
+      name: 'African'
+      type: script
+      id: script.music_play_local
+
+    # Alternative
+    - icon: mdi:trumpet
+      name: 'Alternative'
+      type: script
+      id: script.music_play_alternative
+
+    # Christian
+    - icon: mdi:christianity
+      name: 'Christian'
+      type: script
+      id: script.music_play_christian
+
+    # Congolese
+    - icon: mdi:guitar-electric
+      name: 'Congolese'
+      type: script
+      id: script.music_play_congolese
+
+    # Country
+    - icon: mdi:horseshoe
+      name: 'Country'
+      type: script
+      id: script.music_play_country
+
+    # Indie
+    - icon: mdi:guitar-acoustic
+      name: 'Indie'
+      type: script
+      id: script.music_play_indie
+
+    # Jazz
+    - icon: mdi:trumpet
+      name: 'Jazz'
+      type: script
+      id: script.music_play_jazz
+
+    # Pop
+    - icon: mdi:guitar-electric
+      name: 'Pop'
+      type: script
+      id: script.music_play_pop
+
+    # All
+    - icon: mdi:playlist-music-outline
+      name: 'All'
+      type: script
+      id: script.music_play_all
+
+

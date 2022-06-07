@@ -1,11 +1,32 @@
-type: entity-filter
+type: custom:mini-graph-card
 entities:
   - entity: sensor.outside_temperature
-    name: 'Outdoor'
+    name: 'Outdoors'
+    icon: 'true'
+    state: 'last'
 
-state_filter:
-  - operator: "!="
-    value: "unavailable"
+line_color: var(--accent-color)
+line_width: 8
+font_size: 75
+show:
+  labels: true
+color_thresholds:
+  - value: 23
+    color: "#f39c12"
+  - value: 27
+    color: "#d35400"
+  - value: 33
+    color: "#c0392b"
 
-card: sensor
-show_empty: false
+
+#type: entity-filter
+#entities:
+  #- entity: sensor.outside_temperature
+    #name: 'Outdoor'
+
+#state_filter:
+  #- operator: "!="
+    #value: "unavailable"
+
+#card: sensor
+#show_empty: false

@@ -1,0 +1,14 @@
+fetch_forecast_by_weather_com:
+  sequence:
+
+    # Fetch and Save weather forecast (Weather.com)
+    # ---------------------------------------------
+    - service: script.fetch_weather_forecast_using_scraper
+
+
+    # Send XMPP Message
+    # -----------------
+    - service: notify.jambulatv
+      data_template:
+        title: '[JambulaTV]'
+        message: "Weather Update: {{ states('sensor.weather_forecast_today_kampala_weather_com') }} - Source: weather.com"

@@ -18,9 +18,13 @@ Please remember to carry an umbrella today!
 {{states('sensor.darksky_precip_probability_0d')}}
 \r
 \r
-* AccuWeather (jambulatv.sensor) *
+* AccuWeather (jambulatv precipitation,weather,hourly) *
 \r
 {{states('sensor.jambulatv_precipitation')}}
+\r
+{{states('weather.jambulatv')}}
+\r
+{{states('weather.jambulatv_hourly')}}
 \r
 \r
 * OpenWeather (rain, precip, probability) *

@@ -1,0 +1,37 @@
+alias: Umeme Yaka units update - Daily
+initial_state: True
+
+trigger:
+
+  - platform: time
+    at: !secret umeme_yaka_units_update_time
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Someone at home
+    - condition: template
+      value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+    - condition: template
+      value_template: "{{ not is_state('input_number.umeme_yaka_token_entry_units', '0.0') }}"
+
+    #- condition: template
+      #value_template: "{{ not is_state('input_text.umeme_yaka_token_units_value', '0.0') }}"
+
+
+action:
+
+  # Reduce Yaka balance by estimated daily units value
+  # ---
+  - service: input_number.set_value
+    data_template:
+      entity_id: input_number.umeme_yaka_token_units_value
+      value: "{{ (states('input_number.umeme_yaka_token_units_value') | float) - (states('input_text.umeme_yaka_usage_estimate_daily') | float) }}"
+
+  # Run script
+  # ----------
+  #- service: script.turn_on
+    #entity_id: script.umeme_yaka_balance_updated

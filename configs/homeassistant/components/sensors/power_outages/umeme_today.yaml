@@ -6,7 +6,6 @@
 
 platform: command_line
 name: "Power outage (Today)"
-#command: "echo $(/usr/bin/jambulatv-umeme-outages-via-scraper today $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq) | uniq | sed 's:^none::g' | sed '/^$/d' | paste -s -d' \n'"
-command: "echo $(/usr/bin/jambulatv-umeme-outages-via-scraper today $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq)"
+command: "echo $(/usr/bin/jambulatv-umeme-outages-via-scraper today $(/usr/bin/jambulatv-homeassistant-secrets umeme_outage_areas) | uniq | grep -i -v -e umeme | sed '/^$/d' | paste -s -d' \n')"
 command_timeout: 15
 scan_interval: 180

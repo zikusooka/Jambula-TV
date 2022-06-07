@@ -11,8 +11,9 @@ cards:
   # Reset volumes Player/System
   - type: vertical-stack
     cards:
-      - !include ../cards/entity-button-volume-player-reset.yaml
-      - !include ../cards/entity-button-volume-system-reset.yaml
+      - !include ../cards/entity-button-volume-system-player-reset.yaml
+      #- !include ../cards/entity-button-volume-player-reset.yaml
+      #- !include ../cards/entity-button-volume-system-reset.yaml
 
   # Reboot/Poweroff system
   - type: vertical-stack
@@ -21,12 +22,6 @@ cards:
       - !include ../cards/entity-button-system-cancel_poweroff.yaml
       - !include ../cards/entity-button-system-poweroff.yaml
 
-
-  # Internet and MiFi router status
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/entity-button-internet-status.yaml
-      - !include ../cards/entity-button-mifi-status.yaml
 
 
   # Internet - Connect/Disconnect

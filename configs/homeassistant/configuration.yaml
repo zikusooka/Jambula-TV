@@ -6,8 +6,28 @@ homeassistant:
   unit_system: !secret homeassistant_unit_system
   time_zone: !secret homeassistant_time_zone
 
+  #external_url: "https://www.example.com"
+  internal_url: "http://jambulatv-home:8505"
+  allowlist_external_dirs:
+    - "/tmp"
+    - "/JambulaTV"
+  #allowlist_external_urls:
+
+  media_dirs:
+    music: /JambulaTV/Music
+    tv_shows: /JambulaTV/Videos/TV_Shows
+    movies: /JambulaTV/Videos/Movies
+    tv_recordings: /JambulaTV/Videos/TV_Recordings
+    podcasts: /JambulaTV/Podcasts
+    pictures: /JambulaTV/Pictures
+
+  customize: !include_dir_merge_named customizations/entities
+  customize_domain: !include_dir_merge_named customizations/domains
+  customize_glob: !include_dir_merge_named customizations/globs
+
   packages: !include_dir_named components/packages
 
+# Mobile App
 mobile_app:
 
 # MQTT servers 
@@ -30,3 +50,29 @@ zoneminder:
   ssl: False
   username: !secret zoneminder_username
   password: !secret zoneminder_password
+
+#android_ip_webcam:
+#  - host: 172.16.0.35
+#    port: 8080
+#    sensors:
+#      - audio_connections
+#      - battery_level
+#      - battery_temp
+#      - battery_voltage
+#      - light
+#      - motion
+#      - pressure
+#      - proximity
+#      - sound
+#      - video_connections
+#    switches:
+#      - exposure_lock
+#      - ffc
+#      - focus
+#      - gps_active
+#      - motion_detect
+#      - night_vision
+#      - overlay
+#      - torch
+#      - whitebalance_lock
+#      - video_recording
