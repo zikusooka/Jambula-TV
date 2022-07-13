@@ -6,7 +6,9 @@ After=syslog.target network.target remote-fs.target
 User=jambula
 Type=forking
 ExecStart=/usr/bin/screen -A -fa -d -m -S Torrent /usr/bin/rtorrent
-ExecStopPost=/usr/bin/killall rtorrent
+ExecStopPre=/usr/bin/screen -wipe
+ExecStop=/bin/bash -c "/usr/bin/killall rtorrent"
+ExecStopPost=/bin/bash -c "/usr/bin/kill -9 $(ps auxw | grep [r]torrent | awk '{print $2}')"
 
 [Install]
 WantedBy=multi-user.target
