@@ -120,11 +120,10 @@ dht_port = 6881
 # Enable peer exchange (for torrents not marked private)
 protocol.pex.set = yes
 
-# rtgui - xmlrpc
-################
-network.scgi.open_port = localhost:5000
-#network.scgi.open_local = /tmp/scgi.socket
-#schedule = chmod,0,0,"execute=chmod,777,/tmp/scgi.socket"
+# scgi - xmlrpc
+###############
+network.scgi.open_local = MY_MULTIMEDIA_USER_HOME_DIR/rpc.socket
+schedule = chmod,0,0,"execute=chmod,777,MY_MULTIMEDIA_USER_HOME_DIR/rpc.socket"
 
 # Color / Canvas patch
 # ####################
