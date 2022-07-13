@@ -9766,6 +9766,11 @@ tar zxvf $PROJECT_TARBALLS_DIR/xmlrpc-c-*gz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v xmlrpc* xmlrpc-c
 cd $INSTALL_SRC_DIR/xmlrpc-c
 ./configure --prefix=/usr --libdir=$LIBDIR --disable-wininet-client --disable-libwww-client
+# Install xmlrpc sources
+make_install_jambulatv
+#
+# Install xmlrpc tool
+cd $INSTALL_SRC_DIR/xmlrpc-c/tools/xmlrpc
 make_install_jambulatv
 }
 
