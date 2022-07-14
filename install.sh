@@ -437,6 +437,12 @@ iwd_install
 iwd_configure
 daloradius_configure
 
+# -----------------
+# Caching services
+# -----------------
+redis_install
+redis_configure
+
 #------------------
 # System Monitoring
 # IMPORTANT Install After FreePBX/Asterisk

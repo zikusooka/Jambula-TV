@@ -1,0 +1,21 @@
+[Unit]
+Description=Redis data structure server
+Documentation=https://redis.io/documentation
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/redis-server /etc/redis.conf
+LimitNOFILE=10032
+NoNewPrivileges=yes
+OOMScoreAdjust=-900
+PrivateTmp=yes
+TimeoutStartSec=infinity
+TimeoutStopSec=infinity
+UMask=0077
+User=redis
+Group=redis
+WorkingDirectory=/var/lib/redis
+
+[Install]
+WantedBy=multi-user.target

@@ -12383,6 +12383,47 @@ OwnCloud
 EOF
 }
 
+redis_install () {
+# If present and running, stop redis server
+rpm -q redis > /dev/null 2>&1 && \
+	systemctl -q is-active redis.service && systemctl stop redis.service
+# Remove RPM based package if installed
+rpm -q redis > /dev/null 2>&1 && rpm -e --nodeps redis > /dev/null 2>&1
+#
+# Unpack
+tar zxvf $PROJECT_TARBALLS_DIR/redis-*.tar.gz -C $INSTALL_SRC_DIR
+cd $INSTALL_SRC_DIR && mv -v redis-* redis
+# Compile all
+cd $INSTALL_SRC_DIR/redis
+make
+make PREFIX=$PREFIX install
+#
+# Add redis group and user - Assign home directory = /var/lib/redis
+groupadd -r redis
+useradd -r -M -c "Redis Server User" -d $VARLIBDIR/redis -g redis redis -s /sbin/nologin
+}
+
+redis_configure () {
+# Create redis home directory
+[[ -d $VARLIBDIR/redis ]] || mkdir -p $VARLIBDIR/redis
+# Assign redis user ownership to its home directory
+chown -R redis:redis $VARLIBDIR/redis
+# Create redis log directory
+[[ -d $LOGDIR/redis ]] || mkdir -p $LOGDIR/redis
+# Assign redis user ownership to its log directory
+chown -R redis:redis $LOGDIR/redis
+#
+# Copy redis.conf file
+cp -v $PROJECT_CONFIGS_DIR/redis.conf $CONFDIR/
+# Change ownership of config file to redis
+chown -R redis:redis $CONFDIR/redis.conf
+#
+# Systemctl start script
+cp -v $PROJECT_INIT_SCRIPTS_DIR/redis.service $SYSTEMD_UNITS_DIR_USER/
+# Enable asterisk
+systemctl enable redis.service
+}
+
 nextcloud_install () {
 # Unpack core
 tar jxvf $PROJECT_TARBALLS_DIR/nextcloud-*tar.bz2 -C $WWW_HTML_DIR
