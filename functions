@@ -12585,6 +12585,16 @@ patch -p1 $WWW_HTML_DIR/nextcloud/apps/calendar/controller/proxycontroller.php <
 # Make script executable
 chmod 755 $CALENDAR_EVENTS_TOOL
 
+# Configure cron jobs for Nextcloud
+# ---------------------------------
+# Create cron file for nextcloud user
+cat >> $CRONTABS_DIR/$WWW_USER <<ET
+# Nextcloud maintenance
+*/15  *  *  *  * php -f $WWW_HTML_DIR/nextcloud/cron.php
+ET
+# set permissions
+chown -R $WWW_USER:$WWW_GROUP $CRONTABS_DIR/$WWW_USER
+
 # Display NextCloud's post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
