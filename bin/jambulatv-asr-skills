@@ -559,7 +559,7 @@ REMINDERS_NUMBER=$(wc -l ${REMINDERS_TEMP_FILE}.clean | awk '{print $1}')
 # Cycle through all reminders
 COUNT=2
 #
-uniq -u ${REMINDERS_TEMP_FILE}.clean | while read REMINDER
+uniq ${REMINDERS_TEMP_FILE}.clean | while read REMINDER
 do
 # Skip blank lines
 [[ "x$REMINDER" = "x" ]] && continue
