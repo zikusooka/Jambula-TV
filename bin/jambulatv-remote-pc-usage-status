@@ -48,14 +48,18 @@ fi
 }
 
 connectivity_2_remote_host () {
+# Ping remote host
 PING_COUNT=2
 PING_TIMEOUT=2
 REMOTE_HOST=$SSH_HOST
 ping -c $PING_COUNT -W $PING_TIMEOUT $REMOTE_HOST > /dev/null 2>&1
 REMOTE_HOST_REACHEABLE=$?
-
+# Connect to SSH server
+ssh -o BatchMode=yes $SSH_USER@$SSH_HOST echo > /dev/null 2>&1
+REMOTE_SSH_SERVER_ACCESSIBLE=$?
+#
 # Quit if remote PC is not reacheable
-if [[ "$REMOTE_HOST_REACHEABLE" != "0" ]];
+if [[ "$REMOTE_HOST_REACHEABLE" != "0" || "$REMOTE_SSH_SERVER_ACCESSIBLE" != "0" ]];
 then
 # Notify via logger when there's NO connectivity to remote host
 logger -s -t $(basename $0) "The remote host at $REMOTE_HOST 
