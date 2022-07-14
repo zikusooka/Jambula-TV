@@ -12529,6 +12529,9 @@ cat > $NEXTCLOUD_CONFIG_FILE << EOF
   'dbuser' => '$NEXTCLOUD_DB_USER',
   'dbpassword' => '$NEXTCLOUD_DB_PASS',
   'logfile' => '$PROJECT_SYSTEM_LOG_DIR/nextcloud.log',
+  'log_type' => 'file',
+  'loglevel' => 0,
+  'logdateformat' => 'F d, Y H:i:s',
   'logtimezone' => '$TIMEZONE',
   'mail_domain' => '$NETWORK_DOMAIN',
   'mail_from_address' => '$PROJECT_NAME',
@@ -12536,6 +12539,15 @@ cat > $NEXTCLOUD_CONFIG_FILE << EOF
   'version' => '$NEXTCLOUD_VERSION',
   'updatechecker' => false,
   'defaultapp' => '$NEXTCLOUD_DEFAULT_APP',
+  'filelocking.enabled' => true,
+  'memcache.locking' => '\OC\Memcache\Redis',
+  'redis' => array(
+       'host' => 'localhost',
+       'port' => 6379,
+       'timeout' => 0.0,
+       'password' => '',
+        ),
+  //'maintenance' => 'true',
 );
 EOF
 
