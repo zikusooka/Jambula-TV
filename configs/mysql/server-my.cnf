@@ -1,0 +1,8 @@
+[mysqld]
+
+max_allowed_packet=32M
+
+innodb_file_per_table=1
+innodb_flush_method=O_DIRECT
+innodb_log_file_size=1G
+innodb_buffer_pool_size=4G

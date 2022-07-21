@@ -10398,8 +10398,8 @@ EOF
 }
 
 mysqld_configure () {
-# Apply my.cnf patch 
-patch -p1 $CONFDIR/my.cnf < $PROJECT_PATCHES_DIR/mysqld.my.cnf.patch
+# Add tunables to mysqld server i.e. my.cnf
+cp -v $PROJECT_CONFIGS_DIR/mysql/server-my.cnf $CONFDIR/my.cnf.d/mysql-jambulatv.cnf
 }
 
 freeradius_install () {
