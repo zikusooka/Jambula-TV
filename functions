@@ -2764,6 +2764,13 @@ rm -rf $WWW_HTML_DIR/owncloud
 uninstall_nextcloud () {
 # Remove owncloud HTML files
 rm -rf $WWW_HTML_DIR/nextcloud
+#
+# Remove cron jobs 4 nextcloud
+grep -v -i nextcloud $CRONTABS_DIR/$WWW_USER > $TMPDIR/cron_asterisk
+cp -v $TMPDIR/cron_asterisk $CRONTABS_DIR/$WWW_USER
+# set permissions
+chown -R $WWW_USER:$WWW_GROUP $CRONTABS_DIR/$WWW_USER
+#
 # Drop database data for tests/new installs
 cat <<EOF
 CAUTION: Take care here - NextCloud data is about to be dropped !!!
