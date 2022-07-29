@@ -108,11 +108,21 @@ flexget_python3_install
 }
 
 upgrade_icinga2 () {
+# Backup icinga2 hosts.conf file
+[[ -s $ICINGA2_CUSTOM_CONFIG_DIR/hosts.conf ]] && \
+	cp -v $ICINGA2_CUSTOM_CONFIG_DIR/hosts.conf $TMPDIR/icinga2-hosts.conf
+#
 uninstall_icinga2
 icinga2_install
-icinga2_configure 
+icinga2_configure
+#
+# Restore icinga2 hosts file
+[[ -s $TMPDIR/icinga2-hosts.conf ]] && \
+	cp -v $TMPDIR/icinga2-hosts.conf $ICINGA2_CUSTOM_CONFIG_DIR/hosts.conf 
+#
 # Enable icinga2.service - ONLY for upgrades
 systemctl enable icinga2.service
+systemctl restart icinga2.service
 }
 
 upgrade_icinga2_director () {
