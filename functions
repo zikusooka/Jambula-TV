@@ -2509,8 +2509,8 @@ systemctl disable icinga2.service
 # Drop MySQL DB
 mysqladmin -f -p$MYSQL_ROOT_PASSWORD drop $ICINGA_DB_NAME
 # Remove user and groups
-groupdel $ICINGA_CMD_GROUP
 userdel -r $ICINGA_USER
+groupdel $ICINGA_CMD_GROUP
 # Remove sudoers file
 [[ -f $SUDOERS_DIR/icinga ]] && \
 	rm -f $SUDOERS_DIR/icinga
@@ -2675,8 +2675,8 @@ sed -i "s:FCGI_GROUP=$WWW_USER:FCGI_GROUP=nginx:g" $SYSCONFIG_DIR/spawn-fcgi
 systemctl restart spawn-fcgi.service
 #
 # Remove asterisk user/group
-groupdel asterisk
 userdel -r asterisk
+groupdel asterisk
 # Remove systemd files
 rm -f $SYSTEMD_UNITS_DIR_SYSTEM/asterisk.service $SYSTEMD_UNITS_DIR_USER/asterisk.service
 systemctl --system daemon-reload
@@ -2988,8 +2988,8 @@ else
 rm -rf $(whereis netdata) $LOGDR/netdata $STATEDIR/cache/netdata
 fi
 # Remove user and groups
-groupdel netdata
 userdel -r netdata
+groupdel netdata
 }
 
 uninstall_mpv () {
@@ -3025,6 +3025,36 @@ systemctl stop nginx.service
 [[ -d $STATEDIR/log/nginx ]] && rm -rf $STATEDIR/log/nginx
 [[ -d $LIBDIR/perl5/auto/nginx ]] && rm -rf $LIBDIR/perl5/auto/nginx 
 [[ -d $INSTALL_SRC_DIR/nginx ]] && rm -rf $INSTALL_SRC_DIR/nginx
+}
+
+uninstall_prosody () {
+# stop and disable prosody service
+systemctl stop prosody.service || \
+	kill -9 $(ps aux | awk '/[p]rosody/ {print $2}') > /dev/null 2>&1
+systemctl disable prosody.service
+# Remove prosody systemd file
+[ -f $SYSTEMD_UNITS_DIR_USER/prosody.service ] && \
+	rm -f $SYSTEMD_UNITS_DIR_USER/prosody.service && \
+	systemctl daemon-reload
+# Remove config directory
+[[ -d $PROJECT_SYSTEM_CONF_DIR/prosody ]] && rm -rf $PROJECT_SYSTEM_CONF_DIR/prosody
+# Remove log directory
+[[ -d $PROJECT_SYSTEM_LOG_DIR/prosody ]] && rm -rf $PROJECT_SYSTEM_LOG_DIR/prosody
+#
+for PROGRAM in prosody prosodyctl
+do
+# Remove binaries
+[[ -e $BINARY_PREFIX/${PROGRAM} ]] && rm -f $BINARY_PREFIX/${PROGRAM}
+# Remove man pages
+[[ -e $MANDIR1/${PROGRAM}.1 ]] && rm -f $MANDIR1/${PROGRAM}.1
+done
+# Remove libs
+[[ -d $LIBDIR/prosody ]] && rm -rf $LIBDIR/prosody
+# Remove sources
+[[ -d $INSTALL_SRC_DIR/prosody ]] && rm -rf $INSTALL_SRC_DIR/prosody
+# Remove user and group
+userdel -r prosody
+groupdel prosody
 }
 
 
@@ -14200,7 +14230,6 @@ cd $INSTALL_SRC_DIR/prosody
 	--sysconfdir=$PROJECT_SYSTEM_CONF_DIR/prosody \
 	--datadir=/var/lib/prosody
 make_install_jambulatv 
-
 # Add prosody group and user - Assign home directory = /var/lib/prosody
 groupadd -r prosody
 useradd -r -M -c "Prosody XMPP (Jabber) Server User" -d $VARLIBDIR/prosody -g prosody prosody -s /sbin/nologin

@@ -397,6 +397,20 @@ libtorrent_install
 rtorrent_install 
 }
 
+upgrade_prosody () {
+clear
+cat <<ET
+WARNING: This will remove all previously configured user accounts and certificates!
+
+Are you sure you want to proceed? If Yes, press 'Enter' else 'Ctrl+C'
+ET
+read
+uninstall_prosody
+prosody_install
+prosody_configure
+prosody_add_users
+}
+
 
 
 #################
@@ -496,3 +510,5 @@ rtorrent_install
 #upgrade_v4l_utils
 
 #upgrade_rtorrent
+
+#upgrade_prosody
