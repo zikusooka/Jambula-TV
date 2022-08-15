@@ -3492,8 +3492,19 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/images
 }
 
 ssl_cert_key_generate () {
-# ssl_cert_key_generate [CERT_FILE_PATH] [KEY_FILE_PATH] [DAYS]
-openssl req -new -x509 -nodes -out $1 -keyout $2 -days $3 -subj "/CN=${SYSTEM_IDENTIFIER}.${PROJECT_NAME} /O=$PROJECT_NAME /OU=$COMPANY_NAME"
+CERT_FILE_PATH=$1
+KEY_FILE_PATH=$2
+DAYS=$3
+COMMON_NAME=$4
+if [ "x$COMMON_NAME" = "x" ];
+then
+COMMON_NAME=${HOSTNAME,,}
+else
+COMMON_NAME=$4
+fi
+RSA_KEY_SIZE=2048
+# ssl_cert_key_generate [CERT_FILE_PATH] [KEY_FILE_PATH] [DAYS] [COMMON_NAME]
+openssl req -new -x509 -newkey rsa:$RSA_KEY_SIZE -nodes -sha256 -utf8 -out "$CERT_FILE_PATH" -keyout "$KEY_FILE_PATH" -days $DAYS -subj "/CN=$COMMON_NAME /O=$PROJECT_NAME /OU=$COMPANY_NAME"
 }
 
 tls_ca_server_cert_key_generate () {
@@ -3510,13 +3521,13 @@ CERTIFICATES_DAYS=$7
 openssl genrsa -out $CA_KEY_FILE 2048 
 # CA Cert
 openssl req -new -x509 -key $CA_KEY_FILE -out $CA_CERT_FILE -days $CERTIFICATES_DAYS \
-  -subj "/CN=${SYSTEM_IDENTIFIER}.${PROJECT_NAME} /O=$PROJECT_NAME /OU=$COMPANY_NAME"
+  -subj "/CN=${HOSTNAME,,} /O=$PROJECT_NAME /OU=$COMPANY_NAME"
 #
 # Server Key
 openssl genrsa -out $SERVER_KEY_FILE 2048
 # Server Certificate
 openssl req -new -key $SERVER_KEY_FILE -out $SERVER_CSR_FILE \
-  -subj "/CN=${SYSTEM_IDENTIFIER}.${PROJECT_NAME} /O=$PROJECT_NAME /OU=$COMPANY_NAME"
+  -subj "/CN=${HOSTNAME,,} /O=$PROJECT_NAME /OU=$COMPANY_NAME"
 #
 # Sign Cert
 openssl x509 -req -in $SERVER_CSR_FILE -CA $CA_CERT_FILE -CAkey $CA_KEY_FILE \
