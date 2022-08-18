@@ -1388,6 +1388,15 @@ FFPROBE_OPTS_FRAMERATE="$FFPROBE_OPTS_ENTRIES stream=avg_frame_rate -select_stre
 FFPROBE_OPTS_RESOLUTION="$FFPROBE_OPTS_ENTRIES stream=height,width -select_streams v:0 -of csv=s=x:p=0"
 FFPROBE_PREFERRED_FORMATS="mpegts|hls|applehttp"
 
+# OpenSSL
+OPENSSL_CERT_COUNTRY=UG
+OPENSSL_CERT_LOCALITY=Kampala
+OPENSSL_CERT_ORGANIZATION=$COMPANY_NAME
+OPENSSL_CERT_UNIT="JambulaTV security services"
+OPENSSL_CERT_COMMON_NAME=${HOSTNAME,,}
+OPENSSL_CA_TRUST_DIRECTORY=/etc/pki/ca-trust/source/anchors/
+OPENSSL_CA_TRUST_UPDATE_CMD=update-ca-trust
+
 
 
 ############################
@@ -3489,6 +3498,16 @@ images_add () {
 rsync -av $PROJECT_IMAGES_DIR $PROJECT_SYSTEM_SHARE_DIR/
 # Give permissons
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/images
+}
+
+ssl_cert_key_generate_using_config () {
+CERT_FILE_PATH=$1
+KEY_FILE_PATH=$2
+DAYS=$3
+CONFIG_FILE_PATH=$4
+RSA_KEY_SIZE=2048
+# ssl_cert_key_generate_using_config [CERT_FILE_PATH] [KEY_FILE_PATH] [DAYS] [CONFIG_FILE_PATH]
+openssl req -new -x509 -newkey rsa:$RSA_KEY_SIZE -nodes -sha256 -utf8 -out "$CERT_FILE_PATH" -keyout "$KEY_FILE_PATH" -days $DAYS -config $CONFIG_FILE_PATH
 }
 
 ssl_cert_key_generate () {
