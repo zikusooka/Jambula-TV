@@ -1394,7 +1394,7 @@ OPENSSL_CERT_LOCALITY=Kampala
 OPENSSL_CERT_ORGANIZATION=$COMPANY_NAME
 OPENSSL_CERT_UNIT="JambulaTV security services"
 OPENSSL_CERT_COMMON_NAME=${HOSTNAME,,}
-OPENSSL_CA_TRUST_DIRECTORY=/etc/pki/ca-trust/source/anchors/
+OPENSSL_CA_TRUST_DIRECTORY=/etc/pki/ca-trust/source/anchors
 OPENSSL_CA_TRUST_UPDATE_CMD=update-ca-trust
 
 
@@ -14267,10 +14267,14 @@ useradd -r -M -c "Prosody XMPP (Jabber) Server User" -d $VARLIBDIR/prosody -g pr
 
 prosody_configure () {
 # Copy our custom prosody config file
-cat $PROJECT_CONFIGS_DIR/prosody.cfg.lua.template | \
+cat $PROJECT_CONFIGS_DIR/prosody/prosody.cfg.lua.template | \
 	sed "s:MY_RUNDIR:$RUNDIR:g" | \
 	sed "s:MY_SYSTEM_IDENTIFIER:$SYSTEM_IDENTIFIER:g" | \
-	sed "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
+
+	sed "s:MY_OPENSSL_CERT_COMMON_NAME:$OPENSSL_CERT_COMMON_NAME:g" | \
+	sed "s:MY_OPENSSL_CA_TRUST_DIRECTORY:$OPENSSL_CA_TRUST_DIRECTORY:g" | \
+	sed "s:MY_USER_001_XMPP_USERNAME:$USER_001_XMPP_USERNAME:g" | \
+
 	sed "s:MY_PROJECT_SYSTEM_LOG_DIR:$PROJECT_SYSTEM_LOG_DIR:g" | \
 	sed "s:MY_PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" \
 		> $PROJECT_SYSTEM_CONF_DIR/prosody/prosody.cfg.lua

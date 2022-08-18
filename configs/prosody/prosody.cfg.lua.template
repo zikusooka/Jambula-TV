@@ -4,9 +4,10 @@
 ---------- Server-wide settings ----------
 
 --daemonize = false
+
 pidfile = "MY_RUNDIR/prosody/prosody.pid"
 
-admins = { "MY_SYSTEM_IDENTIFIER@MY_PROJECT_NAME" }
+admins = { "MY_USER_001_XMPP_USERNAME@MY_OPENSSL_CERT_COMMON_NAME" }
 
 --use_libevent = true
 
@@ -27,15 +28,16 @@ modules_enabled = {
 		"version"; 
 		"uptime"; 
 		"time"; 
-		"ping"; 
+		"ping";
 		"register"; 
+                "admin_shell"; 
 		--"mam"; 
 		--"csi_simple"; 
 		"admin_adhoc"; 
 		--"admin_telnet"; 
 		--"bosh"; 
 		--"websocket"; 
-		--"http_files"; 
+		"http_files"; 
 		--"limits"; 
 		--"groups"; 
 		--"server_contact_info"; 
@@ -58,7 +60,7 @@ allow_registration = false
 
 c2s_require_encryption = false
 
-s2s_require_encryption = true
+s2s_require_encryption = false
 
 s2s_secure_auth = false
 
@@ -92,16 +94,16 @@ log = {
 
 -- Certificates
 
-certificates = "certs"
-
-https_certificate = "MY_PROJECT_SYSTEM_CONF_DIR/prosody/certs/localhost.crt"
+certificates = "MY_PROJECT_SYSTEM_CONF_DIR/prosody/certs"
 
 
 ----------- Virtual hosts -----------
 
-VirtualHost "JambulaTV"
+VirtualHost "MY_OPENSSL_CERT_COMMON_NAME"
 
-certificate = "MY_PROJECT_SYSTEM_CONF_DIR/prosody/certs/JambulaTV.crt"
+  ssl = {
+  capath = "MY_OPENSSL_CA_TRUST_DIRECTORY"
+  }
 
 
 ------ Components ------
@@ -112,3 +114,6 @@ certificate = "MY_PROJECT_SYSTEM_CONF_DIR/prosody/certs/JambulaTV.crt"
 
 --Component "gateway.example.com"
 --	component_secret = "password"
+
+
+Component "upload.MY_OPENSSL_CERT_COMMON_NAME" "http_file_share"
