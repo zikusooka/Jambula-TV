@@ -10305,6 +10305,11 @@ nginx_configure () {
 # Get WWW User and Group
 set_www_user_group
 #
+# Add uploads directory
+[[ -d $WWW_HTML_DIR/uploads ]] || mkdir -p $WWW_HTML_DIR/uploads
+echo "# Uploads directory
+$NETWORK_IP_ADDRESS	uploads.$HOSTNAME" >> /etc/hosts
+#
 # Add RTMP information directory i.e. stats
 [[ -d $WWW_HTML_DIR/rtmp ]] || mkdir -p $WWW_HTML_DIR/rtmp
 # Copy stats index XML file from nginx-rtmp-module to root directory
