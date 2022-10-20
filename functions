@@ -14279,8 +14279,27 @@ cat $PROJECT_CONFIGS_DIR/prosody/prosody.cfg.lua.template | \
 	sed "s:MY_PROJECT_SYSTEM_CONF_DIR:$PROJECT_SYSTEM_CONF_DIR:g" \
 		> $PROJECT_SYSTEM_CONF_DIR/prosody/prosody.cfg.lua
 #
-# Create SSL certificate and key for prosody
-ssl_cert_key_generate $PROJECT_SYSTEM_CONF_DIR/prosody/certs/JambulaTV.crt $PROJECT_SYSTEM_CONF_DIR/prosody/certs/JambulaTV.key 7300
+# Create OpenSSL configuration template file used to generate prosody security certificates
+cat $PROJECT_CONFIGS_DIR/prosody/openssl.cnf.template | \
+	sed "s:MY_OPENSSL_CERT_COUNTRY:$OPENSSL_CERT_COUNTRY:g" | \
+	sed "s:MY_OPENSSL_CERT_LOCALITY:$OPENSSL_CERT_LOCALITY:g" | \
+	sed "s:MY_OPENSSL_CERT_ORGANIZATION:$OPENSSL_CERT_ORGANIZATION:g" | \
+	sed "s:MY_OPENSSL_CERT_UNIT:$OPENSSL_CERT_UNIT:g" | \
+	sed "s:MY_OPENSSL_CERT_COMMON_NAME:$OPENSSL_CERT_COMMON_NAME:g" \
+		> $PROJECT_SYSTEM_CONF_DIR/prosody/certs/openssl.cnf.template
+#
+# Create SSL certificate and key for prosody server and virtual hosts using config file
+ssl_cert_key_generate_using_config \
+	$PROJECT_SYSTEM_CONF_DIR/prosody/certs/${OPENSSL_CERT_COMMON_NAME}.crt \
+	$PROJECT_SYSTEM_CONF_DIR/prosody/certs/${OPENSSL_CERT_COMMON_NAME}.key \
+	7300 \
+	$PROJECT_SYSTEM_CONF_DIR/prosody/certs/openssl.cnf.template
+#
+# Add newly created SSL certificate to list of trusted root SSL certificates
+cp -v $PROJECT_SYSTEM_CONF_DIR/prosody/certs/${OPENSSL_CERT_COMMON_NAME}.crt \
+	$OPENSSL_CA_TRUST_DIRECTORY
+# Run CA trust update command
+$OPENSSL_CA_TRUST_UPDATE_CMD
 #
 # Create prosody log directory if it does not exist
 [[ -d $PROJECT_SYSTEM_LOG_DIR/prosody ]] || mkdir -p $PROJECT_SYSTEM_LOG_DIR/prosody
@@ -14290,8 +14309,9 @@ chown -R prosody:prosody $VARLIBDIR/prosody
 chown -R prosody:prosody $PROJECT_SYSTEM_CONF_DIR/prosody
 chown -R prosody:prosody $PROJECT_SYSTEM_LOG_DIR/prosody
 #
-# Copy prosody systemd file 
-cp -v $PROJECT_INIT_SCRIPTS_DIR/prosody.service $SYSTEMD_UNITS_DIR_USER/
+# Copy prosody systemd file
+[[ -e $SYSTEMD_UNITS_DIR_USER/prosody.service ]] || \
+	cp -v $PROJECT_INIT_SCRIPTS_DIR/prosody.service $SYSTEMD_UNITS_DIR_USER/
 systemctl enable prosody.service
 systemctl start prosody.service
 }
