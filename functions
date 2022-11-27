@@ -3648,7 +3648,8 @@ tar xvf $PROJECT_TARBALLS_DIR/curl-*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v curl-* curl
 # Compile
 cd $INSTALL_SRC_DIR/curl
-./configure --prefix=$PREFIX --libdir=$LIBDIR --localstatedir=$STATEDIR
+./configure --prefix=$PREFIX --libdir=$LIBDIR --localstatedir=$STATEDIR \
+	--with-gnutls --without-libidn2
 make_install_jambulatv
 }
 
