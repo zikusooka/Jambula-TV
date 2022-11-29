@@ -60,7 +60,7 @@ def main():
    delay           = args.delay
    address         = args.address
 
-   p = subprocess.Popen([SUDO_CMD, L2PING_CMD, '-c', count, address], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   p = subprocess.Popen([SUDO_CMD, L2PING_CMD, '-i', interface, '-c', count, address], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    output, error = p.communicate()
 
    if p.returncode == 0:
