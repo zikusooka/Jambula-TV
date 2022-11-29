@@ -1,0 +1,36 @@
+#!/usr/local/bin/python3
+import subprocess
+import argparse
+
+default_music_directory = '/JambulaTV/Music'
+
+def usage ():
+    parser = argparse.ArgumentParser(description='JambulaTV: Search for a song in the Local music collection')
+    parser.add_argument('--directory', dest='directory', help='[Music Directory where songs are stored]', default=default_music_directory, type=str, required=False)
+    parser.add_argument('--song', dest='song', help='[Song to search for]', type=str, required=True)
+    return parser
+
+def extract_song_path():
+  song_requested = args.song
+  song_requested = song_requested.replace(' ', '*')
+  print (f'{song_requested=}')
+  search_string = '*' + song_requested + '*'
+  music_directory = args.directory
+  song_path = subprocess.check_output(['find', music_directory, '-iname', search_string], encoding='utf-8')
+  print (f'{song_path=}')
+  return song_path
+
+def play_requested_song():
+  if song_path != '':
+    # Add song to next in line 
+    subprocess.run(['/usr/bin/mpc', 'insert', f"{song_path}"])
+    # Play next song
+    subprocess.run(['/usr/bin/mpc', 'next'])
+
+
+if __name__ == "__main__":
+    parser = usage ()
+    args = parser.parse_args()
+    song_path = extract_song_path()
+    song_path = song_path.strip()
+    play_requested_song()
