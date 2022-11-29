@@ -28,8 +28,6 @@ from gtts import gTTS
 __author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2022-2023 All rights reserved'
 
 default_weather_source = 'https://weather.com/en-UG/weather'
-# Debugging
-#default_weather_source = 'http://192.168.0.101:8000' 
 weather_source_search_domain = urlparse(default_weather_source).netloc
 
 tmp_dir = '/tmp'
@@ -56,8 +54,11 @@ text_output_filename = 'weather_forecast_weather_com.txt'
 tts_output_file = tmp_dir + '/' + tts_output_filename
 text_output_file = tmp_dir + '/' + text_output_filename
 
+weather_update_tts_header_filename = 'weather_update_for_area.mp3'
+
 sounds_tool = '/usr/bin/jambulatv-sounds'
 sounds_gain = '160'
+sounds_alert_speaker_prompt = 'Airplane-ding-sound'
 
 DateDayofWeek = datetime.now().strftime('%a')
 DateToday = datetime.now().strftime('%d')
@@ -76,6 +77,7 @@ def usage ():
     parser = argparse.ArgumentParser(description='JambulaTV: Display, read, and save the weather forecast for a given location')
     parser.add_argument('--location', dest='location', help='[location]', type=str, required=True, default='Kampala, Uganda')
     parser.add_argument('--task', dest='task', choices=['fetch', 'display', 'read'], help='[task]', type=str, required=True)
+    parser.add_argument('--offline', dest='offline', choices=['yes', 'no'] ,help='[offline]', type=str, required=False)
     return parser
 
 def hide_python3_upgrade_warnings():
@@ -89,11 +91,12 @@ def hide_python3_upgrade_warnings():
                             category=ResourceWarning)
 
 def check_internet_connectivity():
+    if OFFLINE == 'yes':
+      print (f'Offline mode: Internet connectivity checks disabled')
+      return
     http = urllib3.PoolManager(timeout=3.0)
     try:
         r = http.request('GET', 'http://172.217.170.196', preload_content=False)
-        # Debugging
-        #r = http.request('GET', 'http://192.168.0.101:8000', preload_content=False)
         code = r.status
         r.release_conn()
         if code == 200:
@@ -142,13 +145,23 @@ def download_save_weather_page(FILE, URL):
     subprocess.check_call(['/usr/bin/sudo', '/usr/bin/cp', tmp_dir + '/' + FILE, weather_pages_dir])
 
 def search_and_fetch_weather_data():
+    # Skip if offline mode is specified 
+    if OFFLINE == 'yes':
+      for outputfile in [text_output_file, tts_output_file]:
+        if os.path.exists(outputfile):
+          subprocess.check_call(['sudo', '/usr/bin/rm', '-f', outputfile])
+      for outputfile in [weather_today_page_filepath, weather_ten_day_page_filepath]:
+        if not os.path.exists(outputfile):
+          print (f'Error: The weather source file {[outputfile]} does not exist!')
+          sys.exit(0)
+      return
+    # Search for weather
     WEATHER_SEARCH_STRING = f'"{LOCATION}" "en-TT" "Weather" "Today" "Weather Forecast and Conditions'
     FILE = weather_today_page_filepath
     FRESHNESS_THRESHOLD_SECS = weather_today_page_file_freshness_threshold
     file_is_fresh = check_file_freshness(FILE,FRESHNESS_THRESHOLD_SECS)
     # Remove weather forecast text and audio output files if not fresh
     if (file_is_fresh == False or file_is_fresh == None):
-        #for outputfile in [text_output_file, tts_output_file]:
         for outputfile in [weather_today_page_filepath, weather_ten_day_page_filepath, text_output_file, tts_output_file]:
             if os.path.exists(outputfile):
                 subprocess.check_call(['sudo', '/usr/bin/rm', '-f', outputfile])
@@ -157,24 +170,15 @@ def search_and_fetch_weather_data():
     if site_is_reachable == False:
         print (f'Error: There\'s no Internet connection, therefore I can not download weather data for {LOCATION} from {weather_source_search_domain}')
         sys.exit(0)
-
     elif (file_is_fresh == False or file_is_fresh == None):
         print (f'Info: Downloading fresh weather information for {LOCATION}, please wait')
         for SEARCH_URL in search(WEATHER_SEARCH_STRING, tbs='d', safe='off', num=5, stop=1, extra_params={'as_sitesearch': weather_source_search_domain}):
             search_url_parts = urlparse(SEARCH_URL)
             canonicalCityId = search_url_parts.path
             canonicalCityId = canonicalCityId.rsplit('/', 1)[1]
-            # Weather URL (Today)
             WEATHER_TODAY_URL = default_weather_source + '/today/l/' + canonicalCityId
-            # Weather URL (10-Day)
             WEATHER_TENDAY_URL = default_weather_source + '/tenday/l/' + canonicalCityId
             #
-            # Debugging
-            #print (f'Canonical City ID = {canonicalCityId}')
-            #WEATHER_TODAY_URL = default_weather_source + '/today.html' 
-            #WEATHER_TENDAY_URL = default_weather_source + '/tenday.html' #Debugging
-            #print (f'Today link: {WEATHER_TODAY_URL}')
-            #print (f'10-Day link: {WEATHER_TENDAY_URL}')
             # TODAY
             try:
                 download_save_weather_page(weather_today_page_filename, WEATHER_TODAY_URL)
@@ -191,10 +195,10 @@ def search_and_fetch_weather_data():
 
 def extract_timestamp_current():
     soup_today = make_soup(weather_today_local_url)
-    weather_timestamp = soup_today.select('.CurrentConditions--header--27uOE')
+    weather_timestamp = soup_today.select('.CurrentConditions--header--kbXKR')
     for current_timestamp in weather_timestamp:
-        weather_village = current_timestamp.select('.CurrentConditions--location--kyTeL')[0].get_text()
-        weather_timestamp = current_timestamp.select('.CurrentConditions--timestamp--23dfw')[0].get_text()
+        weather_village = current_timestamp.select('.CurrentConditions--location--1YWj_')[0].get_text()
+        weather_timestamp = current_timestamp.select('.CurrentConditions--timestamp--1ybTk')[0].get_text()
         return weather_village, weather_timestamp
 
 def extract_precipitation_data_current():
@@ -207,16 +211,16 @@ def extract_precipitation_data_current():
 
 def scrape_read_weather_today():
     soup_today = make_soup(weather_today_local_url)
-    weather_current_conditions = soup_today.select('.CurrentConditions--columns--3KgfN')
+    weather_current_conditions = soup_today.select('.CurrentConditions--columns--30npQ')
     for current_conditions in weather_current_conditions:
         weather_village, weather_time = extract_timestamp_current()
         weather_time = weather_time.split()[2]
         weather_time = datetime.strptime(weather_time, '%H:%M').strftime('%-I:%M %p')
-        summary_current = current_conditions.select('.CurrentConditions--phraseValue--2Z18W')[0].get_text()
-        temperature_current = current_conditions.select('.CurrentConditions--tempValue--3a50n')[0].get_text()
+        summary_current = current_conditions.select('.CurrentConditions--phraseValue--mZC_p')[0].get_text()
+        temperature_current = current_conditions.select('.CurrentConditions--tempValue--MHmYY')[0].get_text()
         temperature_current = unidecode.unidecode(temperature_current)
         temperature_current = temperature_current.replace('deg','')
-        temperature_forecast = current_conditions.select('.CurrentConditions--tempHiLoValue--3SUHy')[0].get_text()
+        temperature_forecast = current_conditions.select('.CurrentConditions--tempHiLoValue--3T1DG')[0].get_text()
         temperature_forecast = unidecode.unidecode(temperature_forecast)
         temp_high_low = temperature_forecast.replace('deg','')
         temp_high_low = temp_high_low.replace('*','').split()
@@ -247,17 +251,17 @@ def scrape_read_weather_today():
 
 def scrape_read_weather_ten_day():
     soup_ten_day = make_soup(weather_ten_day_local_url)
-    weather_ten_days = soup_ten_day.select('.DailyContent--DailyContent--KcPxD')
+    weather_ten_days = soup_ten_day.select('.DailyContent--DailyContent--1yRkH')
     tts_text_message = []
     count = 1
     for weather_forecast in weather_ten_days:
-        period = weather_forecast.select('.DailyContent--daypartName--1bzYn')[0].get_text(strip=True).split()
+        period = weather_forecast.select('.DailyContent--daypartName--3emSU')[0].get_text(strip=True).split()
         day_of_week = period[0]
         date = period[1].replace('|', '')
         time_of_day = period[2]
-        temperature_now = weather_forecast.select('.DailyContent--temp--3d4dn')[0].get_text()
+        temperature_now = weather_forecast.select('.DailyContent--temp--1s3a7')[0].get_text()
         temperature_now_celsius = celsius(temperature_now)
-        summary_ten_day = weather_forecast.select('.DailyContent--narrative--hplRl')[0].get_text()
+        summary_ten_day = weather_forecast.select('.DailyContent--narrative--3Ti6_')[0].get_text()
         if count <= 2:
 
             if day_of_week == DateDayofWeek:
@@ -342,16 +346,19 @@ def read_weather_forecast():
     FILE = tts_output_file
     FRESHNESS_THRESHOLD_SECS = tts_output_file_freshness_threshold
     file_is_fresh = check_file_freshness(FILE,FRESHNESS_THRESHOLD_SECS)
-    if not os.path.exists(tts_output_file) or os.stat(tts_output_file).st_size == 0 or file_is_fresh == False:
+    if not os.path.exists(FILE) or os.stat(FILE).st_size <= 0 or file_is_fresh == False:
         search_and_fetch_weather_data()
         save_weather_forecast_summary()
-    if os.path.exists(tts_output_file) and os.stat(tts_output_file).st_size != 0:
-        sounds_alert = os.path.splitext(tts_output_file)[0]
+    if os.path.exists(FILE) and os.stat(FILE).st_size >= 50:
+        sounds_alert = os.path.splitext(FILE)[0]
         sounds_alert = sounds_alert.rsplit('/', 1)[1]
+        weather_update_alert = weather_update_tts_header_filename.rsplit('.', 1)[0]
         print(f'Reading weather forecast for {LOCATION} ...')
+        subprocess.check_call([sounds_tool, 'alert', sounds_alert_speaker_prompt, 'gain=%s' %sounds_gain])
+        subprocess.check_call([sounds_tool, 'alert', weather_update_alert, 'gain=%s' %sounds_gain])
         subprocess.check_call([sounds_tool, 'alert', sounds_alert, 'gain=%s' %sounds_gain])
     else:
-        print(f'Error: The file {tts_output_file} is does not exist')
+        print(f'Error: The file {FILE} is does not exist')
 
 
 if __name__ == "__main__":
@@ -362,6 +369,7 @@ if __name__ == "__main__":
 
     LOCATION = args.location
     TASK = args.task
+    OFFLINE = args.offline
 
     if TASK == 'fetch':
         search_and_fetch_weather_data()
