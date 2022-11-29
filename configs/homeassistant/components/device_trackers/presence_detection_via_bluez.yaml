@@ -1,7 +1,12 @@
 platform: mqtt
-devices:
-  zik_bluez: !secret mqtt_presence_bluez_topic_itel_it2163
-  zik_watch: !secret mqtt_presence_bluez_topic_gd19s
-  zik_iphone_7: !secret mqtt_presence_bluez_topic_iphone_7
-qos: 1
-source_type: bluetooth
+devices: 
+  bluez_mobile_01_zik: !secret mqtt_presence_bluez_topic_mobile_01_zik
+  bluez_mobile_02_zik: !secret mqtt_presence_bluez_topic_mobile_02_zik
+  bluez_mobile_03_zik: !secret mqtt_presence_bluez_topic_mobile_03_zik
+  bluez_mobile_04_zik: !secret mqtt_presence_bluez_topic_mobile_04_zik
+  bluez_mobile_05_zik: !secret mqtt_presence_bluez_topic_mobile_05_zik
+  bluez_mobile_01_monica: !secret mqtt_presence_bluez_topic_mobile_01_monica
+payload_home: 'Home'
+payload_not_home: 'Away'
+consider_home: 180
+source_type: router

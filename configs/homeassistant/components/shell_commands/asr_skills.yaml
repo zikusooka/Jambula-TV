@@ -1,3 +1,7 @@
+# News Headlines
+fetch_news_headlines: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=no; skill_headlines_start > /dev/null 2>&1 &"
+play_news_headlines: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=yes; skill_headlines_start > /dev/null 2>&1 &"
+
 # Flash briefing - Weather via API
 flash_briefing_all_weather_via_api: /bin/bash -c ". /usr/bin/jambulatv-asr-skills play=no; skill_flash_briefing_all api {{latitude}} {{longitude}} {{tts_api}} {{debug}} > /dev/null 2>&1 &"
 

@@ -1,0 +1,18 @@
+type: conditional
+conditions:
+  - entity: media_player.jambulatv_radio
+    state: "playing"
+  - entity: binary_sensor.internet
+    state_not: 'on'
+
+card:
+  type: entities
+  title: Playing
+  entities:
+    - entity: sensor.playing_now
+      name: 'Now'
+      icon: 'mdi:playlist-music'
+
+    - entity: sensor.playing_next
+      name: 'Next'
+      icon: 'mdi:playlist-music'

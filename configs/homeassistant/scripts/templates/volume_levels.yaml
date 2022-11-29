@@ -35,11 +35,8 @@ startup_volume_levels_player:
     # Set volume to startup levels - mpd
     - service: media_player.volume_set
       data:
-        entity_id: media_player.now_playing
+        entity_id: media_player.jambulatv_radio
         volume_level: !secret mixer_mpd_playlist_volume_level
-
-    # Update current volume file immediately before sensor takes over - player
-    #- service: script.current_volume_levels_player
 
 
 
@@ -57,6 +54,29 @@ startup_volume_levels_system:
 
 
 
+boost_volume_levels_player:
+  sequence:
+
+    # Set volume to boost levels - mpd
+    - service: media_player.volume_set
+      data:
+        entity_id: media_player.jambulatv_radio
+        volume_level: !secret boost_volume_level_mpd
+    - delay: 5
+
+    # Set volume to boost levels - player
+    - service: shell_command.local_radio_control_speaker_volume
+      data_template:
+        volume_level: !secret boost_volume_level_player
+    - delay: 5
+
+    # Set volume to boost levels - system
+    - service: shell_command.local_radio_control_speaker_volume
+      data_template:
+        volume_level: !secret boost_volume_level_system
+
+
+
 volume_levels_reset_player:
   sequence:
 
@@ -71,7 +91,7 @@ volume_levels_reset_player:
     # Set volume to startup levels - mpd
     - service: media_player.volume_set
       data:
-        entity_id: media_player.now_playing
+        entity_id: media_player.jambulatv_radio
         volume_level: !secret mixer_mpd_playlist_volume_level
 
 

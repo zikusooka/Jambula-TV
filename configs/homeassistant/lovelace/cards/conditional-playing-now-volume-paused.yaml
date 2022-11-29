@@ -1,12 +1,12 @@
 type: conditional
 conditions:
-  - entity: media_player.now_playing
+  - entity: media_player.jambulatv_radio
     state: "paused"
 
 card:
   type: entities
   entities:
-    - entity: sensor.now_playing
+    - entity: sensor.playing_now
       name: Playing
       icon: 'mdi:playlist-music'
 

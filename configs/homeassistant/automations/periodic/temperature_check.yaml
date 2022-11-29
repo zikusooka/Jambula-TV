@@ -14,6 +14,16 @@ condition:
   condition: and
   conditions:
 
+    # Zero (0) temperature
+    - condition: state
+      entity_id: sensor.outside_temperature
+      state: '0.0'
+
+    # Unknown temperature
+    - condition: state
+      entity_id: sensor.outside_temperature
+      state: 'unknown'
+
     # 3 minute(s) or more after startup of HASS
     - condition: numeric_state
       entity_id: sensor.hass_uptime_minutes

@@ -12,7 +12,17 @@ internet_datasaver_enable_manual:
 
     # Voice Alert: Internet data saver mode enabled
     # ---------------------------------------------
-    - service: script.internet_data_saver_enabled
+    #- service: script.internet_data_saver_enabled
+    #
+    - service_template: >
+        {% if (states('sensor.hass_uptime_minutes') | int | round (0)) > 1 %}
+          script.internet_data_saver_enabled
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: sensor.hass_uptime_minutes
 
 
 

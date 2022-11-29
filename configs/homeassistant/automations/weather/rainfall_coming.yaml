@@ -4,9 +4,8 @@ initial_state: True
 
 trigger:
 
-  #- platform: state
-    #entity_id: weather.dark_sky
-    #to: 'rainy'
+  - platform: mqtt
+    topic: !secret mqtt_weather_alert_weather_dot_com
 
   #- platform: numeric_state
     #entity_id: sensor.jambulatv_precipitation
@@ -22,7 +21,7 @@ trigger:
 
   - platform: numeric_state
     entity_id: sensor.openweathermap_forecast_precipitation_probability
-    above: 90
+    above: 95
  
   - platform: state
     entity_id: weather.jambulatv
@@ -31,9 +30,6 @@ trigger:
   - platform: state
     entity_id: weather.jambulatv_hourly
     to: 'rainy'
-
-  #- platform: state
-    #entity_id: weather.dark_sky
 
   #- platform: numeric_state
     #entity_id: sensor.openweathermap_rain

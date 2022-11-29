@@ -7,11 +7,3 @@ fetch_save_forecast_using_api:
         latitude: !secret weather_latitude
         longitude: !secret weather_longitude
         weather_api: !secret weather_api_service
-
-
-    # Send XMPP Message
-    # -----------------
-    - service: notify.jambulatv
-      data_template:
-        title: '[JambulaTV]'
-        message: "Weather Update: {{ states('sensor.weather_forecast_today_kampala_accuweather') }} - Source: accuweather.com"

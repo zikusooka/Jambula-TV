@@ -1,17 +1,22 @@
-# Running low on disk space for /JambulaTV partition
-alias: "Running low on disk space (/JambulaTV)"
+# Running low on disk space for / and /JambulaTV partitions
+alias: "Running low on disk space (/ and /JambulaTV)"
 initial_state: True
 
 
 trigger:
 
   - platform: time_pattern
-    minutes: '/5'
+    minutes: '/40'
 
 
 condition:
-  condition: and
+  condition: or
   conditions:
+
+    # Disk space lower than threshold - /
+    - condition: numeric_state
+      entity_id: sensor.disk_free
+      below: !secret disk_space_root_threshold
 
     # Disk space lower than threshold - /JambulaTV
     - condition: numeric_state

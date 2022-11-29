@@ -2,20 +2,36 @@ title: Alarms
 icon: mdi:alarm-multiple
 cards:
 
-
+  # Column 1
+  # --------
+  
   # Welcome Message
-  - type: horizontal-stack
+  - type: vertical-stack
     cards:
       - !include ../cards/markup-alarms-message.yaml
 
+      - type: horizontal-stack
+        cards:
+          # Wakeup alarms
+          - !include ../cards/entities-wakeup-alarm-times.yaml
 
-  # Alarms
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/entities-wakeup-alarm-times.yaml
+      - type: horizontal-stack
+        cards:
+          # Bed/Wakeup routines
+          - !include ../cards/entity-button-time-bed-all.yaml
+          - !include ../cards/entity-button-time-wakeup-all.yaml 
 
-  # Bed/Wakeup times
-  - type: horizontal-stack
-    cards:
-      - !include ../cards/entity-button-time-bed-all.yaml
-      - !include ../cards/entity-button-time-wakeup-all.yaml 
+
+
+  # Column 2
+  # --------
+  
+  # Timers
+  - type: vertical-stack
+    cards:      
+      - !include ../cards/markup-timers-message.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Timer - 5 minutes
+          - !include ../cards/entity-button-timer-minutes-05.yaml

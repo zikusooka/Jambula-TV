@@ -1,7 +1,6 @@
 say_time_at_top_of_hour:
   sequence:
 
-
     # Generate voice files
     # --------------------
     # Remove previous sound effects file for hourly clock
@@ -14,7 +13,12 @@ say_time_at_top_of_hour:
     - service: shell_command.ffmpeg_concat_two_mp3
       data_template:
         input_directory: !secret jambulatv_sounds_dir
-        input_file1: 'chime_big_ben.mp3'
+        input_file1: >
+          {% if is_state('binary_sensor.workday', 'on') and now().strftime('%-H')|int > 8 and now().strftime('%-H')|int < 18 %}
+          'chime_big_ben.mp3'
+          {% else %}
+          'beep-03.mp3'
+          {% endif %}
         input_file2: >
           {% if now().strftime('%-H')|int == 0 %}
           'time_now_is_12_am.mp3'

@@ -1,0 +1,6 @@
+platform: template
+sensors:
+  umeme_yaka_next_top_up_date_days_remaining:
+    friendly_name: 'UMEME Yaka - Next top up days remaining'
+    value_template: >
+      {{ (states('input_number.umeme_yaka_token_units_value') | float) / (states('input_text.umeme_yaka_usage_estimate_daily') | float) }}

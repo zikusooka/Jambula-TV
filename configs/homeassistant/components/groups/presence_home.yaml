@@ -4,3 +4,9 @@ presence_home:
     - person.zik
     - person.lenovo_t61
   icon: mdi:home
+
+home_activity_all:
+  name: Home Activity - All
+  entities:
+    - sensor.activity_while_at_home_zik
+    #- sensor.activity_while_at_home_monica

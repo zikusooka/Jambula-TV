@@ -4,7 +4,7 @@ initial_state: True
 trigger:
 
   - platform: state
-    entity_id: device_tracker.zik_watch
+    entity_id: device_tracker.bluez_mobile_04_zik
     from: 'Away'
     to: 'Home'
     for:
@@ -27,7 +27,7 @@ condition:
 
     # Last triggered in the last 3 hours
     #- condition: template
-      #value_template: '{{ (as_timestamp(now()) - as_timestamp(states.device_tracker.zik_watch.attributes.last_changed | default(0)) | int < 10800)}}'
+      #value_template: '{{ (as_timestamp(now()) - as_timestamp(states.device_tracker.bluez_mobile_04_zik.attributes.last_changed | default(0)) | int < 10800)}}'
 
 
 action:

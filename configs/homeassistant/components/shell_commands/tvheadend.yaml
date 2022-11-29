@@ -1,1 +1,3 @@
 localhost_is_subscribed_to_tvheadend: /bin/bash -c "/usr/bin/curl -s http://127.0.0.1:9981/api/status/subscriptions | jq -r '.entries[] | select(.hostname == "127.0.0.1") | .state'"
+
+schedule_tv_recording: /bin/bash -c '/usr/bin/jambulatv-kodi-controller tv_record_schedule_create "{{tv_channel_name}}" {{day_of_recording}} {{hour_of_recording}} {{minute_of_recording}} {{meridiem_of_recording}} {{duration_of_recording}} {{unit_of_duration}} "{{title_of_recording}}" "{{subtitle_of_recording}}"'

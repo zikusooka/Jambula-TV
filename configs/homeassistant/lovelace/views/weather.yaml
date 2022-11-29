@@ -19,8 +19,8 @@ cards:
 
       - type: horizontal-stack
         cards:
-          - !include ../cards/entity-filter-temperature-outdoors.yaml
-          - !include ../cards/entity-filter-temperature-indoors.yaml
+          - !include ../cards/conditional-entity-filter-temperature-outdoors.yaml
+          - !include ../cards/conditional-entity-filter-temperature-indoors.yaml
 
 
   - type: horizontal-stack

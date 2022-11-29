@@ -6,11 +6,17 @@ trigger:
   - platform: state
     entity_id: input_boolean.bedtime_mode_all
     to: 'on'
+    id: bedtime_mode_4_all_activated
+
+  - platform: state
+    entity_id: binary_sensor.connected_2_asterisk_chan_mobile_zik
+    to: 'off'
+    id: phone_disconnected_4rm_asterisk_zik
 
 
-condition:
-  condition: and
-  conditions:
+#condition:
+  #condition: and
+  #conditions:
 
     # After sunset
     #- condition: sun
@@ -18,10 +24,21 @@ condition:
       
 
 action:
+  
+  - choose:
+    - conditions:    
+        - condition: trigger
+          id: phone_disconnected_4rm_asterisk_zik
+        - condition: state
+          entity_id: 'input_boolean.night_mode'
+          state: 'on'
+      sequence:
+        # Run script
+        - service: script.bedtime_all
 
-  #  SCRIPT
-  # -------
-  - service: script.turn_on
-    data:
-      entity_id:
-        - script.bedtime_all
+    - conditions:    
+        - condition: trigger
+          id: bedtime_mode_4_all_activated
+      sequence:
+        # Run script
+        - service: script.bedtime_all

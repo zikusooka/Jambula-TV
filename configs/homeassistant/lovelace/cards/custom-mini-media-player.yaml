@@ -1,16 +1,16 @@
 type: 'custom:mini-media-player'
-entity: media_player.now_playing
-icon: mdi:spotify
+entity: media_player.jambulatv_radio
+icon: mdi:radio-tower
 artwork: cover
-source: icon
-info: scroll
+#source: icon
+#info: scroll
 volume_stateless: false
 
 hide:
   info: true
   volume: false
   volume_level: false
-  play_stop: false
+  play_stop: true
   repeat: false
   source: true
   power: true
@@ -22,7 +22,7 @@ shortcuts:
 
     # African
     - icon: mdi:piano
-      name: 'African'
+      name: 'AfroBeat'
       type: script
       id: script.music_play_local
 
@@ -38,6 +38,12 @@ shortcuts:
       type: script
       id: script.music_play_christian
 
+    # Gospel
+    - icon: mdi:christianity
+      name: 'Gospel'
+      type: script
+      id: script.music_play_gospel
+
     # Congolese
     - icon: mdi:guitar-electric
       name: 'Congolese'
@@ -49,6 +55,12 @@ shortcuts:
       name: 'Country'
       type: script
       id: script.music_play_country
+
+    # Hip-Hop/Rap
+    - icon: mdi:microphone-variant
+      name: 'Hip-Hop | Rap'
+      type: script
+      id: script.music_play_hiphop_rap
 
     # Indie
     - icon: mdi:guitar-acoustic
@@ -68,10 +80,14 @@ shortcuts:
       type: script
       id: script.music_play_pop
 
+    # R&B/Soul
+    - icon: mdi:guitar-acoustic
+      name: 'R&B | Soul'
+      type: script
+      id: script.music_play_rb_soul
+
     # All
     - icon: mdi:playlist-music-outline
       name: 'All'
       type: script
       id: script.music_play_all
-
-

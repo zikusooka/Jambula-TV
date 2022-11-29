@@ -22,5 +22,5 @@ play_internet_radio:
     # ----------------
     - service: media_player.volume_set
       data:
-        entity_id: media_player.now_playing
+        entity_id: media_player.jambulatv_radio
         volume_level: !secret internet_radio_start_up_volume_level

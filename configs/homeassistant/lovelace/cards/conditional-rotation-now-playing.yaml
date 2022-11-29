@@ -1,6 +1,6 @@
 type: conditional
 conditions:
-  - entity: media_player.now_playing
+  - entity: media_player.jambulatv_radio
     state: "playing"
 
 card:
@@ -12,7 +12,7 @@ card:
     </p>
     <p>
     <b>
-    {{ states('sensor.now_playing_rotation') }}
+    {{ states('sensor.playing_rotation_now') }}
     </b>
     </center>
     </p>

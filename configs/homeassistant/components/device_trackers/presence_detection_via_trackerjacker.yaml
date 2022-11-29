@@ -1,5 +1,5 @@
 platform: mqtt
 devices:
-  zik_trackerjacker: !secret mqtt_presence_trackerjacker_topic_zik
-  lenovo_t61_trackerjacker: !secret mqtt_presence_trackerjacker_topic_lenovo_t61
+  trackerjacker_mobile_01_zik: !secret mqtt_presence_trackerjacker_topic_mobile_01_zik
+  trackerjacker_laptop_01_zik: !secret mqtt_presence_trackerjacker_topic_laptop_01_zik
 source_type: router

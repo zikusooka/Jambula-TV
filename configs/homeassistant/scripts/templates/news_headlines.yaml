@@ -1,0 +1,15 @@
+fetch_news_headlines:
+  sequence:
+
+    # Fetch news headlines
+    # --------------------
+    - service: shell_command.fetch_news_headlines
+
+
+
+play_news_headlines:
+  sequence:
+
+    # Play news headlines
+    # --------------------
+    - service: shell_command.play_news_headlines

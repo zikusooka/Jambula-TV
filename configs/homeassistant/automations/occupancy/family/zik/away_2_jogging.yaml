@@ -4,7 +4,7 @@ initial_state: True
 trigger:
 
   - platform: state
-    entity_id: device_tracker.zik_watch
+    entity_id: device_tracker.bluez_mobile_04_zik
     from: 'Home'
     to: 'Away'
     for:

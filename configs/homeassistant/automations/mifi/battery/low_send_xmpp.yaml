@@ -22,6 +22,9 @@ trigger:
 action:
 
   - service: notify.jambulatv
-    data_template:
+    data:
       title: '[JambulaTV]'
-      message: '{{"MiFi Battery Levels: Critical - Please Plug in Battery Charger"}}'
+      message: '{{ now() }}, MiFi Battery Levels: Critical - Please Plug in Battery Charger'
+      data:
+        path: "/tmp/zik.png"
+

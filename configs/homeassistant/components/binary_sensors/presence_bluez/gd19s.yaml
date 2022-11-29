@@ -1,0 +1,8 @@
+platform: mqtt
+name: 'Bluez GD19s'
+state_topic: !secret mqtt_presence_bluez_topic_mobile_05_zik
+scan_interval: 5
+expire_after: 300
+device_class: presence
+payload_on: "Home"
+payload_off: "Away"

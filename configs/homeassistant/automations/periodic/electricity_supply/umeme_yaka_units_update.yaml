@@ -1,0 +1,64 @@
+alias: Umeme Yaka units update - Daily, Hourly, Half-Hourly
+initial_state: True
+
+trigger:
+
+  #- platform: time
+    #at: !secret umeme_yaka_units_update_time
+    #id: yaka_update_fixed_time
+
+  #- platform: time_pattern
+    #hours: '/24' 
+    #id: yaka_update_daily
+
+  #- platform: time_pattern
+    #hours: '/1' 
+    #id: yaka_update_hourly
+
+  - platform: time_pattern
+    minutes: '/30' 
+    id: yaka_update_30_minutes
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+    - condition: template
+      value_template: "{{ not is_state('input_number.umeme_yaka_token_entry_units', '0.0') }}"
+
+
+action:
+  
+  - choose:
+    - conditions:    
+        - condition: trigger
+          id: yaka_update_fixed_time
+      sequence:
+        # Run script
+        - service: script.umeme_yaka_units_update_daily
+
+    - conditions:    
+        - condition: trigger
+          id: yaka_update_daily
+      sequence:
+        # Run script
+        - service: script.umeme_yaka_units_update_daily
+
+    - conditions:    
+        - condition: trigger
+          id: yaka_update_hourly
+      sequence:
+        # Run script
+        - service: script.umeme_yaka_units_update_hourly
+
+    - conditions:    
+        - condition: trigger
+          id: yaka_update_30_minutes
+      sequence:
+        # Run script
+        - service: script.umeme_yaka_units_update_every_30_minutes

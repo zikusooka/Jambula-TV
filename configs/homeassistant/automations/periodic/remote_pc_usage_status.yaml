@@ -15,7 +15,7 @@ condition:
 
 action:
 
-    # Report current status of water supply 
+    # Report current status of remote PC usage
   - service: shell_command.remote_pc_usage_status
     data_template:
       ssh_host: !secret operator_001_ssh_host

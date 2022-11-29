@@ -1,9 +1,10 @@
 platform: mqtt
 devices:
-  zik_iphone_7: !secret mqtt_presence_tshark_topic_iphone_7
-  zik_tshark: !secret mqtt_presence_tshark_topic_zik
-  lenovo_t61_tshark: !secret mqtt_presence_tshark_topic_lenovo_t61
-  cidea_tshark: !secret mqtt_presence_tshark_topic_cidea
-  mifi_tshark: !secret mqtt_presence_tshark_topic_mifi
+  tshark_mobile_01_zik: !secret mqtt_presence_tshark_topic_mobile_01_zik
+  tshark_mobile_02_zik: !secret mqtt_presence_tshark_topic_mobile_02_zik
+  tshark_laptop_01_zik: !secret mqtt_presence_tshark_topic_laptop_01_zik
+  tshark_tablet_01: !secret mqtt_presence_tshark_topic_tablet_01
+  tshark_mifi_router_01: !secret mqtt_presence_tshark_topic_mifi_router_01
+  tshark_mobile_01_monica: !secret mqtt_presence_tshark_topic_mobile_01_monica
 consider_home: 180
 source_type: router

@@ -4,7 +4,8 @@ initial_state: True
 trigger:
 
   - platform: time_pattern
-    hours: '/3'
+    #hours: '/3'
+    hours: '/1'
 
   - platform: mqtt
     topic: !secret mqtt_weather_alert_weather_dot_com
@@ -20,8 +21,8 @@ condition:
   conditions:
 
     # Internet state
-    - condition: template
-      value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+    #- condition: template
+      #value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
 
     # Weather forecast audio file exists
     - condition: template
@@ -60,15 +61,13 @@ condition:
       entity_id: 'input_boolean.quiet_mode'
       state: 'off'
 
-    # Between 6am and midnight 
-    #- condition: time
-      #after: '06:00:00'
-      #before: '23:59:00'
-
 
 action:
 
-  # Run script
-  # ----------
+  # Run scripts
+  # -----------
   - service: script.turn_on
     entity_id: script.read_forecast_by_weather_com
+
+  - service: script.turn_on
+    entity_id: script.send_forecast_by_weather_com_via_xmpp

@@ -55,14 +55,20 @@ bedtime_all:
 
     # Connect to the Internet and fetch fresh stuff
     # ---------------------------------------------
-    - service: script.internet_connect_wifi_ap
-
+    - service_template: >
+        {% if is_state('binary_sensor.wifi_ap_status', 'on') %}
+          script.internet_connect_wifi_ap
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: script.internet_connect_wifi_ap
+ 
 
     # Wait for MiFi router to be reachable i.e. status is 'on'
     # -------------------------------------------------------
-    - wait_template: "{{ is_state('binary_sensor.mifi_status', 'on') }}"
-      timeout: 60
-      continue_on_timeout: true
+    #- wait_template: "{{ is_state('binary_sensor.mifi_status', 'on') }}"
+      #timeout: 60
+      #continue_on_timeout: true
 
 
     # Notify of any power outages tomorrow or today depending on current time

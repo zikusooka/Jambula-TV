@@ -20,6 +20,11 @@ cards:
           - !include ../cards/conditional-mifi-network-provider.yaml
           - !include ../cards/conditional-mifi-network-type.yaml
 
+      # Internet - Connect/Disconnect
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-entity-button-internet-connect.yaml
+          - !include ../cards/conditional-entity-button-internet-disconnect.yaml
 
   # MiFi router status
   - type: vertical-stack

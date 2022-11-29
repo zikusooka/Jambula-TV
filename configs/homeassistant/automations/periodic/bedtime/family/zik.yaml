@@ -16,14 +16,14 @@ trigger:
     to: 'on'
 
   #- platform: state
-    #entity_id: binary_sensor.bluez_zik_01
-    #from: 'off'
-    #to: 'on'
+    #entity_id: binary_sensor.bluez_tecno_pop_2f
+    #from: 'on'
+    #to: 'off'
 
   #- platform: state
-    #entity_id: binary_sensor.bluez_zik_01
+    #entity_id: binary_sensor.bluez_tecno_pop_2f
     #from: 'unavailable'
-    #to: 'on'
+    #to: 'off'
 
 
 condition:

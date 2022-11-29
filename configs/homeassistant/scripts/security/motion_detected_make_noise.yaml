@@ -34,6 +34,18 @@ motion_detected_outside_make_noise:
     - service: script.security_camera_001_arm
 
 
+    # Turn on living room light if no one is in living room
+    # -----------------------------------------------------
+    - service_template: >
+        {% if is_state('sun.sun', 'below_horizon') %}
+          scene.LivingRoom_Normal
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: sensor.pc_usage_status_for_kampala
+        #{% if not is_state('sensor.pc_usage_status_for_kampala', 'idle') and is_state('sun.sun', 'below_horizon') %}
+
+
     # Start display of camera event at tablet
     # ---------------------------------------
     # Show camera event at tablet - Tecno F1

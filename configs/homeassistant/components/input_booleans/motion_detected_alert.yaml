@@ -1,0 +1,9 @@
+# This is an input boolean to use in scenarios when you want to 
+# disable voice alerts due to motion detection
+#
+# https://www.home-assistant.io/components/input_boolean/
+#
+motion_detection_alert:
+  name: Motion Detection
+  initial: true
+  icon: mdi:motion-sensor

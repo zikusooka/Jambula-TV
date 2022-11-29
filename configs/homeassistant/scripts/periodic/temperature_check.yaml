@@ -5,7 +5,7 @@ say_current_temperature_outside:
     # -----------------------------------------
     # Announce current temperature outside if known
     - service_template: >
-        {% if not is_state('sensor.outside_temperature', 'unknown') %}
+        {% if not is_state('sensor.outside_temperature', 'unknown') and not is_state('sensor.outside_temperature', '0.0') %}
           script.temperature_current_outside
 
         {% else %}

@@ -1,6 +1,6 @@
 type: conditional
 conditions:
-  - entity: media_player.now_playing
+  - entity: media_player.jambulatv_radio
     state: "playing"
   - entity: binary_sensor.internet
     state: "on"

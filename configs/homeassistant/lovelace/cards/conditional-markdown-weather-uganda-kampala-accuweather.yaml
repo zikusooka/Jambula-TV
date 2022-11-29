@@ -18,9 +18,9 @@ card:
     {{ states('sensor.weather_forecast_today_kampala_accuweather') }}
   
     Source: Accuweather.com
-#    </center>
-
 #    <center>
+
+#    </center>
 #    <ha-icon icon="mdi:weather-cloudy-clock"></ha-icon>
 #    <br>
 

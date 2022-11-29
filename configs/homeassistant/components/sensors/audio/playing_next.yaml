@@ -1,0 +1,6 @@
+# IMPORTANT: For this sensor to work, make sure MPD random mode is OFF i.e. Set media player
+# shuffle feature to 'off' in MPD music playlist scripts
+platform: command_line
+name: "Playing next"
+command: /bin/bash -c 'SONG_CURRENT=$(/usr/bin/mpc -h $(/usr/bin/jambulatv-homeassistant-secrets mpd_server_host) -p $(/usr/bin/jambulatv-homeassistant-secrets mpd_server_port) -f "%file%" current | cut -d / -f2 | sed "s/.mp3//"); ROTATION=$(/usr/bin/cat $(/usr/bin/jambulatv-homeassistant-secrets radio_rotation_playing_file) | sed "s:_:/:" | sed "s:\\\::"); ROTATION=${ROTATION,,}; ROTATION=${ROTATION^}; grep -i -a1 "$SONG_CURRENT" $(/usr/bin/jambulatv-homeassistant-secrets jambulatv_playlists_mpd_dir)/Local-Music-$ROTATION.m3u | tail -1 | sed "s/.mp3//" | rev | cut -d / -f1 | rev | sed "s/\./ - /" | sed "s/_/ /g"'
+scan_interval: 5

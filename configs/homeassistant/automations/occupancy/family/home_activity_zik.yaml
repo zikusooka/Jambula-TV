@@ -1,0 +1,179 @@
+# Presence detection and activity while at home - Zik
+alias: "Presence Home activity - Zik"
+description: "Presence detection and activity while at home - Zik"
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: person.zik
+    from: 'not_home'
+    to: 'home'
+    id: presence_away_2_home_zik
+
+  - platform: state
+    entity_id: person.zik
+    from: 'home'
+    to: 'not_home'
+    id: presence_home_2_away_zik
+
+  - platform: state
+    entity_id: sensor.pc_usage_status_for_kampala
+    to: 'active'
+    for:
+      minutes: 3
+    id: presence_pc_usage_status_active_zik
+
+  - platform: state
+    entity_id: sensor.pc_usage_status_for_kampala
+    to: 'idle'
+    for:
+      minutes: 5
+    id: presence_pc_usage_status_idle_zik
+
+  - platform: state
+    entity_id: media_player.jambulatv_pi_living_room
+    to: 'playing'
+    for:
+      minutes: 3
+    id: presence_tv_living_room_playing_zik
+
+  - platform: state
+    entity_id: media_player.jambulatv_pi_living_room
+    to: 'idle'
+    for:
+      minutes: 3
+    id: presence_tv_living_room_idle_zik
+
+  - platform: state
+    entity_id: device_tracker.bluez_mobile_04_zik
+    from: 'Home'
+    to: 'Away'
+    for:
+      minutes: 3
+    id: presence_away_to_jogging_zik
+
+  - platform: state
+    entity_id: device_tracker.bluez_mobile_04_zik
+    from: 'Away'
+    to: 'Home'
+    for:
+      minutes: 3
+    id: presence_home_from_jogging_zik
+
+  - platform: state
+    entity_id: input_boolean.bedtime_mode_zik
+    to: 'on'
+    for:
+      minutes: 3
+    id: presence_home_sleeping_zik
+
+  - platform: state
+    entity_id: input_boolean.bedtime_mode_zik
+    to: 'off'
+    for:
+      minutes: 3
+    id: presence_home_woke_up_zik
+
+
+action:
+  
+  - choose:
+
+    - conditions:    
+        - condition: trigger
+          id: presence_away_2_home_zik
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_zik
+            option: 'Just Arrived'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_home_2_away_zik
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_zik
+            option: 'Just Left'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_pc_usage_status_active_zik
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_zik
+            option: 'Working'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_pc_usage_status_idle_zik
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_zik
+            option: 'Choring'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_tv_living_room_playing_zik
+        - condition: trigger
+          id: presence_pc_usage_status_idle_zik
+
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_zik
+            option: 'Watching TV'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_tv_living_room_idle_zik
+        - condition: trigger
+          id: presence_pc_usage_status_idle_zik
+
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_zik
+            option: 'Choring'
+
+
+
+    - conditions:    
+        - condition: trigger
+          id: presence_away_to_jogging_zik
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_zik
+            option: 'Jogging'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_home_from_jogging_zik
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_zik
+            option: 'Choring'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_home_sleeping_zik
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_zik
+            option: 'Sleeping'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_home_woke_up_zik
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_zik
+            option: 'Choring'

@@ -574,3 +574,333 @@ say_weather_update_coming_up:
       data_template:
         sound_alert: 'sound_effect_weather_update_for_area_coming_up'
         audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+timer_05_minutes_started:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'timer_05_mins_started.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_timer_05_mins_started.mp3'
+
+
+    # Voice Alert: 5 minutes timer started
+    # ------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_timer_05_mins_started'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+timer_05_minutes_finished:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'timer_05_mins_finished.mp3'
+        input_file3: 'kitchen-timer.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_timer_05_mins_finished.mp3'
+
+
+    # Voice Alert: 5 minutes timer finished
+    # -------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_timer_05_mins_finished'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+timer_05_minutes_paused:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'timer_05_mins_paused.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_timer_05_mins_paused.mp3'
+
+
+    # Voice Alert: 5 minutes timer paused
+    # ------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_timer_05_mins_paused'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+timer_05_minutes_restarted:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'timer_05_mins_restarted.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_timer_05_mins_restarted.mp3'
+
+
+    # Voice Alert: 5 minutes timer restarted
+    # --------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_timer_05_mins_restarted'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+timer_05_minutes_cancelled:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'timer_05_mins_cancelled.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_timer_05_mins_cancelled.mp3'
+
+
+    # Voice Alert: 5 minutes timer cancelled
+    # --------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_timer_05_mins_cancelled'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+phone_connected_to_pbx_zik:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_four_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'mobile_phone_for.mp3'
+        input_file3: 'zik.mp3'
+        input_file4: 'has_connected_to_pbx.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_mobile_phone_for_zik_connected_to_pbx.mp3'
+
+
+    # Voice Alert: Phone connected to Asterisk
+    # ----------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_mobile_phone_for_zik_connected_to_pbx'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+phone_disconnected_from_pbx_zik:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_four_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'mobile_phone_for.mp3'
+        input_file3: 'zik.mp3'
+        input_file4: 'has_disconnected_from_pbx.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_mobile_phone_for_zik_disconnected_from_pbx.mp3'
+
+
+    # Voice Alert: Phone disconnected from Asterisk
+    # ---------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_mobile_phone_for_zik_disconnected_from_pbx'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+laptop_battery_charging_system:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_charging_system.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_charging_system.mp3'
+
+
+    # Voice Alert: Announce that laptop battery is charging
+    # ------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_charging_system'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+laptop_battery_discharging_system:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_discharging_system.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_discharging_system.mp3'
+
+
+    # Voice Alert: Announce that Laptop battery is discharging
+    # --------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_discharging_system'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+laptop_battery_is_full_system:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_full_system.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_full_system.mp3'
+
+
+    # Voice Alert: Announce that Laptop battery is full
+    # -------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_full_system'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+laptop_battery_charging_dell_inspiron_7353:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_charging_dell_inspiron_7353.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_charging_dell_inspiron_7353.mp3'
+
+
+    # Voice Alert: Announce that laptop battery is charging
+    # ------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_charging_dell_inspiron_7353'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+laptop_battery_discharging_dell_inspiron_7353:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_discharging_dell_inspiron_7353.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_discharging_dell_inspiron_7353.mp3'
+
+
+    # Voice Alert: Announce that Laptop battery is discharging
+    # --------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_discharging_dell_inspiron_7353'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+laptop_battery_is_full_dell_inspiron_7353:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_full_dell_inspiron_7353.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_full_dell_inspiron_7353.mp3'
+
+
+    # Voice Alert: Announce that Laptop battery is full
+    # -------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_full_dell_inspiron_7353'
+        audio_gain: !secret voice_alert_audio_gain_medium

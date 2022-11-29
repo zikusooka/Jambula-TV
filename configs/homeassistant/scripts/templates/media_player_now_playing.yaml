@@ -3,7 +3,7 @@ music_unpause_if_paused_else_play_internet_or_local_jazz:
 
     # If music is paused, unpause else play Internet or local - jazz 
     - service_template: >
-        {% if is_state('media_player.now_playing', 'paused') %}
+        {% if is_state('media_player.jambulatv_radio', 'paused') %}
           media_player.play_media
 
         {% elif is_state('binary_sensor.internet', 'on') %}
@@ -13,7 +13,7 @@ music_unpause_if_paused_else_play_internet_or_local_jazz:
           script.music_play_jazz
 
         {% endif %}
-      entity_id: media_player.now_playing
+      entity_id: media_player.jambulatv_radio
 
     # Unpause == Unmute audio input from external player
     - service: shell_command.speaker_volume_unmute_player
@@ -26,17 +26,17 @@ music_unpause_if_paused_else_play_local_jazz:
 
     # If music is paused, unpause else play local playlist - jazz 
     - service_template: >
-        {% if is_state('media_player.now_playing', 'paused') %}
+        {% if is_state('media_player.jambulatv_radio', 'paused') %}
           media_player.media_play_pause
 
-        {% elif not is_state('media_player.now_playing', 'playing') %}
+        {% elif not is_state('media_player.jambulatv_radio', 'playing') %}
           script.music_play_jazz
 
         {% else %}
           script.dummy
 
         {% endif %}
-      entity_id: media_player.now_playing
+      entity_id: media_player.jambulatv_radio
 
     # Unpause == Unmute audio input from external player
     - service: shell_command.speaker_volume_unmute_player
@@ -49,21 +49,21 @@ music_unpause_if_paused:
 
     # If music is paused, unpause
     - service_template: >
-        {% if is_state('media_player.now_playing', 'paused') %}
+        {% if is_state('media_player.jambulatv_radio', 'paused') %}
           media_player.media_play_pause
 
         {% else %}
           script.dummy
 
         {% endif %}
-      entity_id: media_player.now_playing
+      entity_id: media_player.jambulatv_radio
     #- service_template: >
-        #{% set player_status = states('media_player.now_playing') %}
+        #{% set player_status = states('media_player.jambulatv_radio') %}
         #{% set mixer_status = states('binary_sensor.mixer_voice_alerts_status') %}
         #{% if player_status == 'paused' and mixer_status == 'off' %}
           #script.dummy
     #- service_template: >
-        #{% if is_state('media_player.now_playing', 'paused') and is_state('binary_sensor.mixer_voice_alerts_status', 'off') %}
+        #{% if is_state('media_player.jambulatv_radio', 'paused') and is_state('binary_sensor.mixer_voice_alerts_status', 'off') %}
           #media_player.play_media
 
     # Unpause == Unmute audio input from external player
@@ -77,14 +77,14 @@ music_pause_if_playing:
 
     # If music is playing, pause
     - service_template: >
-        {% if is_state('media_player.now_playing', 'playing') %}
+        {% if is_state('media_player.jambulatv_radio', 'playing') %}
           media_player.media_play_pause
 
         {% else %}
           script.dummy
 
         {% endif %}
-      entity_id: media_player.now_playing
+      entity_id: media_player.jambulatv_radio
 
     # Pause == Mute audio input from external player
     - service: shell_command.speaker_volume_mute_player

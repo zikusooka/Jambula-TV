@@ -5,13 +5,21 @@ trigger:
 
   - platform: state
     entity_id: input_boolean.bedtime_mode_all
-    from: 'on'
     to: 'off'
+
+  - platform: state
+    entity_id: binary_sensor.connected_2_asterisk_chan_mobile_zik
+    to: 'on'
 
 
 condition:
   condition: and
   conditions:
+
+    # Bedtime for all is on
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'on'
 
     # After sunset
     #- condition: sun

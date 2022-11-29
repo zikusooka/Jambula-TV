@@ -8,16 +8,6 @@ Please remember to carry an umbrella today!
 \r
 \r
 \r
-
-
-\r
-* Dark Sky (weather, prob)*
-\r
-{{states('weather.dark_sky')}}
-\r
-{{states('sensor.darksky_precip_probability_0d')}}
-\r
-\r
 * AccuWeather (jambulatv precipitation,weather,hourly) *
 \r
 {{states('sensor.jambulatv_precipitation')}}

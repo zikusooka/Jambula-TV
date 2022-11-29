@@ -17,6 +17,11 @@ condition:
   condition: and
   conditions:
 
+    # Motion detection alert is - on
+    - condition: state
+      entity_id: 'input_boolean.motion_detection_alert'
+      state: 'on'
+
     # After sunrise
     #- condition: sun
       #after: sunset

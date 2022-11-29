@@ -1,0 +1,9 @@
+send_forecast_by_weather_com_via_xmpp:
+  sequence:
+
+    # Send the current weather forecast using XMPP
+    # --------------------------------------------- 
+    - service: notify.jambulatv
+      data_template:
+        title: '[JambulaTV]'
+        message: "Weather Update: {{ states('sensor.weather_forecast_today_kampala_weather_com') }} - Source: weather.com"

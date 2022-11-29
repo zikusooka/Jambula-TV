@@ -1,0 +1,16 @@
+# Search for song stored locally
+alias: "Search for song stored locally"
+initial_state: True
+
+trigger:
+  - platform: state
+    entity_id: input_text.search_local_music
+
+
+action:
+
+  # Search for song stored locally
+  - service: shell_command.search_play_local_music
+    data_template:
+      music_song: "{{ states('input_text.search_local_music') }}"
+      music_directory: !secret jambulatv_music_dir

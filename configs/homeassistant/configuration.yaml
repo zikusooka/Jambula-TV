@@ -34,10 +34,16 @@ mobile_app:
 mqtt:
   broker: !secret mqtt_server
   port: !secret mqtt_port
-  #username: !secret mqtt_username
-  #password: !secret mqtt_password
   keepalive: !secret mqtt_keepalive
-  #client_id: !secret mqtt_client_id
+  #device_tracker:
+    #- name: 'Bluez Mobile 01 Zik'
+      #state_topic: !secret mqtt_presence_bluez_topic_mobile_01_zik
+      #payload_home: "home"
+      #payload_not_home: "not_home"
+    #- name: 'Bluez Mobile 02 Zik'
+      #state_topic: !secret mqtt_presence_bluez_topic_mobile_02_zik
+      #payload_home: "home"
+      #payload_not_home: "not_home"
 
 
 notify: !include_dir_list components/notifiers

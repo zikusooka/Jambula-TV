@@ -1,0 +1,95 @@
+# Battery status of laptops i.e. Charging or Discharging
+alias: "Laptops battery status i.e. Charging or Discharging"
+initial_state: True
+
+
+trigger:
+
+  # System
+  - platform: state
+    entity_id: sensor.battery_laptop_system
+    from: 'Discharging'
+    to: 'Charging'
+    id: battery_4rm_discharging_2_charging_system
+
+  - platform: state
+    entity_id: sensor.battery_laptop_system
+    from: 'Discharging'
+    to: 'Full'
+    id: battery_4rm_discharging_2_full_system
+
+  - platform: state
+    entity_id: sensor.battery_laptop_system
+    to: 'Discharging'
+    id: battery_2_discharging_system
+
+
+  # Dell Inspiron 7353
+  - platform: state
+    entity_id: sensor.battery_laptop_dell_inspiron_7353
+    from: 'Discharging'
+    to: 'Charging'
+    id: battery_4rm_discharging_2_charging_dell_inspiron_7353
+
+  - platform: state
+    entity_id: sensor.battery_laptop_dell_inspiron_7353
+    from: 'Discharging'
+    to: 'Full'
+    id: battery_4rm_discharging_2_full_dell_inspiron_7353
+
+  - platform: state
+    entity_id: sensor.battery_laptop_dell_inspiron_7353
+    to: 'Discharging'
+    id: battery_2_discharging_dell_inspiron_7353
+
+
+#condition:
+  #condition: and
+  #conditions:
+
+    # Internet state
+    #- condition: template
+    #  value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+
+action:
+  
+  - choose:
+
+    # System
+    - conditions:    
+        - condition: trigger
+          id: battery_4rm_discharging_2_charging_system
+      sequence:
+        - service: script.laptop_battery_is_charging_system
+    
+    - conditions:    
+        - condition: trigger
+          id: battery_2_discharging_system
+      sequence:
+        - service: script.laptop_battery_is_discharging_system
+
+    - conditions:    
+        - condition: trigger
+          id: battery_4rm_discharging_2_full_system
+      sequence:
+        - service: script.laptop_battery_is_full_system
+
+    # Dell Inspiron 7353
+    - conditions:    
+        - condition: trigger
+          id: battery_4rm_discharging_2_charging_dell_inspiron_7353
+      sequence:
+        - service: script.laptop_battery_is_charging_dell_inspiron_7353
+    
+    - conditions:    
+        - condition: trigger
+          id: battery_2_discharging_dell_inspiron_7353
+      sequence:
+        - service: script.laptop_battery_is_discharging_dell_inspiron_7353
+
+    - conditions:    
+        - condition: trigger
+          id: battery_4rm_discharging_2_full_dell_inspiron_7353
+      sequence:
+        - service: script.laptop_battery_is_full_dell_inspiron_7353

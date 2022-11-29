@@ -1,0 +1,25 @@
+type: conditional
+conditions:
+  - entity: sensor.activity_while_at_home_monica
+    state_not: 'unknown'
+  - entity: sensor.activity_while_at_home_monica
+    state_not: 'unknown'
+
+card:
+  type: entity-filter
+  entities:
+    - person.monica
+    - sensor.activity_while_at_home_monica
+  state_filter:
+    - 'Home'
+    - 'home'
+    - 'not_home'
+    - 'unknown'
+    - 'Working'
+    - 'working'
+    - 'jogging'
+    - 'Jogging'
+    - 'Sleeping'
+    - 'sleeping'
+    - 'Away'
+    - 'away'

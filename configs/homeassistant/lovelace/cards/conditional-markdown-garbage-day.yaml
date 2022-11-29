@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: sensor.garbage_collection_day
+    state_not: 'false'
+  - entity: input_boolean.garbage_collected
+    state_not: 'on'
+
+card:
+  type: markdown
+  content: |
+    <center>
+    <b>
+    <ha-icon icon="mdi:delete-empty"> </ha-icon> Today is garbage collection day! 
+    </b>
+    </center>

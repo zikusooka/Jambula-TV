@@ -29,10 +29,12 @@ cards:
           - !include ../cards/conditional-umeme-yaka-units-today.yaml
 
       - type: horizontal-stack
+        cards: 
+          - !include ../cards/entities-umeme-yaka-balance-adjust.yaml
+
+      - type: horizontal-stack
         cards:
-          #- !include ../cards/conditional-electricity-usage-daily.yaml
-          #- !include ../cards/conditional-electricity-usage-monthly.yaml
-          - !include ../cards/conditional-umeme-yaka-token-date.yaml
+          - !include ../cards/conditional-umeme-yaka-next-top-up-date.yaml
 
       - type: horizontal-stack
         cards: 

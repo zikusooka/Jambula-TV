@@ -1,0 +1,7 @@
+platform: template
+sensors:
+  umeme_yaka_next_top_up_date:
+    friendly_name: 'UMEME Yaka - Next top up date'
+    value_template: >
+      {% set yaka_days_remaining = (states('sensor.umeme_yaka_next_top_up_date_days_remaining') | int) %}
+      {{ (as_timestamp(now()) + (yaka_days_remaining * 60 * 60 * 24)) | timestamp_custom('%A, %-d %B %Y', true) }}

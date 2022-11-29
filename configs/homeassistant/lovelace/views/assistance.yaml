@@ -21,9 +21,8 @@ cards:
 
       - type: vertical-stack
         cards:
-          - !include ../cards/conditional-markdown-qrcode-hotspot-credentials-title-all.yaml
+          - !include ../cards/conditional-markdown-qrcode-hotspot-credentials-title.yaml
 
       - type: horizontal-stack
         cards:
-          - !include ../cards/conditional-picture-glance-qrcode-hotspot-credentials-android.yaml
-          - !include ../cards/conditional-picture-glance-qrcode-hotspot-credentials-ios.yaml
+          - !include ../cards/conditional-picture-glance-qrcode-wifi-hotspot-credentials.yaml

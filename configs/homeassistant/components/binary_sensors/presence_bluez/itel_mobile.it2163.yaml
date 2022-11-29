@@ -1,6 +1,6 @@
 platform: mqtt
-name: 'Bluez Zik 02'
-state_topic: !secret mqtt_presence_bluez_topic_itel_it2163
+name: 'Bluez iTel it2163'
+state_topic: !secret mqtt_presence_bluez_topic_mobile_04_zik
 scan_interval: 60
 expire_after: 3600
 device_class: presence

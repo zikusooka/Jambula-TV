@@ -1,16 +1,16 @@
 type: conditional
 conditions:
   - entity: person.zik
-    state_not: 'not_2home'
+    state_not: 'not_home'
 
   - entity: person.zik
-    state_not: '2unknown'
+    state_not: 'unknown'
 
 card:
   type: entity-filter
   entities:
     - person.zik
-    - person.arlette
+    - person.monica
   state_filter:
     - 'home'
     - 'Home'

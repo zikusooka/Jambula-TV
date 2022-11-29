@@ -1,7 +1,6 @@
 alias: Say time at the top of the hour
 initial_state: True
 
-
 trigger:
 
   - platform: time_pattern
@@ -18,6 +17,11 @@ condition:
       entity_id: 'input_boolean.bedtime_mode_all'
       state: 'off'
 
+    # Bedtime for Zik is off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_zik'
+      state: 'off'
+
     # Holiday mode is off
     - condition: state
       entity_id: 'input_boolean.holiday_mode'
@@ -28,16 +32,16 @@ condition:
       entity_id: 'input_boolean.vacation_mode'
       state: 'off'
 
-    # Day of week
-    - condition: time
-      after: '08:00:00'
-      before: '18:00:00'
-      weekday:
-        - mon
-        - tue
-        - wed
-        - thu
-        - fri
+    # Day of week - Remove replaced by 'binary_sensor.workday' state in script
+    #- condition: time
+      #after: '08:00:00'
+      #before: '18:00:00'
+      #weekday:
+        #- mon
+        #- tue
+        #- wed
+        #- thu
+        #- fri
 
     # Night mode - off
     - condition: state

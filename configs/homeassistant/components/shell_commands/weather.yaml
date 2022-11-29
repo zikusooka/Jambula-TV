@@ -9,4 +9,5 @@ say_weather_reports_using_api: /bin/bash -c '/usr/bin/jambulatv-text2speech "{{t
 
 
 # Weather reports using Scraper tool
-weather_reports_using_scraper: /bin/bash -c '/usr/bin/jambulatv-weather-via-scraper --task {{task}} --location "{{weather_location}}" > /dev/null 2>&1 &'
+#weather_reports_using_scraper: /bin/bash -c '/usr/bin/jambulatv-weather-via-scraper --task {{task}} --location "{{weather_location}}" > /dev/null 2>&1 &'
+weather_reports_using_scraper: /bin/bash -c '/usr/bin/jambulatv-weather-via-scraper --task {{task}} --location "{{weather_location}}" > /dev/null 2>&1'
