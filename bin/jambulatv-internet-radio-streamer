@@ -48,50 +48,51 @@ Usage: ./$(basename $0) $WEBRADIO_STREAMER_TASK [WEB_RADIO_STATION_ID e.g. 1] [l
 Online Radio Station IDs
 ***************************************
   1  SmoothJazz.com (Jazz)
-  2  Jazz 24 (Jazz)
-  3  Radio Swiss Jazz
-  4  K-Love (Christian)
-  5  Family Life (Christian)
-  6  23 Indie Street (Indie)
-  7  Indie 88 - Toronto, Canada (Indie)
-  8  Indie 102.3 - Denver, CO (Indie)
-  9  SomaFM (Indie)
- 10  KEXP (Alternative)
- 11  ALT 98.7 -LA (Alternative)
- 12  WDAV - Davidson College, NC (Classical)
- 13  KEAN 105 (Country)
- 14  Hot 108 (Hip Hop)
- 15  NBSRadio (Party)
- 16  Radio Santa Claus (Christmas)
- 17  Relax (Jazz)
- 18  Relax (Latino)
- 19  Relax (Life)
- 20  Relax (Gold)
- 21  Relax (Nature)
- 22  Radio Swiss Classic
- 23  Radio Swiss Classique
- 24  The Loop (Classic Rock)
- 25  Black Gospel Radio (Gospel)
- 26  WFMV - 95.3 FM (Gospel)
- 27  Gospel Highway 11 (Gospel)
- 28  WGOK Gospel 900 (Gospel)
- 29  1.FM ReggaeTrade (Reggae)
- 30  Reggae 141 (Reggae)
- 31  Sun City 104.9 FM (Reggae)
- 32  UFDV Radio (Reggae)
- 33  FM Jamaica Radio (Reggae)
- 34  NPR (News)
- 35  BBC World Service (News)
- 36  KFM (Uganda)
- 37  Radio One (Uganda)
- 38  Sanyu FM (Uganda)
- 39  Capital FM (Uganda)
- 40  Next Radio (Uganda)
- 41  Simba FM (Uganda)
- 42  Beat FM (Uganda)
- 43  CBS Radio (Uganda)
- 44  Power FM (Uganda)
- 45  Impact FM (Uganda)
+  2  WBGO 88.3 - Newark, NJ (Jazz)
+  3  Jazz 24 (Jazz)
+  4  Radio Swiss Jazz
+  5  K-Love (Christian)
+  6  Family Life (Christian)
+  7  23 Indie Street (Indie)
+  8  Indie 88 - Toronto, Canada (Indie)
+  9  Indie 102.3 - Denver, CO (Indie)
+ 10  SomaFM (Indie)
+ 11  KEXP (Alternative)
+ 12  ALT 98.7 - LA (Alternative)
+ 13  WDAV - Davidson College, NC (Classical)
+ 14  KEAN 105 (Country)
+ 15  Hot 108 (Hip Hop)
+ 16  NBSRadio (Party)
+ 17  Radio Santa Claus (Christmas)
+ 18  Relax (Jazz)
+ 19  Relax (Latino)
+ 20  Relax (Life)
+ 21  Relax (Gold)
+ 22  Relax (Nature)
+ 23  Radio Swiss Classic
+ 24  Radio Swiss Classique
+ 25  The Loop (Classic Rock)
+ 26  Black Gospel Radio (Gospel)
+ 27  WFMV - 95.3 FM (Gospel)
+ 28  Gospel Highway 11 (Gospel)
+ 29  WGOK Gospel 900 (Gospel)
+ 30  1.FM ReggaeTrade (Reggae)
+ 31  Reggae 141 (Reggae)
+ 32  Sun City 104.9 FM (Reggae)
+ 33  UFDV Radio (Reggae)
+ 34  FM Jamaica Radio (Reggae)
+ 35  NPR (News)
+ 36  BBC World Service (News)
+ 37  KFM (Uganda)
+ 38  Radio One (Uganda)
+ 39  Sanyu FM (Uganda)
+ 40  Capital FM (Uganda)
+ 41  Next Radio (Uganda)
+ 42  Simba FM (Uganda)
+ 43  Beat FM (Uganda)
+ 44  CBS Radio (Uganda)
+ 45  Power FM (Uganda)
+ 46  Impact FM (Uganda)
 EOF
 exit 1
 fi
@@ -101,11 +102,15 @@ get_webradio_url () {
 case $WEBRADIO_STREAMER_STATION in
 1)
 # Smooth Jazz (Jazz)
-WEBRADIO_STREAMER_URL=https://smoothjazz.cdnstream1.com/2585_128.mp3
-#WEBRADIO_STREAMER_URL=http://sj64.hnux.com
+WEBRADIO_STREAMER_URL="https://smoothjazz.cdnstream1.com/2585_128.mp3"
 ;;
 
 2)
+# WBGO (Jazz)
+WEBRADIO_STREAMER_URL="https://wbgo.streamguys.net/wbgo-64k.aac"
+;;
+
+3)
 # Jazz24 (Jazz)
 WEBRADIO_STREAMER_URL="https://live.wostreaming.net/direct/ppm-jazz24mp3-ibc1"
 #
@@ -119,217 +124,217 @@ WEBRADIO_STREAMER_URL="https://live.wostreaming.net/direct/ppm-jazz24mp3-ibc1"
 # https://live.wostreaming.net/direct/ppm-jazz24aac48-ibc1
 ;;
 
-3) 
+4) 
 # Radio Swiss Jazz (Jazz)
 WEBRADIO_STREAMER_URL="http://stream.srg-ssr.ch:80/m/rsj/aacp_96"
 ;;
 
-4)
+5)
 # K-Love (Christian)
 WEBRADIO_STREAMER_URL="https://maestro.emfcdn.com/stream_for/k-love/tunein/aac"
 ;;
 
-5)
+6)
 # Family Life Radio (Christian)
 WEBRADIO_STREAMER_URL="http://icecast.streammyflr.org/FLRstream"
 ;;
 
-6)
+7)
 # 23 Indie Street (Indie)
 WEBRADIO_STREAMER_URL="https://streamingv2.shoutcast.com/23-indie-street"
 ;;
 
-7)
+8)
 # Indie 88 - Toronto, Canda (Indie)
 WEBRADIO_STREAMER_URL="http://cob-ais.leanstream.co/CINDFM"
 ;;
 
-8) 
+9) 
 # Indie 102.3 - Denver, CO (Indie)
 WEBRADIO_STREAMER_URL="https://stream1.cprnetwork.org/cpr3_lo"
 ;;
 
-9)
+10)
 # SomaFM (Indie)
 WEBRADIO_STREAMER_URL="http://ice1.somafm.com/indiepop-128-mp3"
 ;;
 
-10)
+11)
 # KEXP (Alternative)
 WEBRADIO_STREAMER_URL="https://kexp-mp3-128.streamguys1.com/kexp128.mp3"
 ;;
 
-11) 
+12) 
 # ALT 98.7 -LA (Alternative)
 WEBRADIO_STREAMER_URL="http://stream.revma.ihrhls.com/zc201"
 ;;
 
-12)
+13)
 # WDAV - Davidson College, NC (Classical)
 WEBRADIO_STREAMER_URL="http://audio-mp3.ibiblio.org:8000/concierto"
 ;;
 
-13)
+14)
 # KEAN 105 (Country)
 WEBRADIO_STREAMER_URL="http://live.wostreaming.net/direct/townsquare-keanfmaac-ibc3"
 ;;
 
-14)
+15)
 # Hot 108 (Hip Hop)
 WEBRADIO_STREAMER_URL="http://hot108jamz.hot108.com:4040"
 ;;
 
-15)
+16)
 # NBSRadio (House/Party/Beats)
 WEBRADIO_STREAMER_URL="http://live.nsbradio.co.uk:8904/"
 ;;
 
-16)
+17)
 # Radio Santa Claus (Christmas)
 WEBRADIO_STREAMER_URL="https://streaming.radiostreamlive.com/radiosantaclaus_devices"
 ;;
 
-17)
+18)
 # Relax (Jazz)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_2"
 ;;
 
-18)
+19)
 # Relax (Latino)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_3"
 ;;
 
-19)
+20)
 # Relax (Life)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_5"
 ;;
 
-20)
+21)
 # Relax (Gold)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_4"
 ;;
 
-21)
+22)
 # Relax (Nature)
 WEBRADIO_STREAMER_URL="http://ic4.101.ru:8000/c19_1"
 ;;
 
-22)
+23)
 # Radio Swiss Classic (Classical)
 WEBRADIO_STREAMER_URL="http://stream.srg-ssr.ch:80/m/rsc_de/aacp_96"
 ;;
 
-23)
+24)
 # Radio Swiss Classique (Classical)
 WEBRADIO_STREAMER_URL="http://stream.srg-ssr.ch/m/rsc_fr/mp3_128"
 ;;
 
-24)
+25)
 # WLUP-FM - The Loop 97.9 FM (Classic Rock)
 WEBRADIO_STREAMER_URL="http://208.92.55.133:3690/WLUPFM_SC"
 ;;
 
-25)
+26)
 # Black Gospel Radio (Gospel)
 WEBRADIO_STREAMER_URL="http://ice64.securenetsystems.net/BGRLIVE"
 ;;
 
-26)
+27)
 # WFMV - 95.3 FM (Gospel)
 WEBRADIO_STREAMER_URL="http://ice8.securenetsystems.net/WFMV"
 ;;
 
-27)
+28)
 # WNAP - Gospel Highway 11 1110 AM (Gospel)
 WEBRADIO_STREAMER_URL="http://ice23.securenetsystems.net/WNAP"
 ;;
 
-28)
+29)
 # WGOK Gospel 900 (Gospel)
 WEBRADIO_STREAMER_URL="http://17013.live.streamtheworld.com/WGOKAM.mp3"
 ;;
 
-29)
+30)
 # 1.FM ReggaeTrade (Reggae)
 WEBRADIO_STREAMER_URL="http://strm112.1.fm/reggae_mobile_mp3"
 ;;
 
-30)
+31)
 # Reggae 141 (Reggae)
 WEBRADIO_STREAMER_URL="http://hestia2.cdnstream.com/1301_128"
 ;;
 
-31)
+32)
 # Sun City 104.9 FM (Reggae)
 WEBRADIO_STREAMER_URL="http://streams.suncityradio.fm:8000"
 ;;
 
-32)
+33)
 # UFDV Radio (Reggae)
 WEBRADIO_STREAMER_URL="http://cp3.serverse.com:7059/stream"
 ;;
 
-33)
+34)
 # FM Jamaica Radio (Reggae)
 WEBRADIO_STREAMER_URL="http://us5.internet-radio.com:8487"
 ;;
 
-34)
+35)
 # NPR - National Public Radio (News)
 WEBRADIO_STREAMER_URL="https://npr-ice.streamguys1.com/live.mp3"
 ;;
 
-35)
+36)
 # BBC World Service (News)
 WEBRADIO_STREAMER_URL="https://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
 ;;
 
-36) 
+37) 
 # KFM (Uganda)
 WEBRADIO_STREAMER_URL="http://81.199.17.51:8000/stream"
 ;;
 
-37)
+38)
 # Radio One (Uganda)
 WEBRADIO_STREAMER_URL="http://162.244.80.52:8740/stream/1"
 ;;
 
-38)
+39)
 # Sanyu FM (Uganda)
 WEBRADIO_STREAMER_URL="http://s44.myradiostream.com:8138"
 ;;
 
-39)
+40)
 # Capital FM (Uganda)
 WEBRADIO_STREAMER_URL="http://144.217.203.226:8316/stream/1"
 ;;
 
-40)
+41)
 # Next Radio (Uganda)
 WEBRADIO_STREAMER_URL="http://streams.radio.co/see104bedb/listen"
 ;;
 
-41)
+42)
 # Simba FM (Uganda)
 WEBRADIO_STREAMER_URL="http://www.radiosimba.ug:8000/stream"
 ;;
 
-42)
+43)
 # Beat FM (Uganda)
 WEBRADIO_STREAMER_URL="http://5230.cloudrad.io:8354"
 ;;
 
-43)
+44)
 # CBS Radio (Uganda)
 WEBRADIO_STREAMER_URL="http://41.202.239.38:88/broadwavehigh.mp3"
 ;;
 
-44) 
+45) 
 # Power FM (Uganda)
 WEBRADIO_STREAMER_URL=""
 ;;
 
-45)
+46)
 # Impact FM (Uganda)
 WEBRADIO_STREAMER_URL=""
 ;;
