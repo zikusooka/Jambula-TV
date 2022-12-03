@@ -57,7 +57,7 @@ text_output_file = tmp_dir + '/' + text_output_filename
 weather_update_tts_header_filename = 'weather_update_for_area.mp3'
 
 sounds_tool = '/usr/bin/jambulatv-sounds'
-sounds_gain = '160'
+sounds_gain = '100'
 sounds_alert_speaker_prompt = 'Airplane-ding-sound'
 
 DateDayofWeek = datetime.now().strftime('%a')
@@ -280,6 +280,7 @@ def scrape_read_weather_ten_day():
             else:
                 tts_text_message.append(f'Tomorrow: {summary_ten_day}')
         count += 1
+
     tts_text_message = map(str,tts_text_message)
     tts_text_message = ' '.join(tts_text_message)
     tts_text_message = unidecode.unidecode(tts_text_message)
@@ -311,13 +312,11 @@ def save_weather_forecast_summary():
     tts_text_today, weather_footer, precipitation_current = scrape_read_weather_today()
     tts_text_ten_day = scrape_read_weather_ten_day()
     print(f'Saving weather forecast summary for {LOCATION} ...')
-    for forecast in [tts_text_today, tts_text_ten_day]:
-        f = open(text_output_file, 'a')
-        f.write(f'{forecast} ')
-        f.close()
     f = open(text_output_file, 'a')
-    f.write(f'{weather_footer}')
-    f.close
+    for forecast in [tts_text_today, tts_text_ten_day, weather_footer]:
+      f.write(f'{forecast} ')
+    f.close()
+
     if os.path.exists(text_output_file) and os.stat(text_output_file).st_size != 0 and TASK != 'display':
         for line in fileinput.input(files = text_output_file):
             weather_summary_text = line
