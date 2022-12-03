@@ -187,6 +187,9 @@ zeroconf_name			"MY_PROJECT_NAME MPD Server"
 
 input {
         plugin "curl"
+        verify_peer "no"
+        verify_host "no"
+        verbose "yes"
 #       proxy "proxy.isp.com:8080"
 #       proxy_user "user"
 #       proxy_password "password"
@@ -396,7 +399,7 @@ input {
 # resources. Generally, these settings should be minimized to prevent security
 # risks, depending on the operating resources.
 #
-#connection_timeout		"60"
+connection_timeout		"120"
 #max_connections		"10"
 #max_playlist_length		"16384"
 #max_command_list_size		"2048"
