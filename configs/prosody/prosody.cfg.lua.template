@@ -84,7 +84,7 @@ archive_expires_after = "1w"
 log = {
 	info = "MY_PROJECT_SYSTEM_LOG_DIR/prosody/info.log"; -- Change 'info' to 'debug' for verbose logging
 	error = "MY_PROJECT_SYSTEM_LOG_DIR/prosody/error.log";
-	debug = "MY_PROJECT_SYSTEM_LOG_DIR/prosody/debug.log";
+	-- debug = "MY_PROJECT_SYSTEM_LOG_DIR/prosody/debug.log";
 	-- "*syslog"; -- Uncomment this for logging to syslog
 	-- "*console"; -- Log to the console, useful for debugging with daemonize=false
 }
