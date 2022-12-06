@@ -304,7 +304,7 @@ fi
 echo -e "${RST}Private IP Gateway:${BOLD} $NETWORK_GATEWAY_ADDRESS \t ${RST}DNS Address:${BOLD} $CURRENT_DNS1"
 
 # WiFi AP and Client Chipsets
-echo -e "${RST}WiFi AP:${BOLD} $WIFI_AP_CHIPSET \t\t ${RST}WiFi Client:${BOLD} $WIFI_CLIENT_CHIPSET"
+echo -e "${RST}WiFi AP:${BOLD} $WIFI_AP_CHIPSET \t ${RST}WiFi Client:${BOLD} $WIFI_CLIENT_CHIPSET"
 
 # CPU
 echo -e "${RST}CPU Model:${BOLD} $CPU_MODEL \t ${RST}CPU Speed:${BOLD} $CPU_SPEED"
