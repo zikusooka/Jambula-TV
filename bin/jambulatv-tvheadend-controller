@@ -216,12 +216,12 @@ usage_and_pre_start_dvb () {
 if [[ "x$TV_TASK" = "x" ]];
 then
 clear
-echo "Usage:  ./`basename $0` dvb [scan|map|all|repair|epg|icons]
+echo "Usage:  ./`basename $0` dvb [scan|map|all|repair|epg|icons|playlists]
 "
 exit 1
 
-# Don't proceed if TV_TASK is epg, icons)
-elif [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" ]];
+# Don't proceed if TV_TASK is epg, icons, playlists)
+elif [[ "$TV_TASK" = "m3u" || "$TV_TASK" = "epg" || "$TV_TASK" = "icons" || "$TV_TASK" = "playlists" ]];
 then
 # Notify when TV server controller process has been initiated
 notify_tv_server_controller_initiated
@@ -1950,6 +1950,10 @@ usage_and_pre_start_dvb
 # Refresh TV icons
 [[ "$TV_TASK" = "icons" ]] && \
 	refresh_tvh_kodi_icons
+
+# Generate and send TV playlist
+[[ "$TV_TASK" = "playlists" ]] && \
+	send_tvh_playlist_via_telegram
 
 # All tasks {scan+map} 
 [[ "$TV_TASK" = "all" ]] && \
