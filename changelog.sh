@@ -36,7 +36,7 @@ Changes since ${SPECIFIED_FROM_TAGGED_VERSION}
 --------------------
 
 ET
-git log --reverse --abbrev-commit --pretty=tformat:"* %s %n" ${SPECIFIED_FROM_TAGGED_VERSION}..HEAD
+git log --reverse --abbrev-commit --pretty=tformat:"* %s %n" ${SPECIFIED_FROM_TAGGED_VERSION}..HEAD | sed "s:      : :g"
 ;;
 
 between-specific-versions)
@@ -50,7 +50,7 @@ exit 1
 fi
 
 # changes since specified-from-tag to specified-to-tag
-git log --reverse --abbrev-commit --pretty=tformat:"* %s %n" ${SPECIFIED_FROM_TAGGED_VERSION}..${SPECIFIED_TO_TAGGED_VERSION}
+git log --reverse --abbrev-commit --pretty=tformat:"* %s %n" ${SPECIFIED_FROM_TAGGED_VERSION}..${SPECIFIED_TO_TAGGED_VERSION} | sed "s:      : :g"
 ;;
 
 *)
