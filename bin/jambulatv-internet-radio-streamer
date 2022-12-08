@@ -23,6 +23,13 @@ WEBRADIO_STREAMER_TASK=$1
 WEBRADIO_STREAMER_STATION=$(/bin/echo "$2" | sed -e "s/[^0-9. ]*//g" -e  "s/ \+/ /g")
 WEBRADIO_STREAMER_CLIENT_LOCATION=${@:$WEBRADIO_STREAMER_NUMBER_OF_ARGS}
 
+HASS_LOVELACE_IMAGES_DIRECTORY=$HOMEASSISTANT_CONFIG_DIR/www/images
+HASS_RADIO_PICONS_DIRECTORY=$HASS_LOVELACE_IMAGES_DIRECTORY/radio
+HASS_RADIO_PICON_DEFAULT=radio_station_logo.png
+
+RADIO_STATION_NAME=$(cat $0 | grep -A1 "^$WEBRADIO_STREAMER_STATION)" | grep "^#" | awk -F'(' '{print $1}' | sed 's:#::' | sed 's:^ ::' | rev | sed 's:^ ::' | rev)
+RADIO_STATION_PICON_FILE=$(sudo find $HASS_RADIO_PICONS_DIRECTORY -type f -iname "*$(echo "$RADIO_STATION_NAME" | sed "s:-: :g" | sed "s: :*:g")*" -print0)
+
 
 
 ###############
@@ -354,10 +361,16 @@ MPC_CURRENTLY_PLAYING=$($MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $M
 }
 
 mpd_current_playlist_stop () {
+# Check status of MPD server
+mpd_check_status
+#
+if [[ "$MPC_EXIT_STATUS" = "0" ]];
+then
 # Stop any running playlist, so we take over
-$MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT stop
+[[ "x$MPC_CURRENTLY_PLAYING" = "x" ]] || $MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT stop
 # Clear previous added playlist
 $MPD_CLIENT_CMD $MPD_CLIENT_OPTS -h $MPD_SERVER_IP -p $MPD_SERVER_PORT clear
+fi
 }
 
 internet_radio_via_mpd_start () {
@@ -407,6 +420,10 @@ stream_start () {
 # Usage
 usage_start
 #
+# Print info
+cat <<ET
+Starting [$RADIO_STATION_NAME] internet radio stream, please wait ...
+ET
 # Remove previous log file
 remove_previous_log_file
 #
@@ -441,14 +458,25 @@ EOF
 #
 # Stream locally if user requested
 #stream_local
+#
+# Add radio station logo to homeassistant dashboard i.e. lovelace picture entity
+if [[ -f $RADIO_STATION_PICON_FILE ]];
+then
+# If logo is found, create a symbolic link in the homeassistant images directory
+ln -s -f $RADIO_STATION_PICON_FILE $HASS_LOVELACE_IMAGES_DIRECTORY/$HASS_RADIO_PICON_DEFAULT
+else
+# Add default image for internet radio to homeassistant dashboard i.e. lovelace picture entity
+ln -s -f $HASS_RADIO_PICONS_DIRECTORY/default_01.png $HASS_LOVELACE_IMAGES_DIRECTORY/$HASS_RADIO_PICON_DEFAULT
+fi
 }
 
 stream_stop () {
-# Check status of MPD server
-mpd_check_status
+cat <<ET
+Stopping current internet radio stream ...
+ET
 #
-# Stream Internet Radio over mpd if server is running
-[[ "$MPC_EXIT_STATUS" = "0" ]] && internet_radio_via_mpd_stop
+# Stop currently playing Internet radio, if applicable
+internet_radio_via_mpd_stop
 #
 # Kill streamer processes
 [[ -e $WEBRADIO_STREAMER_PID_FILE ]] && sudo kill -15 $(cat $WEBRADIO_STREAMER_PID_FILE) > /dev/null 2>&1 &
@@ -459,14 +487,15 @@ sudo rm -f $WEBRADIO_STREAMER_PID_FILE
 fi
 # Remove previous log file
 remove_previous_log_file
+#
+# Add default image for internet radio to homeassistant dashboard i.e. lovelace picture entity
+ln -s -f $HASS_RADIO_PICONS_DIRECTORY/default_01.png $HASS_LOVELACE_IMAGES_DIRECTORY/$HASS_RADIO_PICON_DEFAULT
 }
 
 stream_restart () {
 usage_start
 # Stop previous station
 $0 stop
-# Pause a bit to allow radio to settle
-sleep 3
 # Stream new station
 $0 start $WEBRADIO_STREAMER_STATION $WEBRADIO_STREAMER_CLIENT_LOCATION
 #
