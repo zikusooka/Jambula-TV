@@ -4768,10 +4768,6 @@ load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;$NETWORK_WIRED_MASK
 load-module module-loopback source=$PULSE_LINE_IN_SOURCE sink=$PULSE_DEFAULT_SINK
 EOF
 
-# Setup ALSA mixer levels
-# ---
-alsa_mixer_configure
-
 # Update pulseaudio config file: client.conf
 # ---
 # Backup existing file 
@@ -4833,6 +4829,10 @@ EOF
 #
 # Give ownership of asound.conf file to multimedia user i.e. jambula
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $CONFDIR/asound.conf
+
+# Setup ALSA mixer levels
+# ---
+alsa_mixer_configure
 }
 
 portaudio_install () {
