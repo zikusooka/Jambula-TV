@@ -4599,7 +4599,7 @@ EOF
 fi
 }
 
-alsa_mixer_configure () {
+alsa_mixer_volume_levels_setup () {
 # Master
 $ALSA_MIXER_CMD -c $ALSA_CARD_NO sset Master $ALSA_VOLUME_MASTER,$ALSA_VOLUME_MASTER unmute > /dev/null 2>&1
 logger -t $(basename $0) -s "ALSA mixer level for [Master] set to [$ALSA_VOLUME_MASTER]"
@@ -4621,6 +4621,11 @@ $ALSA_MIXER_CMD -c $ALSA_CARD_NO sset 'Line Boost' $ALSA_VOLUME_LINE_IN_BOOST > 
 
 # Save all settings
 $ALSA_CONTROL_CMD -f $ALSA_STATE_FILE store $ALSA_CARD_NO
+}
+
+alsa_mixer_configure () {
+# Tweak several volume knobs i.e. unmute sound card settings
+alsa_mixer_volume_levels_setup
 
 # Configure ALSA store and restore systemd units
 for SYSTEMD_UNIT in alsa-store alsa-restore alsa-state
