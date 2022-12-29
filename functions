@@ -2,7 +2,7 @@
 # This is the main functions file used by JambulaTV initial install
 # It is also sourced by several utilities and tools during runtime
 #
-# Jambula Labs @copyright 2022-2023 All rights reserved
+# Jambula Labs @copyright 2023-2024 All rights reserved
 
 # Variables
 PROJECT_NAME=JambulaTV
@@ -111,7 +111,7 @@ PROJECT_SYSTEM_LIB_DIR=$STATEDIR/lib/$PROJECT_NAME
 PROJECT_SYSTEM_CACHE_DIR=$STATEDIR/cache/$PROJECT_NAME
 PROJECT_SYSTEM_ICONS_DIR=$PROJECT_SYSTEM_SHARE_DIR/picons
 PROJECT_SYSTEM_SOUNDS_DIR=$PROJECT_SYSTEM_SHARE_DIR/sounds
-PROJECT_VERSION=$(cd $PROJECT_BASE_DIR && git tag -l | tail -1)
+PROJECT_VERSION=$([[ -d $PROJECT_BASE_DIR ]] && cd $PROJECT_BASE_DIR && git tag -l | tail -1)
 PROJECT_RELEASE_FILE=$PROJECT_SYSTEM_CONF_DIR/release
 PROJECT_DVBT_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/dvbt-settings.cfg
 PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
@@ -135,7 +135,7 @@ USER_TV_RECORDINGS_DIR=$USER_VIDEOS_DIR/TV_Recordings
 USER_MOVIES_DIR=$USER_VIDEOS_DIR/Movies
 
 PLAYLISTS_DIRECTORY=$PROJECT_PARTITION/Playlists
-PLAYLISTS_PORT=$(grep -i 'playlists$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+PLAYLISTS_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'playlists$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 PLAYLISTS_IPTV_WORLD_M3U_FILE=jambula-iptv.m3u8
 PLAYLISTS_CCTV_LOCAL_M3U_FILE=jambula-cctv.m3u8
 PLAYLISTS_JTV_HOME_M3U_FILE=jambula-home.m3u8
@@ -150,15 +150,15 @@ MUSIC_NOW_PLAYING_FILE=$TMPDIR/now_playing
 MUSIC_NOW_ROTATION_FILE=$STATEDIR/tmp/now_rotation
 
 # Snapcast
-SNAPCAST_SERVER_PORT=$(grep -i 'snapcast server$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-SNAPCAST_CLIENT_PORT=$(grep -i 'snapcast client$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+SNAPCAST_SERVER_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'snapcast server$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+SNAPCAST_CLIENT_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'snapcast client$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 SNAPCAST_DEFAULT_SERVER_FILE=$DEFAULT_CONFIG_DIR/snapserver
 SNAPCAST_DEFAULT_CLIENT_FILE=$DEFAULT_CONFIG_DIR/snapclient
 SNAPCAST_FIFO_FILE=$TMPDIR/snapfifo
 
 # MPD/MPC
 MPD_IP=127.0.0.1
-MPD_PORT=$(grep -i 'mpd$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+MPD_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'mpd$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 MPC_CMD=/usr/bin/mpc
 MPC_OPTS="-q"
 
@@ -212,7 +212,7 @@ FREEVO_VERSION=svn
 # Flexget IPTV list download schedule
 FLEXGET_SCHEDULE_IPTV_LISTS_HR=15
 FLEXGET_SCHEDULE_IPTV_LISTS_MIN=30
-FLEXGET_PORT=$(grep -i 'flexget$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+FLEXGET_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'flexget$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 #
 TVHEADEND_CONFIG_DIR=$MULTIMEDIA_USER_HOME_DIR/.hts/tvheadend
 TVHEADEND_LOG_DIR=$PROJECT_SYSTEM_LOG_DIR/tvheadend
@@ -330,7 +330,7 @@ KODI_DB_MUSIC=${KODI_DB_PREFIX}_music
 KODI_DB_USER=$MULTIMEDIA_USER
 KODI_DB_PASS=jambulatv4
 KODI_HTTP_IP=127.0.0.1
-KODI_HTTP_PORT=$(grep -i 'kodi web$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+KODI_HTTP_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'kodi web$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 KODI_HTTP_USER=jambulatv
 KODI_HTTP_PASS=jambulatv
 
@@ -700,8 +700,8 @@ NGINX_CONFD_DIR=$NGINX_CONF_DIR/conf.d
 # Set WWW user and group for re-installs/upgrades i.e. Non-first time installs
 if [ -d "$NGINX_CONF_DIR" ] ;
 then
-WWW_USER=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $2'})
-WWW_GROUP=$(grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $3'} | sed 's:;::')
+WWW_USER=$([[ -s $NGINX_CONF_DIR/nginx.conf ]] && grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $2'})
+WWW_GROUP=$([[ -s $NGINX_CONF_DIR/nginx.conf ]] && grep -i '^user' $NGINX_CONF_DIR/nginx.conf | head -1 | awk {'print $3'} | sed 's:;::')
 fi
 
 WWW_USER_COMMANDS="/usr/bin/chmod, /usr/bin/grep, /usr/bin/rm"
@@ -757,7 +757,7 @@ JABBERD_CONF_DIR=$CONFDIR/jabberd
 JABBERD_ROUTER_USERS_FILE=$JABBERD_CONF_DIR/router-users.xml
 JABBERD_TEMPLATES_DIR=$JABBERD_CONF_DIR/templates
 JABBERD_DB_CREATE=$DATAROOTDIR/jabberd/db-setup.mysql
-JABBERD_PASSWORD=$(sudo /usr/bin/grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //')
+JABBERD_PASSWORD=$([[ -s $JABBERD_ROUTER_USERS_FILE ]] && sudo /usr/bin/grep \<secret\> $JABBERD_ROUTER_USERS_FILE | sed -e 's/<secret>//' | sed -e 's/<\/secret>//' | sed -e 's/    //')
 JABBERD_RESOURCE=Home
 
 # Prosody XMPP/Jabber server
@@ -765,12 +765,12 @@ PROSODY_CTRL_CMD=$BINARY_PREFIX/prosodyctl
 
 # Smart Home - Generic settings
 SMARTHOME_HUB_APP=homeassistant
-SMARTHOME_HUB_WWW_PORT=$(grep -i "$SMARTHOME_HUB_APP$" $PORTS_ASSIGNED_FILE | awk {'print $1'})
+SMARTHOME_HUB_WWW_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i "$SMARTHOME_HUB_APP$" $PORTS_ASSIGNED_FILE | awk {'print $1'})
 SMARTHOME_HUB_WLAN_SSID=$(/usr/sbin/iw dev | grep ssid | awk {'print $2'})
 
 # OpenHAB
-OPENHAB_HTTP_PORT=$(grep -i 'openhab$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-OPENHAB_HTTPS_PORT=$(grep -i 'openhab ssl$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+OPENHAB_HTTP_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'openhab$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+OPENHAB_HTTPS_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'openhab ssl$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # Domoticz Home Automation
 DOMOTICZ_USER=$MULTIMEDIA_USER
@@ -779,7 +779,7 @@ DOMOTICZ_HOME_DIR=$MULTIMEDIA_USER_HOME_DIR/.domoticz
 DOMOTICZ_HTML_DIR=$WWW_HTML_DIR/domoticz
 DOMOTICZ_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/domoticz.log
 DOMOTICZ_PID_FILE=$RUNDIR/domoticz.pid
-DOMOTICZ_WWW_PORT=$(grep -i 'domoticz$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+DOMOTICZ_WWW_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'domoticz$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # Home Assistant
 HOMEASSISTANT_USER=$MULTIMEDIA_USER
@@ -789,8 +789,8 @@ HOMEASSISTANT_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/homeassistant
 MOSQUITTO_USER=mosquitto
 MOSQUITTO_GROUP=mosquitto
 MOSQUITTO_HOST_IP=127.0.0.1
-MOSQUITTO_PORT=$(grep -i 'mosquitto$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
-MOSQUITTO_SSL_PORT=$(grep -i 'mosquitto ssl$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+MOSQUITTO_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'mosquitto$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+MOSQUITTO_SSL_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'mosquitto ssl$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 MOSQUITTO_CONFIG_DIR=/etc/mosquitto
 MOSQUITTO_CONFIG_FILE=$MOSQUITTO_CONFIG_DIR/mosquitto.conf
 MOSQUITTO_CONFIG_CERTS_DIR=$MOSQUITTO_CONFIG_DIR/ssl
@@ -849,7 +849,7 @@ ZONEMINDER_DB_USER=jambulatv
 ZONEMINDER_DB_PASS=jambulatvzm3
 ZONEMINDER_ADMIN_USER=jambulatv
 ZONEMINDER_ADMIN_PASS=jambulatv
-ZONEMINDER_WWW_PORT=$(grep -i 'ZoneMinder$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+ZONEMINDER_WWW_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'ZoneMinder$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 ZONEMINDER_ZMS_INETD_PORT=8521
 ZONEMINDER_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/zoneminder
 ZONEMINDER_CONTENT_DIR=$MULTIMEDIA_USER_HOME_DIR/CCTV
@@ -866,7 +866,7 @@ ZONEMINDER_CCTV_TEMP_EVENT_DATA_OUPUT_FILE=$TMPDIR/cctv_event_data
 ZONEMINDER_CCTV_ZONE_SENSITIVITY_DEFAULT="best-medium"
 
 # ZMEventServer
-ZMEVENTSERVER_PORT=$(grep -i 'zmeventserver$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+ZMEVENTSERVER_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'zmeventserver$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # Motion Database Variables
 MOTION_DB_HOST=localhost
@@ -921,7 +921,7 @@ DNS_BLOCKING_URL_HOSTNAMES="https://raw.githubusercontent.com/notracking/hosts-b
 DNS_BLOCKING_URL_DOMAINS="https://raw.githubusercontent.com/notracking/hosts-blocklists/master/domains.txt"
 
 # Netdata
-NETDATA_PORT=$(grep -i 'netdata$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+NETDATA_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'netdata$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # Dynamic variables
 # -----------------
@@ -1185,8 +1185,8 @@ NEXTCLOUD_ADMIN_PASS=jambulatv45
 NEXTCLOUD_CONFIG_DIR=$WWW_HTML_DIR/nextcloud/config
 NEXTCLOUD_CONFIG_FILE=$NEXTCLOUD_CONFIG_DIR/config.php
 NEXTCLOUD_DATA_DIRECTORY=$MULTIMEDIA_USER_HOME_DIR/Cloud
-NEXTCLOUD_WWW_SERVER_NAME=$(grep server_name $PROJECT_CONFIGS_DIR/nginx/sites-enabled/nextcloud | awk {'print $2'} | sed 's/;//')
-NEXTCLOUD_HTTP_PORT=$(grep -i 'nextcloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+NEXTCLOUD_WWW_SERVER_NAME=$([[ -s $PROJECT_CONFIGS_DIR/nginx/sites-enabled/nextcloud ]] && grep server_name $PROJECT_CONFIGS_DIR/nginx/sites-enabled/nextcloud | awk {'print $2'} | sed 's/;//')
+NEXTCLOUD_HTTP_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'nextcloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 # VOIP/SIP Settings 
 SIP_PROVIDER_HOSTNAME=sip.flowroute.com
@@ -1357,12 +1357,12 @@ YOUTUBE_CLIENT_ID="1047595433853-gspvl15aj43op9e2timmcqu9en3eefoo.apps.googleuse
 YOUTUBE_CLIENT_SECRET="x4HTznrI1eixU5XHVQxA-5wx"
 
 # FM radio Streamer
-FMRADIO_STREAMER_PORT=$(grep -i 'fmradio streamer$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+FMRADIO_STREAMER_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'fmradio streamer$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 FMRADIO_STREAMER_PID_FILE=$TMPDIR/fmradio_process_ids
 FMRADIO_STREAMER_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/fmradio-streamer.log
 #
 # Internet radio Streamer
-WEBRADIO_STREAMER_PORT=$(grep -i 'webradio streamer$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+WEBRADIO_STREAMER_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'webradio streamer$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 WEBRADIO_STREAMER_PID_FILE=$TMPDIR/webradio_process_ids
 WEBRADIO_STREAMER_LOG_FILE=$PROJECT_SYSTEM_LOG_DIR/webradio-streamer.log
 
@@ -10476,7 +10476,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 RTGUI (rTorrent) Access
 =======================
 % To access your torrents, use a client PC to open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i 'rtgui$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$NETWORK_IP_ADDRESS:$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'rtgui$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 #
 EOF
 }
@@ -10652,7 +10652,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 Daloradius Access
 =================
 % To finish setup, use a client PC to open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i 'daloradius$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$NETWORK_IP_ADDRESS:$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'daloradius$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
   password = radius
 #
 EOF
@@ -12405,7 +12405,7 @@ chmod -R 777 $WWW_HTML_DIR/owncloud
 systemctl restart nginx.service
 #
 # Generate owncloud instance ID
-$CURL_CMD $CURL_OPTS -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$(grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+$CURL_CMD $CURL_OPTS -A 'Mozilla/5.0' -o /dev/null http://$NETWORK_IP_ADDRESS:$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 # Get instance ID
 OWNCLOUD_INSTANCE_ID=$(grep 'instanceid' $WWW_HTML_DIR/owncloud/config/config.php | awk {'print $3'} | sed "s:'::g" | cut -d , -f1)
 # Generate initial owncloud config
@@ -12418,7 +12418,7 @@ cat > $OWNCLOUD_CONFIG_FILE << EOF
     0 => '$NETWORK_IP_ADDRESS', '$NETWORK_WIRELESS_HOTSPOT_IP', '$OWNCLOUD_WWW_SERVER_NAME'
   ),
   'datadirectory' => '$OWNCLOUD_DATA_DIRECTORY',
-  'overwrite.cli.url' => 'http://$NETWORK_IP_ADDRESS:$(grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})',
+  'overwrite.cli.url' => 'http://$NETWORK_IP_ADDRESS:$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})',
   'dbtype' => 'sqlite3',
   'logfile' => '$PROJECT_SYSTEM_LOG_DIR/owncloud.log',
   'logtimezone' => '$TIMEZONE',
@@ -12449,7 +12449,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 OwnCloud
 ========
 % To finish setup, and add an administrative user, open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$NETWORK_IP_ADDRESS:$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'owncloud$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
   Suggested Admin credentials:
 
@@ -13402,7 +13402,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 FreePBX Access
 ==============
 % To access FreePBX, use a client PC to open the URL below:
-  http://$NETWORK_IP_ADDRESS:$(grep -i 'freepbx$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$NETWORK_IP_ADDRESS:$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'freepbx$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 username            = "$FREEPBX_ADMIN_USER"
 password            = "$FREEPBX_ADMIN_PASS"
@@ -15874,7 +15874,7 @@ echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 IcingaWeb2
 ==========
 % I have automagically setup icingaweb2 for you. To access, open the URL below:
-  http://$PROJECT_NAME:$(grep -i 'icingaweb2$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
+  http://$PROJECT_NAME:$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'icingaweb2$' $PORTS_ASSIGNED_FILE | awk {'print $1'})
 
 username            = "$ICINGAWEB2_ADMIN_USER"
 password            = "$ICINGAWEB2_ADMIN_PASS"
