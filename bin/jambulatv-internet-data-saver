@@ -31,7 +31,7 @@ internet_data_saver_on () {
 # Turn on Internet data saver mode in global settings
 sed -i "/INTERNET_DATA_SAVER_MODE/d" $PROJECT_GLOBAL_SETTINGS_FILE
 sed -i "/Internet data saver mode/ a\
-INTERNET_DATA_SAVER_MODE=on" $PROJECT_GLOBAL_SETTINGS_FILE
+INTERNET_DATA_SAVER_MODE=\"on\"" $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Disable IPTV services
 if [[ "$IPTV" = "yes" ]];
@@ -65,7 +65,7 @@ internet_data_saver_off () {
 # Turn off Internet data saver mode in global settings
 sed -i "/INTERNET_DATA_SAVER_MODE/d" $PROJECT_GLOBAL_SETTINGS_FILE
 sed -i "/Internet data saver mode/ a\
-INTERNET_DATA_SAVER_MODE=off" $PROJECT_GLOBAL_SETTINGS_FILE
+INTERNET_DATA_SAVER_MODE=\"off\"" $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Enable IPTV services
 if [[ "$IPTV" = "yes" ]];

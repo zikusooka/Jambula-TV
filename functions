@@ -118,6 +118,9 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 PROJECT_PARTITION=/$PROJECT_NAME
 LOCAL_SETTINGS_DIR=$PROJECT_PARTITION/local_settings
 
+# Project functions file i.e. This script
+PROJECT_FUNCTIONS_FILE=$PROJECT_BASE_DIR/functions
+
 # Ports file
 PORTS_ASSIGNED_FILE=$PROJECT_DOCS_DIR/ports_assigned
 
@@ -1320,7 +1323,7 @@ ASR_SKILLS_FILE=$BINARY_PREFIX/jambulatv-asr-skills
 # Pocketsphinx
 POCKETSPHINX_DATA_DIR=$PROJECT_SYSTEM_SHARE_DIR/pocketsphinx
 
-WEATHER_PROVIDER_API=3 # Default API used > 1=Weather Underground 2=OpenWeatherMap 3=DarkSky
+WEATHER_PROVIDER_API=4 # Default API used > 1=Weather Underground 2=OpenWeatherMap 3=DarkSky 4=Accuweather
 
 # HTTP Headers
 # ------------
@@ -8870,7 +8873,7 @@ cat >> $PROJECT_GLOBAL_SETTINGS_FILE <<GLOBAL
 # JambulaTV global settings
 # ---
 # Command line tools
-$(cat $0 | grep -r '_TOOL=' | grep -v -e 'grep -r' -e '_TOOL=\$' | cut -d':' -f2 | sort -u | sed "s:\$BINARY_PREFIX:$BINARY_PREFIX:")
+$(grep -r '_TOOL=' $PROJECT_FUNCTIONS_FILE | grep -v -e 'grep -r' -e '_TOOL=\$' | cut -d':' -f2 | sort -u | sed "s:\$BINARY_PREFIX:$BINARY_PREFIX:")
 
 # MySQL database credentials
 JAMBULATV_SETUP_DB_NAME="$JAMBULATV_SETUP_DB_NAME"
@@ -8909,7 +8912,7 @@ SMS_PHONE_NUMBER="$SMS_PHONE_NUMBER_DEFAULT"
 # Text 2 Speech default API used # 1=iSpeech 2=google 3=watson
 TTS_PROVIDER_API="$TTS_PROVIDER_API"
 
-# Weather default API used # 1=Weather Underground 2=OpenWeatherMap 3=DarkSky
+# Weather default API used # 1=Weather Underground 2=OpenWeatherMap 3=DarkSky 4=Accuweather
 WEATHER_PROVIDER_API="$WEATHER_PROVIDER_API"
 
 # Internet data saver mode
