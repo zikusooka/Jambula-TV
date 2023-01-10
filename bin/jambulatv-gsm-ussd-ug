@@ -4,6 +4,7 @@
 # - Look up the phone number registered to the SIM card installed
 # - Look up the name of the mobile money recipient i.e. Caller ID
 # - Load SMS bundles
+# - Load selected i.e. cheap data bundles
 #
 # Mobile networks supported:
 # - Uganda (MTN, Airtel)
@@ -11,17 +12,14 @@
 # For mobile money transactions:
 # You need a minimum amount in sender's Mobile Money wallet
 #
-# Jambula Labs @copyright 2022-2023 All rights reserved
+# Jambula Labs @copyright 2023-2024 All rights reserved
 #
 #
-# Variables
-# ---------
-MOBILE_ACTION=$1
-MOBILE_PROVIDER=$2
-MOBILE_EXTRA_ARG=$3
-MODEM_INDICES="$(mmcli -L | grep Modem | cut -d / -f6 | cut -d ' ' -f1)"
-MM_MIN_AMOUNT=500
-
+# Source global settings
+PROJECT_NAME=JambulaTV
+PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
+PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
+. $PROJECT_GLOBAL_SETTINGS_FILE
 
 # PPP helper scripts
 PPP_TOOLS_DIR=/usr/bin
@@ -29,6 +27,23 @@ MODEM_ISP_INIT_TOOL=$PPP_TOOLS_DIR/jambulatv-ppp-init
 
 # Source modem ISP initialization scripts
 . $MODEM_ISP_INIT_TOOL
+
+# Variables
+# ---------
+MOBILE_ACTION=$1
+MOBILE_PROVIDER=$2
+MOBILE_EXTRA_ARG=$3
+MOBILE_RECIPIENT_PHONE_NO=$4
+MODEM_INDICES="$(mmcli -L | grep Modem | cut -d / -f6 | cut -d ' ' -f1)"
+MM_MIN_AMOUNT=500
+
+# MQTT Topics
+MQTT_TOPIC_STATUS_GSM_PHONE_NUMBER_MTN="JambulaTV/house/status/gsm_ussd_ug/phone_number/mtn"
+MQTT_TOPIC_STATUS_GSM_PHONE_NUMBER_AIRTEL="JambulaTV/house/status/gsm_ussd_ug/phone_number/airtel"
+MQTT_TOPIC_STATUS_GSM_VOICE_BALANCE_MTN="JambulaTV/house/status/gsm_ussd_ug/voice_balance/mtn"
+MQTT_TOPIC_STATUS_GSM_DATA_BALANCE_MTN="JambulaTV/house/status/gsm_ussd_ug/data_balance/mtn"
+MQTT_TOPIC_STATUS_GSM_VOICE_BALANCE_AIRTEL="JambulaTV/house/status/gsm_ussd_ug/voice_balance/airtel"
+MQTT_TOPIC_STATUS_GSM_DATA_BALANCE_AIRTEL="JambulaTV/house/status/gsm_ussd_ug/data_balance/airtel"
 
 
 # ------------------------
@@ -91,17 +106,38 @@ ussd_cancel_session_command () {
 mmcli -m $MODEM_INDEX --3gpp-ussd-cancel > /dev/null 2>&1
 }
 
+ussd_respond_exit_status () {
+MOBILE_PROVIDER_LOWER=$(echo $MOBILE_PROVIDER | tr '[:upper:]' '[:lower:]')
+if [[ "$command_exit_status" = "0" ]];
+then
+echo Successfully added data bundle for $MOBILE_PROVIDER
+$SOUNDS_TOOL alert data_bundle_add_succeeded_${MOBILE_PROVIDER_LOWER}
+
+else
+echo Failed to add data bundle for $MOBILE_PROVIDER
+$SOUNDS_TOOL alert data_bundle_add_failed_${MOBILE_PROVIDER_LOWER}
+fi
+}
+
 
 # ----
 # MTN
 # ----
 #
 query_voice_balance_mtn_standard () {
-ussd_initiate_session_command '*131#' | awk -F': ' '/new reply from network/ {print $3}' | sed 's:/-::g' | awk {'print $1'}
+VOICE_BALANCE=$(ussd_initiate_session_command '*131#' | awk -F': ' '/new reply from network/ {print $3}' | sed 's:/-::g' | awk {'print $1'})
+# Print balance on terminal
+echo $VOICE_BALANCE
+# Publish voice balance using MQTT
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_GSM_VOICE_BALANCE_MTN" -m "$VOICE_BALANCE"
 }
 
 query_data_balance_mtn_standard () {
-ussd_initiate_session_command '*131*4#' | awk -F': ' '/new reply from network/ {print $2}' | sed 's:Total data is ::g' | sed "s:['|.]::g"
+DATA_BALANCE=$(ussd_initiate_session_command '*131*4#' | awk -F': ' '/new reply from network/ {print $2}' | sed 's:Total data is ::g' | sed "s:['|.]::g")
+# Print balance on terminal
+echo $DATA_BALANCE
+# Publish data balance using MQTT
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_GSM_DATA_BALANCE_MTN" -m "$DATA_BALANCE"
 }
 
 query_data_balance_mtn_promotion () {
@@ -109,8 +145,12 @@ query_data_balance_mtn_standard
 }
 
 query_phone_number_mtn () {
-ussd_initiate_session_command '*160**7#' > /dev/null 2>&1
-ussd_respond_session_command '1'  | awk -F'Your current number is: ' '/Your current number is/ {print $2}' | cut -d. -f1
+ussd_initiate_session_command '*160*7#' > /dev/null 2>&1
+PHONE_NUMBER=$(ussd_respond_session_command '1'  | awk -F'Your current number is: ' '/Your current number is/ {print $2}' | cut -d. -f1)
+# Print balance on terminal
+echo $PHONE_NUMBER
+# Publish phone number using MQTT
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_GSM_PHONE_NUMBER_MTN" -m "$PHONE_NUMBER"
 }
 
 query_mobile_money_recipient_name_mtn () {
@@ -144,8 +184,26 @@ ussd_cancel_session_command
 }
 
 buy_sms_off_net_mtn () {
-# Currently no available.  Use On-Net
+# Currently not available.  Use On-Net
 buy_sms_on_net_mtn
+}
+
+buy_data_day_bundle_1_mtn () {
+OTHER_PHONE_NUMBER_4_DATA_MTN="$1"
+ussd_initiate_session_command '*160*2*2*2*1*2*1#' > /dev/null 2>&1
+ussd_respond_session_command "${OTHER_PHONE_NUMBER_4_DATA_MTN}" | grep 'Your request is being processed. Please wait for confirmation message'
+command_exit_status=$?
+ussd_respond_exit_status
+ussd_cancel_session_command
+}
+
+buy_data_night_bundle_1_mtn () {
+OTHER_PHONE_NUMBER_4_DATA_MTN="$1"
+ussd_initiate_session_command '*160*2*2*2*6*1*1#' > /dev/null 2>&1
+ussd_respond_session_command "${OTHER_PHONE_NUMBER_4_DATA_MTN}" | grep 'Your request is being processed. Please wait for confirmation message'
+command_exit_status=$?
+ussd_respond_exit_status
+ussd_cancel_session_command
 }
 
 
@@ -154,15 +212,26 @@ buy_sms_on_net_mtn
 # -------
 #
 query_voice_balance_airtel_standard () {
-ussd_initiate_session_command '*131#' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=Ush).+(?=.)" | awk {'print $1'} | sed "s:\.::g"
+VOICE_BALANCE=$(ussd_initiate_session_command '*131#' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=Ugx).+(?=.)" | awk {'print $1'} | sed "s:[\.|\,]::g")
+# Print balance on terminal
+echo $VOICE_BALANCE
+# Publish voice balance using MQTT
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_GSM_VOICE_BALANCE_AIRTEL" -m "$VOICE_BALANCE"
 }
 
 query_voice_balance_airtel_promotion () {
-ussd_initiate_session_command '*170#' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=').+(?=')" | sed "s:\.::g"
+VOICE_BALANCE=$(ussd_initiate_session_command '*170#' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=').+(?=')" | sed "s:\.::g")
+echo $VOICE_BALANCE
+# Publish voice balance using MQTT
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_GSM_VOICE_BALANCE_AIRTEL" -m "$VOICE_BALANCE"
 }
 
 query_data_balance_airtel_standard () {
-ussd_initiate_session_command '*175*4#' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=').+(?=')"
+DATA_BALANCE=$(ussd_initiate_session_command '*175*4#' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=').+(?=')")
+# Print balance on terminal
+echo $DATA_BALANCE
+# Publish data balance using MQTT
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_GSM_DATA_BALANCE_AIRTEL" -m "$DATA_BALANCE"
 }
 
 query_data_balance_airtel_promotion () {
@@ -170,11 +239,12 @@ query_data_balance_airtel_standard
 }
 
 query_phone_number_airtel () {
-ussd_initiate_session_command '*120#' | awk -F';' '/new reply from network/ {print $2}' | cut -d"'" -f2
-#
-# Alternative
-#ussd_initiate_session_command '*100**7#' > /dev/null 2>&1
-#ussd_respond_session_command '2' | awk -F': ' '/new reply from network/ {print $3}' | sed "s:'::g"
+ussd_initiate_session_command '*100*7#' > /dev/null 2>&1
+PHONE_NUMBER=$(ussd_respond_session_command '2' | awk -F': ' '/new reply from network/ {print $3}' | sed "s:'::g")
+# Print balance on terminal
+echo $PHONE_NUMBER
+# Publish phone number using MQTT
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_GSM_PHONE_NUMBER_AIRTEL" -m "$PHONE_NUMBER"
 }
 
 query_mobile_money_recipient_name_airtel () {
@@ -232,6 +302,34 @@ ussd_respond_session_command '2' | sed "s/response successfully sent in USSD ses
 ussd_cancel_session_command
 }
 
+buy_data_day_bundle_1_airtel () {
+OTHER_PHONE_NUMBER_4_DATA_AIRTEL="$1"
+ussd_initiate_session_command '*175*2*2*1#' > /dev/null 2>&1
+ussd_respond_session_command "${OTHER_PHONE_NUMBER_4_DATA_AIRTEL}" > /dev/null 2>&1
+ussd_respond_session_command '1' > /dev/null 2>&1
+ussd_respond_session_command '1' > /dev/null 2>&1
+ussd_respond_session_command '1' | grep 'Your request has been submitted, please wait for a confirmation sms.'
+command_exit_status=$?
+ussd_respond_exit_status
+ussd_cancel_session_command
+}
+
+buy_data_weekend_bundle_1_airtel () {
+#1 - (7.20GB) && 20mins		-> 10,000/=
+#2 - (4.40GB | 5.2GB) && 20mins	->  6,500/= | 7,500/=
+#3 - (3.25GB | 4GB)		->  5,500/= | 5,500/=
+CHOICE="3"
+OTHER_PHONE_NUMBER_4_DATA_AIRTEL="$1"
+ussd_initiate_session_command "*149*10#" > /dev/null 2>&1
+ussd_respond_session_command '5' > /dev/null 2>&1
+ussd_respond_session_command "${CHOICE}" > /dev/null 2>&1
+ussd_respond_session_command "${OTHER_PHONE_NUMBER_4_DATA_AIRTEL}" > /dev/null 2>&1
+ussd_respond_session_command '1' > /dev/null 2>&1
+ussd_respond_session_command "${OTHER_PHONE_NUMBER_4_DATA_AIRTEL}" | grep 'Your request was successfully processed'
+command_exit_status=$?
+ussd_respond_exit_status
+ussd_cancel_session_command
+}
 
 usage () {
 case $MOBILE_ACTION in
@@ -239,10 +337,35 @@ voice-balance|data-balance)
 if [[ "x$MOBILE_PROVIDER" = "x" ]];
 then
 cat <<ET
-Usage: $(basename $0) $MOBILE_ACTION [MOBILE_PROVIDER] [standard|promotion (optional)]
+Usage: $(basename $0) $MOBILE_ACTION [MTN|Airtel] [standard|promotion (optional)]
 ET
 exit 1
 #
+fi
+;;
+
+data-load)
+if [[ "x$MOBILE_PROVIDER" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $MOBILE_ACTION [MTN|Airtel] [day1|night1|weekend1] [recipient no.]
+ET
+exit 1
+#
+elif [[ "x$MOBILE_EXTRA_ARG" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $MOBILE_ACTION $MOBILE_PROVIDER [day1|night1|weekend1] [recipient no.]
+ET
+exit 1
+#
+elif [[ "x$MOBILE_RECIPIENT_PHONE_NO" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $MOBILE_ACTION $MOBILE_PROVIDER [day1|night1|weekend1] [recipient no.]
+ET
+#
+exit 1
 fi
 ;;
 
@@ -250,7 +373,7 @@ phone-number|sms-on-net|sms-off-net)
 if [[ "x$MOBILE_PROVIDER" = "x" ]];
 then
 cat <<ET
-Usage: $(basename $0) $MOBILE_ACTION [MOBILE_PROVIDER]
+Usage: $(basename $0) $MOBILE_ACTION [MTN|Airtel]
 ET
 exit 1
 fi
@@ -260,7 +383,7 @@ callerid-name)
 if [[ "x$MOBILE_PROVIDER" = "x" ]];
 then
 cat <<ET
-Usage: $(basename $0) $MOBILE_ACTION [MOBILE_PROVIDER] [PHONE NUMBER]
+Usage: $(basename $0) $MOBILE_ACTION [MTN|Airtel] [PHONE NUMBER]
 ET
 exit 1
 #
@@ -276,14 +399,13 @@ fi
 
 *)
 cat <<ET
-Usage: $(basename $0) [voice-balance|data-balance|phone-number|callerid-name|sms-on-net|sms-off-net]
+Usage: $(basename $0) [voice-balance|data-balance|data-load|phone-number|callerid-name|sms-on-net|sms-off-net]
 ET
 exit 1
 ;;
 
 esac
 }
-
 
 
 #################
@@ -432,6 +554,32 @@ then
 buy_sms_off_net_airtel
 
 fi
+;;
+
+data-load)
+# MTN 
+# ---
+if [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] && "$MOBILE_EXTRA_ARG" = "day1" ]];
+then
+buy_data_day_bundle_1_mtn $4
+
+elif [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] && "$MOBILE_EXTRA_ARG" = "night1" ]];
+then
+buy_data_night_bundle_1_mtn $4
+
+# Airtel
+# ------
+elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] && "$MOBILE_EXTRA_ARG" = "day1" ]];
+then
+buy_data_day_bundle_1_airtel $4
+
+elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] && "$MOBILE_EXTRA_ARG" = "weekend1" ]];
+then
+buy_data_weekend_bundle_1_airtel $4
+fi
+
+# Query voice balances to update HASS sensors
+$0 voice-balance $MOBILE_PROVIDER
 ;;
 
 esac

@@ -1260,6 +1260,7 @@ FETCH_NEWS_VIA_SCRAPER_TOOL="$BINARY_PREFIX/jambulatv-fetch-news-via-scraper"
 FMRADIO_STREAMER_TOOL="$BINARY_PREFIX/jambulatv-fm-radio-streamer"
 GENERATE_LOCAL_CONF_TOOL="$BINARY_PREFIX/jambulatv-generate-local-conf"
 GEOLOCATION_TOOL="$BINARY_PREFIX/jambulatv-whereami"
+GSM_USSD_UG_TOOL="$BINARY_PREFIX/jambulatv-gsm-ussd-ug"
 IMAGE_UPLOAD_TOOL="$BINARY_PREFIX/jambulatv-image-uploader"
 INITIAL_SETUP_TOOL="$BINARY_PREFIX/jambulatv-initial-setup" 
 INTERNET_SPEED_TOOL="$BINARY_PREFIX/jambulatv-speed-test"
@@ -13971,6 +13972,7 @@ for TOOL_NAME in \
 ${BACKUP_REMOTE_PC_TO_USB_DISK_TOOL##*/} \
 ${CCTV_KODI_EVENT_ALERT_TOOL##*/} \
 ${DATE_TIME_TOOL##*/} \
+${GSM_USSD_UG_TOOL##*/} \
 ${INTERNET_DATA_SAVER_TOOL##*/} \
 ${LIGHTS_TOOL##*/} \
 ${MUSIC_SEARCH_PLAY_TOOL##*/} \
