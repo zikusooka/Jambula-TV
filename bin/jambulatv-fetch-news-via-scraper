@@ -1,13 +1,18 @@
 #!/usr/local/bin/python3
- 
 from bs4 import BeautifulSoup
 import requests
 import subprocess
+import argparse
 import sys
 import unidecode
+import os
+import ssl
+import warnings
+import datetime
+import urllib3
 
 # Copyright
-__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2022-2023 All rights reserved'
+__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2023-2024 All rights reserved'
 
 tmp_dir = 'MY_TMPDIR'
 data_share_dir = 'MY_PROJECT_SYSTEM_SHARE_DIR'
@@ -18,20 +23,71 @@ tts_output_dir = tmp_dir + '/' + 'tts' + '/' + 'news'
 tts_input_file = tmp_dir + '/' + 'tts_output.wav'    
 tts_concat_input_file = tts_output_dir + '/' + 'input_files_news_scraper.txt'
 
+date = datetime.datetime.now().strftime('%Y%m%d')
+bbc_headlines_output_filename = 'bbc_news_summary.mp3'    
+bbc_podcast_output_filename = 'bbc_world_tonight' + '_' + date + '.mp3'
+monitor_ug_output_filename = 'monitor_news_summary.mp3'
+
 text2speech_tool = 'MY_TEXT2SPEECH_TOOL'
 text2speech_api = 'MY_TTS_API'
 
+sounds_tool = 'MY_SOUNDS_TOOL'
+speaker_alerts_volume_level = 'MY_SPEAKER_ALERTS_VOLUME_LEVEL'
+
+
+def usage ():
+    parser = argparse.ArgumentParser(description='JambulaTV: Fetch latest News Headlines and Podcasts using scraper')
+    parser.add_argument('--category', dest='category', choices=['headlines', 'podcasts', 'all'], help='[category]', type=str, required=True)
+    parser.add_argument('--task', dest='task', choices=['download', 'play'], help='[task]', type=str, required=True)
+    parser.add_argument('--offline', dest='offline', choices=['yes', 'no'] ,help='[offline]', type=str, required=False)
+    return parser
+
+def hide_python3_upgrade_warnings():
+    # Add support for unverified SSL connections
+    if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
+        getattr(ssl, '_create_unverified_context', None)): 
+        ssl._create_default_https_context = ssl._create_unverified_context
+        # Ignore all 'unclosed' warnings e.g. unclosed file or socket
+        warnings.filterwarnings(action="ignore", 
+                            message="unclosed", 
+                            category=ResourceWarning)
+
+def check_internet_connectivity():
+    if offline == 'yes':
+      print (f'Offline mode: Internet connectivity checks disabled')
+      return
+    http = urllib3.PoolManager(timeout=3.0)
+    try:
+        r = http.request('GET', 'http://172.217.170.196', preload_content=False)
+        code = r.status
+        r.release_conn()
+        if code == 200:
+            return True
+        else:
+            return False
+    except:
+        return False
 
 def make_soup(url):
-    r  = requests.get(url)
-    data = r.text
-    return BeautifulSoup(data, 'html.parser')
+    internet_is_available = check_internet_connectivity()
+    if internet_is_available == False:
+        print (f'Error: There\'s no Internet connection, therefore I can not download the news')
+        sys.exit(0)
+    else:
+        r  = requests.get(url)
+        data = r.text
+        return BeautifulSoup(data, 'html.parser')
 
 
-def fetch_bbc_world_news():
+# ----------
+# Headlines
+# ----------
+def fetch_world_news_headlines_bbc():
+    """
+    Download world news headlines: BBC World
+    """
     url_uk_bbc_news = 'https://www.bbc.co.uk/programmes/p002vsn1/episodes/player'
-    output_filename = 'bbc_news_summary.mp3'
-    tts_output_file = tmp_dir + '/' + output_filename
+    tts_output_file = tmp_dir + '/' + bbc_headlines_output_filename
     episode_url = make_soup(url_uk_bbc_news).select("a.block-link__target")[0] \
             .attrs['href']
     file_url = make_soup(episode_url).select("a.popup__list__item")[0] \
@@ -39,18 +95,43 @@ def fetch_bbc_world_news():
     file_link = "https:" +file_url
 
     # Download news file
+    print(f'Downloading world news headlines: BBC World ...')
+    # Play Header
+    alert_sound = 'bbc_world_news_headlines_download'
+    subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + speaker_alerts_volume_level])
+    # Download Headlines
     subprocess.check_call(['/usr/bin/wget', '-q', '-c', '-O', tts_output_file, file_link]) 
 
-def fetch_monitor_ug_news():
+def play_world_news_headlines_bbc():
+    """
+    Play world news headlines: BBC World
+    """
+    print(f'Playing world news headlines: BBC World ...')
+    # Play Header
+    alert_sound = 'bbc_world_news_headlines_play'
+    subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + speaker_alerts_volume_level])
+    # Play Headlines
+    alert_sound = bbc_headlines_output_filename.replace('.mp3', '', 1)
+    subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + speaker_alerts_volume_level])
+
+
+def fetch_local_news_headlines_monitor_ug():
+    """
+    Download local news headlines: Daily Monitor (Uganda)
+    """
     news_page_file = 'monitor.html'
     news_page_dir = web_docroot + '/'
     url_remote = 'https://www.monitor.co.ug/uganda/news'
     url_local = f'http://localhost/{news_page_file}'
-    output_filename = 'monitor_news_summary.mp3'
     headlines_max = 17
-    tts_output_file = tmp_dir + '/' + output_filename
+    tts_output_file = tmp_dir + '/' + monitor_ug_output_filename
 
     # Download news web page locally first in order to avoid Cloudfare checks and other access denial issues
+    print(f'Downloading local news headlines: Monitor, UG ...')
+    # Play Header
+    alert_sound = 'daily_monitor_ug_local_news_headlines_download'
+    subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + speaker_alerts_volume_level])
+    # Download Headlines
     subprocess.check_call(['/usr/bin/curl', '-kLsS', '-m', '60', '-A', 'Mozilla/5.0', '-o', tmp_dir + '/' + news_page_file, url_remote]) 
 
     # Clean up news page file to make text-to-speech a bit smoother
@@ -99,14 +180,95 @@ def fetch_monitor_ug_news():
         # Merge all files into one nice mp3 file
         subprocess.check_call(['/usr/bin/ffmpeg', '-loglevel', 'quiet', '-y', '-f', 'concat', '-safe', '0', '-i', tts_concat_input_file, '-c', 'copy', tts_output_file])
 
+def play_local_news_headlines_monitor_ug():
+    """
+    Play local news headlines: Daily Monitor (Uganda)
+    """
+    print(f'Playing local news headlines: Daily Monitor, UG ...')
+    # Play Header
+    alert_sound = 'daily_monitor_ug_local_news_headlines_play'
+    subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + speaker_alerts_volume_level])
+    # Play Headlines
+    alert_sound = monitor_ug_output_filename.replace('.mp3', '', 1)
+    subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + speaker_alerts_volume_level])
 
 
-# Fetch BBC world news
-print(f'Compiling news: BBC World ...')
-fetch_bbc_world_news()
+# ---------
+# Podcasts
+# ---------
+def fetch_the_world_tonight_podcast_bbc():
+    """
+    Download the news podcast: BBC - The World Tonight
+    """
+    url_uk_bbc_news = 'https://www.bbc.co.uk/programmes/b006qtl3/episodes/player'
+    tmp_dir = '/tmp'
+    output_filepath = tmp_dir + '/' + bbc_podcast_output_filename
+    episode_url = make_soup(url_uk_bbc_news).select("a.block-link__target")[0] \
+            .attrs['href']
+    file_url = make_soup(episode_url).select("a.popup__list__item")[0] \
+            .attrs['href']
+    file_link = "https:" +file_url
+    
+    if os.path.exists(output_filepath):
+        pass
+    else:
+        print(f'Downloading the news podcast: BBC - The World Tonight...')
+        # Play Header
+        alert_sound = 'bbc_the_world_tonight_podcast_download'
+        subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + speaker_alerts_volume_level])
+        # Download Podcast
+        subprocess.check_call(['/usr/bin/wget', '-q', '-c', '-O', output_filepath, file_link])
 
-# Fetch Monitor Uganda news
-print(f'Compiling news: Daily Monitor ...')
-fetch_monitor_ug_news()
+def play_the_world_tonight_podcast_bbc():
+    """
+    Play the news podcast: BBC - The World Tonight
+    """
+    print(f'Playing the news podcast: BBC - The World Tonight...')
+    # Play Header
+    alert_sound = 'bbc_the_world_tonight_podcast_play'
+    subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + speaker_alerts_volume_level])
+    # Play Podcast
+    alert_sound = bbc_podcast_output_filename.replace('.mp3', '', 1)
+    subprocess.check_call([sounds_tool, 'alert', alert_sound, 'gain=' + speaker_alerts_volume_level])
 
+
+
+if __name__ == "__main__":
+
+    hide_python3_upgrade_warnings()    
+    parser = usage ()
+    args = parser.parse_args()
+
+    category = args.category
+    task = args.task
+    offline = args.offline
+
+    if task == 'download':
+        if category == 'headlines':
+            fetch_world_news_headlines_bbc()
+            fetch_local_news_headlines_monitor_ug()
+        elif category == 'podcasts':
+            fetch_the_world_tonight_podcast_bbc()
+        elif category == 'all':
+            fetch_world_news_headlines_bbc()
+            fetch_local_news_headlines_monitor_ug()
+            fetch_the_world_tonight_podcast_bbc()
+
+    elif task == 'play':
+        if category == 'headlines':
+            fetch_world_news_headlines_bbc()
+            fetch_local_news_headlines_monitor_ug()
+            play_world_news_headlines_bbc()
+            play_local_news_headlines_monitor_ug()
+        elif category == 'podcasts':
+            fetch_the_world_tonight_podcast_bbc()
+            play_the_world_tonight_podcast_bbc()
+        elif category == 'all':
+            fetch_world_news_headlines_bbc()
+            fetch_local_news_headlines_monitor_ug()
+            fetch_the_world_tonight_podcast_bbc()
+            play_world_news_headlines_bbc()
+            play_local_news_headlines_monitor_ug()
+            play_the_world_tonight_podcast_bbc()
+       
 sys.exit()
