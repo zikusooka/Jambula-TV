@@ -2,7 +2,7 @@
 # This is a set of voice recognition skills used by JambulaTV 
 # It is used by the Speech-to-Text tool
 #
-# Jambula Labs @copyright 2022-2023 All rights reserved
+# Jambula Labs @copyright 2023-2024 All rights reserved
 
 # Variables
 PROJECT_NAME=JambulaTV
@@ -475,7 +475,7 @@ done
 # If Internet is available, fetch latest news headlines 
 check_internet_connectivity
 #
-[[ "$INTERNET_STATUS_VAL" = "0" ]] && $FETCH_NEWS_VIA_SCRAPER_TOOL > /dev/null 2>&1
+[[ "$INTERNET_STATUS_VAL" = "0" ]] && $FETCH_NEWS_VIA_SCRAPER_TOOL --category headlines --task download --offline no > /dev/null 2>&1
 fi
 
 # If no news was fetched, skip compilation and use saved clip to notify of failure
@@ -1373,5 +1373,6 @@ $TEXT2SPEECH_TOOL "$TTS_API" custom "You missed me \"\\pau=500\\\" Right? \"\\pa
 }
 
 skill_unknown () {
-$TEXT2SPEECH_TOOL "$TTS_API" custom "Am sorry, I did not understand what you said"
+STT_DID_NOT_UNDERSTAND_ALERT_SOUND=stt_did_not_understand_said
+$SOUNDS_TOOL alert $STT_DID_NOT_UNDERSTAND_ALERT_SOUND gain=$SOUNDS_VOLUME_LEVEL
 }
