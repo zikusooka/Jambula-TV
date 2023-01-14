@@ -13,8 +13,8 @@ cards:
   #- type: horizontal-stack
       - type: vertical-stack
         cards:
-          - !include ../cards/conditional-custom-type-weather-accuweather-uganda.yaml
-          #- !include ../cards/conditional-custom-type-weather-darksky-uganda.yaml
+          #- !include ../cards/conditional-custom-type-weather-accuweather-uganda.yaml
+          - !include ../cards/conditional-custom-type-weather-darksky-uganda.yaml
 
 
       - type: horizontal-stack

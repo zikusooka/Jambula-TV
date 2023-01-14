@@ -141,7 +141,7 @@ cards:
       - type: horizontal-stack
         cards:
           # Live Cameras
-          #- !include ../cards/picture-entity-motion-camera-front-gate.yaml
+          - !include ../cards/picture-entity-motion-camera-front-gate.yaml
           - !include ../cards/picture-entity-motion-camera-front-door.yaml
           - !include ../cards/picture-entity-zoneminder-camera-back-yard.yaml
 
@@ -154,12 +154,7 @@ cards:
         cards:
           # Person - Monica
           - !include ../cards/entity-filter-presence-activity-monica.yaml
-
-      - type: horizontal-stack
-        cards:
-          # Mobile phones
-          - !include ../cards/entities-mobile-phones-using-asterisk.yaml
-
+ 
       - type: horizontal-stack
         cards:
           # Playing 
@@ -168,10 +163,16 @@ cards:
  
       - type: horizontal-stack
         cards:
+          # Mobile phones
+          - !include ../cards/conditional-entity-filter-residents.yaml
+
+      - type: horizontal-stack
+        cards:
           # Logbook
           - !include ../cards/logbook-dashboard.yaml
 
       - type: horizontal-stack
         cards:
-          # News headlines
+          # News headlines & podcasts
           - !include ../cards/conditional-entity-button-fetch-read-news-headlines.yaml
+          - !include ../cards/conditional-entity-button-fetch-read-news-podcasts.yaml

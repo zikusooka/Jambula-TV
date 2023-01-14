@@ -2,6 +2,13 @@ title: MiFi Router
 icon: mdi:router-wireless-settings
 cards:
 
+
+  # Welcome Message
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/markup-router-message.yaml
+  
+
   # Internet and Mobile network information
   - type: vertical-stack
     cards:
@@ -25,6 +32,35 @@ cards:
         cards:
           - !include ../cards/conditional-entity-button-internet-connect.yaml
           - !include ../cards/conditional-entity-button-internet-disconnect.yaml
+
+
+
+
+      # Credit Balance - Airtel
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entities-sensor-airtime-balance-airtel.yaml
+ 
+      # Buy Data
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-data-load-airtel-ug-day1.yaml
+          - !include ../cards/entity-button-data-load-airtel-ug-weekend1.yaml
+
+      # Credit Balance - MTN
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entities-sensor-airtime-balance-mtn.yaml
+
+      # Buy Data
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-data-load-mtn-ug-day1.yaml
+          - !include ../cards/entity-button-data-load-mtn-ug-night1.yaml
+
+
+
+
 
   # MiFi router status
   - type: vertical-stack

@@ -21,7 +21,7 @@ trigger:
     entity_id: sensor.pc_usage_status_for_kampala
     to: 'active'
     for:
-      minutes: 3
+      minutes: 5
     id: presence_pc_usage_status_active_zik
 
   - platform: state
@@ -35,7 +35,7 @@ trigger:
     entity_id: media_player.jambulatv_pi_living_room
     to: 'playing'
     for:
-      minutes: 3
+      minutes: 6
     id: presence_tv_living_room_playing_zik
 
   - platform: state
@@ -50,7 +50,7 @@ trigger:
     from: 'Home'
     to: 'Away'
     for:
-      minutes: 3
+      minutes: 6
     id: presence_away_to_jogging_zik
 
   - platform: state
@@ -65,7 +65,7 @@ trigger:
     entity_id: input_boolean.bedtime_mode_zik
     to: 'on'
     for:
-      minutes: 3
+      minutes: 7
     id: presence_home_sleeping_zik
 
   - platform: state
@@ -139,8 +139,6 @@ action:
           data:
             entity_id: input_select.presence_status_zik
             option: 'Choring'
-
-
 
     - conditions:    
         - condition: trigger

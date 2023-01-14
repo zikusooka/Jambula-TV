@@ -1,0 +1,20 @@
+type: entity-button
+entity: script.data_bundle_add_airtel_day1
+name: 'Airtel-Day-70MB'
+show_name: true
+show_state: false
+icon: 'mdi:signal-4g'
+
+double_tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.data_bundle_add_airtel_day1
+
+tap_action:
+  action: call-service
+  confirmation:
+    text: Purchase Airtel Data bundle - Day1?
+  service: script.turn_on
+  service_data:
+    entity_id: script.data_bundle_add_airtel_day1

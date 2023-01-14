@@ -34,14 +34,15 @@ cards:
   - type: vertical-stack
     cards:      
       # Audio players
-      - !include ../cards/conditional-internet-radio.yaml
+      - !include ../cards/conditional-entities-internet-radio-stations.yaml
+      - !include ../cards/conditional-picture-entity-internet-radio-station-logo.yaml
       - !include ../cards/conditional-fm-radio.yaml
-      - !include ../cards/conditional-entity-button-local-music-christmas.yaml
 
       - type: horizontal-stack
         cards:
           # Mini media player
-          - !include ../cards/custom-mini-media-player.yaml
+          - !include ../cards/conditional-custom-mini-media-player.yaml
+          - !include ../cards/conditional-custom-mini-media-player-christmas.yaml
 
       - type: horizontal-stack
         cards:

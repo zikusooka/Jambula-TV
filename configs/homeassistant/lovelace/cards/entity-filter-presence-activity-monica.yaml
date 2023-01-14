@@ -2,17 +2,19 @@ type: conditional
 conditions:
   - entity: sensor.activity_while_at_home_monica
     state_not: 'unknown'
-  - entity: sensor.activity_while_at_home_monica
-    state_not: 'unknown'
+  - entity: person.monica
+    state_not: 'not_home'
 
 card:
   type: entity-filter
   entities:
     - person.monica
     - sensor.activity_while_at_home_monica
+    - binary_sensor.connected_2_asterisk_chan_mobile_monica
   state_filter:
     - 'Home'
     - 'home'
+    - 'Just Arrived'
     - 'not_home'
     - 'unknown'
     - 'Working'
@@ -23,3 +25,7 @@ card:
     - 'sleeping'
     - 'Away'
     - 'away'
+    - 'Choring'
+    - 'choring'
+    - 'on'
+    - 'off'

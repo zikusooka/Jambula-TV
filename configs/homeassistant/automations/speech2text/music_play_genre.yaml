@@ -1,0 +1,183 @@
+# Speech-to-Text: Play music genre as requested
+alias: "Play specific music genre via Speech-to-Text (Voice)"
+initial_state: True
+
+
+trigger:
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'local'
+    id: stt_play_music_local
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'alternative'
+    id: stt_play_music_alternative
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'christian'
+    id: stt_play_music_christian
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'gospel'
+    id: stt_play_music_gospel
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'congolese'
+    id: stt_play_music_congolese
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'country'
+    id: stt_play_music_country
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'hiphop_rap'
+    id: stt_play_music_hiphop_rap
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'indie'
+    id: stt_play_music_indie
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'jazz'
+    id: stt_play_music_jazz
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'pop'
+    id: stt_play_music_pop
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'rb_soul'
+    id: stt_play_music_rb_soul
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_play_music_genre
+    payload: 'all'
+    id: stt_play_music_all
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+  - choose:
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_local
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_local
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_alternative
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_alternative
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_christian
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_christian
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_gospel
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_gospel
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_congolese
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_congolese
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_country
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_country
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_hiphop_rap
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_hiphop_rap
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_indie
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_indie
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_jazz
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_jazz
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_pop
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_pop
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_rb_soul
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_rb_soul
+
+    - conditions:    
+        - condition: trigger
+          id: stt_play_music_all
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.music_play_all

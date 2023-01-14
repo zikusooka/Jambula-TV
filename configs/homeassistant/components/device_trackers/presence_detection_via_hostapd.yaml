@@ -2,5 +2,6 @@ platform: mqtt
 devices:
   hostapd_mobile_01_zik: !secret mqtt_presence_hostapd_topic_mobile_01_zik
   hostapd_laptop_01_zik: !secret mqtt_presence_hostapd_topic_laptop_01_zik
-  hostapd_laptop_01_monica: !secret mqtt_presence_hostapd_topic_mobile_01_monica
+  hostapd_mobile_01_monica: !secret mqtt_presence_hostapd_topic_mobile_01_monica
+  hostapd_laptop_01_monica: !secret mqtt_presence_hostapd_topic_laptop_01_monica
 source_type: router

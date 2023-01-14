@@ -2,17 +2,20 @@ type: conditional
 conditions:
   - entity: sensor.activity_while_at_home_zik
     state_not: 'unknown'
-  - entity: sensor.activity_while_at_home_zik
-    state_not: 'unknown'
+  - entity: person.zik
+    state_not: 'not_home'
+
 
 card:
   type: entity-filter
   entities:
     - person.zik
     - sensor.activity_while_at_home_zik
+    - binary_sensor.connected_2_asterisk_chan_mobile_zik 
   state_filter:
     - 'Home'
     - 'home'
+    - 'Just Arrived'
     - 'not_home'
     - 'unknown'
     - 'Working'
@@ -25,3 +28,7 @@ card:
     - 'watching tv'
     - 'Away'
     - 'away'
+    - 'Choring'
+    - 'choring'
+    - 'on'
+    - 'off'

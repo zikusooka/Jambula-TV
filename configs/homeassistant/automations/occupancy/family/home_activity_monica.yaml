@@ -1,0 +1,177 @@
+# Presence detection and activity while at home - Monica
+alias: "Presence Home activity - Monica"
+description: "Presence detection and activity while at home - Monica"
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: person.monica
+    from: 'not_home'
+    to: 'home'
+    id: presence_away_2_home_monica
+
+  - platform: state
+    entity_id: person.monica
+    from: 'home'
+    to: 'not_home'
+    id: presence_home_2_away_monica
+
+  - platform: state
+    entity_id: sensor.pc_usage_status_for_kampala
+    to: 'active'
+    for:
+      minutes: 3
+    id: presence_pc_usage_status_active_monica
+
+  - platform: state
+    entity_id: sensor.pc_usage_status_for_kampala
+    to: 'idle'
+    for:
+      minutes: 5
+    id: presence_pc_usage_status_idle_monica
+
+  - platform: state
+    entity_id: media_player.jambulatv_pi_living_room
+    to: 'playing'
+    for:
+      minutes: 3
+    id: presence_tv_living_room_playing_monica
+
+  - platform: state
+    entity_id: media_player.jambulatv_pi_living_room
+    to: 'idle'
+    for:
+      minutes: 3
+    id: presence_tv_living_room_idle_monica
+
+  - platform: state
+    entity_id: device_tracker.bluez_mobile_04_monica
+    from: 'Home'
+    to: 'Away'
+    for:
+      minutes: 3
+    id: presence_away_to_jogging_monica
+
+  - platform: state
+    entity_id: device_tracker.bluez_mobile_04_monica
+    from: 'Away'
+    to: 'Home'
+    for:
+      minutes: 3
+    id: presence_home_from_jogging_monica
+
+  - platform: state
+    entity_id: input_boolean.bedtime_mode_monica
+    to: 'on'
+    for:
+      minutes: 3
+    id: presence_home_sleeping_monica
+
+  - platform: state
+    entity_id: input_boolean.bedtime_mode_monica
+    to: 'off'
+    for:
+      minutes: 3
+    id: presence_home_woke_up_monica
+
+
+action:
+  
+  - choose:
+
+    - conditions:    
+        - condition: trigger
+          id: presence_away_2_home_monica
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Just Arrived'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_home_2_away_monica
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Just Left'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_pc_usage_status_active_monica
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Working'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_pc_usage_status_idle_monica
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Choring'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_tv_living_room_playing_monica
+        - condition: trigger
+          id: presence_pc_usage_status_idle_monica
+
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Watching TV'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_tv_living_room_idle_monica
+        - condition: trigger
+          id: presence_pc_usage_status_idle_monica
+
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Choring'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_away_to_jogging_monica
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Jogging'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_home_from_jogging_monica
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Choring'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_home_sleeping_monica
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Sleeping'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_home_woke_up_monica
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Choring'

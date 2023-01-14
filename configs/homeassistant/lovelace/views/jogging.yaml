@@ -1,0 +1,49 @@
+title: Jogging
+icon: mdi:run-fast
+cards:
+
+
+  # Welcome Message
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/markup-jogging-message.yaml
+
+
+
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/entity-button-jogging-completed-zik.yaml
+
+
+  # Column 1
+  # --------
+  
+  # Text
+  - type: vertical-stack
+    cards:      
+      - !include ../cards/entities-jogging-distance-ran-today-zik.yaml
+
+  # Text
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-jogging-distance-ran-total-zik.yaml
+
+
+
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/entity-button-jogging-completed-monica.yaml
+
+
+  # Column 1
+  # --------
+  
+  # Text
+  - type: vertical-stack
+    cards:      
+      - !include ../cards/entities-jogging-distance-ran-today-monica.yaml
+
+  # Text
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-jogging-distance-ran-total-monica.yaml

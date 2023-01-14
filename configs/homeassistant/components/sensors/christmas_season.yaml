@@ -5,5 +5,4 @@ sensors:
       {% set today = states('sensor.date').split('-') %}
       {% set month = today[1]|int %}
       {% set day = today[2]|int %}
-      {{ month == 12 and day >= 12 or
-         month == 12 and day <= 28 }}
+      {{ month == 12 and day >= 8 }}
