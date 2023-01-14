@@ -25,7 +25,7 @@ from gtts import gTTS
 
 
 # Copyright
-__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2022-2023 All rights reserved'
+__author__ = 'Joseph Zikusooka.  Jambula Labs @copyright 2023-2024 All rights reserved'
 
 default_weather_source = 'https://weather.com/en-UG/weather'
 weather_source_search_domain = urlparse(default_weather_source).netloc
@@ -286,22 +286,22 @@ def scrape_read_weather_ten_day():
     tts_text_message = unidecode.unidecode(tts_text_message)
     tts_text_message = tts_text_message.replace('oC', ' degrees celsius')
     # Wind direction
-    tts_text_message = tts_text_message.replace('Winds N ', 'North winds ')
-    tts_text_message = tts_text_message.replace('Winds S ', 'South winds ')
-    tts_text_message = tts_text_message.replace('Winds E ', 'East winds ')
-    tts_text_message = tts_text_message.replace('Winds W ', 'West winds ')
-    tts_text_message = tts_text_message.replace('Winds ENE ', 'East North East winds ')
-    tts_text_message = tts_text_message.replace('Winds ESE ', 'East South East winds ')
-    tts_text_message = tts_text_message.replace('Winds WNW ', 'West North West winds ')
-    tts_text_message = tts_text_message.replace('Winds WSW ', 'West South West winds ')
+    tts_text_message = tts_text_message.replace('Winds N ', 'North Winds ')
+    tts_text_message = tts_text_message.replace('Winds S ', 'South Winds ')
+    tts_text_message = tts_text_message.replace('Winds E ', 'East Winds ')
+    tts_text_message = tts_text_message.replace('Winds W ', 'West Winds ')
+    tts_text_message = tts_text_message.replace('Winds ENE ', 'East North East Winds ')
+    tts_text_message = tts_text_message.replace('Winds ESE ', 'East South East Winds ')
+    tts_text_message = tts_text_message.replace('Winds WNW ', 'West North West Winds ')
+    tts_text_message = tts_text_message.replace('Winds WSW ', 'West South West Winds ')
     for wind_direction in [ 'Winds NNE ', 'Winds NE ' ]:
-        tts_text_message = tts_text_message.replace(wind_direction, "North East winds ")
+        tts_text_message = tts_text_message.replace(wind_direction, "North East Winds ")
     for wind_direction in [ 'Winds NNW ', 'Winds NW ' ]:
-        tts_text_message = tts_text_message.replace(wind_direction, "North West winds ")
+        tts_text_message = tts_text_message.replace(wind_direction, "North West Winds ")
     for wind_direction in [ 'Winds SSE ', 'Winds SE ' ]:
-        tts_text_message = tts_text_message.replace(wind_direction, "South East winds ")
+        tts_text_message = tts_text_message.replace(wind_direction, "South East Winds ")
     for wind_direction in [ 'Winds SSW ', 'Winds SW ' ]:
-        tts_text_message = tts_text_message.replace(wind_direction, "South West winds ")
+        tts_text_message = tts_text_message.replace(wind_direction, "South West Winds ")
     tts_text_message = tts_text_message.replace('km/h', 'kilometers per hour')
     return tts_text_message
 
