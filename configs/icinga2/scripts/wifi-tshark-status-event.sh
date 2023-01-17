@@ -7,10 +7,14 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 . $PROJECT_GLOBAL_SETTINGS_FILE
 #
 # Variables
-TSHARK_MAC_ADDRESS=$(echo "$HOSTOUTPUT" | grep -oP "(?<=\[).+?(?=\])")
+TSHARK_MAC_ADDRESS=$(echo "$TSHARK_MAC_ADDRESS" | tr '[:upper:]' '[:lower:]')
 MQTT_TOPIC_PRESENCE_TSHARK=JambulaTV/house/presence/tshark/$TSHARK_MAC_ADDRESS
 
 
+#################
+#  MAIN SCRIPT  #
+#################
+#
 # Quit if type of state alert is 'SOFT'
 [[ "$HOSTSTATETYPE" = "SOFT" ]] && exit 0
 
