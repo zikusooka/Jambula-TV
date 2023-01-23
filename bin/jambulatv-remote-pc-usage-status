@@ -7,7 +7,7 @@
 #
 # NOTE: Currently, only Linux based PCs are supported 
 #
-# Jambula Labs @copyright 2022-2023 All rights reserved
+# Jambula Labs @copyright 2023-2024 All rights reserved
 #
 #
 # Source global settings
@@ -69,11 +69,11 @@ fi
 }
 
 remote_pc_status_active () {
-$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_REMOTE_PC" -m "active"
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_REMOTE_PC" -m "Home"
 }
 
 remote_pc_status_idle () {
-$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_REMOTE_PC" -m "idle"
+$MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_REMOTE_PC" -m "Away"
 }
 
 check_4_keyboard_activity () {
