@@ -1,0 +1,184 @@
+#!/usr/local/bin/python3
+"""
+MY_PROJECT_NAME Smart Home Speech-To-Text Service
+"""
+
+import sys
+import os
+#from os.path import dirname
+import os.path
+from pathlib import Path
+import importlib
+import subprocess
+import argparse
+
+__author__ = 'Joseph Zikusooka'
+__copyright__ = 'MY_COPYRIGHT_NOTICE'
+__license__ = 'GPLv3'
+__version__ = "0.1.0"
+
+scriptdir = os.path.realpath(__file__)
+scriptdir = os.path.split(scriptdir)[0]
+scriptname = Path(__file__).name
+scriptuid = os.geteuid()
+
+skill_search_string = 'phrase ='
+
+all_skills_file = 'MY_TMPDIR/__include__.py'
+
+sys.path.append(scriptdir)
+
+ps_share_dir = 'MY_DATA_ROOT_DIR/pocketsphinx'
+ps_jambula_dir = 'MY_PROJECT_SYSTEM_SHARE_DIR'
+ps_acoustic_models_dir = ps_share_dir + '/model/en-us/en-us'
+ps_feat_params_file = ps_acoustic_models_dir + '/feat.params'
+ps_data_dir = ps_jambula_dir + '/pocketsphinx'
+ps_language_model_file = ps_data_dir + '/jambulatv.000.lm'
+ps_dictionary_file = ps_data_dir + '/jambulatv.000.dic'
+ps_noise_silence_threshold = '4.0'
+ps_samprate = '16000/8000/48000'
+ps_log_file = '/dev/null'
+ps_cmn='prior' #current|prior|none
+ps_cmninit='65,-1,-35,-10,-5,-24,8,-8,-21,-12,-32,-21,-29'
+#ps_cmninit='41.00,-5.29,-0.12,5.09,2.48,-4.07,-1.37,-1.78,-5.08,-2.05,-6.45,-1.42,1.17'
+ps_keyphrase_threshold = '1e-20'
+ps_keyphrase_list = ps_data_dir + '/keyphrase.list'
+ps_keyphrase_multiple = 'yes' #yes|no
+ps_keyphrase = 'OKAY JAMB BOO LA'
+
+
+def usage ():
+    # Usage i.e. parse arguments/help message
+    parser = argparse.ArgumentParser(description='JambulaTV: Voice Assistant | Translate Speech into Text')
+    parser.add_argument('-d', '--directory', dest='directory', help='[The directory where the voice skills are located]', type=str, required=True)
+    parser.add_argument('-s', '--source', dest='source', help='[Audio source i.e. Microphone]', type=str, required=True)
+    args = parser.parse_args()
+    return args
+
+
+def generate_all_skills_file ():
+    skills_directory = args.directory
+    voice_commands_reference_file = skills_directory + '/commands.txt'
+
+    if os.path.exists(all_skills_file):
+        os.remove(all_skills_file)
+
+    if os.path.exists(voice_commands_reference_file):
+        os.remove(voice_commands_reference_file)
+
+    print (f'Generating Jambula-Speech-To-Text skills ...\n')
+    skill_files = Path(skills_directory).glob('*.py')
+    for skill_file in skill_files:
+        skill_file = str(skill_file)
+
+        with open (skill_file, 'r') as file:
+            if skill_search_string in file.read():
+                file = file.name
+                module = Path(file).stem
+                sys.path.append(skills_directory)
+                import_module = importlib.import_module(module)
+                phrase = import_module.phrase
+                print (f'{phrase}''\n')
+
+                with open (voice_commands_reference_file, 'a') as voice_commands:
+                    voice_commands.write(f'{phrase} - {file}')
+                    voice_commands.write('\n')
+                    voice_commands.close()
+
+                with open (all_skills_file, 'a') as skills_file:
+                    skills_file.write(f'if detected_phrase == \'{phrase}\':')
+                    skills_file.write('\n')
+                    skills_file.write('\t')
+                    skills_file.write(f'import {module}')
+                    skills_file.write('\n')
+                    skills_file.write('\t')
+                    skills_file.write(f'print (f\'Phrase matched !!!\')')
+                    skills_file.write('\n')
+                    skills_file.write('\t')
+                    skills_file.write(f'print (f\'Running skill: {phrase}\', \'\\n\')')
+                    skills_file.write('\n')
+                    skills_file.write('\t')
+                    skills_file.write(f'{module}.skill()')
+                    skills_file.write('\n')
+                    skills_file.write('\n')
+                    skills_file.close()
+
+    # Footer
+    with open (all_skills_file, 'a') as skills_file:
+        skills_file.write(f'else:')
+        skills_file.write('\n')
+        skills_file.write('\t')
+        skills_file.write(f'from jambula_common import *')
+        skills_file.write('\n')
+        skills_file.write('\t')
+        skills_file.write(f'print (f\'Phrase Unknown\')')
+        skills_file.write('\n')
+        skills_file.write('\t')
+        skills_file.write('STT_DID_NOT_UNDERSTAND_ALERT_SOUND = \'stt_did_not_understand_said\'')
+        skills_file.write('\n')
+        skills_file.write('\t')
+        skills_file.write('subprocess.check_call([SOUNDS_TOOL, \'alert\', STT_DID_NOT_UNDERSTAND_ALERT_SOUND, \'gain=%s\' %SPEAKER_ALERTS_VOLUME_LEVEL])')
+        skills_file.write('\n')
+        skills_file.write('\n')
+        skills_file.close()
+
+
+def pocketsphinx_add_featparams_file ():
+    uid=str(scriptuid)
+    subprocess.call(['sudo', 'chown', '-R', uid, ps_share_dir])
+
+    feat_params_1 = """# Jambula: feat.params
+-lowerf 130
+-upperf 6800
+-nfilt 25
+-transform dct
+-lifter 22
+-feat 1s_c_d_dd
+-svspec 0-12/13-25/26-38
+-agc none
+-varnorm no
+-model ptm
+"""
+    feat_params_2 = f'-cmn {ps_cmn}\n'
+    feat_params_3 = f'-cmninit {ps_cmninit}'
+    feat_params = feat_params_1 + feat_params_2 + feat_params_3
+
+    with open (ps_feat_params_file, 'w') as feats:
+        feats.writelines(f'{feat_params}')
+        feats.write('\n')
+        feats.close()
+
+
+def setup_default_microphone ():
+    ps_microphone_source = args.source
+    print (f'Setting default microphone to: [{ps_microphone_source}]')
+    subprocess.run(['MY_BINARY_PREFIX/pactl', 'set-default-source', ps_microphone_source])
+    return ps_microphone_source
+
+
+def pocketsphinx_run_daemon ():
+    ps_microphone_source = setup_default_microphone ()
+
+    if ps_keyphrase_multiple == 'yes':
+        # Using multiple keyphrases
+        ps = subprocess.Popen(['MY_BINARY_PREFIX/pocketsphinx_continuous', '-adcdev', ps_microphone_source, '-hmm', ps_acoustic_models_dir, '-inmic', 'yes', '-lm', ps_language_model_file, '-dict', ps_dictionary_file, '-kws', ps_keyphrase_list, '-vad_threshold', ps_noise_silence_threshold, '-samprate', ps_samprate, '-logfn', ps_log_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    else:
+        # Using one keyphrase
+        ps = subprocess.Popen(['MY_BINARY_PREFIX/pocketsphinx_continuous', '-adcdev', ps_microphone_source, '-hmm', ps_acoustic_models_dir, '-inmic', 'yes', '-lm', ps_language_model_file, '-dict', ps_dictionary_file, '-keyphrase', ps_keyphrase, '-kws_threshold', ps_keyphrase_threshold, '-vad_threshold', ps_noise_silence_threshold, '-samprate', ps_samprate, '-logfn', ps_log_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    while ps.poll() is None:
+        detected_phrase = ps.stdout.readline()
+        detected_phrase = detected_phrase.decode()
+        detected_phrase = detected_phrase.strip()
+        if detected_phrase:
+            print (f'Detected: {detected_phrase}','\n')
+            with open (all_skills_file) as includes:
+                exec(includes.read())
+
+
+if __name__ == '__main__':
+    args = usage()
+    generate_all_skills_file ()
+    pocketsphinx_add_featparams_file ()
+    pocketsphinx_run_daemon ()

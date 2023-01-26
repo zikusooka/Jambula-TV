@@ -2,7 +2,7 @@
 # This is the initial file used by JambulaTV installation program.
 # It mainly sources routines from the main functions file
 #
-# Jambula Labs @copyright 2022-2023 All rights reserved
+# Jambula Labs @copyright 2023-2024 All rights reserved
 
 # Variables
 PROJECT_NAME=JambulaTV
@@ -416,6 +416,7 @@ text2speech_setup
 sphinxbase_install
 pocketsphinx_install
 pocketsphinx_configure
+voice_assistant_setup
 #SpeechRecognition_install
 
 # -----------------------------------------

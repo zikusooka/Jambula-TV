@@ -812,7 +812,7 @@ MQTT_TOPIC_PRESENCE_MIFI=JambulaTV/house/presence/mifi
 MQTT_TOPIC_PRESENCE_TRACKERJACKER=JambulaTV/house/presence/trackerjacker
 MQTT_TOPIC_STATUS_MIFI=JambulaTV/house/status/mifi
 # Asterisk
-MQTT_TOPIC_INCOMING_PHONE_CALL='JambulaTV/house/phonecalls/incoming'
+MQTT_TOPIC_INCOMING_PHONE_CALL=JambulaTV/house/phonecalls/incoming
 # SMARTD 
 MQTT_TOPIC_SMARTD_HEALTH_INFO=JambulaTV/house/status/smartd
 # Flash briefing
@@ -959,8 +959,7 @@ WIFI_DEVICES_ROLES_LIST=$TMPDIR/list_of_wireless_devices_roles
 OUR_WIFI_DEVICES_FILE=$PROJECT_SYSTEM_CONF_DIR/my-wifi-devices.cfg
 	[[ -e $OUR_WIFI_DEVICES_FILE ]] && \
 NUMBER_OF_OUR_WIFI_DEVICES=$(awk '$5 == "yes" {print $0}' $OUR_WIFI_DEVICES_FILE | grep -Ev '(#.*$)|(^$)' | wc -l)
-
-NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip link | grep '2: ' | cut -d : -f2 | head -1 | sed -e 's/ //g')
+NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip -o link | grep -v -e lo -e wlan -e wlp -e ww | awk -F': ' '{print $2}' | head -1)
 NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | grep brd | awk {'print $2'} | cut -d / -f1)
 NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
 NETWORK_WIRED_PREFIX=24
@@ -1300,6 +1299,7 @@ TWITTER_TOOL="$BINARY_PREFIX/jambulatv-twitter"
 UMEME_OUTAGES_VIA_API_TOOL="$BINARY_PREFIX/jambulatv-umeme-outages-via-api"
 UMEME_OUTAGES_VIA_SCRAPER_TOOL="$BINARY_PREFIX/jambulatv-umeme-outages-via-scraper"
 VLM_VOD_DELETE_TOOL="$BINARY_PREFIX/jambulatv-delete-video-on-demand"
+VOICE_ASSISTANT_TOOL="$BINARY_PREFIX/jambulatv-voice-assistant"
 WEATHER_VIA_SCRAPER_TOOL="$BINARY_PREFIX/jambulatv-weather-via-scraper"
 WEBRADIO_STREAMER_TOOL="$BINARY_PREFIX/jambulatv-internet-radio-streamer"
 WHATSAPP_TOOL="$BINARY_PREFIX/jambulatv-whatsapp"
@@ -1319,8 +1319,10 @@ ZONEMINDER_ZMS_INETD_TOOL="$BINARY_PREFIX/jambulatv-zms-inetd"
 TTS_OUTPUT_FILE=$(grep ^TTS_OUTPUT_FILE $TEXT2SPEECH_TOOL | cut -d '=' -f2 | head -1 | awk {'print $1'}) # IMPORTANT: Must be on 'ext4' partition i.e. /var
 # TTS provider
 TTS_PROVIDER_API=2 # Default API used > 1=iSpeech 2=google 3=watson
-# Skills 
+# ASR Skills file 
 ASR_SKILLS_FILE=$BINARY_PREFIX/jambulatv-asr-skills
+# Voice skills directory
+VOICE_SKILLS_DIR=$PROJECT_SYSTEM_SHARE_DIR/voice_skills
 # Pocketsphinx
 POCKETSPHINX_DATA_DIR=$PROJECT_SYSTEM_SHARE_DIR/pocketsphinx
 
@@ -16383,6 +16385,45 @@ EOF
 cp -v $PROJECT_INIT_SCRIPTS_DIR/jambulatv-speech-recognition.service $SYSTEMD_UNITS_DIR_USER/
 # Enable jambulatv-speech-recognition.service if needed
 systemctl enable jambulatv-speech-recognition.service
+}
+
+voice_assistant_setup () {
+PULSE_DEFAULT_SOURCE=$($PULSE_CONTROL_CMD get-default-source)
+#
+# Copy jambulatv-voice-assistant script, if it does not exist in bin directory
+[[ -e $VOICE_ASSISTANT_TOOL ]] || \
+	cat $PROJECT_BIN_DIR/jambulatv-voice-assistant | \
+		sed -e "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
+		sed -e "s:MY_COPYRIGHT_NOTICE:$COPYRIGHT_NOTICE:g" | \
+		sed -e "s:MY_DATA_ROOT_DIR:$DATAROOTDIR:g" | \
+		sed -e "s:MY_BINARY_PREFIX:$BINARY_PREFIX:g" | \
+		sed -e "s:MY_TMPDIR:$TMPDIR:g" | \
+		sed -e "s:MY_PROJECT_SYSTEM_SHARE_DIR:$PROJECT_SYSTEM_SHARE_DIR:g" \
+		> $VOICE_ASSISTANT_TOOL
+# Make script executable
+chmod 755 $VOICE_ASSISTANT_TOOL
+
+# Copy contributed voice skills to share directory
+rsync -av $PROJECT_CONTRIB_DIR/voice_skills/ $PROJECT_SYSTEM_SHARE_DIR/voice_skills/
+# Modify common skills
+cat $PROJECT_CONTRIB_DIR/voice_skills/jambula_common.py | \
+		sed -e "s:MY_COPYRIGHT_NOTICE:$COPYRIGHT_NOTICE:g" | \
+		sed -e "s:MY_GLOBAL_SETTINGS_FILE:$PROJECT_GLOBAL_SETTINGS_FILE:g" \
+		> $PROJECT_SYSTEM_SHARE_DIR/voice_skills/jambula_common.py 
+# Change ownership of voice skills directory
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_SHARE_DIR/voice_skills
+
+# Configure and copy systemd unit (.service) file if not present
+[[ -e $SYSTEMD_UNITS_DIR_USER/jambulatv-voice-assistant.service ]] || \
+	cat $PROJECT_INIT_SCRIPTS_DIR/jambulatv-voice-assistant.service | \
+		sed -e "s:MY_PROJECT_NAME:$PROJECT_NAME:g" | \
+		sed -e "s:MY_VOICE_ASSISTANT_TOOL:$VOICE_ASSISTANT_TOOL:g" | \
+		sed -e "s:MY_VOICE_SKILLS_DIR:$VOICE_SKILLS_DIR:g" | \
+		sed -e "s:MY_MICROPHONE:$PULSE_DEFAULT_SOURCE:g" \
+			> $SYSTEMD_UNITS_DIR_USER/jambulatv-voice-assistant.service
+
+# Enable jambulatv-voice-assistant.service
+systemctl enable jambulatv-voice-assistant.service
 }
 
 SpeechRecognition_install () {

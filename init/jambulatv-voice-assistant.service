@@ -1,0 +1,10 @@
+[Unit]
+Description=MY_PROJECT_NAME Voice Assistant
+After=sound.target
+
+[Service]
+PIDFile=/run/MY_PROJECT_NAME-voice-assistant.pid
+ExecStart=MY_VOICE_ASSISTANT_TOOL -d MY_VOICE_SKILLS_DIR -s MY_MICROPHONE
+
+[Install]
+WantedBy=multi-user.target
