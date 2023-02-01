@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # - Query voice airtime, and Internet data (standard & promotional)
+# - Query mobile money balances
 # - Look up the phone number registered to the SIM card installed
 # - Look up the name of the mobile money recipient i.e. Caller ID
 # - Load SMS bundles
@@ -144,6 +145,20 @@ query_data_balance_mtn_promotion () {
 query_data_balance_mtn_standard
 }
 
+query_mobile_money_balance_mtn () {
+MM_PIN_NUMBER=$MOBILE_EXTRA_ARG
+ussd_initiate_session_command "*165*8*1#" > /dev/null 2>&1
+MM_BALANCE=$(ussd_respond_session_command "$MM_PIN_NUMBER" | grep -oP "(?<=Your Mobile Money balance is UGX ).+(?=.and your Single Max)")
+if [[ "x$MM_BALANCE" != "x" ]];
+then
+echo -n "$MM_BALANCE"
+else
+logger -s -t $(basename $0) "Error: Failed to get the balance on $MOBILE_PROVIDER Mobile Money"
+exit 1
+fi
+ussd_cancel_session_command
+}
+
 query_phone_number_mtn () {
 ussd_initiate_session_command '*160*7#' > /dev/null 2>&1
 PHONE_NUMBER=$(ussd_respond_session_command '1'  | awk -F'Your current number is: ' '/Your current number is/ {print $2}' | cut -d. -f1)
@@ -155,17 +170,17 @@ $MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_GSM_PHONE_NUMBER_MTN
 
 query_mobile_money_recipient_name_mtn () {
 MM_RECIPIENT_NUMBER=$MOBILE_EXTRA_ARG
-ussd_initiate_session_command "*185**1**1#" > /dev/null 2>&1
+ussd_initiate_session_command "*165*1*1#" > /dev/null 2>&1
 ussd_respond_session_command "$MM_RECIPIENT_NUMBER" > /dev/null 2>&1
-ussd_respond_session_command "$MM_MIN_AMOUNT" | grep 'insufficient funds' > /dev/null 2>&1
-INSUFFICIENT_FUNDS=$?
-if [[ "$INSUFFICIENT_FUNDS" = "0" ]];
+ussd_respond_session_command "$MM_MIN_AMOUNT" > /dev/null 2>&1
+MM_RECIPIENT_NAME=$(ussd_respond_session_command "No Reason" | grep -oP "(?<=$MM_MIN_AMOUNT to ).+(?= on )")
+if [[ "x$MM_RECIPIENT_NAME" != "x" ]];
 then
-logger -s -t $(basename $0) "You have insufficient funds in your mobile money wallet. Please make the minimum deposit, and re-run this tool"
-ussd_cancel_session_command
+echo -n "$MM_RECIPIENT_NAME"
+else
+logger -s -t $(basename $0) "Error: Failed to get the registered name for the phone number $MM_RECIPIENT_NUMBER"
 exit 1
 fi
-ussd_respond_session_command 'Not Applicable' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=$MM_MIN_AMOUNT to ).+(?= on )"
 ussd_cancel_session_command
 }
 
@@ -238,6 +253,28 @@ query_data_balance_airtel_promotion () {
 query_data_balance_airtel_standard
 }
 
+query_mobile_money_balance_airtel () {
+MM_PIN_NUMBER=$MOBILE_EXTRA_ARG
+ussd_initiate_session_command "*185*10#" | grep -i "SET PIN" > /dev/null 2>&1
+INACTIVE_ACCOUNT=$?
+if [[ "$INACTIVE_ACCOUNT" = "0" ]];
+then
+logger -s -t $(basename $0) "You have activated your mobile money account. Please set the PIN code, and re-run this tool"
+ussd_cancel_session_command
+exit 1
+fi
+ussd_respond_session_command "2" > /dev/null 2>&1
+MM_BALANCE=$(ussd_respond_session_command "$MM_PIN_NUMBER" | grep -oP "(?<=Balance: UGX ).+(?=.)")
+if [[ "x$MM_BALANCE" != "x" ]];
+then
+echo -n "$MM_BALANCE"
+else
+logger -s -t $(basename $0) "Error: Failed to get the balance on $MOBILE_PROVIDER Mobile Money"
+exit 1
+fi
+ussd_cancel_session_command
+}
+
 query_phone_number_airtel () {
 ussd_initiate_session_command '*100*7#' > /dev/null 2>&1
 PHONE_NUMBER=$(ussd_respond_session_command '2' | awk -F': ' '/new reply from network/ {print $3}' | sed "s:'::g")
@@ -249,7 +286,7 @@ $MQTT_PUBLISH_CMD $MQTT_PUBLISH_OPTS -t "$MQTT_TOPIC_STATUS_GSM_PHONE_NUMBER_AIR
 
 query_mobile_money_recipient_name_airtel () {
 MM_RECIPIENT_NUMBER=$MOBILE_EXTRA_ARG
-ussd_initiate_session_command "*185#" | grep -i "SET PIN" > /dev/null 2>&1
+ussd_initiate_session_command "*185*1#" | grep -i "SET PIN" > /dev/null 2>&1
 INACTIVE_ACCOUNT=$?
 if [[ "$INACTIVE_ACCOUNT" = "0" ]];
 then
@@ -257,16 +294,16 @@ logger -s -t $(basename $0) "You have activated your mobile money account. Pleas
 ussd_cancel_session_command
 exit 1
 fi
+ussd_respond_session_command "1" > /dev/null 2>&1
 ussd_respond_session_command "$MM_RECIPIENT_NUMBER" > /dev/null 2>&1
-ussd_respond_session_command "$MM_MIN_AMOUNT" | grep 'insufficient funds' > /dev/null 2>&1
-INSUFFICIENT_FUNDS=$?
-if [[ "$INSUFFICIENT_FUNDS" = "0" ]];
+MM_RECIPIENT_NAME=$(ussd_respond_session_command "$MM_MIN_AMOUNT" | grep -oP "(?<=$MM_RECIPIENT_NUMBER- ).+(?=. Charge UGX)")
+if [[ "x$MM_RECIPIENT_NAME" != "x" ]];
 then
-logger -s -t $(basename $0) "You have insufficient funds in your mobile money wallet. Please make the minimum deposit, and re-run this tool"
-ussd_cancel_session_command
+echo -n "$MM_RECIPIENT_NAME"
+else
+logger -s -t $(basename $0) "Error: Failed to get the registered name for the phone number $MM_RECIPIENT_NUMBER"
 exit 1
 fi
-ussd_respond_session_command 'Not Applicable' | awk -F': ' '/new reply from network/ {print $2}' | grep -oP "(?<=$MM_MIN_AMOUNT to ).+(?= on )"
 ussd_cancel_session_command
 }
 
@@ -344,6 +381,24 @@ exit 1
 fi
 ;;
 
+money-balance)
+if [[ "x$MOBILE_PROVIDER" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $MOBILE_ACTION [MTN|Airtel] [PIN NUMBER]
+ET
+exit 1
+#
+elif [[ "x$MOBILE_EXTRA_ARG" = "x" ]];
+then
+cat <<ET
+Usage: $(basename $0) $MOBILE_ACTION $MOBILE_PROVIDER [PIN NUMBER]
+ET
+exit 1
+#
+fi
+;;
+
 data-load)
 if [[ "x$MOBILE_PROVIDER" = "x" ]];
 then
@@ -399,7 +454,7 @@ fi
 
 *)
 cat <<ET
-Usage: $(basename $0) [voice-balance|data-balance|data-load|phone-number|callerid-name|sms-on-net|sms-off-net]
+Usage: $(basename $0) [voice-balance|data-balance|money-balance|data-load|phone-number|callerid-name|sms-on-net|sms-off-net]
 ET
 exit 1
 ;;
@@ -480,6 +535,24 @@ query_data_balance_airtel_standard
 elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] && "$MOBILE_EXTRA_ARG" = "promotion" ]];
 then
 query_data_balance_airtel_promotion
+
+fi
+;;
+
+money-balance)
+# MTN 
+# ---
+# Mobile Money - Check balance using MTN
+if [[ "$MOBILE_PROVIDER" = [Mm][Tt][Nn] ]];
+then
+query_mobile_money_balance_mtn
+
+# Airtel
+# ------
+# Mobile Money - Check balance using Airtel
+elif [[ "$MOBILE_PROVIDER" = [Aa][Ii][Rr][Tt][Ee][Ll] ]];
+then
+query_mobile_money_balance_airtel
 
 fi
 ;;
