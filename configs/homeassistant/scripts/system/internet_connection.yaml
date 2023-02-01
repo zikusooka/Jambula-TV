@@ -21,10 +21,10 @@ internet_already_connected:
 internet_connect_wifi_ap:
   sequence:
 
-    # Enable WiFi AP (MiFi) service discovery by Icinga
+    # Enable WiFi AP (MiFi) host discovery by Icinga
     # --------------------------------------------------
     - service: script.turn_on
-      entity_id: script.icinga_wifi_ap_service_discovery_enable
+      entity_id: script.icinga_wifi_ap_host_discovery_enable
 
    
     # Voice Alert: Connecting to Internet
@@ -75,10 +75,10 @@ internet_connect_wifi_ap:
 internet_disconnect_wifi_ap:
   sequence:
 
-    # Disable WiFi AP (MiFi) service discovery by Icinga
+    # Disable WiFi AP (MiFi) host discovery by Icinga
     # --------------------------------------------------
     - service: script.turn_on
-      entity_id: script.icinga_wifi_ap_service_discovery_disable
+      entity_id: script.icinga_wifi_ap_host_discovery_disable
 
  
     # Voice Alert: Disconnecting from Internet

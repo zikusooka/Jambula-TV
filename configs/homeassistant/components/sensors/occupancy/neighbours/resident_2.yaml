@@ -1,4 +1,4 @@
 platform: mqtt
-state_topic: !secret mqtt_presence_tshark_topic_resident_2
+state_topic: !secret mqtt_presence_topic_resident_2
 expire_after: 360
-name: Resident2 TShark Status
+name: Resident2 Presence Status

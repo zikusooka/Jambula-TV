@@ -2,4 +2,5 @@ platform: mqtt
 devices:
   trackerjacker_mobile_01_zik: !secret mqtt_presence_trackerjacker_topic_mobile_01_zik
   trackerjacker_laptop_01_zik: !secret mqtt_presence_trackerjacker_topic_laptop_01_zik
-source_type: router
+#consider_home: 120
+source_type: gps

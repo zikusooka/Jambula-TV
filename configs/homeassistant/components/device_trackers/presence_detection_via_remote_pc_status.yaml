@@ -1,7 +1,6 @@
 platform: mqtt
 devices:
-  pc_usage_status_kampala: !secret mqtt_status_remote_pc_kampala
-payload_home: active
-payload_not_home: idle
-source_type: router
-consider_home: 180
+  pc_usage_status_zik_kampala: !secret mqtt_status_remote_pc_kampala
+  pc_usage_status_monica_gulu: !secret mqtt_status_remote_pc_gulu
+#consider_home: 120
+source_type: gps

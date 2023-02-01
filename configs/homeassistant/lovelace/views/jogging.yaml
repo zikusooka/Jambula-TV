@@ -42,8 +42,10 @@ cards:
   - type: vertical-stack
     cards:      
       - !include ../cards/entities-jogging-distance-ran-today-monica.yaml
+      - !include ../cards/conditional-jogging-distance-ran-total-monica.yaml
 
   # Text
       - type: horizontal-stack
         cards:
-          - !include ../cards/conditional-jogging-distance-ran-total-monica.yaml
+          #- !include ../cards/conditional-jogging-distance-ran-total-monica.yaml
+          - !include ../cards/conditional-markdown-removeme.yaml

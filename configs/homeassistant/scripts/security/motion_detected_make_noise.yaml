@@ -42,8 +42,7 @@ motion_detected_outside_make_noise:
         {% else %}
           script.dummy
         {% endif %}
-      entity_id: sensor.pc_usage_status_for_kampala
-        #{% if not is_state('sensor.pc_usage_status_for_kampala', 'idle') and is_state('sun.sun', 'below_horizon') %}
+      entity_id: scene.LivingRoom_Normal
 
 
     # Start display of camera event at tablet

@@ -24,6 +24,11 @@ zik_has_returned_4rm_jogging:
         audio_gain: !secret voice_alert_audio_gain_medium
 
 
+    # Update jogging statistics for Zik
+    # ---------------------------------- 
+    - service: script.jogging_completed_zik
+
+
     # Music
     # -----
     #- delay: 120

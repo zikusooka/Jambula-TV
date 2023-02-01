@@ -1,6 +1,20 @@
 jogging_completed_zik:
   sequence:
 
+    # Launch script to update jogging statistics if 12 hours have passed
+    # ---
+    - service_template: >
+        {% if states('sensor.jogging_statistics_last_updated_zik') | round (0) > 43200 %}
+          script.jogging_completed_update_stats_zik
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: script.jogging_completed_update_stats_zik
+
+
+jogging_completed_update_stats_zik:
+  sequence:
+
     # Update last distance ran
     # ---
     - service: input_number.set_value

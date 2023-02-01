@@ -1,0 +1,28 @@
+type: conditional
+conditions:
+  - entity: sensor.resident1_tshark_status 
+    state_not: 'Away'
+  - entity: sensor.resident2_tshark_status 
+    state_not: 'Away'
+  - entity: sensor.resident3_tshark_status 
+    state_not: 'Away'
+  - entity: sensor.resident4_tshark_status 
+    state_not: 'Away'
+  - entity: sensor.resident5_tshark_status 
+    state_not: 'Away'
+
+card:
+  type: entity-filter
+  entities:
+    - sensor.resident1_tshark_status 
+    - sensor.resident2_tshark_status 
+    - sensor.resident3_tshark_status 
+    - sensor.resident4_tshark_status 
+    - sensor.resident5_tshark_status 
+  state_filter:
+    - 'home'
+    - 'Home'
+    - 'Sighted'
+    - 'sighted'
+    - 'Away'
+    - 'unavailable'

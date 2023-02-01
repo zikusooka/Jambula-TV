@@ -6,5 +6,5 @@ devices:
   tshark_tablet_01: !secret mqtt_presence_tshark_topic_tablet_01
   tshark_mifi_router_01: !secret mqtt_presence_tshark_topic_mifi_router_01
   tshark_mobile_01_monica: !secret mqtt_presence_tshark_topic_mobile_01_monica
-consider_home: 180
-source_type: router
+#consider_home: 120
+source_type: gps

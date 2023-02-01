@@ -7,26 +7,33 @@ trigger:
 
   - platform: state
     entity_id: person.zik
-    from: 'not_home'
-    to: 'home'
+    from: 'Away'
+    to: 'Home'
     id: presence_away_2_home_zik
 
   - platform: state
     entity_id: person.zik
-    from: 'home'
-    to: 'not_home'
+    from: 'Home'
+    to: 'Away'
     id: presence_home_2_away_zik
 
   - platform: state
-    entity_id: sensor.pc_usage_status_for_kampala
-    to: 'active'
+    entity_id: person.zik
+    to: 'Away'
+    for:
+      minutes: 9
+    id: presence_away_4_long_zik
+
+  - platform: state
+    entity_id: device_tracker.pc_usage_status_zik_kampala
+    to: 'Home'
     for:
       minutes: 5
     id: presence_pc_usage_status_active_zik
 
   - platform: state
-    entity_id: sensor.pc_usage_status_for_kampala
-    to: 'idle'
+    entity_id: device_tracker.pc_usage_status_zik_kampala
+    to: 'Away'
     for:
       minutes: 5
     id: presence_pc_usage_status_idle_zik
@@ -40,7 +47,7 @@ trigger:
 
   - platform: state
     entity_id: media_player.jambulatv_pi_living_room
-    to: 'idle'
+    to: 'Away'
     for:
       minutes: 3
     id: presence_tv_living_room_idle_zik
@@ -97,6 +104,15 @@ action:
           data:
             entity_id: input_select.presence_status_zik
             option: 'Just Left'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_away_4_long_zik
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Away'
 
     - conditions:    
         - condition: trigger

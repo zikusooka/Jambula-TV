@@ -1,9 +1,12 @@
 type: conditional
 conditions:
-  - entity: sensor.activity_while_at_home_monica
+  - entity: person.monica
+    state_not: 'unavailable'
+  - entity: person.monica
     state_not: 'unknown'
   - entity: person.monica
-    state_not: 'not_home'
+    state_not: 'Away'
+
 
 card:
   type: entity-filter
@@ -15,17 +18,15 @@ card:
     - 'Home'
     - 'home'
     - 'Just Arrived'
-    - 'not_home'
-    - 'unknown'
     - 'Working'
     - 'working'
     - 'jogging'
     - 'Jogging'
     - 'Sleeping'
     - 'sleeping'
+    - 'Watching TV'
+    - 'watching tv'
     - 'Away'
     - 'away'
     - 'Choring'
     - 'choring'
-    - 'on'
-    - 'off'

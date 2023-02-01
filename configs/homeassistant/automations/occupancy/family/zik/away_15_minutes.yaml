@@ -14,10 +14,10 @@ condition:
   condition: and
   conditions:
 
-    # Zik is not using the Laptop i.e. Kampala idle for 15 mins
+    # Zik is not using the Laptop i.e. Kampala user away for 15 mins
     - condition: state
-      entity_id: sensor.pc_usage_status_for_kampala
-      state: 'idle'
+      entity_id: device_tracker.pc_usage_status_zik_kampala
+      state: 'Away'
       for:
         minutes: 15
 

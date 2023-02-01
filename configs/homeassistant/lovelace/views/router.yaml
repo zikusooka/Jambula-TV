@@ -12,6 +12,7 @@ cards:
   # Internet and Mobile network information
   - type: vertical-stack
     cards:
+      - !include ../cards/entities-sensor-wifi-ap-discovery-status.yaml
       - !include ../cards/entity-button-internet-status.yaml
 
       - type: horizontal-stack
@@ -27,25 +28,11 @@ cards:
           - !include ../cards/conditional-mifi-network-provider.yaml
           - !include ../cards/conditional-mifi-network-type.yaml
 
-      # Internet - Connect/Disconnect
+
+      # Title - MTN
       - type: horizontal-stack
         cards:
-          - !include ../cards/conditional-entity-button-internet-connect.yaml
-          - !include ../cards/conditional-entity-button-internet-disconnect.yaml
-
-
-
-
-      # Credit Balance - Airtel
-      - type: horizontal-stack
-        cards:
-          - !include ../cards/entities-sensor-airtime-balance-airtel.yaml
- 
-      # Buy Data
-      - type: horizontal-stack
-        cards:
-          - !include ../cards/entity-button-data-load-airtel-ug-day1.yaml
-          - !include ../cards/entity-button-data-load-airtel-ug-weekend1.yaml
+          - !include ../cards/markdown-title-mtn.yaml
 
       # Credit Balance - MTN
       - type: horizontal-stack
@@ -59,7 +46,28 @@ cards:
           - !include ../cards/entity-button-data-load-mtn-ug-night1.yaml
 
 
+      # Title - Airtel
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/markdown-title-airtel.yaml
 
+      # Credit Balance - Airtel
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entities-sensor-airtime-balance-airtel.yaml
+ 
+      # Buy Data
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-data-load-airtel-ug-day1.yaml
+          - !include ../cards/entity-button-data-load-airtel-ug-weekend1.yaml
+
+
+      # Internet - Connect/Disconnect
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-entity-button-internet-connect.yaml
+          - !include ../cards/conditional-entity-button-internet-disconnect.yaml
 
 
   # MiFi router status

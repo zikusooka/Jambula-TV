@@ -1,0 +1,34 @@
+resident_arrived:
+  sequence:
+
+
+    # Voice Alert: Announce that a resident has arrived
+    # -------------------------------------------------
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'resident_has_arrived'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+    # Send messages using  XMPP, WhatsApp, and Telegram
+    # -------------------------------------------------
+    # XMPP Message
+    - service: notify.jambulatv
+      data_template:
+        title: '[JambulaTV]'
+        message: 'Resident {{resident_number}} has arrived'
+
+
+    # WhatsApp Message
+    - service: script.send_whatsapp
+      data_template:        
+        whatsapp_text: 'Resident {{resident_number}} has arrived'
+        whatsapp_image: ''
+        whatsapp_recipient_phone: ''
+  
+    # Telegram Message
+    - service: script.send_telegram
+      data_template: 
+        telegram_text: 'Resident {{resident_number}} has arrived'
+        telegram_image: ''
+        telegram_recipient_phone: ''

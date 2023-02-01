@@ -5,7 +5,6 @@ trigger:
 
   - platform: state
     entity_id: device_tracker.bluez_mobile_01_monica
-    #from: 'Away'
     to: 'Home'
     for:
       minutes: 1

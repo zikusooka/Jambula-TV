@@ -7,7 +7,7 @@ internet_datasaver_enable_manual:
 
 
     # Disable discovery of WiFi access point i.e. Don't connect to MiFi automatically
-    - service: script.icinga_wifi_ap_service_discovery_disable
+    - service: script.icinga_wifi_ap_host_discovery_disable
 
 
     # Voice Alert: Internet data saver mode enabled
@@ -30,7 +30,7 @@ internet_datasaver_disable_manual:
   sequence:
 
     # Enable discovery of WiFi access point i.e. Connect to MiFi automatically
-    - service: script.icinga_wifi_ap_service_discovery_enable
+    - service: script.icinga_wifi_ap_host_discovery_enable
 
 
     # Turn off data saver mode
@@ -53,7 +53,7 @@ internet_datasaver_enable_auto_no_alert:
 
 
     # Disable discovery of WiFi access point i.e. Don't connect to MiFi automatically
-    - service: script.icinga_wifi_ap_service_discovery_disable
+    - service: script.icinga_wifi_ap_host_discovery_disable
 
 
 
@@ -61,7 +61,7 @@ internet_datasaver_disable_auto_no_alert:
   sequence:
 
     # Enable discovery of WiFi access point i.e. Connect to MiFi automatically
-    - service: script.icinga_wifi_ap_service_discovery_enable
+    - service: script.icinga_wifi_ap_host_discovery_enable
 
 
     # Turn off data saver mode

@@ -7,7 +7,5 @@ devices:
   bluez_mobile_05_zik: !secret mqtt_presence_bluez_topic_mobile_05_zik
   bluez_mobile_01_monica: !secret mqtt_presence_bluez_topic_mobile_01_monica
   bluez_mobile_02_monica: !secret mqtt_presence_bluez_topic_mobile_02_monica
-payload_home: 'Home'
-payload_not_home: 'Away'
-#consider_home: 180
-source_type: router
+#consider_home: 120
+source_type: gps

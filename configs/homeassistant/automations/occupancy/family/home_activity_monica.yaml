@@ -7,26 +7,33 @@ trigger:
 
   - platform: state
     entity_id: person.monica
-    from: 'not_home'
+    from: 'Away'
     to: 'home'
     id: presence_away_2_home_monica
 
   - platform: state
     entity_id: person.monica
-    from: 'home'
-    to: 'not_home'
+    from: 'Home'
+    to: 'Away'
     id: presence_home_2_away_monica
 
   - platform: state
-    entity_id: sensor.pc_usage_status_for_kampala
-    to: 'active'
+    entity_id: person.monica
+    to: 'Away'
+    for:
+      minutes: 9
+    id: presence_away_4_long_monica
+
+  - platform: state
+    entity_id: device_tracker.pc_usage_status_monica_gulu
+    to: 'Home'
     for:
       minutes: 3
     id: presence_pc_usage_status_active_monica
 
   - platform: state
-    entity_id: sensor.pc_usage_status_for_kampala
-    to: 'idle'
+    entity_id: device_tracker.pc_usage_status_monica_gulu
+    to: 'Away'
     for:
       minutes: 5
     id: presence_pc_usage_status_idle_monica
@@ -40,7 +47,7 @@ trigger:
 
   - platform: state
     entity_id: media_player.jambulatv_pi_living_room
-    to: 'idle'
+    to: 'Away'
     for:
       minutes: 3
     id: presence_tv_living_room_idle_monica
@@ -97,6 +104,15 @@ action:
           data:
             entity_id: input_select.presence_status_monica
             option: 'Just Left'
+
+    - conditions:    
+        - condition: trigger
+          id: presence_away_4_long_monica
+      sequence:
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.presence_status_monica
+            option: 'Away'
 
     - conditions:    
         - condition: trigger
