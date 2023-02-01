@@ -73,9 +73,12 @@ def interface_setup ():
 
    command_interface_up = ['/usr/bin/sudo', '/usr/sbin/ip', 'link', 'set', interface, 'up']
 
-   subprocess.check_call(command_interface_up)
+   try:
+       subprocess.check_call(command_interface_up)
+   except:
+       sys.exit(UNKNOWN)
 
-
+   
 def main():
    """
    Simple WiFi Scanner
