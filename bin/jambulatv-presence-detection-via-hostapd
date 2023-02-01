@@ -2,7 +2,7 @@
 # This is used to alert when a user or client connects to JambulaTV WiFi access point i.e.
 # Presence detection.  Use MQTT to notify smart home hub
 #
-# Jambula Labs @copyright 2022-2023 All rights reserved
+# Jambula Labs @copyright 2023-2024 All rights reserved
 
 PROJECT_NAME=JambulaTV
 PROJECT_SYSTEM_CONF_DIR=/etc/$PROJECT_NAME
@@ -70,12 +70,20 @@ mqtt_publish_home
 done
 # Notify via logger and OSD
 notify_via_logger_osd_home
-fi
 
 # Disconnections from AP
 # ----------------------
-if [[ $2 == "AP-STA-DISCONNECTED" && $3 == "$WIFI_USER_MAC" ]];
+elif [[ $2 == "AP-STA-DISCONNECTED" && $3 == "$WIFI_USER_MAC" ]];
 then
+# Notify via MQTT - Implement case transformations 
+for MAC_ADDRESS in ${3,,} ${3^^};
+do
+mqtt_publish_away
+done
+# Notify via logger and OSD
+notify_via_logger_osd_away
+
+else
 # Notify via MQTT - Implement case transformations 
 for MAC_ADDRESS in ${3,,} ${3^^};
 do
