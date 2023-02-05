@@ -276,7 +276,7 @@ ussd_cancel_session_command
 }
 
 query_phone_number_airtel () {
-ussd_initiate_session_command '*100*7#' > /dev/null 2>&1
+ussd_initiate_session_command '*100*9#' > /dev/null 2>&1
 PHONE_NUMBER=$(ussd_respond_session_command '2' | awk -F': ' '/new reply from network/ {print $3}' | sed "s:'::g")
 # Print balance on terminal
 echo $PHONE_NUMBER
