@@ -20,6 +20,9 @@ PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 #DEBUGGING
 #_install_pause_check_4_errors_ "[Insert program name here] Install"
 
+# Fetch project packages
+fetch_packages
+
 # Custom kernel install, reboot is needed
 kernel_install 
 

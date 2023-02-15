@@ -9,18 +9,37 @@ PROJECT_NAME=JambulaTV
 PROJECT_NICKNAME=Nabusugwe
 PROJECT_SYSTEM_TYPE=server
 PROJECT_SYSTEM_NO=01
-PROJECT_URL="https://www.jambulatv.com"
-PROJECT_TRACKER_URL="https://issues.jambulatv.com"
-PROJECT_DOMAINS="jambulatv.com, jambula.net, jambula.cc" 
+PROJECT_SERVER_DOMAIN="jambulatv.com"
+PROJECT_DOMAINS="$PROJECT_SERVER_DOMAIN, jambula.net, jambula.cc" 
+PROJECT_URL="https://www.$PROJECT_SERVER_DOMAIN"
+PROJECT_TRACKER_URL="https://issues.$PROJECT_SERVER_DOMAIN"
 COMPANY_NAME="Jambula Labs"
-COMPANY_URL="https://www.jambulalabs.com"
+COMPANY_URL="https://www.jambula.homes"
 COMPANY_WORKGROUP="JAMBULA"
 COPYRIGHT_YEAR_START=$(date '+%Y')
 COPYRIGHT_YEAR_END=$(date '+%Y' --date='12 months')
 COPYRIGHT_NOTICE=" ©$COPYRIGHT_YEAR_START-$COPYRIGHT_YEAR_END $COMPANY_NAME All Rights Reserved."
-EMAIL_ADDRESS_SUPPORT=support@jambulatv.com
-EMAIL_ADDRESS_ERRORS=errors@jambulatv.com
+EMAIL_ADDRESS_SUPPORT=support@$PROJECT_SERVER_DOMAIN
+EMAIL_ADDRESS_ERRORS=errors@$PROJECT_SERVER_DOMAIN
 
+# FTP Server info
+JAMBULATV_FTP_SERVER=sftp.$PROJECT_SERVER_DOMAIN
+JAMBULATV_FTP_PORT=21
+JAMBULATV_FTP_SERVER_ROOT_DIR=$PROJECT_NAME
+JAMBULATV_FTP_SERVER_PACKAGES_DIR=$JAMBULATV_FTP_SERVER_ROOT_DIR/packages
+JAMBULATV_FTP_SERVER_UPDATES_DIR=$JAMBULATV_FTP_SERVER_ROOT_DIR/updates
+JAMBULATV_FTP_SERVER_VERSION_FILE=$JAMBULATV_FTP_SERVER_UPDATES_DIR/VERSION
+JAMBULATV_FTP_SERVER_IPTV_DIR_NAME=$JAMBULATV_FTP_SERVER_ROOT_DIR/iptv
+JAMBULATV_FTP_USER=jambulaftp1
+JAMBULATV_FTP_PASS=nahZic4k
+
+# Packages cache directory
+PACKAGES_CACHE_DIR_DOWNLOAD_REQUIRED="n"
+PACKAGES_CACHE_DIR_CHECKSUM_CHECK="n"
+PACKAGES_CACHE_DIR_CHECKSUM_EXPECTED="128559"
+PACKAGES_CACHE_DIR_SIZE_EXPECTED="11210316"
+
+# Remote host attendant 
 PROJECT_ATTENDANT_USERNAME=zik
 PROJECT_ATTENDANT_HOSTNAME=kampala
 
@@ -82,11 +101,11 @@ LOGROTATE_CONF_DIR=$CONFDIR/logrotate.d
 FIRMWARE_DIR=$PREFIX/lib/firmware
 POST_INSTALL_NOTES=$ROOT_DIR/post_install_notes
 LOCK_FILES_DIR=$TMPDIR
-# Source directories
+
+# Project directories
 PROJECT_BASE_DIR=$SOURCESDIR/$PROJECT_NAME
 PROJECT_PATCHES_DIR=$PROJECT_BASE_DIR/patches
 PROJECT_CONFIGS_DIR=$PROJECT_BASE_DIR/configs
-PROJECT_SRC_DIR=$PROJECT_BASE_DIR/src
 PROJECT_BIN_DIR=$PROJECT_BASE_DIR/bin
 PROJECT_UTILS_DIR=$PROJECT_BASE_DIR/utils
 PROJECT_IMAGES_DIR=$PROJECT_BASE_DIR/images
@@ -94,15 +113,8 @@ PROJECT_CONTRIB_DIR=$PROJECT_BASE_DIR/contrib
 PROJECT_INIT_SCRIPTS_DIR=$PROJECT_BASE_DIR/init
 PROJECT_CUSTOMIZATION_DIR=$PROJECT_BASE_DIR/customize
 PROJECT_DOCS_DIR=$PROJECT_BASE_DIR/docs
-# Package directories
-PROJECT_TARBALLS_DIR=$PROJECT_SRC_DIR/tarballs
-PROJECT_GITHUB_DIR=$PROJECT_SRC_DIR/github
-PROJECT_RPMS_DIR=$PROJECT_SRC_DIR/rpms
-PROJECT_ZIPS_DIR=$PROJECT_SRC_DIR/zips
-PROJECT_DEBS_DIR=$PROJECT_SRC_DIR/debs
-PROJECT_PIPS_DIR=$PROJECT_SRC_DIR/pips
-PROJECT_PIPS_REQUIRES_DIR=$PROJECT_PIPS_DIR/requirements
-# System directories
+
+# Project System directories
 PROJECT_SYSTEM_ARCH=`uname -m`
 PROJECT_SYSTEM_CONF_DIR=$CONFDIR/$PROJECT_NAME
 PROJECT_SYSTEM_SHARE_DIR=$DATAROOTDIR/$PROJECT_NAME
@@ -111,6 +123,18 @@ PROJECT_SYSTEM_LIB_DIR=$STATEDIR/lib/$PROJECT_NAME
 PROJECT_SYSTEM_CACHE_DIR=$STATEDIR/cache/$PROJECT_NAME
 PROJECT_SYSTEM_ICONS_DIR=$PROJECT_SYSTEM_SHARE_DIR/picons
 PROJECT_SYSTEM_SOUNDS_DIR=$PROJECT_SYSTEM_SHARE_DIR/sounds
+
+# Project source packages directories
+PROJECT_SYSTEM_PACKAGES_DIR=$PROJECT_SYSTEM_CACHE_DIR/packages
+PROJECT_SRC_DIR=$PROJECT_SYSTEM_PACKAGES_DIR
+PROJECT_TARBALLS_DIR=$PROJECT_SRC_DIR/tarballs
+PROJECT_GITHUB_DIR=$PROJECT_SRC_DIR/github
+PROJECT_RPMS_DIR=$PROJECT_SRC_DIR/rpms
+PROJECT_ZIPS_DIR=$PROJECT_SRC_DIR/zips
+PROJECT_DEBS_DIR=$PROJECT_SRC_DIR/debs
+PROJECT_PIPS_DIR=$PROJECT_SRC_DIR/pips
+
+PROJECT_PIPS_REQUIRES_DIR=$PROJECT_PIPS_DIR/requirements
 PROJECT_VERSION=$([[ -d $PROJECT_BASE_DIR ]] && cd $PROJECT_BASE_DIR && git tag -l | tail -1)
 PROJECT_RELEASE_FILE=$PROJECT_SYSTEM_CONF_DIR/release
 PROJECT_DVBT_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/dvbt-settings.cfg
@@ -964,7 +988,7 @@ NETWORK_IP_ADDRESS=$(/usr/sbin/ip -4 addr show dev $NETWORK_ETHERNET_DEVICE | gr
 NETWORK_GATEWAY_ADDRESS=$(/usr/sbin/ip route show | awk '$3 ~ /^[1-9]+/ {print $3}')
 NETWORK_WIRED_PREFIX=24
 NETWORK_WIRED_MASK=$(echo $NETWORK_IP_ADDRESS | cut -d '.' -f1-3).0/$NETWORK_WIRED_PREFIX
-NETWORK_DOMAIN=jambulatv.com
+NETWORK_DOMAIN=$PROJECT_SERVER_DOMAIN
 NETWORK_WIRELESS_SSID="$PROJECT_NAME-$(echo $SYSTEM_IDENTIFIER | cut -c 1-5)"
 NETWORK_WIRELESS_CHANNEL_NO=11
 NETWORK_WIRELESS_PASSPHRASE=$(pwgen -A -v -N1 12)
@@ -1070,7 +1094,7 @@ VNC_PASSWORD=jambulatvvnc3
 # -----------
 REVERSE_SSH_NOTIFICATION_METHOD="email" #sms|email|none
 REVERSE_SSH_CONFIG=$PROJECT_SYSTEM_CONF_DIR/reverse-ssh.cfg
-REVERSE_SSH_NOTIFICATION_EMAIL="reverse-ssh@jambulatv.com"
+REVERSE_SSH_NOTIFICATION_EMAIL="reverse-ssh@$PROJECT_SERVER_DOMAIN"
 # Local SSH server
 LOCAL_SSH_USER=root
 LOCAL_SSH_SERVER=localhost
@@ -1078,7 +1102,7 @@ LOCAL_SSH_SERVER_PORT=22
 # Remote SSH server
 REMOTE_SSH_SERVER_USER=$PROJECT_NAME.$SYSTEM_IDENTIFIER
 REMOTE_SSH_SERVER_PASS=$(pwgen -v -N1 8)
-REMOTE_SSH_SERVER=remote1.jambulatv.com
+REMOTE_SSH_SERVER=remote1.$PROJECT_SERVER_DOMAIN
 REMOTE_SSH_SERVER_PORT=222
 REMOTE_SSH_SERVER_RANDOM_PORT=$[ ( $RANDOM % 10000 )  + 10000 ]
 # AutoSSH
@@ -1152,7 +1176,7 @@ FREEPBX_CONF_DIR=$PROJECT_SYSTEM_CONF_DIR/freepbx
 FREEPBX_ADMIN_USER=jambulatv
 FREEPBX_ADMIN_PASS=jambulatv321
 FREEPBX_ADMIN_PASS_HASH=$(echo -n $FREEPBX_ADMIN_PASS | sha1sum | awk {'print $1'})
-FREEPBX_ADMIN_EMAIL=freepbx@jambulatv.com
+FREEPBX_ADMIN_EMAIL=freepbx@$PROJECT_SERVER_DOMAIN
 FREEPBX_EXTENSION_000=600
 FREEPBX_EXTENSION_000_NAME="Jambula SwitchBoard"
 FREEPBX_EXTENSION_000_PASS="ellis2012"
@@ -1193,15 +1217,7 @@ NEXTCLOUD_HTTP_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'nextcloud$' $POR
 # VOIP/SIP Settings 
 SIP_PROVIDER_HOSTNAME=sip.flowroute.com
 
-# Updates FTP Server info
-JAMBULATV_FTP_SERVER=sftp.jambulatv.com
-JAMBULATV_FTP_PORT=21
-JAMBULATV_FTP_SERVER_ROOT_DIR=JambulaTV
-JAMBULATV_FTP_SERVER_UPDATES_DIR=$JAMBULATV_FTP_SERVER_ROOT_DIR/updates
-JAMBULATV_FTP_SERVER_VERSION_FILE=$JAMBULATV_FTP_SERVER_UPDATES_DIR/VERSION
-JAMBULATV_FTP_SERVER_IPTV_DIR_NAME=$JAMBULATV_FTP_SERVER_ROOT_DIR/iptv
-JAMBULATV_FTP_USER=jambulaftp1
-JAMBULATV_FTP_PASS=nahZic4k
+# Updates via FTP
 JAMBULATV_UPDATES_FTP_SERVER_INFO_FILE=$PROJECT_SYSTEM_CONF_DIR/updates-ftp-server-cfg
 JAMBULATV_UPDATES_DOWNLOAD_DIR=$STATEDIR/updates/$PROJECT_NAME
 JAMBULATV_UPDATES_TEMP_DIR=$TMPDIR/JambulaTV-updates
@@ -1352,7 +1368,7 @@ CURL_COOKIE_JAR_FILE=$TMPDIR/curl_cookie.txt
 # Wget
 WGET_CMD=wget
 WGET_TIMEOUT=20
-WGET_OPTS="-nv --no-check-certificate --retr-symlinks -T $WGET_TIMEOUT"
+WGET_OPTS="-nv -c --no-check-certificate --retry-connrefused --retr-symlinks -T $WGET_TIMEOUT"
 
 # Socat
 SOCAT_CMD="/usr/bin/socat"
@@ -3132,6 +3148,67 @@ $KODI_CONTROLLER_TOOL tv_picons_repair
 #######################
 #  INSTALL FUNCTIONS  #
 #######################
+
+fetch_packages () {
+# Set cache directory checksum & size variables
+if [[ -d $PROJECT_SYSTEM_PACKAGES_DIR ]];
+then
+# Checksum of local packages directory
+[[ "$PACKAGES_CACHE_DIR_CHECKSUM_CHECK" = "y" ]] && \
+logger -s -t $(basename $0) "Info: Verifying the number of files in local cache directory i.e. checksum, please be patient ..." && \
+CHECKSUM_4_PACKAGES_DIR_NOW=$(find $PROJECT_SYSTEM_PACKAGES_DIR -type f -exec ls {} \; | wc -l)
+#CHECKSUM_4_PACKAGES_DIR_NOW=$(find $PROJECT_SYSTEM_PACKAGES_DIR -type f -exec md5sum {} \; | sort -k 2 | md5sum | awk '{print $1}')
+# Size of local packages directory
+SIZE_OF_PACKAGES_DIR_NOW=$(du -sk $PROJECT_SYSTEM_PACKAGES_DIR | awk '{print $1}')
+fi
+
+# Determine if download of packages from remote FTP server should take place
+if [[ "$PACKAGES_CACHE_DIR_DOWNLOAD_REQUIRED" = "y" ]];
+then
+[[ "$CHECKSUM_4_PACKAGES_DIR_NOW" != "$PACKAGES_CACHE_DIR_CHECKSUM_EXPECTED" ]] || [[ "$SIZE_OF_PACKAGES_DIR_NOW" != "$PACKAGES_CACHE_DIR_SIZE_EXPECTED" ]] && \
+DOWNLOAD_PACKAGES_VIA_FTP="y"
+else
+DOWNLOAD_PACKAGES_VIA_FTP="n"
+fi
+
+# Download source packages from remote FTP server
+if [[ "$DOWNLOAD_PACKAGES_VIA_FTP" = "y" ]];
+then
+logger -s -t $(basename $0) "Info: Connecting to remote packages FTP server [$JAMBULATV_FTP_SERVER] ..."
+check_internet_connectivity_ping 0
+$WGET_CMD $WGET_OPTS -r -N -l inf -nH --cut-dirs=2 --passive-ftp \
+	--user=$JAMBULATV_FTP_USER --password=$JAMBULATV_FTP_PASS \
+	-P $PROJECT_SYSTEM_CACHE_DIR/packages \
+	ftp://$JAMBULATV_FTP_SERVER/$JAMBULATV_FTP_SERVER_PACKAGES_DIR
+fi
+
+# Quit if packages directory does not exist
+if [[ ! -d $PROJECT_SYSTEM_PACKAGES_DIR ]];
+then
+clear
+logger -s -t $(basename $0) "Error: Local cache directory for packages [$PROJECT_SYSTEM_PACKAGES_DIR] is missing.  Please download package sources from remote FTP server i.e. To download set 'PACKAGES_CACHE_DIR_DOWNLOAD_REQUIRED=y'"
+exit 1
+fi
+
+# Quit if checksum of current packages directory is diferent from ours
+if [[ "$PACKAGES_CACHE_DIR_CHECKSUM_CHECK" = "y" ]];
+then
+# Compare current packages directory checksum with ours.  Quit if different 
+[[ "$CHECKSUM_4_PACKAGES_DIR_NOW" != "$PACKAGES_CACHE_DIR_CHECKSUM_EXPECTED" ]] && \
+clear && \
+logger -s -t $(basename $0) "Error: The checksum of the source packages directory is wrong!  Please ensure that the directory [$PROJECT_SYSTEM_PACKAGES_DIR] exists and contains all the necessary packages. To disable, set 'PACKAGES_CACHE_DIR_CHECKSUM_CHECK=n'
+" && \
+exit 1
+fi
+
+# Quit if packages directory size is less than what we expected
+if [[ "$SIZE_OF_PACKAGES_DIR_NOW" != "$PACKAGES_CACHE_DIR_SIZE_EXPECTED" ]];
+then
+clear
+logger -s -t $(basename $0) "Error: Local cache directory for packages [$PROJECT_SYSTEM_PACKAGES_DIR] is NOT fully populated.  Please download all package sources from remote FTP server'"
+exit 1
+fi
+}
 
 kernel_install () {
 # See how much space is left
