@@ -13008,10 +13008,12 @@ done
 cp -v $CONFDIR/asterisk/asterisk.conf $CONFDIR/asterisk/asterisk.conf.orig
 # Allow use of #exec statements
 sed -i "s/;execincludes = yes/execincludes = yes/g"  $CONFDIR/asterisk/asterisk.conf
-# Add customized sounds
-rsync -av $PROJECT_CONTRIB_DIR/sounds/asterisk/ /var/lib/asterisk/sounds/en/
-# Add music-on-hold files
-rsync -av $PROJECT_CONTRIB_DIR/music/asterisk/ /var/lib/asterisk/
+# Add customized sounds if they exist
+[[ -d $PROJECT_SYSTEM_CACHE_DIR/contributions/asterisk/sounds ]] && \
+rsync -av $PROJECT_SYSTEM_CACHE_DIR/contributions/asterisk/sounds/ /var/lib/asterisk/sounds/en/
+# Add music-on-hold files if they exist
+[[ -d $PROJECT_SYSTEM_CACHE_DIR/contributions/asterisk/music ]] && \
+rsync -av $PROJECT_SYSTEM_CACHE_DIR/contributions/asterisk/music/ /var/lib/asterisk/
 # Link to default moh
 ln -s /var/lib/asterisk/moh /var/lib/asterisk/moh.default
 #
