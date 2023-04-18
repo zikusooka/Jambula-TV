@@ -126,7 +126,7 @@ PROJECT_SYSTEM_SOUNDS_DIR=$PROJECT_SYSTEM_SHARE_DIR/sounds
 
 # Project source packages directories
 PROJECT_SYSTEM_PACKAGES_DIR=$PROJECT_SYSTEM_CACHE_DIR/packages
-PROJECT_SRC_DIR=$PROJECT_SYSTEM_PACKAGES_DIR
+PROJECT_SRC_DIR=$PROJECT_SYSTEM_PACKAGES_DIR/src
 PROJECT_TARBALLS_DIR=$PROJECT_SRC_DIR/tarballs
 PROJECT_GITHUB_DIR=$PROJECT_SRC_DIR/github
 PROJECT_RPMS_DIR=$PROJECT_SRC_DIR/rpms
@@ -2407,29 +2407,29 @@ fi
 
 # Uninstall python3
 uninstall_python3 () {
-for PYTHON3_BINARY in \
-	python3.*dm \
-	python3.* \
-	python3.*dm-config \
-	pyvenv-3.* \
-	pydoc3.* \
-	idle3.* \
-	2to3-3.* \
-	pip3.* \
-	coverage-3.* \
-	f2py3.* \
-	easy_install-3.*
-do
-rm -f $PREFIX/local/bin/$PYTHON3_BINARY
-done
-
-rm -f $LIBDIR/libpython3.*dm.so.1.0*
-#rm -rf $PREFIX/local/lib/python3.*/site-packages
-rm -rf $PREFIX/local/lib/python3.*/config-3.*dm-x86_64-linux-gnu
-rm -f $PREFIX/local/lib/libpython3.*dm.so*
-rm -f $PREFIX/local/lib/pkgconfig/python-3.*.pc
-rm -rf $PREFIX/local/include/python3.*dm
-rm -rf $PREFIX/local/share/man/man1/python3.*
+# /usr/local/bin
+rm -f $PREFIX/local/bin/python3*
+rm -f $PREFIX/local/bin/pip3*
+rm -f $PREFIX/local/bin/pyvenv-3*
+rm -f $PREFIX/local/bin/pydoc3*
+rm -f $PREFIX/local/bin/idle3*
+rm -f $PREFIX/local/bin/2to3-3*
+rm -f $PREFIX/local/bin/coverage-3.*
+rm -f $PREFIX/local/bin/f2py3*
+rm -f $PREFIX/local/bin/easy_install-3*
+# /usr/lib
+rm -rf $PREFIX/lib/python3*
+# /usr/lib64
+rm -f $LIBDIR/libpython3*
+# /usr/local/bin
+rm -rf $PREFIX/local/lib/python3*
+rm -f $PREFIX/local/lib/libpython3*
+rm -f $PREFIX/local/lib/pkgconfig/python-3*
+# /usr/local/include
+rm -rf $PREFIX/local/include/python3*
+# /usr/local/share/man
+rm -rf $PREFIX/local/share/man/man1/python3*
+# /usr/src/jambulatv
 rm -rf $INSTALL_SRC_DIR/python3*
 rm -rf $INSTALL_SRC_DIR/pip*
 }
@@ -4209,16 +4209,19 @@ python3_install () {
 rpm -q python3-libs > /dev/null 2>&1 && rpm -e --nodeps python3-libs
 rpm -q python3-devel > /dev/null 2>&1 && rpm -e --nodeps python3-devel
 rpm -q python3 > /dev/null 2>&1 && rpm -e --nodeps python3
-#
-PYTHON_SRC_TARBALL=$(ls -x $PROJECT_TARBALLS_DIR/Python-*.tar.xz)
+
+# Set version variable
+PREFERRED_PYTHON_VERS=3.11
+PYTHON_SRC_TARBALL=$(ls -x $PROJECT_TARBALLS_DIR/Python-${PREFERRED_PYTHON_VERS}*.tar.xz)
 PYTHON_SETUP_VERSION=$(echo ${PYTHON_SRC_TARBALL##*/} | sed 's:Python-::g' | cut -d '.' -f1-2)
 export PYTHON_SETUP_VERSION
+
 # Unpack Python 3 package
 tar xvf $PROJECT_TARBALLS_DIR/Python-$PYTHON_SETUP_VERSION*.tar.xz -C $INSTALL_SRC_DIR
 cd $INSTALL_SRC_DIR && mv -v Python-$PYTHON_SETUP_VERSION* python${PYTHON_SETUP_VERSION}
-# Compile
 cd $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}
-#
+
+# Compile
 if [[ "$PYTHON_SETUP_VERSION" = "3.6" ]];
 then
 # Python 3.6 - patches
@@ -4226,31 +4229,41 @@ then
 # point formatting with "n" format, zero padding and small width
 patch -p1 $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}/Lib/test/test_float.py < $PROJECT_PATCHES_DIR/python${PYTHON_SETUP_VERSION}.test_float.py.patch
 patch -p1 $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}/Objects/unicodeobject.c < $PROJECT_PATCHES_DIR/python${PYTHON_SETUP_VERSION}.unicodeobject.c.py.patch
-fi
+
+elif [[ "$PYTHON_SETUP_VERSION" = "3.11" ]];
+then
+# Configure - Python 3.11+
+./configure --prefix=/usr/local --enable-shared --with-system-expat --with-system-ffi
 #
-# Compile
+# Make some modules a permanent part of the Python interpreter
+cp -vf $PROJECT_CONFIGS_DIR/python${PYTHON_SETUP_VERSION}/modules_setup.local $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}/Modules/Setup.local
+
+else
+# Configure - Python 3.6+
 ./configure --prefix=$PREFIX/local LDFLAGS="-Wl,-rpath=$PREFIX/local/ssl/lib64" --enable-shared --with-system-expat --with-ensurepip=yes --with-pydebug RPATH=$PREFIX/local/ssl/lib64 
-# The following needed for python 3.7+?
-#--with-openssl=$PREFIX/local 
-#--with-ssl-default-suites=python 
 #
-# Patch python modules Setup file - This is mandatory
+# Make some modules a permanent part of the Python interpreter
 patch -p1 $INSTALL_SRC_DIR/python${PYTHON_SETUP_VERSION}/Modules/Setup < $PROJECT_PATCHES_DIR/python${PYTHON_SETUP_VERSION}.modules.setup.patch
+fi
+
 # make and install in alternate locations
-make && make altinstall
+make -j$SYSTEM_CPU_CORES
+make -j$SYSTEM_CPU_CORES altinstall
 #
 # Create symlinks to python binaries
 [[ -L $PREFIX/local/bin/python3 ]] && rm -f $PREFIX/local/bin/python3
-ln -s -v $PREFIX/local/bin/python${PYTHON_SETUP_VERSION} $PREFIX/local/bin/python3
+ln -s -v -f $PREFIX/local/bin/python${PYTHON_SETUP_VERSION} $PREFIX/local/bin/python3
+#
 # Create symlinks to pip binaries
 [[ -L $PREFIX/local/bin/pip3 ]] && rm -f $PREFIX/local/bin/pip3
-ln -s -v $PREFIX/local/bin/pip${PYTHON_SETUP_VERSION} $PREFIX/local/bin/pip3
+ln -s -v -f $PREFIX/local/bin/pip${PYTHON_SETUP_VERSION} $PREFIX/local/bin/pip3
+#
 # Create symlinks to python library i.e. libpython
 LIBPYTHON_FILE=$(basename $PREFIX/local/lib/libpython${PYTHON_SETUP_VERSION}*.so.*)
-ln -s -v $PREFIX/local/lib/$LIBPYTHON_FILE $LIBDIR/$LIBPYTHON_FILE
-#
+ln -s -v -f $PREFIX/local/lib/$LIBPYTHON_FILE $LIBDIR/$LIBPYTHON_FILE
+
 # Install the latest Python3 pip installer
-python3_pip_install
+#python3_pip_install
 
 # Install commonly used python3 modules
 python3_common_modules_install

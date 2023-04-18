@@ -1,0 +1,79 @@
+# Python 3 Setup for JambulaTV
+
+readline readline.c -lreadline -ltermcap
+
+array -DPy_BUILD_CORE_MODULE arraymodule.c
+
+#cmath cmathmodule.c _math.c -DPy_BUILD_CORE_MODULE
+
+_contextvars _contextvarsmodule.c
+
+_struct -DPy_BUILD_CORE_MODULE _struct.c
+
+_random _randommodule.c -DPy_BUILD_CORE_MODULE
+
+_elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DUSE_PYEXPAT_CAPI _elementtree.c
+
+_pickle -DPy_BUILD_CORE_MODULE _pickle.c
+
+_datetime _datetimemodule.c
+
+_zoneinfo _zoneinfo.c -DPy_BUILD_CORE_MODULE
+
+_bisect _bisectmodule.c
+
+_asyncio _asynciomodule.c
+
+_json -I$(srcdir)/Include/internal -DPy_BUILD_CORE_BUILTIN _json.c
+
+unicodedata unicodedata.c -DPy_BUILD_CORE_BUILTIN
+
+fcntl fcntlmodule.c
+
+spwd spwdmodule.c
+
+grp grpmodule.c
+
+select selectmodule.c
+
+mmap mmapmodule.c
+
+_csv _csv.c
+
+_socket socketmodule.c
+
+OPENSSL=/usr/local/ssl
+_ssl _ssl.c \
+     -DUSE_SSL -I$(OPENSSL)/include -I$(OPENSSL)/include/openssl -L$(OPENSSL)/lib64 \
+     -lssl -lcrypto
+
+nis nismodule.c -lnsl
+
+termios termios.c
+
+resource resource.c
+
+_posixsubprocess  -DPy_BUILD_CORE_BUILTIN _posixsubprocess.c
+
+audioop audioop.c
+
+_md5 md5module.c
+
+_sha1 sha1module.c
+_sha256 sha256module.c -DPy_BUILD_CORE_BUILTIN
+_sha512 sha512module.c -DPy_BUILD_CORE_BUILTIN
+_sha3 _sha3/sha3module.c
+
+_blake2 _blake2/blake2module.c _blake2/blake2b_impl.c _blake2/blake2s_impl.c
+
+syslog syslogmodule.c
+
+_gdbm _gdbmmodule.c -I/usr/local/include -L/usr/local/lib -lgdbm
+
+binascii binascii.c
+
+zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
+
+#pyexpat expat/xmlparse.c expat/xmlrole.c expat/xmltok.c pyexpat.c -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DXML_POOR_ENTROPY -DUSE_PYEXPAT_CAPI
+
+_multibytecodec cjkcodecs/multibytecodec.c
