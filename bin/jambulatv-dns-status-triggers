@@ -12,6 +12,8 @@ PROJECT_GLOBAL_SETTINGS_FILE=$PROJECT_SYSTEM_CONF_DIR/global-settings.cfg
 . $PROJECT_GLOBAL_SETTINGS_FILE
 
 # Variables
+PROJECT_GITHUB_DIR=/var/cache/JambulaTV/packages/src/github
+INSTALL_SRC_DIR=/usr/src/jambulatv
 TMPDIR=/tmp
 # Get ethernet device
 NETWORK_ETHERNET_DEVICE=$(/usr/sbin/ip -o -4 link show | awk -F': ' '/mode DEFAULT/ {print $2}' | grep -v lo | head -1)
@@ -151,15 +153,19 @@ fi
 }
 
 update_youtube_dl () {
-$YOUTUBE_DL_CMD -U | grep -i 'Updated youtube-dl' > /dev/null 2>&1
-YOUTUBE_DL_UPDATED=$?
-if [[ "$YOUTUBE_DL_UPDATED" = "0" ]];
-then
-YOUTUBE_DL_NEW_VERSION=$($YOUTUBE_DL_CMD --version)
-# Notify
-logger -s -t $(basename $0) "Youtube-dl has been updated to version: $YOUTUBE_DL_NEW_VERSION"
-$OSD_TOOL_CMD "Youtube-dl has been updated to version: $YOUTUBE_DL_NEW_VERSION"
-fi
+# Copy youtube-dl sources into install directory if non-existent
+[[ -d $INSTALL_SRC_DIR/youtube-dl ]] || \
+	rsync -av $PROJECT_GITHUB_DIR/youtube-dl/ $INSTALL_SRC_DIR/youtube-dl/
+# Update git sources i.e. sync with upstream
+cd $INSTALL_SRC_DIR/youtube-dl
+git pull
+# Compile youtube-dl with lazy-extractors
+/usr/local/bin/python3 devscripts/make_lazy_extractors.py youtube_dl/extractor/lazy_extractors.py > $TMPDIR/youtube_dl_upgrade.log 2>&1
+# Install youtube-dl
+/usr/local/bin/pip3 install . >> $TMPDIR/youtube_dl_upgrade.log 2>&1
+#
+# Create symbolic link to youtube-dl binary in /usr/local/bin
+ln -s -f /usr/local/bin/youtube-dl /usr/bin/youtube-dl
 }
 
 check_4_updates () {
