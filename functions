@@ -13940,10 +13940,15 @@ homeassistant_pyozw_install
 # ----------------------------------------------------
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/home-assistant-core
-# Get latest home-assistant core tag
+# Set the home-assistant core tag to be used
+HOME_ASSISTANT_TAG="2021.7.3"
+#
 if [[ "x$HOME_ASSISTANT_TAG" = "x" ]];
 then
 HASS_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+elif [[ "$HOME_ASSISTANT_TAG" = "master" ]];
+then
+HASS_TAG=master
 else
 HASS_TAG=$HOME_ASSISTANT_TAG
 fi
