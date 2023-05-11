@@ -13867,30 +13867,6 @@ cd $INSTALL_SRC_DIR/python_openzwave
 $PYTHON_INSTALL_CMD
 }
 
-homeassistant_pyozw_install () {
-PYTHON_VERSION_USED=3 && set_python_version
-
-# Set PyOZW version
-PYOZW_VERSION=$(awk -F'==' '/homeassistant-pyozw/ {print $2}' $PROJECT_GITHUB_DIR/home-assistant-core/requirements_all.txt)
-#
-# Unpack runtime
-unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/homeassistant_pyozw-${PYOZW_VERSION}.zip
-#
-# Remove external URL to github for downloading embedded version of openzwave
-# i.e. it is available locally
-sed -i \
-	"s|def get_openzwave(self, url='https://raw.githubusercontent.com/home-assistant/python-openzwave/hass/archives/open-zwave-hass-{0}.zip'|def get_openzwave(self, url='file:$PROJECT_PIPS_DIR/openzwave-embed/open-zwave-hass-{0}.zip'|g" \
-	$INSTALL_SRC_DIR/homeassistant_pyozw/pyozw_setup.py
-#
-# Copy open-zwave-hass into openzwave-embed directory
-[[ -f $PROJECT_PIPS_DIR/openzwave-embed/open-zwave-hass-${PYOZW_VERSION}.zip ]] || \
-	cp -v $PROJECT_PIPS_DIR/open-zwave-hass-${PYOZW_VERSION}.zip $PROJECT_PIPS_DIR/openzwave-embed/open-zwave-hass-${PYOZW_VERSION}.zip
-#
-# compile
-cd $INSTALL_SRC_DIR/homeassistant_pyozw
-$PYTHON_INSTALL_CMD
-}
-
 domoticz_install () {
 # Install open-zwave first
 open_zwave_install
@@ -13945,30 +13921,107 @@ systemctl enable domoticz.service
 systemctl start domoticz.service
 }
 
-homeassistant_core_install () {
-PYTHON_VERSION_USED=3 && set_python_version
-#
-# hass_openzwave
-homeassistant_pyozw_install
+homeassistant_pyozw_install () {
+# NOTE: Run this function after archiving/unpacking of home-assistant core sources
+# Set PyOZW version
+PYOZW_VERSION=$(awk -F'==' '/homeassistant-pyozw/ {print $2}' $INSTALL_SRC_DIR/home-assistant-core/requirements_all.txt)
 
-# Archive and Unpack specified Home-Assistant core tag
-# ----------------------------------------------------
+# Don't continue if this version of HASS does not use openzwave
+if [[ "x$PYOZW_VERSION" != "x" ]];
+then
+
+# Notice: Installing homeassistant_pyozw
+cat <<ET
+
+Installing OpenZwave package for Home Assistant Core, please be patient ...
+
+ET
+sleep 5
+
+# Unpack homeassistant_pyozw
+if [[ -e $PROJECT_PIPS_DIR/homeassistant_pyozw-${PYOZW_VERSION}.zip ]];
+then
+	unzip -d $INSTALL_SRC_DIR/ $PROJECT_PIPS_DIR/homeassistant_pyozw-${PYOZW_VERSION}.zip
+
+elif [[ -e $PROJECT_PIPS_DIR/homeassistant_pyozw-${PYOZW_VERSION}.tgz ]];
+then
+	tar zxvf $PROJECT_PIPS_DIR/homeassistant_pyozw-${PYOZW_VERSION}.tgz -C $INSTALL_SRC_DIR/ 
+fi
+#
+# Remove external URL to github for downloading embedded version of openzwave
+# i.e. it is available locally
+sed -i \
+	"s|def get_openzwave(self, url='https://raw.githubusercontent.com/home-assistant/python-openzwave/hass/archives/open-zwave-hass-{0}.zip'|def get_openzwave(self, url='file:$PROJECT_PIPS_DIR/openzwave-embed/open-zwave-hass-{0}.zip'|g" \
+	$INSTALL_SRC_DIR/homeassistant_pyozw/pyozw_setup.py
+#
+# Copy open-zwave-hass into openzwave-embed directory
+[[ -f $PROJECT_PIPS_DIR/openzwave-embed/open-zwave-hass-${PYOZW_VERSION}.zip ]] || \
+	cp -v $PROJECT_PIPS_DIR/open-zwave-hass-${PYOZW_VERSION}.zip $PROJECT_PIPS_DIR/openzwave-embed/open-zwave-hass-${PYOZW_VERSION}.zip
+#
+# Install homeassistant_pyozw
+cd $INSTALL_SRC_DIR/homeassistant_pyozw
+$PYTHON3_CMD setup.py install
+
+else
+# Skip install of homeassistant_pyozw
+cat <<ET
+Skipping installation of OpenZwave package i.e. Not needed in newer versions of Home Assistant Core
+ET
+sleep 5
+fi
+}
+
+homeassistant_core_install () {
+# Set the home-assistant core tag plus other variables to be used
+HOME_ASSISTANT_TAG="2021.7.3"
+HOME_ASSISTANT_PYTHON3_BINARY="python3.8"
+
+# Set version string
+if [[ "x$HOME_ASSISTANT_TAG" != "x" ]];
+then
+HOME_ASSISTANT_VERS_STRING=$(echo $HOME_ASSISTANT_TAG | sed "s/\.//g")
+else
+HOME_ASSISTANT_VERS_STRING=generic
+fi
+
+# Create python 3 virtual environment for homeassistant core using python3.8
+python3_venv_create $HOME_ASSISTANT_PYTHON3_BINARY homeassistant-core-$HOME_ASSISTANT_VERS_STRING jambula
+
+# Install PyNaCl==1.3.0 using installed system sodium library # i.e. libsodium
+SODIUM_INSTALL=system $PIP3_CMD --log $BUILD_LOG install --no-cache-dir --no-index --find-links $PROJECT_PIPS_DIR PyNaCl==1.3.0
+
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/home-assistant-core
-# Set the home-assistant core tag to be used
-HOME_ASSISTANT_TAG="2021.7.3"
 #
+# Query and set HASS tag
 if [[ "x$HOME_ASSISTANT_TAG" = "x" ]];
 then
 HASS_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+HASS_INSTALL_REQUIREMENTS_FILE=$PROJECT_PIPS_REQUIRES_DIR/home-assistant-core-requirements.txt
 elif [[ "$HOME_ASSISTANT_TAG" = "master" ]];
 then
 HASS_TAG=master
+HASS_INSTALL_REQUIREMENTS_FILE=$PROJECT_PIPS_REQUIRES_DIR/home-assistant-core-requirements.txt
 else
 HASS_TAG=$HOME_ASSISTANT_TAG
+HASS_INSTALL_REQUIREMENTS_FILE=$PROJECT_PIPS_REQUIRES_DIR/home-assistant-core-requirements-${HOME_ASSISTANT_VERS_STRING}.txt
 fi
 #
-# Unpack desired git branch/tag
+# Quit if HASS install requirements file does not exist
+if [[ ! -e $HASS_INSTALL_REQUIREMENTS_FILE ]];
+then
+clear
+cat >> $BUILD_LOG <<ET
+Error: The requirements file needed to install Home Assistant Core is missing! Please add the following file and try again:
+
+$HASS_INSTALL_REQUIREMENTS_FILE
+
+Proceeding shortly ...
+ET
+sleep 5
+fi
+
+# Archive and Unpack desired Home-Assistant core git tag
 case $HASS_TAG in
 master)
 # master branch i.e. HEAD
@@ -13983,7 +14036,7 @@ then
 git archive --format tar.gz --prefix=home-assistant-core/ $HASS_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 else
 git archive --format tar.gz --prefix=home-assistant-core/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
-# Display Kodi's post install/configuration information, and output to final notice
+# Display post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
 #
@@ -13997,43 +14050,36 @@ fi
 ;;
 esac
 
-# Install PyNaCl==1.3.0 using installed system sodium library 
-# i.e. libsodium
-SODIUM_INSTALL=system pip3 --log $BUILD_LOG install --no-cache-dir --no-index --find-links $PROJECT_PIPS_DIR PyNaCl==1.3.0
+# Install homeassistant_pyozw 
+homeassistant_pyozw_install
 
-# Modify requirements files for some HASS dependencies 
-for REQUIREMENTS_FILE in \
-	$INSTALL_SRC_DIR/home-assistant-core/requirements_all.txt \
-	$INSTALL_SRC_DIR/home-assistant-core/homeassistant/components/version/manifest.json \
-	$INSTALL_SRC_DIR/home-assistant-core/homeassistant/package_constraints.txt \
-	$INSTALL_SRC_DIR/home-assistant-core/requirements.txt \
-	$INSTALL_SRC_DIR/home-assistant-core/setup.py
-do
-:
-# pip: Don't re-install since the current version is what works
-[[ -e $REQUIREMENTS_FILE ]] && sed -i 's:pip>:#pip>:g; s:pip<:#pip<:g; s:pip=:#pip=:g' $REQUIREMENTS_FILE
-# yarl: Don't re-install since the current version is what works
-[[ -e $REQUIREMENTS_FILE ]] && sed -i 's:yarl>:#yarl>:g; s:yarl<:#yarl<:g; s:yarl=:#yarl=:g' $REQUIREMENTS_FILE
-# ruamel.yaml: Don't re-install since the current version is what works
-[[ -e $REQUIREMENTS_FILE ]] && sed -i 's:ruamel.yaml:#ruamel.yaml>:g; s:ruamel.yaml<:#ruamel.yaml<:g; s:ruamel.yaml=:#ruamel.yaml=:g' $REQUIREMENTS_FILE
-done
+# Notice: Installing homeassistant core [version]
+cat <<ET
 
-# Install dependencies for Home-Assistant using pips specified in
-# sources requirements and package_constraints files
-#sed "/^#/d" $INSTALL_SRC_DIR/home-assistant-core/homeassistant/package_constraints.txt | sed "/^$/d" | xargs -n 1 pip3 --log $BUILD_LOG install --no-cache-dir --upgrade --upgrade-strategy eager --no-index --find-links $PROJECT_PIPS_DIR
+Installing Home Assistant Core [$HASS_TAG], please be patient ...
+
+ET
+sleep 5
 
 # Install Home-Assistant
 cd $INSTALL_SRC_DIR/home-assistant-core
-$PYTHON_INSTALL_CMD
-pip3 --log $BUILD_LOG install --no-cache-dir --upgrade --upgrade-strategy only-if-needed --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/home-assistant-core-requirements.txt
+$PIP3_CMD --log $BUILD_LOG install --prefer-binary --no-cache-dir --upgrade --upgrade-strategy only-if-needed --no-index --find-links $PROJECT_PIPS_DIR .
 
-# Patch homeassistant i.e. hass binary to allow for connections to 
-# unverified SSL certificate sites and
+# Install other packages needed for Home-Assistant runtime
+$PIP3_CMD --log $BUILD_LOG install --prefer-binary --no-cache-dir --upgrade --upgrade-strategy only-if-needed --no-index --find-links $PROJECT_PIPS_DIR -r $HASS_INSTALL_REQUIREMENTS_FILE
+#
+# Patch homeassistant i.e. hass binary to allow for connections to unverified SSL certificate sites and
 # Avoid unnecessary logging warnings after migration to python 3.6+
-patch -p1 $PREFIX/local/bin/hass < $PROJECT_PATCHES_DIR/hass.bin.patch
+patch -p1 $VENV_BIN_DIR/hass < $PROJECT_PATCHES_DIR/hass.bin.patch
 #
 # Create symbolic link
-[ -x $BINARY_PREFIX/hass ] || ln -s $PREFIX/local/bin/hass $BINARY_PREFIX/hass
+[ -x $BINARY_PREFIX/hass-$HOME_ASSISTANT_VERS_STRING ] || \
+	ln -s $VENV_BIN_DIR/hass $BINARY_PREFIX/hass-$HOME_ASSISTANT_VERS_STRING
+#
+# Create environment variables file for home-assistant-core
+cat > $SYSCONFIG_DIR/home-assistant-core <<ET
+HOME_ASSISTANT_VERS_STRING="$HOME_ASSISTANT_VERS_STRING"
+ET
 }
 
 homeassistant_core_configure () {

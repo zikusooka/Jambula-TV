@@ -1,12 +1,13 @@
 [Unit]
-Description=Home Assistant
+Description=Home Assistant Core
 After=multi-user.target alsa-restore.service 
 
 
 [Service]
 Type=simple
 User=jambula
-ExecStart=/bin/bash -c "/usr/local/bin/python3 /usr/local/bin/hass -c /etc/JambulaTV/homeassistant"
+EnvironmentFile=/etc/sysconfig/home-assistant-core
+ExecStart=/bin/bash -c "/usr/bin/hass-${HOME_ASSISTANT_VERS_STRING} -c /etc/JambulaTV/homeassistant"
 
 [Install]
 WantedBy=graphical.target
