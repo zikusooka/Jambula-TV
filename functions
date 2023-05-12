@@ -14135,34 +14135,71 @@ sed -i "s|\"You're about to give {clientId} access to your Home Assistant instan
 }
 
 homeassistant_cli_install () {
-PYTHON_VERSION_USED=3 && set_python_version
+# Set the home-assistant cli tag plus other variables to be used
+HOME_ASSISTANT_CLI_TAG="0.9.6"
+HOME_ASSISTANT_CLI_PYTHON3_BINARY="python3.8"
 
-# Install dependencies for Home-Assistant-CLI using pips specified in requirements
-pip3 --log $BUILD_LOG install --no-cache-dir --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/home-assistant-cli-requirements.txt
+# Create python 3 virtual environment for homeassistant cli using python3.8
+python3_venv_create $HOME_ASSISTANT_CLI_PYTHON3_BINARY homeassistant-cli jambula
 
-# Sync sources to install directory
-rsync -av $PROJECT_GITHUB_DIR/home-assistant-cli/ $INSTALL_SRC_DIR/home-assistant-cli/
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/home-assistant-cli
+#
+# Query and set HASS CLItag
+if [[ "x$HOME_ASSISTANT_CLI_TAG" = "x" ]];
+then
+HASS_CLI_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+elif [[ "$HOME_ASSISTANT_CLI_TAG" = "master" ]];
+then
+HASS_CLI_TAG=master
+else
+HASS_CLI_TAG=$HOME_ASSISTANT_CLI_TAG
+fi
+#
+# Archive and Unpack desired Home-Assistant CLI CLI git tag
+case $HASS_CLI_TAG in
+master)
+# master branch i.e. HEAD
+git archive --format tar.gz --prefix=home-assistant-cli/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+;;
+*)
+# Check to see if desired branch/tag exists
+git tag -l | grep -x $HASS_CLI_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+if [ "$TAG_EXISTS" = "0" ];
+then
+git archive --format tar.gz --prefix=home-assistant-cli/ $HASS_CLI_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=home-assistant-cli/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Display post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+HASS-CLI Version
+================
+% The home-assistant cli branch you specified ($HASS_CLI_TAG), does not exist, so I used master/ HEAD instead
 
-# Force our requirements
-cp -v $PROJECT_PIPS_REQUIRES_DIR/home-assistant-cli-requirements.txt $INSTALL_SRC_DIR/home-assistant-cli/requirements.txt
-# Change to install directory
+#
+EOF
+fi
+;;
+esac
+
+# Notice: Installing homeassistant cli [version]
+cat <<ET
+
+Installing Home Assistant CLI [$HASS_CLI_TAG], please be patient ...
+
+ET
+sleep 5
+
+# Install Home-Assistant CLI
 cd $INSTALL_SRC_DIR/home-assistant-cli
-# Force use of versions of already installed python module in setup.py
-cp -v setup.py setup.py.orig
-cat setup.py.orig | \
-	sed -e "s:aiohttp==:aiohttp>=:g" | \
-	sed -e "s:click-log==:click-log>=:g" | \
-	sed -e "s:click==:click>=:g" | \
-	sed -e "s:dateparser==:dateparser>=:g" | \
-	sed -e "s:jsonpath-rw==:jsonpath-rw>=:g" | \
-	sed -e "s:netdisco==2.6.0:netdisco:g" | \
-	sed -e "s:regex>=2019.08.19:regex:g" | \
-	sed -e "s:ruamel.yaml>=0.16.5,<0.17:ruamel.yaml:g" | \
-	sed -e "s:requests==:requests>=:g" | \
-	sed -e "s:tabulate==:tabulate>=:g" \
-		> setup.py
-# Install Home-Assistant
-$PYTHON_INSTALL_CMD
+$PIP3_CMD --log $BUILD_LOG install --prefer-binary --no-cache-dir --upgrade --upgrade-strategy only-if-needed --no-index --find-links $PROJECT_PIPS_DIR .
+#
+# Create symbolic link
+[[ -x $BINARY_PREFIX/hass-cli ]] || \
+	ln -s $VENV_BIN_DIR/hass-cli $BINARY_PREFIX/hass-cli
 }
 
 home_automation_tools () {
