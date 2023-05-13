@@ -35,7 +35,7 @@ openssl111_install
 # Upgrade Python 3
 upgrade_python3 () {
 uninstall_python3
-python3_install
+python3_install 3.11
 }
 
 upgrade_scapy () {

@@ -4264,7 +4264,7 @@ rpm -q python3-devel > /dev/null 2>&1 && rpm -e --nodeps python3-devel
 rpm -q python3 > /dev/null 2>&1 && rpm -e --nodeps python3
 
 # Set version variable
-PREFERRED_PYTHON_VERS=3.11
+PREFERRED_PYTHON_VERS=$1
 PYTHON_SRC_TARBALL=$(ls -x $PROJECT_TARBALLS_DIR/Python-${PREFERRED_PYTHON_VERS}*.tar.xz)
 PYTHON_SETUP_VERSION=$(echo ${PYTHON_SRC_TARBALL##*/} | sed 's:Python-::g' | cut -d '.' -f1-2)
 export PYTHON_SETUP_VERSION
@@ -4303,6 +4303,10 @@ fi
 make -j$SYSTEM_CPU_CORES
 make -j$SYSTEM_CPU_CORES altinstall
 #
+# Create symlinks to python library i.e. libpython
+LIBPYTHON_FILE=$(basename $PREFIX/local/lib/libpython${PYTHON_SETUP_VERSION}*.so.*)
+ln -s -v -f $PREFIX/local/lib/$LIBPYTHON_FILE $LIBDIR/$LIBPYTHON_FILE
+
 # Create symlinks to python binaries
 [[ -L $PREFIX/local/bin/python3 ]] && rm -f $PREFIX/local/bin/python3
 ln -s -v -f $PREFIX/local/bin/python${PYTHON_SETUP_VERSION} $PREFIX/local/bin/python3
@@ -4311,10 +4315,6 @@ ln -s -v -f $PREFIX/local/bin/python${PYTHON_SETUP_VERSION} $PREFIX/local/bin/py
 [[ -L $PREFIX/local/bin/pip3 ]] && rm -f $PREFIX/local/bin/pip3
 ln -s -v -f $PREFIX/local/bin/pip${PYTHON_SETUP_VERSION} $PREFIX/local/bin/pip3
 #
-# Create symlinks to python library i.e. libpython
-LIBPYTHON_FILE=$(basename $PREFIX/local/lib/libpython${PYTHON_SETUP_VERSION}*.so.*)
-ln -s -v -f $PREFIX/local/lib/$LIBPYTHON_FILE $LIBDIR/$LIBPYTHON_FILE
-
 # Install the latest Python3 pip installer
 #python3_pip_install
 
@@ -13924,7 +13924,7 @@ systemctl start domoticz.service
 homeassistant_pyozw_install () {
 # NOTE: Run this function after archiving/unpacking of home-assistant core sources
 # Set PyOZW version
-PYOZW_VERSION=$(awk -F'==' '/homeassistant-pyozw/ {print $2}' $INSTALL_SRC_DIR/home-assistant-core/requirements_all.txt)
+PYOZW_VERSION=$(awk -F'==' '/homeassistant-pyozw/ {print $2}' $INSTALL_SRC_DIR/home-assistant-core-${HOME_ASSISTANT_VERS_STRING}/requirements_all.txt)
 
 # Don't continue if this version of HASS does not use openzwave
 if [[ "x$PYOZW_VERSION" != "x" ]];

@@ -66,7 +66,7 @@ curl_install
 expat_install
 
 # Install python3
-python3_install
+python3_install 3.11
 
 # Install meson/ninja
 meson_install
