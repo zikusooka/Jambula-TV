@@ -2182,7 +2182,8 @@ source bin/activate
 # Upgrade key packages for use in virtual environment
 for PACKAGE in \
 pip \
-setuptools
+setuptools \
+wheel
 do
 $PIP3_CMD --log $BUILD_LOG install --prefer-binary --no-cache-dir --upgrade --upgrade-strategy only-if-needed --no-index --find-links $PROJECT_PIPS_DIR $PACKAGE
 done
