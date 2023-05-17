@@ -14108,6 +14108,7 @@ homeassistant_core_configure () {
 . $SYSCONFIG_DIR/home-assistant-core
 
 # Set HASS config directory
+[[ "x$HOME_ASSISTANT_VERS_STRING" = "x" ]] && HOME_ASSISTANT_VERS_STRING=generic
 HOMEASSISTANT_CONFIG_DIR=$HOMEASSISTANT_CONFIG_DIR-${HOME_ASSISTANT_VERS_STRING}
 
 # Copy udev rules 4 home automation controllers - ttyUSB*
