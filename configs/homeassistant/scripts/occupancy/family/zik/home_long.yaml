@@ -2,6 +2,14 @@ zik_home_after_long_time:
   sequence:
 
 
+    # Home Activity - Just Arrived
+    # ----------------------------
+    - service: input_select.select_option
+      data:
+        entity_id: input_select.presence_status_zik
+        option: 'Just Arrived'
+
+
     # Generate voice files
     # --------------------
     # Merge audio files
@@ -45,7 +53,7 @@ zik_home_after_long_time:
     #- delay: 120
     #
     # Play local playlist - alternative
-    - service: script.music_play_alternative
+    #- service: script.music_play_alternative
 
 
     # Send messages using  XMPP, WhatsApp, and Telegram
