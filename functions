@@ -14131,7 +14131,8 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER  $HOMEASSISTANT_CONFIG_DIR
 # Copy jambulatv-homeassistant-secrets script, if it does not exist in bin directory
 [ -e $BINARY_PREFIX/jambulatv-homeassistant-secrets ] || \
 	cat $PROJECT_BIN_DIR/jambulatv-homeassistant-secrets | \
-		sed -e "s:MY_HOMEASSISTANT_CONFIG_DIR:$HOMEASSISTANT_CONFIG_DIR:g" \
+		sed -e "s:MY_SYSCONFIG_DIR:$SYSCONFIG_DIR:g" |  \
+		sed -e "s:MY_HOME_ASSISTANT_CONFIG_DIR:$HOMEASSISTANT_CONFIG_DIR:g" \
 			> $BINARY_PREFIX/jambulatv-homeassistant-secrets
 # Make script executable
 chmod 755 $BINARY_PREFIX/jambulatv-homeassistant-secrets
