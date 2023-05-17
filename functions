@@ -3055,9 +3055,16 @@ python3_venv_destroy homeassistant-core $HOME_ASSISTANT_OLD_VERSION_STRING
 }
 
 uninstall_homeassistant_cli () {
-uninstall_python_pkgs homeassistant_cli 
-uninstall_python_pkgs home-assistant-cli
-rm -rf $(whereis hass-cli)
+# Destroy python 3 virtual environment for homeassistant-cli 
+python3_venv_destroy homeassistant-cli
+
+# Remove installation sources directory
+[[ -d $INSTALL_SRC_DIR/home-assistant-cli-${$HOME_ASSISTANT_OLD_VERSION_STRING} ]] && \
+	rm -rf $INSTALL_SRC_DIR/home-assistant-cli-${$HOME_ASSISTANT_OLD_VERSION_STRING}
+
+# Remove HASS-CLI binary symlink
+[[ -e $BINARY_PREFIX/hass-cli ]] && \
+	rm -f $BINARY_PREFIX/hass-cli
 }
 
 uninstall_firefox () {
