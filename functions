@@ -3039,32 +3039,19 @@ rm -f $(which MinOZW ozw_config)
 }
 
 uninstall_homeassistant_core () {
+HOME_ASSISTANT_OLD_VERSION_STRING=$1
 # Stop home-assistant
 systemctl stop home-assistant.service || killall hass
-# Uninstall home-assistant core
-uninstall_python_pkgs home_assistant_frontend
-uninstall_python_pkgs homeassistant
-uninstall_python_pkgs home-assistant-core
-uninstall_python_pkgs homeassistant_pyozw
-uninstall_python_pkgs homeassistant-pyozw
-# Remove lingering *_homeassistant* related packages
-PYTHON_VERSION_USED=3 && set_python_version && \
-	rm -rf $(find $PYTHON_SITEDIR -iname "*_homeassistant*")
-# Remove python_openzwave
-uninstall_python_pkgs python_openzwave
-# Remove libopenzwave*
-uninstall_python_pkgs openzwave
-rm -f $PYTHON_SITEDIR/libopenzwave.cpython-*.so
-# Remove pyozw_* scripts
-for PYOZW_BIN in pyozw_check pyozw_shell
-do
-[[ -f $(which ${PYOZW_BIN}) ]] && rm -f $(whereis ${PYOZW_BIN})
-done
-# Remove hass binary file(s)
-rm -rf $(whereis hass)
-# Remove dependencies directory in hass config folder
-[[ -d $PROJECT_CONFIGS_DIR/homeassistant/deps ]] && \
-	rm -rf $PROJECT_CONFIGS_DIR/homeassistant/deps 
+# Destroy python 3 virtual environment for homeassistant-core 
+python3_venv_destroy homeassistant-core $HOME_ASSISTANT_OLD_VERSION_STRING
+
+# Remove installation sources directory
+[[ -d $INSTALL_SRC_DIR/home-assistant-core-${$HOME_ASSISTANT_OLD_VERSION_STRING} ]] && \
+	rm -rf $INSTALL_SRC_DIR/home-assistant-core-${$HOME_ASSISTANT_OLD_VERSION_STRING}
+
+# Remove HASS binary symlink
+[[ -e $BINARY_PREFIX/hass-${$HOME_ASSISTANT_OLD_VERSION_STRING} ]] && \
+	rm -f $BINARY_PREFIX/hass-${$HOME_ASSISTANT_OLD_VERSION_STRING}
 }
 
 uninstall_homeassistant_cli () {
