@@ -2194,6 +2194,25 @@ done
 export VENV_BIN_DIR PYTHON3_CMD PIP3_CMD
 }
 
+python3_venv_destroy () {
+# Delete python3 virtual environment for [PACKAGE]
+# Usage: python3_venv_destroy [PACKAGE] [VERSION_STRING]
+#   e.g. python3_venv_destroy homeassistant 202173
+VENV_PYTHON3_BINARY=$1
+VENV_PACKAGE=$2
+VENV_PACKAGE_VERSION_STRING=$3
+
+# Delete virtual environment
+if [[ "x$VENV_PACKAGE_VERSION_STRING" != "x" ]];
+then
+echo "Destroying virtual environment [$VENV_PACKAGE-${VENV_PACKAGE_VERSION_STRING}], please be patient ..."
+rm -rf $PYTHON3_VENV_ROOT_DIR/$VENV_PACKAGE-${VENV_PACKAGE_VERSION_STRING}
+else
+echo "Destroying virtual environment [$VENV_PACKAGE], please be patient ..."
+rm -rf $PYTHON3_VENV_ROOT_DIR/$VENV_PACKAGE
+fi
+}
+
 
 
 ############
