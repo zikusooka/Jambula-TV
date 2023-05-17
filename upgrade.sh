@@ -267,9 +267,9 @@ PYTHON3_BINARY="$HOMEASSISTANT_PYTHON3_BINARY_DEFAULT"
 fi
 #
 # Uninstall old homeassistant
-uninstall_homeassistant_core
-# Update common python3 dependency modules
-python3_common_modules_install 
+HOME_ASSISTANT_OLD_VERSION=$3 && \
+	uninstall_homeassistant_core $HOME_ASSISTANT_OLD_VERSION
+#
 # Install latest homeassistant
 HOME_ASSISTANT_TAG=$NEW_HOME_ASSISTANT_TAG && \
 	homeassistant_core_install "$HOME_ASSISTANT_TAG" "$PYTHON3_BINARY"
@@ -478,7 +478,7 @@ prosody_add_users
 #upgrade_open_zwave
 #upgrade_domoticz
 
-#upgrade_homeassistant 2023.5.2 python3.11
+#upgrade_homeassistant 2023.5.2 python3.11 202209
 #upgrade_homeassistant_cli
 
 #upgrade_zoneminder
