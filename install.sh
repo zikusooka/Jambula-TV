@@ -507,7 +507,8 @@ imobiledevice_install
 backup_mobile_phones_setup
 #
 # HomeAssistant
-homeassistant_core_install
+homeassistant_core_install "$HOMEASSISTANT_CORE_DEFAULT_VERSION" "$HOMEASSISTANT_PYTHON3_BINARY_DEFAULT"
+
 homeassistant_core_configure
 homeassistant_skin_customization
 # HomeAssistant-CLI

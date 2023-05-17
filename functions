@@ -814,6 +814,8 @@ DOMOTICZ_WWW_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'domoticz$' $PORTS_
 # Home Assistant
 HOMEASSISTANT_USER=$MULTIMEDIA_USER
 HOMEASSISTANT_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/homeassistant
+HOMEASSISTANT_CORE_DEFAULT_VERSION="2021.7.3"  # "2023.5.2" 
+HOMEASSISTANT_PYTHON3_BINARY_DEFAULT="python3.8"  # "python3.11"
 
 # Mosquitto - MQTT
 MOSQUITTO_USER=mosquitto
@@ -13974,9 +13976,9 @@ fi
 
 homeassistant_core_install () {
 # Set the home-assistant core tag plus other variables to be used
-HOME_ASSISTANT_TAG="2021.7.3"
-HOME_ASSISTANT_PYTHON3_BINARY="python3.8"
-
+HOME_ASSISTANT_TAG="$1"
+HOME_ASSISTANT_PYTHON3_BINARY="$2"
+#
 # Set version string
 if [[ "x$HOME_ASSISTANT_TAG" != "x" ]];
 then
@@ -13984,12 +13986,18 @@ HOME_ASSISTANT_VERS_STRING=$(echo $HOME_ASSISTANT_TAG | sed "s/\.//g")
 else
 HOME_ASSISTANT_VERS_STRING=generic
 fi
+export HOME_ASSISTANT_VERS_STRING
+#
+# Set python binary version
+if [[ "x$HOME_ASSISTANT_PYTHON3_BINARY" != "x" ]];
+then
+HOME_ASSISTANT_PYTHON3_BINARY=$HOME_ASSISTANT_PYTHON3_BINARY
+else
+HOME_ASSISTANT_PYTHON3_BINARY=$(python3 --version | rev | cut -d '.' -f2- | rev | sed 's: ::g' | tr '[:upper:]' '[:lower:]')
+fi
 
-# Create python 3 virtual environment for homeassistant core using python3.8
+# Create python 3 virtual environment for homeassistant core using python version specified above
 python3_venv_create $HOME_ASSISTANT_PYTHON3_BINARY homeassistant-core-$HOME_ASSISTANT_VERS_STRING jambula
-
-# Install PyNaCl==1.3.0 using installed system sodium library # i.e. libsodium
-SODIUM_INSTALL=system $PIP3_CMD --log $BUILD_LOG install --no-cache-dir --no-index --find-links $PROJECT_PIPS_DIR PyNaCl==1.3.0
 
 # Change to Github sources
 cd $PROJECT_GITHUB_DIR/home-assistant-core
@@ -14008,25 +14016,30 @@ HASS_TAG=$HOME_ASSISTANT_TAG
 HASS_INSTALL_REQUIREMENTS_FILE=$PROJECT_PIPS_REQUIRES_DIR/home-assistant-core-requirements-${HOME_ASSISTANT_VERS_STRING}.txt
 fi
 #
-# Quit if HASS install requirements file does not exist
+# Check if HASS install requirements file exists
 if [[ ! -e $HASS_INSTALL_REQUIREMENTS_FILE ]];
 then
-clear
+# Add warning to log file
 cat >> $BUILD_LOG <<ET
-Error: The requirements file needed to install Home Assistant Core is missing! Please add the following file and try again:
-
+Warning: [Home-Assitant Core]: The requirements file needed to install Home Assistant Core is missing! Please add the following file and try again:
 $HASS_INSTALL_REQUIREMENTS_FILE
-
-Proceeding shortly ...
 ET
-sleep 5
 fi
 
+# Notice: Installing homeassistant core [version]
+clear
+cat <<ET
+
+Installing Home Assistant Core [$HASS_TAG], please be patient ...
+
+ET
+sleep 7
+#
 # Archive and Unpack desired Home-Assistant core git tag
 case $HASS_TAG in
 master)
 # master branch i.e. HEAD
-git archive --format tar.gz --prefix=home-assistant-core/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=home-assistant-core-${HOME_ASSISTANT_VERS_STRING}/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 ;;
 *)
 # Check to see if desired branch/tag exists
@@ -14034,9 +14047,9 @@ git tag -l | grep -x $HASS_TAG > /dev/null 2>&1
 TAG_EXISTS=$?
 if [ "$TAG_EXISTS" = "0" ];
 then
-git archive --format tar.gz --prefix=home-assistant-core/ $HASS_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=home-assistant-core-${HOME_ASSISTANT_VERS_STRING}/ $HASS_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 else
-git archive --format tar.gz --prefix=home-assistant-core/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+git archive --format tar.gz --prefix=home-assistant-core-${HOME_ASSISTANT_VERS_STRING}/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
 # Display post install/configuration information, and output to final notice
 echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
 #
@@ -14054,16 +14067,8 @@ esac
 # Install homeassistant_pyozw 
 homeassistant_pyozw_install
 
-# Notice: Installing homeassistant core [version]
-cat <<ET
-
-Installing Home Assistant Core [$HASS_TAG], please be patient ...
-
-ET
-sleep 5
-
 # Install Home-Assistant
-cd $INSTALL_SRC_DIR/home-assistant-core
+cd $INSTALL_SRC_DIR/home-assistant-core-${HOME_ASSISTANT_VERS_STRING}
 $PIP3_CMD --log $BUILD_LOG install --prefer-binary --no-cache-dir --upgrade --upgrade-strategy only-if-needed --no-index --find-links $PROJECT_PIPS_DIR .
 
 # Install other packages needed for Home-Assistant runtime
@@ -14071,19 +14076,27 @@ $PIP3_CMD --log $BUILD_LOG install --prefer-binary --no-cache-dir --upgrade --up
 #
 # Patch homeassistant i.e. hass binary to allow for connections to unverified SSL certificate sites and
 # Avoid unnecessary logging warnings after migration to python 3.6+
-patch -p1 $VENV_BIN_DIR/hass < $PROJECT_PATCHES_DIR/hass.bin.patch
+[[ -e $PROJECT_PATCHES_DIR/hass.bin.patch.${HOME_ASSISTANT_VERS_STRING} ]] && \
+	patch -p1 $VENV_BIN_DIR/hass < $PROJECT_PATCHES_DIR/hass.bin.patch.${HOME_ASSISTANT_VERS_STRING}
 #
 # Create symbolic link
-[ -x $BINARY_PREFIX/hass-$HOME_ASSISTANT_VERS_STRING ] || \
-	ln -s $VENV_BIN_DIR/hass $BINARY_PREFIX/hass-$HOME_ASSISTANT_VERS_STRING
+[[ -x $BINARY_PREFIX/hass-${HOME_ASSISTANT_VERS_STRING} ]] || \
+	ln -s $VENV_BIN_DIR/hass $BINARY_PREFIX/hass-${HOME_ASSISTANT_VERS_STRING}
 #
 # Create environment variables file for home-assistant-core
 cat > $SYSCONFIG_DIR/home-assistant-core <<ET
 HOME_ASSISTANT_VERS_STRING="$HOME_ASSISTANT_VERS_STRING"
+HOME_ASSISTANT_CONFIG_DIR=/etc/JambulaTV/homeassistant-\${HOME_ASSISTANT_VERS_STRING}
 ET
 }
 
 homeassistant_core_configure () {
+# Source HASS runtime variables
+. $SYSCONFIG_DIR/home-assistant-core
+
+# Set HASS config directory
+HOMEASSISTANT_CONFIG_DIR=$HOMEASSISTANT_CONFIG_DIR-${HOME_ASSISTANT_VERS_STRING}
+
 # Copy udev rules 4 home automation controllers - ttyUSB*
 cp -v $PROJECT_CONFIGS_DIR/udev/96-jambulatv.usb-ha-controllers.rules $UDEV_RULES_USB_HA_CONTROLLERS
 # Reload udev
@@ -14097,7 +14110,7 @@ usermod -a -G dialout $HOMEASSISTANT_USER
 	rsync -av $PROJECT_CONFIGS_DIR/homeassistant/ $HOMEASSISTANT_CONFIG_DIR/
 
 # Change homeassistant config directory permissions
-chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_CONF_DIR/homeassistant
+chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER  $HOMEASSISTANT_CONFIG_DIR
 
 # Customize secrets i.e. port etc.....
 

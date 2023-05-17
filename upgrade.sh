@@ -258,13 +258,21 @@ NEW_HOME_ASSISTANT_TAG=$1
 else
 NEW_HOME_ASSISTANT_TAG=$HOME_ASSISTANT_TAG
 fi
+# Python 3 binary version 
+if [[ "x$2" != "x" ]];
+then
+PYTHON3_BINARY="$2"
+else
+PYTHON3_BINARY="$HOMEASSISTANT_PYTHON3_BINARY_DEFAULT"
+fi
+#
 # Uninstall old homeassistant
 uninstall_homeassistant_core
 # Update common python3 dependency modules
-python3_common_modules_install
+python3_common_modules_install 
 # Install latest homeassistant
 HOME_ASSISTANT_TAG=$NEW_HOME_ASSISTANT_TAG && \
-	homeassistant_core_install
+	homeassistant_core_install "$HOME_ASSISTANT_TAG" "$PYTHON3_BINARY"
 }
 
 upgrade_homeassistant_cli () {
@@ -470,7 +478,7 @@ prosody_add_users
 #upgrade_open_zwave
 #upgrade_domoticz
 
-#upgrade_homeassistant
+#upgrade_homeassistant 2023.5.2 python3.11
 #upgrade_homeassistant_cli
 
 #upgrade_zoneminder
