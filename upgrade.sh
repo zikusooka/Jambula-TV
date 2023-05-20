@@ -478,7 +478,8 @@ prosody_add_users
 #upgrade_open_zwave
 #upgrade_domoticz
 
-#upgrade_homeassistant 2023.5.2 python3.11 202209
+#upgrade_homeassistant 2023.5.2 python3.11 202352
+#upgrade_homeassistant 2021.7.3 python3.8 202173
 #upgrade_homeassistant_cli
 
 #upgrade_zoneminder

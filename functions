@@ -2198,9 +2198,8 @@ python3_venv_destroy () {
 # Delete python3 virtual environment for [PACKAGE]
 # Usage: python3_venv_destroy [PACKAGE] [VERSION_STRING]
 #   e.g. python3_venv_destroy homeassistant 202173
-VENV_PYTHON3_BINARY=$1
-VENV_PACKAGE=$2
-VENV_PACKAGE_VERSION_STRING=$3
+VENV_PACKAGE=$1
+VENV_PACKAGE_VERSION_STRING=$2
 
 # Delete virtual environment
 if [[ "x$VENV_PACKAGE_VERSION_STRING" != "x" ]];
@@ -3040,18 +3039,23 @@ rm -f $(which MinOZW ozw_config)
 
 uninstall_homeassistant_core () {
 HOME_ASSISTANT_OLD_VERSION_STRING=$1
+#
 # Stop home-assistant
 systemctl stop home-assistant.service || killall hass
+
 # Destroy python 3 virtual environment for homeassistant-core 
 python3_venv_destroy homeassistant-core $HOME_ASSISTANT_OLD_VERSION_STRING
 
 # Remove installation sources directory
-[[ -d $INSTALL_SRC_DIR/home-assistant-core-${$HOME_ASSISTANT_OLD_VERSION_STRING} ]] && \
-	rm -rf $INSTALL_SRC_DIR/home-assistant-core-${$HOME_ASSISTANT_OLD_VERSION_STRING}
+[[ -d $INSTALL_SRC_DIR/home-assistant-core-${HOME_ASSISTANT_OLD_VERSION_STRING} ]] && \
+	rm -rf $INSTALL_SRC_DIR/home-assistant-core-${HOME_ASSISTANT_OLD_VERSION_STRING}
 
 # Remove HASS binary symlink
-[[ -e $BINARY_PREFIX/hass-${$HOME_ASSISTANT_OLD_VERSION_STRING} ]] && \
-	rm -f $BINARY_PREFIX/hass-${$HOME_ASSISTANT_OLD_VERSION_STRING}
+[[ -e $BINARY_PREFIX/hass-${HOME_ASSISTANT_OLD_VERSION_STRING} ]] && \
+	rm -f $BINARY_PREFIX/hass-${HOME_ASSISTANT_OLD_VERSION_STRING}
+
+# Remove default sysconfig file for HASS
+[[ -e $SYSCONFIG_DIR/home-assistant-core ]] && rm -f $SYSCONFIG_DIR/home-assistant-core
 }
 
 uninstall_homeassistant_cli () {
@@ -3059,12 +3063,11 @@ uninstall_homeassistant_cli () {
 python3_venv_destroy homeassistant-cli
 
 # Remove installation sources directory
-[[ -d $INSTALL_SRC_DIR/home-assistant-cli-${$HOME_ASSISTANT_OLD_VERSION_STRING} ]] && \
-	rm -rf $INSTALL_SRC_DIR/home-assistant-cli-${$HOME_ASSISTANT_OLD_VERSION_STRING}
+[[ -d $INSTALL_SRC_DIR/home-assistant-cli ]] && \
+	rm -rf $INSTALL_SRC_DIR/home-assistant-cli
 
 # Remove HASS-CLI binary symlink
-[[ -e $BINARY_PREFIX/hass-cli ]] && \
-	rm -f $BINARY_PREFIX/hass-cli
+[[ -L $BINARY_PREFIX/hass-cli ]] && rm -f $BINARY_PREFIX/hass-cli
 }
 
 uninstall_firefox () {
@@ -13953,6 +13956,9 @@ Installing OpenZwave package for Home Assistant Core, please be patient ...
 
 ET
 sleep 5
+
+# Remove previous sources directory if existent
+[[ -d $INSTALL_SRC_DIR/homeassistant_pyozw ]] && rm -rf $INSTALL_SRC_DIR/homeassistant_pyozw
 
 # Unpack homeassistant_pyozw
 if [[ -e $PROJECT_PIPS_DIR/homeassistant_pyozw-${PYOZW_VERSION}.zip ]];
