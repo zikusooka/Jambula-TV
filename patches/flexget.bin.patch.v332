@@ -1,0 +1,26 @@
+--- orig	2023-05-21 07:49:25.250860598 +0300
++++ now		2023-05-21 07:54:15.569971317 +0300
+@@ -2,7 +2,23 @@
+ # -*- coding: utf-8 -*-
+ import re
+ import sys
++import os
++import ssl
++import warnings
+ from flexget import main
++
++# JambulaTV patch
++# ---------------
++# Add support for unverified SSL connections
++if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
++    getattr(ssl, '_create_unverified_context', None)): 
++    ssl._create_default_https_context = ssl._create_unverified_context
++# Ignore all 'unclosed' warnings e.g. unclosed file or socket
++    warnings.filterwarnings(action="ignore", 
++                            message="unclosed", 
++                            category=ResourceWarning)
++# FlexGet
++# -------
+ if __name__ == '__main__':
+     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+     sys.exit(main())

@@ -239,6 +239,10 @@ FREEVO_USER_HOME_DIR=`cat /etc/passwd | grep "$FREEVO_USER" | cut -d ':' -f6 | h
 #FREEVO_VERSION=git
 FREEVO_VERSION=svn
 
+# Flexget version
+FLEXGET_DEFAULT_VERSION="v3.7.0" # "v3.3.2" 
+FLEXGET_PYTHON3_BINARY_DEFAULT="python3.11" # "python3.8"
+
 # Flexget IPTV list download schedule
 FLEXGET_SCHEDULE_IPTV_LISTS_HR=15
 FLEXGET_SCHEDULE_IPTV_LISTS_MIN=30
@@ -2152,6 +2156,7 @@ VENV_PACKAGE=$2
 VENV_USER=$3
 VENV_HOME_DIR=$PYTHON3_VENV_ROOT_DIR/$VENV_PACKAGE
 VENV_BIN_DIR=$VENV_HOME_DIR/bin
+VENV_SITE_DIR=$VENV_HOME_DIR/lib/python3.8/site-packages
 PYTHON3_CMD=$VENV_BIN_DIR/python3
 PIP3_CMD=$VENV_BIN_DIR/pip3
 #
@@ -9810,46 +9815,137 @@ done
 }
 
 flexget_python3_install () {
-PYTHON_VERSION_USED=3 && set_python_version
-# Dependencies for Flexget - Install locally using wheels/pips specified in requirements
-pip3 --log $BUILD_LOG install --no-cache-dir --no-index --find-links $PROJECT_PIPS_DIR -r $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt
+# Set the flexget tag plus other variables to be used
+FLEXGET_TAG="$1"
+FLEXGET_PYTHON3_BINARY="$2"
 #
-# Flexget (Python3)
-# -----------------
-# IMPORTANT: Don't use pip due to requirements set for common python 3 modules used by
-#            other packages
+# Set version string
+if [[ "x$FLEXGET_TAG" != "x" ]];
+then
+FLEXGET_VERS_STRING=$(echo $FLEXGET_TAG | sed "s/\.//g")
+else
+FLEXGET_VERS_STRING=dev
+fi
+export FLEXGET_VERS_STRING
 #
-# Install python modules
-echo "Installing FlexGet ..."
-rsync -av $PROJECT_GITHUB_DIR/Flexget-current/ $INSTALL_SRC_DIR/Flexget/
-# Force our requirements
-cp -v $PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt \
-	$INSTALL_SRC_DIR/Flexget/requirements.txt
+# Set python binary version
+if [[ "x$FLEXGET_PYTHON3_BINARY" != "x" ]];
+then
+FLEXGET_PYTHON3_BINARY=$FLEXGET_PYTHON3_BINARY
+else
+FLEXGET_PYTHON3_BINARY=$(python3 --version | rev | cut -d '.' -f2- | rev | sed 's: ::g' | tr '[:upper:]' '[:lower:]')
+fi
+
+# Create python 3 virtual environment for flexget core using python version specified above
+python3_venv_create $FLEXGET_PYTHON3_BINARY flexget-$FLEXGET_VERS_STRING jambula
+
+# Change to Github sources
+cd $PROJECT_GITHUB_DIR/Flexget
+#
+# Query and set Flexget tag
+if [[ "x$FLEXGET_TAG" = "x" ]];
+then
+FLEXGET_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+FLEXGET_INSTALL_REQUIREMENTS_FILE=$PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt
+elif [[ "$FLEXGET_TAG" = "master" ]];
+then
+FLEXGET_TAG=master
+FLEXGET_INSTALL_REQUIREMENTS_FILE=$PROJECT_PIPS_REQUIRES_DIR/flexget-requirements.txt
+else
+FLEXGET_TAG=$FLEXGET_TAG
+FLEXGET_INSTALL_REQUIREMENTS_FILE=$PROJECT_PIPS_REQUIRES_DIR/flexget-requirements-${FLEXGET_VERS_STRING}.txt
+fi
+#
+# Check if Flexget install requirements file exists
+if [[ ! -e $FLEXGET_INSTALL_REQUIREMENTS_FILE ]];
+then
+# Add warning to log file
+cat >> $BUILD_LOG <<ET
+Warning: [Flexget]: The requirements file needed to install Flexget is missing! Please add the following file and try again:
+$FLEXGET_INSTALL_REQUIREMENTS_FILE
+ET
+fi
+
+# Notice: Installing flexget core [version]
+clear
+cat <<ET
+
+Installing Flexget [$FLEXGET_TAG], please be patient ...
+
+ET
+sleep 7
+#
+# Archive and Unpack desired Flexget core git tag
+case $FLEXGET_TAG in
+master)
+# master branch i.e. HEAD
+git archive --format tar.gz --prefix=flexget-${FLEXGET_VERS_STRING}/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+;;
+*)
+# Check to see if desired branch/tag exists
+git tag -l | grep -x $FLEXGET_TAG > /dev/null 2>&1
+TAG_EXISTS=$?
+if [ "$TAG_EXISTS" = "0" ];
+then
+git archive --format tar.gz --prefix=flexget-${FLEXGET_VERS_STRING}/ $FLEXGET_TAG | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+else
+git archive --format tar.gz --prefix=flexget-${FLEXGET_VERS_STRING}/ HEAD | (cd $INSTALL_SRC_DIR/ && tar zxvf -)
+# Display post install/configuration information, and output to final notice
+echo 2>&1 | tee -a $POST_INSTALL_NOTES << EOF
+#
+#
+Flexget Version
+===============
+% The flexget branch you specified ($FLEXGET_TAG), does not exist, so I used master/ HEAD instead
+
+#
+EOF
+fi
+;;
+esac
 #
 # Apply Patches
 # -------------
 # notify.py component
-patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/components/notify/notify.py < $PROJECT_PATCHES_DIR/flexget.components.notify.python3.patch
+patch -p1 $INSTALL_SRC_DIR/flexget-${FLEXGET_VERS_STRING}/flexget/components/notify/notify.py < $PROJECT_PATCHES_DIR/flexget.components.notify.python3.patch
 # include plugin
-patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/operate/include.py < $PROJECT_PATCHES_DIR/flexget.plugin.include.python3.patch
+patch -p1 $INSTALL_SRC_DIR/flexget-${FLEXGET_VERS_STRING}/flexget/plugins/operate/include.py < $PROJECT_PATCHES_DIR/flexget.plugin.include.python3.patch
 # notifiers plugin
-#patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/notifiers/notify.py < $PROJECT_PATCHES_DIR/flexget.plugin.notifiers.python3.patch
+#patch -p1 $INSTALL_SRC_DIR/flexget-${FLEXGET_VERS_STRING}/flexget/plugins/notifiers/notify.py < $PROJECT_PATCHES_DIR/flexget.plugin.notifiers.python3.patch
 # rss plugin - extract podcast poster image URLs
-patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/input/rss.py < $PROJECT_PATCHES_DIR/flexget.plugin.input.rss.python3.patch
+patch -p1 $INSTALL_SRC_DIR/flexget-${FLEXGET_VERS_STRING}/flexget/plugins/input/rss.py < $PROJECT_PATCHES_DIR/flexget.plugin.input.rss.python3.patch
 # rtorrent_magnet plugin - download torrent file directly if magnet URI is badly formatted
-patch -p1 $INSTALL_SRC_DIR/Flexget/flexget/plugins/output/rtorrent_magnet.py < $PROJECT_PATCHES_DIR/flexget.plugin.output.rtorrent_magnet.patch
+patch -p1 $INSTALL_SRC_DIR/flexget-${FLEXGET_VERS_STRING}/flexget/plugins/output/rtorrent_magnet.py < $PROJECT_PATCHES_DIR/flexget.plugin.output.rtorrent_magnet.patch
 #
-# Install
-cd $INSTALL_SRC_DIR/Flexget
-$PYTHON_INSTALL_CMD
+# Install Flexget
+cd $INSTALL_SRC_DIR/flexget-${FLEXGET_VERS_STRING}
+$PIP3_CMD --log $BUILD_LOG install --prefer-binary --no-cache-dir --upgrade --upgrade-strategy only-if-needed --no-index --find-links $PROJECT_PIPS_DIR .
+#
+# Install other packages needed for Flexget runtime
+[[ -e $FLEXGET_INSTALL_REQUIREMENTS_FILE ]] && \
+	$PIP3_CMD --log $BUILD_LOG install --prefer-binary --no-cache-dir --upgrade --upgrade-strategy only-if-needed --no-index --find-links $PROJECT_PIPS_DIR -r $FLEXGET_INSTALL_REQUIREMENTS_FILE
+#
+# Patch flexget i.e. flexget binary to allow for connections to unverified SSL certificate sites and
+# Avoid unnecessary logging warnings after migration to python 3.6+
+[[ -e $PROJECT_PATCHES_DIR/flexget.bin.patch.${FLEXGET_VERS_STRING} ]] && \
+	patch -p1 $VENV_BIN_DIR/flexget < $PROJECT_PATCHES_DIR/flexget.bin.patch.${FLEXGET_VERS_STRING}
+#
 # Create symbolic link
-[[ -x $BINARY_PREFIX/flexget ]] || ln -s $PREFIX/local/bin/flexget $BINARY_PREFIX/flexget
-# Patch flexget binary to allow for connections to unverified SSL certificate sites
-patch -p1 -R $PREFIX/local/bin/flexget < $PROJECT_PATCHES_DIR/flexget.bin.patch
+[[ -x $BINARY_PREFIX/flexget-${FLEXGET_VERS_STRING} ]] || \
+	ln -s $VENV_BIN_DIR/flexget $BINARY_PREFIX/flexget-${FLEXGET_VERS_STRING}
 #
 # Copy email templates in Python 3 installs
 cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \
-	$PYTHON_SITEDIR/FlexGet-*.egg/flexget/templates/task/
+	$VENV_SITE_DIR/flexget/templates/task/
+#
+# Create environment variables file for flexget
+cat > $SYSCONFIG_DIR/flexget <<ET
+FLEXGET_VERS_STRING=$FLEXGET_VERS_STRING
+FLEXGET_CMD="$BINARY_PREFIX/flexget-\${FLEXGET_VERS_STRING}"
+FLEXGET_CONFIG_FILE="$FLEXGET_CONFIG_DIR-\${FLEXGET_VERS_STRING}/config.yml"
+FLEXGET_LOG_FILE="$PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log"
+FLEXGET_LOCK_FILE="$FLEXGET_CONFIG_DIR/.config-lock"
+ET
 }
 
 flexget_python2_install () {
@@ -9872,8 +9968,21 @@ cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.template \
 }
 
 flexget_configure () {
-#PYTHON_VERSION_USED=2 && set_python_version
 PYTHON_VERSION_USED=3 && set_python_version
+#PYTHON_VERSION_USED=2 && set_python_version
+#
+# Source flexget runtime variables
+. $SYSCONFIG_DIR/flexget
+#
+# Set flexget config directory
+[[ "x$FLEXGET_VERS_STRING" = "x" ]] && FLEXGET=dev
+FLEXGET_CONFIG_DIR=$FLEXGET_CONFIG_DIR-${FLEXGET_VERS_STRING}
+
+
+echo FLEXGET_CONFIG_DIR=[$FLEXGET_CONFIG_DIR]
+exit
+
+#
 # create flexget config directory
 [ -d $FLEXGET_CONFIG_DIR ] || mkdir -p $FLEXGET_CONFIG_DIR
 # Create flexget logs directory
@@ -9981,14 +10090,6 @@ chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $FLEXGET_CONFIG_DIR
 # Change flexget log directory to multimedia user
 chown -R $MULTIMEDIA_USER:$MULTIMEDIA_USER $PROJECT_SYSTEM_LOG_DIR/flexget
 #
-# Add Environment file for Systemd
-cat > $SYSCONFIG_DIR/flexget <<EOF
-FLEXGET_CMD="$(which flexget)"
-CONFIG_FILE="$FLEXGET_CONFIG_DIR/config.yml"
-LOG_FILE="$PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log"
-LOCK_FILE="$FLEXGET_CONFIG_DIR/.config-lock"
-PYTHON_SITEDIR="$PYTHON_SITEDIR"
-EOF
 # Copy flexget systemd file 
 cp -v $PROJECT_INIT_SCRIPTS_DIR/flexget.service $SYSTEMD_UNITS_DIR_USER/
 # Run flexget in daemon mode: add timezone file
@@ -14040,7 +14141,7 @@ if [[ ! -e $HASS_INSTALL_REQUIREMENTS_FILE ]];
 then
 # Add warning to log file
 cat >> $BUILD_LOG <<ET
-Warning: [Home-Assitant Core]: The requirements file needed to install Home Assistant Core is missing! Please add the following file and try again:
+Warning: [Home-Assistant Core]: The requirements file needed to install Home Assistant Core is missing! Please add the following file and try again:
 $HASS_INSTALL_REQUIREMENTS_FILE
 ET
 fi

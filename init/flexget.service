@@ -5,12 +5,12 @@ After=network.target
 [Service]
 User=jambula
 EnvironmentFile=-/etc/sysconfig/flexget
-ExecStartPre=/bin/sh -c "/usr/bin/sudo /usr/bin/rm -f ${LOCK_FILE}"
-ExecStartPre=/bin/sh -c "/usr/bin/sudo /usr/bin/chown jambula:jambula ${LOG_FILE}"
-#ExecStartPre=/bin/sh -c "/usr/bin/sudo /usr/bin/chown -R jambula:jambula ${PYTHON_SITEDIR}/protobuf-*"
-ExecStart=/bin/sh -c "${FLEXGET_CMD} -c ${CONFIG_FILE} -l ${LOG_FILE} daemon start"
-ExecStop=/bin/sh -c "${FLEXGET_CMD} -c ${CONFIG_FILE} -l ${LOG_FILE} daemon stop"
-ExecReload=/bin/sh -c "${FLEXGET_CMD} -c ${CONFIG_FILE} -l ${LOG_FILE} daemon reload"
+ExecStartPre=/bin/sh -c "/usr/bin/sudo /usr/bin/rm -f ${FLEXGET_LOCK_FILE}"
+ExecStartPre=/bin/sh -c "[[ -e ${FLEXGET_LOG_FILE} ]] || /usr/bin/sudo /usr/bin/touch ${FLEXGET_LOG_FILE}"
+ExecStartPre=/bin/sh -c "/usr/bin/sudo /usr/bin/chown jambula:jambula ${FLEXGET_LOG_FILE}"
+ExecStart=/bin/sh -c "${FLEXGET_CMD} -c ${FLEXGET_CONFIG_FILE} -l ${FLEXGET_LOG_FILE} daemon start"
+ExecStop=/bin/sh -c "${FLEXGET_CMD} -c ${FLEXGET_CONFIG_FILE} -l ${FLEXGET_LOG_FILE} daemon stop"
+ExecReload=/bin/sh -c "${FLEXGET_CMD} -c ${FLEXGET_CONFIG_FILE} -l ${FLEXGET_LOG_FILE} daemon reload"
 
 [Install]
 WantedBy=multi-user.target
