@@ -8,7 +8,7 @@ Type=simple
 User=jambula
 
 EnvironmentFile=/etc/sysconfig/home-assistant-core
-ExecStart=/bin/bash -c "/usr/bin/hass-${HOME_ASSISTANT_VERS_STRING} -c ${HOME_ASSISTANT_CONFIG_DIR}"
+ExecStart=/bin/bash -c "${HOME_ASSISTANT_CMD} -c ${HOME_ASSISTANT_CONFIG_DIR}"
 
 [Install]
 WantedBy=graphical.target
