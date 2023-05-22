@@ -465,8 +465,8 @@ prosody_add_users
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
 
 #FLEXGET_DEPENDENCIES="DEP_1 DEP_2 DEP_3" upgrade_flexget_deps
-#upgrade_flexget "v3.3.2" "python3.8" "v3.3.2"
-#upgrade_flexget "v3.7.0" "python3.11" "v3.7.0"
+#upgrade_flexget "v3.3.2" "python3.8" "v332"
+#upgrade_flexget "v3.7.0" "python3.11" "v370"
 
 #upgrade_icinga2
 #upgrade_icingaweb2
