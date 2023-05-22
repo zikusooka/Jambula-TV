@@ -2738,14 +2738,24 @@ rm -f $BINARY_PREFIX/zmalarm_daemon.pl
 }
 
 uninstall_flexget () {
-# Stop running instance
-systemctl stop flexget.service
-# Uninstall
-pip uninstall -y flexget
-# Remove flexget lingering binary files
-[[ -L $BINARY_PREFIX/flexget ]] && rm -f $BINARY_PREFIX/flexget
-# Remove flexget sources
-rm -rf $INSTALL_SRC_DIR/Flexget
+FLEXGET_OLD_VERSION_STRING=$1
+#
+# Stop running instance of flexget
+systemctl stop flexget.service || killall flexget
+#
+# Destroy python 3 virtual environment for flexget 
+python3_venv_destroy flexget $FLEXGET_OLD_VERSION_STRING
+#
+# Remove installation sources directory
+[[ -d $INSTALL_SRC_DIR/flexget-${FLEXGET_OLD_VERSION_STRING} ]] && \
+	rm -rf $INSTALL_SRC_DIR/flexget-${FLEXGET_OLD_VERSION_STRING}
+#
+# Remove flexget binary symlink
+[[ -L $BINARY_PREFIX/flexget-${FLEXGET_OLD_VERSION_STRING} ]] && \
+	rm -f $BINARY_PREFIX/flexget-${FLEXGET_OLD_VERSION_STRING}
+#
+# Remove default sysconfig file for FLEXGET
+[[ -e $SYSCONFIG_DIR/flexget ]] && rm -f $SYSCONFIG_DIR/flexget
 }
 
 uninstall_flexget_deps () {
