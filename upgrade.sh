@@ -275,7 +275,7 @@ if [[ "x$1" != "x" ]];
 then
 NEW_HOME_ASSISTANT_TAG=$1
 else
-NEW_HOME_ASSISTANT_TAG=$HOME_ASSISTANT_TAG
+NEW_HOME_ASSISTANT_TAG=$(cd $PROJECT_GITHUB_DIR/home-assistant-core && git describe --tags $(git rev-list --tags --max-count=1))0
 fi
 # Python 3 binary version 
 if [[ "x$2" != "x" ]];
@@ -285,13 +285,13 @@ else
 PYTHON3_BINARY="$HOMEASSISTANT_PYTHON3_BINARY_DEFAULT"
 fi
 #
+HOME_ASSISTANT_OLD_VERSION=$3
+#
 # Uninstall old homeassistant
-HOME_ASSISTANT_OLD_VERSION=$3 && \
-	uninstall_homeassistant_core $HOME_ASSISTANT_OLD_VERSION
+uninstall_homeassistant_core $HOME_ASSISTANT_OLD_VERSION
 #
 # Install latest homeassistant
-HOME_ASSISTANT_TAG=$NEW_HOME_ASSISTANT_TAG && \
-	homeassistant_core_install "$HOME_ASSISTANT_TAG" "$PYTHON3_BINARY"
+homeassistant_core_install "$NEW_HOME_ASSISTANT_TAG" "$PYTHON3_BINARY"
 }
 
 upgrade_homeassistant_cli () {
