@@ -102,12 +102,28 @@ flexget_deps_install
 }
 
 upgrade_flexget () {
-#uninstall_flexget v332
-uninstall_flexget v370
+# Set flexget tag
+if [[ "x$1" != "x" ]];
+then
+NEW_FLEXGET_TAG=$1
+else
+NEW_FLEXGET_TAG=$(cd $PROJECT_GITHUB_DIR/Flexget && git describe --tags $(git rev-list --tags --max-count=1))
+fi
+# Python 3 binary version 
+if [[ "x$2" != "x" ]];
+then
+PYTHON3_BINARY="$2"
+else
+PYTHON3_BINARY="$FLEXGET_PYTHON3_BINARY_DEFAULT"
+fi
 #
-#flexget_python2_install
-#flexget_python3_install "v3.3.2" "python3.8"
-flexget_python3_install "v3.7.0" "python3.11"
+FLEXGET_OLD_VERSION=$3
+#
+# Uninstall old flexget
+uninstall_flexget $FLEXGET_OLD_VERSION
+#
+# Install latest flexget
+flexget_python3_install "$NEW_FLEXGET_TAG" "$PYTHON3_BINARY"
 }
 
 upgrade_icinga2 () {
@@ -449,9 +465,10 @@ prosody_add_users
 #upgrade_kodi_addons PLUGIN_1 PLUGIN_2 PLUGIN_3
 
 #FLEXGET_DEPENDENCIES="DEP_1 DEP_2 DEP_3" upgrade_flexget_deps
-#upgrade_flexget
+#upgrade_flexget "v3.3.2" "python3.8" "v3.3.2"
+#upgrade_flexget "v3.7.0" "python3.11" "v3.7.0"
 
-#upgrade_icinga2 
+#upgrade_icinga2
 #upgrade_icingaweb2
 
 #upgrade_nextcloud
