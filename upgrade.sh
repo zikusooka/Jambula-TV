@@ -102,9 +102,12 @@ flexget_deps_install
 }
 
 upgrade_flexget () {
-uninstall_flexget
+#uninstall_flexget v332
+uninstall_flexget v370
+#
 #flexget_python2_install
-flexget_python3_install
+#flexget_python3_install "v3.3.2" "python3.8"
+flexget_python3_install "v3.7.0" "python3.11"
 }
 
 upgrade_icinga2 () {

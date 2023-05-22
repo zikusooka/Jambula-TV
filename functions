@@ -9950,7 +9950,7 @@ cp -v $PROJECT_CUSTOMIZATION_DIR/flexget/templates/email/jambula.html.template \
 #
 # Create environment variables file for flexget
 cat > $SYSCONFIG_DIR/flexget <<ET
-FLEXGET_VERS_STRING=$FLEXGET_VERS_STRING
+FLEXGET_VERS_STRING="$FLEXGET_VERS_STRING"
 FLEXGET_CMD="$BINARY_PREFIX/flexget-\${FLEXGET_VERS_STRING}"
 FLEXGET_CONFIG_FILE="$FLEXGET_CONFIG_DIR-\${FLEXGET_VERS_STRING}/config.yml"
 FLEXGET_LOG_FILE="$PROJECT_SYSTEM_LOG_DIR/flexget/flexget.log"
@@ -14114,7 +14114,7 @@ if [[ "x$HOME_ASSISTANT_TAG" != "x" ]];
 then
 HOME_ASSISTANT_VERS_STRING=$(echo $HOME_ASSISTANT_TAG | sed "s/\.//g")
 else
-HOME_ASSISTANT_VERS_STRING=generic
+HOME_ASSISTANT_VERS_STRING=dev
 fi
 export HOME_ASSISTANT_VERS_STRING
 #
@@ -14216,7 +14216,8 @@ $PIP3_CMD --log $BUILD_LOG install --prefer-binary --no-cache-dir --upgrade --up
 # Create environment variables file for home-assistant-core
 cat > $SYSCONFIG_DIR/home-assistant-core <<ET
 HOME_ASSISTANT_VERS_STRING="$HOME_ASSISTANT_VERS_STRING"
-HOME_ASSISTANT_CONFIG_DIR=/etc/JambulaTV/homeassistant-\${HOME_ASSISTANT_VERS_STRING}
+HOME_ASSISTANT_CMD="$BINARY_PREFIX/hass-\${HOME_ASSISTANT_VERS_STRING}"
+HOME_ASSISTANT_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/homeassistant-\${HOME_ASSISTANT_VERS_STRING}
 ET
 }
 
@@ -14225,7 +14226,7 @@ homeassistant_core_configure () {
 . $SYSCONFIG_DIR/home-assistant-core
 
 # Set HASS config directory
-[[ "x$HOME_ASSISTANT_VERS_STRING" = "x" ]] && HOME_ASSISTANT_VERS_STRING=generic
+[[ "x$HOME_ASSISTANT_VERS_STRING" = "x" ]] && HOME_ASSISTANT_VERS_STRING=dev
 HOMEASSISTANT_CONFIG_DIR=$HOMEASSISTANT_CONFIG_DIR-${HOME_ASSISTANT_VERS_STRING}
 
 # Copy udev rules 4 home automation controllers - ttyUSB*
