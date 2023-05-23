@@ -1,3 +1,111 @@
+Changes since v7.6
+--------------------
+
+* JambulaTV: Add support for displaying logo(s) of Internet radio stations  in Home-Assistant's lovelace dashboard when on-line streaming  is started i.e. Update the Internet radio streamer tool:  'jambulatv-internet-radio-streamer' 
+
+* JambulaTV: Fix issue where there's no sound after upgrade/install of  Pulseaudio sound server 
+
+* JambulaTV: Refactor our global settings file so that other programming  languages like Python can use it i.e. Escape all values of  variables specified in 'global-settings.cfg' file 
+
+* JambulaTV: Cleanup initial and main functions file 
+
+* JambulaTV: Rename ALSA configuration routines 'alsa_mixer_configure'  to 'alsa_mixer_volume_levels_setup' in initial and main  functions file i.e. Make ALSA configuration modular 
+
+* JambulaTV: Update pocketsphinx language dictionary and model files 
+
+* JambulaTV: Fix issue where variables for our tools are not added to  the global settings file as is expected. See changes in  commit: 3a5fe71613ece039d01d7fa38c39c01c71821fe4 
+
+* JambulaTV: Make gsm ussd controller tool i.e. jambulatv-gsm-ussd-ug  compatible with Home-Assistant scripts and automations 
+
+* JambulaTV: In addition to local and global news headlines, add support  for downloading and playing news podcasts to the fetch news  via scraper tool i.e. jambulatv-fetch-news-via-scraper 
+
+* JambulaTV: Modify command used to fetch the latest news headlines in  ASR skills i.e. Update 'jambulatv-asr-skills' tool 
+
+* JambulaTV: Fix wind information typos in the weather via scraper tool:  'jambulatv-weather-via-scraper' since it was causing a  mis-pronounciation of winds by the Text-to-Speech service 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Add several TTS generated voice alert sound files that are  used by various automations and scripts in Home-Assistant 
+
+* JambulaTV: Switch from using service to hosts in Icinga2 when discovering  WiFi access points  i.e. Remove 'Discover Wifi Access Point'  Icinga2 service as it is no longer needed.  Replace it with  newly added Icinga2 template host i.e. 'jambula-01-wifi-ap' 
+
+* JambulaTV: Change the MQTT payload messages used when publishing the  usage states of remote PCs i.e. Use 'Home' and 'Away' in  the tool: 'jambulatv-remote-pc-usage-status' as this is  needed for the device tracker in Home-Assistant to work  as expected 
+
+*  JambulaTV: Switch to using a different tool and skills for voice commands  i.e. Add a new tool named 'jambulatv-voice-assistant.service'  It is a replacement for the previous speech to text tool and is  written in Python 3 and supports on the fly generated skills to  translate voice commands into text 
+
+* JambulaTV: Add support for querying mobile money balances via the GSM  USSD controller tool i.e. Update 'jambulatv-gsm-ussd-ug' 
+
+* JambulaTV: Refactor the code used in presence detection via Hostapd  i.e. Update 'jambulatv-presence-detection-via-hostapd' 
+
+* JambulaTV: While querying for nearby WiFi devices promiscuously, do  not run command to bring UP the monitor interface if the  specified interface does not exist i.e. Update Icinga2  plugin: check_tshark.  This prevents Icinga2 from giving  false positives and reporting WifI nodes as UP 
+
+* JambulaTV: Add TTS generated voice alert sound files that are used to  alert presence status of residents in Home-Assistant 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Change the main menu code for Airtel queries in the GSM USSD  controller tool i.e. Update 'jambulatv-gsm-ussd-ug' 
+
+* JambulaTV: Support download of source packages via a remote FTP server  during initial installation 
+
+* JambulaTV: Remove all sounds and music files currently used by our  Asterisk server instance from the project's contribution  directory and move to an external location 
+
+* JambulaTV: Add support for upgrading to the latest Python 3.11.x packages 
+
+* JambulaTV: Change the directory path where requirements for Python based packages are located 
+
+* JambulaTV: Add home streaming test video clip to project's contributed directory 
+
+* JambulaTV: Update contributed jazz music playlist to include revised stream URLs  for Smoothjazz.com i.e. Online-Radio-Jazz.m3u 
+
+* JambulaTV: Always update youtube-dl package when Internet status changes  to UP  i.e. Update the Internet/DNS monitoring tool:  jambulatv-dns-status-triggers 
+
+* JambulaTV: Add support for creating Python virtual environments in order  to enable management of separate Python package installations  i.e. Allow for some Python packages to be isolated in order  to avoid breakages due to dependencies 
+
+* JambulaTV: Add support for specifying the source tag or version when  installing Home-Assistant Core 
+
+* JambulaTV: Add support for using specific versions of Python 3 during  creation of pyenv based virtual environments i.e. Refactor  routines under 'python3_venv_create' in initial and main  functions file 
+
+* JambulaTV: Switch to installing Home-Assistant Core via Python 3 virtual  environments i.e. Refactor the 'homeassistant_pyozw_install'  and 'homeassistant_core_install' routines in initial and main  functions files 
+
+* JambulaTV: Switch to installing Home-Assistant CLI via Python 3 virtual  environments i.e. Refactor the 'homeassistant_cli_install'  routines in initial and main functions files 
+
+* JambulaTV: Add support for dynamically specifying the version of Python 3  package to be installed i.e. Update 'python3_install' routines  in initial install, upgrade and functions files 
+
+* JambulaTV: Add install of 'wheel' package during the creation of pyenv  based virtual environments i.e. Update 'python3_venv_create'  routines in initial and main functions file 
+
+* JambulaTV: Add support for dynamic install, upgrade and runtime usage of  different tags/versions of Home-Assistant core 
+
+* JambulaTV: Add support for destroying Python 3 virtual environments for  previously installed packages  i.e. Add 'python3_venv_destroy' routines to initial and main  functions files 
+
+* JambulaTV: Switch to new method of uninstalling Home-Assistant Core  that was created using Python 3 virtual environments  i.e. Refactor the 'uninstall_homeassistant_core' routines  in initial and main functions files 
+
+* JambulaTV: Support upgrades of Home-Assistant Core using Python 3 virtual  environments i.e. Refactor 'upgrade_homeassistant' routines in  upgrade script 
+
+* JambulaTV: Switch to new method of uninstalling Home-Assistant CLI that  was created using Python 3 virtual environments  i.e. Refactor the 'uninstall_homeassistant_cli' routines in  initial and main functions files 
+
+* JambulaTV: Support use of newly introduced sysconfig defaults file in  CLI tool used to extract variables from the 'secrets.yaml'  file in Home-Assistant Core  i.e. Update 'jambulatv-homeassistant-secrets' 
+
+* JambulaTV: Refactor the Home-Assistant Core configuration routines  i.e. Update 'homeassistant_core_configure' 
+
+* JambulaTV: Update Home-Assistant configuration files 
+
+* JambulaTV: Fix minor bugs in un-installation routines for Home-Assistant  Core and CLI 
+
+* JambulaTV: Switch to installing Flexget via Python 3 virtual environments  i.e. Refactor 'flexget_python3_install' routines in initial  and main functions files 
+
+* JambulaTV: Switch to new method of uninstalling Flexget created using  the Python 3 virtual environment  i.e. Refactor the  'uninstall_flexget' routines in initial and main functions  files 
+
+* JambulaTV: Support upgrades of Flexget using Python 3 virtual environments  i.e. Refactor 'upgrade_flexget' routines in the upgrade script 
+
+* JambulaTV: Update install/uninstall routines for Home-Assistant Core in  initial and main functions files 
+
+* JambulaTV: Refactor Flexget upgrade routines in the upgrade script 
+
+* JambulaTV: Refactor Home-Asistant Core upgrade routines in the upgrade  script 
+
+* JambulaTV: Fix the 'VENV_SITE_DIR' variable in Python 3 virtual environment  creation in initial and main functions file 
+
+
 Changes since v7.5
 --------------------
 
