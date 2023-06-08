@@ -4,7 +4,7 @@
 
 # HASS Settings
 HASS_HOST_IP=127.0.0.1
-HASS_WWW_PORT=8505
+HASS_WWW_PORT=$(/usr/bin/jambulatv-homeassistant-secrets http_server_port)
 HASS_WWW_PASSWORD=""
 
 # Time of Day
