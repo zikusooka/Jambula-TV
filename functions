@@ -818,7 +818,7 @@ DOMOTICZ_WWW_PORT=$([[ -s $PORTS_ASSIGNED_FILE ]] && grep -i 'domoticz$' $PORTS_
 # Home Assistant
 HOMEASSISTANT_USER=$MULTIMEDIA_USER
 HOMEASSISTANT_CONFIG_DIR=$PROJECT_SYSTEM_CONF_DIR/homeassistant
-HOMEASSISTANT_CORE_DEFAULT_VERSION="2021.7.3"  # "2023.5.2" 
+HOMEASSISTANT_CORE_DEFAULT_VERSION="2021.7.3"  # "2023.6.1" 
 HOMEASSISTANT_PYTHON3_BINARY_DEFAULT="python3.8"  # "python3.11"
 
 # Mosquitto - MQTT
@@ -3069,7 +3069,7 @@ python3_venv_destroy homeassistant-core $HOME_ASSISTANT_OLD_VERSION_STRING
 [[ -L $HOMEASSISTANT_CONFIG_DIR ]] & rm -f $HOMEASSISTANT_CONFIG_DIR
 
 # Remove HASS binary symlink
-[[ -e $BINARY_PREFIX/hass-${HOME_ASSISTANT_OLD_VERSION_STRING} ]] && \
+[[ -L $BINARY_PREFIX/hass-${HOME_ASSISTANT_OLD_VERSION_STRING} ]] && \
 	rm -f $BINARY_PREFIX/hass-${HOME_ASSISTANT_OLD_VERSION_STRING}
 
 # Remove default sysconfig file for HASS
@@ -14208,9 +14208,11 @@ $PIP3_CMD --log $BUILD_LOG install --prefer-binary --no-cache-dir --upgrade --up
 [[ -e $PROJECT_PATCHES_DIR/hass.bin.patch.${HOME_ASSISTANT_VERS_STRING} ]] && \
 	patch -p1 $VENV_BIN_DIR/hass < $PROJECT_PATCHES_DIR/hass.bin.patch.${HOME_ASSISTANT_VERS_STRING}
 #
-# Create symbolic link
+# Create symbolic links
 [[ -x $BINARY_PREFIX/hass-${HOME_ASSISTANT_VERS_STRING} ]] || \
 	ln -s $VENV_BIN_DIR/hass $BINARY_PREFIX/hass-${HOME_ASSISTANT_VERS_STRING}
+[[ -x $BINARY_PREFIX/hass-${HOME_ASSISTANT_VERS_STRING} ]] && \
+	ln -s -f $BINARY_PREFIX/hass-${HOME_ASSISTANT_VERS_STRING} $BINARY_PREFIX/hass
 #
 # Create environment variables file for home-assistant-core
 cat > $SYSCONFIG_DIR/home-assistant-core <<ET
