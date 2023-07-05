@@ -1,0 +1,9 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.mifi_status
+    state: "on"
+
+card:
+  type: sensor
+  entity: sensor.mifi_network_connection_status
+  name: 'Network Connection Status'

@@ -1,0 +1,12 @@
+type: entity-button
+entity: script.volume_levels_reset_player
+name: 'Volume Reset (Player)'
+show_name: true
+show_state: false
+icon: 'mdi:volume-high'
+
+tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.volume_levels_reset_player

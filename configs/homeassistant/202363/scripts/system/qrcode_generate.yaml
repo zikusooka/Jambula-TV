@@ -1,0 +1,6 @@
+qrcodes_generate_wifi_hotspot_credentials:
+  sequence:
+
+    # Generate QR codes containing hotspot credentials
+    # ------------------------------------------------
+    - service: shell_command.qrcodes_generate_wifi_hotspot_credentials

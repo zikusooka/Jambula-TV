@@ -1,0 +1,10 @@
+platform: template
+sensors:
+
+  activity_while_at_home_zik:
+    friendly_name: 'Activity while at home - Zik'
+    value_template: '{{ states.input_select.presence_status_zik.state }}'
+
+  activity_while_at_home_monica:
+    friendly_name: 'Activity while at home - Monica'
+    value_template: '{{ states.input_select.presence_status_monica.state }}'

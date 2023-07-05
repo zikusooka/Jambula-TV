@@ -1,0 +1,9 @@
+garbage_collected:
+  sequence:
+
+
+    # Toggle status of garbage collected
+    # ----------------------------------
+    - service: homeassistant.toggle
+      data:
+        entity_id: input_boolean.garbage_collected

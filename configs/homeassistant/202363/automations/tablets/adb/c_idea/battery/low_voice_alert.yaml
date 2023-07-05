@@ -1,0 +1,41 @@
+# Battery - Low (Voice Alert)
+alias: "Play voice alert when tablet battery for C Idea is low"
+initial_state: True
+
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/3'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Bedtime for all is off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Battery level: Less than threshold
+    - condition: numeric_state
+      entity_id: sensor.battery_level_via_adb_4_c_idea
+      below: 50
+
+    # Battery status: discharging
+    - condition: state
+      entity_id: sensor.battery_status_via_adb_4_c_idea
+      state: 'discharging'
+
+    # Battery status not empty value
+    - condition: template
+      value_template: "{{ not is_state('sensor.battery_status_via_adb_4_c_idea', '') }}"
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.tablet_battery_low_c_idea

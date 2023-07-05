@@ -1,0 +1,48 @@
+alias: Umeme Yaka token units value entry via frontend
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: input_datetime.umeme_yaka_token_entry_date
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    - condition: template
+      value_template: "{{ not is_state('input_text.umeme_yaka_token_units_value', 'unknown') }}"
+    - condition: template
+      value_template: "{{ not is_state('input_text.umeme_yaka_token_units_value', '') }}"
+    - condition: template
+      value_template: "{{ not is_state('input_text.umeme_yaka_token_units_value', '0.0') }}"
+
+
+action:
+
+  # Update last entered Yaka token units
+  # ---
+  - service: input_number.set_value
+    data_template:
+      entity_id: input_number.umeme_yaka_token_entry_units
+      value: "{{ states('input_text.umeme_yaka_token_units_value') }}"
+
+  # Add Yaka units loaded now to last known balance
+  # ---
+  - service: input_number.set_value
+    data_template:
+      entity_id: input_number.umeme_yaka_token_units_value
+      value: "{{ (states('input_text.umeme_yaka_token_units_value') | float) + (states('input_number.umeme_yaka_token_units_value') | float) }}"
+
+  # Update last Yaka total cost
+  # ---
+  - service: input_number.set_value
+    data_template:
+      entity_id: input_number.umeme_yaka_token_cost_total
+      value: "{{ states('input_text.umeme_yaka_token_cost_total') }}"
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.umeme_yaka_token_entered

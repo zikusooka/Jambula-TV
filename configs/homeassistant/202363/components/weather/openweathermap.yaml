@@ -1,0 +1,7 @@
+# The openweathermap weather platform uses OpenWeatherMap as a source for current 
+# meteorological data for your location.
+#
+# https://www.home-assistant.io/components/weather.openweathermap/
+
+platform: openweathermap
+api_key: !secret openweathermap_api_key

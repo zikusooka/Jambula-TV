@@ -1,0 +1,176 @@
+internet_already_connected:
+  sequence:
+
+    # Set status of internet already connected 'on'
+    # ---------------------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.internet_already_connected
+
+
+    - service_template: >
+        {% if is_state('input_boolean.wakeup_time_activated_all', 'off') and is_state('input_boolean.bed_time_activated_all', 'off') %}
+          script.internet_already_connected_alert
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: input_boolean.wakeup_time_activated_all
+
+
+
+internet_connect_wifi_ap:
+  sequence:
+
+    # Enable WiFi AP (MiFi) host discovery by Icinga
+    # --------------------------------------------------
+    - service: script.turn_on
+      entity_id: script.icinga_wifi_ap_host_discovery_enable
+
+   
+    # Voice Alert: Connecting to Internet
+    # -----------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.wakeup_time_activated_all', 'off') and is_state('input_boolean.bed_time_activated_all', 'off') %}
+          script.internet_connecting
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: input_boolean.wakeup_time_activated_all
+
+
+    # Internet: Connect
+    # ------------------
+    - service_template: >
+        {% if not is_state('binary_sensor.internet', 'on') %}
+          shell_command.internet_connect_wifi_ap
+        {% else %}
+          script.internet_already_connected
+        {% endif %}
+      entity_id: binary_sensor.internet
+
+ 
+    # Wait for Internet connection to be established
+    # ----------------------------------------------
+    - wait_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+      timeout: 120
+      continue_on_timeout: true
+ 
+
+    # Check and alert if connection to the Internet succeeded
+    # -------------------------------------------------------
+    - service_template: >
+        {% if not is_state('binary_sensor.internet', 'on') and is_state('input_boolean.wakeup_time_activated_all', 'on') %}
+          script.internet_connect_failed
+        {% elif not is_state('binary_sensor.internet', 'on') and is_state('input_boolean.wakeup_time_activated_all', 'off') %}
+          script.internet_connect_failed_try_again
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: binary_sensor.internet
+
+
+
+internet_disconnect_wifi_ap:
+  sequence:
+
+    # Disable WiFi AP (MiFi) host discovery by Icinga
+    # --------------------------------------------------
+    - service: script.turn_on
+      entity_id: script.icinga_wifi_ap_host_discovery_disable
+
+ 
+    # Voice Alert: Disconnecting from Internet
+    # -----------------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.wakeup_time_activated_all', 'off') and is_state('input_boolean.bed_time_activated_all', 'off') %}
+          script.internet_disconnecting
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: input_boolean.wakeup_time_activated_all
+
+
+    # Internet: Disconnect
+    # --------------------
+    - service_template: >
+        {% if is_state('binary_sensor.internet', 'on') %}
+          shell_command.internet_disconnect_wifi_ap
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: binary_sensor.internet
+
+
+
+internet_connection_on:
+  sequence:
+ 
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_is_back_on.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_internet_is_back_on.mp3'
+
+
+    # Voice Alert: Announce that laptop battery is charging
+    # ------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_internet_is_back_on'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+    # Restart HASS
+    # -------------
+    #- service: homeassistant.restart
+
+
+
+internet_connection_off:
+  sequence:
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_has_gone_off.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_internet_has_gone_off.mp3'
+
+
+    # Voice Alert: Announce that laptop battery is charging
+    # ------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_internet_has_gone_off'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+    # Other actions - Internet off:
+    # -----------------------------
+    #
+    # Kill media player if it was running i.e. unselect radio station
+    - service_template: >
+        {% if not is_state('input_select.internet_radio_station', 'Select station') %}
+          shell_command.internet_radio_stop
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: input_select.internet_radio_station

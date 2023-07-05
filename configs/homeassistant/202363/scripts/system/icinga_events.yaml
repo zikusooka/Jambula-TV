@@ -1,0 +1,26 @@
+icinga_wifi_ap_host_discovery_enable:
+  sequence:
+
+    # Enable WiFi access point host discovery in Icinga via API
+    - service: shell_command.icinga2_hosts_set_attribute
+      data_template:
+        file: 
+        icinga_api_user: !secret icinga_api_username
+        #icinga_api_pass: !secret icinga_api_password
+        icinga_host_name: !secret icinga_api_wifi_ap_host
+        icinga_host_attribute_name: 'enable_event_handler'
+        icinga_host_attribute_value: 1
+
+
+
+icinga_wifi_ap_host_discovery_disable:
+  sequence:
+
+    # Disable WiFi access point host discovery in Icinga via API
+    - service: shell_command.icinga2_hosts_set_attribute
+      data_template:
+        file: 
+        icinga_api_user: !secret icinga_api_username
+        icinga_host_name: !secret icinga_api_wifi_ap_host
+        icinga_host_attribute_name: 'enable_event_handler'
+        icinga_host_attribute_value: 0

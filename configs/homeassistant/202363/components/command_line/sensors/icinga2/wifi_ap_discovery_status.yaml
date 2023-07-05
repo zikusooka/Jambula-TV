@@ -1,0 +1,3 @@
+sensor:
+  name: WiFi AP Discovery Status
+  command: /bin/bash -c "/usr/bin/curl -ksS -u root:$(grep -A1 'object ApiUser "root"' /etc/icinga2/conf.d/api-users.conf | awk -F'= ' '/password/ {print $2}' | sed 's:\"::g') -H 'Accept:application/json' 'https://localhost:5665/v1/objects/hosts?host=$(/usr/bin/jambulatv-homeassistant-secrets icinga_api_wifi_ap_host)&attrs=enable_event_handler&pretty=1' | jq -r .results[].attrs.enable_event_handler"

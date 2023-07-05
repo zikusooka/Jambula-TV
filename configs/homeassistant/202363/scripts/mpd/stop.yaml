@@ -1,0 +1,5 @@
+music_stop:
+  sequence:
+    - service: media_player.media_stop
+      data:
+        entity_id: media_player.jambulatv_radio

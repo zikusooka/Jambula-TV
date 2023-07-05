@@ -1,0 +1,94 @@
+bedtime_zik:
+  sequence:
+
+    # Enable Bedtime Mode at Frontend
+    # --------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.bedtime_mode_zik
+
+
+    # Voice Alert: Play greeting if bedtime 4 all wasn't activated
+    # -------------------------------------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.bed_time_activated_all', 'off') %}
+          script.bedtime_greeting_announce_zik
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.bedtime_greeting_announce_zik
+
+
+    # If bedtime for all was activated; don't set volumes here
+    # --------------------------------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.bed_time_activated_all', 'off') %}
+          script.bedtime_volume_levels_player_all
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.bedtime_volume_levels_player_all
+
+
+    # Turn off TV
+    # -----------
+    # Power off PC running kodi media center
+    #- service: shell_command.run_command_at_remote_workstation
+      #data_template:
+        #ssh_username: root
+        #ssh_host: !secret sensor_kodi_02_host
+        #alert_command: "sudo poweroff"
+
+
+    # Turn off TV
+    # -----------
+    # Power off raspberry pi running kodi media center
+    #- service: shell_command.run_command_at_remote_workstation
+      #data_template:
+        #ssh_username: pi
+        #ssh_host: !secret sensor_kodi_03_host
+        #alert_command: "sudo poweroff"
+
+
+    # Turn off Laptop
+    # ---------------
+    # Power off user's laptop if it is reachable
+    - service: shell_command.run_command_at_remote_workstation
+      data_template:
+        ssh_username: !secret operator_001_ssh_username
+        ssh_host: !secret operator_001_ssh_host
+        #alert_command: "/usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav && /usr/bin/gxmessage -center -ontop -sticky -timeout 30 -title Poweroff-Laptop Shutting down laptop && /home/zik/Scripts/close-firefox.sh && /home/zik/Scripts/close-gedit.sh && /home/zik/Scripts/close-gnucash.sh && /home/zik/Scripts/close-libreoffice.sh && sudo /usr/sbin/poweroff"
+        alert_command: "/usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav && /usr/bin/gxmessage -center -ontop -sticky -timeout 30 -title Poweroff-Laptop Shutting down laptop"
+
+
+    # Turn off light
+    # ---------------
+    - service: light.turn_off 
+      data:
+        entity_id: light.living_room
+
+
+    # Backup up remote PC i.e. Laptop
+    # --------------------------------
+    #- service: shell_command.backup_remote_pc_data_2_usb_disk
+
+
+    # Shutdown this system
+    # ---------------------
+    # a) Delay 15 mins before shutdown to allow notifications to go out
+    #- delay: '00:15:00'
+
+    # b) Set wake up time before shutting down system
+    #- service: shell_command.set_wakeup_and_shutdown_via_rtcwake
+      #data_template:
+        #alarm_time: "{{states('input_datetime.wakeup_time_zik')}}"
+        #alarm_time: "{{states('sensor.phone_alarm_for_zik_tecno')}}"
+    # OR
+    # b) Shutdown system now i.e. '0' minutes
+    #- service: shell_command.server_shutdown
+      #data_template:
+        #minutes: 0

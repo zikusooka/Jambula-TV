@@ -1,0 +1,35 @@
+music_play_folk:
+  sequence:
+
+    # Generate playlist
+    - service: shell_command.create_local_music_playlist_without_christmas
+      data_template:
+        music_dir: !secret jambulatv_music_dir
+        mpd_playlists_dir: !secret jambulatv_playlists_mpd_dir
+        genre: 'Folk'
+        rotation_file: !secret radio_rotation_playing_file
+
+    # Play 
+    - service: media_player.play_media
+      data:
+        entity_id: media_player.jambulatv_radio
+        media_content_type: playlist
+        media_content_id: 'Local-Music-Folk'
+
+    # Shuffle
+    - service: media_player.shuffle_set
+      data:
+        entity_id: media_player.jambulatv_radio
+        shuffle: 'false'
+
+    # Repeat
+    - service: media_player.repeat_set
+      data:
+        entity_id: media_player.jambulatv_radio
+        repeat: 'all'
+  
+    # set volume
+    - service: media_player.volume_set
+      data:
+        entity_id: media_player.jambulatv_radio
+        volume_level: !secret mixer_mpd_playlist_volume_level

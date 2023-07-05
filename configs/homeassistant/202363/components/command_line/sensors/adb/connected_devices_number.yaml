@@ -1,0 +1,3 @@
+sensor:
+  name: Android devices connected 
+  command: /bin/bash -c 'ADB_CMD=/usr/bin/adb; ADB_PORT=$(/usr/bin/jambulatv-homeassistant-secrets adb_tcp_port); $ADB_CMD devices | sed "1d;$d" | grep device | grep ":$ADB_PORT" | wc -l'

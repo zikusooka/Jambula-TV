@@ -1,0 +1,44 @@
+# This automation turns on inside lights for 10 seconds when
+# movement is detected outside
+#
+# 10 seconds might seem short, but the sensor has a timeout of
+# a minute as well. These 10 seconds gives it time to re-trigger.
+#
+#
+alias: Indoor lights on when motion is detected outside
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.vision_zp3102_pir_motion_sensor_alarm_level
+    to: '255'
+    for:
+      seconds: 10
+
+  - platform: state
+    entity_id: sensor.vision_zp3102_pir_motion_sensor_burglar
+    to: '8'
+    for:
+      seconds: 10
+
+
+condition:
+  condition: and
+  conditions:
+
+    - condition: state
+      entity_id: sun.sun
+      state: 'below_horizon'
+
+    - condition: template
+      value_template: "{{ is_state('group.lights_indoors', 'off') }}"
+
+
+action:
+
+  # Turn on indoor lights
+  - service: light.turn_on
+    data:
+      entity_id: group.lights_indoors

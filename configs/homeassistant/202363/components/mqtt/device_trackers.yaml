@@ -1,0 +1,81 @@
+device_tracker:
+
+  # Presence Detection via Bluez
+  - name: "Bluez Mobile 01 (Zik)"
+    state_topic: !secret mqtt_presence_bluez_topic_mobile_01_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+  - name: "Bluez Mobile 02 (Zik)"
+    state_topic: !secret mqtt_presence_bluez_topic_mobile_02_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+  - name: "Bluez Mobile 03 (Zik)"
+    state_topic: !secret mqtt_presence_bluez_topic_mobile_03_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+  - name: "Bluez Mobile 04 (Zik)"
+    state_topic: !secret mqtt_presence_bluez_topic_mobile_04_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+  - name: "Bluez Mobile 05 (Zik)"
+    state_topic: !secret mqtt_presence_bluez_topic_mobile_05_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+
+  # Presence Detection via Remote PC
+  - name: "PC Usage Status Zik Kampala"
+    state_topic: !secret mqtt_status_remote_pc_kampala
+    payload_home: "home"
+    payload_not_home: "not_home"
+
+  # Presence Detection via Hostapd
+  - name: "Hostapd Mobile 01 (Zik)"
+    state_topic: !secret mqtt_presence_hostapd_topic_mobile_01_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+  - name: "Hostapd Laptop 01 (Zik)"
+    state_topic: !secret mqtt_presence_hostapd_topic_laptop_01_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+
+  # Presence Detection via MiFi
+  - name: "MiFi Mobile 01 (Zik)"
+    state_topic: !secret mqtt_presence_mifi_topic_mobile_01_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+  - name: "MiFi Laptop 01 (Zik)"
+    state_topic: !secret mqtt_presence_mifi_topic_laptop_01_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+
+  # Presence Detection via Tshark
+  - name: "Tshark Mobile 01 (Zik)"
+    state_topic: !secret mqtt_presence_tshark_topic_mobile_01_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+  - name: "Tshark Mobile 02 (Zik)"
+    state_topic: !secret mqtt_presence_tshark_topic_mobile_02_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+  - name: "Tshark Laptop 01 (Zik)"
+    state_topic: !secret mqtt_presence_tshark_topic_laptop_01_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+  - name: "Tshark Tablet 01"
+    state_topic: !secret mqtt_presence_tshark_topic_tablet_01
+    payload_home: "home"
+    payload_not_home: "not_home"
+  - name: "Tshark MiFi Router 01"
+    state_topic: !secret mqtt_presence_tshark_topic_mifi_router_01
+    payload_home: "home"
+    payload_not_home: "not_home"
+
+  # Presence Detection via TrackerJacker
+  - name: "TrackerJacker Mobile 01 (Zik)"
+    state_topic: !secret mqtt_presence_trackerjacker_topic_mobile_01_zik
+    payload_home: "home"
+    payload_not_home: "not_home"
+  - name: "TrackerJacker Laptop 01 (Zik)"
+    state_topic: !secret mqtt_presence_trackerjacker_topic_laptop_01_zik
+    payload_home: "home"
+    payload_not_home: "not_home"

@@ -1,0 +1,34 @@
+alias: Make some noise when motion is detected
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.vision_security_zp3102_pir_motion_sensor_alarm_level
+    to: '255'
+
+#  - platform: state
+#    entity_id: sensor.vision_security_zp3102_pir_motion_sensor_burglar
+#    to: '8'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Motion detection alert is - on
+    - condition: state
+      entity_id: 'input_boolean.motion_detection_alert'
+      state: 'on'
+
+    # After sunrise
+    #- condition: sun
+      #after: sunset
+      #before: sunrise
+    
+
+action:
+
+  # Run script that says time at the top of the hour
+  - service: script.motion_detected_outside_make_noise

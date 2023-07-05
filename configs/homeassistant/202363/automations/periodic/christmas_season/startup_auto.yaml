@@ -1,0 +1,26 @@
+# Holiday mode at startup of Home Assistant when its Christmas/NewYears
+#
+alias: Christmas Season (Holidays)
+initial_state: True
+
+
+trigger:
+  platform: homeassistant
+  event: start
+
+
+condition:
+  condition: and
+  conditions:
+
+    - condition: state
+      entity_id: 'sensor.christmas_season'
+      state: 'True'
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.christmas_season

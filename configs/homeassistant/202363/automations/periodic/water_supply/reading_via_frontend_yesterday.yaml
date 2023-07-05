@@ -1,0 +1,42 @@
+alias: Water meter reading input via frontend (Yesterday)
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: input_text.water_meter_reading_yesterday
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+    - condition: template
+      value_template: "{{ not is_state('input_select.water_flow_status_yesterday', 'Select Yes or No') }}"
+
+    - condition: template
+      value_template: "{{ not is_state('input_text.water_meter_reading_yesterday', '') }}"
+
+    - condition: template
+      value_template: "{{ not is_state('input_text.water_meter_reading_yesterday', '0.0') }}"
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.input_water_reading_for_yesterday
+
+
+  # Set water reading sensor for yesterday used by utility integration
+  # ---
+  - service: input_number.set_value
+    data_template:
+      entity_id: input_number.water_meter_reading_yesterday
+      value: "{{ states('input_text.water_meter_reading_yesterday') }}"

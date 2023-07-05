@@ -1,0 +1,52 @@
+title: System
+icon: mdi:tools
+cards:
+
+
+  # Welcome Message
+  - type: vertical-stack
+    cards:
+      - !include ../cards/markup-system-message.yaml
+
+      # Reset volumes Player/System
+      - type: horizontal-stack
+        cards:
+          #- !include ../cards/entity-button-volume-player-reset.yaml
+          - !include ../cards/entity-button-volume-system-player-reset.yaml
+          #- !include ../cards/entity-button-volume-system-reset.yaml
+
+      # Reboot/Poweroff system
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-system-reboot.yaml
+          - !include ../cards/entity-button-system-cancel_poweroff.yaml
+          - !include ../cards/entity-button-system-poweroff.yaml
+
+     # Reboot/Poweroff clients
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-client-001-reboot.yaml
+          - !include ../cards/entity-button-client-001-poweroff.yaml
+
+
+  # Services Message
+  - type: vertical-stack
+    cards:
+      - !include ../cards/markup-system-services.yaml
+
+      # rTorrent
+      - type: vertical-stack
+        cards:
+          - !include ../cards/entity-button-rtorrent-status.yaml
+          - !include ../cards/conditional-entities-rtorrent-statistics.yaml
+
+          - type: horizontal-stack
+            cards:
+              - !include ../cards/entity-button-rtorrent-start.yaml
+              - !include ../cards/conditional-entity-button-rtorrent-stop.yaml
+              - !include ../cards/conditional-entity-button-rtorrent-restart.yaml
+
+      # Garbage collected
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-entity-button-garbage-collected.yaml

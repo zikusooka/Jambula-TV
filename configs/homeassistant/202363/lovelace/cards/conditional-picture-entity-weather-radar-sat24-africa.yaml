@@ -1,0 +1,12 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.internet
+    state: "on"
+ 
+card:
+  type: picture-entity
+  entity: camera.weather_radar_rain_africa_sat24
+  show_state: false
+  #camera_image: 'https://api.sat24.com/animated/AF/rain/1/E_dot_%20Africa%20Standard%20Time/1455427'
+  name: 'Rainfall Africa'
+  icon: 'mdi:weather'

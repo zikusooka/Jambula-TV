@@ -1,0 +1,73 @@
+sensor:
+
+# Water Supply
+  - name: "Water usage (Monthly)"
+    state_topic: !secret mqtt_water_usage_monthly
+    force_update: true
+  - name: "Water usage (Daily)"
+    state_topic: !secret mqtt_water_usage_daily
+    force_update: true
+
+  - name: "Water meter reading (Today)"
+    state_topic: !secret mqtt_water_meter_reading_today
+    force_update: true
+  - name: "Water meter reading (Yesterday)"
+    state_topic: !secret mqtt_water_meter_reading_yesterday
+    force_update: true
+
+
+# Flash Briefing
+  - name: "Flash briefing status"
+    state_topic: !secret mqtt_flash_briefing_status_topic
+    expire_after: 1200
+
+
+# GSM Mobile Network
+  - name: "Airtime Balance (MTN)"
+    state_topic: !secret mqtt_topic_status_gsm_voice_balance_mtn
+  - name: "Airtime Balance (Airtel)"
+    state_topic: !secret mqtt_topic_status_gsm_voice_balance_airtel
+
+
+# Occupancy - Neighbours
+  - name: "Resident1 Presence Status"
+    state_topic: !secret mqtt_presence_topic_resident_1
+    expire_after: 360
+  - name: "Resident2 Presence Status"
+    state_topic: !secret mqtt_presence_topic_resident_2
+    expire_after: 360
+  - name: "Resident3 Presence Status"
+    state_topic: !secret mqtt_presence_topic_resident_3
+    expire_after: 360
+  - name: "Resident4 Presence Status"
+    state_topic: !secret mqtt_presence_topic_resident_4
+    expire_after: 360
+  - name: "Resident5 Presence Status"
+    state_topic: !secret mqtt_presence_topic_resident_5
+    expire_after: 360
+
+
+# Power Utility Company Alerts via Twitter
+  - name: "UMEME Power Alerts via Twitter"
+    state_topic: !secret mqtt_twitter_searches_topic_power_umeme
+  - name: "ESKOM Power Alerts via Twitter"
+    state_topic: !secret mqtt_twitter_searches_topic_power_eskom
+  - name: "UETCL Power Alerts via Twitter"
+    state_topic: !secret mqtt_twitter_searches_topic_power_uetcl
+
+
+# COVID-19 Alerts
+  - name: "COVID-19 Uganda Updates"
+    state_topic: !secret mqtt_twitter_searches_topic_covid19
+
+
+# Tablet - F1
+  - name: "Tablet shake status 4 Tecno Pop 2F"
+    state_topic: !secret mqtt_tablet_device_shake_tecno
+    expire_after: 30
+  - name: "Tablet battery level 4 Tecno Pop 2F"
+    state_topic: !secret mqtt_tablet_battery_status_tecno
+    expire_after: 30
+  - name: "Tablet call status 4 Tecno Pop 2F"
+    state_topic: !secret mqtt_tablet_incoming_call_tecno
+    expire_after: 30

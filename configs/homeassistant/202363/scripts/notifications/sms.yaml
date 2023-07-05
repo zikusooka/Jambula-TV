@@ -1,0 +1,33 @@
+send_sms_via_mifi:
+  sequence:
+
+    # SMS via MiFi router
+    - service: shell_command.send_sms_text_via_mifi_app
+      data_template:        
+        sms_network: '{{sms_mobile_network}}'
+        sms_phone: '{{sms_phone_number}}'
+        sms_message: '{{sms_text_message}}'
+
+
+
+send_sms_via_modem_manager:
+  sequence:
+
+    # SMS via Modem Manager
+    - service: shell_command.send_sms_text_via_modem_manager
+      data_template:        
+        sms_network: '{{sms_mobile_network}}'
+        sms_phone: '{{sms_phone_number}}'
+        sms_message: '{{sms_text_message}}'
+
+
+
+send_sms_via_asterisk:
+  sequence:
+
+    # SMS via Asterisk
+    - service: shell_command.send_sms_text_via_asterisk
+      data_template:        
+        sms_network: '{{sms_mobile_network}}'
+        sms_phone: '{{sms_phone_number}}'
+        sms_message: '{{sms_text_message}}'

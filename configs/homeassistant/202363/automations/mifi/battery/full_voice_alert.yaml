@@ -1,0 +1,37 @@
+# Battery - Full (Voice Alert)
+alias: "Play voice alert when MiFi battery is full"
+initial_state: True
+
+
+trigger:
+  - platform: state
+    entity_id: sensor.mifi_battery_level
+    to: 'Full'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Internet state
+    #- condition: template
+      #value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+    # Bedtime (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Wakeup time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.wakeup_time_activated_all'
+      state: 'off'
+
+
+action:
+
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.mifi_battery_full

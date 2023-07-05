@@ -1,0 +1,28 @@
+# Connected ADB devices - Above Threshold (Voice Alert - ONLY once)
+alias: "Play a one time voice alert when connected ADB devices are above the minimum threshold"
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.android_devices_connected
+    to: !secret adb_connected_devices_min
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Bedtime for all is off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.adb_connected_above_threshold

@@ -1,0 +1,17 @@
+# FM Radio
+fm_radio_play_selected_station: /bin/bash -c "/usr/bin/jambulatv-fm-radio-streamer restart '{{station}}' local"
+fm_radio_control_speaker_volume: /bin/bash -c "/usr/bin/jambulatv-speaker-volume fmradio localhost {{volume_level}}%"
+fm_radio_stop: /bin/bash -c "/usr/bin/jambulatv-fm-radio-streamer stop local"
+
+# Internet Radio
+internet_radio_play_selected_station: /bin/bash -c "/usr/bin/jambulatv-internet-radio-streamer restart $(echo '{{station}}' | awk '{print $1}') local; echo '{{station}}' | rev | awk '{print $1}' | rev | sed 's:(::' | sed 's:)::' > $(/usr/bin/jambulatv-homeassistant-secrets radio_rotation_playing_file)"
+internet_radio_play_favorite_station: /bin/bash -c "/usr/bin/jambulatv-internet-radio-streamer restart 1 local; echo 'Jazz' > $(/usr/bin/jambulatv-homeassistant-secrets radio_rotation_playing_file)"
+internet_radio_control_speaker_volume: /bin/bash -c "/usr/bin/jambulatv-speaker-volume webradio localhost {{volume_level}}%"
+internet_radio_stop: /bin/bash -c "/usr/bin/jambulatv-internet-radio-streamer stop local"
+
+# Local Radio i.e. System speakers
+local_radio_control_speaker_volume: /bin/bash -c "/usr/bin/jambulatv-speaker-volume system localhost {{volume_level}}%"
+
+# Local music - Jazz
+jtv_radio_start: /bin/bash -c "/usr/bin/ps auxw | grep [m]player > /dev/null 2>&1 || /usr/bin/mplayer -ao pulse -novideo -shuffle -loop 0 /JambulaTV/Music/Jazz/*"
+jtv_radio_stop: /bin/bash -c "/usr/bin/killall mplayer"

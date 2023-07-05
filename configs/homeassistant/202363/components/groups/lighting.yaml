@@ -1,0 +1,12 @@
+lights_indoors:
+  name: Lighting (Indoors)
+  entities:
+    - !secret lights_living_room_bulb_01
+    - !secret lights_kitchen_bulb_01
+    - !secret lights_bed_room_bulb_01
+
+lights_outdoors:
+  name: Lighting (Outdoors)
+  entities:
+    - !secret lights_boys_quarters_bulb_01
+    - !secret lights_gate_bulb_01

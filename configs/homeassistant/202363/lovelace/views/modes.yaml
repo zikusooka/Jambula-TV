@@ -1,0 +1,15 @@
+title: Modes
+icon: mdi:toggle-switch
+cards:
+
+
+  # Welcome Message
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/markup-modes-message.yaml
+
+
+  # Modes
+  - type: vertical-stack
+    cards:
+      - !include ../cards/entities-modes.yaml

@@ -1,0 +1,27 @@
+# Battery - Full (Voice Alert)
+alias: "Play voice alert when tablet battery for Tecno Pop 2F is full"
+initial_state: True
+
+
+trigger:
+  - platform: state
+    entity_id: sensor.battery_level_via_adb_4_tecno_pop_2f
+    to: '100'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Bedtime for all is off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.tablet_battery_full_tecno

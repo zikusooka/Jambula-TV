@@ -1,0 +1,45 @@
+alias: Internet is off
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: binary_sensor.internet
+    from: 'on'
+    to: 'off'
+    for: '00:03:00'
+
+condition:
+  condition: and
+  conditions:
+
+    # Internet state
+    - condition: template
+      value_template: "{{ is_state('binary_sensor.internet', 'off') }}"
+
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+    # Wakeup time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.wakeup_time_activated_all'
+      state: 'off'
+
+    # Bedtime time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bed_time_activated_all'
+      state: 'off'
+
+    # Internet data saver mode is NOT enabled - off
+    - condition: state
+      entity_id: 'input_boolean.internet_data_saver'
+      state: 'off'
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.internet_connection_off

@@ -1,0 +1,28 @@
+title: Assistance
+icon: mdi:help
+cards:
+
+  # Assistance
+  - type: vertical-stack
+    cards:
+      - !include ../cards/markup-assistance-message.yaml
+
+
+  - type: vertical-stack
+    cards:
+      - !include ../cards/markdown-call-maid-title-all.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-call-maid-office.yaml
+          - !include ../cards/entity-button-call-maid-bedroom.yaml
+          - !include ../cards/entity-button-call-maid-porch.yaml
+
+
+      - type: vertical-stack
+        cards:
+          - !include ../cards/conditional-markdown-qrcode-hotspot-credentials-title.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-picture-glance-qrcode-wifi-hotspot-credentials.yaml

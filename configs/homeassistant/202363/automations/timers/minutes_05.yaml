@@ -1,0 +1,86 @@
+alias: Timer started, finished, paused, restarted, cancel (5 minutes)
+description: Timer for five (5) minutes
+initial_state: True
+
+trigger:
+
+  - platform: event
+    event_type: timer.started
+    event_data:
+      entity_id: timer.minutes_05
+    id: timer_started_05_minutes
+
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.minutes_05
+    id: timer_finished_05_minutes
+
+  - platform: event
+    event_type: timer.paused
+    event_data:
+      entity_id: timer.minutes_05
+    id: timer_paused_05_minutes
+
+  - platform: event
+    event_type: timer.restarted
+    event_data:
+      entity_id: timer.minutes_05
+    id: timer_restarted_05_minutes
+
+  - platform: event
+    event_type: timer.cancelled
+    event_data:
+      entity_id: timer.minutes_05
+    id: timer_cancelled_05_minutes
+
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Vacation mode is off
+    #- condition: state
+      #entity_id: 'input_boolean.vacation_mode'
+      #state: 'off'
+
+
+
+action:
+  
+  - choose:
+    - conditions:    
+        - condition: trigger
+          id: timer_started_05_minutes
+      sequence:
+        # Run script
+        - service: script.timer_05_minutes_started
+
+    - conditions:    
+        - condition: trigger
+          id: timer_finished_05_minutes
+      sequence:
+        # Run script
+        - service: script.timer_05_minutes_finished
+
+    - conditions:    
+        - condition: trigger
+          id: timer_paused_05_minutes
+      sequence:
+        # Run script
+        - service: script.timer_05_minutes_paused
+
+    - conditions:    
+        - condition: trigger
+          id: timer_restarted_05_minutes
+      sequence:
+        # Run script
+        - service: script.timer_05_minutes_restarted
+
+    - conditions:    
+        - condition: trigger
+          id: timer_cancelled_05_minutes
+      sequence:
+        # Run script
+        - service: script.timer_05_minutes_cancelled

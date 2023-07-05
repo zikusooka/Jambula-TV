@@ -1,0 +1,20 @@
+# Shutdown system after setting the wakeup time using rtcwake
+set_wakeup_and_shutdown_via_rtcwake: /bin/bash -c "sudo /usr/sbin/rtcwake -m off -l -t $(date +%s -d '{{alarm_time}}')"
+
+# Shutdown server
+server_shutdown: /bin/bash -c "sudo /usr/sbin/shutdown -h +{{minutes}}"
+
+# Restart server
+server_restart: /bin/bash -c "sudo /usr/sbin/shutdown -r +{{minutes}}"
+
+# Cancel shutdown/reboot
+server_cancel_shutdown: /bin/bash -c "sudo /usr/sbin/shutdown -c"
+
+# Delete directory(s)/file(s) on system i.e. temporary files
+delete_directory_contents: /bin/bash -c "sudo /usr/bin/rm -rf {{directory}}"
+delete_file_dir_specified: /bin/bash -c "sudo /usr/bin/rm -f {{directory}}/{{file}}"
+delete_file_path_specified: /bin/bash -c "sudo /usr/bin/rm -f {{file}}"
+
+# Create/append content to a file on the fly
+file_content_create: /bin/bash -c "/usr/bin/echo {{content}} > {{file}}"
+file_content_append: /bin/bash -c "/usr/bin/echo {{content}} >> {{file}}"

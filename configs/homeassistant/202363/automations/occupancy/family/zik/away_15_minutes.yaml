@@ -1,0 +1,26 @@
+alias: Zik has been away for more than 15 minutes
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: !secret presence_away_for_short_sensor_15_minutes_zik
+    to: !secret presence_away_for_short_threshold
+    for:
+      minutes: 3
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Zik is not using the Laptop i.e. Kampala user away for 15 mins
+    - condition: state
+      entity_id: device_tracker.pc_usage_status_zik_kampala
+      state: 'Away'
+      for:
+        minutes: 15
+
+
+action:
+  - service: script.zik_away_for_more_than_15_minutes

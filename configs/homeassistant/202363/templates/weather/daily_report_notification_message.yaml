@@ -1,0 +1,32 @@
+"Here's the Weather forecast for your area:
+\r
+\r
+--------------
+OpenWeatherMap
+--------------
+\r
+\r
+Rain Chance: *{{states('sensor.openweathermap_forecast_precipitation_probability')|int}}%*
+\r
+\r
+Temperature (Current): *{{states('sensor.openweathermap_temperature')|int}}*
+\r
+\r
+Temperature (High): *{{states('sensor.openweathermap_forecast_temperature')|int}}*
+\r
+\r
+Temperature (Low): *{{states('sensor.openweathermap_forecast_temperature_low')|int}}*
+\r
+\r
+Summary (Later): *{{states('sensor.openweathermap_forecast_condition')}}*
+\r
+\r
+Summary (Current): *{{states('sensor.openweathermap_condition')}}*
+\r
+\r
+\r
+-------------------------------------------------
+\r
+This message was generated
+\r
+at: *{{states('sensor.time')}}* on *{{states('sensor.date')}}*"

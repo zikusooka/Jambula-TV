@@ -1,0 +1,8 @@
+type: alarm-panel
+name: Security Alarm
+entity: alarm_control_panel.security_alarm
+states:
+  - arm_home
+  - arm_away
+  - arm_night
+  - armed_custom_bypass

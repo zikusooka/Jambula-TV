@@ -1,0 +1,13 @@
+# The Google Text-to-Speech platform use Google Text-to-Speech engine to
+# read a text with a natural sounding voice(s).
+#
+# https://www.home-assistant.io/components/tts.google/
+#
+
+platform: google_translate
+#cache: true
+#cache_dir: /tmp/tts
+cache_dir: /tmp/tts
+#time_memory: 300
+#base_url: http://127.0.0.1:8505
+#service_name: google_say

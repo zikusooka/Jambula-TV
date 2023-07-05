@@ -1,0 +1,9 @@
+type: conditional
+conditions:
+  - entity: media_player.jambulatv_radio
+    state: "playing"
+
+card:
+  type: gauge
+  entity: sensor.current_player_volume_level
+  name: 'Volume (Player)'

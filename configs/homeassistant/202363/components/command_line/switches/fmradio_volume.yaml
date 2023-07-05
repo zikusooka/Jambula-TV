@@ -1,0 +1,4 @@
+switch:
+  name: "fmradio_volume"
+  command_on: "/usr/bin/jambulatv-speaker-volume fmradio localhost 100%"
+  command_off: "/usr/bin/jambulatv-speaker-volume fmradio localhost 0%"

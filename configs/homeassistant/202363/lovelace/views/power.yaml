@@ -1,0 +1,52 @@
+title: Power
+icon: mdi:lightning-bolt
+cards:
+
+  # Welcome Message
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/markup-electricity-message.yaml
+
+
+  # Electricity Status
+  - type: vertical-stack
+    cards:
+
+      #- type: horizontal-stack
+        #cards:
+          #- !include ../cards/entity-button-electricity-supply.yaml
+          #- !include ../cards/conditional-electricity-tariff-monthly.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entities-power-outages.yaml
+
+
+      - type: horizontal-stack
+        cards: 
+          #- !include ../cards/conditional-electricity-reading-today.yaml
+          - !include ../cards/conditional-umeme-yaka-usage-daily.yaml
+          - !include ../cards/conditional-umeme-yaka-units-today.yaml
+
+      - type: horizontal-stack
+        cards: 
+          - !include ../cards/entities-umeme-yaka-balance-adjust.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-umeme-yaka-next-top-up-date.yaml
+
+      - type: horizontal-stack
+        cards: 
+          - !include ../cards/conditional-umeme-yaka-token-cost-total.yaml
+          - !include ../cards/conditional-umeme-yaka-units-loaded.yaml
+          #- !include ../cards/
+
+
+
+
+  # Input electricity reading for Today
+  - type: vertical-stack
+    cards:
+      #- !include ../cards/entities-electricty-readings-daily.yaml
+      - !include ../cards/entities-umeme-yaka-token-entry-date.yaml

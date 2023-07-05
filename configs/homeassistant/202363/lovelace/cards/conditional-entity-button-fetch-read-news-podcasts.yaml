@@ -1,0 +1,26 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.internet
+    state: 'on'
+
+card:
+  type: entity-button
+  entity: script.read_news_podcasts
+  name: "News Podcasts"
+  show_name: true
+  show_state: false
+  icon: "mdi:radio"
+
+  double_tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.read_news_podcasts
+
+  tap_action:
+    action: call-service
+    confirmation:
+      text: Fetch and read news headlines?
+    service: script.turn_on
+    service_data:
+      entity_id: script.read_news_podcasts

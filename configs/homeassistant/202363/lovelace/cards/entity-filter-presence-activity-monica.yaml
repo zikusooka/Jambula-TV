@@ -1,0 +1,34 @@
+type: conditional
+conditions:
+  - entity: person.monica
+    state_not: 'unavailable'
+  - entity: person.monica
+    state_not: 'unknown'
+  - entity: person.monica
+    state_not: 'Away'
+
+
+card:
+  type: entity-filter
+  entities:
+    - person.monica
+    - sensor.activity_while_at_home_monica
+    - binary_sensor.connected_2_asterisk_chan_mobile_monica
+  state_filter:
+    - 'Home'
+    - 'home'
+    - 'Just Arrived'
+    - 'Working'
+    - 'working'
+    - 'jogging'
+    - 'Jogging'
+    - 'Sleeping'
+    - 'sleeping'
+    - 'Watching TV'
+    - 'watching tv'
+    - 'Away'
+    - 'away'
+    - 'Choring'
+    - 'choring'
+    - 'Recessing'
+    - 'recessing'

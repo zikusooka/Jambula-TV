@@ -1,0 +1,12 @@
+presence_home:
+  name: Occupancy (Home)
+  entities:
+    - person.zik
+    - person.monica
+  icon: mdi:home
+
+home_activity_all:
+  name: Home Activity - All
+  entities:
+    - sensor.activity_while_at_home_zik
+    - sensor.activity_while_at_home_monica

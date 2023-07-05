@@ -1,0 +1,23 @@
+# Speech-to-Text: Bed time for all
+alias: "Bed time for all via Speech-to-Text (Voice)"
+initial_state: True
+
+
+trigger:
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_bed_time_all
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    data:
+      entity_id:
+        - script.bedtime_all

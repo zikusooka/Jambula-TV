@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.internet
+    state: 'on'
+ 
+card:
+  type: custom:weather-card
+  entity: weather.jambulatv
+  #name: 'Weather forecast Uganda (Accuweather)'
+  icons: '/local/lovelace/icons/weather-card/'
+  current: true
+  details: false
+  forecast: true
+  hourly_forecast: false
+  number_of_forecasts: 5

@@ -1,0 +1,53 @@
+# Power outages today - planned
+alias: "Planned power outage today"
+initial_state: True
+
+
+trigger:
+
+  - platform: time
+    at: '00:05:00'
+
+  - platform: template
+    value_template: "{{ not is_state('sensor.power_outage_today', 'none') }}"
+    for:
+      minutes: 1
+
+  - platform: template
+    value_template: "{{ not is_state('sensor.power_outage_today', '') }}"
+    for:
+      minutes: 1
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Power outage state not null
+    - condition: template
+      value_template: "{{ not is_state('sensor.power_outage_today', 'none') }}"
+
+    - condition: template
+      value_template: "{{ not is_state('sensor.power_outage_today', '') }}"
+
+    # Bedtime (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Wakeup time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.wakeup_time_activated_all'
+      state: 'off'
+
+    # Time of day
+    - condition: time
+      before: '23:59:59'
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.power_supply_umeme_off_today

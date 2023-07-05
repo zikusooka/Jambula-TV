@@ -1,0 +1,22 @@
+# Battery - Low (Voice Alert)
+alias: "Play voice alert when phone battery for Zik (Tecno) is low"
+initial_state: True
+
+
+trigger:
+  - platform: state
+    entity_id: sensor.phone_battery_for_zik_tecno
+    to: '40'
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.phone_battery_low_tecno

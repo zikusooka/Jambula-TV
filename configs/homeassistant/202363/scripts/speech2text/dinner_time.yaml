@@ -1,0 +1,14 @@
+dinner_time_start:
+  sequence:
+
+
+    # Start playing soft music e.g. Jazz
+    # -----------------------------------
+    - service: script.turn_on
+      entity_id: script.music_play_jazz
+
+
+    # Dim light
+    # ---------
+    - service: scene.turn_on
+      entity_id: scene.romantic_mode

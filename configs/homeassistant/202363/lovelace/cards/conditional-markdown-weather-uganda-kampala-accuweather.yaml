@@ -1,0 +1,39 @@
+type: conditional
+conditions:
+  - entity: sensor.weather_forecast_today_kampala_accuweather
+    state_not: 'unknown'
+  - entity: sensor.weather_forecast_today_kampala_accuweather
+    state_not: 'null'
+
+  - entity: sensor.weather_forecast_minute_kampala_accuweather
+    state_not: 'unknown'
+  - entity: sensor.weather_forecast_minute_kampala_accuweather
+    state_not: 'null'
+
+
+card:
+  type: markdown
+  content: |
+    {{ states('sensor.weather_forecast_minute_kampala_accuweather') }}
+    {{ states('sensor.weather_forecast_today_kampala_accuweather') }}
+  
+    Source: Accuweather.com
+#    <center>
+
+#    </center>
+#    <ha-icon icon="mdi:weather-cloudy-clock"></ha-icon>
+#    <br>
+
+  #card_mod:
+    #style: |
+      #ha-card.type-markdown {
+        #box-shadow: none;
+        #overflow-y: scroll;
+        #animation: blink 2s linear infinite;
+        #color: red;       
+      #@keyframes blink {
+        #50% {
+          #background: red;
+        #}
+      #}
+      #}

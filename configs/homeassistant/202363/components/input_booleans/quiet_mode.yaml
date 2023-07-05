@@ -1,0 +1,10 @@
+# This is an input boolean to use during quiet time to cut off
+# execssive, noisy voice alerts, and lower music during movie/TV
+# times
+#
+# https://www.home-assistant.io/components/input_boolean/
+#
+quiet_mode:
+  name: Quiet
+  initial: false
+  icon: mdi:volume-off

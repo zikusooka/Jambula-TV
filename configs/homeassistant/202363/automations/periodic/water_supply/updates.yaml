@@ -1,0 +1,21 @@
+alias: Water supply updates
+initial_state: True
+
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/5'
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+    # Report current status of water supply 
+  - service: shell_command.water_supply_reports_and_status
+    data_template:
+      water_last_billed_date: "{{ states('input_datetime.water_supply_last_billed_date') }}"

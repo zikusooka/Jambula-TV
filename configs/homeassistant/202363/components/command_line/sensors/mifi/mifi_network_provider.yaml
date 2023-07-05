@@ -1,0 +1,3 @@
+sensor:
+  name: "MiFi Network Provider"
+  command: "/usr/bin/jambulatv-mifi-query $(/usr/bin/jambulatv-homeassistant-secrets mifi_address mifi_username mifi_password) info_all | awk -F':' '/Network Provider/ {print $2}' | awk '{print $1FS$2FS$3FS$4FS$5}'"

@@ -1,0 +1,26 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.internet
+    state: 'on'
+
+card:
+  type: entity-button
+  entity: script.internet_disconnect_wifi_ap
+  name: 'Internet (Disconnect)'
+  show_name: true
+  show_state: false
+  icon: 'mdi:router-wireless-off'
+
+  double_tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.internet_disconnect_wifi_ap
+
+  tap_action:
+    action: call-service
+    confirmation:
+      text: Disconnect from the Internet?
+    service: script.turn_on
+    service_data:
+      entity_id: script.internet_disconnect_wifi_ap

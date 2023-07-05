@@ -1,0 +1,22 @@
+alias: Guest Mode (Off)
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: input_boolean.guest_mode
+    to: 'off'
+
+condition:
+  condition: and
+  conditions:
+
+    # Someone at home
+    #- condition: template
+    #  value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+
+action:
+
+  # Run guest mode (off) script
+  - service: script.guest_mode_off

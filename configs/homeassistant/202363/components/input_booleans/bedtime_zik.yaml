@@ -1,0 +1,9 @@
+# This is an input boolean to use during the night time to prevent
+# execssive and noisy voice alerts
+#
+# https://www.home-assistant.io/components/input_boolean/
+#
+bedtime_mode_zik:
+  name: Bedtime (Zik)
+  initial: false
+  icon: mdi:bed

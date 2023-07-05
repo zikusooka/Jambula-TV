@@ -292,6 +292,12 @@ uninstall_homeassistant_core $HOME_ASSISTANT_OLD_VERSION
 #
 # Install latest homeassistant
 homeassistant_core_install "$NEW_HOME_ASSISTANT_TAG" "$PYTHON3_BINARY"
+
+# Source HASS runtime variables
+. $SYSCONFIG_DIR/home-assistant-core
+#
+# Create symbolic link to HASS config directory - needed by some tools that don't know about version info
+ln -s -f $HOME_ASSISTANT_CONFIG_DIR $PROJECT_SYSTEM_CONF_DIR/homeassistant
 }
 
 upgrade_homeassistant_cli () {

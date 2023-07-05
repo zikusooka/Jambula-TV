@@ -1,0 +1,13 @@
+alias: "Media player unpaused"
+trigger:
+  - platform: state
+    entity_id: media_player.jambulatv_pi_living_room
+    from: 'paused'
+    to: 'playing'
+condition:
+  - condition: state
+    entity_id: sun.sun
+    state: 'below_horizon'
+action:
+  - service: scene.turn_on
+    entity_id: scene.LivingRoom_Off

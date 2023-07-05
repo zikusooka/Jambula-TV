@@ -1,0 +1,5 @@
+sensor:
+  name: "Weather forecast today Kampala (Weather.Com)"
+  command: FORECAST_FILE=$(/usr/bin/jambulatv-homeassistant-secrets weather_weather_dot_com_forecast_text_file); if [[ -s $FORECAST_FILE ]]; then /usr/bin/cat $FORECAST_FILE | /usr/bin/cut -c1-255; else printf 'null'; fi
+#  command: /bin/bash -c "/usr/bin/cat $(/usr/bin/jambulatv-homeassistant-secrets weather_weather_dot_com_forecast_text_file) | /usr/bin/cut -c1-255"
+  scan_interval: 120

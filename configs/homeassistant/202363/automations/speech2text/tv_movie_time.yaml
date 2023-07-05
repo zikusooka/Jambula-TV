@@ -1,0 +1,43 @@
+# Speech-to-Text: TV/Movie Time
+alias: "TV/Movie Time"
+initial_state: True
+
+
+trigger:
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_tv_time
+    payload: 'start'
+    id: tv_time_start
+ 
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_movie_time
+    payload: 'start'
+    id: movie_time_start
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+  - choose:
+
+    - conditions:    
+        - condition: trigger
+          id: tv_time_start
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.kodi_tv_movie_start
+
+    - conditions:    
+        - condition: trigger
+          id: movie_time_start
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.kodi_tv_movie_start

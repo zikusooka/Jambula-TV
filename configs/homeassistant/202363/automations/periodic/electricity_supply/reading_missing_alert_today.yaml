@@ -1,0 +1,44 @@
+alias: Electricity meter reading is missing alert (Today)
+initial_state: False
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/5'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+    # Electricity supply meter reading missing - Today
+    - condition: state
+      entity_id: 'input_number.electricity_meter_reading_today'
+      state: '0.0'
+
+    # Night mode - off
+    - condition: state
+      entity_id: 'input_boolean.night_mode'
+      state: 'off'
+
+    # Quiet mode - off
+    - condition: state
+      entity_id: 'input_boolean.quiet_mode'
+      state: 'off'
+
+    # Between 6am and 7pm i.e. daytime
+    #- condition: time
+      #after: '06:00:00'
+      #before: '23:59:00'
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.electricity_meter_reading_is_missing_today

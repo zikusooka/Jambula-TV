@@ -1,0 +1,4 @@
+sensor:
+  name: "Weather forecast today Kampala (Accuweather)"
+  command: /bin/bash -c "if [[ -s $(/usr/bin/jambulatv-homeassistant-secrets weather_accuweather_today_file) ]]; then jq -r '.Headline.Text' $(/usr/bin/jambulatv-homeassistant-secrets weather_accuweather_today_file); else echo ''; fi"
+  scan_interval: 120

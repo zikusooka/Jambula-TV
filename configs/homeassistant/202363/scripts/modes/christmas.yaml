@@ -1,0 +1,15 @@
+christmas_season:
+  sequence:
+ 
+
+    # Turn on Christmas season mode
+    # -----------------------------   
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.christmas_season_mode
+
+    # Turn on Holiday mode
+    # --------------------   
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.holiday_mode

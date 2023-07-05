@@ -1,0 +1,19 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.internet
+    state: 'on'
+ 
+
+card:
+  type: iframe
+  url: 'https://www.accuweather.com/en/ug/kampala/318416/weather-radar/318416'
+  aspect_ratio: '0.7'
+  #aspect_ratio: '70%'
+
+
+#card:
+#  type: picture-entity
+#  entity: camera.weather_radar_rain_uganda_accuweather
+#  show_state: false
+#  name: 'Rainfall Uganda (Accuweather)'
+#  icon: 'mdi:weather'

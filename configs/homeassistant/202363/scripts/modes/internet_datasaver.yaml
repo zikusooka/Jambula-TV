@@ -1,0 +1,69 @@
+internet_datasaver_enable_manual:
+  sequence:
+
+    # Turn on data saver mode
+    # -----------------------
+    - service: shell_command.internet_data_saver_on
+
+
+    # Disable discovery of WiFi access point i.e. Don't connect to MiFi automatically
+    - service: script.icinga_wifi_ap_host_discovery_disable
+
+
+    # Voice Alert: Internet data saver mode enabled
+    # ---------------------------------------------
+    #- service: script.internet_data_saver_enabled
+    #
+    - service_template: >
+        {% if (states('sensor.hass_uptime_minutes') | int | round (0)) > 1 %}
+          script.internet_data_saver_enabled
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: sensor.hass_uptime_minutes
+
+
+
+internet_datasaver_disable_manual:
+  sequence:
+
+    # Enable discovery of WiFi access point i.e. Connect to MiFi automatically
+    - service: script.icinga_wifi_ap_host_discovery_enable
+
+
+    # Turn off data saver mode
+    # ------------------------
+    - service: shell_command.internet_data_saver_off
+
+
+    # Voice Alert: Internet data saver mode disabled
+    # ---------------------------------------------
+    - service: script.internet_data_saver_disabled
+
+
+
+internet_datasaver_enable_auto_no_alert:
+  sequence:
+
+    # Turn on data saver mode
+    # -----------------------
+    - service: shell_command.internet_data_saver_on
+
+
+    # Disable discovery of WiFi access point i.e. Don't connect to MiFi automatically
+    - service: script.icinga_wifi_ap_host_discovery_disable
+
+
+
+internet_datasaver_disable_auto_no_alert:
+  sequence:
+
+    # Enable discovery of WiFi access point i.e. Connect to MiFi automatically
+    - service: script.icinga_wifi_ap_host_discovery_enable
+
+
+    # Turn off data saver mode
+    # ------------------------
+    - service: shell_command.internet_data_saver_off

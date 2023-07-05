@@ -1,0 +1,28 @@
+alias: Outdoor lights on at sunset
+initial_state: True
+
+
+trigger:
+
+#  - platform: sun
+#    event: sunset
+#    offset: "-00:15:00"
+
+  - platform: time
+    at: "18:50:00"
+
+
+condition:
+  condition: and
+  conditions:
+
+    - condition: template
+      value_template: "{{ is_state('group.lights_outdoors', 'off') }}"
+
+
+action:
+
+  # Turn on outdoor lights
+  - service: light.turn_on
+    data:
+      entity_id: group.lights_outdoors

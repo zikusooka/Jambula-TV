@@ -1,0 +1,15 @@
+type: entity-button
+entity: script.water_back
+name: 'Water Back'
+show_name: true
+show_state: false
+state_icons:
+icon: 'mdi:water'
+
+tap_action:
+  action: call-service
+  confirmation:
+    text: Water back?
+  service: script.turn_on
+  service_data:
+    entity_id: script.water_back

@@ -1,0 +1,23 @@
+# The openweathermap weather platform uses OpenWeatherMap as a source for current 
+# meteorological data for your location.
+#
+# https://www.home-assistant.io/components/sensor.openweathermap/
+
+platform: openweathermap
+api_key: !secret openweathermap_api_key
+name: OpenWeatherMap
+forecast: true
+monitored_conditions:
+  - weather
+  - temperature
+  - humidity
+  - rain
+mode: onecall
+
+
+# Conditions
+# ----------
+# A human-readable text summary
+# The current temperature
+# The relative humidity
+# The rain volume

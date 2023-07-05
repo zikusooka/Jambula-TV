@@ -1,0 +1,3 @@
+sensor:
+  name: "There is a Birthday Today"
+  command: "/usr/bin/remind /JambulaTV/Reminders/birthdays.rem | grep -i today > /dev/null 2>&1 && echo yes || echo no"

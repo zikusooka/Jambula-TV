@@ -1,0 +1,19 @@
+prayer_time_start:
+  sequence:
+
+
+    # Start playing christian music
+    # ------------------------------
+    - service: script.turn_on
+      entity_id: script.music_play_christian
+
+
+    # Reduce volume of music player
+    # -----------------------------
+    - service: script.tv_movie_time_volume_levels_player
+
+
+    # Dim light
+    # ---------
+    - service: scene.turn_on
+      entity_id: scene.romantic_mode

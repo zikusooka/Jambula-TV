@@ -1,0 +1,25 @@
+# Data - Alert when data balance is used up
+alias: "Alert when MiFi data Balance is used up"
+initial_state: True
+
+trigger:
+  - platform: state
+    entity_id: sensor.mifi_data_balance
+    to: !secret internet_data_threshold_critical
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Internet state
+    - condition: template
+      value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.data_balance_used_up

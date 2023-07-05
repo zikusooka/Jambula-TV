@@ -1,0 +1,37 @@
+unmute_volume_4_current_player:
+  sequence:
+
+
+    # Unmute volume of current active player
+    # --------------------------------------
+    - service: shell_command.speaker_volume_unmute_player
+      data_template:
+        current_player: "{{states('sensor.current_player_cli_name')}}"
+
+
+    # Restore previous volume level before volume was muted
+    # -----------------------------------------------------
+    - service: shell_command.restore_previous_volume_level_player
+      data_template:
+        current_player: "{{states('sensor.current_player_cli_name')}}"
+        volume_level_player_file: !secret previous_volume_level_player_file
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Connection-established-sound-effect.mp3'
+        input_file2: 'mixer_levels_have_been_recalibrated.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_mixer_levels_have_been_recalibrated.mp3'
+
+
+    # Voice Alert: Announce that mixer levels have been re-calibrated
+    # ---------------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_mixer_levels_have_been_recalibrated'
+        audio_gain: !secret voice_alert_audio_gain_high

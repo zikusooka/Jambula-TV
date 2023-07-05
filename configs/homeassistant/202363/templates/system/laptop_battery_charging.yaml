@@ -1,0 +1,18 @@
+"Hi there!
+\r
+\r
+Please be advised that the power adapter for JambulaTV has been plugged in and the system battery is now charging. 
+\r
+\r
+If there was a power outage, then AC power has been restored!
+\r
+\r
+System Battery Status: *{{states('sensor.battery_laptop')}}*
+\r
+\r
+\r
+-------------------------------------------------
+\r
+This message was generated
+\r
+at: *{{states('sensor.time')}}* on *{{states('sensor.date')}}*"

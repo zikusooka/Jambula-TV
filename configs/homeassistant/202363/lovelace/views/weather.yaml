@@ -1,0 +1,48 @@
+title: Weather
+icon: mdi:weather-partly-cloudy
+cards:
+
+
+  # Outside/Indoor temperature
+  - type: vertical-stack
+    cards:
+      - !include ../cards/markup-weather-message.yaml
+
+
+  # Weather forecast
+  #- type: horizontal-stack
+      - type: vertical-stack
+        cards:
+          #- !include ../cards/conditional-custom-type-weather-accuweather-uganda.yaml
+          - !include ../cards/conditional-custom-type-weather-darksky-uganda.yaml
+
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-entity-filter-temperature-outdoors.yaml
+          - !include ../cards/conditional-entity-filter-temperature-indoors.yaml
+
+
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/conditional-custom-date-time.yaml
+
+
+  - type: vertical-stack
+    cards: 
+      - !include ../cards/conditional-markdown-weather-uganda-kampala-weather-dot-com.yaml
+      - !include ../cards/conditional-markdown-weather-uganda-kampala-accuweather.yaml
+      - !include ../cards/conditional-picture-entity-weather-radar-accuweather-uganda.yaml
+      - !include ../cards/conditional-picture-entity-weather-radar-weather-channel-uganda.yaml
+
+
+# Fetch forecast - Today
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/conditional-entity-button-weather-forecast-weather-dot-com.yaml
+      #- !include ../cards/conditional-entity-button-weather-forecast-weather-dot-com2.yaml
+
+
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/conditional-picture-entity-weather-radar-sat24-africa.yaml

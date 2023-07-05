@@ -1,0 +1,18 @@
+rtorrent_restart:
+  sequence:
+
+    - service: shell_command.rtorrent_restart
+
+
+
+rtorrent_start:
+  sequence:
+
+    - service: shell_command.rtorrent_start
+
+
+
+rtorrent_stop:
+  sequence:
+
+    - service: shell_command.rtorrent_stop

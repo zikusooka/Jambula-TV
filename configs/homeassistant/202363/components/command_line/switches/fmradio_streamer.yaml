@@ -1,0 +1,4 @@
+switch:
+  name: "fmradio_streamer"
+  command_on: "/usr/bin/jambulatv-fm-radio-streamer restart 101.3 local"
+  command_off: "/usr/bin/jambulatv-fm-radio-streamer stop"

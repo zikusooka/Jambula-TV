@@ -1,0 +1,92 @@
+title: Overview
+icon: mdi:playlist-music
+cards:
+
+  # Column 1
+  # --------
+  #
+  - type: vertical-stack
+    cards:
+      # Welcome message      
+      - !include ../cards/markup-media-message.yaml
+
+      - type: horizontal-stack
+        cards:
+          # jTV client 01
+          - !include ../cards/media-control-jambulatv-client-02.yaml
+
+      #- type: horizontal-stack
+        #cards:
+          # jTV client 02
+          #- !include ../cards/media-control-jambulatv-server.yaml
+          #- !include ../cards/media-control-jambulatv-client-01.yaml
+
+      - type: horizontal-stack
+        cards:
+          #- !include ../cards/conditional-markup-playlist-last-hour.yaml
+          - !include ../cards/custom-home-feed-media-player-current-previous-song.yaml
+
+
+
+  # Column 2
+  # --------
+  #
+  - type: vertical-stack
+    cards:      
+      # Audio players
+      - !include ../cards/conditional-entities-internet-radio-stations.yaml
+      - !include ../cards/conditional-picture-entity-internet-radio-station-logo.yaml
+      - !include ../cards/conditional-fm-radio.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Mini media player
+          - !include ../cards/conditional-custom-mini-media-player.yaml
+          - !include ../cards/conditional-custom-mini-media-player-christmas.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Music search
+          - !include ../cards/entities-search-local-music.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Music downloads
+          - !include ../cards/conditional-music-download-previous.yaml
+          - !include ../cards/conditional-music-download-playing.yaml
+
+
+
+  # Column 3
+  # --------
+  #
+  - type: vertical-stack
+    cards:
+      # Playing (Now and Next)
+      - !include ../cards/conditional-playing-now-volume-playing-online.yaml
+      - !include ../cards/conditional-playing-now-volume-playing-offline.yaml
+ 
+      - type: horizontal-stack
+        cards:
+          # Volume - Down
+          - !include ../cards/conditional-media-player-volume-down.yaml
+          # Volume - Level (MPD)
+          - !include ../cards/conditional-media-player-volume-boost.yaml
+          # Volume - Up
+          - !include ../cards/conditional-media-player-volume-up.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Player / Music navigation controls
+          - !include ../cards/conditional-media-player-previous_track.yaml
+          - !include ../cards/conditional-media-player-loop_track.yaml
+          - !include ../cards/conditional-media-player-forward_track.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Volume Controls / Stop Media Player
+          - !include ../cards/conditional-playing-now-volume-paused.yaml
+          - !include ../cards/conditional-media-player-stop.yaml
+          - !include ../cards/conditional-media-player-pause-playing.yaml
+          - !include ../cards/conditional-media-player-pause-paused.yaml
+          - !include ../cards/conditional-rotation-now-playing.yaml

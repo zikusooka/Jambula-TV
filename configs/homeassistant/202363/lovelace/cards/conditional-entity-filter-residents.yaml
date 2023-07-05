@@ -1,0 +1,37 @@
+type: conditional
+conditions:
+
+  - entity: sensor.resident1_presence_status 
+    state_not: 'Away'
+  - entity: sensor.resident2_presence_status 
+    state_not: 'Away'
+  - entity: sensor.resident3_presence_status 
+    state_not: 'Away'
+  - entity: sensor.resident4_presence_status 
+    state_not: 'Away'
+  - entity: sensor.resident5_presence_status 
+    state_not: 'Away'
+
+  - entity: sensor.resident1_presence_status 
+    state_not: 'unavailable'
+  - entity: sensor.resident2_presence_status 
+    state_not: 'unavailable'
+  - entity: sensor.resident3_presence_status 
+    state_not: 'unavailable'
+  - entity: sensor.resident4_presence_status 
+    state_not: 'unavailable'
+  - entity: sensor.resident5_presence_status 
+    state_not: 'unavailable'
+
+card:
+  type: entity-filter
+  entities:
+    - sensor.resident1_presence_status 
+    - sensor.resident2_presence_status 
+    - sensor.resident3_presence_status 
+    - sensor.resident4_presence_status 
+    - sensor.resident5_presence_status 
+  state_filter:
+    - 'Home'
+    - 'Sighted'
+    - 'Away'

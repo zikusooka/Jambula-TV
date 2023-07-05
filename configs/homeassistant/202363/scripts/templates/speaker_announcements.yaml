@@ -1,0 +1,906 @@
+bedtime_greeting_announce_all:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Remove previous sound effects file for bed time routines
+    - service: shell_command.delete_file_dir_specified
+      data_template:
+        directory: !secret jambulatv_temp_dir
+        file: 'sound_effect_bedtime_routines_for_everybody.mp3'
+
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_four_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: >
+          {% if now().strftime('%-H')|int < 12 %}
+          'goodmorning.mp3'
+          {% elif now().strftime('%-H')|int < 18 %}
+          'goodafternoon.mp3'
+          {% else %}
+          'goodevening.mp3'
+          {% endif %}
+        input_file3: 'activating_bedtime_routines_for.mp3'
+        input_file4: 'everybody.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_bedtime_routines_for_everybody.mp3'
+
+
+    # Voice Alert: Announce that it's time for bed
+    # --------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_bedtime_routines_for_everybody'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+bedtime_greeting_announce_zik:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Remove previous sound effects file for bed time routines
+    - service: shell_command.delete_file_dir_specified
+      data_template:
+        directory: !secret jambulatv_temp_dir
+        file: 'sound_effect_bedtime_routines_for_zik.mp3'
+
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_four_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: >
+          {% if now().strftime('%-H')|int < 12 %}
+          'goodmorning.mp3'
+          {% elif now().strftime('%-H')|int < 18 %}
+          'goodafternoon.mp3'
+          {% else %}
+          'goodevening.mp3'
+          {% endif %}
+        input_file3: 'activating_bedtime_routines_for.mp3'
+        input_file4: 'zik.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_bedtime_routines_for_zik.mp3'
+
+
+    # Voice Alert: Announce that it's time for bed
+    # --------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_bedtime_routines_for_zik'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+wakeup_time_greeting_announce_everybody:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Remove previous sound effects file for wakeup time routines
+    - service: shell_command.delete_file_dir_specified
+      data_template:
+        directory: !secret jambulatv_temp_dir
+        file: 'sound_effect_wakeup_time_routines_for_everybody.mp3'
+
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_four_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: >
+          {% if now().strftime('%-H')|int < 12 %}
+          'goodmorning.mp3'
+          {% elif now().strftime('%-H')|int < 18 %}
+          'goodafternoon.mp3'
+          {% else %}
+          'goodevening.mp3'
+          {% endif %}
+        input_file3: 'activating_wakeup_time_routines_for.mp3'
+        input_file4: 'everybody.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_wakeup_time_routines_for_everybody.mp3'
+
+
+    # Voice Alert: Announce that it's wake up time
+    # --------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_wakeup_time_routines_for_everybody'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+wakeup_time_greeting_announce_zik:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Remove previous sound effects file for wakeup time routines
+    - service: shell_command.delete_file_dir_specified
+      data_template:
+        directory: !secret jambulatv_temp_dir
+        file: 'sound_effect_wakeup_time_routines_for_zik.mp3'
+
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_four_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: >
+          {% if now().strftime('%-H')|int < 12 %}
+          'goodmorning.mp3'
+          {% elif now().strftime('%-H')|int < 18 %}
+          'goodafternoon.mp3'
+          {% else %}
+          'goodevening.mp3'
+          {% endif %}
+        input_file3: 'activating_wakeup_time_routines_for.mp3'
+        input_file4: 'zik.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_wakeup_time_routines_for_zik.mp3'
+
+
+    # Voice Alert: Announce that it's wake up time
+    # --------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_wakeup_time_routines_for_zik'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+temperature_current_outside:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Remove previous sound effects file for current temp outdsie
+    - service: shell_command.delete_file_dir_specified
+      data_template:
+        directory: !secret jambulatv_temp_dir
+        file: 'sound_effect_current_temperature_outside_is.mp3'
+
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_four_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: >
+          {% if is_state('input_boolean.wakeup_time_activated_all', 'off') and is_state('input_boolean.bed_time_activated_all', 'off') %}
+          'Airplane-ding-sound.mp3'
+          {% else %}
+          'silence_1s.mp3'
+          {% endif %}
+        input_file2: 'temperature_current_outside.mp3'
+        input_file3: >
+          {% if (states('sensor.outside_temperature') | int | round (0)) == 1 %}
+          'one.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 2 %}
+          'two.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 3 %}
+          'three.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 4 %}
+          'four.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 5 %}
+          'five.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 6 %}
+          'six.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 7 %}
+          'seven.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 8 %}
+          'eight.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 9 %}
+          'nine.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 10 %}
+          'ten.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 11 %}
+          'eleven.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 12 %}
+          'twelve.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 13 %}
+          'thirteen.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 14 %}
+          'fourteen.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 15 %}
+          'fifteen.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 16 %}
+          'sixteen.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 17 %}
+          'seventeen.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 18 %}
+          'eighteen.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 19 %}
+          'nineteen.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 20 %}
+          'twenty.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 21 %}
+          'twenty_one.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 22 %}
+          'twenty_two.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 23 %}
+          'twenty_three.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 24 %}
+          'twenty_four.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 25 %}
+          'twenty_five.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 26 %}
+          'twenty_six.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 27 %}
+          'twenty_seven.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 28 %}
+          'twenty_eight.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 29 %}
+          'twenty_nine.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 30 %}
+          'thirty.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 31 %}
+          'thirty_one.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 32 %}
+          'thirty_two.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 33 %}
+          'thirty_three.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 34 %}
+          'thirty_four.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 35 %}
+          'thirty_five.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 36 %}
+          'thirty_six.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 37 %}
+          'thirty_seven.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 38 %}
+          'thirty_eight.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 39 %}
+          'thirty_nine.mp3'
+          {% elif (states('sensor.outside_temperature') | int | round (0)) == 40 %}
+          'fourty.mp3'
+          {% endif %}
+        input_file4: 'degrees_celcius.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_current_temperature_outside_is.mp3'
+
+
+    # Voice Alert: Announce the current temperature outside
+    # ------------------------------------------------------ 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_current_temperature_outside_is'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+internet_connecting:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_connecting.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_connecting_to_the_internet.mp3'
+
+
+    # Voice Alert: Announce that I'm connecting to the Internet
+    # --------------------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_connecting_to_the_internet'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+internet_connect_succeeded:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_connected.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_connection_to_the_internet_succeeded.mp3'
+
+
+    # Voice Alert: Announce that I connected to the Internet
+    # ------------------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_connection_to_the_internet_succeeded'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+internet_connect_failed_try_again:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_connection_failed_try_again.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_connection_to_the_internet_failed.mp3'
+
+
+    # Voice Alert: Announce that I failed to connect to the Internet
+    # -------------------------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_connection_to_the_internet_failed'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+internet_connect_failed:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_connection_failed.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_connection_to_the_internet_failed.mp3'
+
+
+    # Voice Alert: Announce that I failed to connect to the Internet
+    # -------------------------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_connection_to_the_internet_failed'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+internet_disconnecting:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_disconnecting.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_disconnecting_from_the_internet.mp3'
+
+
+    # Voice Alert: Announce that I'm disconnecting from the Internet
+    # -------------------------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_disconnecting_from_the_internet'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+internet_disconnected:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_disconnected.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_disconnected_from_the_internet.mp3'
+
+
+    # Voice Alert: Announce that I've disconnected from the Internet
+    # --------------------------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_disconnected_from_the_internet'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+internet_already_connected_alert:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_already_connected.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_already_connected_to_the_internet.mp3'
+
+
+    # Voice Alert: Announce that I'm already connected to the Internet
+    # ---------------------------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_already_connected_to_the_internet'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+internet_data_saver_enabled:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_data_saver_enabled.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_internet_data_saver_enabled.mp3'
+
+
+    # Voice Alert: Announce that Internet datasaver has been enabled
+    # ---------------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_internet_data_saver_enabled'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+internet_data_saver_disabled:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'internet_data_saver_disabled.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_internet_data_saver_disabled.mp3'
+
+
+    # Voice Alert: Announce that Internet datasaver has been disabled
+    # ----------------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_internet_data_saver_disabled'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+cpu_usage_high_critical_process_alert_via_speakers:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'cpu_usage_critical_service_very_high.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_cpu_usage_critical_service_very_high.mp3'
+
+
+    # Voice Alert: CPU usage is very high
+    # -----------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_cpu_usage_critical_service_very_high'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+cpu_usage_high_overall_alert_via_speakers:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'cpu_usage_high_performance_degrade.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_cpu_usage_high_performance_degrade.mp3'
+
+
+    # Voice Alert: CPU usage is very high
+    # -----------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_cpu_usage_high_performance_degrade'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+say_weather_update_coming_up:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'weather_update_for_area_coming_up.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_weather_update_for_area_coming_up.mp3'
+
+
+    # Voice Alert: Weather update for your area
+    # ------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_weather_update_for_area_coming_up'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+timer_05_minutes_started:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'timer_05_mins_started.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_timer_05_mins_started.mp3'
+
+
+    # Voice Alert: 5 minutes timer started
+    # ------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_timer_05_mins_started'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+timer_05_minutes_finished:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'timer_05_mins_finished.mp3'
+        input_file3: 'kitchen-timer.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_timer_05_mins_finished.mp3'
+
+
+    # Voice Alert: 5 minutes timer finished
+    # -------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_timer_05_mins_finished'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+timer_05_minutes_paused:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'timer_05_mins_paused.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_timer_05_mins_paused.mp3'
+
+
+    # Voice Alert: 5 minutes timer paused
+    # ------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_timer_05_mins_paused'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+timer_05_minutes_restarted:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'timer_05_mins_restarted.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_timer_05_mins_restarted.mp3'
+
+
+    # Voice Alert: 5 minutes timer restarted
+    # --------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_timer_05_mins_restarted'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+timer_05_minutes_cancelled:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'timer_05_mins_cancelled.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_timer_05_mins_cancelled.mp3'
+
+
+    # Voice Alert: 5 minutes timer cancelled
+    # --------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_timer_05_mins_cancelled'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+phone_connected_to_pbx_zik:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_four_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'mobile_phone_for.mp3'
+        input_file3: 'zik.mp3'
+        input_file4: 'has_connected_to_pbx.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_mobile_phone_for_zik_connected_to_pbx.mp3'
+
+
+    # Voice Alert: Phone connected to Asterisk
+    # ----------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_mobile_phone_for_zik_connected_to_pbx'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+phone_disconnected_from_pbx_zik:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_four_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'mobile_phone_for.mp3'
+        input_file3: 'zik.mp3'
+        input_file4: 'has_disconnected_from_pbx.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_mobile_phone_for_zik_disconnected_from_pbx.mp3'
+
+
+    # Voice Alert: Phone disconnected from Asterisk
+    # ---------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_mobile_phone_for_zik_disconnected_from_pbx'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+laptop_battery_charging_system:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_charging_system.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_charging_system.mp3'
+
+
+    # Voice Alert: Announce that laptop battery is charging
+    # ------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_charging_system'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+laptop_battery_discharging_system:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_discharging_system.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_discharging_system.mp3'
+
+
+    # Voice Alert: Announce that Laptop battery is discharging
+    # --------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_discharging_system'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+laptop_battery_is_full_system:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_full_system.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_full_system.mp3'
+
+
+    # Voice Alert: Announce that Laptop battery is full
+    # -------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_full_system'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+laptop_battery_charging_dell_inspiron_7353:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_charging_dell_inspiron_7353.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_charging_dell_inspiron_7353.mp3'
+
+
+    # Voice Alert: Announce that laptop battery is charging
+    # ------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_charging_dell_inspiron_7353'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+laptop_battery_discharging_dell_inspiron_7353:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_discharging_dell_inspiron_7353.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_discharging_dell_inspiron_7353.mp3'
+
+
+    # Voice Alert: Announce that Laptop battery is discharging
+    # --------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_discharging_dell_inspiron_7353'
+        audio_gain: !secret voice_alert_audio_gain_high
+
+
+
+laptop_battery_is_full_dell_inspiron_7353:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'laptop_battery_is_full_dell_inspiron_7353.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_laptop_battery_is_full_dell_inspiron_7353.mp3'
+
+
+    # Voice Alert: Announce that Laptop battery is full
+    # -------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_laptop_battery_is_full_dell_inspiron_7353'
+        audio_gain: !secret voice_alert_audio_gain_medium

@@ -1,0 +1,3 @@
+sensor:
+  name: "Garbage collection day"
+  command: TODAY=$(date +%a | tr '[:upper:]' '[:lower:]'); GARBAGE_DAY=$(/usr/bin/jambulatv-homeassistant-secrets garbage_collection_day); [[ "$GARBAGE_DAY" = "$TODAY" ]] && echo true || echo false

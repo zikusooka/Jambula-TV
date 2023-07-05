@@ -1,0 +1,17 @@
+kodi_tv_movie_start:
+  sequence:
+
+    # Turn off lights in Living room
+    # ------------------------------
+    - service_template: >
+        {% if is_state('sun.sun', 'below_horizon') %}
+          scene.LivingRoom_Off
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: scene.LivingRoom_Normal
+
+
+    # Reduce volume of music player
+    # -----------------------------
+    - service: script.tv_movie_time_volume_levels_player

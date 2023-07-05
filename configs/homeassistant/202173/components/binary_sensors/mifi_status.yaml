@@ -1,0 +1,7 @@
+platform: mqtt
+name: 'WiFi AP Status'
+state_topic: !secret mqtt_status_mifi_huawei
+scan_interval: 60
+device_class: connectivity
+payload_on: "on"
+payload_off: "off"

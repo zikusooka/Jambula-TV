@@ -1,0 +1,70 @@
+daily_digest_notify:
+  sequence:
+
+    #  WHATSAPP
+    # ---------
+    #
+    # WhatsApp - image
+    - service: shell_command.send_whatsapp_image
+      data_template:
+        image_path: '/usr/share/JambulaTV/images/hass/digest_daily'
+        phone: ''
+
+    # IMPORTANT: Pause a bit to allow previous notification to be sent
+    - delay: '00:00:10'
+
+    # WhatsApp - text
+    - service: shell_command.send_whatsapp_text
+      data_template: 
+        message: !include ../../templates/digests/zik_daily_notification_message.yaml
+        phone: ''
+
+    # IMPORTANT: Pause a bit to allow previous notification to be sent
+    - delay: '00:00:10'
+
+    #  TELEGRAM  
+    # ---------
+    #
+    # Telegram - image
+    - service: shell_command.send_telegram_image
+      data_template:
+        image_path: '/usr/share/JambulaTV/images/hass/digest_daily'
+        phone: ''
+
+    # IMPORTANT: Pause a bit to allow previous notification to be sent
+    - delay: '00:00:10'
+
+    # Telegram - text
+    - service: shell_command.send_telegram_text
+      data_template: 
+        message: !include ../../templates/digests/zik_daily_notification_message.yaml
+        phone: ''
+
+    # IMPORTANT: Pause a bit to allow previous notification to be sent
+    - delay: '00:00:10'
+
+
+    #  TWITTER REPORTS
+    # ----------------
+    #
+    # Fetch twitter reports
+    - service: shell_command.fetch_twitter_reports_all
+      data_template: 
+        village: !secret homeassistant_city
+
+    # IMPORTANT: Pause a bit to allow previous task to be completed
+    - delay: '00:00:05'
+
+    # Send twitter reports - WhatsApp
+    - service: shell_command.send_twitter_reports_whatsapp
+      data_template: 
+        reports_file: !secret twitter_reports_all_file
+
+    # IMPORTANT: Pause a bit to allow previous notification to be sent
+    - delay: '00:00:10'
+
+    # Send twitter reports - Telegram
+    - service: shell_command.send_twitter_reports_telegram
+      data_template: 
+        reports_file: !secret twitter_reports_all_file
+

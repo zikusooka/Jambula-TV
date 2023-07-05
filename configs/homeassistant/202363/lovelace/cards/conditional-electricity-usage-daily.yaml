@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: sensor.electricity_usage_daily
+    state_not: 'none'
+
+  - entity: sensor.electricity_usage_daily
+    state_not: 'unknown'
+
+card:
+  type: sensor
+  entity: sensor.electricity_usage_daily
+  name: 'Usage (Daily)'
+  icon: 'mdi:lightning-bolt'
+  show_name: false
+  show_icon: false

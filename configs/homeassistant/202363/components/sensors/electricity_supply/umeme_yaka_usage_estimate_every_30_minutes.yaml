@@ -1,0 +1,6 @@
+platform: template
+sensors:
+  umeme_yaka_usage_estimate_every_30_minutes:
+    friendly_name: 'UMEME Yaka usage estimate (Every 30 minutes)'
+    value_template: >
+      {{ (states('input_text.umeme_yaka_usage_estimate_daily') | float) / 48 }}

@@ -1,0 +1,1 @@
+search_play_local_music: /bin/bash -c 'sudo /usr/bin/jambulatv-search-play-music --directory {{music_directory}} --song "{{music_song}}" > /dev/null 2>&1'

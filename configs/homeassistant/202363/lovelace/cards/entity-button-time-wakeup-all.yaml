@@ -1,0 +1,12 @@
+type: entity-button
+entity: script.wakeup_time_all
+name: 'Wakeup (All)'
+show_name: true
+show_state: false
+icon: 'mdi:coffee-maker'
+
+tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.wakeup_time_all

@@ -1,0 +1,8 @@
+platform: template
+sensors:
+  jogging_statistics_last_updated_zik:
+    friendly_name: 'Jogging statistics last updated (Zik)'
+    value_template: >
+      {% set sensor = 'script.jogging_completed_update_stats_zik' %}
+      {{ (as_timestamp(now()) - as_timestamp(states.script.jogging_completed_update_stats_zik.attributes.last_triggered) | int | round(0, 'ceil')) }}
+#      {{ (as_timestamp(now()) - as_timestamp(states.script.jogging_completed_update_stats_zik.attributes.last_triggered | default(0)) | int | round(0, 'ceil')) }}

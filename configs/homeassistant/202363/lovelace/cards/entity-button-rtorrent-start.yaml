@@ -1,0 +1,22 @@
+type: entity-button
+entity: script.rtorrent_start
+name: 'Start rTorrent'
+show_name: true
+show_state: false
+icon: 'mdi:download'
+
+double_tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.rtorrent_start
+
+
+tap_action:
+  action: call-service
+  confirmation:
+    text: Start rRorrent?
+  service: script.turn_on
+  service_data:
+    entity_id: script.rtorrent_start
+

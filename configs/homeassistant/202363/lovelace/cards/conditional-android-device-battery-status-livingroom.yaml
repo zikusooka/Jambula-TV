@@ -1,0 +1,10 @@
+type: conditional
+conditions:
+  - entity: sensor.connected_status_via_adb_4_c_idea
+    state: "Connected"
+
+card:
+  type: sensor
+  entity: sensor.battery_status_via_adb_4_c_idea
+  name: 'Status'
+  icon: 'mdi:battery-charging'
