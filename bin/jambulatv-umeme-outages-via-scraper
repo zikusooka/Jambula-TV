@@ -266,7 +266,7 @@ DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_TODAY}
 # Set outage coming flag if date is found in outages file
 case "$UMEME_OUTAGES_FILE_FORMAT" in
 pdf)
-pdfgrep -C line -i "$DATE_DIGIT_TODAY$(DaySuffix).${THIS_MONTH_NAME_FULL}" $UMEME_OUTAGES_PLANNED_FILE | grep -i "\b${VILLAGE}\b" > /dev/null 2>&1
+pdfgrep -C line -i "$DATE_DIGIT_TODAY$(DaySuffix)*.${THIS_MONTH_NAME_FULL}" $UMEME_OUTAGES_PLANNED_FILE | grep -i "\b${VILLAGE}\b" > /dev/null 2>&1
 OUTAGE_COMING_TODAY=$?
 ;;
 xls)
@@ -282,7 +282,7 @@ DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_TOMORROW}
 # Set outage coming flag if date is found in outages file
 case "$UMEME_OUTAGES_FILE_FORMAT" in
 pdf)
-pdfgrep -C line -i "$DATE_DIGIT_TOMORROW$(DaySuffix).${THIS_MONTH_NAME_FULL}" $UMEME_OUTAGES_PLANNED_FILE | grep -i "\b${VILLAGE}\b" > /dev/null 2>&1
+pdfgrep -C line -i "$DATE_DIGIT_TOMORROW$(DaySuffix)*.${THIS_MONTH_NAME_FULL}" $UMEME_OUTAGES_PLANNED_FILE | grep -i "\b${VILLAGE}\b" > /dev/null 2>&1
 OUTAGE_COMING_TOMORROW=$?
 ;;
 xls)
@@ -298,7 +298,7 @@ DATE_DIGIT_OF_SPECIFIED_DAY=${DATE_DIGIT_AFTER_TOMORROW}
 # Set outage coming flag if date is found in outages file
 case "$UMEME_OUTAGES_FILE_FORMAT" in
 pdf)
-pdfgrep -C line -i "$DATE_DIGIT_AFTER_TOMORROW$(DaySuffix).${THIS_MONTH_NAME_FULL}" $UMEME_OUTAGES_PLANNED_FILE | grep -i "\b${VILLAGE}\b" > /dev/null 2>&1
+pdfgrep -C line -i "$DATE_DIGIT_AFTER_TOMORROW$(DaySuffix)*.${THIS_MONTH_NAME_FULL}" $UMEME_OUTAGES_PLANNED_FILE | grep -i "\b${VILLAGE}\b" > /dev/null 2>&1
 OUTAGE_COMING_TWO_DAYS=$?
 ;;
 xls)
