@@ -1,0 +1,23 @@
+its_time_for_lunch:
+  sequence:
+
+ 
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Bell-magic-transition-sound-effect.mp3'
+        input_file2: 'its_time_4_lunch.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_its_time_4_lunch.mp3'
+
+
+    # Voice Alert: Announce that it's time for lunch
+    # -----------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_its_time_4_lunch'
+        audio_gain: !secret voice_alert_audio_gain_low

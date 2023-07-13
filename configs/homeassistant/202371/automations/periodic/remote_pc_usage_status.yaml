@@ -1,0 +1,22 @@
+alias: Remote PC usage status
+initial_state: True
+
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/3'
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+    # Report current status of remote PC usage
+  - service: shell_command.remote_pc_usage_status
+    data_template:
+      ssh_host: !secret operator_001_ssh_host
+      ssh_username: !secret operator_001_ssh_username

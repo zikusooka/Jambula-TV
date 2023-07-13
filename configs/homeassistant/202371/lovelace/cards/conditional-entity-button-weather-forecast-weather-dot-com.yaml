@@ -1,0 +1,26 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.internet
+    state: 'on'
+
+card:
+  type: entity-button
+  entity: script.say_weather_forecast_using_scraper
+  name: "Weather.com forecast"
+  show_name: true
+  show_state: false
+  icon: "mdi:weather-cloudy-clock"
+
+  double_tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.say_weather_forecast_using_scraper
+
+  tap_action:
+    action: call-service
+    confirmation:
+      text: Fetch and read weather information today?
+    service: script.turn_on
+    service_data:
+      entity_id: script.say_weather_forecast_using_scraper

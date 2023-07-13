@@ -1,0 +1,4 @@
+sensor:
+  name: "MiFi Battery Status"
+  command: "/usr/bin/jambulatv-mifi-query $(/usr/bin/jambulatv-homeassistant-secrets mifi_address mifi_username mifi_password) battery | grep -i 'Battery Status' | awk {'print $3FS$4'}"
+  scan_interval: 60

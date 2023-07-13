@@ -1,0 +1,8 @@
+lunch_time_start:
+  sequence:
+
+
+    # Start playing local music
+    # -------------------------
+    - service: script.turn_on
+      entity_id: script.music_play_local

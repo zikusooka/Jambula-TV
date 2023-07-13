@@ -1,0 +1,13 @@
+fetch_forecast_by_weather_com:
+  sequence:
+
+    # Wait for weather forecast reading to complete if already activated
+    # -------------------------------------------------------------------
+    - wait_template: "{{ is_state('script.read_forecast_by_weather_com', 'off') }}"
+      timeout: 60
+      continue_on_timeout: true
+
+
+    # Fetch and Save weather forecast (Weather.com)
+    # ---------------------------------------------
+    - service: script.fetch_weather_forecast_using_scraper

@@ -1,0 +1,4 @@
+sensor:
+  name: "Previously Played"
+  command: /bin/bash -c "if [[ -s $(/usr/bin/jambulatv-homeassistant-secrets radio_playlist_file) ]]; then /usr/bin/uniq $(/usr/bin/jambulatv-homeassistant-secrets radio_playlist_file) | tail -2 | head -1; else echo ''; fi"
+  scan_interval: 10

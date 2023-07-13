@@ -1,0 +1,103 @@
+wakeup_via_alarm_zik:
+  sequence:
+
+    # Disable Bedtime Mode at Frontend
+    # -----------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.bedtime_mode_zik
+
+    # If bedtime for all was activated; don't up volumes here
+    - service_template: >
+        {% if is_state('input_boolean.wakeup_time_activated_all', 'off') %}
+          script.wakeup_time_volume_levels_system_player_all
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.wakeup_time_volume_levels_system_player_all
+
+
+    # Voice Alert: Play wake up greeting
+    # -----------------------------------
+    - service: script.turn_on
+      data:
+        entity_id: script.wakeup_time_announce
+
+
+
+wakeup_via_input_zik:
+  sequence:
+
+    # Disable Bedtime Mode at Frontend
+    # -----------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.bedtime_mode_zik
+
+
+    # If bedtime for all was activated; don't up volumes here
+    # -------------------------------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.wakeup_time_activated_all', 'off') %}
+          script.wakeup_time_volume_levels_system_player_all
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.wakeup_time_volume_levels_system_player_all
+
+
+    # Voice Alert: Play greeting if wakeup time 4 all wasn't activated
+    # -----------------------------------------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.wakeup_time_activated_all', 'off') %}
+          script.wakeup_time_greeting_announce_zik
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.wakeup_time_greeting_announce_zik
+
+
+
+wakeup_via_all_zik:
+  sequence:
+
+    # Disable Bedtime Mode at Frontend
+    # -----------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.bedtime_mode_zik
+
+
+    # Send daily digest for today
+    # ---------------------------
+    - service_template: >
+        {% if is_state('binary_sensor.internet', 'on') %}
+          script.daily_digest_notify
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: script.daily_digest_notify
+
+
+    # Send flash briefing (audio) for today
+    # -------------------------------------
+    #
+    # Telegram
+    - service: shell_command.send_telegram_audio
+      data_template:
+        audio_path: !secret flash_briefing_today_audio_file
+        phone: ''
+    #
+    # WhatsApp
+    - service: shell_command.send_whatsapp_audio
+      data_template:
+        audio_path: !secret flash_briefing_today_audio_file
+        phone: ''

@@ -1,0 +1,25 @@
+alias: Reset water billing date
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: input_datetime.water_supply_last_billed_date
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.water_billing_reset_date

@@ -1,0 +1,8 @@
+data_bundle_add_airtel_weekend1:
+  sequence:
+
+    - service: shell_command.gsm_ussd_ug_load_data
+      data_template:        
+        network_provider: 'Airtel'
+        data_bundle: 'weekend1'
+        phone_number: !secret phone_number_for_data_airtel_1

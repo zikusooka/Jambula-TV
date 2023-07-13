@@ -1,0 +1,58 @@
+alias: Alarm - Activate when away
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.tp_link_mr_3040_presence_status
+    to: 'Home'
+    id: turn_on_alarm_away
+
+  - platform: state
+    entity_id: sensor.tp_link_mr_3040_presence_status
+    to: 'Away'
+    id: turn_off_alarm
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Motion detection alert is - on
+    #- condition: state
+      #entity_id: 'input_boolean.motion_detection_alert'
+      #state: 'on'
+
+    # After sunrise
+    #- condition: sun
+      #after: sunset
+      #before: sunrise
+    
+
+action:
+  - choose:
+
+    - conditions:    
+        - condition: trigger
+          id: turn_on_alarm_away
+        - condition: state
+          entity_id: alarm_control_panel.security_alarm
+          state: disarmed
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.arm_away
+
+    - conditions:    
+        - condition: trigger
+          id: turn_off_alarm
+        - condition: state
+          entity_id: alarm_control_panel.security_alarm
+          state: armed_away
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.disarm

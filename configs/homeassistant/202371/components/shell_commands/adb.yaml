@@ -1,0 +1,1 @@
+adb_connect_2_all_devices: ADB_CMD=/usr/bin/adb; ADB_PORT=$(/usr/bin/jambulatv-homeassistant-secrets adb_tcp_port); for IP_ADDRESS in $(/usr/bin/jambulatv-homeassistant-secrets adb_ip_address | sed s:\'::g | awk {'print $2'}); do $ADB_CMD connect $IP_ADDRESS:$ADB_PORT > /dev/null 2>&1; done

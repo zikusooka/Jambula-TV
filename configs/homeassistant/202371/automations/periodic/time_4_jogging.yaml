@@ -1,0 +1,37 @@
+alias: Its time for jogging
+initial_state: True
+
+trigger:
+
+  # Jogging starts at 6:20pm
+  - platform: time
+    at: '18:20:00'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Bedtime for all is off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Day of week
+    - condition: time
+      weekday:
+        - sun
+        - tue
+        - thu
+        - sat
+
+    # Vacation mode is off
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+
+
+action:
+
+  # Run script
+  - service: script.its_time_for_jogging

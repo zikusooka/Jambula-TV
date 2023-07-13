@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: media_player.jambulatv_radio
+    state: "playing"
+
+card:
+  type: entity-button
+  entity: script.music_pause
+  tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.music_pause
+  name: 'Pause'
+  icon: 'mdi:pause-circle-outline'

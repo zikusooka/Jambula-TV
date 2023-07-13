@@ -1,0 +1,33 @@
+umeme_yaka_units_update_daily:
+  sequence:
+
+    # Reduce Yaka units balance using estimated value - daily
+    # ---
+    - service: input_number.set_value
+      data_template:
+        entity_id: input_number.umeme_yaka_token_units_value
+        value: "{{ (states('input_number.umeme_yaka_token_units_value') | float | round (2)) - (states('sensor.umeme_yaka_usage_estimate_daily') | float | round (2)) }}"
+
+
+
+umeme_yaka_units_update_hourly:
+  sequence:
+
+    # Reduce Yaka units balance using estimated value - hourly
+    # ---
+    - service: input_number.set_value
+      data_template:
+        entity_id: input_number.umeme_yaka_token_units_value
+        value: "{{ (states('input_number.umeme_yaka_token_units_value') | float | round (2)) - (states('sensor.umeme_yaka_usage_estimate_hourly') | float | round (2)) }}"
+
+
+
+umeme_yaka_units_update_every_30_minutes:
+  sequence:
+
+    # Reduce Yaka units balance using estimated value - Every 30 minutes
+    # ---
+    - service: input_number.set_value
+      data_template:
+        entity_id: input_number.umeme_yaka_token_units_value
+        value: "{{ (states('input_number.umeme_yaka_token_units_value') | float | round (2)) - (states('sensor.umeme_yaka_usage_estimate_every_30_minutes') | float | round (2)) }}"

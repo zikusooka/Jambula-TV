@@ -1,0 +1,3 @@
+# Single mode aka 'loop' song
+mpc_single_mode_on: /bin/bash -c "/usr/bin/mpc -h {{mpc_host}} -p {{mpc_port}} single on"
+mpc_single_mode_off: /bin/bash -c "/usr/bin/mpc -h {{mpc_host}} -p {{mpc_port}} single off"

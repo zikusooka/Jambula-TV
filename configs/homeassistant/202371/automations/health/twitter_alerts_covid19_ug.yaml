@@ -1,0 +1,20 @@
+alias: COVID-19 Daily Updates for Uganda
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.covid_19_uganda_updates
+    to: changed
+
+#condition:
+  #condition: and
+  #conditions:
+
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    entity_id: script.covid19_daily_updates_notify

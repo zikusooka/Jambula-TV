@@ -1,0 +1,9 @@
+# This is an input boolean to use to prevent collissions while
+# using house speakers for voice alerts
+#
+# https://www.home-assistant.io/components/input_boolean/
+#
+voice_alerts_mixer_status:
+  name: Voice Alerts (Mixer Status)
+  initial: false
+  icon: mdi:message-bulleted-off

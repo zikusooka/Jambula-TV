@@ -1,0 +1,52 @@
+title: Water
+icon: mdi:water-plus
+cards:
+
+
+  # Welcome Message
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/markup-water-message.yaml
+
+
+  # Water Status
+  - type: vertical-stack
+    cards:
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/entity-button-water-supply.yaml
+          - !include ../cards/conditional-water-tariff-monthly.yaml
+
+      - type: horizontal-stack
+        cards: 
+          - !include ../cards/conditional-water-reading-today.yaml
+          - !include ../cards/conditional-water-reading-yesterday.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-water-usage-daily.yaml
+          - !include ../cards/conditional-water-usage-monthly.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-water-last-billed-date.yaml
+          - !include ../cards/conditional-water-bill-previous-balance.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/conditional-water-cost-per-unit.yaml
+
+
+  # Water is back or gone
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/entity-button-water-back.yaml
+      - !include ../cards/entity-button-water-gone.yaml
+
+
+  # Input water readings for Today / Yesterday
+  - type: vertical-stack
+    cards:
+      - !include ../cards/entities-water-readings-today.yaml
+      - !include ../cards/entities-water-readings-yesterday.yaml

@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: input_number.umeme_yaka_token_entry_units
+    state_not: 'none'
+
+  - entity: input_number.umeme_yaka_token_entry_units
+    state_not: 'unknown'
+
+card:
+  type: entity
+  entity: input_number.umeme_yaka_token_entry_units
+  name: 'Token Value (KWh)'
+  icon: 'mdi:lightning-bolt'
+  show_name: true
+  show_icon: false

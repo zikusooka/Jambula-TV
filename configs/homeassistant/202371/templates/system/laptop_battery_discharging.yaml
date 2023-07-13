@@ -1,0 +1,21 @@
+"Hi there!
+\r
+\r
+Please be advised that the power adapter for JambulaTV has been unplugged and the system battery is now discharging. 
+\r
+\r
+Please backup your work immediately
+\r
+\r
+It is likely that power has gone off!
+\r
+\r
+System Battery Status: *{{states('sensor.battery_laptop')}}*
+\r
+\r
+\r
+-------------------------------------------------
+\r
+This message was generated
+\r
+at: *{{states('sensor.time')}}* on *{{states('sensor.date')}}*"

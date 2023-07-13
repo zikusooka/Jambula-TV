@@ -1,0 +1,5 @@
+sensor:
+  name: "Connected 2 Asterisk Chan_Mobile - Zik"
+  command: "BLUEZ_MAC=$(/usr/bin/jambulatv-homeassistant-secrets bluez_mac_address_tecno_pop_2f); sudo asterisk -rx 'mobile show devices' | grep -i $BLUEZ_MAC | awk '{print $5}'"
+  command_timeout: 15
+  scan_interval: 180

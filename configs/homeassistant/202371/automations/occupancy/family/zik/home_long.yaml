@@ -1,0 +1,33 @@
+alias: Zik home after a long time
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: person.zik
+    from: 'Away'
+    to: 'Home'
+
+    
+condition:
+  condition: and
+  conditions:
+
+    # Away for a long time sensor is greater than short threshold
+    - condition: numeric_state
+      entity_id: !secret presence_away_for_long_sensor_1_hour_zik
+      below: !secret presence_away_for_long_threshold
+      above: !secret presence_away_for_short_threshold
+
+    # Last triggered more than 5 minute(s) ago
+    #- condition: template
+      #value_template: '{{ (as_timestamp(now()) - as_timestamp(states.person.zik.attributes.last_triggered | default(0)) | int > 300)}}'
+
+    # Last triggered more than 30 minute(s) ago
+    #- condition: template
+      #value_template: '{{ (as_timestamp(now()) - as_timestamp(states.person.zik.attributes.last_triggered | default(0)) | int > 1800)}}'
+
+
+action:
+
+  - service: script.zik_home_after_long_time

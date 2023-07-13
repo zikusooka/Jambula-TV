@@ -1,0 +1,21 @@
+type: entity-button
+entity: script.water_gone
+name: 'Water Gone'
+show_name: true
+show_state: false
+state_icons:
+icon: 'mdi:water'
+
+double_tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.water_gone
+
+tap_action:
+  action: call-service
+  confirmation:
+    text: Water gone?
+  service: script.turn_on
+  service_data:
+    entity_id: script.water_gone

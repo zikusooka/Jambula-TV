@@ -1,0 +1,26 @@
+title: Android Devices
+icon: mdi:tablet
+cards:
+
+
+  # Android devices connected
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/gauge-android-devices-connected.yaml
+
+
+  # Connect status
+  - type: vertical-stack
+    cards:
+      - !include ../cards/sensor-android-devices-connected-status-zik-pop-2f.yaml
+      - !include ../cards/sensor-android-devices-connected-status-livingroom.yaml
+      - !include ../cards/sensor-android-devices-connected-status-kitchen.yaml
+
+  
+  # Battery status
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/conditional-android-device-battery-level-livingroom.yaml
+      - !include ../cards/conditional-android-device-battery-status-livingroom.yaml
+      - !include ../cards/conditional-android-device-battery-level-kitchen.yaml
+      - !include ../cards/conditional-android-device-battery-status-kitchen.yaml

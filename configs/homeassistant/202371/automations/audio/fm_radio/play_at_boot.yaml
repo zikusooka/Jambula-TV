@@ -1,0 +1,24 @@
+# Start FM Radio at Boot time, but only during day time
+alias: "Play FM Radio at start time"
+initial_state: False
+
+trigger:
+  - platform: homeassistant
+    event: start
+
+
+# only when the sun is up i.e. daytime
+condition:
+  condition: and
+  conditions:
+
+    # After sunrise
+    - condition: sun
+      after: sunrise
+      before: sunset
+
+
+action:
+  - service: shell_command.fm_radio_play_selected_station
+    data_template:
+      station: !secret fm_radio_preferred_station

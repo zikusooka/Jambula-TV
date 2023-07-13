@@ -1,0 +1,9 @@
+music_download_playing:
+  sequence:
+    - service: shell_command.music_download_playing_now
+
+
+
+music_download_previous:
+  sequence:
+    - service: shell_command.music_download_played_previously

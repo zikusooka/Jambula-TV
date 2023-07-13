@@ -1,0 +1,31 @@
+alias: Alarm - Stop Panic
+initial_state: False
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.tp_link_mr_3040_presence_status
+    to: 'Away'
+ 
+
+condition:
+  condition: and
+  conditions:
+
+    - condition: state
+      entity_id: 'alarm_control_panel.security_alarm'
+      state: 'triggered'
+
+    # After sunrise
+    #- condition: sun
+      #after: sunset
+      #before: sunrise
+
+
+action:
+
+    # Disarm alarm
+  - service: alarm_control_panel.alarm_disarm
+    data:
+      entity_id: alarm_control_panel.security_alarm
+      code: !secret security_alarm_code

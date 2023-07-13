@@ -1,0 +1,49 @@
+water_meter_reading_is_missing_today:
+  sequence:
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Trickling-water-sound.mp3'
+        input_file2: 'input_water_reading_today.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_input_water_reading_today.mp3'
+
+
+    # Voice Alert: Announce that water reading is missing - Enter 
+    # -----------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_input_water_reading_today'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+
+water_meter_reading_is_missing_yesterday:
+  sequence:
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Trickling-water-sound.mp3'
+        input_file2: 'input_water_reading_yesterday.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_input_water_reading_yesterday.mp3'
+
+
+    # Voice Alert: Announce that water reading is missing - Enter 
+    # -----------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_input_water_reading_yesterday'
+        audio_gain: !secret voice_alert_audio_gain_medium

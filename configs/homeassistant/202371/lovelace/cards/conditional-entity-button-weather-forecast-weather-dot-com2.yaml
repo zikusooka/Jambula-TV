@@ -1,0 +1,43 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.internet
+    state: 'on'
+
+  type: 'custom:button-card'
+  entity: script.say_weather_forecast_using_scraper
+  name: Weather forecast
+  show_entity_picture: true
+  show_state: true
+  tap_action:
+    action: toggle
+  state:
+    - entity_picture: /local/icons/hueLigtOffSmall.png
+      value: 'off'
+      styles:
+        card:
+          - width: 160px
+          - border-radius: 14px
+          - padding-top: 10px
+          - padding-bottom: 10px
+          - margin-bottom: 20px
+        name:
+          - font-size: 18px
+          - color: gray
+          - align-self: middle
+          - padding-bottom: 10px
+          - padding-top: 20px
+    - entity_picture: /local/icons/hueLigtOnSmall.png
+      value: 'on'
+      styles:
+        card:
+          - width: 160px
+          - border-radius: 14px
+          - padding-top: 10px
+          - padding-bottom: 10px
+          - margin-bottom: 20px
+        name:
+          - font-size: 18px
+          - color: yellow
+          - align-self: middle
+          - padding-top: 20px
+          - padding-bottom: 10px

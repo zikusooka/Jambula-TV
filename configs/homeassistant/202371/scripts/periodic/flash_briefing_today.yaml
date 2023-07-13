@@ -1,0 +1,24 @@
+flash_briefing_weather_via_api:
+  sequence:
+
+    # Play flash briefing - weather via API
+    # -------------------------------------
+    - service: shell_command.flash_briefing_all_weather_via_api
+      data_template:
+        latitude: !secret homeassistant_latitude
+        longitude: !secret homeassistant_longitude
+        tts_api: !secret tts_api_service
+        debug: 'debug'
+
+
+
+flash_briefing_weather_via_scraper:
+  sequence:
+
+    # Play flash briefing - weather via Scraper
+    # -----------------------------------------
+    - service: shell_command.flash_briefing_all_weather_via_scraper
+      data_template:
+        weather_location: !secret weather_location
+        tts_api: !secret tts_api_service
+        debug: 'debug'

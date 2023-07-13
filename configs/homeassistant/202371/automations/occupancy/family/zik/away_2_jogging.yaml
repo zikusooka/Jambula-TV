@@ -1,0 +1,30 @@
+alias: Zik has gone jogging
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: device_tracker.bluez_mobile_04_zik
+    from: 'Home'
+    to: 'Away'
+    for:
+      minutes: 3
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Time of day
+    #- condition: time
+      #after: '06:00:00'
+      #before: '21:00:00'
+
+    # Motion detected outside
+    - condition: state
+      entity_id: sensor.vision_security_zp3102_pir_motion_sensor_alarm_level
+      state: '255'
+
+
+action:
+  - service: script.zik_has_gone_jogging

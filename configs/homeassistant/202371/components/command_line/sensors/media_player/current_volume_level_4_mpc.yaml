@@ -1,0 +1,4 @@
+sensor:
+  name: "Current MPC (Volume Level)"
+  command: "MPC_CMD=/usr/bin/mpc; MPC_HOST=$(/usr/bin/jambulatv-homeassistant-secrets mpd_server_host); MPC_PORT=$(/usr/bin/jambulatv-homeassistant-secrets mpd_server_port); $MPC_CMD -h $MPC_HOST -p $MPC_PORT volume | cut -d: -f2 | sed 's/%//g'"
+  scan_interval: 3

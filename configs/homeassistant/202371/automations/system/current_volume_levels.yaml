@@ -1,0 +1,29 @@
+# Record current volume levels
+alias: "Record current volume levels"
+initial_state: true
+
+trigger:
+
+  - platform: time_pattern
+    seconds: '/10'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # 2 minute(s) or more after startup of HASS
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime_minutes
+      above: 2.0
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.current_volume_levels_player
+
+  - service: script.turn_on
+    entity_id: script.current_volume_levels_system

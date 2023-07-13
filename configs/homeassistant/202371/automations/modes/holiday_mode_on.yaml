@@ -1,0 +1,31 @@
+alias: Holiday Mode (On)
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: input_boolean.holiday_mode
+    to: 'on'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Someone at home
+    #- condition: template
+    #  value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+    # 1 minute(s) or more after startup of HASS
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime_minutes
+      above: 1
+
+
+action:
+ 
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.holiday_mode_on

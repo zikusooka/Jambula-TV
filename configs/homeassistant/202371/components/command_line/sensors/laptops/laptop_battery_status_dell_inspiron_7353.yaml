@@ -1,0 +1,3 @@
+sensor:
+  name: Battery Laptop (Dell Inspiron 7353)
+  command: /bin/bash -c "/usr/bin/ping -c 3 $(/usr/bin/jambulatv-homeassistant-secrets operator_001_ssh_host) > /dev/null 2>&1 && /usr/bin/ssh $(/usr/bin/jambulatv-homeassistant-secrets operator_001_ssh_username)@$(/usr/bin/jambulatv-homeassistant-secrets operator_001_ssh_host) 'if [[ -f /sys/class/power_supply/BAT0/status ]]; then cat /sys/class/power_supply/BAT0/status; fi'"

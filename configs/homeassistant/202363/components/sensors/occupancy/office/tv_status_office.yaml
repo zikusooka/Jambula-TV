@@ -1,0 +1,7 @@
+platform: template
+sensors:
+
+  tv_status_office:
+    friendly_name: 'TV status (Office)'
+    value_template: >
+      '{{ states.media_player.jambulatv_pi_living_room.state }}'

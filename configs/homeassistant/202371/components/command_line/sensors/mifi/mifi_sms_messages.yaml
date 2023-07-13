@@ -1,0 +1,3 @@
+sensor:
+  name: "MiFi SMS Messages"
+  command: "/usr/bin/jambulatv-mifi-query $(/usr/bin/jambulatv-homeassistant-secrets mifi_address mifi_username mifi_password) info_all | awk -F':' '/New SMS Messages/ {print $2}' | awk '{print $1}'"

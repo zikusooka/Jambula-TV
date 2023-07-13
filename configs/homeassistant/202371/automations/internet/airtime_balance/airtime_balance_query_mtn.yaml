@@ -1,0 +1,21 @@
+# Data - Query Airtime Balance (MTN)
+alias: "Query Airtime Balance (MTN)"
+initial_state: True
+
+trigger:
+  - platform: time_pattern
+    hours: '/3'
+
+
+condition:
+  condition: and
+  conditions:
+
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.airtime_query_balance_mtn

@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: sensor.water_usage_daily
+    state_not: 'none'
+
+  - entity: sensor.water_usage_daily
+    state_not: 'unknown'
+
+card:
+  type: sensor
+  entity: sensor.water_usage_daily
+  name: 'Usage (Daily)'
+  icon: 'mdi:water'
+  show_name: false
+  show_icon: false

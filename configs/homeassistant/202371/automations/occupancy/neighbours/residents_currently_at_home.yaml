@@ -1,0 +1,28 @@
+# Neighbours currently at home 
+alias: "Residents currently at home"
+initial_state: True
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/30'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Bedtime (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Wakeup time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.wakeup_time_activated_all'
+      state: 'off'
+
+
+action:
+
+  - service: script.residents_currently_at_home

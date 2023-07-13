@@ -1,0 +1,20 @@
+alias: Twitter Alerts by UMEME
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.umeme_power_alerts_via_twitter
+    to: changed
+
+#condition:
+  #condition: and
+  #conditions:
+
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    entity_id: script.power_umeme_alerts_notify_no_poster

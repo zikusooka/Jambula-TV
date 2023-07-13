@@ -1,0 +1,22 @@
+type: conditional
+conditions:
+  - entity: media_player.jambulatv_radio
+    state: "playing"
+
+card:
+  type: entity-button
+  entity: script.boost_volume_levels_player
+  name: 'Boost|Reset'
+  icon: 'mdi:volume-plus'
+
+  double_tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.boost_volume_levels_player
+
+  tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.volume_levels_reset_system_player

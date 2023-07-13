@@ -1,0 +1,9 @@
+# This is an input boolean to use in scenarios when Internet
+# costs are high and you want to save bandwidth data
+#
+# https://www.home-assistant.io/components/input_boolean/
+#
+internet_data_saver:
+  name: Internet Data Saver 
+  initial: true
+  icon: mdi:chart-donut

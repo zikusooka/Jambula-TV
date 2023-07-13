@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: sensor.water_meter_reading_today
+    state_not: 'none'
+
+  - entity: sensor.water_meter_reading_today
+    state_not: 'unknown'
+
+card:
+  type: sensor
+  entity: sensor.water_meter_reading_today
+  name: 'Meter (Today)'
+  icon: 'mdi:water'
+  show_name: false
+  show_icon: false

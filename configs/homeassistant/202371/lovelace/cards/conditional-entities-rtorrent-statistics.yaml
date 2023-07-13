@@ -1,0 +1,24 @@
+type: conditional
+conditions:
+  - entity: sensor.rtorrent_status
+    state_not: 'unavailable'
+
+card:
+  type: entities
+  title: Torrent Metrics
+  entities:
+    - entity: sensor.rtorrent_all_torrents
+      name: 'All'
+      icon: 'mdi:all'
+    - entity: sensor.rtorrent_active_torrents
+      name: 'Active'
+      icon: 'mdi:active'
+    - entity: sensor.rtorrent_downloading_torrents
+      name: 'Downloading'
+      icon: 'mdi:download'
+    - entity: sensor.rtorrent_stopped_torrents
+      name: 'Stopped'
+      icon: 'mdi:stop'
+    - entity: sensor.rtorrent_complete_torrents
+      name: 'Completed'
+      icon: 'mdi:complete'

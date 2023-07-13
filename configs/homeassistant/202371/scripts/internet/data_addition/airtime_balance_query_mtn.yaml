@@ -1,0 +1,6 @@
+airtime_query_balance_mtn:
+  sequence:
+
+    - service: shell_command.gsm_ussd_ug_balance_voice
+      data_template:        
+         network_provider: 'MTN'

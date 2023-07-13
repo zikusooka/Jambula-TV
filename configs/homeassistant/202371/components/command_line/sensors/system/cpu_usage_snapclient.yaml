@@ -1,0 +1,4 @@
+sensor:
+  name: "CPU Usage (Snapclient)"
+  command: /bin/bash -c "/usr/lib64/nagios/plugins/check_procs -w 4 -c 6 --metric=CPU -C snapclient | cut -d':' -f1 | sed 's:CPU ::g' | tr '[:upper:]' '[:lower:]'"
+  scan_interval: 60

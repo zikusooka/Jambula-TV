@@ -1,0 +1,61 @@
+# Motion detected - send snapshot of event
+alias: "Motion detected - send snapshot of event"
+
+
+
+
+
+initial_state: False
+
+
+
+
+
+
+
+
+
+
+trigger:
+  - platform: mqtt
+    topic: !secret mqtt_topic_security_cctv
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  - service: notify.jambulatv
+    data:
+      title: '[JambulaTV-one]'
+      message: 'Hello Zik 1'
+      data:
+        path: '/tmp/derick.png'
+        #verify: false
+
+
+
+  - service: notify.jambulatv
+    data:
+      title: '[JambulaTV-Two]'
+      message: 'Hello Zik 2'
+      data:
+        url: 'http://172.16.0.10/motion/CAM1_29-20220814155423-00.jpg'
+        #verify: false
+
+
+  - service: notify.jambulatv
+    data_template:
+      title: '[JambulaTV]'
+      message: >
+
+        Hi there, Motion was detected outside!
+
+        You may view the snapshot at: 
+        {{trigger.payload_json.snapshot_url}}
+
+        This message was generated at: 
+        {{states('sensor.time')}} on {{states('sensor.date')}}

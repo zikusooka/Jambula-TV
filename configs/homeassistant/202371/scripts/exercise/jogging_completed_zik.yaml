@@ -1,0 +1,31 @@
+jogging_completed_zik:
+  sequence:
+
+    # Launch script to update jogging statistics if 12 hours have passed
+    # ---
+    - service_template: >
+        {% if states('sensor.jogging_statistics_last_updated_zik') == 'unavailable' or states('sensor.jogging_statistics_last_updated_zik') == 'unknown' or states('sensor.jogging_statistics_last_updated_zik') | round (0) > 43200 %}
+          script.jogging_completed_update_stats_zik
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: script.jogging_completed_update_stats_zik
+
+
+jogging_completed_update_stats_zik:
+  sequence:
+
+    # Update last distance ran
+    # ---
+    - service: input_number.set_value
+      data_template:
+        entity_id: input_number.jogging_distance_ran_total_zik
+        value: "{{ (states('input_number.jogging_distance_ran_total_zik') | float | round (2)) + (states('input_text.jogging_distance_ran_today_zik') | float | round (2)) }}"
+
+
+    # Voice Alert: Announce when jogging stats are updated
+    # ----------------------------------------------------
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'welcome_back_from_jogging_statistics_updated_well_done_zik'
+        audio_gain: !secret voice_alert_audio_gain_high

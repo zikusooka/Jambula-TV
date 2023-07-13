@@ -1,0 +1,39 @@
+title: Overview
+icon: mdi:lightbulb-multiple
+cards:
+
+
+  # Welcome Message
+  - type: horizontal-stack
+    cards:
+      - !include ../cards/markup-lights-message.yaml
+
+
+  # Lighting
+  - type: vertical-stack
+    cards:
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/light-living-room.yaml
+          - !include ../cards/light-kitchen.yaml
+
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/light-bed-room.yaml
+          - !include ../cards/light-veranda.yaml
+
+      #- type: horizontal-stack
+        #cards:
+          #- !include ../cards/light-dining.yaml 
+          #- !include ../cards/light-bath-room.yaml
+ 
+      #- type: horizontal-stack
+        #cards:
+          #- !include ../cards/light-guest-bed-room.yaml
+          #- !include ../cards/light-guest-bath-room.yaml
+
+      #- type: horizontal-stack
+        #cards:
+          #- !include ../cards/light-boys-quarters.yaml
+          #- !include ../cards/light-gate.yaml

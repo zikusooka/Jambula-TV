@@ -1,0 +1,14 @@
+phone_connected_2_asterisk_zik:
+  sequence:
+
+    # Voice Alert: Phone connected to Asterisk PBX
+    # --------------------------------------------
+    - service: script.phone_connected_to_pbx_zik
+
+
+
+phone_disconnected_4rm_asterisk_zik:
+  sequence:
+    # Voice Alert: Phone disconnected from Asterisk PBX
+    # -------------------------------------------------
+    - service: script.phone_disconnected_from_pbx_zik

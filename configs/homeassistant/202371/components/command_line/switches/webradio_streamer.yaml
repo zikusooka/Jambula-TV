@@ -1,0 +1,4 @@
+switch:
+  name: "webradio_streamer"
+  command_on: "/usr/bin/jambulatv-internet-radio-streamer restart 1 local"
+  command_off: "/usr/bin/jambulatv-internet-radio-streamer stop"

@@ -1,0 +1,32 @@
+# Phone call - Incoming (Voice Alert)
+alias: "Play voice alert when phone call is incoming at Tecno Pop 2F Phone"
+initial_state: True
+
+
+trigger:
+  - platform: state
+    entity_id: sensor.phone_call_status_via_adb_4_tecno_pop_2f
+    to: 'ringing'
+
+  - platform: state
+    entity_id: sensor.incoming_phone_caller_id_via_adb_4_tecno_pop_2f
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Bedtime for all is off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    data:
+      entity_id: script.mobile_phone_incoming_call_tecno_pop2f
+      caller_id: sensor.incoming_phone_caller_id_via_adb_4_tecno_pop_2f

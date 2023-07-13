@@ -1,0 +1,18 @@
+"Hi there!
+\r
+\r
+Weather forecast services indicate that rainfall is very likely tomorrow. 
+\r
+\r
+*{{states('sensor.darksky_precip_probability_0d')|int}}% chance of rainfall - {{states('sensor.darksky_summary_0d')}}* (DarkSky)
+\r
+\r
+Please remember to carry an umbrella tomorrow!
+\r
+\r
+\r
+-------------------------------------------------
+\r
+This message was generated
+\r
+at: *{{states('sensor.time')}}* on *{{states('sensor.date')}}*"

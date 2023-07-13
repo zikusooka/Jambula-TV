@@ -1,0 +1,33 @@
+"Hi there!
+\r
+\r
+Weather forecast services indicate that *rainfall is coming or is in the viscinity* 
+\r
+\r
+Please remember to carry an umbrella today!
+\r
+\r
+\r
+* AccuWeather (jambulatv precipitation,weather,hourly) *
+\r
+{{states('sensor.jambulatv_precipitation')}}
+\r
+{{states('weather.jambulatv')}}
+\r
+{{states('weather.jambulatv_hourly')}}
+\r
+\r
+* OpenWeather (rain, precip, probability) *
+\r
+{{states('sensor.openweathermap_rain')}}
+\r
+{{states('sensor.openweathermap_forecast_precipitation')}}
+\r
+{{states('sensor.openweathermap_forecast_precipitation_probability')}}
+\r
+\r
+-------------------------------------------------
+\r
+This message was generated
+\r
+at: *{{states('sensor.time')}}* on *{{states('sensor.date')}}*"

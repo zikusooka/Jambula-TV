@@ -1,0 +1,26 @@
+type: conditional
+conditions:
+  - entity: sensor.rtorrent_status
+    state_not: 'unavailable'
+
+card:
+  type: entity-button
+  entity: script.rtorrent_restart
+  name: 'Restart rTorrent'
+  show_name: true
+  show_state: false
+  icon: 'mdi:download'
+
+  double_tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.rtorrent_restart
+
+  tap_action:
+    action: call-service
+    confirmation:
+      text: Restart rRorrent?
+    service: script.turn_on
+    service_data:
+      entity_id: script.rtorrent_restart

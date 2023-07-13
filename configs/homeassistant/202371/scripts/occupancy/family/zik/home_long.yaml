@@ -1,0 +1,79 @@
+zik_home_after_long_time:
+  sequence:
+
+
+    # Home Activity - Just Arrived
+    # ----------------------------
+    - service: input_select.select_option
+      data:
+        entity_id: input_select.presence_status_zik
+        option: 'Just Arrived'
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Metal-gate-opening-sound-effect.mp3'
+        input_file2: 'zik.mp3'
+        input_file3: 'home_after_long_time.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_zik_home_after_long_time.mp3'
+
+
+    # Voice Alert: Announce that Zik is back after a long time
+    # ---------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_zik_home_after_long_time'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+    # Set security Alarm
+    # -------------------   
+    # Demilitarize House
+    - service: script.security_camera_001_disarm_now
+
+
+    # Laptop: Unlock
+    # --------------
+    # Unlock user's laptop if it is reachable
+    - service: shell_command.run_command_at_remote_workstation
+      data_template:
+        ssh_username: !secret operator_001_ssh_username
+        ssh_host: !secret operator_001_ssh_host
+        alert_command: "sudo loginctl unlock-sessions && /usr/bin/aplay /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav /usr/share/sounds/purple/alert.wav && /usr/bin/gxmessage -center -ontop -sticky -timeout 0 -title Unlocked-Laptop Laptop unlocked"
+
+
+    # Music
+    # -----
+    #- delay: 120
+    #
+    # Play local playlist - alternative
+    #- service: script.music_play_alternative
+
+
+    # Send messages using  XMPP, WhatsApp, and Telegram
+    # -------------------------------------------------
+    # XMPP Message
+    - service: notify.jambulatv
+      data_template:
+        title: '[JambulaTV]'
+        message: 'Zik home after a long time'
+
+    # WhatsApp Message
+    - service: script.send_whatsapp
+      data_template:        
+        whatsapp_text: 'Zik home after a long time'
+        whatsapp_image: ''
+        whatsapp_recipient_phone: ''
+  
+    # Telegram Message
+    - service: script.send_telegram
+      data_template: 
+        telegram_text: 'Zik home after a long time'
+        telegram_image: ''
+        telegram_recipient_phone: ''

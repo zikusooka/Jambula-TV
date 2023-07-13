@@ -1,0 +1,26 @@
+play_internet_radio:
+  sequence:
+
+    # Turn off Internet radio if on
+    # -----------------------------
+    - service: shell_command.internet_radio_stop
+
+
+    # Turn off FM radio if on
+    # -----------------------
+    - service: shell_command.fm_radio_stop
+
+
+    # Start playing Internet Radio
+    # ---------------------------- 
+    - service: shell_command.internet_radio_play_selected_station
+      data_template:
+        station: "{{ states('input_select.internet_radio_station') }}"
+
+
+    # Set radio volume
+    # ----------------
+    - service: media_player.volume_set
+      data:
+        entity_id: media_player.jambulatv_radio
+        volume_level: !secret internet_radio_start_up_volume_level

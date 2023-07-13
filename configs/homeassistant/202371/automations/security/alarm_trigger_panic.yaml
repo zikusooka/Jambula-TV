@@ -1,0 +1,41 @@
+alias: Alarm - Trigger panic
+initial_state: False
+
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.vision_security_zp3102_pir_motion_sensor_alarm_level
+    to: '255'
+
+  - platform: state
+    entity_id: sensor.tp_link_mr_3040_presence_status
+    to: 'Home'
+
+
+condition:
+  condition: and
+  conditions:
+
+    - condition: state
+      entity_id: 'alarm_control_panel.security_alarm'
+      state: 'armed_away'
+    # No one is home
+    - condition: state
+      entity_id: 'zone.home '
+      state: '0'
+
+
+    # After sunrise
+    #- condition: sun
+      #after: sunset
+      #before: sunrise
+
+
+action:
+
+  - service: alarm_control_panel.alarm_trigger
+    entity_id: alarm_control_panel.security_alarm
+
+  # Run script when there's a security breach
+  - service: script.panic

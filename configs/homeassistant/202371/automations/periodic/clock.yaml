@@ -1,0 +1,49 @@
+alias: Say time at the top of the hour
+initial_state: True
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '00'
+    seconds: '00'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Bedtime for all is off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Bedtime for Zik is off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_zik'
+      state: 'off'
+
+    # Holiday mode is off
+    - condition: state
+      entity_id: 'input_boolean.holiday_mode'
+      state: 'off'
+
+    # Vacation mode is off
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+
+    # Night mode - off
+    - condition: state
+      entity_id: 'input_boolean.night_mode'
+      state: 'off'
+
+    # Quiet mode - off
+    - condition: state
+      entity_id: 'input_boolean.quiet_mode'
+      state: 'off'
+
+
+action:
+
+  # Run script: Say time at the top of the hour
+  - service: script.say_time_at_top_of_hour

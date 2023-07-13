@@ -1,0 +1,33 @@
+timer_05_minutes_start:
+  sequence:
+
+    - service: timer.start
+      data:
+        entity_id: timer.minutes_05
+
+
+
+timer_05_minutes_finish:
+  sequence:
+
+    - service: timer.finish
+      data:
+        entity_id: timer.minutes_05
+
+
+
+timer_05_minutes_pause:
+  sequence:
+
+    - service: timer.pause
+      data:
+        entity_id: timer.minutes_05
+
+
+
+timer_05_minutes_cancel:
+  sequence:
+
+    - service: timer.cancel
+      data:
+        entity_id: timer.minutes_05

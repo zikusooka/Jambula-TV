@@ -1,0 +1,73 @@
+alias: Read the weather forecast periodically (Weather.com)
+initial_state: True
+
+trigger:
+
+  - platform: time_pattern
+    #hours: '/3'
+    hours: '/1'
+
+  - platform: mqtt
+    topic: !secret mqtt_weather_alert_weather_dot_com
+
+
+  #- platform: template
+    #value_template: >
+      #{{ (now() - states.sensor.weather_forecast_today_kampala_weather_com.last_updated).seconds > 120 }}
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Internet state
+    #- condition: template
+      #value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+    # Weather forecast audio file exists
+    - condition: template
+      value_template: "{{ is_state('sensor.weather_dot_com_forecast_audio_file_exists', 'yes') }}"
+
+    # Weather forecast text status
+    - condition: template
+      value_template: "{{ not is_state('sensor.weather_forecast_today_kampala_weather_com', 'unknown') }}"
+    - condition: template
+      value_template: "{{ not is_state('sensor.weather_forecast_today_kampala_weather_com', '') }}"
+    - condition: template
+      value_template: "{{ not is_state('sensor.weather_forecast_today_kampala_weather_com', 'null') }}"
+
+    # Bedtime (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Wakeup time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.wakeup_time_activated_all'
+      state: 'off'
+
+    # Bedtime time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bed_time_activated_all'
+      state: 'off'
+
+    # Night mode - off
+    - condition: state
+      entity_id: 'input_boolean.night_mode'
+      state: 'off'
+
+    # Quiet mode - off
+    - condition: state
+      entity_id: 'input_boolean.quiet_mode'
+      state: 'off'
+
+
+action:
+
+  # Run scripts
+  # -----------
+  - service: script.turn_on
+    entity_id: script.read_forecast_by_weather_com
+
+  - service: script.turn_on
+    entity_id: script.send_forecast_by_weather_com_via_xmpp

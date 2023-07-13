@@ -1,0 +1,2 @@
+# Generate QRcode codes for WiFi Hotspot credentials
+qrcodes_generate_wifi_hotspot_credentials: /bin/bash -c 'jambulatv-auto-wifi-provision -nodisplay > /dev/null 2>&1 &'

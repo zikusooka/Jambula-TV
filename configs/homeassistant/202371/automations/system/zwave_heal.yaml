@@ -1,0 +1,20 @@
+# Heal Z-Wave Network i.e. send flashes.
+#
+# This automation will perform Z-Wave Healing and Flash lights
+#
+# https://www.home-assistant.io/components/
+#
+alias: Heal Z-Wave Network
+initial_state: True
+
+
+trigger:
+#  - platform: event
+#    event_type: zwave.network_ready
+
+  - platform: time
+    at: '05:01:00'
+
+
+action:
+  - service: zwave.heal_network

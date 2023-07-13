@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: sensor.water_meter_reading_yesterday
+    state_not: 'unknown'
+    #- entity: sensor.water_meter_reading_today
+    #state_not: 'unknown'
+
+card:
+  type: entities
+  entities:
+    - entity: input_datetime.water_supply_last_billed_date
+      name: 'Water Last Billed'
+      icon: 'mdi:water'
+      show_name: true
+      show_icon: false

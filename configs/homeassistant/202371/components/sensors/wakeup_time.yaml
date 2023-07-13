@@ -1,0 +1,8 @@
+platform: template
+sensors:
+  wakeup_time_recommended_if_bed_time_now:
+    friendly_name: 'Wakeup time recommended if going to bed now'
+    value_template: >
+      {% set sleep_duration_hrs = 7.5 %}
+      {{ (as_timestamp(now()) + (sleep_duration_hrs * 60 * 60)) | timestamp_custom('%-I %M %p', true) }}
+
