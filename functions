@@ -3065,7 +3065,7 @@ python3_venv_destroy homeassistant-core $HOME_ASSISTANT_OLD_VERSION_STRING
 	rm -rf $INSTALL_SRC_DIR/home-assistant-core-${HOME_ASSISTANT_OLD_VERSION_STRING}
 
 # Remove symlink to HASS config directory
-[[ -L $PROJECT_SYSTEM_CONF_DIR/homeassistant ]] & rm -f $PROJECT_SYSTEM_CONF_DIR/homeassistant
+[[ -L $PROJECT_SYSTEM_CONF_DIR/homeassistant ]] && rm -f $PROJECT_SYSTEM_CONF_DIR/homeassistant
 
 # Remove HASS binary symlink
 [[ -L $BINARY_PREFIX/hass-${HOME_ASSISTANT_OLD_VERSION_STRING} ]] && \

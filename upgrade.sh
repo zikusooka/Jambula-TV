@@ -504,7 +504,7 @@ prosody_add_users
 #upgrade_open_zwave
 #upgrade_domoticz
 
-#upgrade_homeassistant 2023.6.3 python3.11 202362
+#upgrade_homeassistant 2023.7.1 python3.11 202362
 #upgrade_homeassistant 2021.7.3 python3.8 202171
 #upgrade_homeassistant_cli
 
