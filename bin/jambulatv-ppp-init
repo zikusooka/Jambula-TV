@@ -1,7 +1,7 @@
 #!/bin/sh
 # Various functions for initializing modem and querying ISP parameters 
 #
-# Jambula Labs @copyright 2022-2023 All rights reserved
+# Jambula Labs @copyright 2023-2024 All rights reserved
 
 # Variables
 #----------
@@ -16,10 +16,21 @@ DEVICE_NODE_PATH=/dev/$DEVICE_NODE
 # Wait for device nodes to appear before proceeding
 ls $DEVICE_NODE_PATH* > /dev/null 2>&1
 NODE_STATUS=$?
+CYCLE=0
+CYCLE_LIMIT=6
+#
 while [ "$NODE_STATUS" != "0" ];
 do
-# Wait for 1 second
-echo "Waiting for modem to be recognized by system, please wait ..."
+# Increase cycle counter
+let "CYCLE = $CYCLE + 1"
+# Quit if modem is not inserted within specified time
+if [[ "$CYCLE" = $CYCLE_LIMIT ]];
+then
+echo "Error: Modem was not found"
+exit 0
+fi
+# Wait for modem to be inderted
+echo "[$CYCLE] Waiting for modem to be recognized by system ..."
 sleep 5
 ls $DEVICE_NODE_PATH* > /dev/null 2>&1
 NODE_STATUS=$?
@@ -58,7 +69,6 @@ done
 #
 # Export modem variables
 export MODEMDEV MODEMCONTROLDEV DEVICE_NODE DEVICE_NODE_NO
-
 
 
 # Reset modem 
