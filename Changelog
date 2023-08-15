@@ -1,3 +1,38 @@
+Changes since v7.7
+--------------------
+
+* JambulaTV: Update package requirements for Home-Assistant Core version:  2023.5.2 
+
+* JambulaTV: Switch to using port 8507 when accessing the latest versions  of Home-Assistant Core 
+
+* JambulaTV: Add/Remove symbolic link to Home-Assistant Core's configuration directory during installs/uninstalls 
+  respectively.  The symlink  is needed by some tools that don't know about version info and  it makes life easier 
+  on the command line 
+
+* JambulaTV: Upgrade Home-Assistant Core to the latest Github version:  2023.6.3 
+
+* JambulaTV: Update Home-Assistant configuration files and split into different  directories depending on 
+  Home-Assistant version used 
+
+* JambulaTV: Fix minor bugs in the UMEME power outages via scraper tool  i.e. Update 'jambulatv-umeme-outages-via-scraper' 
+
+* JambulaTV: Upgrade Home-Assistant Core to the latest Github version:  2023.7.1 
+
+* JambulaTV: Update Home-Assistant configuration files for version(s):  2023.6.3 and 2023.7.1 
+
+* JambulaTV: Add more TTS generated voice alert sound files that are used  to alert presence status of residents in 
+  Home-Assistant 
+
+* JambulaTV: Add timeout if GSM modem is not discovered in 25 seconds by  PPP/modem initialization script 
+  i.e. 'jambulatv-ppp-init' 
+
+* JambulaTV: Upgrade Home-Assistant Core to the latest Github version:  2023.8.2 
+
+* JambulaTV: Upgrade system's Linux kernel to latest version: 5.4.253 
+
+* JambulaTV: Add Home-Assistant configuration files for version(s):  2023.8.2 
+
+
 Changes since v7.6
 --------------------
 
