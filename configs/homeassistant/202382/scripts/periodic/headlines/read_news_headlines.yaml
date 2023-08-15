@@ -1,0 +1,20 @@
+read_news_headlines:
+  sequence:
+    # Connect to the Internet and fetch fresh stuff
+    # ---------------------------------------------
+    - service_template: >
+        {% if is_state('binary_sensor.wifi_ap_status', 'on') %}
+          script.internet_connect_wifi_ap
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: script.internet_connect_wifi_ap
+
+
+    - service_template: >
+        {% if is_state('binary_sensor.internet', 'on') %}
+          script.play_news_headlines
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: binary_sensor.internet

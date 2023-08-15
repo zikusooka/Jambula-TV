@@ -1,0 +1,20 @@
+type: entity-button
+entity: script.emergency_kidnap
+name: 'Kidnapping'
+show_name: true
+show_state: false
+icon: 'mdi:van-utility'
+
+double_tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.emergency_kidnap
+
+tap_action:
+  action: call-service
+  confirmation:
+    text: Is this really an emergency?
+  service: script.turn_on
+  service_data:
+    entity_id: script.emergency_kidnap

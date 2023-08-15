@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: sensor.reminders
+    state_not: 'unknown'
+  - entity: sensor.reminders
+    state_not: '1. none'
+
+card:
+  type: markdown
+  content: |
+    <center>
+    <ha-icon icon="mdi:reminder"></ha-icon>
+    <br>
+    {{ states('sensor.reminders') }}
+    </center>

@@ -1,0 +1,9 @@
+# Restart server
+rtorrent_restart: /bin/bash -c "sudo /usr/bin/systemctl restart rtorrent.service > /dev/null 2>&1 &"
+
+# Start server
+rtorrent_start: /bin/bash -c "sudo /usr/bin/systemctl start rtorrent.service > /dev/null 2>&1 &"
+
+# Stop server
+rtorrent_stop: /bin/bash -c "sudo /usr/bin/systemctl stop rtorrent.service > /dev/null 2>&1 &"
+

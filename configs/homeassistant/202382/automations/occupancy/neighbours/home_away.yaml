@@ -1,0 +1,89 @@
+# Presence detection of all residents
+alias: Arrival or Departure of Any Resident
+description: "Presence detection of all residents (Home/Away)"
+initial_state: True
+
+trigger:
+
+  # Home
+  - platform: state
+    entity_id: sensor.resident1_presence_status
+    to: 'Home'
+    id: presence_resident_home
+
+  - platform: state
+    entity_id: sensor.resident2_presence_status
+    to: 'Home'
+    id: presence_resident_home
+
+  - platform: state
+    entity_id: sensor.resident3_presence_status
+    to: 'Home'
+    id: presence_resident_home
+
+  - platform: state
+    entity_id: sensor.resident4_presence_status
+    to: 'Home'
+    id: presence_resident_home
+
+  - platform: state
+    entity_id: sensor.resident5_presence_status
+    to: 'Home'
+    id: presence_resident_home
+
+  # Away
+  - platform: state
+    entity_id: sensor.resident1_presence_status
+    from: 'Home'
+    to: 'Away'
+    id: presence_resident_away
+
+  - platform: state
+    entity_id: sensor.resident2_presence_status
+    from: 'Home'
+    to: 'Away'
+    id: presence_resident_away
+
+  - platform: state
+    entity_id: sensor.resident3_presence_status
+    from: 'Home'
+    to: 'Away'
+    id: presence_resident_away
+
+  - platform: state
+    entity_id: sensor.resident4_presence_status
+    from: 'Home'
+    to: 'Away'
+    id: presence_resident_away
+
+  - platform: state
+    entity_id: sensor.resident5_presence_status
+    from: 'Home'
+    to: 'Away'
+    id: presence_resident_away
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+  
+  - choose:
+
+    - conditions:    
+        - condition: trigger
+          id: presence_resident_home
+      sequence:
+        - service: script.resident_sighted
+          data_template:
+            resident_number: "{{ trigger.entity_id.split('_')[0].replace('sensor.resident', '') }}"
+
+    - conditions:    
+        - condition: trigger
+          id: presence_resident_away
+      sequence:
+        - service: script.resident_gone
+          data_template:
+            resident_number: "{{ trigger.entity_id.split('_')[0].replace('sensor.resident', '') }}"

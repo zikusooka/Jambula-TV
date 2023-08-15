@@ -1,0 +1,25 @@
+alias: Wakeup for Maid
+initial_state: True
+
+trigger:
+
+  - platform: time
+    at: input_datetime.wakeup_time_maid
+
+
+condition:
+  condition: and
+  conditions:
+
+    # After sunset
+    #- condition: sun
+      #after: sunrise
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    data:
+      entity_id:
+        - script.wakeup_maid

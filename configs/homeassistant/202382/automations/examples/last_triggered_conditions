@@ -1,0 +1,26 @@
+#!
+    # Last triggered less than 30 minute(s) ago
+    #- condition: template
+      #value_template: '{{ (as_timestamp(now()) - as_timestamp(states.automation.water_flow_on.attributes.last_triggered | default(0)) | int > 1800)}}'
+      #value_template: "{{ ( as_timestamp(now()) - as_timestamp(state_attr('automation.water_flow_on', 'last_triggered')) | int(0) ) > 3600 }}"
+      #
+
+
+# Medication once a day
+  alias: Medicine Notification
+  trigger:
+
+  - platform: template
+    value_template: '{{now() > state_attr(''automation.medicine_notification'',''last_triggered'')
+      + timedelta(days=1)}}'
+
+
+  condition:
+
+  - condition: template
+    value_template: '{{as_timestamp(state_attr(''automation.medicine_notification'',''last_triggered''))|timestamp_custom(''%-d'')
+      != as_timestamp(now())|timestamp_custom(''%-d'')}}'
+
+# truly 24 hours
+value_template: "{{ (now()|as_timestamp - state_attr('automation.medicine_notification','last_triggered')|as_timestamp) > 86400 }}"
+

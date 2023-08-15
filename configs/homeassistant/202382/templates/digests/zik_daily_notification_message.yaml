@@ -1,0 +1,53 @@
+"Hello *Zik*!
+\r
+\r
+Here's todays daily digest:
+\r
+\r 
+*
+Reminders:*
+\r
+{{states('sensor.reminders')}}
+\r
+\r
+*
+Power outages:*
+\r
+{{states('sensor.power_outage_today')}}
+\r
+\r
+*
+Weather:*
+\r
+Weather.com
+\r
+{{ states('sensor.weather_forecast_today_kampala_weather_com') }}
+\r
+\r
+Accuweather.com
+\r
+{{ states('sensor.weather_forecast_minute_kampala_accuweather') }}    
+{{ states('sensor.weather_forecast_today_kampala_accuweather') }}
+\r
+\r
+OpenWeatherMap
+\r
+{{states('sensor.openweathermap_forecast_precipitation_probability')|int}}% chance of rainfall - {{states('sensor.openweathermap_forecast_condition')}}
+\r
+\r
+\r
+Met.no
+\r
+{{states('weather.jambulatv_2')}}
+\r
+\r
+\r
+Have a great day!
+\r
+\r
+\r
+-------------------------------------------------
+\r
+This message was generated
+\r
+at: *{{states('sensor.time')}}* on *{{states('sensor.date')}}*"

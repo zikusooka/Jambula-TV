@@ -1,0 +1,30 @@
+alias: Zik has been away for a short time
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: person.zik
+    from: 'Home'
+    to: 'Away'
+    for:
+      minutes: 3
+
+
+condition:
+  condition: and
+  conditions:
+
+    # 15 minute(s) or more after startup of HASS
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime_minutes
+      above: 15
+
+    # TV Screen in Office is off
+    - condition: state
+      entity_id: sensor.tv_status_office
+      state: 'off'
+
+
+action:
+  - service: script.zik_away_for_a_short_time

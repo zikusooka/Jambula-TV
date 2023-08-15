@@ -1,0 +1,4 @@
+sensor:
+  name: "Battery status via ADB 4 Tecno Pop 2F"
+  command: /bin/bash -c 'ADB_CMD=/usr/bin/adb; IP_ADDRESS=$(/usr/bin/jambulatv-homeassistant-secrets adb_ip_address_tecno_pop2f); ADB_PORT=$(/usr/bin/jambulatv-homeassistant-secrets adb_tcp_port); SERIAL_ID=$IP_ADDRESS:$ADB_PORT; $ADB_CMD connect $IP_ADDRESS | grep -i connected > /dev/null 2>&1; ADB_STATUS=$?; if [[ "$ADB_STATUS" = "0" ]]; then $ADB_CMD -s $SERIAL_ID shell dumpsys battery | grep -i powered | grep -i true > /dev/null 2>&1 && echo charging || echo discharging; else echo "unknown" && exit 0; fi'
+  scan_interval: 30

@@ -1,0 +1,43 @@
+alias: Its time for news
+initial_state: True
+
+
+trigger:
+
+  # Local News at 7pm
+  - platform: time
+    at: '18:57:00'
+
+  # Local News at 9pm
+  - platform: time
+    at: '20:57:00'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    # Bedtime for all is off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Vacation mode is off
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+
+    # Day of week
+    - condition: time
+      weekday:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+
+
+action:
+
+  # Run script that says its time for news
+  - service: script.its_time_for_news

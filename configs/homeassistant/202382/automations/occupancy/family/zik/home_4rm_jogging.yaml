@@ -1,0 +1,34 @@
+alias: Zik has returned home from jogging
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: device_tracker.bluez_mobile_04_zik
+    from: 'Away'
+    to: 'Home'
+    for:
+      minutes: 1
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Time of day
+    - condition: time
+      after: '06:00:00'
+      before: '21:00:00'
+
+    # Motion detected outside
+    #- condition: state
+      #entity_id: sensor.vision_security_zp3102_pir_motion_sensor_alarm_level
+      #state: '255'
+
+    # Last triggered 12 hours or more ago
+    - condition: template
+      value_template: '{{ as_timestamp(now()) - as_timestamp(states.automation.zik_has_returned_home_from_jogging.attributes.last_triggered | default(0)) | int > 43200 }}'
+
+
+action:
+  - service: script.zik_has_returned_4rm_jogging

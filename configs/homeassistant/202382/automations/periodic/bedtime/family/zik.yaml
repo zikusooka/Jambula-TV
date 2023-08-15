@@ -1,0 +1,45 @@
+alias: Bedtime for Zik
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.phone_alarm_for_zik_tecno
+    from: ''
+
+  - platform: state
+    entity_id: sensor.phone_alarm_for_zik_tecno
+    from: 'unknown'
+ 
+  - platform: state
+    entity_id: input_boolean.bedtime_mode_zik
+    to: 'on'
+
+  #- platform: state
+    #entity_id: binary_sensor.bluez_tecno_pop_2f
+    #from: 'on'
+    #to: 'off'
+
+  #- platform: state
+    #entity_id: binary_sensor.bluez_tecno_pop_2f
+    #from: 'unavailable'
+    #to: 'off'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # After sunset
+    #- condition: sun
+     # before: sunrise
+      
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    data:
+      entity_id:
+        - script.bedtime_zik

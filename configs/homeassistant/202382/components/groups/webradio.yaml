@@ -1,0 +1,8 @@
+internet_radio_controls:
+  name: Internet Radio
+  entities:
+    - switch.webradio_streamer
+    - input_select.internet_radio_station
+    - input_number.internet_radio_volume
+    - switch.webradio_volume
+  icon: mdi:earth

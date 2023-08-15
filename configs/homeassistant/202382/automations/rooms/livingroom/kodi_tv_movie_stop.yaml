@@ -1,0 +1,22 @@
+alias: "Media player stopped"
+
+trigger:
+  - platform: state
+    entity_id: media_player.jambulatv_pi_living_room
+    from: 'playing'
+    to: 'idle'
+    for:
+      minutes: 2
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.kodi_tv_movie_stop

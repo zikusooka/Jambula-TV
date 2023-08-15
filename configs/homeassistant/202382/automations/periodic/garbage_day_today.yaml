@@ -1,0 +1,40 @@
+alias: Garbage day - Alert via voice
+initial_state: True
+
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/30'
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    - condition: state
+      entity_id: 'sensor.garbage_collection_day'
+      state: 'true'
+ 
+
+    - condition: time
+      after: '07:00:00'
+      before: '18:59:00'
+        
+    # Garbage collected status is off
+    - condition: state
+      entity_id: 'input_boolean.garbage_collected'
+      state: 'off'
+ 
+    # Vacation mode is off
+    - condition: state
+      entity_id: 'input_boolean.vacation_mode'
+      state: 'off'
+   
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.garbage_collection_day_alert

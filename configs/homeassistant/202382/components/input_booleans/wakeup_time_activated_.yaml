@@ -1,0 +1,9 @@
+# This is an input boolean to use during activation of the wakeup time 
+# routines - Prevent repeatition of voice alerts
+#
+# https://www.home-assistant.io/components/input_boolean/
+#
+wakeup_time_activated_all:
+  name: Wakeup Time Activated (All)
+  initial: false
+  icon: mdi:bed

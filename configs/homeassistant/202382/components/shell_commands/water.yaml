@@ -1,0 +1,11 @@
+# Water supply reports and status
+water_supply_reports_and_status: /bin/bash -c "/usr/bin/jambulatv-water-supply {{water_last_billed_date}}"
+
+# Water reading for Today
+input_water_reading_for_today: /bin/bash -c "/usr/bin/jambulatv-water-reading today {{water_meter_reading_today}} {{water_flow_status_today}}"
+
+# Water reading for Yesterday
+input_water_reading_for_yesterday: /bin/bash -c "/usr/bin/jambulatv-water-reading yesterday {{water_meter_reading_yesterday}} {{water_flow_status_yesterday}}"
+
+# Archive water reports for previous month prior to bill date
+archive_water_reports_prior_billing_date: /bin/bash -c "/usr/bin/jambulatv-water-reading reset {{water_last_billed_date}}"

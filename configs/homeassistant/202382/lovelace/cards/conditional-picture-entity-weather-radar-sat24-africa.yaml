@@ -1,0 +1,11 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.internet
+    state: "on"
+ 
+card:
+  type: picture-entity
+  entity: image.weather_radar_rain_africa_sat24
+  show_state: false
+  name: 'Rainfall Africa'
+  icon: 'mdi:weather'

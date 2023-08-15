@@ -1,0 +1,8 @@
+fm_radio_controls:
+  name: FM Radio
+  entities:
+    - switch.fmradio_streamer
+    - input_select.fm_radio_station
+    - input_number.fm_radio_volume
+    - switch.fmradio_volume
+  icon: mdi:radio

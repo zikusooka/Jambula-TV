@@ -1,0 +1,51 @@
+alias: Say current temperature whenever theres's a change
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.outside_temperature
+ 
+  #- platform: time_pattern
+    #hours: '/2'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Zero (0) temperature
+    - condition: state
+      entity_id: sensor.outside_temperature
+      state: '0.0'
+
+    # unknown temperature
+    - condition: state
+      entity_id: sensor.outside_temperature
+      state: 'unknown'
+
+    # 3 minute(s) or more after startup of HASS
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime_minutes
+      above: 3
+
+    # Bedtime (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Night mode - off
+    - condition: state
+      entity_id: 'input_boolean.night_mode'
+      state: 'off'
+
+    # Quiet mode - off
+    - condition: state
+      entity_id: 'input_boolean.quiet_mode'
+      state: 'off'
+
+
+action:
+
+  # Run script: Say current temperature every 90 minutes 
+  - service: script.say_current_temperature_outside

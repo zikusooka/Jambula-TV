@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: media_player.jambulatv_radio
+    state: "playing"
+
+card:
+  type: entity-button
+  entity: script.music_previous_track
+  tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.music_previous_track
+  name: 'Previous'
+  icon: 'mdi:skip-backward'

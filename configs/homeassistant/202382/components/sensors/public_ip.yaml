@@ -1,0 +1,4 @@
+#platform: rest
+#resource: http://ip-api.com/json
+#name: External IP
+#value_template: '{{ value_json.query }}'

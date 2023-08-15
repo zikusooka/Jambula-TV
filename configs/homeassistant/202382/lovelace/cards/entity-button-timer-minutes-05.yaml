@@ -1,0 +1,24 @@
+type: entity-button
+entity: script.timer_05_minutes_start
+name: '5 Minutes'
+show_name: true
+show_state: false
+icon: 'mdi:timer'
+
+double_tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data: 
+    entity_id: script.timer_05_minutes_start
+
+tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.timer_05_minutes_pause
+
+hold_action:
+  action: call-service
+  service: script.turn_on
+  service_data: 
+    entity_id: script.timer_05_minutes_cancel

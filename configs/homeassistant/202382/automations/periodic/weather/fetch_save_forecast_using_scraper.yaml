@@ -1,0 +1,20 @@
+alias: Fetch the weather forecast periodically using scraper
+initial_state: True
+
+trigger:
+
+  - platform: time_pattern
+    minutes: '/30'
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.fetch_forecast_by_weather_com

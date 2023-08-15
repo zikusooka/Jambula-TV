@@ -1,0 +1,139 @@
+emergency_kidnap:
+  sequence:
+
+
+    # Start capture of snapshot
+    # --------------------------
+    # Arm camera alarm
+    - service: script.security_camera_001_arm
+
+
+    # Start display of camera events at all tablets
+    # ---------------------------------------------
+    # C Idea
+    - service: shell_command.open_zm_camera_at_c_idea
+    # Tecno Pop 2F
+    - service: shell_command.open_zm_camera_at_tecno_pop_2f
+
+
+    # Send XMPP message
+    # -----------------
+    - service: notify.jambulatv
+      data_template:
+        title: '[JambulaTV]'
+        message: !include ../../templates/emergencies/message_alert_long_kidnap.yaml
+
+ 
+    # Send SMS message using ModemManager
+    # -----------------------------------
+    # Contact 1
+    - service: script.send_sms_via_modem_manager
+      data_template:        
+        sms_mobile_network: !secret sms_network_1
+        sms_phone_number: !secret sms_contact_1
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_kidnap.yaml
+    #
+    # Contact 2
+    - service: script.send_sms_via_modem_manager
+      data_template:        
+        sms_mobile_network: !secret sms_network_2
+        sms_phone_number: !secret sms_contact_2
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_kidnap.yaml
+
+ 
+    # Send SMS message using Asterisk
+    # -------------------------------
+    # Contact 1
+    - service: script.send_sms_via_asterisk
+      data_template:        
+        sms_mobile_network: !secret sms_network_1
+        sms_phone_number: !secret sms_contact_1
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_kidnap.yaml
+    #
+    # Contact 2
+    - service: script.send_sms_via_asterisk
+      data_template:        
+        sms_mobile_network: !secret sms_network_2
+        sms_phone_number: !secret sms_contact_2
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_kidnap.yaml
+
+
+    # Connect to the Internet in order to perform the following tasks
+    # ---------------------------------------------------------------
+    - service_template: >
+        {% if is_state('binary_sensor.wifi_ap_status', 'on') %}
+          script.internet_connect_wifi_ap
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: script.internet_connect_wifi_ap
+
+
+    # Wait for MiFi router to be reachable i.e. status is 'on'
+    # -------------------------------------------------------
+    - wait_template: "{{ is_state('binary_sensor.mifi_status', 'on') }}"
+      timeout: 120
+      continue_on_timeout: true
+
+
+    # Send SMS message using MiFi router
+    # ----------------------------------
+    # Contact 1
+    - service: script.send_sms_via_mifi
+      data_template:        
+        sms_mobile_network: !secret sms_network_1
+        sms_phone_number: !secret sms_contact_1
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_kidnap.yaml
+    #
+    # Contact 2
+    - service: script.send_sms_via_mifi
+      data_template:        
+        sms_mobile_network: !secret sms_network_2
+        sms_phone_number: !secret sms_contact_2
+        sms_text_message: !include ../../templates/emergencies/message_alert_short_kidnap.yaml
+
+
+    # Wait until SMS messages via MiFi router have been sent
+    # ------------------------------------------------------
+    - wait_template: "{{ is_state('script.send_sms_via_mifi', 'off') }}"
+      timeout: 60
+      continue_on_timeout: true
+
+
+    # Send WhatsApp messages
+    # ----------------------
+    # Contact 1
+    - service: script.send_whatsapp
+      data_template:        
+        whatsapp_text: !include ../../templates/emergencies/message_alert_long_kidnap.yaml
+        whatsapp_image: ''
+        whatsapp_recipient_phone: !secret whatsapp_contact_1
+    #
+    # Contact 2
+    - service: script.send_whatsapp
+      data_template:        
+        whatsapp_text: !include ../../templates/emergencies/message_alert_long_kidnap.yaml
+        whatsapp_image: ''
+        whatsapp_recipient_phone: !secret whatsapp_contact_2
+
+
+    # Wait until all WhatsApp messages have been sent
+    # -----------------------------------------------
+    - wait_template: "{{ is_state('script.send_whatsapp', 'off') and is_state('sensor.whatsapp_messages_unsent', '0') }}"
+      timeout: 300
+      continue_on_timeout: true
+
+
+    # Disconnect from the Internet if data saver mode is enabled
+    # ----------------------------------------------------------
+    - service_template: >
+        {% if is_state('input_boolean.internet_data_saver', 'on') and is_state('input_boolean.internet_already_connected', 'off') %}
+          script.internet_disconnect_wifi_ap
+        {% else %}
+          script.dummy
+        {% endif %}
+      entity_id: input_boolean.internet_data_saver
+
+
+    # Attempt Phone calls
+    # -------------------

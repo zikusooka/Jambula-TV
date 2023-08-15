@@ -1,0 +1,23 @@
+flash_briefing_via_whatsapp:
+  sequence:
+
+    # Send flash briefing - WhatsApp
+    # ------------------------------
+    - service: script.send_whatsapp
+      data_template:
+        whatsapp_text: !include ../../templates/weather/daily_report_notification_message.yaml
+        whatsapp_image: ''
+        whatsapp_recipient_phone: ''
+
+
+
+flash_briefing_via_telegram:
+  sequence:
+
+    # Send flash briefing - Telegram
+    # ------------------------------
+    - service: script.send_telegram
+      data_template: 
+        telegram_text: !include ../../templates/weather/daily_report_notification_message.yaml
+        telegram_image: ''
+        telegram_recipient_phone: ''

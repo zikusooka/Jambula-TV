@@ -1,0 +1,18 @@
+type: conditional
+conditions:
+  - entity: media_player.jambulatv_radio
+    state: "playing"
+
+card:
+  type: markdown
+  content: |
+    <center>
+    <p>
+    <ha-icon icon="mdi:music-box-multiple"></ha-icon>
+    </p>
+    <p>
+    <b>
+    {{ states('sensor.playing_rotation_now') }}
+    </b>
+    </center>
+    </p>

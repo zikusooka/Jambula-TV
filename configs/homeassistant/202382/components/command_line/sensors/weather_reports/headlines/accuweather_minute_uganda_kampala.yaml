@@ -1,0 +1,4 @@
+sensor:
+  name: "Weather forecast minute Kampala (Accuweather)"
+  command: /bin/bash -c "if [[ -s $(/usr/bin/jambulatv-homeassistant-secrets weather_accuweather_minutecast_file) ]]; then /usr/bin/jq -r .Summary.Phrase /tmp/weather_minutecast_api_4.json $(/usr/bin/jambulatv-homeassistant-secrets weather_accuweather_minutecast_file); else echo ''; fi"
+  scan_interval: 120

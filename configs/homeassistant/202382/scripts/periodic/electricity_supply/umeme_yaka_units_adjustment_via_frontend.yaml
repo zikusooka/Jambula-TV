@@ -1,0 +1,31 @@
+umeme_yaka_balance_adjust:
+  sequence:
+
+    # Adjust Yaka token units balance
+    # ---
+    - service: input_number.set_value
+      data_template:
+        entity_id: input_number.umeme_yaka_token_units_value
+        value: "{{ states('input_text.umeme_yaka_balance_adjust') }}"
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_three_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'thank_you.mp3'
+        input_file3: 'electricity-power-units-balance-adjusted.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_electricity-power-units-adjusted.mp3'
+
+
+    # Voice Alert: Announce that electricity reading has been entered
+    # ---------------------------------------------------------- 
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_electricity-power-units-adjusted'
+        audio_gain: !secret voice_alert_audio_gain_high

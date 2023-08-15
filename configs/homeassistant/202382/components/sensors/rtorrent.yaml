@@ -1,0 +1,12 @@
+platform: rtorrent
+url: "http://127.0.0.1:8522/RPC2"
+monitored_variables:
+  - 'current_status'
+  - 'download_speed'
+  - 'upload_speed'
+  - 'all_torrents'
+  - 'stopped_torrents'
+  - 'complete_torrents'
+  - 'uploading_torrents'
+  - 'downloading_torrents'
+  - 'active_torrents'

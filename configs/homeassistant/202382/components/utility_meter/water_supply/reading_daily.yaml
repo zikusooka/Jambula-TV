@@ -1,0 +1,6 @@
+water_supply_meter_reading_today:
+  source: input_number.water_meter_reading_today
+  cycle: daily
+  tariffs:
+    - peak
+    - offpeak

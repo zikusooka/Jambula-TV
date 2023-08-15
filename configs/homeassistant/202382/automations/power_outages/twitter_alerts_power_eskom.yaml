@@ -1,0 +1,20 @@
+alias: Twitter Alerts by ESKOM
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.eskom_power_alerts_via_twitter
+    to: changed
+
+#condition:
+  #condition: and
+  #conditions:
+
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    entity_id: script.power_eskom_alerts_notify

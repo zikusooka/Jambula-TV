@@ -1,0 +1,93 @@
+sensor:
+
+  # Time - Local
+  - name: "Local Time"
+    state: >
+      {% set dummy = states('sensor.time') %}
+      {{ (as_timestamp(now()) | timestamp_custom('%A, %-d %B %Y   %-I:%M %p')) }}
+
+  # Uptime - Homeassitant
+  - name: "HASS uptime minutes"
+    state: >
+      {{ (as_timestamp(now()) - as_timestamp(states('sensor.uptime'))) // 60| round (0)  }}
+  
+  # Time - Wake up time
+  - name: "Wakeup time recommended if bed time now"
+    state: >
+      {% set sleep_duration_hrs = 7.5 %}
+      {{ (as_timestamp(now()) + (sleep_duration_hrs * 60 * 60)) | timestamp_custom('%-I %M %p', true) }}
+
+
+  # Temperature - Outside
+  - name: "Outside temperature"
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state: >
+      {{ states('sensor.vision_security_zp3102_pir_motion_sensor_temperature') | round(1, default=0) }}
+
+
+  # UMEME - Yaka usage estimate (hourly)
+  - name: "UMEME Yaka usage estimate (hourly)"
+    state: >
+      {{ (states('input_text.umeme_yaka_usage_estimate_daily') | float | default(1.0)) / 24 }}
+
+  # UMEME - Yaka usage estimate (Every 30 minutes)
+  - name: 'UMEME Yaka usage estimate (Every 30 minutes)'
+    state: >
+      {{ (states('input_text.umeme_yaka_usage_estimate_daily') | float | default(1.0)) / 48 }}
+
+  # UMEME - Yaka - Next top up date days remaining
+  - name: "UMEME Yaka - Next top up date days remaining"
+    state: >
+      {{ (states('input_number.umeme_yaka_token_units_value') | float | default (0)) / (states('input_text.umeme_yaka_usage_estimate_daily') | float) }}
+
+  # UMEME - Yaka - Next top up date
+  - name: "UMEME Yaka - Next top up date"
+    state: >
+      {% set yaka_days_remaining = (states('sensor.umeme_yaka_next_top_up_date_days_remaining') | int) %}
+      {{ (as_timestamp(now()) + (yaka_days_remaining * 60 * 60 * 24 | default (0) )) | timestamp_custom('%A, %-d %B %Y', true) }}
+
+
+  # Water
+  - name: "Water tariff (Monthly)"
+    unit_of_measurement: "/="
+    state: >
+      {% set water_usage_monthly = states('sensor.water_usage_monthly') | round(0, 'ceil') | int | default (0) %}
+      {% set water_cost_per_unit = states('input_number.water_cost_per_unit') | int | default (0) %}
+      {% set water_bill_previous_balance = states('input_number.water_bill_previous_balance') | int | default (0) %}
+      {{ ( water_usage_monthly * water_cost_per_unit  ) + water_bill_previous_balance }}
+      
+#####
+#{{ (water_usage_monthly | int * water_cost_per_unit | int ) + water_bill_previous_balance | int }}
+
+
+  # Occupancy - Activity while at home
+  - name: "Activity while at home - Zik"
+    state: >
+      {{ states.input_select.presence_status_zik.state }}
+
+  # Occupancy - TV Status (Living Room)
+  - name: "TV status (Living Room)"
+    state: >
+      {{ states.media_player.jambulatv_pi_living_room.state }}
+
+  # Occupancy - TV Status (Office)
+  - name: "TV status (Office)"
+    state: >
+      {{ states.media_player.jambulatv_pi_living_room.state }}
+
+
+  # Holidays - Christmas
+  - name: "Christmas Season"
+    state: >
+      {% set today = states('sensor.date').split('-') %}
+      {% set month = today[1]|int %}
+      {% set day = today[2]|int %}
+      {{ month == 12 and day >= 8 }}
+
+
+  # Entity last updated - jogging statistics for zik
+  - name: 'Jogging statistics last updated (Zik)'
+    state: >
+      {% set sensor_updated = as_timestamp(states.script.jogging_completed_update_stats_zik.attributes.last_triggered) %}
+      {{ ( as_timestamp(now()) - sensor_updated  | int | round(0, 'ceil') | default (0) ) }}

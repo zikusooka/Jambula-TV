@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: sensor.resident1_presence_status 
+    state_not: 'Away'
+  - entity: sensor.resident1_presence_status 
+    state_not: 'unavailable'
+  - entity: sensor.resident1_presence_status 
+    state_not: 'unknown'
+  - entity: sensor.resident1_presence_status 
+    state_not: ''
+
+card:
+  type: entities
+  entities:
+    - sensor.resident1_presence_status 

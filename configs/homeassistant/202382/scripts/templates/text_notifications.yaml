@@ -1,0 +1,23 @@
+weather_daily_report_via_whatsapp:
+  sequence:
+
+    # Text weather reports - WhatsApp
+    # -------------------------------
+    - service: script.send_whatsapp
+      data_template:
+        whatsapp_text: !include ../../templates/weather/daily_report_notification_message.yaml
+        whatsapp_image: ''
+        whatsapp_recipient_phone: ''
+
+
+
+weather_daily_report_via_telegram:
+  sequence:
+
+    # Text weather reports - Telegram
+    # -------------------------------
+    - service: script.send_telegram
+      data_template: 
+        telegram_text: !include ../../templates/weather/daily_report_notification_message.yaml
+        telegram_image: ''
+        telegram_recipient_phone: ''

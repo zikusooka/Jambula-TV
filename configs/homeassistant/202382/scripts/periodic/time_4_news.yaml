@@ -1,0 +1,45 @@
+its_time_for_news:
+  sequence:
+
+ 
+
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'news_starting.mp3'
+        input_file2: 'its_time_4_news.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_its_time_4_news.mp3'
+
+
+    # Voice Alert: Announce that it's time for news
+    # ----------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_its_time_4_news'
+        audio_gain: !secret voice_alert_audio_gain_low
+
+
+    # Start Live TV streaming on tablet in the living room
+    # -----------------------------------------------------
+    # Launch NTV on C-Idea tablet
+    - service: shell_command.start_dvbt2_stream_c_idea
+      data_template:
+        tv_channel: "{{states('sensor.dvbt2_tv_channel_uuid_ntv')}}"
+
+
+    # Start Live TV streaming on tablet in the kitchen
+    # -------------------------------------------------
+    # Launch NTV on Tecno Pop 2F tablet
+    - service: shell_command.start_dvbt2_stream_tecno_pop_2f
+      data_template:
+        tv_channel: "{{states('sensor.dvbt2_tv_channel_uuid_ntv')}}"
+
+
+    # Start Live TV streaming on JambulaTV-Pi in the living room
+    # -----------------------------------------------------------
+    # Launch live TV on raspberrypi in living room 
+    - service: script.turn_on
+      entity_id: script.kodi_pvr_play_living_room_client_01

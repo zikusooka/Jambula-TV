@@ -1,0 +1,18 @@
+type: conditional
+conditions:
+  - entity: sensor.garbage_collection_day
+    state: "true"
+
+card:
+  type: entity-button
+  entity: script.music_download_previous
+  name: 'Garbage collected'
+  #show_name: true
+  #show_state: false
+  icon: 'mdi:delete-empty'
+
+  tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.garbage_collected

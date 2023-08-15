@@ -1,0 +1,15 @@
+type: 'custom:gallery-card'
+entities:
+  - camera.motion_camera_front_gate
+  #- camera.motion_camera_front_door
+  - camera.logitech_c200
+  - image.bulindo_scenary
+  - image.nsasa_scenary
+  #- camera.ip_webcam
+  #- 'media-source://media_source/pictures/'
+
+#recursive: true 
+menu_alignment: Responsive
+maximum_files: 10
+file_name_format: '%YYY_%m_%d_%H_%M_%S'
+caption_format: '%m/%d %H:%M %p'  

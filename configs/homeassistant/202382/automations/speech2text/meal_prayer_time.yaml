@@ -1,0 +1,57 @@
+# Speech-to-Text: Meal/Prayer Time
+alias: "Meal/Prayer Time"
+initial_state: True
+
+
+trigger:
+
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_lunch_time
+    payload: 'start'
+    id: lunch_time_start
+ 
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_dinner_time
+    payload: 'start'
+    id: dinner_time_start
+ 
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_prayer_time
+    payload: 'start'
+    id: prayer_time_start
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+  - choose:
+
+    - conditions:    
+        - condition: trigger
+          id: lunch_time_start
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.lunch_time_start
+
+    - conditions:    
+        - condition: trigger
+          id: dinner_time_start
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.dinner_time_start
+
+    - conditions:    
+        - condition: trigger
+          id: prayer_time_start
+      sequence:
+        - service: script.turn_on
+          data:
+            entity_id:
+              - script.prayer_time_start

@@ -1,0 +1,20 @@
+type: entity-button
+entity: script.data_bundle_add_mtn_night1
+name: 'Load (MTN-Night-2GB)'
+show_name: true
+show_state: false
+icon: 'mdi:cash-plus'
+
+double_tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.data_bundle_add_mtn_night1
+
+tap_action:
+  action: call-service
+  confirmation:
+    text: Purchase MTN Data bundle - Night1?
+  service: script.turn_on
+  service_data:
+    entity_id: script.data_bundle_add_mtn_night1

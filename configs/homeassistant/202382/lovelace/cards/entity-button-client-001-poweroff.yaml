@@ -1,0 +1,20 @@
+type: entity-button
+entity: script.client_001_shutdown
+name: 'Shutdown client 1'
+show_name: true
+show_state: false
+icon: 'mdi:power-plug'
+
+double_tap_action:
+  action: call-service
+  service: script.turn_on
+  service_data:
+    entity_id: script.client_001_shutdown
+
+tap_action:
+  action: call-service
+  confirmation:
+    text: Shutdown client 1?
+  service: script.turn_on
+  service_data:
+    entity_id: script.client_001_shutdown

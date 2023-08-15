@@ -1,0 +1,28 @@
+alias: Outdoor lights off at sunrise
+initial_state: True
+
+
+trigger:
+
+#  - platform: sun
+#    event: sunrise
+#    offset: "-00:15:00"
+
+  - platform: time
+    at: "06:45:00"
+
+
+condition:
+  condition: and
+  conditions:
+
+    - condition: template
+      value_template: "{{ is_state('light.living_room', 'on') }}"
+
+
+action:
+
+  # Turn on outdoor lights
+  - service: light.turn_off
+    data:
+      entity_id: light.living_room

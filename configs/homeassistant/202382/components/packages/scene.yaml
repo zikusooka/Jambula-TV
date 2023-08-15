@@ -1,0 +1,8 @@
+# The script component allows users to specify a sequence of scenes to be
+# executed by Home Assistant when turned on.
+#
+# This loads up my custom scenes.
+#
+# https://www.home-assistant.io/components/scene/
+#
+scene: !include_dir_merge_named ../../scenes

@@ -1,0 +1,59 @@
+guest_mode_on:
+  sequence:
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'guest_visitor_mode_activating.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_guest_visitor_mode_activating.mp3'
+
+
+    # Voice Alert: Announce that activating guest mode
+    # -------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_guest_visitor_mode_activating'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+
+    # Guest mode actions - On
+    # -----------------------
+    - service: shell_command.qrcodes_generate_wifi_hotspot_credentials
+
+
+
+guest_mode_off:
+  sequence:
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'guest_visitor_mode_deactivated.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_guest_visitor_mode_deactivated.mp3'
+
+
+    # Guest mode actions - Off
+    # -------------------------
+    #- service: shell_command...
+
+
+    # Voice Alert: Announce that guest mode deactivated
+    # --------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_guest_visitor_mode_deactivated'
+        audio_gain: !secret voice_alert_audio_gain_medium

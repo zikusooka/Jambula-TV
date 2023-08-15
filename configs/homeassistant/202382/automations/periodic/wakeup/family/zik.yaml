@@ -1,0 +1,43 @@
+alias: Wakeup for Zik
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: input_boolean.bedtime_mode_zik
+    from: 'on'
+    to: 'off'
+
+  #- platform: state
+    #entity_id: binary_sensor.bluez_tecno_pop_2f
+    #from: 'off'
+    #to: 'on'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # After sunset
+    #- condition: sun
+      #after: sunrise
+
+    # Before midnight
+    #- condition: time
+      #before: '00:00:00'
+
+    # Zik is home
+    #- condition: state
+    #  entity_id: 'device_tracker.kampala'
+    #  state: 'home'
+      
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    data:
+      entity_id:
+        - script.wakeup_via_input_zik
+        - script.wakeup_via_all_zik

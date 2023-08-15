@@ -1,0 +1,30 @@
+# Phone call - Incoming (Asterisk)
+alias: "Incoming phone call (Asterisk)"
+initial_state: True
+
+
+trigger:
+  - platform: mqtt
+    topic: !secret mqtt_incoming_phonecalls
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  # Send OSD notification message to Kodi instance in Living room
+  - service: notify.kodi_osd_notification_living_room
+    data:
+      title: 'JambulaTV'
+      message: 'Incoming phone call from {{trigger.payload}}'
+      data:
+        icon: 'Info'
+        displaytime: 30000
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.phone_call_incoming_via_asterisk_alert

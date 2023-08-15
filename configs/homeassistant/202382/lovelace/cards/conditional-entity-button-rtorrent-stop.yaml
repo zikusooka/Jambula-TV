@@ -1,0 +1,18 @@
+type: conditional
+conditions:
+  - entity: sensor.rtorrent_status
+    state_not: 'unavailable'
+
+card:
+  type: entity-button
+  entity: script.rtorrent_stop
+  name: 'Stop rTorrent'
+  show_name: true
+  show_state: false
+  icon: 'mdi:stop'
+
+  tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.rtorrent_stop

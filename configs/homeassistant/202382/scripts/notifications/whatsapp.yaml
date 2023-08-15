@@ -1,0 +1,37 @@
+send_whatsapp:
+  sequence:
+
+    # WhatsApp - image # NOT YET working/implemented
+    #- service: shell_command.send_whatsapp_image
+      #data_template:
+        #image_path: '{{whatsapp_image}}'
+        #phone: '{{whatsapp_recipient_phone}}'
+
+    # IMPORTANT: Pause a bit to allow previous notification to be sent
+    #- delay: '00:00:10'
+
+    # WhatsApp - text
+    - service: shell_command.send_whatsapp_text
+      data_template: 
+        message: '{{whatsapp_text}}'
+        phone: '{{whatsapp_recipient_phone}}'
+
+    # IMPORTANT: Pause a bit to allow previous notification to be sent
+    - delay: '00:00:10'
+
+
+
+send_whatsapp_audio:
+  sequence:
+
+    # WhatsApp - audio only
+    # ---------------------
+    - service: shell_command.send_whatsapp_audio
+      data_template:
+        audio_path: '{{whatsapp_audio_file}}'
+        phone: '{{whatsapp_recipient_phone}}'
+
+    # IMPORTANT: Pause a bit to allow previous notification to be sent
+    - delay: '00:00:10'
+
+

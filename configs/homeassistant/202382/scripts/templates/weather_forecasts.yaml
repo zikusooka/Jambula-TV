@@ -1,0 +1,37 @@
+fetch_weather_forecast_using_scraper:
+  sequence:
+
+    # Fetch and Save weather forecast (Weather.com)
+    # ---------------------------------------------
+    - service: shell_command.weather_reports_using_scraper
+      data_template:
+        task: 'fetch'
+        weather_location: !secret weather_location
+
+
+
+say_weather_forecast_using_api_current:
+  sequence:
+
+    # Voice Alert: Read weather forecast using API
+    # ---------------------------------------------
+    - service: shell_command.say_weather_reports_using_api
+      data_template:
+        weather_period: 'current' 
+        tts_api: !secret tts_api_service
+        weather_api: !secret weather_api_service
+        weather_latitude: !secret weather_latitude
+        weather_longitude: !secret weather_longitude
+        tts_volume_level: !secret tts_volume_level
+
+
+
+say_weather_forecast_using_scraper:
+  sequence:
+
+    # Voice Alert: Read weather forecast using Scraper
+    # ------------------------------------------------
+    - service: shell_command.weather_reports_using_scraper
+      data_template:
+        task: 'read'
+        weather_location: !secret weather_location

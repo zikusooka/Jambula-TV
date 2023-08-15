@@ -1,0 +1,22 @@
+type: conditional
+conditions:
+  - entity: media_player.jambulatv_radio
+    state: "playing"
+
+card:
+  type: entity-button
+  entity: script.music_single_track_on
+  name: 'Loop'
+  icon: 'mdi:skip-backward'
+
+  double_tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.music_single_track_on
+
+  tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.music_single_track_off

@@ -1,0 +1,57 @@
+hass_startup:
+  sequence:
+
+
+    # Set the default theme on start up of Home Assistant
+    # ---------------------------------------------------
+    - service: frontend.set_theme
+      data:
+        name: pmaxx
+
+
+    # Restart icinga2, so sensors dependent on it are initialized
+    # -----------------------------------------------------------
+    - service: shell_command.icinga2_restart
+ 
+
+    # Retrieve status of today's water supply
+    # ---------------------------------------
+    - service: shell_command.water_supply_reports_and_status
+      data_template:
+        water_last_billed_date: "{{ states('input_datetime.water_supply_last_billed_date') }}"
+
+
+    # Configure startup volume levels
+    # -------------------------------
+    # Player
+    - service: script.turn_on
+      entity_id: script.startup_volume_levels_player
+
+    # System
+    - service: script.turn_on
+      entity_id: script.startup_volume_levels_system
+
+
+    # ADB: Connect to all specified Android based devices
+    # ----------------------------------------------------
+    - service: script.turn_on
+      entity_id: script.adb_connect_2_all_devices
+
+
+    # Voice alert: Announce startup of smart home system
+    # --------------------------------------------------
+    - service: script.turn_on
+      entity_id: script.startup_alert_started
+
+
+    # Turn off Internet data saver and announce 
+    # -----------------------------------------
+    - service_template: >
+        {% if not is_state('sensor.global_setting_internet_data_saver_mode', 'off') %}
+          script.internet_datasaver_enable_manual
+
+        {% else %}
+          script.dummy
+
+        {% endif %}
+      entity_id: sensor.global_setting_internet_data_saver_mode

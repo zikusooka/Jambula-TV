@@ -1,0 +1,39 @@
+alias: Rainfall coming
+initial_state: True
+
+
+trigger:
+
+  - platform: mqtt
+    topic: !secret mqtt_weather_alert_weather_dot_com
+
+ 
+  - platform: state
+    entity_id: weather.jambulatv
+    to: 'rainy'
+
+  - platform: state
+    entity_id: weather.jambulatv_hourly
+    to: 'rainy'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Internet state
+    - condition: template
+      value_template: "{{ is_state('binary_sensor.internet', 'on') }}"
+
+    # 3 minute(s) or more after startup of HASS
+    - condition: numeric_state
+      entity_id: sensor.hass_uptime_minutes
+      above: 3
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.rainfall_coming

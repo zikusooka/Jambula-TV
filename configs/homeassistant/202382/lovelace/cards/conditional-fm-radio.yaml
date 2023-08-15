@@ -1,0 +1,12 @@
+type: conditional
+conditions:
+  - entity: sensor.fm_radio_tuner_status
+    state_not: 'Not Available'
+    #state_not: 'Available'
+
+card:
+  type: entities
+  entities:
+    - entity: input_select.fm_radio_station
+      name: 'FM Radio'
+      icon: 'mdi:radio-fm'

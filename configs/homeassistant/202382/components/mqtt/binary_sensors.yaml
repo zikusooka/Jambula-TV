@@ -1,0 +1,83 @@
+binary_sensor:
+
+# WiFi AP status
+  - name: "WiFi AP Status"
+    state_topic: !secret mqtt_presence_tshark_topic_mifi_router_01
+    device_class: power
+    payload_on: "Home"
+    payload_off: "Away"
+
+# Presence detection via Bluez
+  - name: "Bluez Tecno Pop 2F"
+    state_topic: !secret mqtt_presence_bluez_topic_mobile_01_zik
+    expire_after: 300
+    device_class: presence
+    payload_on: "Home"
+    payload_off: "Away"
+  - name: "Bluez iPhone 7"
+    state_topic: !secret mqtt_presence_bluez_topic_mobile_02_zik
+    expire_after: 300
+    device_class: presence
+    payload_on: "Home"
+    payload_off: "Away"
+  - name: "Bluez Pantech P7040"
+    state_topic: !secret mqtt_presence_bluez_topic_mobile_03_zik
+    expire_after: 300
+    device_class: presence
+    payload_on: "Home"
+    payload_off: "Away"
+  - name: "Bluez iTel it2163"
+    state_topic: !secret mqtt_presence_bluez_topic_mobile_04_zik
+    expire_after: 3600
+    device_class: presence
+    payload_on: "Home"
+    payload_off: "Away"
+  - name: "Bluez GD19s"
+    state_topic: !secret mqtt_presence_bluez_topic_mobile_05_zik
+    expire_after: 300
+    device_class: presence
+    payload_on: "Home"
+    payload_off: "Away"
+  - name: "Bluez i7_TWS"
+    state_topic: !secret mqtt_presence_bluez_topic_mobile_06_zik
+    expire_after: 300
+    device_class: presence
+    payload_on: "Home"
+    payload_off: "Away"
+
+# Sound Mixer
+  - name: "Mixer voice alerts (status)"
+    state_topic: !secret mqtt_status_mixer_voice_alerts
+    device_class: sound
+    payload_on: "on"
+    payload_off: "off"
+
+# Water Supply
+  - name: "Water flow status (Today)"
+    state_topic: !secret mqtt_water_flow_status_today
+    expire_after: 300
+    payload_on: "yes"
+    payload_off: "no"
+  - name: "Water flow status (Yesterday)"
+    state_topic: !secret mqtt_water_flow_status_yesterday
+    expire_after: 300
+    payload_on: "yes"
+    payload_off: "no"
+  - name: "Water tank status"
+    state_topic: !secret mqtt_water_tank_status
+    expire_after: 300
+    device_class: presence
+    payload_on: "full"
+    payload_off: "low"
+  - name: "Water report status (Today)"
+    state_topic: !secret mqtt_water_report_status_today
+    expire_after: 300
+    device_class: presence
+    payload_on: "found"
+    payload_off: "not_found"
+  - name: "Water report status (Yesterday)"
+    state_topic: !secret mqtt_water_report_status_yesterday
+    expire_after: 300
+    device_class: presence
+    payload_on: "found"
+    payload_off: "not_found"

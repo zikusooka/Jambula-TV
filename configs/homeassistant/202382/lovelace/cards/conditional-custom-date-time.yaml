@@ -1,0 +1,25 @@
+type: conditional
+conditions:
+  - entity: sensor.local_time
+    state_not: 'unknown'
+
+card:
+  type: 'custom:button-card'
+  #icon: 'mdi:clock'
+  entity: sensor.local_time
+  show_icon: false
+  show_label: false
+  show_name: false
+  show_state: true
+  styles:
+    state:
+      - font-size: 18px #1.5em #18px
+      - font-weight: bold
+      - font-family: Saira
+      - text-align: center
+      - text-transform: uppercase
+      - color: "#bfbdbf"
+
+    card:
+      - border: '1px solid rgb(255, 255, 255)'
+      - height: 50px

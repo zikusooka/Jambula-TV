@@ -1,0 +1,17 @@
+type: conditional
+conditions:
+  - entity: media_player.jambulatv_radio
+    state: "playing"
+  - entity: binary_sensor.internet
+    state: "on"
+
+card:
+  type: entity-button
+  entity: script.music_download_previous
+  tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.music_download_previous
+  name: 'Download (Previous)'
+  icon: 'mdi:cloud-download-outline'

@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: sensor.electricity_usage_monthly
+    state_not: 'none'
+
+  - entity: sensor.electricity_usage_monthly
+    state_not: 'unknown'
+
+card:
+  type: sensor
+  entity: sensor.electricity_usage_monthly
+  name: 'Usage (Monthly)'
+  icon: 'mdi:lightning-bolt'
+  show_name: false
+  show_icon: false

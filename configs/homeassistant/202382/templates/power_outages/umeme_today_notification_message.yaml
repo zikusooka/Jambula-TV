@@ -1,0 +1,21 @@
+"Hi there!
+\r
+\r
+A planned power outage is scheduled for the following area(s) today:
+\r
+\r
+*{{states('sensor.power_outage_today')}}*
+\r
+\r
+Power will be gone from 8:00am until 5:00pm.
+\r
+\r
+Please plan your day accordingly
+\r
+\r
+\r
+-------------------------------------------------
+\r
+This message was generated
+\r
+at: *{{states('sensor.time')}}* on *{{states('sensor.date')}}*"

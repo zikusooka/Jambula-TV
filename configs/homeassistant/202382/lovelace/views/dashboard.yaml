@@ -1,0 +1,189 @@
+title: Overview
+icon: mdi:home
+cards:
+
+  # Column 1
+  # --------
+
+  - type: vertical-stack
+    cards:
+      # Welcome Message
+      - !include ../cards/markup-dashboard-message.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Motion
+          - !include ../cards/conditional-motion-sensor-outside.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Internet status
+          - !include ../cards/entity-button-internet-status.yaml
+          # MiFi router status
+          - !include ../cards/entity-button-mifi-status.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Playing 
+          - !include ../cards/conditional-playing-now-volume-playing-online.yaml
+          - !include ../cards/conditional-playing-now-volume-playing-offline.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Volume - speaker
+          - !include ../cards/gauge-system-speaker-volume-level.yaml
+          # Volume - player
+          - !include ../cards/conditional-media-player-volume-level.yaml
+          # Volume - server
+          - !include ../cards/conditional-media-server-volume-level.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Water supply - currently
+          - !include ../cards/entity-button-water-supply.yaml
+          # Water usage - daily
+          - !include ../cards/conditional-water-usage-daily.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Electricity usage - daily 
+          - !include ../cards/conditional-umeme-yaka-usage-daily.yaml
+          # Electricity units - balance 
+          - !include ../cards/conditional-umeme-yaka-units-today.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Electrricity units - next topup date
+          - !include ../cards/conditional-umeme-yaka-next-top-up-date.yaml
+
+
+
+  # Column 2
+  # --------  
+  - type: vertical-stack
+    cards:
+     # Date
+      - !include ../cards/conditional-custom-date-time.yaml
+
+      # Weather forecast
+      - type: horizontal-stack
+        cards:
+          # Weather forecast - accuweather
+          #- !include ../cards/conditional-custom-type-weather-accuweather-uganda.yaml
+          - !include ../cards/conditional-custom-type-weather-darksky-uganda.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Reminders
+          - !include ../cards/conditional-custom-home-feed.reminders.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Power Outage - today
+          - !include ../cards/conditional-power-outage-today.yaml
+          # Power Outage - tomorrow
+          - !include ../cards/conditional-power-outage-tomorrow.yaml
+          # Power Outage - ongoing
+          - !include ../cards/conditional-power-outage-ongoing.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Garbage day
+          - !include ../cards/conditional-markdown-garbage-day.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Temperature - outdoors
+          - !include ../cards/conditional-entity-filter-temperature-outdoors.yaml
+          # Temperature - indoors
+          - !include ../cards/conditional-entity-filter-temperature-indoors.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Garbage day
+          - !include ../cards/entities-modes-dashboard.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Lights - Living Room / Kitchen
+          - !include ../cards/light-living-room.yaml
+          - !include ../cards/light-kitchen.yaml
+
+      #- type: horizontal-stack
+        #cards:
+          # Lights - Bed Room / Verandah
+          #- !include ../cards/light-bed-room.yaml
+          #- !include ../cards/light-veranda.yaml
+
+      #- type: horizontal-stack
+        #cards:
+          # Lights - Dining Room / Bath Room
+          #- !include ../cards/light-dining.yaml 
+          #- !include ../cards/light-bath-room.yaml
+ 
+      #- type: horizontal-stack
+        #cards:
+          # Lights - Guest Bed Room / Guest Bath Room
+          #- !include ../cards/light-guest-bed-room.yaml
+          #- !include ../cards/light-guest-bath-room.yaml
+
+      #- type: horizontal-stack
+        #cards:
+          # Lights - Boys Quarters / Gate entrace
+          #- !include ../cards/light-boys-quarters.yaml
+          #- !include ../cards/light-gate.yaml
+
+
+  # Column 3
+  # --------
+  - type: vertical-stack
+    cards:
+
+      - type: horizontal-stack
+        cards:
+          # Security alarm
+          - !include ../cards/entity-button-security-alarm-status.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Live Cameras
+          - !include ../cards/picture-entity-motion-camera-front-gate.yaml
+          - !include ../cards/picture-entity-motion-camera-front-door.yaml
+          - !include ../cards/picture-entity-zoneminder-camera-back-yard.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Person - Zik
+          - !include ../cards/entity-filter-presence-activity-zik.yaml
+ 
+      - type: horizontal-stack
+        cards:
+          # Resident 1
+          - !include ../cards/residents/conditional-entities-resident-1.yaml
+      - type: horizontal-stack
+        cards:
+          # Resident 2
+          - !include ../cards/residents/conditional-entities-resident-2.yaml
+      - type: horizontal-stack
+        cards:
+          # Resident 3
+          - !include ../cards/residents/conditional-entities-resident-3.yaml
+      - type: horizontal-stack
+        cards:
+          # Resident 4
+          - !include ../cards/residents/conditional-entities-resident-4.yaml
+      - type: horizontal-stack
+        cards:
+          # Resident 5
+          - !include ../cards/residents/conditional-entities-resident-5.yaml
+
+      - type: horizontal-stack
+        cards:
+          # Logbook
+          - !include ../cards/logbook-dashboard.yaml
+
+      - type: horizontal-stack
+        cards:
+          # News headlines & podcasts
+          - !include ../cards/conditional-entity-button-fetch-read-news-headlines.yaml
+          - !include ../cards/conditional-entity-button-fetch-read-news-podcasts.yaml

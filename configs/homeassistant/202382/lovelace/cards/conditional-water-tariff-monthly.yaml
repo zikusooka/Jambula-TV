@@ -1,0 +1,21 @@
+type: conditional
+conditions:
+  - entity: sensor.water_tariff_monthly
+    state_not: 'none'
+
+  - entity: sensor.water_tariff_monthly
+    state_not: 'unknown'
+
+  - entity: sensor.water_tariff_monthly
+    state_not: '0'
+
+  - entity: sensor.water_tariff_monthly
+    state_not: '0.0'
+
+card:
+  type: sensor
+  entity: sensor.water_tariff_monthly
+  name: 'Water Tariff (Monthly)'
+  icon: 'mdi:cash-100'
+  show_name: false
+  show_icon: true

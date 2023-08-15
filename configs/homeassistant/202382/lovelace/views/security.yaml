@@ -1,0 +1,13 @@
+title: Security
+icon: mdi:shield-home
+cards:
+
+  # Security
+  - type: vertical-stack
+    cards:
+      - !include ../cards/markup-security-message.yaml
+
+  # Alarm control panel
+      - type: horizontal-stack
+        cards:
+          - !include ../cards/alarm-panel-security-control.yaml

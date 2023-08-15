@@ -1,0 +1,42 @@
+# Power outages tomorrow - planned (Send telegram message)
+alias: "Planned power outage tomorrow"
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: sensor.power_outage_tomorrow
+
+  - platform: time_pattern
+    hours: '/3'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Power outage state not none, null or unknown
+    - condition: template
+      value_template: "{{ not is_state('sensor.power_outage_tomorrow', 'none') }}"
+    - condition: template
+      value_template: "{{ not is_state('sensor.power_outage_tomorrow', '') }}"
+    - condition: template
+      value_template: "{{ not is_state('sensor.power_outage_tomorrow', 'unknown') }}"
+
+    # Bedtime (all) - off
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'off'
+
+    # Wakeup time activation NOT in progress (all) - off
+    - condition: state
+      entity_id: 'input_boolean.wakeup_time_activated_all'
+      state: 'off'
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.power_supply_umeme_tomorrow

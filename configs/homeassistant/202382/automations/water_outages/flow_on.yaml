@@ -1,0 +1,49 @@
+alias: Water Flow - On
+initial_state: True
+
+
+trigger:
+
+  - platform: state
+    entity_id: 'binary_sensor.water_flow_status_today'
+    from: 'off'
+    to: 'on'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Someone at home
+    #- condition: template
+      #value_template: "{{ is_state('group.presence_home', 'home') }}"
+
+    # Water reading (Yesterday) - exists
+    - condition: template
+      value_template: "{{ not is_state('sensor.water_meter_reading_yesterday', 'unknown') }}"
+
+    # Water reading (Today) - exists
+    - condition: template
+      value_template: "{{ not is_state('sensor.water_meter_reading_today', 'unknown') }}"
+ 
+    # Do not trigger if initial state change to 'on' like at startup
+    - condition: template
+      value_template: "{{ not is_state('binary_sensor.water_flow_status_today', 'unavailable') }}"
+ 
+    # Night mode - off
+    - condition: state
+      entity_id: 'input_boolean.night_mode'
+      state: 'off'
+
+    # Quiet mode - off
+    - condition: state
+      entity_id: 'input_boolean.quiet_mode'
+      state: 'off'
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.water_flow_on_alert

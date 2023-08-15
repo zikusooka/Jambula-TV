@@ -1,0 +1,4 @@
+sensor:
+  name: Phone Number 4 Data Purchases (MTN)
+  command: /bin/bash -c 'sudo /usr/bin/jambulatv-gsm-ussd-ug phone-number MTN'
+  scan_interval: 1800

@@ -1,0 +1,45 @@
+alias: Wakeup for All
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: input_boolean.bedtime_mode_all
+    to: 'off'
+
+  - platform: state
+    entity_id: binary_sensor.connected_2_asterisk_chan_mobile_zik
+    to: 'on'
+
+
+condition:
+  condition: and
+  conditions:
+
+    # Bedtime for all is on
+    - condition: state
+      entity_id: 'input_boolean.bedtime_mode_all'
+      state: 'on'
+
+    # After sunset
+    #- condition: sun
+      #after: sunrise
+
+    # Before midnight
+    #- condition: time
+      #before: '00:00:00'
+
+    # Zik is home
+    #- condition: state
+    #  entity_id: 'device_tracker.kampala'
+    #  state: 'home'
+      
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    data:
+      entity_id:
+        - script.wakeup_time_all

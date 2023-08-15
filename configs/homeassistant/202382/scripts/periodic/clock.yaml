@@ -1,0 +1,83 @@
+say_time_at_top_of_hour:
+  sequence:
+
+    # Generate voice files
+    # --------------------
+    # Remove previous sound effects file for hourly clock
+    - service: shell_command.delete_file_dir_specified
+      data_template:
+        directory: !secret jambulatv_temp_dir
+        file: 'sound_effect_the_time_now_is_hour.mp3'
+
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: >
+          {% if is_state('binary_sensor.workday', 'on') and now().strftime('%-H')|int > 8 and now().strftime('%-H')|int < 18 %}
+          'chime_big_ben.mp3'
+          {% else %}
+          'beep-03.mp3'
+          {% endif %}
+        input_file2: >
+          {% if now().strftime('%-H')|int == 0 %}
+          'time_now_is_12_am.mp3'
+          {% elif now().strftime('%-H')|int == 1 %}
+          'time_now_is_1_am.mp3'
+          {% elif now().strftime('%-H')|int == 2 %}
+          'time_now_is_2_am.mp3'
+          {% elif now().strftime('%-H')|int == 3 %}
+          'time_now_is_3_am.mp3'
+          {% elif now().strftime('%-H')|int == 4 %}
+          'time_now_is_4_am.mp3'
+          {% elif now().strftime('%-H')|int == 5 %}
+          'time_now_is_5_am.mp3'
+          {% elif now().strftime('%-H')|int == 6 %}
+          'time_now_is_6_am.mp3'
+          {% elif now().strftime('%-H')|int == 7 %}
+          'time_now_is_7_am.mp3'
+          {% elif now().strftime('%-H')|int == 8 %}
+          'time_now_is_8_am.mp3'
+          {% elif now().strftime('%-H')|int == 9 %}
+          'time_now_is_9_am.mp3'
+          {% elif now().strftime('%-H')|int == 10 %}
+          'time_now_is_10_am.mp3'
+          {% elif now().strftime('%-H')|int == 11 %}
+          'time_now_is_11_am.mp3'
+          {% elif now().strftime('%-H')|int == 12 %}
+          'time_now_is_12_pm.mp3'
+          {% elif now().strftime('%-H')|int == 13 %}
+          'time_now_is_1_pm.mp3'
+          {% elif now().strftime('%-H')|int == 14 %}
+          'time_now_is_2_pm.mp3'
+          {% elif now().strftime('%-H')|int == 15 %}
+          'time_now_is_3_pm.mp3'
+          {% elif now().strftime('%-H')|int == 16 %}
+          'time_now_is_4_pm.mp3'
+          {% elif now().strftime('%-H')|int == 17 %}
+          'time_now_is_5_pm.mp3'
+          {% elif now().strftime('%-H')|int == 18 %}
+          'time_now_is_6_pm.mp3'
+          {% elif now().strftime('%-H')|int == 19 %}
+          'time_now_is_7_pm.mp3'
+          {% elif now().strftime('%-H')|int == 20 %}
+          'time_now_is_8_pm.mp3'
+          {% elif now().strftime('%-H')|int == 21 %}
+          'time_now_is_9_pm.mp3'
+          {% elif now().strftime('%-H')|int == 22 %}
+          'time_now_is_10_pm.mp3'
+          {% elif now().strftime('%-H')|int == 23 %}
+          'time_now_is_11_pm.mp3'
+          {% else %}
+          {% endif %}
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_the_time_now_is_hour.mp3'
+
+
+    # Voice Alert: Announce the current time at the top of the hour
+    # -------------------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_the_time_now_is_hour'
+        audio_gain: !secret voice_alert_audio_gain_medium

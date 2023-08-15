@@ -1,0 +1,20 @@
+alias: Internet Data Saver (Disable Manually)
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: input_boolean.internet_data_saver
+    to: 'off'
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.internet_datasaver_disable_manual

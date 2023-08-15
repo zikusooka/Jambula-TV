@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: media_player.jambulatv_radio
+    state: "paused"
+
+card:
+  type: entities
+  entities:
+    - entity: sensor.playing_now
+      name: Playing
+      icon: 'mdi:playlist-music'
+
+    - entity: input_number.local_radio_volume
+      name: 'Volume'
+      icon: 'mdi:volume-high'

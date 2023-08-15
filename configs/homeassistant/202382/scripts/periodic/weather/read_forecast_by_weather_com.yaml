@@ -1,0 +1,14 @@
+read_forecast_by_weather_com:
+  sequence:
+
+    # Wait for weather forecast fetching to complete if already activated
+    # -------------------------------------------------------------------
+    - wait_template: "{{ is_state('script.fetch_forecast_by_weather_com', 'off') }}"
+      timeout: 60
+      continue_on_timeout: true
+
+
+    # Voice Alert: Read the current weather forecast
+    # ---------------------------------------------- 
+    # Play weather forecast on house speakers with the help of scraper tool 'read' option
+    - service: script.say_weather_forecast_using_scraper

@@ -1,0 +1,8 @@
+data_bundle_add_mtn_day1:
+  sequence:
+
+    - service: shell_command.gsm_ussd_ug_load_data
+      data_template:        
+        network_provider: 'MTN'
+        data_bundle: 'day1'
+        phone_number: !secret phone_number_for_data_mtn_1

@@ -1,0 +1,3 @@
+sensor:
+  name: "Product Software Version"
+  command: /bin/bash -c "RELEASE_FILE=/etc/JambulaTV/release; [[ -s \$RELEASE_FILE ]] && awk -F':' '/Version/ {print \$2}' \$RELEASE_FILE"

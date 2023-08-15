@@ -1,0 +1,10 @@
+type: gauge
+entity: sensor.android_devices_connected
+name: 'ADB devices'
+theme: default
+min: 0
+max: 2
+severity:
+green: 2
+yellow: 1
+red: 0

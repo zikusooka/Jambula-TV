@@ -1,0 +1,2 @@
+gsm_ussd_ug_balance_voice: /bin/bash -c 'sudo /usr/bin/jambulatv-gsm-ussd-ug voice-balance {{network_provider}} > /dev/null 2>&1'
+gsm_ussd_ug_load_data: /bin/bash -c 'sudo /usr/bin/jambulatv-gsm-ussd-ug data-load {{network_provider}} {{data_bundle}} {{phone_number}} > /dev/null 2>&1 && sudo /usr/bin/jambulatv-gsm-ussd-ug voice-balance {{network_provider}} > /dev/null 2>&1'

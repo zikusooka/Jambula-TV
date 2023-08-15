@@ -1,0 +1,15 @@
+alias: System Startup
+initial_state: True
+
+
+trigger:
+  platform: homeassistant
+  event: start
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.hass_startup

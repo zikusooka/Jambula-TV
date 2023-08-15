@@ -1,0 +1,3 @@
+sensor:
+  name: "Weather dot com forecast audio file exists"
+  command: /bin/bash -c "if [[ -s $(/usr/bin/jambulatv-homeassistant-secrets weather_weather_dot_com_forecast_audio_file) ]]; then echo yes; else echo no; fi"

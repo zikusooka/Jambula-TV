@@ -1,0 +1,8 @@
+presence_neighbours:
+  name: Occupancy (Neighbours)
+  entities:
+    - sensor.resident1_presence_status
+    - sensor.resident2_presence_status
+    - sensor.resident3_presence_status
+    - sensor.resident4_presence_status
+  icon: mdi:home

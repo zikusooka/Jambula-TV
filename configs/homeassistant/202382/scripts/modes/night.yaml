@@ -1,0 +1,83 @@
+night_mode_on:
+  sequence:
+
+
+    # Enable Night time Mode at Frontend
+    # ----------------------------------
+    - service: homeassistant.turn_on
+      data:
+        entity_id: input_boolean.night_mode
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'night_mode_activating.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_night_mode_activating.mp3'
+
+
+    # Voice Alert: Announce that Activating night mode
+    # -------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_night_mode_activating'
+        audio_gain: !secret voice_alert_audio_gain_medium
+
+    - delay: 00:00:01
+
+   
+    # Lower volume of current system
+    # -------------------------------
+    - service: shell_command.set_volume_level_system
+      data_template:
+        volume_level_system: !secret mixer_night_mode_volume_level_system
+
+    # Lower volume of current player
+    # -------------------------------
+    - service: shell_command.set_volume_level_player
+      data_template:
+        current_player: "{{states('sensor.current_player_cli_name')}}"
+        volume_level_player: !secret mixer_night_mode_volume_level_player
+ 
+
+
+night_mode_off:
+  sequence:
+
+    # Disable Night time Mode at Frontend
+    # -----------------------------------
+    - service: homeassistant.turn_off
+      data:
+        entity_id: input_boolean.night_mode
+
+
+    # Generate voice files
+    # --------------------
+    # Merge audio files
+    - service: shell_command.ffmpeg_concat_two_mp3
+      data_template:
+        input_directory: !secret jambulatv_sounds_dir
+        input_file1: 'Airplane-ding-sound.mp3'
+        input_file2: 'night_mode_deactivated.mp3'
+        output_directory: !secret jambulatv_temp_dir
+        output_file: 'sound_effect_night_mode_deactivated.mp3'
+
+
+    # Reset volume to day time levels - system & player
+    # -------------------------------------------------
+    - service: script.volume_levels_reset_system_player
+
+
+    # Voice Alert: Announce that night mode deactivated
+    # -------------------------------------------------
+    # Play merged audio file in temp directory using house speakers
+    - service: shell_command.voice_alerts_and_sound_effects
+      data_template:
+        sound_alert: 'sound_effect_night_mode_deactivated'
+        audio_gain: !secret voice_alert_audio_gain_medium

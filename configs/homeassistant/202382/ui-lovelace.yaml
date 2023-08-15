@@ -1,0 +1,51 @@
+title: JambulaTV Control Panel
+background: center / cover no-repeat url("/local/backgrounds/jambula_01.png") fixed
+
+resources: !include_dir_list lovelace/resources
+
+custom_header:
+  chevrons: false
+  compact_mode: true
+  exceptions:
+    - conditions:
+        user_agent: Mobile
+      config:
+        show_tabs: '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19'
+    - conditions:
+        user_agent: Windows
+      config:
+        show_tabs: '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19'
+    - conditions:
+        device_id: Tablet
+      config:
+        show_tabs: '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19'
+  hide_help: true
+  menu_hide: true
+
+
+swipe_nav:
+  animate: swipe
+  prevent_default: true
+  #skip_tabs: '9,10'
+  swipe_amount: 15
+  wrap: true
+
+
+views:
+
+  - !include lovelace/views/dashboard.yaml
+  - !include lovelace/views/lights.yaml
+  - !include lovelace/views/security.yaml
+  - !include lovelace/views/weather.yaml
+  - !include lovelace/views/emergency.yaml
+  - !include lovelace/views/media.yaml
+  - !include lovelace/views/cctv.yaml
+  - !include lovelace/views/alarms.yaml
+  - !include lovelace/views/water.yaml
+  - !include lovelace/views/power.yaml
+  - !include lovelace/views/modes.yaml
+  - !include lovelace/views/router.yaml
+  - !include lovelace/views/system.yaml
+  - !include lovelace/views/adb.yaml
+  - !include lovelace/views/assistance.yaml
+  - !include lovelace/views/jogging.yaml

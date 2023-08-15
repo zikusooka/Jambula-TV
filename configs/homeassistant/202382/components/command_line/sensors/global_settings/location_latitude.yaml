@@ -1,0 +1,3 @@
+sensor:
+  name: "Location (Latitude)"
+  command: /bin/bash -c "GEOLOCATION_FILE=/etc/JambulaTV/geolocation.txt; [[ -s \$GEOLOCATION_FILE ]] && awk -F'=' '/LATITUDE/ {print \$2}' \$GEOLOCATION_FILE"

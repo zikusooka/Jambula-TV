@@ -1,0 +1,15 @@
+type: conditional
+conditions:
+  - entity: input_number.electricity_meter_reading_today
+    state_not: 'none'
+
+  - entity: input_number.electricity_meter_reading_today
+    state_not: 'unknown'
+
+card:
+  type: sensor
+  entity: input_number.electricity_meter_reading_today
+  name: 'Meter (Today)'
+  icon: 'mdi:power-socket-uk'
+  show_name: false
+  show_icon: false

@@ -1,0 +1,27 @@
+alias: Umeme Yaka token units value adjustment via frontend
+initial_state: True
+
+trigger:
+
+  - platform: state
+    entity_id: input_text.umeme_yaka_balance_adjust
+
+
+condition:
+  condition: and
+  conditions:
+ 
+    - condition: template
+      value_template: "{{ not is_state('input_text.umeme_yaka_balance_adjust', 'unknown') }}"
+    - condition: template
+      value_template: "{{ not is_state('input_text.umeme_yaka_balance_adjust', '') }}"
+    - condition: template
+      value_template: "{{ not is_state('input_text.umeme_yaka_balance_adjust', '0.0') }}"
+
+
+action:
+
+  # Run script
+  # ----------
+  - service: script.turn_on
+    entity_id: script.umeme_yaka_balance_adjust

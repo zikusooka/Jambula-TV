@@ -1,0 +1,16 @@
+# This is a custom internet status sensor. This command_line binary 
+# sensor indicates if the connection to the Internet is UP or DOWN
+#
+# This is pretty useful for a lot of automations.
+#
+#
+# https://www.home-assistant.io/components/command_line/
+
+binary_sensor:
+  name: Internet
+  command: "/usr/bin/ping -n -c 5 -W 1 $(/usr/bin/jambulatv-homeassistant-secrets connectivity_ping_host) > /dev/null 2>&1 && echo UP || echo DOWN"
+  device_class: connectivity
+  payload_on: "UP"
+  payload_off: "OFF"
+  command_timeout: 15
+  scan_interval: 60

@@ -1,0 +1,24 @@
+# Speech-to-Text: Garbage was collected
+alias: "Garbage was collected"
+initial_state: True
+
+
+trigger:
+  - platform: mqtt
+    topic: !secret mqtt_topic_stt_garbage_collected
+    payload: 'yes'
+
+
+condition:
+  condition: and
+  conditions:
+
+
+action:
+
+  #  SCRIPT
+  # -------
+  - service: script.turn_on
+    data:
+      entity_id:
+        - script.garbage_collected

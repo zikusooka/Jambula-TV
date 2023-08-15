@@ -1,0 +1,4 @@
+sensor:
+  name: 'Phone call status via ADB 4 C Idea'
+  command: /bin/bash -c 'ADB_CMD=/usr/bin/adb; IP_ADDRESS=$(/usr/bin/jambulatv-homeassistant-secrets adb_ip_address_c_idea); ADB_PORT=$(/usr/bin/jambulatv-homeassistant-secrets adb_tcp_port); SERIAL_ID=$IP_ADDRESS:$ADB_PORT; $ADB_CMD connect $IP_ADDRESS | grep -i connected > /dev/null 2>&1; ADB_STATUS=$?; if [[ "$ADB_STATUS" = "0" ]]; then CALLSTATE=$($ADB_CMD -s $SERIAL_ID shell dumpsys telephony.registry | grep mCallState | head -1 | cut -d= -f2) && case $CALLSTATE in 0) echo idle;; 1) echo ringing;; 2) echo active;; esac; else echo "unknown" && exit 0; fi'
+  scan_interval: 2

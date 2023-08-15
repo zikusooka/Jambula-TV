@@ -1,0 +1,6 @@
+# The ZoneMinder component sets up the integration with your 
+# ZoneMinder instance.
+#
+# https://www.home-assistant.io/components/zoneminder/
+#
+zoneminder: !include_dir_list ../zoneminder
