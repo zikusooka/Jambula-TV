@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Jambula Labs @copyright 2022-2023 All rights reserved
+# Jambula Labs @copyright 2023-2024 All rights reserved
 
 # Variables
 PROJECT_NAME=JambulaTV
@@ -287,6 +287,23 @@ fi
 #
 HOME_ASSISTANT_OLD_VERSION=$3
 #
+# Generate this HASS version's extra requirements file
+HASS_INSTALL_REQUIREMENTS_OLD_VERSION_FILE=$PROJECT_PIPS_REQUIRES_DIR/home-assistant-core-requirements-${HOME_ASSISTANT_OLD_VERSION}.txt
+HASS_INSTALL_REQUIREMENTS_NEW_VERSION_FILE=$PROJECT_PIPS_REQUIRES_DIR/home-assistant-core-requirements-$(echo $NEW_HOME_ASSISTANT_TAG | sed "s/\.//g").txt
+#
+REQUIREMENTS_FILE=$PROJECT_GITHUB_DIR/home-assistant-core/requirements.txt
+REQUIREMENTS_CONSTRAINTS_FILE=$PROJECT_GITHUB_DIR/home-assistant-core/homeassistant/package_constraints.txt
+REQUIREMENTS_ALL_FILE=$PROJECT_GITHUB_DIR/home-assistant-core/requirements_all.txt
+#
+if [[ ! -e $HASS_INSTALL_REQUIREMENTS_NEW_VERSION_FILE ]] && [[ -e $HASS_INSTALL_REQUIREMENTS_OLD_VERSION_FILE ]];
+then
+for PKG in $(cat $HASS_INSTALL_REQUIREMENTS_OLD_VERSION_FILE | cut -d "=" -f1 );
+do
+NEW_PKG=$(grep -r $PKG $REQUIREMENTS_FILE $REQUIREMENTS_CONSTRAINTS_FILE $REQUIREMENTS_ALL_FILE | cut -d ":" -f2 | uniq | sed "/^#/d" | head -1)
+[[ "x$NEW_PKG" = "x" ]] || echo "$NEW_PKG" >> $HASS_INSTALL_REQUIREMENTS_NEW_VERSION_FILE
+done
+fi
+#
 # Uninstall old homeassistant
 uninstall_homeassistant_core $HOME_ASSISTANT_OLD_VERSION
 #
@@ -296,6 +313,8 @@ homeassistant_core_install "$NEW_HOME_ASSISTANT_TAG" "$PYTHON3_BINARY"
 # Source HASS runtime variables
 . $SYSCONFIG_DIR/home-assistant-core
 #
+# Sync old HASS configuration files into new version's configuration directory	
+rsync -av $PROJECT_SYSTEM_CONF_DIR/homeassistant-${HOME_ASSISTANT_OLD_VERSION}/ $HOME_ASSISTANT_CONFIG_DIR/ 
 # Create symbolic link to HASS config directory - needed by some tools that don't know about version info
 ln -s -f $HOME_ASSISTANT_CONFIG_DIR $PROJECT_SYSTEM_CONF_DIR/homeassistant
 }
@@ -506,6 +525,8 @@ prosody_add_users
 
 #upgrade_homeassistant 2023.7.1 python3.11 202362
 #upgrade_homeassistant 2021.7.3 python3.8 202171
+#upgrade_homeassistant 2023.8.2 python3.11 202371
+
 #upgrade_homeassistant_cli
 
 #upgrade_zoneminder
